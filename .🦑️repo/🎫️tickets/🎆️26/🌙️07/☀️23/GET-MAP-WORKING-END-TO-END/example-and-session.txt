@@ -1,0 +1,288 @@
+
+===== around 7824 =====
+7785|      },
+7786|    });
+7787|  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, uiLocale]);
+7788|  //#endregion 🔄️SyncLeaf
+7789|
+7790|  const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
+7791|  const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
+7792|
+7793|  // 📱️ Moved ahead of `mobilePanelTabs` (below) so its synthetic mobile "App" tab can share the exact
+7794|  // example-select/mode-switcher elements the desktop navbar center cluster renders — single source of truth.
+7795|  const exampleOptions = useMemo(() => {
+7796|    const appId = session?.app.id ?? "";
+7797|    if (!appId) return [];
+7798|    const seen = new Set<string>();
+7799|    return (activePluginManifest?.examples ?? [])
+7800|      .filter((example) => example.appId === appId)
+7801|      .filter((example) => {
+7802|        if (seen.has(example.id)) return false;
+7803|        seen.add(example.id);
+7804|        return true;
+7805|      })
+7806|      .map((example) => ({
+7807|        id: example.id,
+7808|        label: resolveAppLabel(appLabelsOverlay, "example", example.id, example.label),
+7809|        icon: example.iconId,
+7810|      }));
+7811|  }, [activePluginManifest, session?.app.id, appLabelsOverlay]);
+7812|
+7813|  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+7814|  const exampleSelectElement = useMemo(() => {
+7815|    if (!session || exampleOptions.length === 0 || locks.exampleId || (studioMode && session.app.id === landingAppId)) return null;
+7816|    return (
+7817|      <NavbarExampleSelect
+7818|        key="fixture"
+7819|        id="playground.navbar.fixture"
+7820|        value={activeExampleId}
+7821|        options={exampleOptions}
+7822|        onValueChange={(exampleId) => {
+7823|          dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+7824|          onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
+7825|        }}
+7826|      />
+7827|    );
+7828|  }, [session, exampleOptions, locks.exampleId, studioMode, landingAppId, activeExampleId, onAction]);
+7829|
+7830|  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+7831|  const modeSwitcherElement = useMemo(() => {
+7832|    if (!session || session.app.modes.length <= 1) return null;
+7833|    return (
+7834|      <ButtonGroup key="modes" id="playground.navbar.modes">
+7835|        {session.app.modes.map((mode) => {
+7836|          const isActive = activeModeId === mode.id;
+7837|          return (
+7838|            <ButtonGroupItem
+7839|              key={mode.id}
+7840|              id={`playground.navbar.modes.${mode.id}`}
+7841|              className={cn(isActive && interactiveActiveFillClass)}
+7842|              data-state={isActive ? "on" : undefined}
+7843|              onClick={() => applyModeChange(mode.id)}
+7844|              icon={mode.iconId}
+7845|              text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label)}
+7846|            />
+7847|          );
+7848|        })}
+7849|      </ButtonGroup>
+7850|    );
+7851|  }, [session, activeModeId, applyModeChange, appLabelsOverlay]);
+7852|
+7853|  const resolvedCommands = useMemo(() => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId), [osCommands, activePluginManifest, session?.app, activeModeId]);
+7854|
+7855|  const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
+7856|
+7857|  /**
+7858|   * 🎛️ Dispatches a resolved command: os-scope commands are handled locally (no program round trip);
+7859|   * plugin/app/mode-scope commands route through the active session's program `handleCommand`, mirroring
+7860|   * `onAction`'s tail. Plugin commands are only resolvable/dispatchable for the active session's program
+7861|   * instance (no headless-instance routing for non-focused plugins yet).
+7862|   */
+7863|  const onCommand = useCallback(
+7864|    (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => {
+
+===== around 8338 =====
+8299|      activeTabPath: mobilePanelPath,
+8300|      onActiveTabPathChange: (path: readonly string[]) => {
+8301|        dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
+8302|        const tabId = path[path.length - 1];
+8303|        // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
+8304|        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
+8305|          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
+8306|        }
+8307|      },
+8308|      pathMemory: panelPathMemory,
+8309|      onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+8310|      treeOpenStates,
+8311|      onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
+8312|      // ♻️ Lazy tool/command trees read measures + active tool from refs — revision forces re-resolve.
+8313|      treeContentRevision: { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey },
+8314|    };
+8315|  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId, activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey]);
+8316|
+8317|  useEffect(() => {
+8318|    if (exampleOptions.length === 0) return;
+8319|    dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: (current) => (!current || exampleOptions.some((option) => option.id === current) ? current : "") });
+8320|  }, [exampleOptions, session?.app.id, session?.pluginId]);
+8321|
+8322|  // 🎛️ Announces the boot example to the fresh session exactly once per instance. When nothing is
+8323|  // locked/defaulted, seed the first registered example so the dropdown matches the plugin default
+8324|  // document (e.g. procedural3d hexagonal column) — same rule as wgpu `sync_session_chrome`.
+8325|  // Studio-mode routes load documents via `applyShellUri`/`openSpace`; never boot-override those.
+8326|  useEffect(() => {
+8327|    if (exampleOptions.length === 0 || !session) return;
+8328|    if (studioMode) {
+8329|      noExampleResetInstanceIdRef.current = session.instanceId;
+8330|      return;
+8331|    }
+8332|    if (noExampleResetInstanceIdRef.current === session.instanceId) return;
+8333|    noExampleResetInstanceIdRef.current = session.instanceId;
+8334|    const exampleId = resolveBootExampleId(activeExampleId, exampleOptions, defaults.exampleId);
+8335|    if (exampleId !== activeExampleId) {
+8336|      dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+8337|    }
+8338|    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
+8339|  }, [activeExampleId, defaults.exampleId, exampleOptions, onAction, session, studioMode]);
+8340|
+8341|  //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
+8342|  // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
+8343|  // {@link PANEL_TAB_BAR_HOSTS}) and the floating `Panel` itself (`buildPanelProps`) — the two hosts of the
+8344|  // SAME anchor always read/write the exact same controlled state.
+8345|  const buildPanelSelectionProps = useCallback(
+8346|    (anchor: Anchor): PanelTabSelectionOptions => ({
+8347|      tabs: dock.anchors[anchor],
+8348|      visible: panels[anchor].visible,
+8349|      onVisibleChange: (value: boolean) => {
+8350|        dispatch({ type: "SET_PANEL_VISIBLE", anchor, value });
+8351|        noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor, visible: value });
+8352|      },
+8353|      activeTabPath: panelActivePaths[anchor],
+8354|      onActiveTabPathChange: (path: readonly string[]) => {
+8355|        const pathChanged = (panelActivePaths[anchor] ?? []).join("/") !== path.join("/");
+8356|        dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
+8357|        // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
+8358|        // next hierarchy level up only makes sense under its own category's command list (mirrors the old
+8359|        // dedicated `SET_COMMAND_CATEGORY` reducer case, now expressed at the generic path-change call site
+8360|        // since category-active state itself is just this anchor's `activeTabPath`). Categories sit under
+8361|        // the Command branch, so compare the category segment (path[1]), not the shared branch root.
+8362|        if (anchor === "bottom-middle" && panels[anchor].path[1] !== path[1]) {
+8363|          dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
+8364|        }
+8365|        const tabId = path[path.length - 1];
+8366|        // 🛠️ Selecting a mode-tool leaf (`tool.<id>`) activates that tool so its measures render immediately
+8367|        // under the tab — no nested Fill toggle inside the tree.
+8368|        if (anchor === "bottom-middle" && session && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+8369|          const selectedToolId = toolIdFromPanelTabId(tabId);
+8370|          if (selectedToolId && selectedToolId !== activeToolIdRef.current) {
+8371|            onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: selectedToolId } });
+8372|          }
+8373|        }
+8374|        // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
+8375|        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+8376|          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
+8377|        }
+8378|        if (pathChanged && tabId) noteShellCommand("shell.panelTab", shellLabel("ui.shellCommand.panelTab"), { anchor, tabId });
+
+===== createMapSession =====
+9588|export async function createMapSession(): Promise<MapWasmSession> {
+21318|    void createMapSession().then((session) => {
+AF|6678|                    const [hostPort, ...rest] = path.split("/");
+AF|6679|                    const [spaceId, documentId] = rest.length >= 2 ? [rest[0], rest.slice(1).join("/")] : ["default", rest[0] || syncDocumentId(session, panel, studioMode)];
+AF|6680|                    return buildRemoteBackboneUri(hostPort ?? "127.0.0.1:8787", spaceId, documentId);
+AF|6681|                  })()
+AF|6682|                : String((action.args as { kind?: string }).kind) === "folder"
+AF|6683|                  ? buildFolderBackboneUri(path)
+AF|6684|                  : buildFileBackboneUri(path)
+AF|6685|              : buildFileBackboneUri(path);
+AF|6686|          void attachSyncBackbone(uri);
+AF|6687|          return;
+AF|6688|        }
+AF|6689|        if (action.action === "detach") {
+AF|6690|          void detachSyncBackbone();
+AF|6691|          return;
+AF|6692|        }
+AF|6693|        return;
+AF|6694|      }
+AF|6695|
+AF|6696|      if (studioMode && action.controllerId === landingControllerId && action.action === "importSpace") {
+AF|6697|        importSpaceInputRef.current?.click();
+AF|6698|        return;
+AF|6699|      }
+AF|6700|
+AF|6701|      if (studioMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
+AF|6702|        const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
+AF|6703|        const currentPanel = parsePanelState(session.viewState);
+AF|6704|        const program = currentPanel?.programs.find((entry) => entry.pluginId === pluginId);
+AF|6705|        if (program) void spawnProgram(program);
+AF|6706|        return;
+AF|6707|      }
+AF|6708|
+AF|6709|      if (studioMode && action.controllerId === hostControllerId && action.action === "setActivePanelTab") {
+AF|6710|        const tabId = typeof action.args === "object" && action.args != null && "tabId" in action.args ? String((action.args as { tabId?: string }).tabId ?? hostCatalogueTabId ?? "") : (hostCatalogueTabId ?? "");
+AF|6711|        const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
+AF|6712|        updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
+AF|6713|        return;
+AF|6714|      }
+AF|6715|
+AF|6716|      const pluginEntry = findPluginForAction(action);
+AF|6717|      const plugin = pluginEntry?.handle;
+AF|6718|      if (!plugin) return;
+AF|6719|
+AF|6720|      const targetSession =
+AF|6721|        studioMode && action.controllerId !== session.app.controllerId
+AF|6722|          ? (() => {
+AF|6723|              const spawned = panel?.spawnedApps.find((entry) => {
+AF|6724|                const app = loadedPlugins.find((p) => p.handle.pluginId === entry.pluginId)?.manifest.apps.find((a) => a.id === entry.appId);
+AF|6725|                return app?.controllerId === action.controllerId;
+AF|6726|              });
+AF|6727|              if (!spawned) return session;
+AF|6728|              const app = loadedPlugins.find((p) => p.handle.pluginId === spawned.pluginId)?.manifest.apps.find((a) => a.id === spawned.appId);
+AF|6729|              if (!app) return session;
+AF|6730|              return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
+AF|6731|            })()
+AF|6732|          : session;
+AF|6733|
+AF|6734|      // 🚫️ The old `setDocument` → `patchAppSource` mirror (spawned-instance content write-back on the
+AF|6735|      // os document) is deleted — app content no longer embeds on the os document at all
+AF|6736|      // (`OsAppInstance.document` is now just an `OsDocumentRef` handle). A spawned instance's content
+AF|6737|      // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
+AF|6738|      // document; there is no host-side JS mirroring step anymore.
+AF|6739|      // 🪟️ `windowId` is read back off the tagged `action.args` (see `windowMeasuresChrome`/`tagSetActiveUtilityWindow`),
+AF|6740|      // falling back to the active window — stamped into the dispatched view state so the plugin can key any
+AF|6741|      // per-window option mutation off `view_state.windowId` instead of ever guessing at the active window.
+AF|6742|      const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
+AF|6743|      const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
+AF|6744|      const dispatchViewState = injectActiveUtility(
+AF|6745|        {
+AF|6746|          ...targetSession.viewState,
+AF|6747|          windowId: dispatchWindowId,
+AF|6748|          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+AF|6749|        },
+AF|6750|        dispatchWindowId,
+AF|6751|      );
+AF|6752|      const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
+AF|6753|      if (interactiveAction) beginInteractivePluginAction();
+AF|6754|      return plugin
+AF|6755|        .handleAction(targetSession.instanceId, encodeActionWire(action), dispatchViewState)
+AF|6756|        .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
+AF|6757|        .catch((actionError) => {
+AF|6758|          console.error("[DEBUG] action failed", action.action, action.args, actionError);
+AF|6759|        })
+AF|6760|        .finally(() => {
+AF|6761|          if (interactiveAction) endInteractivePluginAction();
+AF|6762|        });
+AF|6763|    },
+AF|6764|    [
+AF|6765|      applyHostEffects,
+AF|6766|      attachSyncBackbone,
+AF|6767|      clearAllWindowUtilities,
+AF|6768|      detachSyncBackbone,
+AF|6769|      findPluginForAction,
+AF|6770|      injectActiveUtility,
+AF|6771|      loadedPlugins,
+AF|6772|      panel,
+AF|6773|      session,
+AF|6774|      setActiveUtilityForWindow,
+AF|6775|      spawnProgram,
+AF|6776|      studioMode,
+AF|6777|      syncBackboneUri,
+AF|6778|      syncDraftPath,
+AF|6779|      updateSpacePanel,
+AF|6780|      hostControllerId,
+AF|6781|      landingControllerId,
+AF|6782|      hostCatalogueTabId,
+AF|6783|      completeIntroductionInteraction,
+AF|6784|    ],
+AF|6785|  );
+AF|6786|
+AF|6787|  /** 🧭️ Logs a shell-chrome command (theme change, dock drag, window resize, panel toggle, …) into the
+AF|6788|   * plugin's session-only command-history panel — routed through the exact same `onAction` funnel as every
+AF|6789|   * other action (see `NOTE_SHELL_COMMAND_ACTION_ID`) so it lands on `targetSession.instanceId` via the
+AF|6790|   * standard `handleAction` call, just tagged with an id the plugin intercepts before the app sees it.
+AF|6791|   * No-ops when there's no active app session. */
+AF|6792|  const noteShellCommand = useCallback(
+AF|6793|    (commandId: string, label: string, detail?: Record<string, unknown>) => {
+AF|6794|      if (!session) return;
+AF|6795|      onAction(buildNoteShellCommandAction(session.app.controllerId, commandId, label, detail));
+AF|6796|    },
+AF|6797|    [session, onAction],

@@ -1,0 +1,2016 @@
+
+--- 3512: /// `handle_typed_command` trio. Decoded off the wire once, by `VcsDocumentApp:: ---
+3452|/// matched one line in. Not yet wired into `DocumentApp` itself (that would break every existing
+3453|/// implementer at once); adopt it per app by matching on the parsed variant instead of the raw string
+3454|/// inside `handle_action`, e.g. `let action = MyAppAction::from_action_id(action)?; match action { ... }`.
+3455|pub trait AppAction: Sized {
+3456|    fn from_action_id(id: &str) -> Result<Self, String>;
+3457|}
+3458|
+3459|/// @emoji 🏭️ Generates a closed per-app action enum plus its `AppAction` impl from a list of
+3460|/// `Variant = "actionId"` pairs — the ids should match what's passed to `.operation()/.view_action()/
+3461|/// .shell_action()` on the app's `AppBuilder` so the declared action registry and the dispatch match
+3462|/// can't drift apart silently.
+3463|#[macro_export]
+3464|macro_rules! app_action_enum {
+3465|    ($vis:vis enum $Name:ident { $($Variant:ident = $id:literal),* $(,)? }) => {
+3466|        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+3467|        $vis enum $Name {
+3468|            $($Variant),*
+3469|        }
+3470|
+3471|        impl $crate::app::AppAction for $Name {
+3472|            fn from_action_id(id: &str) -> Result<Self, String> {
+3473|                match id {
+3474|                    $($id => Ok(Self::$Variant),)*
+3475|                    other => Err(format!("unknown action id {other}")),
+3476|                }
+3477|            }
+3478|        }
+3479|    };
+3480|}
+3481|
+3482|/// @emoji 🧩️ Typed, per-app author surface. An app declares its `Projection` and `Operation` (a
+3483|/// `store::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
+3484|/// operations flow through a persistent `DocumentStore` owned by {@link VcsDocumentApp}. Ephemeral
+3485|/// view state (selection/camera/active utility) lives in the app struct itself, not in the document.
+3486|///
+3487|/// # 🔖️UtilityPreviewContract
+3488|/// The formalized actions-vs-utilities contract:
+3489|/// - **Actions** are non-interactive: they carry optional declared `ActionArgDef`s, stage in the
+3490|///   renderer, and execute once. `Operation`-kind actions emit operations; `View`/`Shell`-kind actions must
+3491|///   emit **zero** operations ({@link VcsDocumentApp} enforces this — a View/Shell action returning operations is a
+3492|///   hard error).
+3493|/// - **Utilities** are interactive live-preview pointer modes. Exactly one utility is active per window kind;
+3494|///   the active utility arrives via `view_state.active_utility_id` and is **never** stored in the document
+3495|///   nor emitted as an operation. Switching utilities dispatches the framework `setActiveUtility` View action; on a
+3496|///   switch the app must clear any in-progress preview scratch.
+3497|/// - **Two blessed preview patterns** (both funnel through {@link ActionEmit}):
+3498|///   1. per-tick coalesced — {@link ActionEmit::amend} folds each tick of a gesture into one amendable
+3499|///      edit (one undo per gesture); use for cheap operations (camera/opacity drags).
+3500|///   2. scratch + commit — hold a draft in app-runtime state, render it as an overlay, and on gesture
+3501|///      end emit {@link ActionEmit::commit} once; use for megabyte-scale content where per-tick
+3502|///      amending is O(N²) (draw drafts, lowpoly strokes).
+3503|/// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
+3504|///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
+3505|pub trait DocumentApp: Send + 'static {
+3506|    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
+3507|    type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+3508|    type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + DocumentPack;
+3509|    type ConfigOperation: ::protocol::Operation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+3510|    /// @emoji 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
+3511|    /// `handle` below, replacing the deleted stringly-typed `handle_action`/`handle_command`/
+3512|    /// `handle_typed_command` trio. Decoded off the wire once, by `VcsDocumentApp::dispatch_typed_command`,
+3513|    /// via `OpBinary::decode_op`; framework-reserved verbs (undo/redo/checkpoint/alternative/clipboard/
+3514|    /// revert/history-filter/noteShellCommand) never reach here — the wrapper intercepts those itself
+3515|    /// (see `VcsDocumentApp::dispatch_framework_action`) since they are host mechanics, not app behavior.
+3516|    type Command: ::protocol::OpBinary + Send;
+3517|
+3518|    fn app_id(&self) -> &str;
+3519|    fn document_schema(&self) -> &str;
+3520|    fn config_schema(&self) -> &str {
+3521|        "config.empty"
+3522|    }
+3523|    fn initial_projection(&self) -> Self::Projection;
+3524|    fn initial_config(&self) -> Self::Config {
+3525|        Self::Config::default()
+3526|    }
+3527|    /// @emoji 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
+3528|    /// `(command, document, config)` to an {@link Emit}. No `&mut self`, no `ViewState` (ephemeral
+3529|    /// per-window/locale/selection state now lives in `Self::Config`, keyed by window-instance id where
+3530|    /// it varies per window). `View`-kind interactions from the pre-B1 world (camera/selection/hover/…)
+3531|    /// emit `config_operations` here instead of mutating an app-struct field — the config store computes
+3532|    /// their real `backwards`, so undo/redo works without any ad hoc `InverseAction`.
+3533|    fn handle(
+3534|        &self,
+3535|        command: &Self::Command,
+3536|        doc: &DocumentView<'_, Self::Projection>,
+3537|        cfg: &ConfigView<'_, Self::Config>,
+3538|    ) -> Emit<Self::Operation, Self::ConfigOperation>;
+3539|    /// @emoji 🏷️ `command`'s action/command id string — used for command-log labeling and
+3540|    /// `AppActionRegistry` kind-discipline lookup (`View`/`Shell`-kind must not emit
+3541|    /// `document_operations`; `VcsDocumentApp::dispatch_typed_command_inner` enforces this when the
+3542|    /// registry has a matching declaration). Default: `"typed-command"` for every command (correct but
+3543|    /// generic — an app that wants per-command labels/kind-discipline overrides this to match the id
+3544|    /// the command was declared under in its `AppDefinition`, e.g. via `.operation`/`.view_action`).
+3545|    fn command_id(&self, _command: &Self::Command) -> &str {
+3546|        "typed-command"
+3547|    }
+3548|    /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
+3549|    fn config_spec(&self) -> ConfigSpec {
+3550|        ConfigSpec::empty()
+3551|    }
+3552|    /// 📋️ The `MediaType` this app copies fragments as and accepts pastes of by default — `None` (the
+3553|    /// default) means this app doesn't participate in the clipboard mechanism, and `VcsDocumentApp`'s
+3554|    /// injected `copy`/`cut`/`paste` actions silently no-op. Override alongside `copy_fragment`/
+3555|    /// `cut_operations`/`paste_operations`.
+3556|    fn clipboard_media_type(&self) -> Option<MediaType> {
+3557|        None
+3558|    }
+3559|    /// 📋️ Every `MediaType` this app accepts a paste of — defaults to just `clipboard_media_type()`.
+3560|    /// Override to additionally accept fragments copied from a compatible sibling app (e.g. puzzle
+3561|    /// accepting a block kind-definition fragment as a catalog merge).
+
+--- 3541: /// `document_operations`; `VcsDocumentApp::dispatch_typed_command_inner` enforc ---
+3481|
+3482|/// @emoji 🧩️ Typed, per-app author surface. An app declares its `Projection` and `Operation` (a
+3483|/// `store::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
+3484|/// operations flow through a persistent `DocumentStore` owned by {@link VcsDocumentApp}. Ephemeral
+3485|/// view state (selection/camera/active utility) lives in the app struct itself, not in the document.
+3486|///
+3487|/// # 🔖️UtilityPreviewContract
+3488|/// The formalized actions-vs-utilities contract:
+3489|/// - **Actions** are non-interactive: they carry optional declared `ActionArgDef`s, stage in the
+3490|///   renderer, and execute once. `Operation`-kind actions emit operations; `View`/`Shell`-kind actions must
+3491|///   emit **zero** operations ({@link VcsDocumentApp} enforces this — a View/Shell action returning operations is a
+3492|///   hard error).
+3493|/// - **Utilities** are interactive live-preview pointer modes. Exactly one utility is active per window kind;
+3494|///   the active utility arrives via `view_state.active_utility_id` and is **never** stored in the document
+3495|///   nor emitted as an operation. Switching utilities dispatches the framework `setActiveUtility` View action; on a
+3496|///   switch the app must clear any in-progress preview scratch.
+3497|/// - **Two blessed preview patterns** (both funnel through {@link ActionEmit}):
+3498|///   1. per-tick coalesced — {@link ActionEmit::amend} folds each tick of a gesture into one amendable
+3499|///      edit (one undo per gesture); use for cheap operations (camera/opacity drags).
+3500|///   2. scratch + commit — hold a draft in app-runtime state, render it as an overlay, and on gesture
+3501|///      end emit {@link ActionEmit::commit} once; use for megabyte-scale content where per-tick
+3502|///      amending is O(N²) (draw drafts, lowpoly strokes).
+3503|/// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
+3504|///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
+3505|pub trait DocumentApp: Send + 'static {
+3506|    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
+3507|    type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+3508|    type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + DocumentPack;
+3509|    type ConfigOperation: ::protocol::Operation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+3510|    /// @emoji 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
+3511|    /// `handle` below, replacing the deleted stringly-typed `handle_action`/`handle_command`/
+3512|    /// `handle_typed_command` trio. Decoded off the wire once, by `VcsDocumentApp::dispatch_typed_command`,
+3513|    /// via `OpBinary::decode_op`; framework-reserved verbs (undo/redo/checkpoint/alternative/clipboard/
+3514|    /// revert/history-filter/noteShellCommand) never reach here — the wrapper intercepts those itself
+3515|    /// (see `VcsDocumentApp::dispatch_framework_action`) since they are host mechanics, not app behavior.
+3516|    type Command: ::protocol::OpBinary + Send;
+3517|
+3518|    fn app_id(&self) -> &str;
+3519|    fn document_schema(&self) -> &str;
+3520|    fn config_schema(&self) -> &str {
+3521|        "config.empty"
+3522|    }
+3523|    fn initial_projection(&self) -> Self::Projection;
+3524|    fn initial_config(&self) -> Self::Config {
+3525|        Self::Config::default()
+3526|    }
+3527|    /// @emoji 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
+3528|    /// `(command, document, config)` to an {@link Emit}. No `&mut self`, no `ViewState` (ephemeral
+3529|    /// per-window/locale/selection state now lives in `Self::Config`, keyed by window-instance id where
+3530|    /// it varies per window). `View`-kind interactions from the pre-B1 world (camera/selection/hover/…)
+3531|    /// emit `config_operations` here instead of mutating an app-struct field — the config store computes
+3532|    /// their real `backwards`, so undo/redo works without any ad hoc `InverseAction`.
+3533|    fn handle(
+3534|        &self,
+3535|        command: &Self::Command,
+3536|        doc: &DocumentView<'_, Self::Projection>,
+3537|        cfg: &ConfigView<'_, Self::Config>,
+3538|    ) -> Emit<Self::Operation, Self::ConfigOperation>;
+3539|    /// @emoji 🏷️ `command`'s action/command id string — used for command-log labeling and
+3540|    /// `AppActionRegistry` kind-discipline lookup (`View`/`Shell`-kind must not emit
+3541|    /// `document_operations`; `VcsDocumentApp::dispatch_typed_command_inner` enforces this when the
+3542|    /// registry has a matching declaration). Default: `"typed-command"` for every command (correct but
+3543|    /// generic — an app that wants per-command labels/kind-discipline overrides this to match the id
+3544|    /// the command was declared under in its `AppDefinition`, e.g. via `.operation`/`.view_action`).
+3545|    fn command_id(&self, _command: &Self::Command) -> &str {
+3546|        "typed-command"
+3547|    }
+3548|    /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
+3549|    fn config_spec(&self) -> ConfigSpec {
+3550|        ConfigSpec::empty()
+3551|    }
+3552|    /// 📋️ The `MediaType` this app copies fragments as and accepts pastes of by default — `None` (the
+3553|    /// default) means this app doesn't participate in the clipboard mechanism, and `VcsDocumentApp`'s
+3554|    /// injected `copy`/`cut`/`paste` actions silently no-op. Override alongside `copy_fragment`/
+3555|    /// `cut_operations`/`paste_operations`.
+3556|    fn clipboard_media_type(&self) -> Option<MediaType> {
+3557|        None
+3558|    }
+3559|    /// 📋️ Every `MediaType` this app accepts a paste of — defaults to just `clipboard_media_type()`.
+3560|    /// Override to additionally accept fragments copied from a compatible sibling app (e.g. puzzle
+3561|    /// accepting a block kind-definition fragment as a catalog merge).
+3562|    fn clipboard_accepts(&self) -> Vec<MediaType> {
+3563|        self.clipboard_media_type().into_iter().collect()
+3564|    }
+3565|    /// 📋️ Builds a `ClipboardFragment` from the current selection. Called by `VcsDocumentApp`'s
+3566|    /// injected `copy` and `cut` actions; `cut` additionally calls `cut_operations`. Default: always
+3567|    /// empty (apps that don't override `clipboard_media_type` never reach here in practice, since the
+3568|    /// interception only calls this when a media type is declared).
+3569|    fn copy_fragment(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
+3570|        Err(ClipboardError::EmptySelection)
+3571|    }
+3572|    fn cut_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Operation> {
+3573|        Vec::new()
+3574|    }
+3575|    fn paste_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Operation>, ClipboardError> {
+3576|        Ok(Vec::new())
+3577|    }
+3578|    fn pending_effects(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+3579|        Vec::new()
+3580|    }
+3581|    fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+3582|    /// 🪟️ Keyed by window INSTANCE id — an app with two open instances of the same kind (e.g. split
+3583|    /// panes) returns one entry per instance so their chrome/options never collapse together. Apps with
+3584|    /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
+3585|    fn window_engagements(
+3586|        &self,
+3587|        _doc: &DocumentView<'_, Self::Projection>,
+3588|        _cfg: &ConfigView<'_, Self::Config>,
+3589|    ) -> HashMap<String, WindowEngagement> {
+3590|        HashMap::new()
+
+--- 3777: fn handle_action( ---
+3717|        self.export_media(port, doc).map(|media| MediaFingerprint::of(&media))
+3718|    }
+3719|}
+3720|
+3721|/// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/📜️world.wit`): `descriptor` is the
+3722|/// parsed `descriptor-json`, `data` the sibling raw-bytes field. Deliberately separate from
+3723|/// `mesh::Media` (which pairs a `MediaType` with a `MediaPayload` for the declared-port workflow
+3724|/// via `export_media`/`import_media`) — `consume-media`/`produce-media` operate at the whole-document
+3725|/// level, not a specific `MediaPortSpec`, so `PluginApp::{consume_media, produce_media}` below default
+3726|/// to a document passthrough rather than requiring any `media_ports()` declaration at all.
+3727|#[derive(Clone, Debug)]
+3728|pub struct MediaArtifact {
+3729|    pub descriptor: MediaArtifactDescriptor,
+3730|    pub data: Vec<u8>,
+3731|}
+3732|
+3733|/// 🎞️ Rust mirror of WIT's `media-artifact.descriptor-json` JSON shape. `edge_id`/`port_id`/`kind_id`
+3734|/// are dataflow-driver bookkeeping the SDK default below leaves untouched (opaque pass-through for the
+3735|/// caller); `media_type` is the declared `MediaType` the wire claims to satisfy; `wire` is the actual
+3736|/// encoding; `blob_hash` is set instead of inline `data` when the payload already lives in the host's
+3737|/// blob store.
+3738|#[derive(Clone, Debug, Serialize, Deserialize)]
+3739|#[serde(rename_all = "camelCase")]
+3740|pub struct MediaArtifactDescriptor {
+3741|    #[serde(default, skip_serializing_if = "Option::is_none")]
+3742|    pub edge_id: Option<String>,
+3743|    #[serde(default, skip_serializing_if = "Option::is_none")]
+3744|    pub port_id: Option<String>,
+3745|    #[serde(default, skip_serializing_if = "Option::is_none")]
+3746|    pub kind_id: Option<String>,
+3747|    #[serde(default, skip_serializing_if = "Option::is_none")]
+3748|    pub media_type: Option<MediaType>,
+3749|    pub wire: MediaWireFormat,
+3750|    #[serde(default, skip_serializing_if = "Option::is_none")]
+3751|    pub blob_hash: Option<String>,
+3752|}
+3753|
+3754|/// 🚧️ Failure producing/consuming a `MediaArtifact` through `PluginApp::{produce_media, consume_media}`.
+3755|#[derive(Debug, thiserror::Error)]
+3756|pub enum MediaArtifactError {
+3757|    #[error("{0}")]
+3758|    Payload(String),
+3759|    #[error("document schema mismatch: expected {expected}, found {found}")]
+3760|    SchemaMismatch { expected: String, found: String },
+3761|    #[error("no binary importer registered for format {0:?}")]
+3762|    NoImporter(OsMediaFormat),
+3763|}
+3764|
+3765|/// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
+3766|/// (via {@link VcsDocumentApp}'s store) across calls — no per-call document JSON is threaded in.
+3767|/// History actions (undo/redo/checkpoint/alternative) are intercepted by the wrapper; typed
+3768|/// operations are dispatched with real inverses; operations flow to/from the backbone as the wire format.
+3769|pub trait PluginApp: Send {
+3770|    fn app_id(&self) -> &str;
+3771|    fn document_schema(&self) -> &str;
+3772|    /// @emoji 🕰️ FRAMEWORK-reserved action dispatch only (undo/redo/checkpoint/alternative/clipboard/
+3773|    /// revert-to-command/history-filter/noteShellCommand) — B1 deleted the generic app-declared-action
+3774|    /// fallback this used to carry (`DocumentApp::handle_action` no longer exists; an app's own
+3775|    /// behavior is reached exclusively through `handle_command_frame`'s typed `Self::Command` decode).
+3776|    /// An unrecognized `action` id is a hard error pointing at the typed channel.
+3777|    fn handle_action(
+3778|        &mut self,
+3779|        action: &str,
+3780|        args: Option<&Value>,
+3781|        meta: &ActionMeta,
+3782|    ) -> Result<InvocationResult, String>;
+3783|    /// @emoji 🕰️ Same FRAMEWORK-reserved scope as `handle_action` above — kept as a distinct entry
+3784|    /// point for `CommandDefinition`-shaped host calls (a command has no `ActionKind` of its own).
+3785|    fn handle_command(
+3786|        &mut self,
+3787|        command: &str,
+3788|        args: Option<&Value>,
+3789|        meta: &ActionMeta,
+3790|    ) -> Result<InvocationResult, String>;
+3791|    /// 🎯️ The single dispatch point `plugin_runtime::plugin_exchange` calls for every
+3792|    /// `AppCommand::Command` frame: recognizes a framework-reserved `{kind,name,args}` wire-value
+3793|    /// envelope (routed through `handle_action`/`handle_command` above) and otherwise decodes
+3794|    /// `command_bytes` directly as the app's typed `DocumentApp::Command` via `OpBinary::decode_op`
+3795|    /// and calls the pure `DocumentApp::handle`.
+3796|    fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String>;
+3797|    /// 🧮️ Object-safe counterpart to `DocumentApp::Config`'s binary-pack encoding — the config-store
+3798|    /// twin of `document_pack` below.
+3799|    fn config_pack(&self) -> Result<store::DocumentPackFiles, String>;
+3800|    /// 🧮️ Object-safe counterpart to `load_document_pack`, targeting the config store.
+3801|    fn load_config_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), String>;
+3802|    /// 🧮️ Dispatches one binary-encoded `store::DocumentCommand<Self::ConfigOperation>` against the
+3803|    /// config store — the `AppCommand::ConfigCommand` wire frame's real handler (replaces the deleted
+3804|    /// `apply_config_bytes` whole-record-replace legacy path).
+3805|    fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String>;
+3806|    /// @emoji 📥️ Ingests binary-encoded remote `OperationEnvelope`s (`protocol::decode_envelopes`)
+3807|    /// into the causal DAG (idempotent — duplicate operation ids are dropped).
+3808|    fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), String>;
+3809|    /// @emoji 📜️ Text-DSL counterpart to {@link Self::ingest_operations}: applies one already-authored
+3810|    /// `Self::Operation` per non-blank line (via `store::OpText::parse_op`) as a fresh local edit — unlike
+3811|    /// the JSON path (which ingests already-caused remote `OperationEnvelope`s into the causal DAG
+3812|    /// via `store.ingest_remote`, preserving their original ids/deps), each parsed line here goes
+3813|    /// through the normal `DocumentCommand::Apply` path (a fresh id/timestamp, a real computed
+3814|    /// inverse) — the natural mapping for hand-authored or externally-generated op-text, which carries
+3815|    /// no envelope metadata of its own.
+3816|    fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), String>;
+3817|    /// @emoji 📜️ Text-DSL counterpart to {@link Self::document_pack}: the whole document as
+3818|    /// {@link store::DocumentTextFiles} (the `dsl` initial-projection text plus the full `ops` op-log
+3819|    /// text) via `store::print_document_text` — returned as the established two-file struct rather than
+3820|    /// a single concatenated string, since that struct (not an ad hoc delimiter format) is already the
+3821|    /// canonical text representation everywhere else in this codebase (`FolderTextStorage`,
+3822|    /// `parse_document_text`).
+3823|    fn document_text(&self) -> Result<store::DocumentTextFiles, String>;
+3824|    /// @emoji 📜️ Text-DSL counterpart to {@link Self::load_document_pack}.
+3825|    fn load_document_text(&mut self, files: &store::DocumentTextFiles) -> Result<(), String>;
+3826|    /// @emoji 📦️ Binary-pack counterpart to {@link Self::document_text}: the whole document as
+
+--- 4639: /// @emoji 🧬️ B1: the single dispatch tail for BOTH `dispatch_typed_command` (th ---
+4579|                    .and_then(|entry_meta| entry_meta.operation_id.clone())
+4580|                    .unwrap_or_else(|| OperationId(format!("{}:{index}", invocation_id.0)));
+4581|                let base_version = DocumentVersion(entry.map(|entry_meta| entry_meta.base_version).unwrap_or(0));
+4582|                let undo_policy = entry.map(|entry_meta| entry_meta.undo_policy).unwrap_or(UndoPolicy::ExactBaseOnly);
+4583|                let author = entry.and_then(|entry_meta| entry_meta.author_id.clone()).unwrap_or_else(|| ActorId(meta.actor.clone()));
+4584|                let timestamp = entry.map(|entry_meta| entry_meta.timestamp).unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
+4585|                operations.push(KernelOperation {
+4586|                    id: operation_id.clone(),
+4587|                    document,
+4588|                    base_version,
+4589|                    invocation_id: invocation_id.clone(),
+4590|                    diff: DocumentDiff {
+4591|                        schema: SchemaId(format!("{schema}.operation")),
+4592|                        payload: ::protocol::OpBinary::encode_op(forward).unwrap_or_default(),
+4593|                    },
+4594|                    inverse: InverseOperation {
+4595|                        target_operation: operation_id,
+4596|                        inverse_diff: DocumentDiff {
+4597|                            schema: SchemaId(format!("{schema}.operation.inverse")),
+4598|                            payload: inverse_payload.clone(),
+4599|                        },
+4600|                        base_version,
+4601|                        dependencies: Vec::new(),
+4602|                        undo_policy,
+4603|                    },
+4604|                    dependencies: Vec::new(),
+4605|                    author,
+4606|                    timestamp,
+4607|                });
+4608|            }
+4609|        }
+4610|        let operation_ids: Vec<OperationId> = operations.iter().map(|operation| operation.id.clone()).collect();
+4611|        let inverse_operations: Vec<InverseOperation> = operations.iter().map(|operation| operation.inverse.clone()).collect();
+4612|        InvocationResult {
+4613|            output: DslValue::Null,
+4614|            operations,
+4615|            inverse_group: UndoGroup {
+4616|                invocation_id,
+4617|                operations: operation_ids,
+4618|                inverse_operations,
+4619|            },
+4620|            diagnostics: Vec::new(),
+4621|            requested_effects: effects,
+4622|            events,
+4623|            ui_scope,
+4624|        }
+4625|    }
+4626|
+4627|    // 🧮️ B1: `materialize_args` (JSON-args default-fill + required-arg enforcement for app-declared
+4628|    // actions/commands, plus its now-unused `effective_action_args`/`missing_required_args` imports)
+4629|    // was deleted — dead code once `dispatch_action`'s generic app-action fallback and
+4630|    // `dispatch_command`'s registry-backed dispatch were removed (an app's own behavior now dispatches
+4631|    // exclusively through the typed `Self::Command` channel, where a Rust caller supplies a complete
+4632|    // value — there is no "missing arg" to materialize).
+4633|
+4634|    /// @emoji 🧬️ Shared dispatch tail for `handle_action`/`handle_command`/`import_media`: given the
+4635|    /// app's `ActionEmit`, either records the op-less dispatch and returns an empty result, or commits
+4636|    /// `Apply`/`AmendLast`, records the resulting edit, and builds the `InvocationResult` from it.
+4637|    /// `verb` is the action/command id, used to resolve the registry kind/label and to synthesize the
+4638|    /// `InvocationId`.
+4639|    /// @emoji 🧬️ B1: the single dispatch tail for BOTH `dispatch_typed_command` (the app's own
+4640|    /// `Emit`) and the framework-reserved clipboard actions below — commits `document_operations` to
+4641|    /// the document store and `config_operations` to the config store (independently, each its own
+4642|    /// undo stack), records exactly one command-log row carrying whichever edit id(s) were produced,
+4643|    /// and builds the resulting `InvocationResult` from the document side (config-only dispatches
+4644|    /// never touch `KernelOperation`/space-sync — see `🔖️CommandLog`'s doc region for why).
+4645|    fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Operation, A::ConfigOperation>, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4646|        let Emit { document_operations, config_operations, description, coalesce_key, effects, events, ui_scope } = emit;
+4647|
+4648|        // 🧮️ Config side dispatches first, independent of whether this verb ALSO touches the document
+4649|        // — captures the resulting (possibly amended) config edit id for the command-log row below.
+4650|        let mut config_edit_id: Option<String> = None;
+4651|        if !config_operations.is_empty() {
+4652|            self.config_store.set_local_actor_id(Some(meta.actor.clone()));
+4653|            let before_config_edit_id = self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
+4654|            let config_command = match &coalesce_key {
+4655|                Some(key) => DocumentCommand::AmendLast { operations: config_operations, coalesce_key: Some(format!("config:{key}")) },
+4656|                None => DocumentCommand::Apply { operations: config_operations, description: description.clone() },
+4657|            };
+4658|            self.config_store.dispatch(config_command).map_err(|error| error.to_string())?;
+4659|            self.cache = None;
+4660|            let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
+4661|            config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
+4662|        }
+4663|
+4664|        if document_operations.is_empty() {
+4665|            // 🧾️ An app-declared action logs under its declared kind (so an `Operation`-kind action
+4666|            // that happened to produce zero document operations — e.g. paste with no clipboard
+4667|            // fragment, or a pure config-op dispatch — still gets a real row, `edit_id: None`,
+4668|            // correctly filed under "Without Operations"); a declared command (no `ActionKind` of its
+4669|            // own) logs as `Shell`; anything unresolved (registry-less test construction, an ad-hoc
+4670|            // verb like an import-media port id) logs as `View`.
+4671|            let kind = match self.registry.get(verb) {
+4672|                Some(def) => def.kind,
+4673|                None if self.registry.get_command(verb).is_some() => ActionKind::Shell,
+4674|                None => ActionKind::View,
+4675|            };
+4676|            self.record_command(verb, kind, description.clone(), None, config_edit_id, None);
+4677|            return Ok(Self::empty_result(verb, meta, effects, events, ui_scope));
+4678|        }
+4679|        self.store.set_local_actor_id(Some(meta.actor.clone()));
+4680|        // 🪢️ Captured before dispatch so `result_from_last_edit` can report only the operations THIS dispatch
+4681|        // added — if `AmendLast` amends the same edit (`before_edit_id` unchanged after dispatch), these
+4682|        // are the tail offsets into that edit's now-longer forwards/backwards; if a new edit was created
+4683|        // instead, the offsets are moot (checked via edit identity, not reused blindly).
+4684|        let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
+4685|        let (before_forwards_len, before_backwards_len) = self.store.edit_operations().map(|(f, b, _)| (f.len(), b.len())).unwrap_or((0, 0));
+4686|        let log_label = description.clone();
+4687|        let vcs_command = match coalesce_key {
+4688|            Some(key) => DocumentCommand::AmendLast {
+
+--- 4720: /// behavior is dispatched exclusively through `dispatch_typed_command` now. ---
+4660|            let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
+4661|            config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
+4662|        }
+4663|
+4664|        if document_operations.is_empty() {
+4665|            // 🧾️ An app-declared action logs under its declared kind (so an `Operation`-kind action
+4666|            // that happened to produce zero document operations — e.g. paste with no clipboard
+4667|            // fragment, or a pure config-op dispatch — still gets a real row, `edit_id: None`,
+4668|            // correctly filed under "Without Operations"); a declared command (no `ActionKind` of its
+4669|            // own) logs as `Shell`; anything unresolved (registry-less test construction, an ad-hoc
+4670|            // verb like an import-media port id) logs as `View`.
+4671|            let kind = match self.registry.get(verb) {
+4672|                Some(def) => def.kind,
+4673|                None if self.registry.get_command(verb).is_some() => ActionKind::Shell,
+4674|                None => ActionKind::View,
+4675|            };
+4676|            self.record_command(verb, kind, description.clone(), None, config_edit_id, None);
+4677|            return Ok(Self::empty_result(verb, meta, effects, events, ui_scope));
+4678|        }
+4679|        self.store.set_local_actor_id(Some(meta.actor.clone()));
+4680|        // 🪢️ Captured before dispatch so `result_from_last_edit` can report only the operations THIS dispatch
+4681|        // added — if `AmendLast` amends the same edit (`before_edit_id` unchanged after dispatch), these
+4682|        // are the tail offsets into that edit's now-longer forwards/backwards; if a new edit was created
+4683|        // instead, the offsets are moot (checked via edit identity, not reused blindly).
+4684|        let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
+4685|        let (before_forwards_len, before_backwards_len) = self.store.edit_operations().map(|(f, b, _)| (f.len(), b.len())).unwrap_or((0, 0));
+4686|        let log_label = description.clone();
+4687|        let vcs_command = match coalesce_key {
+4688|            Some(key) => DocumentCommand::AmendLast {
+4689|                operations: document_operations,
+4690|                coalesce_key: Some(key),
+4691|            },
+4692|            None => DocumentCommand::Apply {
+4693|                operations: document_operations,
+4694|                description,
+4695|            },
+4696|        };
+4697|        self.store.dispatch(vcs_command).map_err(|error| error.to_string())?;
+4698|        self.cache = None;
+4699|        let amended_same_edit = before_edit_id.is_some() && self.store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_edit_id.as_ref();
+4700|        // 🧾️ One command-log entry per VCS edit — a coalesced gesture (`amended_same_edit`) grows the
+4701|        // existing entry's `op_lines` live (see `build_history_view`), it never appends a new entry.
+4702|        if !amended_same_edit {
+4703|            if let Some(edit_id) = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) {
+4704|                // 🧾️ `verb` is the app's typed-command tag or a framework command id — `CommandDefinition`
+4705|                // has no `ActionKind` (commands aren't View/Shell/History), and reaching here means
+4706|                // operations were dispatched, so `Operation` is always correct.
+4707|                let kind = self.registry.get(verb).map(|def| def.kind).unwrap_or(ActionKind::Operation);
+4708|                // ⏪️ No memory `inverse` for an edit-linked row — the VCS edit's own `Operation::backwards`
+4709|                // is already the real inverse, and `revertToCommand`'s edit_id branch replays that.
+4710|                self.record_command(verb, kind, log_label, Some(edit_id), config_edit_id, None);
+4711|            }
+4712|        }
+4713|        let tail_offset = if amended_same_edit { (before_forwards_len, before_backwards_len) } else { (0, 0) };
+4714|        Ok(self.result_from_last_edit(verb, meta, effects, events, ui_scope, tail_offset))
+4715|    }
+4716|
+4717|    /// @emoji 🕰️ The actual body of `PluginApp::handle_action` — renamed to an inherent method so
+4718|    /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖️CommandLog`). B1:
+4719|    /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard) — an app's own
+4720|    /// behavior is dispatched exclusively through `dispatch_typed_command` now.
+4721|    fn dispatch_action(
+4722|        &mut self,
+4723|        action: &str,
+4724|        args: Option<&Value>,
+4725|        meta: &ActionMeta,
+4726|    ) -> Result<InvocationResult, String> {
+4727|        if HISTORY_ACTION_IDS.contains(&action) {
+4728|            let command = Self::history_command(action, args)
+4729|                .ok_or_else(|| format!("history action {action} missing required argument"))?;
+4730|            match self.store.dispatch(command) {
+4731|                Ok(()) => {
+4732|                    self.cache = None;
+4733|                    // 🧾️ Undo/redo/checkpoint/alternative are pure cursor motion (`edit_id: None`) —
+4734|                    // append-only: this NEVER removes a prior entry, including undo's.
+4735|                    self.record_command(action, ActionKind::History, None, None, None, None);
+4736|                    // 🐢️ History actions (undo/redo/checkpoint/alternative) can touch any part of the
+4737|                    // document — always Full, never opt into a narrower scope.
+4738|                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
+4739|                }
+4740|                // Benign no-operations (nothing to undo/redo, foreign tail) collapse to an empty result
+4741|                // and are NOT logged — they never touched the store.
+4742|                Err(vcs::VcsError::NothingToUndo)
+4743|                | Err(vcs::VcsError::NothingToRedo)
+4744|                | Err(vcs::VcsError::ForeignEdit(_)) => {
+4745|                    Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None))
+4746|                }
+4747|                Err(error) => Err(error.to_string()),
+4748|            }
+4749|        } else if action == REVERT_TO_COMMAND_ACTION_ID {
+4750|            self.refresh_cache()?;
+4751|            let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(Value::as_u64);
+4752|            // ⏪️ Only a `revertible` entry has a real anchor to revert to — see `CommandView::revertible`
+4753|            // in `build_history_view`. Four disjoint shapes, branched below: (1) document edit-linked
+4754|            // (VCS undo to position), (2) config edit-linked (config-store undo to position — B1's
+4755|            // replacement for the old memory-only "View"-kind inverse), (3) `Shell`-kind memory-only
+4756|            // (bubble the inverse out — the plugin can't touch shell-owned state itself).
+4757|            let target = entry_seq.and_then(|seq| {
+4758|                self.cache
+4759|                    .as_ref()
+4760|                    .and_then(|(_, _, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible))
+4761|                    .map(|entry| (entry.edit_id.clone(), entry.config_edit_id.clone(), entry.kind, entry.inverse.clone()))
+4762|            });
+4763|            match target {
+4764|                Some((Some(edit_id), _, _, _)) => {
+4765|                    let target_position = self.store.applied_edit_ids().iter().position(|id| *id == edit_id);
+4766|                    match target_position {
+4767|                        Some(position) => {
+4768|                            let undo_count = self.store.applied_edit_ids().len() - (position + 1);
+4769|                            for _ in 0..undo_count {
+
+--- 4913: "action '{action}' is not a framework-reserved action (history/clipboard/revert/ ---
+4853|            let label = match detail {
+4854|                Some(detail) => format!("{label} - {detail}"),
+4855|                None => label.to_string(),
+4856|            };
+4857|            // ⏪️ Optional real inverse: the shell already knows the pre-change value at its call site
+4858|            // (e.g. the previous theme id) and can supply the command that restores it, giving this row
+4859|            // a working Backwards button too — see `HostEffect::ReplayShellCommand`.
+4860|            let inverse = args
+4861|                .and_then(|value| value.get("inverseCommandId"))
+4862|                .and_then(Value::as_str)
+4863|                .map(|inverse_command_id| InverseAction {
+4864|                    action_id: inverse_command_id.to_string(),
+4865|                    args: args.and_then(|value| value.get("inverseArgs")).cloned(),
+4866|                });
+4867|            self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse);
+4868|            Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None))
+4869|        } else if CLIPBOARD_ACTION_IDS.contains(&action) {
+4870|            self.refresh_cache()?;
+4871|            let emit = {
+4872|                let VcsDocumentApp { app, cache, .. } = self;
+4873|                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4874|                let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4875|                match action {
+4876|                    "copy" => match app.copy_fragment(&doc, &cfg) {
+4877|                        Ok(fragment) => Emit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..Emit::default() },
+4878|                        Err(_) => Emit::default(),
+4879|                    },
+4880|                    "cut" => {
+4881|                        let fragment = app.copy_fragment(&doc, &cfg).ok();
+4882|                        let operations = app.cut_operations(&doc, &cfg);
+4883|                        let mut emit = Emit::operations(operations);
+4884|                        emit.description = Some("Cut".into());
+4885|                        if let Some(fragment) = fragment {
+4886|                            emit.effects.push(HostEffect::ClipboardWrite { fragment });
+4887|                        }
+4888|                        emit
+4889|                    }
+4890|                    "paste" => {
+4891|                        let fragment = args.and_then(|value| value.get("fragment")).and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone()).ok());
+4892|                        let placement = args
+4893|                            .and_then(|value| serde_json::from_value::<PastePlacement>(value.clone()).ok())
+4894|                            .unwrap_or_default();
+4895|                        match fragment {
+4896|                            Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
+4897|                                Ok(operations) => {
+4898|                                    let mut emit = Emit::operations(operations);
+4899|                                    emit.description = Some("Paste".into());
+4900|                                    emit
+4901|                                }
+4902|                                Err(_) => Emit::default(),
+4903|                            },
+4904|                            None => Emit::default(),
+4905|                        }
+4906|                    }
+4907|                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+4908|                }
+4909|            };
+4910|            self.dispatch_emit(action, emit, meta)
+4911|        } else {
+4912|            Err(format!(
+4913|                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+4914|                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+4915|            ))
+4916|        }
+4917|    }
+4918|
+4919|    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+4920|    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+4921|    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+4922|    /// by `CommandDefinition`-driven host call sites) stays stable.
+4923|    fn dispatch_command(
+4924|        &mut self,
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+
+--- 4914: app actions are dispatched exclusively through the typed command channel now (se ---
+4854|                Some(detail) => format!("{label} - {detail}"),
+4855|                None => label.to_string(),
+4856|            };
+4857|            // ⏪️ Optional real inverse: the shell already knows the pre-change value at its call site
+4858|            // (e.g. the previous theme id) and can supply the command that restores it, giving this row
+4859|            // a working Backwards button too — see `HostEffect::ReplayShellCommand`.
+4860|            let inverse = args
+4861|                .and_then(|value| value.get("inverseCommandId"))
+4862|                .and_then(Value::as_str)
+4863|                .map(|inverse_command_id| InverseAction {
+4864|                    action_id: inverse_command_id.to_string(),
+4865|                    args: args.and_then(|value| value.get("inverseArgs")).cloned(),
+4866|                });
+4867|            self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse);
+4868|            Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None))
+4869|        } else if CLIPBOARD_ACTION_IDS.contains(&action) {
+4870|            self.refresh_cache()?;
+4871|            let emit = {
+4872|                let VcsDocumentApp { app, cache, .. } = self;
+4873|                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4874|                let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4875|                match action {
+4876|                    "copy" => match app.copy_fragment(&doc, &cfg) {
+4877|                        Ok(fragment) => Emit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..Emit::default() },
+4878|                        Err(_) => Emit::default(),
+4879|                    },
+4880|                    "cut" => {
+4881|                        let fragment = app.copy_fragment(&doc, &cfg).ok();
+4882|                        let operations = app.cut_operations(&doc, &cfg);
+4883|                        let mut emit = Emit::operations(operations);
+4884|                        emit.description = Some("Cut".into());
+4885|                        if let Some(fragment) = fragment {
+4886|                            emit.effects.push(HostEffect::ClipboardWrite { fragment });
+4887|                        }
+4888|                        emit
+4889|                    }
+4890|                    "paste" => {
+4891|                        let fragment = args.and_then(|value| value.get("fragment")).and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone()).ok());
+4892|                        let placement = args
+4893|                            .and_then(|value| serde_json::from_value::<PastePlacement>(value.clone()).ok())
+4894|                            .unwrap_or_default();
+4895|                        match fragment {
+4896|                            Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
+4897|                                Ok(operations) => {
+4898|                                    let mut emit = Emit::operations(operations);
+4899|                                    emit.description = Some("Paste".into());
+4900|                                    emit
+4901|                                }
+4902|                                Err(_) => Emit::default(),
+4903|                            },
+4904|                            None => Emit::default(),
+4905|                        }
+4906|                    }
+4907|                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+4908|                }
+4909|            };
+4910|            self.dispatch_emit(action, emit, meta)
+4911|        } else {
+4912|            Err(format!(
+4913|                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+4914|                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+4915|            ))
+4916|        }
+4917|    }
+4918|
+4919|    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+4920|    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+4921|    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+4922|    /// by `CommandDefinition`-driven host call sites) stays stable.
+4923|    fn dispatch_command(
+4924|        &mut self,
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+
+--- 4929: Err(format!("command '{command}' — app commands are dispatched exclusively throu ---
+4869|        } else if CLIPBOARD_ACTION_IDS.contains(&action) {
+4870|            self.refresh_cache()?;
+4871|            let emit = {
+4872|                let VcsDocumentApp { app, cache, .. } = self;
+4873|                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4874|                let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4875|                match action {
+4876|                    "copy" => match app.copy_fragment(&doc, &cfg) {
+4877|                        Ok(fragment) => Emit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..Emit::default() },
+4878|                        Err(_) => Emit::default(),
+4879|                    },
+4880|                    "cut" => {
+4881|                        let fragment = app.copy_fragment(&doc, &cfg).ok();
+4882|                        let operations = app.cut_operations(&doc, &cfg);
+4883|                        let mut emit = Emit::operations(operations);
+4884|                        emit.description = Some("Cut".into());
+4885|                        if let Some(fragment) = fragment {
+4886|                            emit.effects.push(HostEffect::ClipboardWrite { fragment });
+4887|                        }
+4888|                        emit
+4889|                    }
+4890|                    "paste" => {
+4891|                        let fragment = args.and_then(|value| value.get("fragment")).and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone()).ok());
+4892|                        let placement = args
+4893|                            .and_then(|value| serde_json::from_value::<PastePlacement>(value.clone()).ok())
+4894|                            .unwrap_or_default();
+4895|                        match fragment {
+4896|                            Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
+4897|                                Ok(operations) => {
+4898|                                    let mut emit = Emit::operations(operations);
+4899|                                    emit.description = Some("Paste".into());
+4900|                                    emit
+4901|                                }
+4902|                                Err(_) => Emit::default(),
+4903|                            },
+4904|                            None => Emit::default(),
+4905|                        }
+4906|                    }
+4907|                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+4908|                }
+4909|            };
+4910|            self.dispatch_emit(action, emit, meta)
+4911|        } else {
+4912|            Err(format!(
+4913|                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+4914|                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+4915|            ))
+4916|        }
+4917|    }
+4918|
+4919|    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+4920|    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+4921|    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+4922|    /// by `CommandDefinition`-driven host call sites) stays stable.
+4923|    fn dispatch_command(
+4924|        &mut self,
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+4964|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4965|            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4966|            let verb = app.command_id(&command).to_string();
+4967|            (verb, app.handle(&command, &doc, &cfg))
+4968|        };
+4969|        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+4970|        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+4971|        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+4972|        // registry-less construction, or a command whose id isn't declared, skips this check).
+4973|        if let Some(def) = self.registry.get(&verb) {
+4974|            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+4975|                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
+4976|            }
+4977|        }
+4978|        self.dispatch_emit(&verb, emit, meta)
+
+--- 4934: /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wir ---
+4874|                let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4875|                match action {
+4876|                    "copy" => match app.copy_fragment(&doc, &cfg) {
+4877|                        Ok(fragment) => Emit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..Emit::default() },
+4878|                        Err(_) => Emit::default(),
+4879|                    },
+4880|                    "cut" => {
+4881|                        let fragment = app.copy_fragment(&doc, &cfg).ok();
+4882|                        let operations = app.cut_operations(&doc, &cfg);
+4883|                        let mut emit = Emit::operations(operations);
+4884|                        emit.description = Some("Cut".into());
+4885|                        if let Some(fragment) = fragment {
+4886|                            emit.effects.push(HostEffect::ClipboardWrite { fragment });
+4887|                        }
+4888|                        emit
+4889|                    }
+4890|                    "paste" => {
+4891|                        let fragment = args.and_then(|value| value.get("fragment")).and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone()).ok());
+4892|                        let placement = args
+4893|                            .and_then(|value| serde_json::from_value::<PastePlacement>(value.clone()).ok())
+4894|                            .unwrap_or_default();
+4895|                        match fragment {
+4896|                            Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
+4897|                                Ok(operations) => {
+4898|                                    let mut emit = Emit::operations(operations);
+4899|                                    emit.description = Some("Paste".into());
+4900|                                    emit
+4901|                                }
+4902|                                Err(_) => Emit::default(),
+4903|                            },
+4904|                            None => Emit::default(),
+4905|                        }
+4906|                    }
+4907|                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+4908|                }
+4909|            };
+4910|            self.dispatch_emit(action, emit, meta)
+4911|        } else {
+4912|            Err(format!(
+4913|                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+4914|                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+4915|            ))
+4916|        }
+4917|    }
+4918|
+4919|    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+4920|    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+4921|    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+4922|    /// by `CommandDefinition`-driven host call sites) stays stable.
+4923|    fn dispatch_command(
+4924|        &mut self,
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+4964|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4965|            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4966|            let verb = app.command_id(&command).to_string();
+4967|            (verb, app.handle(&command, &doc, &cfg))
+4968|        };
+4969|        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+4970|        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+4971|        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+4972|        // registry-less construction, or a command whose id isn't declared, skips this check).
+4973|        if let Some(def) = self.registry.get(&verb) {
+4974|            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+4975|                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
+4976|            }
+4977|        }
+4978|        self.dispatch_emit(&verb, emit, meta)
+4979|    }
+4980|
+4981|    /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
+4982|    /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
+4983|    /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
+
+--- 4938: return self.dispatch_typed_command(command_bytes, meta); ---
+4878|                        Err(_) => Emit::default(),
+4879|                    },
+4880|                    "cut" => {
+4881|                        let fragment = app.copy_fragment(&doc, &cfg).ok();
+4882|                        let operations = app.cut_operations(&doc, &cfg);
+4883|                        let mut emit = Emit::operations(operations);
+4884|                        emit.description = Some("Cut".into());
+4885|                        if let Some(fragment) = fragment {
+4886|                            emit.effects.push(HostEffect::ClipboardWrite { fragment });
+4887|                        }
+4888|                        emit
+4889|                    }
+4890|                    "paste" => {
+4891|                        let fragment = args.and_then(|value| value.get("fragment")).and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone()).ok());
+4892|                        let placement = args
+4893|                            .and_then(|value| serde_json::from_value::<PastePlacement>(value.clone()).ok())
+4894|                            .unwrap_or_default();
+4895|                        match fragment {
+4896|                            Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
+4897|                                Ok(operations) => {
+4898|                                    let mut emit = Emit::operations(operations);
+4899|                                    emit.description = Some("Paste".into());
+4900|                                    emit
+4901|                                }
+4902|                                Err(_) => Emit::default(),
+4903|                            },
+4904|                            None => Emit::default(),
+4905|                        }
+4906|                    }
+4907|                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+4908|                }
+4909|            };
+4910|            self.dispatch_emit(action, emit, meta)
+4911|        } else {
+4912|            Err(format!(
+4913|                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+4914|                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+4915|            ))
+4916|        }
+4917|    }
+4918|
+4919|    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+4920|    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+4921|    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+4922|    /// by `CommandDefinition`-driven host call sites) stays stable.
+4923|    fn dispatch_command(
+4924|        &mut self,
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+4964|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4965|            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4966|            let verb = app.command_id(&command).to_string();
+4967|            (verb, app.handle(&command, &doc, &cfg))
+4968|        };
+4969|        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+4970|        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+4971|        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+4972|        // registry-less construction, or a command whose id isn't declared, skips this check).
+4973|        if let Some(def) = self.registry.get(&verb) {
+4974|            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+4975|                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
+4976|            }
+4977|        }
+4978|        self.dispatch_emit(&verb, emit, meta)
+4979|    }
+4980|
+4981|    /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
+4982|    /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
+4983|    /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
+4984|    /// already holds a concrete `A::Command` value.
+4985|    pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4986|        let log_generation_before = self.log_generation;
+4987|        let result = self.dispatch_typed_command_inner(command, meta)?;
+
+--- 4953: fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> ---
+4893|                            .and_then(|value| serde_json::from_value::<PastePlacement>(value.clone()).ok())
+4894|                            .unwrap_or_default();
+4895|                        match fragment {
+4896|                            Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
+4897|                                Ok(operations) => {
+4898|                                    let mut emit = Emit::operations(operations);
+4899|                                    emit.description = Some("Paste".into());
+4900|                                    emit
+4901|                                }
+4902|                                Err(_) => Emit::default(),
+4903|                            },
+4904|                            None => Emit::default(),
+4905|                        }
+4906|                    }
+4907|                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+4908|                }
+4909|            };
+4910|            self.dispatch_emit(action, emit, meta)
+4911|        } else {
+4912|            Err(format!(
+4913|                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+4914|                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+4915|            ))
+4916|        }
+4917|    }
+4918|
+4919|    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+4920|    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+4921|    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+4922|    /// by `CommandDefinition`-driven host call sites) stays stable.
+4923|    fn dispatch_command(
+4924|        &mut self,
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+4964|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4965|            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4966|            let verb = app.command_id(&command).to_string();
+4967|            (verb, app.handle(&command, &doc, &cfg))
+4968|        };
+4969|        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+4970|        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+4971|        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+4972|        // registry-less construction, or a command whose id isn't declared, skips this check).
+4973|        if let Some(def) = self.registry.get(&verb) {
+4974|            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+4975|                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
+4976|            }
+4977|        }
+4978|        self.dispatch_emit(&verb, emit, meta)
+4979|    }
+4980|
+4981|    /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
+4982|    /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
+4983|    /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
+4984|    /// already holds a concrete `A::Command` value.
+4985|    pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4986|        let log_generation_before = self.log_generation;
+4987|        let result = self.dispatch_typed_command_inner(command, meta)?;
+4988|        Ok(self.finish_recorded(log_generation_before, "typed-command", result))
+4989|    }
+4990|
+4991|    /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
+4992|    fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4993|        self.refresh_cache()?;
+4994|        let emit = {
+4995|            let VcsDocumentApp { app, cache, .. } = self;
+4996|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4997|            let doc = DocumentView { projection, history }; let _cfg = ConfigView { projection: config };
+4998|            app.import_media(port, media, &doc).map_err(|error| error.to_string())?
+4999|        };
+5000|        self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+5001|    }
+5002|
+
+--- 4955: self.dispatch_typed_command_inner(command, meta) ---
+4895|                        match fragment {
+4896|                            Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
+4897|                                Ok(operations) => {
+4898|                                    let mut emit = Emit::operations(operations);
+4899|                                    emit.description = Some("Paste".into());
+4900|                                    emit
+4901|                                }
+4902|                                Err(_) => Emit::default(),
+4903|                            },
+4904|                            None => Emit::default(),
+4905|                        }
+4906|                    }
+4907|                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+4908|                }
+4909|            };
+4910|            self.dispatch_emit(action, emit, meta)
+4911|        } else {
+4912|            Err(format!(
+4913|                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+4914|                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+4915|            ))
+4916|        }
+4917|    }
+4918|
+4919|    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+4920|    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+4921|    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+4922|    /// by `CommandDefinition`-driven host call sites) stays stable.
+4923|    fn dispatch_command(
+4924|        &mut self,
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+4964|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4965|            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4966|            let verb = app.command_id(&command).to_string();
+4967|            (verb, app.handle(&command, &doc, &cfg))
+4968|        };
+4969|        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+4970|        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+4971|        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+4972|        // registry-less construction, or a command whose id isn't declared, skips this check).
+4973|        if let Some(def) = self.registry.get(&verb) {
+4974|            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+4975|                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
+4976|            }
+4977|        }
+4978|        self.dispatch_emit(&verb, emit, meta)
+4979|    }
+4980|
+4981|    /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
+4982|    /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
+4983|    /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
+4984|    /// already holds a concrete `A::Command` value.
+4985|    pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4986|        let log_generation_before = self.log_generation;
+4987|        let result = self.dispatch_typed_command_inner(command, meta)?;
+4988|        Ok(self.finish_recorded(log_generation_before, "typed-command", result))
+4989|    }
+4990|
+4991|    /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
+4992|    fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4993|        self.refresh_cache()?;
+4994|        let emit = {
+4995|            let VcsDocumentApp { app, cache, .. } = self;
+4996|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4997|            let doc = DocumentView { projection, history }; let _cfg = ConfigView { projection: config };
+4998|            app.import_media(port, media, &doc).map_err(|error| error.to_string())?
+4999|        };
+5000|        self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+5001|    }
+5002|
+5003|    /// @emoji 🧮️ B1: dispatches a binary-encoded `store::DocumentCommand<A::ConfigOperation>` against
+5004|    /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
+
+--- 4958: /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire byt ---
+4898|                                    let mut emit = Emit::operations(operations);
+4899|                                    emit.description = Some("Paste".into());
+4900|                                    emit
+4901|                                }
+4902|                                Err(_) => Emit::default(),
+4903|                            },
+4904|                            None => Emit::default(),
+4905|                        }
+4906|                    }
+4907|                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+4908|                }
+4909|            };
+4910|            self.dispatch_emit(action, emit, meta)
+4911|        } else {
+4912|            Err(format!(
+4913|                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+4914|                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+4915|            ))
+4916|        }
+4917|    }
+4918|
+4919|    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+4920|    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+4921|    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+4922|    /// by `CommandDefinition`-driven host call sites) stays stable.
+4923|    fn dispatch_command(
+4924|        &mut self,
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+4964|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4965|            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4966|            let verb = app.command_id(&command).to_string();
+4967|            (verb, app.handle(&command, &doc, &cfg))
+4968|        };
+4969|        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+4970|        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+4971|        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+4972|        // registry-less construction, or a command whose id isn't declared, skips this check).
+4973|        if let Some(def) = self.registry.get(&verb) {
+4974|            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+4975|                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
+4976|            }
+4977|        }
+4978|        self.dispatch_emit(&verb, emit, meta)
+4979|    }
+4980|
+4981|    /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
+4982|    /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
+4983|    /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
+4984|    /// already holds a concrete `A::Command` value.
+4985|    pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4986|        let log_generation_before = self.log_generation;
+4987|        let result = self.dispatch_typed_command_inner(command, meta)?;
+4988|        Ok(self.finish_recorded(log_generation_before, "typed-command", result))
+4989|    }
+4990|
+4991|    /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
+4992|    fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4993|        self.refresh_cache()?;
+4994|        let emit = {
+4995|            let VcsDocumentApp { app, cache, .. } = self;
+4996|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4997|            let doc = DocumentView { projection, history }; let _cfg = ConfigView { projection: config };
+4998|            app.import_media(port, media, &doc).map_err(|error| error.to_string())?
+4999|        };
+5000|        self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+5001|    }
+5002|
+5003|    /// @emoji 🧮️ B1: dispatches a binary-encoded `store::DocumentCommand<A::ConfigOperation>` against
+5004|    /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
+5005|    /// `apply_config_bytes` whole-record-replace legacy path).
+5006|    fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+5007|        self.config_store.set_local_actor_id(Some(meta.actor.clone()));
+
+--- 4960: fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMet ---
+4900|                                    emit
+4901|                                }
+4902|                                Err(_) => Emit::default(),
+4903|                            },
+4904|                            None => Emit::default(),
+4905|                        }
+4906|                    }
+4907|                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+4908|                }
+4909|            };
+4910|            self.dispatch_emit(action, emit, meta)
+4911|        } else {
+4912|            Err(format!(
+4913|                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+4914|                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+4915|            ))
+4916|        }
+4917|    }
+4918|
+4919|    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+4920|    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+4921|    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+4922|    /// by `CommandDefinition`-driven host call sites) stays stable.
+4923|    fn dispatch_command(
+4924|        &mut self,
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+4964|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4965|            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4966|            let verb = app.command_id(&command).to_string();
+4967|            (verb, app.handle(&command, &doc, &cfg))
+4968|        };
+4969|        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+4970|        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+4971|        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+4972|        // registry-less construction, or a command whose id isn't declared, skips this check).
+4973|        if let Some(def) = self.registry.get(&verb) {
+4974|            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+4975|                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
+4976|            }
+4977|        }
+4978|        self.dispatch_emit(&verb, emit, meta)
+4979|    }
+4980|
+4981|    /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
+4982|    /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
+4983|    /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
+4984|    /// already holds a concrete `A::Command` value.
+4985|    pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4986|        let log_generation_before = self.log_generation;
+4987|        let result = self.dispatch_typed_command_inner(command, meta)?;
+4988|        Ok(self.finish_recorded(log_generation_before, "typed-command", result))
+4989|    }
+4990|
+4991|    /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
+4992|    fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4993|        self.refresh_cache()?;
+4994|        let emit = {
+4995|            let VcsDocumentApp { app, cache, .. } = self;
+4996|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4997|            let doc = DocumentView { projection, history }; let _cfg = ConfigView { projection: config };
+4998|            app.import_media(port, media, &doc).map_err(|error| error.to_string())?
+4999|        };
+5000|        self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+5001|    }
+5002|
+5003|    /// @emoji 🧮️ B1: dispatches a binary-encoded `store::DocumentCommand<A::ConfigOperation>` against
+5004|    /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
+5005|    /// `apply_config_bytes` whole-record-replace legacy path).
+5006|    fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+5007|        self.config_store.set_local_actor_id(Some(meta.actor.clone()));
+5008|        self.config_store.dispatch_binary(command_bytes).map_err(|error| error.to_string())?;
+5009|        self.cache = None;
+
+--- 4985: pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Resu ---
+4925|        command: &str,
+4926|        _args: Option<&Value>,
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+4964|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4965|            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4966|            let verb = app.command_id(&command).to_string();
+4967|            (verb, app.handle(&command, &doc, &cfg))
+4968|        };
+4969|        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+4970|        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+4971|        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+4972|        // registry-less construction, or a command whose id isn't declared, skips this check).
+4973|        if let Some(def) = self.registry.get(&verb) {
+4974|            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+4975|                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
+4976|            }
+4977|        }
+4978|        self.dispatch_emit(&verb, emit, meta)
+4979|    }
+4980|
+4981|    /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
+4982|    /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
+4983|    /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
+4984|    /// already holds a concrete `A::Command` value.
+4985|    pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4986|        let log_generation_before = self.log_generation;
+4987|        let result = self.dispatch_typed_command_inner(command, meta)?;
+4988|        Ok(self.finish_recorded(log_generation_before, "typed-command", result))
+4989|    }
+4990|
+4991|    /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
+4992|    fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4993|        self.refresh_cache()?;
+4994|        let emit = {
+4995|            let VcsDocumentApp { app, cache, .. } = self;
+4996|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4997|            let doc = DocumentView { projection, history }; let _cfg = ConfigView { projection: config };
+4998|            app.import_media(port, media, &doc).map_err(|error| error.to_string())?
+4999|        };
+5000|        self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+5001|    }
+5002|
+5003|    /// @emoji 🧮️ B1: dispatches a binary-encoded `store::DocumentCommand<A::ConfigOperation>` against
+5004|    /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
+5005|    /// `apply_config_bytes` whole-record-replace legacy path).
+5006|    fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+5007|        self.config_store.set_local_actor_id(Some(meta.actor.clone()));
+5008|        self.config_store.dispatch_binary(command_bytes).map_err(|error| error.to_string())?;
+5009|        self.cache = None;
+5010|        let config_edit_id = self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
+5011|        self.record_command("configCommand", ActionKind::Shell, None, None, config_edit_id, None);
+5012|        Ok(Self::empty_result("configCommand", meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::Full))
+5013|    }
+5014|
+5015|    /// @emoji 🕰️ Upgrades `result.ui_scope` to also refresh the framework history panel body whenever
+5016|    /// `dispatch_action`/`dispatch_command`/`dispatch_import_media` actually logged something
+5017|    /// (`log_generation` advanced) — the seam that makes the panel live without every action opting in.
+5018|    fn finish_recorded(&self, log_generation_before: u64, verb: &str, mut result: InvocationResult) -> InvocationResult {
+5019|        if self.log_generation != log_generation_before {
+5020|            let skip_history_panel = self.registry.get(verb).is_some_and(|def| matches!(def.kind, ActionKind::View));
+5021|            if !skip_history_panel {
+5022|                result.ui_scope = with_history_panel_scope(result.ui_scope);
+5023|            }
+5024|        }
+5025|        result
+5026|    }
+5027|}
+5028|
+5029|/// @emoji 📣️ Signals the shell that the document's checkpoint/alternative history changed (after an
+5030|/// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
+5031|fn history_changed_event() -> AppEvent {
+5032|    AppEvent {
+5033|        kind: "history-changed".into(),
+5034|        payload: DslValue::Null,
+
+--- 4987: let result = self.dispatch_typed_command_inner(command, meta)?; ---
+4927|        _meta: &ActionMeta,
+4928|    ) -> Result<InvocationResult, String> {
+4929|        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
+4930|    }
+4931|
+4932|    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+4933|    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+4934|    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+4935|    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+4936|    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4937|        if command_bytes.first().copied() == Some(1) {
+4938|            return self.dispatch_typed_command(command_bytes, meta);
+4939|        }
+4940|        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+4941|        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+4942|        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+4943|        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+4944|        if kind == "command" {
+4945|            self.dispatch_command(&name, args.as_ref(), meta)
+4946|        } else {
+4947|            self.dispatch_action(&name, args.as_ref(), meta)
+4948|        }
+4949|    }
+4950|
+4951|    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+4952|    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+4953|    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+4954|        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+4955|        self.dispatch_typed_command_inner(command, meta)
+4956|    }
+4957|
+4958|    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+4959|    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+4960|    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4961|        self.refresh_cache()?;
+4962|        let (verb, emit) = {
+4963|            let VcsDocumentApp { app, cache, .. } = self;
+4964|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4965|            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+4966|            let verb = app.command_id(&command).to_string();
+4967|            (verb, app.handle(&command, &doc, &cfg))
+4968|        };
+4969|        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+4970|        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+4971|        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+4972|        // registry-less construction, or a command whose id isn't declared, skips this check).
+4973|        if let Some(def) = self.registry.get(&verb) {
+4974|            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+4975|                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
+4976|            }
+4977|        }
+4978|        self.dispatch_emit(&verb, emit, meta)
+4979|    }
+4980|
+4981|    /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
+4982|    /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
+4983|    /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
+4984|    /// already holds a concrete `A::Command` value.
+4985|    pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4986|        let log_generation_before = self.log_generation;
+4987|        let result = self.dispatch_typed_command_inner(command, meta)?;
+4988|        Ok(self.finish_recorded(log_generation_before, "typed-command", result))
+4989|    }
+4990|
+4991|    /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
+4992|    fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
+4993|        self.refresh_cache()?;
+4994|        let emit = {
+4995|            let VcsDocumentApp { app, cache, .. } = self;
+4996|            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+4997|            let doc = DocumentView { projection, history }; let _cfg = ConfigView { projection: config };
+4998|            app.import_media(port, media, &doc).map_err(|error| error.to_string())?
+4999|        };
+5000|        self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+5001|    }
+5002|
+5003|    /// @emoji 🧮️ B1: dispatches a binary-encoded `store::DocumentCommand<A::ConfigOperation>` against
+5004|    /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
+5005|    /// `apply_config_bytes` whole-record-replace legacy path).
+5006|    fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+5007|        self.config_store.set_local_actor_id(Some(meta.actor.clone()));
+5008|        self.config_store.dispatch_binary(command_bytes).map_err(|error| error.to_string())?;
+5009|        self.cache = None;
+5010|        let config_edit_id = self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
+5011|        self.record_command("configCommand", ActionKind::Shell, None, None, config_edit_id, None);
+5012|        Ok(Self::empty_result("configCommand", meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::Full))
+5013|    }
+5014|
+5015|    /// @emoji 🕰️ Upgrades `result.ui_scope` to also refresh the framework history panel body whenever
+5016|    /// `dispatch_action`/`dispatch_command`/`dispatch_import_media` actually logged something
+5017|    /// (`log_generation` advanced) — the seam that makes the panel live without every action opting in.
+5018|    fn finish_recorded(&self, log_generation_before: u64, verb: &str, mut result: InvocationResult) -> InvocationResult {
+5019|        if self.log_generation != log_generation_before {
+5020|            let skip_history_panel = self.registry.get(verb).is_some_and(|def| matches!(def.kind, ActionKind::View));
+5021|            if !skip_history_panel {
+5022|                result.ui_scope = with_history_panel_scope(result.ui_scope);
+5023|            }
+5024|        }
+5025|        result
+5026|    }
+5027|}
+5028|
+5029|/// @emoji 📣️ Signals the shell that the document's checkpoint/alternative history changed (after an
+5030|/// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
+5031|fn history_changed_event() -> AppEvent {
+5032|    AppEvent {
+5033|        kind: "history-changed".into(),
+5034|        payload: DslValue::Null,
+5035|    }
+5036|}
+
+--- 5073: fn handle_action( ---
+5013|    }
+5014|
+5015|    /// @emoji 🕰️ Upgrades `result.ui_scope` to also refresh the framework history panel body whenever
+5016|    /// `dispatch_action`/`dispatch_command`/`dispatch_import_media` actually logged something
+5017|    /// (`log_generation` advanced) — the seam that makes the panel live without every action opting in.
+5018|    fn finish_recorded(&self, log_generation_before: u64, verb: &str, mut result: InvocationResult) -> InvocationResult {
+5019|        if self.log_generation != log_generation_before {
+5020|            let skip_history_panel = self.registry.get(verb).is_some_and(|def| matches!(def.kind, ActionKind::View));
+5021|            if !skip_history_panel {
+5022|                result.ui_scope = with_history_panel_scope(result.ui_scope);
+5023|            }
+5024|        }
+5025|        result
+5026|    }
+5027|}
+5028|
+5029|/// @emoji 📣️ Signals the shell that the document's checkpoint/alternative history changed (after an
+5030|/// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
+5031|fn history_changed_event() -> AppEvent {
+5032|    AppEvent {
+5033|        kind: "history-changed".into(),
+5034|        payload: DslValue::Null,
+5035|    }
+5036|}
+5037|
+5038|/// @emoji 🕰️ Upgrades a returned `UiDirtyScope` to also cover the framework history panel body
+5039|/// (`FRAMEWORK_HISTORY_BODY_KEY`) — `Full` is already maximal and passes through unchanged, `None`
+5040|/// becomes a `Partial` naming just the history body, and an existing `Partial` gains it alongside
+5041|/// whatever the app already asked to refresh (idempotent — checks before pushing).
+5042|fn with_history_panel_scope(scope: semio_framework_core::kernel::UiDirtyScope) -> semio_framework_core::kernel::UiDirtyScope {
+5043|    use semio_framework_core::kernel::UiDirtyScope;
+5044|    match scope {
+5045|        UiDirtyScope::Full => UiDirtyScope::Full,
+5046|        UiDirtyScope::None => UiDirtyScope::Partial {
+5047|            window_bodies: Vec::new(),
+5048|            panel_bodies: vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()],
+5049|            utilities: false,
+5050|            tools: false,
+5051|            engagements: false,
+5052|            measures: false,
+5053|            labels: false,
+5054|        },
+5055|        UiDirtyScope::Partial { window_bodies, mut panel_bodies, utilities, tools, engagements, measures, labels } => {
+5056|            if !panel_bodies.iter().any(|key| key == FRAMEWORK_HISTORY_BODY_KEY) {
+5057|                panel_bodies.push(FRAMEWORK_HISTORY_BODY_KEY.to_string());
+5058|            }
+5059|            UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels }
+5060|        }
+5061|    }
+5062|}
+5063|
+5064|impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
+5065|    fn app_id(&self) -> &str {
+5066|        self.app.app_id()
+5067|    }
+5068|
+5069|    fn document_schema(&self) -> &str {
+5070|        self.app.document_schema()
+5071|    }
+5072|
+5073|    fn handle_action(
+5074|        &mut self,
+5075|        action: &str,
+5076|        args: Option<&Value>,
+5077|        meta: &ActionMeta,
+5078|    ) -> Result<InvocationResult, String> {
+5079|        let log_generation_before = self.log_generation;
+5080|        let result = self.dispatch_action(action, args, meta)?;
+5081|        Ok(self.finish_recorded(log_generation_before, action, result))
+5082|    }
+5083|
+5084|    fn handle_command(
+5085|        &mut self,
+5086|        command: &str,
+5087|        args: Option<&Value>,
+5088|        meta: &ActionMeta,
+5089|    ) -> Result<InvocationResult, String> {
+5090|        let log_generation_before = self.log_generation;
+5091|        let result = self.dispatch_command(command, args, meta)?;
+5092|        Ok(self.finish_recorded(log_generation_before, command, result))
+5093|    }
+5094|
+5095|    fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+5096|        let log_generation_before = self.log_generation;
+5097|        let result = self.dispatch_command_frame(command_bytes, meta)?;
+5098|        Ok(self.finish_recorded(log_generation_before, "typed-command", result))
+5099|    }
+5100|
+5101|    fn config_pack(&self) -> Result<store::DocumentPackFiles, String> {
+5102|        store::print_document_pack(self.config_store.envelope()).map_err(|error| error.to_string())
+5103|    }
+5104|
+5105|    fn load_config_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), String> {
+5106|        let parsed: store::ParsedDocumentText<A::Config, A::ConfigOperation> =
+5107|            store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.to_string())?;
+5108|        let (applied, redo) = match &parsed.envelope.cursor {
+5109|            Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
+5110|            None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+5111|        };
+5112|        self.config_store.set_state(parsed.envelope, applied, redo);
+5113|        self.cache = None;
+5114|        Ok(())
+5115|    }
+5116|
+5117|    fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+5118|        let log_generation_before = self.log_generation;
+5119|        let result = self.dispatch_config_command_inner(command_bytes, meta)?;
+5120|        Ok(self.finish_recorded(log_generation_before, "configCommand", result))
+5121|    }
+5122|
+
+--- 6694: // the registry-backed kind-discipline check in `dispatch_typed_command_inner` r ---
+6634|
+6635|    impl DocumentApp for TestApp {
+6636|        type Projection = TestProjection;
+6637|        type Operation = TestOperation;
+6638|        type Config = TestConfig;
+6639|        type ConfigOperation = TestConfigOperation;
+6640|        type Command = TestCommand;
+6641|
+6642|        fn app_id(&self) -> &str {
+6643|            "synthetic-play"
+6644|        }
+6645|
+6646|        fn document_schema(&self) -> &str {
+6647|            "semio.test/v1"
+6648|        }
+6649|
+6650|        fn initial_projection(&self) -> TestProjection {
+6651|            TestProjection::default()
+6652|        }
+6653|
+6654|        fn command_id(&self, command: &TestCommand) -> &str {
+6655|            match command {
+6656|                TestCommand::Increment => "increment",
+6657|                TestCommand::SetLabel { .. } => "setLabel",
+6658|                TestCommand::AmendLabel { .. } => "amendLabel",
+6659|                TestCommand::CommitLabel { .. } => "commitLabel",
+6660|                TestCommand::BadView => "badView",
+6661|                TestCommand::Select { .. } => "select",
+6662|                TestCommand::Navigate => "navigate",
+6663|                TestCommand::NoopOperation => "noopOperation",
+6664|                TestCommand::ViewNoScope => "viewNoScope",
+6665|                TestCommand::ViewPartialScope => "viewPartialScope",
+6666|                TestCommand::IncrementViaCommand => "incrementViaCommand",
+6667|                TestCommand::SetLabelViaCommand { .. } => "setLabelViaCommand",
+6668|                TestCommand::SetActiveUtility { .. } => "setActiveUtility",
+6669|            }
+6670|        }
+6671|
+6672|        fn handle(
+6673|            &self,
+6674|            command: &TestCommand,
+6675|            doc: &DocumentView<'_, TestProjection>,
+6676|            _cfg: &ConfigView<'_, TestConfig>,
+6677|        ) -> Emit<TestOperation, TestConfigOperation> {
+6678|            self.received_actions.borrow_mut().push(self.command_id(command).to_string());
+6679|            match command {
+6680|                TestCommand::Increment | TestCommand::IncrementViaCommand => Emit {
+6681|                    document_operations: vec![TestOperation::SetCount { value: doc.projection.count + 1 }],
+6682|                    description: Some("increment".into()),
+6683|                    ..Default::default()
+6684|                },
+6685|                TestCommand::SetLabel { value } => Emit {
+6686|                    document_operations: vec![TestOperation::SetLabel { value: value.clone() }],
+6687|                    coalesce_key: Some("label".into()),
+6688|                    ..Default::default()
+6689|                },
+6690|                TestCommand::SetLabelViaCommand { value } => Emit::operations(vec![TestOperation::SetLabel { value: value.clone() }]),
+6691|                TestCommand::AmendLabel { value } => Emit::amend(vec![TestOperation::SetLabel { value: value.clone() }], "label"),
+6692|                TestCommand::CommitLabel { value } => Emit::commit(vec![TestOperation::SetLabel { value: value.clone() }], "commit label"),
+6693|                // 🧪️ A deliberately mis-behaving View command: emits document operations it must not —
+6694|                // the registry-backed kind-discipline check in `dispatch_typed_command_inner` rejects it.
+6695|                TestCommand::BadView => Emit::operations(vec![TestOperation::SetCount { value: 99 }]),
+6696|                // 🧪️ B1: the utility id now arrives directly in the typed command payload (the sender
+6697|                // already knows it) rather than being read back off a host-pushed `ViewState` — echoes
+6698|                // it as an event, proving `setActiveUtility` emits no operations.
+6699|                TestCommand::SetActiveUtility { utility_id } => Emit::event(AppEvent {
+6700|                    kind: "active-utility".into(),
+6701|                    payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null),
+6702|                }),
+6703|                // 🧪️ B1: the config-op replacement for the old `ActionEmit::view_with_inverse` — a real
+6704|                // `ConfigOperation` with a real `backwards`, no ad hoc `InverseAction`.
+6705|                TestCommand::Select { id } => Emit::config(vec![TestConfigOperation::SetSelected { value: id.clone() }]),
+6706|                TestCommand::Navigate => Emit::effect(HostEffect::Navigate { uri: "semio://home".into() }),
+6707|                // 🧪️ Declared `Operation`-kind (see `contract_registry`) but deliberately emits nothing.
+6708|                TestCommand::NoopOperation => Emit::default(),
+6709|                // 🧪️ Op-less View commands that explicitly opt into a narrow `ui_scope` — fixtures for
+6710|                // the `finish_recorded`/`with_history_panel_scope` upgrade matrix.
+6711|                TestCommand::ViewNoScope => Emit { ui_scope: UiDirtyScope::None, ..Default::default() },
+6712|                TestCommand::ViewPartialScope => Emit {
+6713|                    ui_scope: UiDirtyScope::Partial {
+6714|                        window_bodies: vec!["some.window".into()],
+6715|                        panel_bodies: Vec::new(),
+6716|                        utilities: false,
+6717|                        tools: false,
+6718|                        engagements: false,
+6719|                        measures: false,
+6720|                        labels: false,
+6721|                    },
+6722|                    ..Default::default()
+6723|                },
+6724|            }
+6725|        }
+6726|
+6727|        fn render(&self, _body_key: &str, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
+6728|            ui_text(format!("count={}", doc.projection.count))
+6729|        }
+6730|
+6731|        fn clipboard_media_type(&self) -> Option<MediaType> {
+6732|            Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
+6733|        }
+6734|
+6735|        fn copy_fragment(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {
+6736|            if doc.projection.label.is_empty() {
+6737|                return Err(ClipboardError::EmptySelection);
+6738|            }
+6739|            Ok(ClipboardFragment {
+6740|                schema: self.document_schema().to_string(),
+6741|                media_type: self.clipboard_media_type().expect("declared above"),
+6742|                dsl_text: doc.projection.label.clone(),
+6743|                pack_bytes: None,

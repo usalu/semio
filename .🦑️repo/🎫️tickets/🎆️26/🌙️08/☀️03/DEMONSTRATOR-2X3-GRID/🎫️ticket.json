@@ -1,9 +1,9 @@
 {
   "title": "Demonstrator 2x3 Grid",
   "emoji": "🎪",
-  "status": "closed",
-  "description": "Extend the Entwerfen mit Bestand demonstrator from a 3-app horizontal strip into a 2x3 grid by adding Aussuchen (sourcing), Bearbeiten (process 3d) and Verfolgen (gis 2d) as fully branded apps, and generalize the cursor-driven scroll and tint effect from one axis to both.",
-  "summary": "Added aussuchen/bearbeiten/verfolgen playground variants (react 6030-6032, wgpu 6130-6132) to the sourcing, process and gis manifests and regenerated the plugin registry catalog. Authored three ShellBrands with two-step German introductions anchored to the real sourcing-pool, process-workpiece and gis2d-main windows and the demo-stock, timber-beam-joinery and reuse-map examples; brand ids extended to six and registered in SHELL_BRANDS. Generalized the landing from a 1-D vw strip to a 300vw x 200vh grid: 2-D scroll offset with cursor X and Y mapping, per-axis pane bounds, 2-D reveal rect intersection, and a 3x2 card overlay. Wired script.ts slugs, vite proxies, root dev scripts and launch.json. Renderer brand test updated to six and passing. Runtime probe confirms 300vw x 200vh strip, diagonal scroll clamped to (200vw, 100vh), 3x2 card layout, per-pane 2-D untint matching the pane's visible rect exactly, and click navigation to /verfolgen/. Full six-app wasm build is blocked by an unrelated concurrent workflows refactor breaking semio-framework-plugin against semio-framework-core.",
+  "status": "open",
+  "description": "Extend the Entwerfen mit Bestand demonstrator from a 3-app horizontal strip into a 2x3 grid by adding Aussuchen (sourcing), Bearbeiten (process 3d) and Verfolgen (gis 2d) as fully branded apps, and generalize the cursor-driven scroll and tint effect from one axis to both. Follow-up: get all six app panes loading end to end instead of white empty iframes.",
+  "summary": "",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": []
 }

@@ -5,6 +5,250 @@ use serde::{Deserialize, Serialize};
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
 
+//#region 🔖️Workshop
+/// 📏️ A stock dimension a capability rule checks against a capability's own parameter value.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+pub enum StockQuantity {
+    #[default]
+    Width,
+    Depth,
+    Height,
+    MaxDimension,
+    MinDimension,
+}
+
+/// 🪚️ Which kernel geometry effect a capability produces — `ProcessMeasure`'s three shapes are the
+/// fixed, small vocabulary every machine capability ultimately maps onto via its `MeasureRecipe`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum MeasureKind {
+    Cut,
+    Drill,
+    Attach,
+}
+
+/// ✅️ "the named stock quantity must be at least/at most the named capability parameter's value (±
+/// margin)" — a capability's rules are ANDed together, e.g. a crosscut capability needs stock width
+/// AND height above the blade diameter.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum CapabilityRule {
+    Min { quantity: StockQuantity, parameter: String, #[dsl(unit = "m")] margin: f64 },
+    Max { quantity: StockQuantity, parameter: String, #[dsl(unit = "m")] margin: f64 },
+}
+
+/// 🔧️ One named numeric parameter of a capability (e.g. blade diameter) — workshop-editable, and
+/// referenced by id from the capability's own `MeasureRecipe`/`CapabilityRule`s.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct CapabilityParameter {
+    pub id: String,
+    pub label: String,
+    #[dsl(unit = "m")]
+    pub value: f64,
+}
+
+/// 🪚️ How a capability's parameters build a kernel `ProcessMeasure` — every field names a
+/// `Capability::parameters` entry by id, resolved at measure-build time; `measure_kind()` derives the
+/// fixed Cut/Drill/Attach effect so it never needs to be stored redundantly alongside the recipe.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "recipe", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum MeasureRecipe {
+    /// ✂️ A disc-shaped cut tool sized from a blade `diameter` and `kerf` (tool thickness).
+    DiscCut { diameter: String, kerf: String },
+    /// ✂️ A blade-shaped cut tool sized from `kerf` (width), cut `length` (depth), and cut `depth` (height).
+    BladeCut { kerf: String, length: String, depth: String },
+    /// ✂️ A square pocket cut tool sized from a `diameter` (width/depth) and `depth` (height).
+    PocketCut { diameter: String, depth: String },
+    /// 🕳️ A cylindrical bore sized from `radius` and `depth`.
+    BoreDrill { radius: String, depth: String },
+    /// 🔩️ A cylindrical additive component sized from `radius` and `length` (height).
+    CylinderAttach { radius: String, length: String },
+    /// 🔩️ A box-shaped additive component sized from `width`, `depth`, and `height`.
+    BoxAttach { width: String, depth: String, height: String },
+}
+
+impl MeasureRecipe {
+    pub fn measure_kind(&self) -> MeasureKind {
+        match self {
+            MeasureRecipe::DiscCut { .. } | MeasureRecipe::BladeCut { .. } | MeasureRecipe::PocketCut { .. } => MeasureKind::Cut,
+            MeasureRecipe::BoreDrill { .. } => MeasureKind::Drill,
+            MeasureRecipe::CylinderAttach { .. } | MeasureRecipe::BoxAttach { .. } => MeasureKind::Attach,
+        }
+    }
+}
+
+/// 🌉️ Same reasoning/idiom as `SolidSpec`'s and `ProcessMeasure`'s hand `dsl::DslField` impls (see
+/// `SolidSpec`'s doc comment) — `MeasureRecipe` is a `DslEnum` (`DslVariants` only), and
+/// `Capability::recipe` is a REQUIRED, never-optional field that must stay a bare `MeasureRecipe`.
+impl dsl::DslField for MeasureRecipe {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Statements(<MeasureRecipe as dsl::DslVariants>::variants())
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Statements(vec![<MeasureRecipe as dsl::DslVariants>::to_named_record(self)])
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Statements(items) if items.len() == 1 => <MeasureRecipe as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|e| e.message),
+            other => Err(format!("expected exactly 1 tagged recipe value, found {other:?}")),
+        }
+    }
+}
+
+/// 🪚️ One thing a machine can do; every capability turns into a step: `recipe` fixes the geometric
+/// effect and how it's sized, `parameters` size the tool, `rules` gate legality against the stock.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Capability {
+    pub id: String,
+    pub label: String,
+    pub icon_id: String,
+    pub recipe: MeasureRecipe,
+    #[serde(default)]
+    pub parameters: Vec<CapabilityParameter>,
+    #[serde(default)]
+    #[dsl(statements, block)]
+    pub rules: Vec<CapabilityRule>,
+}
+
+/// 🛠️ A machine in the document's workshop — an embedded snapshot, never a reference; consistent with
+/// `StepOrigin`'s never-resolve invariant (see its doc comment), and robust to catalog drift: editing
+/// or removing an installed catalog can never retroactively change an already-configured workshop.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkshopMachine {
+    pub id: String,
+    pub label: String,
+    pub icon_id: String,
+    /// 🏷️ Which installed catalog this snapshot was seeded from — informational only, never resolved
+    /// (a machine stays fully usable after its source catalog is uninstalled).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_id: Option<String>,
+    #[serde(default)]
+    pub capabilities: Vec<Capability>,
+}
+
+impl Identified<String> for WorkshopMachine {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+/// 🩹️ Sparse edit for a `WorkshopMachine` — `None` fields are left untouched.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkshopMachinePatch {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub capabilities: Option<Vec<Capability>>,
+}
+
+impl Patchable<WorkshopMachinePatch> for WorkshopMachine {
+    fn apply_patch(&mut self, patch: &WorkshopMachinePatch) {
+        if let Some(label) = &patch.label {
+            self.label = label.clone();
+        }
+        if let Some(icon_id) = &patch.icon_id {
+            self.icon_id = icon_id.clone();
+        }
+        if let Some(capabilities) = &patch.capabilities {
+            self.capabilities = capabilities.clone();
+        }
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<WorkshopMachinePatch> {
+        let patch = WorkshopMachinePatch {
+            label: (self.label != other.label).then(|| other.label.clone()),
+            icon_id: (self.icon_id != other.icon_id).then(|| other.icon_id.clone()),
+            capabilities: (self.capabilities != other.capabilities).then(|| other.capabilities.clone()),
+        };
+        (patch != WorkshopMachinePatch::default()).then_some(patch)
+    }
+}
+
+/// 🏭️ The document's configured workshop: the machines available to build steps from.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Workshop {
+    #[serde(default)]
+    pub machines: Vec<WorkshopMachine>,
+}
+
+impl Default for Workshop {
+    fn default() -> Self {
+        Self { machines: generic_machines() }
+    }
+}
+
+/// 📦️ The three built-in generic machines (saw/drill/attacher), reproducing the same default tool
+/// sizes `ProcessMeasure` used before capabilities existed — pure data with no catalog dependency, so
+/// every document (including ones deserialized without a `workshop` field) always has a working
+/// workshop and the utility bar's click-to-place cut/drill/attach never dead-ends.
+pub fn generic_machines() -> Vec<WorkshopMachine> {
+    vec![
+        WorkshopMachine {
+            id: "saw".into(),
+            label: "Generic Saw".into(),
+            icon_id: "scissors".into(),
+            catalog_id: None,
+            capabilities: vec![Capability {
+                id: "cut".into(),
+                label: "Cut".into(),
+                icon_id: "scissors".into(),
+                recipe: MeasureRecipe::BladeCut { kerf: "kerf".into(), length: "length".into(), depth: "depth".into() },
+                parameters: vec![
+                    CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.05 },
+                    CapabilityParameter { id: "length".into(), label: "Length".into(), value: 0.5 },
+                    CapabilityParameter { id: "depth".into(), label: "Depth".into(), value: 0.5 },
+                ],
+                rules: Vec::new(),
+            }],
+        },
+        WorkshopMachine {
+            id: "drill".into(),
+            label: "Generic Drill".into(),
+            icon_id: "circle-dot".into(),
+            catalog_id: None,
+            capabilities: vec![Capability {
+                id: "drill".into(),
+                label: "Drill".into(),
+                icon_id: "circle-dot".into(),
+                recipe: MeasureRecipe::BoreDrill { radius: "radius".into(), depth: "depth".into() },
+                parameters: vec![CapabilityParameter { id: "radius".into(), label: "Radius".into(), value: 0.05 }, CapabilityParameter { id: "depth".into(), label: "Depth".into(), value: 0.3 }],
+                rules: Vec::new(),
+            }],
+        },
+        WorkshopMachine {
+            id: "attacher".into(),
+            label: "Generic Attacher".into(),
+            icon_id: "plus".into(),
+            catalog_id: None,
+            capabilities: vec![Capability {
+                id: "attach".into(),
+                label: "Attach".into(),
+                icon_id: "plus".into(),
+                recipe: MeasureRecipe::CylinderAttach { radius: "radius".into(), length: "length".into() },
+                parameters: vec![CapabilityParameter { id: "radius".into(), label: "Radius".into(), value: 0.03 }, CapabilityParameter { id: "length".into(), label: "Length".into(), value: 0.2 }],
+                rules: Vec::new(),
+            }],
+        },
+    ]
+}
+
+/// 🧩️ A machine catalog: contributes machines (with capabilities) the workshop configurator can
+/// install into a document's workshop. Implemented by the built-in generic catalog (`process_3d_engine`)
+/// and by each domain extension crate (`process-machines-wood`, `-concrete`, `-metal`, `-robotic`).
+pub trait MachineCatalog {
+    fn catalog_id(&self) -> &'static str;
+    fn label(&self) -> &'static str;
+    fn icon_id(&self) -> &'static str;
+    fn machines(&self) -> Vec<WorkshopMachine>;
+}
+//#endregion 🔖️Workshop
+
 //#region 🔖️Document
 fn default_axis_z() -> [f64; 3] {
     [0.0, 0.0, 1.0]
@@ -137,15 +381,15 @@ impl dsl::DslField for ProcessMeasure {
     }
 }
 
-/// 🏭️ Provenance: which module/machine/modification-kind produced a step (display + future re-validation).
+/// 🏭️ Provenance: which workshop machine/capability produced a step (display + future re-validation).
 /// Purely informational — kernel replay only ever reads `ProcessMeasure`, never resolves this back to a
-/// catalog entry, so an older/renamed catalog can never retroactively change already-authored geometry.
+/// workshop entry, so editing or removing the machine/capability can never retroactively change
+/// already-authored geometry.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct StepOrigin {
-    pub module_id: String,
     pub machine_id: String,
-    pub modification_kind_id: String,
+    pub capability_id: String,
 }
 
 /// 🎞️ One ordered step of the process timeline.
@@ -215,11 +459,14 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
     }
 }
 
-/// 🪚️ Process 3d projection: stock + ordered steps + timeline cursor.
+/// 🪚️ Process 3d projection: workshop + stock + ordered steps + timeline cursor.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "process3d", layout = "lines")]
 pub struct Process3dDocument {
+    #[serde(default)]
+    #[dsl(block)]
+    pub workshop: Workshop,
     #[serde(default)]
     #[dsl(block)]
     pub stock: Stock,
@@ -267,5 +514,66 @@ mod tests {
         let parsed: SolidSpec = serde_json::from_value(json).expect("deserialize");
         assert_eq!(parsed, solid);
     }
+
+    //#region 🔖️WorkshopTests
+    fn sample_capability() -> Capability {
+        Capability {
+            id: "crosscut".into(),
+            label: "Crosscut".into(),
+            icon_id: "scissors".into(),
+            recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+            parameters: vec![CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.184 }, CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.002 }],
+            rules: vec![
+                CapabilityRule::Min { quantity: StockQuantity::Width, parameter: "bladeDiameter".into(), margin: 0.0 },
+                CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "bladeDiameter".into(), margin: 0.05 },
+            ],
+        }
+    }
+
+    fn sample_workshop() -> Workshop {
+        Workshop { machines: vec![WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![sample_capability()] }] }
+    }
+
+    /// 📜️ The document's deepest new nesting (workshop → machines → capabilities → parameters/rules,
+    /// 3 `Vec` levels deep) must round-trip through the DSL text codec — the riskiest new grammar surface.
+    #[test]
+    fn workshop_dsl_round_trips_through_document() {
+        let document = Process3dDocument { workshop: sample_workshop(), ..Process3dDocument::default() };
+        store::test_support::assert_dsl_round_trip(&document);
+    }
+
+    #[test]
+    fn default_workshop_has_the_three_generic_machines() {
+        let workshop = Workshop::default();
+        let ids: Vec<&str> = workshop.machines.iter().map(|machine| machine.id.as_str()).collect();
+        assert_eq!(ids, ["saw", "drill", "attacher"]);
+        assert!(workshop.machines.iter().all(|machine| machine.catalog_id.is_none()));
+    }
+
+    #[test]
+    fn document_without_workshop_field_deserializes_to_generic_workshop() {
+        let legacy_json = r#"{"stock":{"id":"stock","label":"Stock","solid":{"kind":"box","width":1.0,"depth":1.0,"height":1.0},"pose":{"position":[0.0,0.0,0.0],"axis":[0.0,0.0,1.0],"angle":0.0}},"steps":[],"resolvedUpTo":null}"#;
+        let document: Process3dDocument = serde_json::from_str(legacy_json).expect("legacy document json");
+        assert_eq!(document.workshop, Workshop::default());
+    }
+
+    #[test]
+    fn workshop_machine_patch_apply_and_diff_round_trip() {
+        let mut machine = WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![sample_capability()] };
+        let original = machine.clone();
+        let patch = WorkshopMachinePatch { label: Some("Big Saw".into()), icon_id: None, capabilities: None };
+        machine.apply_patch(&patch);
+        assert_eq!(machine.label, "Big Saw");
+        assert_eq!(machine.capabilities, original.capabilities);
+        let diff = original.diff_patch(&machine).expect("diff");
+        assert_eq!(diff, patch);
+    }
+
+    #[test]
+    fn workshop_machine_patch_diff_is_none_for_identical_machines() {
+        let machine = WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: None, capabilities: vec![] };
+        assert!(machine.diff_patch(&machine).is_none());
+    }
+    //#endregion 🔖️WorkshopTests
 }
 //#endregion 🧪️Tests

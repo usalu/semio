@@ -1,0 +1,145 @@
+===== around 8338 =====
+8281|    // anchor's active leaf already belongs to Settings, so browsing Theme/Settings there doesn't get stomped.
+8282|    if (mobile) {
+8283|      if (settingsRightTabs.some((tab) => tab.id === mobilePanelPath[0])) return;
+8284|      const resolved = findPanelTabPath(mobilePanelTabs, detailsOverrideTabId);
+8285|      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+8286|      return;
+8287|    }
+8288|    if (settingsRightTabs.some((tab) => tab.id === panels[detailsOverrideAnchor].path[0])) return;
+8289|    const resolved = findPanelTabPath(dock.anchors[detailsOverrideAnchor], detailsOverrideTabId);
+8290|    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: detailsOverrideAnchor, value: resolved });
+8291|  }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels, settingsRightTabs, mobile, mobilePanelTabs, mobilePanelPath]);
+8292|  //#endregion 🧭️DockAssembly
+8293|
+8294|  const mobilePanel = useMemo(() => {
+8295|    if (mobilePanelTabs.length === 0) return undefined;
+8296|    return {
+8297|      visible: mobilePanelVisible,
+8298|      tabs: mobilePanelTabs,
+8299|      activeTabPath: mobilePanelPath,
+8300|      onActiveTabPathChange: (path: readonly string[]) => {
+8301|        dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
+8302|        const tabId = path[path.length - 1];
+8303|        // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
+8304|        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
+8305|          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
+8306|        }
+8307|      },
+8308|      pathMemory: panelPathMemory,
+8309|      onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+8310|      treeOpenStates,
+8311|      onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
+8312|      // ♻️ Lazy tool/command trees read measures + active tool from refs — revision forces re-resolve.
+8313|      treeContentRevision: { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey },
+8314|    };
+8315|  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId, activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey]);
+8316|
+8317|  useEffect(() => {
+8318|    if (exampleOptions.length === 0) return;
+8319|    dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: (current) => (!current || exampleOptions.some((option) => option.id === current) ? current : "") });
+8320|  }, [exampleOptions, session?.app.id, session?.pluginId]);
+8321|
+8322|  // 🎛️ Announces the boot example to the fresh session exactly once per instance. When nothing is
+8323|  // locked/defaulted, seed the first registered example so the dropdown matches the plugin default
+8324|  // document (e.g. procedural3d hexagonal column) — same rule as wgpu `sync_session_chrome`.
+8325|  // Studio-mode routes load documents via `applyShellUri`/`openSpace`; never boot-override those.
+8326|  useEffect(() => {
+8327|    if (exampleOptions.length === 0 || !session) return;
+8328|    if (studioMode) {
+8329|      noExampleResetInstanceIdRef.current = session.instanceId;
+8330|      return;
+8331|    }
+8332|    if (noExampleResetInstanceIdRef.current === session.instanceId) return;
+8333|    noExampleResetInstanceIdRef.current = session.instanceId;
+8334|    const exampleId = resolveBootExampleId(activeExampleId, exampleOptions, defaults.exampleId);
+8335|    if (exampleId !== activeExampleId) {
+8336|      dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+8337|    }
+8338|    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
+8339|  }, [activeExampleId, defaults.exampleId, exampleOptions, onAction, session, studioMode]);
+8340|
+8341|  //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
+8342|  // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
+8343|  // {@link PANEL_TAB_BAR_HOSTS}) and the floating `Panel` itself (`buildPanelProps`) — the two hosts of the
+8344|  // SAME anchor always read/write the exact same controlled state.
+8345|  const buildPanelSelectionProps = useCallback(
+8346|    (anchor: Anchor): PanelTabSelectionOptions => ({
+8347|      tabs: dock.anchors[anchor],
+8348|      visible: panels[anchor].visible,
+8349|      onVisibleChange: (value: boolean) => {
+8350|        dispatch({ type: "SET_PANEL_VISIBLE", anchor, value });
+8351|        noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor, visible: value });
+8352|      },
+8353|      activeTabPath: panelActivePaths[anchor],
+8354|      onActiveTabPathChange: (path: readonly string[]) => {
+8355|        const pathChanged = (panelActivePaths[anchor] ?? []).join("/") !== path.join("/");
+8356|        dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
+8357|        // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
+8358|        // next hierarchy level up only makes sense under its own category's command list (mirrors the old
+8359|        // dedicated `SET_COMMAND_CATEGORY` reducer case, now expressed at the generic path-change call site
+8360|        // since category-active state itself is just this anchor's `activeTabPath`). Categories sit under
+8361|        // the Command branch, so compare the category segment (path[1]), not the shared branch root.
+8362|        if (anchor === "bottom-middle" && panels[anchor].path[1] !== path[1]) {
+8363|          dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
+8364|        }
+8365|        const tabId = path[path.length - 1];
+8366|        // 🛠️ Selecting a mode-tool leaf (`tool.<id>`) activates that tool so its measures render immediately
+8367|        // under the tab — no nested Fill toggle inside the tree.
+8368|        if (anchor === "bottom-middle" && session && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+8369|          const selectedToolId = toolIdFromPanelTabId(tabId);
+8370|          if (selectedToolId && selectedToolId !== activeToolIdRef.current) {
+8371|            onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: selectedToolId } });
+8372|          }
+8373|        }
+8374|        // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
+8375|        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+8376|          onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
+8377|        }
+8378|        if (pathChanged && tabId) noteShellCommand("shell.panelTab", shellLabel("ui.shellCommand.panelTab"), { anchor, tabId });
+8379|      },
+8380|      pathMemory: panelPathMemory,
+8381|      onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
+8382|    }),
+8383|    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, studioMode, hostAppId, noteShellCommand],
+8384|  );
+8385|  //#endregion 🎛️PanelTabBarHosting
+8386|
+8387|  const navbarItems = useMemo((): NavbarItem[] => {
+8388|    if (!session) return [];
+8389|    const logoAndTitle = (
+8390|      <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
+8391|        {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
+8392|        <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
+8393|          {appDocumentLabel(resolveAppDocument(session.app, uiTerminology))}
+8394|        </span>
+8395|      </div>
+8396|    );
+8397|    const showExampleSelect = exampleOptions.length > 0 && !locks.exampleId && (!studioMode || session.app.id !== landingAppId);
+8398|    // 📱️ Mobile has no room for tab bars, example selector, or mode switcher in the navbar — just the
+8399|    // logo/title and the single toggle for the merged mobile panel (the two dropped controls resurface as
+8400|    // the panel's synthetic "App" tab, see `mobilePanelTabs`).
+
+===== createMapSession body =====
+9588|export async function createMapSession(): Promise<MapWasmSession> {
+9589|  return createEngineSession<MapWasmSession>("tiled-map", "MapSession");
+9590|}
+9591|//#endregion MapSession
+9592|
+9593|//#region TerrainSession
+9594|export type TerrainWasmSession = {
+REF|462|  encodeActionWire,
+REF|2252|      encodeActionWire({ controllerId: baseSession.app.controllerId, action, args }),
+REF|6088|      await plugin.handleAction(pluginInstanceId, encodeActionWire({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
+REF|6399|        const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
+REF|6405|        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+REF|6408|        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
+REF|6621|            .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)
+REF|6645|            .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)
+REF|6755|        .handleAction(targetSession.instanceId, encodeActionWire(action), dispatchViewState)
+REF|9171|  const frames = await client.command(encodePackValue(envelope), viewState);
+ENV|6572|          tutorialRecorderRef.current?.recordEvent({ kind: "action", action: action.action, args: action.args as Record<string, unknown> | undefined });
+ENV|9160|type WireCommandEnvelope = { readonly kind: "action" | "command"; readonly name: string; readonly args: unknown };
+ENV|9170|async function performCommand(client: AppChannelClient, envelope: WireCommandEnvelope, viewState: unknown): Promise<InvocationResponse> {
+ENV|9186|      throw new Error(`[DEBUG] ${envelope.kind} '${envelope.name}' failed (${frame.Error.code}): ${frame.Error.message}`);
+ENV|9309|      return performCommand(requireChannel(instanceId), { kind: "action", name: parsed.action, args: parsed.args }, viewState);

@@ -1,16 +1,20 @@
 //! ⚡️ Process 3d app — operation enum + laws (constitutional: op).
 
-use process_3d::{Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, Stock, StepOrigin};
+use process_3d::{Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, Stock, StepOrigin, WorkshopMachine, WorkshopMachinePatch};
 use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Operation, OperationDiff, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Operations
-/// 🪚️ Process 3d document operation: an ordered-step collection edit, a stock swap, or a cursor move.
+/// 🪚️ Process 3d document operation: an ordered-step collection edit, a workshop-machines collection
+/// edit, a stock swap, or a cursor move.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Process3dOperation {
     Steps {
         collection: CollectionOperation<String, ProcessStep, ProcessStepPatch>,
+    },
+    Machines {
+        collection: CollectionOperation<String, WorkshopMachine, WorkshopMachinePatch>,
     },
     SetStock {
         stock: Stock,
@@ -31,6 +35,8 @@ pub struct Process3dDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub steps: Option<CollectionOperation<String, ProcessStep, ProcessStepPatch>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub machines: Option<CollectionOperation<String, WorkshopMachine, WorkshopMachinePatch>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stock: Option<Stock>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<Option<usize>>,
@@ -46,6 +52,9 @@ impl OperationDiff<Process3dDocument> for Process3dDiff {
         let mut next = projection.clone();
         if let Some(operation) = &self.steps {
             apply_collection_operation(&mut next.steps, operation);
+        }
+        if let Some(operation) = &self.machines {
+            apply_collection_operation(&mut next.workshop.machines, operation);
         }
         if let Some(stock) = &self.stock {
             next.stock = stock.clone();
@@ -63,12 +72,16 @@ impl OperationDiff<Process3dDocument> for Process3dDiff {
         if other.document.is_some() {
             self.document = other.document;
             self.steps = None;
+            self.machines = None;
             self.stock = None;
             self.cursor = None;
             return;
         }
         if other.steps.is_some() {
             self.steps = other.steps;
+        }
+        if other.machines.is_some() {
+            self.machines = other.machines;
         }
         if other.stock.is_some() {
             self.stock = other.stock;
@@ -85,6 +98,7 @@ impl Operation<Process3dDocument> for Process3dOperation {
     fn diff(&self, _projection: &Process3dDocument) -> Self::Diff {
         match self {
             Process3dOperation::Steps { collection } => Process3dDiff { steps: Some(collection.clone()), ..Default::default() },
+            Process3dOperation::Machines { collection } => Process3dDiff { machines: Some(collection.clone()), ..Default::default() },
             Process3dOperation::SetStock { stock } => Process3dDiff { stock: Some(stock.clone()), ..Default::default() },
             Process3dOperation::SetCursor { resolved_up_to } => Process3dDiff { cursor: Some(*resolved_up_to), ..Default::default() },
             Process3dOperation::SetDocument { document } => Process3dDiff { document: Some(document.clone()), ..Default::default() },
@@ -95,6 +109,9 @@ impl Operation<Process3dDocument> for Process3dOperation {
         match self {
             Process3dOperation::Steps { collection } => {
                 vec![Process3dOperation::Steps { collection: invert_collection_operation(&projection.steps, collection) }]
+            }
+            Process3dOperation::Machines { collection } => {
+                vec![Process3dOperation::Machines { collection: invert_collection_operation(&projection.workshop.machines, collection) }]
             }
             Process3dOperation::SetStock { .. } => vec![Process3dOperation::SetStock { stock: projection.stock.clone() }],
             Process3dOperation::SetCursor { .. } => vec![Process3dOperation::SetCursor { resolved_up_to: projection.resolved_up_to }],
@@ -185,6 +202,22 @@ enum Process3dOperationDsl {
         #[dsl(block)]
         patch: ProcessStepPatchDsl,
     },
+    MachinesAdd {
+        index: usize,
+        #[dsl(block)]
+        item: WorkshopMachine,
+    },
+    MachinesRemove { id: String },
+    MachinesMove {
+        id: String,
+        #[dsl(key = "to")]
+        to_index: usize,
+    },
+    MachinesPatch {
+        id: String,
+        #[dsl(block)]
+        patch: WorkshopMachinePatch,
+    },
     #[dsl(key = "stock")]
     SetStock {
         #[dsl(block)]
@@ -207,6 +240,10 @@ fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperat
         Process3dOperation::Steps { collection: CollectionOperation::Patch { id, patch } } => {
             Process3dOperationDsl::StepsPatch { id: id.clone(), patch: process_step_patch_to_dsl(patch) }
         }
+        Process3dOperation::Machines { collection: CollectionOperation::Add { id: _id, item, at } } => Process3dOperationDsl::MachinesAdd { index: *at, item: item.clone() },
+        Process3dOperation::Machines { collection: CollectionOperation::Remove { id } } => Process3dOperationDsl::MachinesRemove { id: id.clone() },
+        Process3dOperation::Machines { collection: CollectionOperation::Move { id, to } } => Process3dOperationDsl::MachinesMove { id: id.clone(), to_index: *to },
+        Process3dOperation::Machines { collection: CollectionOperation::Patch { id, patch } } => Process3dOperationDsl::MachinesPatch { id: id.clone(), patch: patch.clone() },
         Process3dOperation::SetStock { stock } => Process3dOperationDsl::SetStock { stock: stock.clone() },
         Process3dOperation::SetCursor { resolved_up_to } => Process3dOperationDsl::SetCursor { value: *resolved_up_to },
         Process3dOperation::SetDocument { document } => Process3dOperationDsl::SetDocument { document: document.clone() },
@@ -219,6 +256,10 @@ fn process3d_operation_from_dsl(operation: Process3dOperationDsl) -> Process3dOp
         Process3dOperationDsl::StepsRemove { id } => Process3dOperation::Steps { collection: CollectionOperation::Remove { id } },
         Process3dOperationDsl::StepsMove { id, to_index } => Process3dOperation::Steps { collection: CollectionOperation::Move { id, to: to_index } },
         Process3dOperationDsl::StepsPatch { id, patch } => Process3dOperation::Steps { collection: CollectionOperation::Patch { id, patch: process_step_patch_from_dsl(patch) } },
+        Process3dOperationDsl::MachinesAdd { index, item } => Process3dOperation::Machines { collection: CollectionOperation::Add { id: item.id.clone(), item, at: index } },
+        Process3dOperationDsl::MachinesRemove { id } => Process3dOperation::Machines { collection: CollectionOperation::Remove { id } },
+        Process3dOperationDsl::MachinesMove { id, to_index } => Process3dOperation::Machines { collection: CollectionOperation::Move { id, to: to_index } },
+        Process3dOperationDsl::MachinesPatch { id, patch } => Process3dOperation::Machines { collection: CollectionOperation::Patch { id, patch } },
         Process3dOperationDsl::SetStock { stock } => Process3dOperation::SetStock { stock },
         Process3dOperationDsl::SetCursor { value } => Process3dOperation::SetCursor { resolved_up_to: value },
         Process3dOperationDsl::SetDocument { document } => Process3dOperation::SetDocument { document },
@@ -325,7 +366,7 @@ impl Operation<process_3d_engine::Process3dConfig> for Process3dConfigOperation 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use process_3d::{empty_process3d_projection, Pose, SolidSpec};
+    use process_3d::{empty_process3d_projection, Pose, SolidSpec, Workshop};
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
@@ -336,17 +377,37 @@ mod tests {
     }
 
     fn drill_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { module_id: "wood".into(), machine_id: "circularSaw".into(), modification_kind_id: "crosscut".into() }), measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() } }
+        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }), measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() } }
     }
 
     fn attach_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Attach".into(), enabled: false, origin: None, measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.05 }, pose: Pose { position: [0.1, -0.2, 0.3], axis: [0.0, 1.0, 0.0], angle: 1.2 } } }
     }
 
-    /// 📜️ A document exercising every `SolidSpec`/`ProcessMeasure` shape and both `origin` states, so
-    /// the OpText round trip covers the full grammar, not just the happy path.
+    fn circular_saw_machine() -> WorkshopMachine {
+        use process_3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity};
+        WorkshopMachine {
+            id: "circularSaw".into(),
+            label: "Circular Saw".into(),
+            icon_id: "scissors".into(),
+            catalog_id: Some("wood".into()),
+            capabilities: vec![Capability {
+                id: "crosscut".into(),
+                label: "Crosscut".into(),
+                icon_id: "scissors".into(),
+                recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+                parameters: vec![CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.184 }, CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.002 }],
+                rules: vec![CapabilityRule::Min { quantity: StockQuantity::Width, parameter: "bladeDiameter".into(), margin: 0.0 }],
+            }],
+        }
+    }
+
+    /// 📜️ A document exercising every `SolidSpec`/`ProcessMeasure` shape, both `origin` states, and a
+    /// non-default workshop machine, so the OpText round trip covers the full grammar including the
+    /// 3-deep workshop nesting, not just the happy path.
     fn sample_document() -> Process3dDocument {
         Process3dDocument {
+            workshop: Workshop { machines: vec![circular_saw_machine()] },
             stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose { position: [0.0, 0.0, 0.12], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             steps: vec![cut_step("cut-1"), drill_step("drill-1"), attach_step("attach-1")],
             resolved_up_to: Some(2),
@@ -387,7 +448,7 @@ mod tests {
             label: Some("Renamed".into()),
             enabled: Some(false),
             measure: Some(ProcessMeasure::Drill { radius: 0.03, depth: 0.4, pose: Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.7 } }),
-            origin: Some(Some(StepOrigin { module_id: "wood".into(), machine_id: "tableSaw".into(), modification_kind_id: "crosscut".into() })),
+            origin: Some(Some(StepOrigin { machine_id: "tableSaw".into(), capability_id: "crosscut".into() })),
         };
         store::test_support::assert_op_line_round_trip(&Process3dOperation::Steps { collection: CollectionOperation::Patch { id: "cut-1".into(), patch } });
     }
@@ -422,6 +483,46 @@ mod tests {
     #[test]
     fn process3d_op_text_round_trips_set_document() {
         store::test_support::assert_op_line_round_trip(&Process3dOperation::SetDocument { document: sample_document() });
+    }
+
+    #[test]
+    fn process3d_op_text_round_trips_machines_add() {
+        store::test_support::assert_op_line_round_trip(&Process3dOperation::Machines { collection: CollectionOperation::Add { id: "circularSaw".into(), item: circular_saw_machine(), at: 0 } });
+    }
+
+    #[test]
+    fn process3d_op_text_round_trips_machines_remove() {
+        store::test_support::assert_op_line_round_trip(&Process3dOperation::Machines { collection: CollectionOperation::Remove { id: "circularSaw".into() } });
+    }
+
+    #[test]
+    fn process3d_op_text_round_trips_machines_move() {
+        store::test_support::assert_op_line_round_trip(&Process3dOperation::Machines { collection: CollectionOperation::Move { id: "circularSaw".into(), to: 2 } });
+    }
+
+    #[test]
+    fn process3d_op_text_round_trips_machines_patch_full() {
+        use process_3d::WorkshopMachinePatch;
+        let patch = WorkshopMachinePatch { label: Some("Big Saw".into()), icon_id: Some("scissors".into()), capabilities: Some(circular_saw_machine().capabilities) };
+        store::test_support::assert_op_line_round_trip(&Process3dOperation::Machines { collection: CollectionOperation::Patch { id: "circularSaw".into(), patch } });
+    }
+
+    #[test]
+    fn process3d_op_text_round_trips_machines_patch_empty() {
+        use process_3d::WorkshopMachinePatch;
+        store::test_support::assert_op_line_round_trip(&Process3dOperation::Machines { collection: CollectionOperation::Patch { id: "circularSaw".into(), patch: WorkshopMachinePatch::default() } });
+    }
+
+    #[test]
+    fn backwards_of_machines_add_is_remove() {
+        let projection = empty_process3d_projection();
+        let operation = Process3dOperation::Machines { collection: CollectionOperation::Add { id: "circularSaw".into(), item: circular_saw_machine(), at: 0 } };
+        let inverse = operation.backwards(&projection);
+        assert_eq!(inverse.len(), 1);
+        match &inverse[0] {
+            Process3dOperation::Machines { collection: CollectionOperation::Remove { id } } => assert_eq!(id, "circularSaw"),
+            _ => panic!("expected Machines::Remove"),
+        }
     }
     //#endregion 🔖️OpTextTests
 

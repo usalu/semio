@@ -30,7 +30,7 @@ use semio_framework_plugin::{
     apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene,
     merge_world_selection_ids, SelectionSet, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_inspector_stepper_field,
-    ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json,
+    ui_inspector_vec3_group, ui_text, world3d_camera_projection_json, world3d_chunking_json,
     world3d_environment_json, world3d_mesh_id_from_url, world3d_projection_action_moves_pose,
     world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json,
     world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabelsOverlay,
@@ -1238,7 +1238,7 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
         format!("cad-object:{id_suffix}:{}", object.id),
         object.label.clone(),
         Some("box"),
-        cad_action("setSelection", Some(json!({ "objectIds": [object.id] }))),
+        cad_action("worldSelect", Some(json!({ "ids": [object.id], "merge": "replace" }))),
     );
     if !object.typology.is_empty() {
         item.description = Some(typology_label(&object.typology, labels).to_string());
@@ -1559,11 +1559,25 @@ fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_uti
             return ui_inspector_groups_to_tree(&[node_inspector_group(node, labels)]);
         }
     }
-    ui_stack_vertical(vec![
-        ui_text(format!("{}: {}", labels.schema, envelope.document.schema)),
-        ui_text(format!("{}: {}", labels.utility, active_utility.unwrap_or(labels.none_placeholder))),
-        ui_text(format!("{}: {}", labels.objects, envelope.document.objects.len())),
-    ])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        id: "cad-play-inspector.empty".into(),
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into(),
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        fields: vec![
+            ui_inspector_readonly_field("cad-play-inspector.schema", labels.schema, &envelope.document.schema),
+            ui_inspector_readonly_field(
+                "cad-play-inspector.utility",
+                labels.utility,
+                active_utility.unwrap_or(labels.none_placeholder),
+            ),
+            ui_inspector_readonly_field(
+                "cad-play-inspector.objects",
+                labels.objects,
+                envelope.document.objects.len().to_string(),
+            ),
+        ],
+    }])
 }
 
 
@@ -2441,15 +2455,14 @@ impl DocumentApp for CadPlayApp {
                 }
                 Emit::config(vec![snapshot_of(&runtime)])
             }
-            CadCommand::SetSelection { object_ids } => {
-                runtime.selected_object_ids = SelectionSet::from(object_ids.clone());
+            CadCommand::SetSelection { mode, ids, object_id, merge } => {
                 runtime.selected_node_ids.clear();
                 runtime.selected_primitive_id = None;
                 runtime.selected_primitive_kind = None;
                 runtime.selected_reference_model_definition_id = None;
                 runtime.selected_reference_id = None;
-                runtime.active_object_id = runtime.selected_object_ids.first().map(str::to_string);
-                clear_component_selection(&mut runtime);
+                let resolved_object_id = object_id.clone().or_else(|| resolve_active_object_id(&runtime));
+                apply_component_selection(&mut runtime, &mode, &ids, &merge, resolved_object_id.as_deref());
                 Emit::config(vec![snapshot_of(&runtime)])
             }
             CadCommand::SetNodeSelection { node_ids } => {
@@ -3214,7 +3227,7 @@ mod tests {
     use cad_document_engine::{
         align_mesh_to_fixture_centroid, cad_document_from_dwg, CAD_DEFAULT_TYPOLOGY_EXTENT,
         CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_WIDTH_WORLD,
-        CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
+        CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
     };
     use semio_framework_plugin::{ActionMeta, AppActionRegistry, HistoryView, PluginApp, UiMenuRef, VcsDocumentApp, ViewState};
     use protocol::{Operation, OperationDiff};
@@ -3246,6 +3259,22 @@ mod tests {
         let str_vec_field = |key: &str| -> Vec<String> {
             args.and_then(|value| value.get(key)).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
         };
+        let u32_vec_field = |key: &str| -> Vec<u32> {
+            args.and_then(|value| value.get(key))
+                .and_then(|value| {
+                    if let Some(array) = value.as_array() {
+                        Some(
+                            array
+                                .iter()
+                                .filter_map(|entry| entry.as_u64().map(|number| number as u32))
+                                .collect(),
+                        )
+                    } else {
+                        serde_json::from_value(value.clone()).ok()
+                    }
+                })
+                .unwrap_or_default()
+        };
         let value_string = || -> Option<String> {
             args.and_then(|value| value.get("value")).and_then(|value| match value {
                 Value::String(text) => Some(text.clone()),
@@ -3261,7 +3290,12 @@ mod tests {
             "setLocale" => CadCommand::SetLocale { value: str_field("value").unwrap_or_default() },
             "setTerminology" => CadCommand::SetTerminology { value: str_field("value").unwrap_or_default() },
             "setDislocateOption" => CadCommand::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") },
-            "setSelection" => CadCommand::SetSelection { object_ids: str_vec_field("objectIds") },
+            "setSelection" => CadCommand::SetSelection {
+                mode: str_field("mode").unwrap_or_else(|| "mesh".into()),
+                ids: u32_vec_field("ids"),
+                object_id: str_field("objectId"),
+                merge: str_field("merge").unwrap_or_else(|| "replace".into()),
+            },
             "setNodeSelection" => CadCommand::SetNodeSelection { node_ids: str_vec_field("nodeIds") },
             "setCamera" => CadCommand::SetCamera {
                 pane: str_field("surfaceId"),
@@ -3494,11 +3528,7 @@ mod tests {
             .get(CAD_MODEL_DEFINITION_ENERGY)
             .and_then(|references| references.first())
             .expect("energy reference");
-        assert!(
-            reference.origin[2] > 2.5,
-            "reference z {} should match slab elevation",
-            reference.origin[2]
-        );
+        assert_eq!(reference.origin[2], CAD_FOREST_REFERENCE_PLANE_Z, "reference must stay on the CAD ground datum");
         assert!(
             (reference.origin[0] - (-9.7)).abs() < 1e-9,
             "reference x {} should be base + 50% width (right)",
@@ -3790,7 +3820,7 @@ mod tests {
     fn gumball_fields_present_when_selection_active() {
         let app = CadPlayApp::default();
         let scene = default_document();
-        let emit = drive(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
+        let emit = drive(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })));
         let runtime = runtime_after(&emit, &CadConfig::default());
         let selection = world_selection_json(
             &scene,
@@ -3861,7 +3891,7 @@ mod tests {
         let app = CadPlayApp::default();
         let scene = default_document();
         let base_config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
-        let emit = drive_with_config(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })), &base_config);
+        let emit = drive_with_config(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })), &base_config);
         let config = config_after(&emit, &base_config);
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
@@ -3886,7 +3916,7 @@ mod tests {
 
         assert!(context_menu_direct(&app, &doc, &empty_config, &registry).is_empty(), "no selection must fall through to the shell's window-level menu");
 
-        let emit = drive(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
+        let emit = drive(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })));
         let config = config_after(&emit, &empty_config);
         let items = context_menu_direct(&app, &doc, &config, &registry);
         assert!(items.iter().any(|item| item.id == "translateSelection" && item.label.is_some()), "labels must resolve from the registry: {items:?}");
@@ -4050,6 +4080,30 @@ mod tests {
         assert!(selection.contains("\"selectionMode\":\"edge\""));
         assert!(selection.contains("\"componentIds\":[7]"));
         assert!(selection.contains(&format!("\"activeObjectId\":\"{object_id}\"")));
+    }
+
+    #[test]
+    fn marquee_set_selection_commits_component_ids() {
+        let app = CadPlayApp::default();
+        let scene = default_document();
+        let object_id = scene.objects.iter().find(|object| object.visible).expect("visible").id.clone();
+        let emit = drive(
+            &app,
+            &scene,
+            "setSelection",
+            Some(json!({
+                "mode": "edge",
+                "ids": [3, 9],
+                "objectId": object_id,
+                "merge": "replace"
+            })),
+        );
+        let runtime = runtime_after(&emit, &CadConfig::default());
+        assert_eq!(runtime.component_selection.mode, "edge");
+        assert_eq!(runtime.component_selection.ids, vec![3, 9]);
+        assert_eq!(runtime.active_object_id.as_deref(), Some(object_id.as_str()));
+        let selection = world_selection_json(&scene, &runtime, None, CadDislocateOptions::default());
+        assert!(selection.contains("\"componentIds\":[3,9]"));
     }
 
     #[test]

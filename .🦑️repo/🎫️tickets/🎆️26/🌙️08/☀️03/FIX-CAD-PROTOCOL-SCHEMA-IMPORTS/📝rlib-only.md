@@ -1,0 +1,1 @@
+Protocol was `rlib+cdylib`. Building the CAD plugin (component-guest) feature-unifies framework-plugin across the graph, so protocol's cdylib linked without `semio_plugin_bundle_installer_link_shim`. Protocol is an rlib constitutional crate; the plugin crate owns the wasm component entry via `semio_plugin!`.

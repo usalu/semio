@@ -3,7 +3,7 @@
   "emoji": "📐️",
   "status": "closed",
   "description": "Increase the scale of the CAD reference visual slightly, preserving its existing behavior and verifying the relevant rendering path.",
-  "summary": "Kept the reference 30% larger at 28.6 world units and moved it 20% forward on CAD Y without changing Z. Enforced the CAD renderer boundary as Y-forward and Z-up on camera and scene, and added axis and placement regression coverage. The ticket verifier passed and the live React CAD view rendered flat with no console errors. Focused Nx test and lint remain blocked before collection by unrelated missing Vitest configuration and policy-linter file-resolution errors.",
+  "summary": "Removed the concrete-forest reference coupling to the authored slab elevation. The example reference now stays on the CAD ground datum at Z 0.01 while retaining its 20% forward offset on CAD Y and 28.6-unit width. Updated the existing regression to require ground-plane Z and the ticket verifier to validate Z, Y offset, scale, and the Y-forward/Z-up renderer contract. The ticket verifier passed and the live CAD view showed the reference on the ground plane. The current CAD build alias points at a removed Nx project; the replacement all-plugin target reached Rust compilation but was blocked by unrelated architect plugin API errors before CAD collection.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2407"
   },
@@ -13,6 +13,7 @@
     "⚪️652ad075992d4213aa82cc2c1ac91faa",
     "⚪3fa49ffbc8b54db2aa543fbc2339abae",
     "⚪9b1b8e6a3c0b4d02a8423a3b7dfc5b17",
-    "⚪bba196d183c6408fb62bc84b84c2fbfd"
+    "⚪bba196d183c6408fb62bc84b84c2fbfd",
+    "⚪ca2e452c204749859cbbea830f78521c"
   ]
 }

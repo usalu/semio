@@ -10153,6 +10153,20 @@ Add request IDs for request/response correlation
 Add timeouts, heartbeats, and auto-restart
 Keep the renderer isolated from native details
 
+## process
+
+---
+
+The process app is still adhoc.
+Every document must have a configurable workshop.
+The workshop offers different machines.
+The different machines has different capabilities.
+Every capability can be turned into a step.
+Make sure the extension mechanism are clean and feature complete.
+Complete the extensions with exhaustive machines, capabilities, etc 
+
+---
+
 ## ♻️mit-bestand
 
 ### demonstrator

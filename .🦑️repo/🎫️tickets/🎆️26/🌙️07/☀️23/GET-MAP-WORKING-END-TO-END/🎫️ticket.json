@@ -3,12 +3,13 @@
   "emoji": "🗺️",
   "status": "closed",
   "description": "Get GIS/map (dev:gis:2d) working end to end. Build currently fails with missing `presence` field on UiInspectorFieldGroup in gis/plugin/rs/lib.rs. Fix compile errors and any further blockers so the map app runs.",
-  "summary": "GIS/map failed to compile (UiInspectorFieldGroup missing presence) and then failed to boot (playground app id gis2d/gis3d vs plugin gis2d-play/gis3d-play). Added presence defaults in gis/plugin/rs/lib.rs; aligned Cargo.toml playground+asset app ids and regenerated the plugin registry. Verified: wasm release build ok; SEMIO_RENDERER=react dev:gis:2d serves http://127.0.0.1:6040/ as semio · gis · 2d with Map canvas, Document/Catalogue/Inspection chrome, and Reuse Map example (Playwright).",
+  "summary": "Fixed GIS 2D Render error (TiledMapHost mapped undefined contextMenu.specs) and restored app actions via DocumentApp::command_from_action bridge (GIS maps host {action,args} onto Gis2dCommand). Rebuilt gis wasm. Verified: no render error, Map canvas, Reuse Map, OSM/VT tiles, setActiveExample tests ok.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2292"
   },
-  "goal": "🎯️r2602",
+  "goal": "🎯r2603",
   "sessions": [
-    "⚪️6f317847c9da4977a9618906e176b734"
+    "⚪️6f317847c9da4977a9618906e176b734",
+    "⚪65df43e6a27744979f0bb0f8553a3c1b"
   ]
 }

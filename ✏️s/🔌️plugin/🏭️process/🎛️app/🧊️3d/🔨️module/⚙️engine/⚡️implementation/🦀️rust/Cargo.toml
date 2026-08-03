@@ -19,6 +19,10 @@ dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻�
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 kernel_3d_brepkit = { path = "../../../../../../../../🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
 kernel_3d_engine = { path = "../../../../../../../../🔨️module/🧊️3d/📐️brep/⚙️engine/⚡️implementation/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-3d-brep-engine" }
+process_machines_wood = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🧩️extension/🪵️wood/⚡️implementation/🦀️rust", package = "semio-s-plugin-process-wood" }
+process_machines_concrete = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🧩️extension/🧱️concrete/⚡️implementation/🦀️rust", package = "semio-s-plugin-process-concrete" }
+process_machines_metal = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🧩️extension/🔩️metal/⚡️implementation/🦀️rust", package = "semio-s-plugin-process-metal" }
+process_machines_robotic = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🧩️extension/🤖️robotic/⚡️implementation/🦀️rust", package = "semio-s-plugin-process-robotic" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"

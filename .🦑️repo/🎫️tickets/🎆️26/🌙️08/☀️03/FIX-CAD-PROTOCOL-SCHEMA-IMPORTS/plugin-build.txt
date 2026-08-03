@@ -1,0 +1,13 @@
+   Compiling semio-s-app-cad-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+warning: unused import: `OsAppRegistration`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3271:72
+     |
+3271 |     use crate::registry::{os_app_registration, os_artifact_descriptor, OsAppRegistration, OsArtifactDescriptor};
+     |                                                                        ^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os` to apply 1 suggestion)
+   Compiling semio-s-app-cad-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+   Compiling semio-s-plugin-cad v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📐️cad/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust)
+    Finished `release` profile [optimized] target(s) in 7.74s

@@ -1,0 +1,14 @@
+{
+  "title": "Tree Row Hidden Actions Width",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix the UI tree-row layout bug where reveal-on-hover actions remain invisible but reserve horizontal width, causing item labels to truncate well before the available panel edge. Preserve persistent actions and drag handles, add regression coverage in the existing UI test region, and verify runtime layout behavior.",
+  "summary": "Collapsed reveal-on-hover tree header actions out of flex width at rest while restoring them on hover and focus-within, preserving persistent actions. Added regression coverage for mixed persistent/revealed actions. Verified the focused test and measured the live CAD tree: hidden actions now occupy 0 px while labels use the recovered row width.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2415"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": [
+    "⚪d62f1d9fe064476da1ac723882d5e66d"
+  ]
+}

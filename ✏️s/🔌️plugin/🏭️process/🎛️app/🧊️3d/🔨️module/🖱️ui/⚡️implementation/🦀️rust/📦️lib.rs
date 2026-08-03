@@ -6,10 +6,10 @@
 //! `DocumentApp::handle`.
 
 use base64::Engine;
-use process_3d::{Pose, Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin};
+use process_3d::{MeasureKind, Pose, Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin, Workshop, WorkshopMachine, WorkshopMachinePatch};
 use process_3d_engine::{
-    axis_angle_from_up_to, default_document, export_process3d_model, find_modification, geometry_machine_for_measure, import_process3d_model, measure_for_modification, next_step_id, plate_document, processed_mesh, processed_volume,
-    validate_modification, validation_context_for_stock, validation_reason, MeasureKind, Process3dConfig, ALL_MODULES, GEOMETRY_ATTACHER, GEOMETRY_MODULE, GEOMETRY_SAW,
+    axis_angle_from_up_to, capability_for_measure_kind, catalog_machine, default_document, export_process3d_model, find_capability, import_process3d_model, installed_catalogs, measure_for_capability, next_step_id, plate_document,
+    processed_mesh, processed_volume, validate_capability, validation_context_for_stock, validation_reason, Process3dConfig,
 };
 use process_3d_op::{Process3dConfigOperation, Process3dOperation};
 use process_3d_protocol::Process3dCommand;
@@ -132,6 +132,20 @@ fn remove_step_operations(fixture: &Process3dDocument, id: &str) -> Option<Vec<P
 }
 //#endregion 🔖️DocumentHelpers
 
+//#region 🔖️WorkshopHelpers
+fn add_workshop_machine_operation(fixture: &Process3dDocument, machine: WorkshopMachine) -> Option<Process3dOperation> {
+    if fixture.workshop.machines.iter().any(|existing| existing.id == machine.id) {
+        return None;
+    }
+    let at = fixture.workshop.machines.len();
+    Some(Process3dOperation::Machines { collection: CollectionOperation::Add { id: machine.id.clone(), item: machine, at } })
+}
+
+fn remove_workshop_machine_operation(fixture: &Process3dDocument, id: &str) -> Option<Process3dOperation> {
+    fixture.workshop.machines.iter().any(|machine| machine.id == id).then(|| Process3dOperation::Machines { collection: CollectionOperation::Remove { id: id.to_string() } })
+}
+//#endregion 🔖️WorkshopHelpers
+
 //#region 🔖️InspectorPatch
 fn apply_pose_patch(pose: &mut Pose, field: &str, value: f64) -> bool {
     match field {
@@ -236,10 +250,42 @@ fn apply_step_patch(step: &mut ProcessStep, field: &str, value: Option<&Value>) 
     }
 }
 
-/// 🩹️ Builds the `Process3dOperation` for one inspector field edit — clones the target (stock or step),
-/// mutates the clone via `apply_stock_patch`/`apply_step_patch`, then wraps it back into a
-/// `SetStock`/`Steps::Patch` operation so the store computes the true pre-state inverse.
+/// 🔎️ Generic inspector edit dispatcher for a workshop machine's own label or a capability parameter
+/// value, addressed as `"{capabilityId}.{parameterId}"` so field names never collide across capabilities.
+fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, value: Option<&Value>) -> bool {
+    if field == "label" {
+        return match value.and_then(Value::as_str) {
+            Some(label) => {
+                machine.label = label.into();
+                true
+            }
+            None => false,
+        };
+    }
+    let Some((capability_id, parameter_id)) = field.split_once('.') else { return false };
+    let Some(number) = value.and_then(Value::as_f64) else { return false };
+    let clamped = number.max(0.001);
+    let Some(capability) = machine.capabilities.iter_mut().find(|capability| capability.id == capability_id) else { return false };
+    let Some(parameter) = capability.parameters.iter_mut().find(|parameter| parameter.id == parameter_id) else { return false };
+    parameter.value = clamped;
+    true
+}
+
+/// 🩹️ Builds the `Process3dOperation` for one inspector field edit — clones the target (stock, step, or
+/// workshop machine), mutates the clone via `apply_stock_patch`/`apply_step_patch`/
+/// `apply_workshop_machine_patch`, then wraps it back into a `SetStock`/`Steps::Patch`/`Machines::Patch`
+/// operation so the store computes the true pre-state inverse.
 fn process3d_inspector_patch_operation(fixture: &Process3dDocument, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dOperation> {
+    if let Some(machine_id) = target.strip_prefix("machine:") {
+        let machine = fixture.workshop.machines.iter().find(|machine| machine.id == machine_id)?;
+        let mut updated = machine.clone();
+        return if apply_workshop_machine_patch(&mut updated, field, value) {
+            let patch = WorkshopMachinePatch { label: Some(updated.label), icon_id: None, capabilities: Some(updated.capabilities) };
+            Some(Process3dOperation::Machines { collection: CollectionOperation::Patch { id: machine_id.to_string(), patch } })
+        } else {
+            None
+        };
+    }
     if target == fixture.stock.id {
         let mut stock = fixture.stock.clone();
         return if apply_stock_patch(&mut stock, field, value) { Some(Process3dOperation::SetStock { stock }) } else { None };
@@ -272,12 +318,12 @@ fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f6
     let offset = distance.min(0.0);
     let position = [point[0] + normal[0] * offset, point[1] + normal[1] * offset, point[2] + normal[2] * offset];
     let pose = Pose { position, axis, angle };
-    let (measure, label, machine_id, modification_kind_id) = if distance < 0.0 {
-        (ProcessMeasure::Cut { tool: SolidSpec::Box { width, depth, height }, pose }, labels.push_cut, GEOMETRY_SAW.id, "cut")
+    let (measure, label, machine_id, capability_id) = if distance < 0.0 {
+        (ProcessMeasure::Cut { tool: SolidSpec::Box { width, depth, height }, pose }, labels.push_cut, "saw", "cut")
     } else {
-        (ProcessMeasure::Attach { component: SolidSpec::Box { width, depth, height }, pose }, labels.pull_attach, GEOMETRY_ATTACHER.id, "attach")
+        (ProcessMeasure::Attach { component: SolidSpec::Box { width, depth, height }, pose }, labels.pull_attach, "attacher", "attach")
     };
-    let origin = StepOrigin { module_id: GEOMETRY_MODULE.id.to_string(), machine_id: machine_id.to_string(), modification_kind_id: modification_kind_id.to_string() };
+    let origin = StepOrigin { machine_id: machine_id.to_string(), capability_id: capability_id.to_string() };
     Some(ProcessStep { id: next_step_id(), label: label.to_string(), enabled: true, origin: Some(origin), measure })
 }
 //#endregion 🔖️FaceDrag

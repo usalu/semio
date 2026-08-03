@@ -11495,6 +11495,10 @@ dependencies = [
  "semio-framework-plugin",
  "semio-s-app-process-3d",
  "semio-s-app-process-3d-dsl",
+ "semio-s-plugin-process-concrete",
+ "semio-s-plugin-process-metal",
+ "semio-s-plugin-process-robotic",
+ "semio-s-plugin-process-wood",
  "serde",
  "serde_json",
 ]
@@ -13477,6 +13481,50 @@ dependencies = [
  "semio-s-app-process-3d-engine",
  "semio-s-app-process-3d-ui",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-process-concrete"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "semio-s-app-process-3d",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-process-metal"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "semio-s-app-process-3d",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-process-robotic"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "semio-s-app-process-3d",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-plugin-process-wood"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "semio-s-app-process-3d",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

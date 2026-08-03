@@ -1,0 +1,22 @@
+{
+  "url": "http://127.0.0.1:6040/",
+  "title": "semio · gis · 2d",
+  "hasRenderError": false,
+  "bodySnippet": "Document\nCatalogue\nInspection\nFullscreen\nsemio · gis · 2d\nExample\nReuse Map\nMap\nClose\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view",
+  "canvasCount": 1,
+  "canvasBox": {
+    "x": 6.375,
+    "y": 57.5625,
+    "width": 1267.25,
+    "height": 627.265625
+  },
+  "canvasSample": {
+    "width": 1267,
+    "height": 627,
+    "cssW": 1267,
+    "cssH": 627
+  },
+  "pageErrors": [],
+  "actionErrors": [],
+  "debugMsgs": []
+}

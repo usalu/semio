@@ -17,14 +17,14 @@ pub fn decode(bytes: &[u8]) -> Result<Process3dDocument, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use process_3d::{empty_process3d_projection, Pose, ProcessMeasure, ProcessStep, SolidSpec, Stock, StepOrigin};
+    use process_3d::{empty_process3d_projection, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, SolidSpec, Stock, StepOrigin, StockQuantity, Workshop, WorkshopMachine};
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
     fn drill_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { module_id: "wood".into(), machine_id: "circularSaw".into(), modification_kind_id: "crosscut".into() }), measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() } }
+        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }), measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() } }
     }
 
     fn attach_step(id: &str) -> ProcessStep {
@@ -35,10 +35,28 @@ mod tests {
         Stock { id: "stock".into(), label: "Imported GLB".into(), solid: SolidSpec::ImportedMesh { mesh_url: "data:model/gltf-binary;base64,AAAA".into() }, pose: Pose::default() }
     }
 
-    /// 📜️ A document exercising every `SolidSpec`/`ProcessMeasure` shape and both `origin` states, so
-    /// the pack round trip covers the full grammar, not just the happy path.
+    fn circular_saw_machine() -> WorkshopMachine {
+        WorkshopMachine {
+            id: "circularSaw".into(),
+            label: "Circular Saw".into(),
+            icon_id: "scissors".into(),
+            catalog_id: Some("wood".into()),
+            capabilities: vec![Capability {
+                id: "crosscut".into(),
+                label: "Crosscut".into(),
+                icon_id: "scissors".into(),
+                recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
+                parameters: vec![CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.184 }, CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.002 }],
+                rules: vec![CapabilityRule::Min { quantity: StockQuantity::Width, parameter: "bladeDiameter".into(), margin: 0.0 }],
+            }],
+        }
+    }
+
+    /// 📜️ A document exercising every `SolidSpec`/`ProcessMeasure` shape, both `origin` states, and a
+    /// non-default workshop machine (3-deep nesting), so the pack round trip covers the full grammar.
     fn sample_document() -> Process3dDocument {
         Process3dDocument {
+            workshop: Workshop { machines: vec![circular_saw_machine()] },
             stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose { position: [0.0, 0.0, 0.12], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
             steps: vec![cut_step("cut-1"), drill_step("drill-1"), attach_step("attach-1")],
             resolved_up_to: Some(2),

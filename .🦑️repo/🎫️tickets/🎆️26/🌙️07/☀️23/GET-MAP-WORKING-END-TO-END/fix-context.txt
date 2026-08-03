@@ -1,0 +1,175 @@
+
+=== board-ish around 17680 ===
+17681|          session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
+17682|          session.renderFrame();
+17683|          emitInteractionState();
+17684|        }}
+17685|        onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
+17686|        onWheel={(event) => {
+17687|          event.preventDefault();
+17688|          const session = sessionRef.current;
+17689|          if (!session?.wheelScreen) return;
+17690|          const rect = event.currentTarget.getBoundingClientRect();
+17691|          const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 400 : event.deltaY;
+17692|          session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true);
+17693|          session.renderFrame();
+17694|          emitInteractionState();
+17695|        }}
+17696|      />
+17697|      {selectionBounds && editable ? (
+17698|        <SelectionAlignChrome
+17699|          bounds={selectionBounds}
+17700|          onAlign={(mode) => {
+17701|            const session = sessionRef.current;
+17702|            if (!session?.alignSelection) return;
+17703|            session.alignSelection(alignModeToDag(mode));
+17704|            commitGraphFixture();
+17705|            session.renderFrame();
+17706|            emitInteractionState();
+17707|          }}
+17708|        />
+17709|      ) : null}
+17710|      <GraphSliderOverlays stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphActions.edit, { operator: "setSlider", widgetId, value })} />
+17711|      <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
+17712|      <ContextMenuController
+17713|        open={contextMenu != null}
+17714|        position={contextMenu ?? { x: 0, y: 0 }}
+17715|        items={mapContextMenu(contextMenu?.specs ?? [])}
+17716|        onOpenChange={(open) => {
+17717|          if (!open) setContextMenu(null);
+17718|        }}
+17719|      />
+17720|    </div>
+17721|  );
+17722|}
+17723|//#endregion WasmGraphSurface
+17724|
+17725|//#region DiagramFallback
+17726|function DiagramGraphFallback({
+17727|  scene,
+17728|  node,
+17729|  editable,
+17730|  parsedNodes,
+
+=== flow around 19180 ===
+19181|        }}
+19182|        onPointerUp={(event) => {
+19183|          if (event.button === 2) return;
+19184|          const session = sessionRef.current;
+19185|          if (!session) return;
+19186|          const rect = event.currentTarget.getBoundingClientRect();
+19187|          const client = { x: event.clientX, y: event.clientY };
+19188|          pickInteraction.onCanvasPointerUp(client, { shift: event.shiftKey, ctrlOrMeta: event.metaKey || event.ctrlKey, alt: event.altKey });
+19189|          session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
+19190|          session.renderFrame();
+19191|          commitFixture();
+19192|          emitInteractionState();
+19193|        }}
+19194|        onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
+19195|        onDoubleClick={onCanvasDoubleClick}
+19196|        onWheel={(event) => {
+19197|          event.preventDefault();
+19198|          const session = sessionRef.current;
+19199|          if (!session) return;
+19200|          const rect = event.currentTarget.getBoundingClientRect();
+19201|          const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaMode === 2 ? event.deltaY * 400 : event.deltaY;
+19202|          session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, 0, delta, true);
+19203|          session.renderFrame();
+19204|          const cameraJson = session.cameraJson?.();
+19205|          if (cameraJson) dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(cameraJson));
+19206|          paintOverlays();
+19207|        }}
+19208|      />
+19209|      <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
+19210|      {spotlight ? (
+19211|        <FlowSpotlight state={spotlight} sections={spotlightSections} onPreview={previewSpotlightItem} onCommit={commitSpotlightItem} onClose={closeSpotlight} />
+19212|      ) : null}
+19213|      <ContextMenuController
+19214|        open={contextMenu != null}
+19215|        position={contextMenu ?? { x: 0, y: 0 }}
+19216|        items={mapFlowContextMenu(contextMenu?.specs ?? [])}
+19217|        onOpenChange={(open) => {
+19218|          if (!open) setContextMenu(null);
+19219|        }}
+19220|      />
+19221|    </div>
+19222|  );
+19223|}
+19224|//#endregion FlowGraphCanvasHost
+19225|//#endregion 🔖️flow-graph-canvas-host
+19226|//#endregion 🔖️NodeGraphHost
+19227|
+19228|//#region 🔖️TextEditorHost
+19229|//#region Types
+19230|type GrammarToken = { readonly class: string; readonly start: number; readonly end: number };
+
+=== world around 16920 ===
+16921|            />
+16922|          </WorldLodBridge>
+16923|        </WorldOrbitViewSnapGateProvider>
+16924|      </WorldCanvas>
+16925|      {marqueeDragActive && marqueeStart && marqueeEnd ? (
+16926|        method === "lasso" ? (
+16927|          <SelectionMarquee coverage={marqueeCoverage} shape="polygon" points={marqueePath} />
+16928|        ) : (
+16929|          <SelectionMarquee
+16930|            coverage={marqueeCoverage}
+16931|            shape="rect"
+16932|            rect={{
+16933|              x: Math.min(marqueeStart.x, marqueeEnd.x),
+16934|              y: Math.min(marqueeStart.y, marqueeEnd.y),
+16935|              width: Math.abs(marqueeEnd.x - marqueeStart.x),
+16936|              height: Math.abs(marqueeEnd.y - marqueeStart.y),
+16937|            }}
+16938|          />
+16939|        )
+16940|      ) : null}
+16941|      <ContextMenuController
+16942|        open={contextMenu != null && (contextMenu.specs?.length ?? 0) > 0 && !suggestionMenuOwnsThisWindow}
+16943|        position={contextMenu ?? { x: 0, y: 0 }}
+16944|        items={mapWorldContextMenuSpecs(contextMenu?.specs ?? [])}
+16945|        onOpenChange={(open) => {
+16946|          if (!open) setContextMenu(null);
+16947|        }}
+16948|      />
+16949|      {suggestionMenuOwnsThisWindow ? (
+16950|        <ContextMenuController
+16951|          open
+16952|          closeOnSelect={false}
+16953|          position={{ x: interaction.suggestionMenu!.x, y: interaction.suggestionMenu!.y }}
+16954|          items={mapSuggestionContextMenuSpecs(suggestionMenuItems(interaction.suggestionMenu!, interaction.brushCandidateIndex ?? 0))}
+16955|          onOpenChange={(open) => {
+16956|            if (!open) handleSuggestionClose();
+16957|          }}
+16958|        />
+16959|      ) : null}
+16960|    </div>
+16961|  );
+16962|}
+16963|//#endregion World3dHost
+16964|//#endregion 🔖️World3dHost
+16965|
+16966|//#region 🔖️NodeGraphHost
+16967|//#region Types
+16968|type WorkflowNodeData = {
+16969|  readonly label: string;
+16970|  readonly inputs: readonly NodeGraphPortRecord[];
+
+=== setActiveExample refs ===
+1395|  activeExampleId: string,
+1399|  if (activeExampleId && exampleOptions.some((option) => option.id === activeExampleId)) return activeExampleId;
+1515|  readonly activeExampleId: string;
+1826|      return { ...state, activeExampleId: resolveUpdatable(action.value, state.activeExampleId) };
+2003|      activeExampleId: locks.exampleId ?? defaults.exampleId ?? "",
+5363|  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById, windowIconsById } = shellState.layout;
+5383|  // `setActiveExample`) that starts after the session-switch refresh wrote extras but before React
+5744|          // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
+7820|        value={activeExampleId}
+7824|          onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
+7828|  }, [session, exampleOptions, locks.exampleId, studioMode, landingAppId, activeExampleId, onAction]);
+8334|    const exampleId = resolveBootExampleId(activeExampleId, exampleOptions, defaults.exampleId);
+8335|    if (exampleId !== activeExampleId) {
+8338|    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
+8339|  }, [activeExampleId, defaults.exampleId, exampleOptions, onAction, session, studioMode]);
+
+=== action failed / typed channel ===

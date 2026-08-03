@@ -7,11 +7,8 @@ description = "Cad app - binary command protocol surface + laws (constitutional:
 
 [lints]
 workspace = true
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
-
 [lib]
-crate-type = ["rlib", "cdylib"]
+crate-type = ["rlib"]
 path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]

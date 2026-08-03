@@ -1,0 +1,64 @@
+    Checking simd-adler32 v0.3.9
+    Checking serde_json v1.0.149
+    Checking log v0.4.29
+    Checking futures-util v0.3.32
+    Checking smallvec v1.15.1
+    Checking either v1.15.0
+    Checking bumpalo v3.20.2
+    Checking indexmap v2.14.0
+    Checking brepkit-sketch v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking rayon v1.12.0
+    Checking semio-framework-os-kernel-protocol-command v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🎮️command/⚡️implementation/🦀️rust)
+    Checking gltf-json v1.4.1
+    Checking miniz_oxide v0.8.9
+    Checking brepkit-math v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking zopfli v0.8.3
+    Checking js-sys v0.3.103
+    Checking futures-executor v0.3.32
+    Checking semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚙️engine/⚡️implementation/🦀️rust)
+    Checking futures v0.3.32
+    Checking semio-framework-os-kernel-protocol-causal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔗️causal/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-crdt v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔀️crdt/⚡️implementation/🦀️rust)
+    Checking gltf v1.4.1
+    Checking semio-framework-os-kernel-3d-brep-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️module/🧊️3d/📐️brep/⚙️engine/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-wire v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/📡️wire/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-channel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-pack-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/📐️format/⚡️implementation/🦀️rust)
+    Checking flate2 v1.1.9
+    Checking semio-framework-os-kernel-protocol-format v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/📐️format/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔢️value/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-pack-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⏳️async/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-pack-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔌️io/⚡️implementation/🦀️rust)
+    Checking serde-wasm-bindgen v0.6.5
+    Checking wasm-bindgen-futures v0.4.76
+    Checking web-sys v0.3.103
+    Checking semio-framework-os-kernel-pack-http v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🌐️http/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/📜️history/⚡️implementation/🦀️rust)
+    Checking brepkit-topology v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking brepkit-geometry v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking semio-framework-os-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔢️index/⚡️implementation/🦀️rust)
+    Checking zip v8.6.0
+    Checking semio-framework-os-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/💎️materialize/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+    Checking brepkit-blend v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking brepkit-algo v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust)
+    Checking brepkit-check v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking brepkit-heal v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking brepkit-offset v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-math-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🛂️manifest/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-math-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🗣️dsl/⚡️implementation/🦀️rust)
+    Checking brepkit-operations v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+    Checking brepkit-io v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-3d-brep v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust)
+    Checking semio-s-app-cad v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/⚡️implementation/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+    Checking semio-s-app-cad-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+    Checking semio-s-app-cad-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+    Checking semio-s-app-cad-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 14.19s

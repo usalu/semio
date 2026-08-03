@@ -2383,6 +2383,8 @@ pub const CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX: f64 = 692.0;
 
 const CAD_FOREST_REFERENCE_BASE_ORIGIN_XY: [f64; 2] = [-24.0, -18.0];
 
+pub const CAD_FOREST_REFERENCE_PLANE_Z: f64 = 0.01;
+
 pub const CAD_FOREST_REFERENCE_Y_OFFSET_RATIO: f64 = 0.2;
 
 static CAD_BREP_KERNEL: OnceLock<Mutex<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
@@ -2470,26 +2472,6 @@ pub fn align_mesh_to_fixture_centroid(mesh: &mut MeshData, geometry: &CadGeometr
     if delta[0].abs() + delta[1].abs() + delta[2].abs() > 0.05 {
         translate_mesh_positions(mesh, delta);
     }
-}
-
-fn forest_reference_plane_z(source_json: &str) -> f64 {
-    let Ok(root) = serde_json::from_str::<Value>(source_json) else {
-        return 0.01;
-    };
-    for model_index in [CAD_MODEL_INDEX_ENERGY, CAD_MODEL_INDEX_STRUCTURE_CLASSIC] {
-        let geometry = parse_geometry(root.pointer(&format!("/models/{model_index}/model/geometry")));
-        for face in &geometry.faces {
-            let slot = CadPrimitiveSlot {
-                slot: "surface".into(),
-                primitive_id: face.id.clone(),
-                kind: "surface".into(),
-            };
-            if let Some([_, _, z]) = centroid_from_fixture_primitives(&geometry, &[slot]) {
-                return z;
-            }
-        }
-    }
-    0.01
 }
 
 /// @emoji 🖼️ Centers the concrete-forest reference and moves it forward from the authored base corner.
@@ -2640,7 +2622,7 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
         building_geometry: Some(building_geometry),
         energy_geometry: Some(energy_geometry),
         structure_classic_geometry: Some(structure_classic_geometry),
-        references_by_model_definition_id: forest_references_for_model_definitions(forest_reference_plane_z(source_json)),
+        references_by_model_definition_id: forest_references_for_model_definitions(CAD_FOREST_REFERENCE_PLANE_Z),
         active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
     }
 }

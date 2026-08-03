@@ -1,0 +1,11 @@
+{
+  "title": "Fix Cad Protocol Schema Imports",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "CAD protocol wasm bridge missing CAD_DOCUMENT_SCHEMA and empty_cad_projection imports; fix and get bun ./script.ts dev cad working.",
+  "summary": "Imported CAD_DOCUMENT_SCHEMA and empty_cad_projection into cad protocol; made protocol rlib-only so wasip2 plugin builds no longer link a protocol cdylib without the bundle installer shim. CAD playground up at :6020.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪cbbef80e2e4446fc94f610bca7076cc3"
+  ]
+}

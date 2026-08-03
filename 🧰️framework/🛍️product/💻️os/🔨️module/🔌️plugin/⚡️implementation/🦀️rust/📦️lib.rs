@@ -3233,21 +3233,6 @@ impl HistoryView {
 /// is capped, matching the "no silent caps" convention (never truncates data, only the view).
 const HISTORY_PANEL_ROW_LIMIT: usize = 300;
 
-fn ui_stack_horizontal_tight(children: Vec<UiNode>) -> UiNode {
-    UiNode::Stack(UiStackNode {
-        direction: "horizontal".into(),
-        gap: Some("tight".into()),
-        padding: None,
-        id: None,
-        presence: UiPresence::default(),
-        activate: None,
-        children,
-        drop_action: None,
-        drop_overlay: None,
-        menu: None,
-    })
-}
-
 fn history_panel_icon_id(kind: ActionKind) -> IconName {
     match kind {
         ActionKind::Operation => IconName::Pencil,
@@ -3260,54 +3245,45 @@ fn history_panel_icon_id(kind: ActionKind) -> IconName {
     }
 }
 
-/// @emoji 🕰️ Builds the framework's history panel body from a `HistoryView`: undo/redo/checkpoint/
-/// alternative header buttons, a tri-state operations filter, and a newest-first command tree with a
-/// per-item "backwards" revert action. Shared by both renderers — `VcsDocumentApp::render` returns
-/// this verbatim for `FRAMEWORK_HISTORY_BODY_KEY`, so every app gets the identical panel (mirrors
-/// `ui_wgpu::ui_recovery_panel`'s "one Rust builder, both renderers" shape).
+/// @emoji 🕰️ Builds the framework's history panel body from a `HistoryView` as a pure side-panel
+/// `Tree` (same shape as Document/Catalogue): an Actions section (undo/redo/checkpoint/alternative +
+/// filter control) and a Commands section of newest-first rows with optional "backwards" revert.
+/// Shared by both renderers — `VcsDocumentApp::render` returns this verbatim for
+/// `FRAMEWORK_HISTORY_BODY_KEY`.
 pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool) -> UiNode {
     let act = |action: &str, args: Option<DslValue>| ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args };
-    let history_button = |icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| {
-        UiNode::Button(UiButtonNode {
-            id: Some(format!("framework.history.{action}")),
-            icon_id,
-            label: if is_de { label_de.to_string() } else { label_en.to_string() },
-            action: act(action, None),
-            style: None,
-            presence: if enabled { UiPresence::default() } else { UiPresence::state(UiState::Disabled) },
-            menu: None,
-        })
+    let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| {
+        let mut item = UiTreeItemNode::base(id, if is_de { label_de } else { label_en });
+        item.icon_id = Some(icon_id);
+        item.action = Some(act(action, None));
+        if !enabled {
+            item.presence = UiPresence::state(UiState::Disabled);
+        }
+        item
     };
-    let header = ui_stack_horizontal_tight(vec![
-        history_button(IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo),
-        history_button(IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo),
-        history_button(IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", true),
-        history_button(IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", true),
-    ]);
 
     let filter_value = match history.command_filter {
         HistoryCommandFilter::All => "all",
         HistoryCommandFilter::WithoutOperations => "withoutOperations",
         HistoryCommandFilter::OnlyOperations => "onlyOperations",
     };
-    let filter = UiNode::Select(UiSelectNode {
-        id: "framework.history.filter".into(),
+    let mut filter_item = UiTreeItemNode::base("framework.history.filter", if is_de { "Filter" } else { "Filter" });
+    filter_item.icon_id = Some(IconName::Filter);
+    filter_item.control = Some(UiControlNode::Select(UiSelectNode {
+        id: "framework.history.filter.control".into(),
         value: filter_value.into(),
         items: vec![
-            UiSelectItem { value: "all".into(), label: if is_de { "Alle" } else { "All" }.into(),
-        },
-            UiSelectItem { value: "withoutOperations".into(), label: if is_de { "Ohne Operationen" } else { "Without Operations" }.into(),
-        },
-            UiSelectItem { value: "onlyOperations".into(), label: if is_de { "Nur Operationen" } else { "Only Operations" }.into(),
-        },
+            UiSelectItem { value: "all".into(), label: if is_de { "Alle" } else { "All" }.into() },
+            UiSelectItem { value: "withoutOperations".into(), label: if is_de { "Ohne Operationen" } else { "Without Operations" }.into() },
+            UiSelectItem { value: "onlyOperations".into(), label: if is_de { "Nur Operationen" } else { "Only Operations" }.into() },
         ],
         placeholder: None,
         on_change: act(SET_HISTORY_COMMAND_FILTER_ACTION_ID, None),
         presence: UiPresence::default(),
         menu: None,
-    });
+    }));
 
-    let items: Vec<UiTreeItemNode> = history
+    let command_items: Vec<UiTreeItemNode> = history
         .commands
         .iter()
         .filter(|entry| match history.command_filter {
@@ -3335,23 +3311,36 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
         })
         .collect();
 
-    let tree = UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "framework.history.commands".into(),
-            label: Some(if is_de { "Befehle" } else { "Commands" }.into()),
-            default_open: Some(true),
-            presence: UiPresence::default(),
-            items,
-        }],
+    UiNode::Tree(UiTreeNode {
+        sections: vec![
+            UiTreeSectionNode {
+                id: "framework.history.actions".into(),
+                label: Some(if is_de { "Aktionen" } else { "Actions" }.into()),
+                default_open: Some(true),
+                presence: UiPresence::default(),
+                items: vec![
+                    action_item("framework.history.undo", IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo),
+                    action_item("framework.history.redo", IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo),
+                    action_item("framework.history.commitCheckpoint", IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", true),
+                    action_item("framework.history.createAlternative", IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", true),
+                    filter_item,
+                ],
+            },
+            UiTreeSectionNode {
+                id: "framework.history.commands".into(),
+                label: Some(if is_de { "Befehle" } else { "Commands" }.into()),
+                default_open: Some(true),
+                presence: UiPresence::default(),
+                items: command_items,
+            },
+        ],
         presence: UiPresence::default(),
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
         menu: None,
-    });
-
-    ui_stack_vertical(vec![header, filter, tree])
+    })
 }
 //#endregion 🔖️HistoryPanel
 
@@ -3544,6 +3533,15 @@ pub trait DocumentApp: Send + 'static {
     /// the command was declared under in its `AppDefinition`, e.g. via `.operation`/`.view_action`).
     fn command_id(&self, _command: &Self::Command) -> &str {
         "typed-command"
+    }
+    /// @emoji 🎯️ Builds this app's typed `Command` from a host action id + JSON args — the bridge
+    /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
+    /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
+    /// that the shells drive must override this so chrome actions reach `handle`.
+    fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+        Err(format!(
+            "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —              app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+        ))
     }
     /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
     fn config_spec(&self) -> ConfigSpec {
@@ -4909,10 +4907,8 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             };
             self.dispatch_emit(action, emit, meta)
         } else {
-            Err(format!(
-                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
-                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
-            ))
+            let command = self.app.command_from_action(action, args)?;
+            self.dispatch_typed_command_inner(command, meta)
         }
     }
 
@@ -7200,24 +7196,24 @@ mod semio_plugin_macro_tests {
             ],
             command_filter: HistoryCommandFilter::All,
         };
-        let UiNode::Stack(all_stack) = ui_history_panel(&history, "ctrl", false) else { panic!("expected a Stack root") };
-        let UiNode::Tree(all_tree) = &all_stack.children[2] else { panic!("expected the tree as the third child") };
-        assert_eq!(all_tree.sections[0].label.as_deref(), Some("Commands"));
-        assert_eq!(all_tree.sections[0].items.len(), 2);
-        assert!(all_tree.sections[0].items[0].actions.is_some(), "the revertible entry must offer backwards");
-        assert!(all_tree.sections[0].items[1].actions.is_none(), "the non-revertible entry must not offer backwards");
+        let UiNode::Tree(all_tree) = ui_history_panel(&history, "ctrl", false) else { panic!("expected a Tree root like Document/Catalogue") };
+        assert_eq!(all_tree.sections.len(), 2, "Actions + Commands sections");
+        assert_eq!(all_tree.sections[0].label.as_deref(), Some("Actions"));
+        assert_eq!(all_tree.sections[0].items.len(), 5, "undo/redo/commit/alternative/filter");
+        assert_eq!(all_tree.sections[1].label.as_deref(), Some("Commands"));
+        assert_eq!(all_tree.sections[1].items.len(), 2);
+        assert!(all_tree.sections[1].items[0].actions.is_some(), "the revertible entry must offer backwards");
+        assert!(all_tree.sections[1].items[1].actions.is_none(), "the non-revertible entry must not offer backwards");
 
         let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyOperations, ..history.clone() };
-        let UiNode::Stack(ops_stack) = ui_history_panel(&only_ops, "ctrl", false) else { panic!("expected a Stack root") };
-        let UiNode::Tree(ops_tree) = &ops_stack.children[2] else { panic!("expected the tree as the third child") };
-        assert_eq!(ops_tree.sections[0].items.len(), 1);
-        assert_eq!(ops_tree.sections[0].items[0].id, "framework.history.entry.1");
+        let UiNode::Tree(ops_tree) = ui_history_panel(&only_ops, "ctrl", false) else { panic!("expected a Tree root") };
+        assert_eq!(ops_tree.sections[1].items.len(), 1);
+        assert_eq!(ops_tree.sections[1].items[0].id, "framework.history.entry.1");
 
         let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutOperations, ..history };
-        let UiNode::Stack(no_ops_stack) = ui_history_panel(&without_ops, "ctrl", false) else { panic!("expected a Stack root") };
-        let UiNode::Tree(no_ops_tree) = &no_ops_stack.children[2] else { panic!("expected the tree as the third child") };
-        assert_eq!(no_ops_tree.sections[0].items.len(), 1);
-        assert_eq!(no_ops_tree.sections[0].items[0].id, "framework.history.entry.2");
+        let UiNode::Tree(no_ops_tree) = ui_history_panel(&without_ops, "ctrl", false) else { panic!("expected a Tree root") };
+        assert_eq!(no_ops_tree.sections[1].items.len(), 1);
+        assert_eq!(no_ops_tree.sections[1].items[0].id, "framework.history.entry.2");
     }
 
     #[test]
@@ -7328,9 +7324,9 @@ mod semio_plugin_macro_tests {
         app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewState::default()).expect("render before");
         app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).expect("select");
         let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewState::default()).expect("render after");
-        let UiNode::Stack(stack) = rendered else { panic!("expected a Stack root") };
-        let UiNode::Tree(tree) = &stack.children[2] else { panic!("expected the tree as the third child") };
-        assert_eq!(tree.sections[0].items.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
+        let UiNode::Tree(tree) = rendered else { panic!("expected a Tree root like Document/Catalogue") };
+        assert_eq!(tree.sections.len(), 2, "Actions + Commands");
+        assert_eq!(tree.sections[1].items.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
     }
 
     #[test]

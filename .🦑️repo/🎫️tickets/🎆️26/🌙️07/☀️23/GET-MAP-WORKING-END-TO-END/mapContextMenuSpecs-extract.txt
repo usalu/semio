@@ -1,0 +1,236 @@
+exists True size 1145566
+
+===== 5160-5180 =====
+5160|  return useContext(AppKeybindingsContext);
+5161|}
+5162|
+5163|/** @emoji 🖱️ Maps program context-menu specs with app keybinding shortcut enrichment. */
+5164|export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
+5165|  const keysByActionId = useAppKeybindingsByActionId();
+5166|  return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
+5167|}
+5168|
+5169|//#region 🎥️TutorialOverlayHosts
+5170|/** @emoji 📦️ Resolves a `TutorialAssetSrc` to a value usable as an `<video>`/`<audio>` `src` — `Blob` (a
+5171| * studio `BlobStore` reference) isn't resolvable from this scope (no blob-store bridge here) and returns
+5172| * `null` with a console warning; `Url`/`DataUrl` resolve directly. */
+5173|function tutorialAssetSrcToUrl(src: TutorialAssetSrc): string | null {
+5174|  if (src.kind === "url") return src.url;
+5175|  if (src.kind === "dataUrl") return src.data;
+5176|  console.warn("[DEBUG] tutorial blob asset src not resolvable in this scope", src.hash);
+5177|  return null;
+5178|}
+5179|
+5180|/** @emoji 💬️ Self-subscribes to the tutorial clock (see `useTutorialClock`) so only THIS leaf re-renders every frame — never the whole shell — mirroring `TutorialBar`'s own subscription. */
+
+===== 13065-13140 =====
+13065|  console.log(
+13066|    `[DEBUG] context menu open (${source})`,
+13067|    specs.map((spec) => ({ id: spec.id, icon: spec.icon, color: spec.color, action: spec.action })),
+13068|  );
+13069|}
+13070|
+13071|/** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
+13072|export function mapContextMenuSpecs(
+13073|  specs: readonly ContextMenuItemSpec[],
+13074|  dispatch: (action: string, args?: Record<string, unknown>) => void,
+13075|  keysByActionId?: ReadonlyMap<string, string>,
+13076|): ContextMenuItem[] {
+13077|  return specs.map((spec) => {
+13078|    const boundKeys = spec.action ? keysByActionId?.get(spec.action) : undefined;
+13079|    const shortcut = spec.shortcut ?? (boundKeys ? formatKeybindingShortcut(boundKeys) : undefined);
+13080|    return {
+13081|      id: spec.id,
+13082|      label: spec.label,
+13083|      icon: spec.icon,
+13084|      color: spec.color,
+13085|      shortcut,
+13086|      disabled: spec.disabled,
+13087|      separator: spec.separator,
+13088|      checked: spec.checked,
+13089|      destructive: spec.destructive,
+13090|      onSelect: spec.action
+13091|        ? (event) => {
+13092|            const clientX = event && "clientX" in event && typeof (event as MouseEvent).clientX === "number" ? (event as MouseEvent).clientX : undefined;
+13093|            const clientY = event && "clientY" in event && typeof (event as MouseEvent).clientY === "number" ? (event as MouseEvent).clientY : undefined;
+13094|            const pointArgs = spec.action === "openVortexSuggestions" && clientX != null && clientY != null ? { x: clientX, y: clientY } : undefined;
+13095|            dispatch(spec.action!, { ...spec.args, ...pointArgs });
+13096|          }
+13097|        : undefined,
+13098|      onHover: spec.hoverAction
+13099|        ? () => {
+13100|            if (spec.hoverAction === "hoverSuggestion") {
+13101|              console.log(`[DEBUG] hoverSuggestion`, { index: spec.hoverArgs?.index, color: spec.color, icon: spec.icon });
+13102|            }
+13103|            dispatch(spec.hoverAction!, spec.hoverArgs);
+13104|          }
+13105|        : undefined,
+13106|      children: spec.children?.length ? mapContextMenuSpecs(spec.children, dispatch, keysByActionId) : undefined,
+13107|    };
+13108|  });
+13109|}
+13110|
+13111|function parseInteraction(interactionJson: string | undefined): WorldInteractionRecord {
+13112|  if (!interactionJson) return {};
+13113|  try {
+13114|    return JSON.parse(interactionJson) as WorldInteractionRecord;
+13115|  } catch {
+13116|    return {};
+13117|  }
+13118|}
+13119|
+13120|function parseLod(lodJson: string | undefined): WorldLodRecord {
+13121|  if (!lodJson) return {};
+13122|  try {
+13123|    return JSON.parse(lodJson) as WorldLodRecord;
+13124|  } catch {
+13125|    return {};
+13126|  }
+13127|}
+13128|
+13129|function parseBrushPreview(brushPreviewJson: string | undefined): WorldBrushPreviewRecord | null {
+13130|  if (!brushPreviewJson) return null;
+13131|  try {
+13132|    return JSON.parse(brushPreviewJson) as WorldBrushPreviewRecord;
+13133|  } catch {
+13134|    return null;
+13135|  }
+13136|}
+13137|
+13138|type WorldContextMenuTarget = { readonly kind: "vortex" | "object" | "reference"; readonly id: string };
+13139|
+13140|/** @emoji 🖱️ Resolves which entity a plain right-click should select-then-open a menu for, by priority: hovered vortex, then hovered object component, then hovered reference. */
+
+===== mapTiledContextMenu / mapContextMenuSpecs call sites =====
+---
+5162|
+5163|/** @emoji 🖱️ Maps program context-menu specs with app keybinding shortcut enrichment. */
+5164|export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
+5165|  const keysByActionId = useAppKeybindingsByActionId();
+5166|  return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
+5167|}
+5168|
+5169|//#region 🎥️TutorialOverlayHosts
+5170|/** @emoji 📦️ Resolves a `TutorialAssetSrc` to a value usable as an `<video>`/`<audio>` `src` — `Blob` (a
+5171| * studio `BlobStore` reference) isn't resolvable from this scope (no blob-store bridge here) and returns
+---
+5164|export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
+5165|  const keysByActionId = useAppKeybindingsByActionId();
+5166|  return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
+5167|}
+5168|
+5169|//#region 🎥️TutorialOverlayHosts
+5170|/** @emoji 📦️ Resolves a `TutorialAssetSrc` to a value usable as an `<video>`/`<audio>` `src` — `Blob` (a
+5171| * studio `BlobStore` reference) isn't resolvable from this scope (no blob-store bridge here) and returns
+5172| * `null` with a console warning; `Url`/`DataUrl` resolve directly. */
+5173|function tutorialAssetSrcToUrl(src: TutorialAssetSrc): string | null {
+---
+13070|
+13071|/** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
+13072|export function mapContextMenuSpecs(
+13073|  specs: readonly ContextMenuItemSpec[],
+13074|  dispatch: (action: string, args?: Record<string, unknown>) => void,
+13075|  keysByActionId?: ReadonlyMap<string, string>,
+13076|): ContextMenuItem[] {
+13077|  return specs.map((spec) => {
+13078|    const boundKeys = spec.action ? keysByActionId?.get(spec.action) : undefined;
+13079|    const shortcut = spec.shortcut ?? (boundKeys ? formatKeybindingShortcut(boundKeys) : undefined);
+---
+13104|          }
+13105|        : undefined,
+13106|      children: spec.children?.length ? mapContextMenuSpecs(spec.children, dispatch, keysByActionId) : undefined,
+13107|    };
+13108|  });
+13109|}
+13110|
+13111|function parseInteraction(interactionJson: string | undefined): WorldInteractionRecord {
+13112|  if (!interactionJson) return {};
+13113|  try {
+---
+16034|  );
+16035|
+16036|  const mapWorldContextMenuSpecs = useMapContextMenuSpecs(handleWorldMenuDispatch);
+16037|  const mapSuggestionContextMenuSpecs = useMapContextMenuSpecs((action, args) => {
+16038|    if (action === "acceptSuggestion") {
+16039|      setVortexPointerArm(null);
+16040|      setConnectDragSource(null);
+16041|      setConnectDragHoverPosition(null);
+16042|    }
+16043|    dispatch(action, args);
+---
+16035|
+16036|  const mapWorldContextMenuSpecs = useMapContextMenuSpecs(handleWorldMenuDispatch);
+16037|  const mapSuggestionContextMenuSpecs = useMapContextMenuSpecs((action, args) => {
+16038|    if (action === "acceptSuggestion") {
+16039|      setVortexPointerArm(null);
+16040|      setConnectDragSource(null);
+16041|      setConnectDragHoverPosition(null);
+16042|    }
+16043|    dispatch(action, args);
+16044|  });
+---
+17425|  );
+17426|
+17427|  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+17428|
+17429|  const paintOverlays = useCallback(() => {
+17430|    const session = sessionRef.current;
+17431|    const labelCanvas = labelCanvasRef.current;
+17432|    const container = containerRef.current;
+17433|    if (!session || !labelCanvas || !container) return;
+17434|    const rect = container.getBoundingClientRect();
+---
+17760|  );
+17761|
+17762|  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+17763|
+17764|  const containerRef = useRef<HTMLDivElement>(null);
+17765|  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
+17766|
+17767|  return (
+17768|    <div
+17769|      ref={containerRef}
+---
+18625|    [contextMenu, dispatch, scene.fixtureJson],
+18626|  );
+18627|  const mapFlowContextMenu = useMapContextMenuSpecs(handleFlowMenuDispatch);
+18628|
+18629|  // 🧵️ Dispatches the mutated fixture to the plugin and returns immediately — evaluation happens
+18630|  // off the main thread in the plugin worker's `flowEvalTick` chain, never here. The next scene
+18631|  // resync applies its `evalJson`/`computingJson` back onto this session (`syncFlowSessionFromScene`).
+18632|  const commitFixture = useCallback(() => {
+18633|    const session = sessionRef.current;
+18634|    if (!session) return;
+---
+21223|  );
+21224|
+21225|  const mapTiledContextMenu = useMapContextMenuSpecs(dispatch);
+21226|
+21227|  const dispatchCamera = useCallback(
+21228|    (camera: MapCamera) => {
+21229|      dispatch("setCamera", { camera });
+21230|    },
+21231|    [dispatch],
+21232|  );
+---
+21686|      {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
+21687|      {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
+21688|      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={mapTiledContextMenu(contextMenu.specs)} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
+21689|      {hoveredFeature?.kind === "position" ? (
+21690|        <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" style={{ left: 0, top: 0 }}>
+21691|          {(() => {
+21692|            const meta = positionMetaById.get(hoveredFeature.id);
+21693|            const title = meta?.name ?? meta?.label ?? hoveredFeature.id;
+21694|            return (
+21695|              <div className="flex items-start gap-1.5">
+---
+22061|  );
+22062|
+22063|  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+22064|
+22065|  /** @emoji 🎞️ Coalesces renderFrame() to at most one per animation frame, no matter how many raw pointer/wheel events fire in between — mirrors the premigration `scheduleInputInvalidate()` pattern. */
+22066|  const scheduleRender = useCallback((): void => {
+22067|    if (renderScheduledRef.current) return;
+22068|    renderScheduledRef.current = true;
+22069|    requestAnimationFrame(() => {
+22070|      renderScheduledRef.current = false;

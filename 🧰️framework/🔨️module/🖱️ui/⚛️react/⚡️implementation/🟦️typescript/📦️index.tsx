@@ -9630,9 +9630,26 @@ function isSurfaceActiveBackgroundTarget(target: EventTarget | null): boolean {
   return !chip || !gap.contains(chip);
 }
 
-function resolveSurfaceActiveRoot(target: Node): HTMLElement | null {
+/** @emoji 🎯️ Treats the visual cutout as canvas even when an app's absolute canvas extends beneath it and becomes the DOM pointer target. */
+function isSurfaceActiveBackgroundPointer(event: { readonly target: EventTarget | null; readonly clientX?: number; readonly clientY?: number }): boolean {
+  if (isSurfaceActiveBackgroundTarget(event.target)) return true;
+  if (typeof document === "undefined" || typeof event.clientX !== "number" || typeof event.clientY !== "number") return false;
+  const target = event.target instanceof Element ? event.target : null;
+  const stack = target?.closest<HTMLElement>('[data-slot="mode-dock-stack"]');
+  const scope: Document | HTMLElement = stack ?? document;
+  for (const gap of scope.querySelectorAll<HTMLElement>('[data-window-silhouette-gap]')) {
+    if (stack && gap.closest('[data-slot="mode-dock-stack"]') !== stack) continue;
+    const rect = gap.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) continue;
+    if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) return true;
+  }
+  return false;
+}
+
+function resolveSurfaceActiveRoot(target: EventTarget | null): HTMLElement | null {
   if (isSurfaceActiveBackgroundTarget(target)) return null;
-  let node: Node | null = target instanceof Element ? target : target.parentElement;
+  if (!(target instanceof Element)) return null;
+  let node: HTMLElement | null = target instanceof HTMLElement ? target : target.parentElement;
   let match: HTMLElement | null = null;
   while (node instanceof HTMLElement) {
     if (surfaceActiveRoots.has(node)) match = node;
@@ -9645,14 +9662,10 @@ function installSurfaceActiveDocumentListeners(): void {
   if (surfaceActiveListenersInstalled || typeof document === "undefined") return;
   surfaceActiveListenersInstalled = true;
   const onPointerDown = (event: Event): void => {
-    const target = event.target;
-    if (!(target instanceof Node)) return;
-    setSurfaceActiveRoot(resolveSurfaceActiveRoot(target));
+    setSurfaceActiveRoot(isSurfaceActiveBackgroundPointer(event) ? null : resolveSurfaceActiveRoot(event.target));
   };
   const onFocusIn = (event: Event): void => {
-    const target = event.target;
-    if (!(target instanceof Node)) return;
-    setSurfaceActiveRoot(resolveSurfaceActiveRoot(target));
+    setSurfaceActiveRoot(resolveSurfaceActiveRoot(event.target));
   };
   document.addEventListener("pointerdown", onPointerDown);
   document.addEventListener("focusin", onFocusIn);
@@ -9686,7 +9699,7 @@ export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): read
   const bind = reactHostPort.useMemo<SurfaceActiveBindProps>(
     () => ({
       onPointerDownCapture: (event: React.PointerEvent) => {
-        if (isSurfaceActiveBackgroundTarget(event.target)) {
+        if (isSurfaceActiveBackgroundPointer(event)) {
           setSurfaceActiveRoot(null);
           return;
         }
@@ -9695,7 +9708,7 @@ export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): read
       },
       onFocusCapture: (event: React.FocusEvent) => {
         const root = ref.current;
-        if (root?.contains(event.target as Node)) setSurfaceActiveRoot(root);
+        if (root && event.target instanceof Element && root.contains(event.target)) setSurfaceActiveRoot(root);
       },
     }),
     [ref],
@@ -16033,6 +16046,8 @@ const treeInspectorInnerRowClassName = "min-w-0 w-full";
 const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-double";
 const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double overflow-hidden";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
+const treeHeaderRevealActionsClassName =
+  "flex max-w-0 items-center gap-single overflow-hidden opacity-0 pointer-events-none transition-opacity group-hover/tree-row:max-w-none group-hover/tree-row:overflow-visible group-hover/tree-row:opacity-100 group-hover/tree-row:pointer-events-auto group-focus-within/tree-row:max-w-none group-focus-within/tree-row:overflow-visible group-focus-within/tree-row:opacity-100 group-focus-within/tree-row:pointer-events-auto";
 const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center gap-x-tiny min-h-workbench";
 const treePropertyHeaderGridStyle: React.CSSProperties = { gridTemplateColumns: `minmax(0, 1fr) ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)}` };
 const treeItemControlClassName =
@@ -16352,29 +16367,40 @@ export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheck
   </label>
 );
 
-const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
-  <div data-slot="tree-header-actions" className={treeHeaderActionsClassName}>
-    {actions.map((action, index) =>
-      action.kind === "checkbox" ? (
-        <TreeCheckbox key={action.id ?? index} id={action.id} checked={action.checked} onCheckedChange={action.onCheckedChange} title={action.title} disabled={action.disabled} ariaLabel={action.ariaLabel} />
-      ) : (
-        <span key={action.id ?? index} className={cn(action.revealOnHover ? "opacity-0 transition-opacity group-hover/tree-row:opacity-100" : undefined)}>
-          <Action
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              action.onClick();
-            }}
-            id={action.id}
-            icon={action.icon}
-            text={action.text ?? action.title}
-            disabled={action.disabled}
-          />
-        </span>
-      ),
-    )}
-  </div>
-);
+const renderTreeHeaderAction = (action: TreeHeaderAction, key: React.Key) =>
+  action.kind === "checkbox" ? (
+    <TreeCheckbox key={key} id={action.id} checked={action.checked} onCheckedChange={action.onCheckedChange} title={action.title} disabled={action.disabled} ariaLabel={action.ariaLabel} />
+  ) : (
+    <span key={key}>
+      <Action
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          action.onClick();
+        }}
+        id={action.id}
+        icon={action.icon}
+        text={action.text ?? action.title}
+        disabled={action.disabled}
+      />
+    </span>
+  );
+
+const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => {
+  const indexedActions = actions.map((action, index) => ({ action, key: action.id ?? index }));
+  const persistentActions = indexedActions.filter(({ action }) => action.kind === "checkbox" || !action.revealOnHover);
+  const revealActions = indexedActions.filter(({ action }) => action.kind !== "checkbox" && action.revealOnHover);
+  return (
+    <div data-slot="tree-header-actions" className={treeHeaderActionsClassName}>
+      {persistentActions.map(({ action, key }) => renderTreeHeaderAction(action, key))}
+      {revealActions.length > 0 ? (
+        <div data-slot="tree-header-reveal-actions" className={treeHeaderRevealActionsClassName}>
+          {revealActions.map(({ action, key }) => renderTreeHeaderAction(action, key))}
+        </div>
+      ) : null}
+    </div>
+  );
+};
 
 export enum TreeItemCollapsibleState {
   None = 0,
@@ -22359,7 +22385,9 @@ const Window: React.FC<WindowProps> = ({
         data-elevation-root=""
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
-        onPointerDownCapture={() => onActivate?.()}
+        onPointerDownCapture={(event) => {
+          if (!isSurfaceActiveBackgroundPointer(event)) onActivate?.();
+        }}
         className={cn(
           "relative flex w-full min-w-0 flex-col overflow-hidden",
           fill ? "h-full min-h-0" : "h-auto max-h-full self-start",
@@ -27840,6 +27868,10 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   const handleCanvasBackgroundPointerDown = reactHostPort.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      if (isSurfaceActiveBackgroundPointer(event)) {
+        deactivateActiveWindow();
+        return;
+      }
       if (!(event.target instanceof HTMLElement)) return;
       if (event.target.closest('[data-slot="mode-dock-stack"]')) return;
       if (event.target !== event.currentTarget && event.target.dataset.slot !== "resizable-panel") return;
@@ -32796,13 +32828,14 @@ if (import.meta.vitest) {
     });
 
     it("Mode exposes its top cutout to the canvas background from pointer down", async () => {
+      const onCanvasPointerDown = vi.fn();
       const ControlledMode = () => {
         const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("right");
         return (
           <Mode
             windows={[
               { id: "left", title: "Left", iconId: "app-window", children: <div>Left Body</div> },
-              { id: "right", title: "Right", iconId: "app-window", children: <div>Right Body</div> },
+              { id: "right", title: "Right", iconId: "app-window", children: <div data-testid="under-cutout-canvas" onPointerDown={onCanvasPointerDown}>Right Body</div> },
             ]}
             layout={{
               kind: "stack",
@@ -32828,9 +32861,9 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("pointer-events-auto");
       expect(gap.className).toContain("pointer-events-none");
       expect(gap.className).not.toContain("cursor-grab");
-      fireEvent.pointerDown(gap);
-      await waitFor(() => expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal"));
-      fireEvent.pointerDown(container.querySelector('[data-slot="mode-body"]')!);
+      vi.spyOn(gap, "getBoundingClientRect").mockReturnValue({ left: 60, right: 160, top: 0, bottom: 24, width: 100, height: 24, x: 60, y: 0, toJSON: () => ({}) } as DOMRect);
+      fireEvent.pointerDown(screen.getByTestId("under-cutout-canvas"), { clientX: 100, clientY: 12 });
+      expect(onCanvasPointerDown).toHaveBeenCalledOnce();
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-active="true"]')).toBeNull();
       expect(container.querySelector('[data-slot="window"][data-active="true"]')).toBeNull();
       expect(screen.getByText("Right Body")).toBeTruthy();
@@ -36673,6 +36706,32 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-header-actions"');
       expect(markup).not.toContain('data-slot="property-control"');
       expect(markup).toContain('data-testid="remove-icon"');
+    });
+
+    it("collapses reveal-on-hover tree actions without collapsing persistent actions", async () => {
+      const { render } = await import("@testing-library/react");
+      const { container } = render(
+        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <TreeItem
+            id="tooltip.manual"
+            actions={[
+              { id: "persistent", icon: <span data-testid="persistent-icon" />, onClick: () => undefined },
+              { id: "revealed", icon: <span data-testid="revealed-icon" />, onClick: () => undefined, revealOnHover: true },
+            ]}
+          />
+        </TreeContext.Provider>,
+      );
+
+      const actions = container.querySelector<HTMLElement>('[data-slot="tree-header-actions"]');
+      const revealActions = container.querySelector<HTMLElement>('[data-slot="tree-header-reveal-actions"]');
+      expect(actions).toBeTruthy();
+      expect(revealActions).toBeTruthy();
+      expect(revealActions?.className).toContain("max-w-0");
+      expect(revealActions?.className).toContain("group-hover/tree-row:max-w-none");
+      expect(revealActions?.className).toContain("group-focus-within/tree-row:max-w-none");
+      expect(revealActions?.querySelector('[data-testid="revealed-icon"]')).toBeTruthy();
+      expect(revealActions?.querySelector('[data-testid="persistent-icon"]')).toBeNull();
+      expect(actions?.querySelector('[data-testid="persistent-icon"]')).toBeTruthy();
     });
 
     it("uses the same inline tree header actions when isTree is false", () => {

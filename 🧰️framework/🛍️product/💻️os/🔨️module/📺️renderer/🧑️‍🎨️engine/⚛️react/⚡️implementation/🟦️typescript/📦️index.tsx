@@ -13070,11 +13070,11 @@ function logContextMenuOpen(source: string, specs: readonly ContextMenuItemSpec[
 
 /** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
 export function mapContextMenuSpecs(
-  specs: readonly ContextMenuItemSpec[],
+  specs: readonly ContextMenuItemSpec[] | null | undefined,
   dispatch: (action: string, args?: Record<string, unknown>) => void,
   keysByActionId?: ReadonlyMap<string, string>,
 ): ContextMenuItem[] {
-  return specs.map((spec) => {
+  return (specs ?? []).map((spec) => {
     const boundKeys = spec.action ? keysByActionId?.get(spec.action) : undefined;
     const shortcut = spec.shortcut ?? (boundKeys ? formatKeybindingShortcut(boundKeys) : undefined);
     return {
@@ -15802,6 +15802,10 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const instancesRef = useRef(instances);
   instancesRef.current = instances;
   const wasMarqueeDragRef = useRef(false);
+  const [marqueeCommitHold, setMarqueeCommitHold] = useState<{
+    readonly mergedComponentIds: readonly number[] | null;
+    readonly mergedInstanceIds: readonly string[] | null;
+  } | null>(null);
   const connectDropConsumedRef = useRef(false);
   const engagementPointerMoveInFlightRef = useRef(false);
   const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
@@ -16385,20 +16389,48 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [instances, marqueeCoverage, marqueeDragActive, marqueeMergeMode, marqueePath, meshes, method, selection.activeObjectId, selection.componentIds, selection.ids, selectionMode]);
   const selectionPreviewSourceId = windowInstanceId ?? node.surfaceId;
   const localSelectionPreviewActive = marqueePreview.mergedComponentIds !== null || marqueePreview.mergedInstanceIds !== null;
+  const heldSelectionPreviewActive = marqueeCommitHold !== null && (marqueeCommitHold.mergedComponentIds !== null || marqueeCommitHold.mergedInstanceIds !== null);
+  useEffect(() => {
+    if (!marqueeCommitHold) return;
+    const selectionIdSet = new Set(selection.ids ?? []);
+    const selectionComponentSet = new Set(selection.componentIds ?? []);
+    const instanceMatch =
+      marqueeCommitHold.mergedInstanceIds != null &&
+      marqueeCommitHold.mergedInstanceIds.length > 0 &&
+      marqueeCommitHold.mergedInstanceIds.length === selectionIdSet.size &&
+      marqueeCommitHold.mergedInstanceIds.every((id) => selectionIdSet.has(id));
+    const componentMatch =
+      marqueeCommitHold.mergedComponentIds != null &&
+      marqueeCommitHold.mergedComponentIds.length > 0 &&
+      marqueeCommitHold.mergedComponentIds.length === selectionComponentSet.size &&
+      marqueeCommitHold.mergedComponentIds.every((id) => selectionComponentSet.has(id));
+    if (instanceMatch || componentMatch) setMarqueeCommitHold(null);
+  }, [marqueeCommitHold, selection.componentIds, selection.ids]);
   useLayoutEffect(() => {
     if (localSelectionPreviewActive) {
       setWorldSelectionPreview(node.controllerId, { sourceId: selectionPreviewSourceId, ...marqueePreview });
+    } else if (heldSelectionPreviewActive && marqueeCommitHold) {
+      setWorldSelectionPreview(node.controllerId, { sourceId: selectionPreviewSourceId, ...marqueeCommitHold });
     } else {
       clearWorldSelectionPreview(node.controllerId, selectionPreviewSourceId);
     }
-  }, [localSelectionPreviewActive, marqueePreview, node.controllerId, selectionPreviewSourceId]);
+  }, [heldSelectionPreviewActive, localSelectionPreviewActive, marqueeCommitHold, marqueePreview, node.controllerId, selectionPreviewSourceId]);
+  const marqueePreviewRef = useRef(marqueePreview);
+  marqueePreviewRef.current = marqueePreview;
+  const marqueeDragActiveRef = useRef(marqueeDragActive);
+  marqueeDragActiveRef.current = marqueeDragActive;
+  const marqueeFinalizeOnceRef = useRef(false);
   useEffect(
     () => () => {
       clearWorldSelectionPreview(node.controllerId, selectionPreviewSourceId);
     },
     [node.controllerId, selectionPreviewSourceId],
   );
-  const visibleSelectionPreview = localSelectionPreviewActive ? marqueePreview : (sharedSelectionPreview ?? marqueePreview);
+  const visibleSelectionPreview = localSelectionPreviewActive
+    ? marqueePreview
+    : heldSelectionPreviewActive && marqueeCommitHold
+      ? marqueeCommitHold
+      : (sharedSelectionPreview ?? marqueePreview);
 
   const dispatchGumballPoseDelta = useCallback(
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
@@ -16479,7 +16511,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         dispatch("paintStrokeBegin");
       }
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
+      marqueeFinalizeOnceRef.current = false;
       setMarqueePath([toLocalPoint(event)]);
+      event.currentTarget.setPointerCapture?.(event.pointerId);
     },
     [dispatch, node.surfaceId, paintMode, selection.engagementSessionActive, toLocalPoint],
   );
@@ -16508,8 +16542,38 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [dispatch, marqueeDown, node.surfaceId, selection.engagementSessionActive, toLocalPoint],
   );
 
+  const finalizeMarqueeSelection = useCallback(() => {
+    if (!marqueeDragActiveRef.current || marqueeFinalizeOnceRef.current) return;
+    const preview = marqueePreviewRef.current;
+    if (!preview.mergedInstanceIds?.length && !preview.mergedComponentIds?.length) return;
+    marqueeFinalizeOnceRef.current = true;
+    if (preview.mergedInstanceIds?.length) {
+      setMarqueeCommitHold({ mergedComponentIds: null, mergedInstanceIds: preview.mergedInstanceIds });
+      void Promise.resolve(dispatch("worldSelect", { ids: preview.mergedInstanceIds, merge: "replace" })).finally(() => {
+        window.setTimeout(() => setMarqueeCommitHold((hold) => (hold?.mergedInstanceIds === preview.mergedInstanceIds ? null : hold)), 250);
+      });
+    } else if (preview.mergedComponentIds?.length) {
+      setMarqueeCommitHold({ mergedComponentIds: preview.mergedComponentIds, mergedInstanceIds: null });
+      void Promise.resolve(
+        dispatch("setSelection", {
+          mode: selectionMode,
+          ids: preview.mergedComponentIds,
+          objectId: selection.activeObjectId,
+          merge: "replace",
+        }),
+      ).finally(() => {
+        window.setTimeout(() => setMarqueeCommitHold((hold) => (hold?.mergedComponentIds === preview.mergedComponentIds ? null : hold)), 250);
+      });
+    }
+    wasMarqueeDragRef.current = true;
+    setMarqueePath([]);
+  }, [dispatch, selection.activeObjectId, selectionMode]);
+
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
       if (faceDragSession) {
         const session = faceDragSession;
         setFaceDragSession(null);
@@ -16530,14 +16594,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         }
         return;
       }
-      if (marqueeDragActive) {
-        if (marqueePreview.mergedInstanceIds) {
-          dispatch("worldSelect", { ids: marqueePreview.mergedInstanceIds, merge: "replace" });
-        } else if (marqueePreview.mergedComponentIds) {
-          dispatch("setSelection", { mode: selectionMode, ids: marqueePreview.mergedComponentIds });
-        }
-      }
-      wasMarqueeDragRef.current = marqueeDragActive;
+      finalizeMarqueeSelection();
       if (paintStrokeActive) {
         dispatch("paintStrokeEnd");
         setPaintStrokeActive(false);
@@ -16550,8 +16607,22 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         handleConnectDragCancel();
       }
     },
-    [dispatch, faceDragSession, handleConnectDragCancel, marqueeDragActive, marqueePreview, node.surfaceId, paintStrokeActive, selectionMode],
+    [faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, node.surfaceId, paintStrokeActive],
   );
+
+  useEffect(() => {
+    if (!marqueeDown || selection.engagementSessionActive || paintMode) return undefined;
+    const onWindowPointerUp = (event: PointerEvent): void => {
+      if (event.button !== 0) return;
+      finalizeMarqueeSelection();
+    };
+    window.addEventListener("pointerup", onWindowPointerUp, true);
+    window.addEventListener("pointercancel", onWindowPointerUp, true);
+    return () => {
+      window.removeEventListener("pointerup", onWindowPointerUp, true);
+      window.removeEventListener("pointercancel", onWindowPointerUp, true);
+    };
+  }, [finalizeMarqueeSelection, marqueeDown, paintMode, selection.engagementSessionActive]);
 
   const handleEmptyClick = useCallback(
     (event: MouseEvent) => {
@@ -16749,6 +16820,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       onDragEnter={onCatalogueDragEnter}
       onDragLeave={onCatalogueDragLeave}
       onDragOver={onCatalogueDragOver}
@@ -21191,7 +21263,7 @@ class MapRenderer {
 //#endregion MapRenderer
 
 //#region TiledMapHost
-export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
+export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.tiledMap;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -21203,10 +21275,14 @@ export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
   const [marqueeOverlay, setMarqueeOverlay] = useState<
     { coverage: SelectionMarqueeCoverage; shape: "rect"; rect: { x: number; y: number; width: number; height: number } } | { coverage: SelectionMarqueeCoverage; shape: "polygon"; points: readonly SelectionMarqueePoint[] } | null
   >(null);
-  const [contextMenu, setContextMenu] = useState<{ open: boolean; position: { x: number; y: number } | null; items: ContextMenuItem[] }>({
+  const [contextMenu, setContextMenu] = useState<{
+    open: boolean;
+    position: { x: number; y: number } | null;
+    specs: readonly ContextMenuItemSpec[];
+  }>({
     open: false,
     position: null,
-    items: [],
+    specs: [],
   });
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const sourceAvailableLabel = useLabel("ui.host.sourceAvailable");
@@ -21685,7 +21761,7 @@ export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
       <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
       {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
-      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={mapTiledContextMenu(contextMenu.specs)} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
+      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={mapTiledContextMenu(contextMenu.specs ?? [])} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
       {hoveredFeature?.kind === "position" ? (
         <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" style={{ left: 0, top: 0 }}>
           {(() => {

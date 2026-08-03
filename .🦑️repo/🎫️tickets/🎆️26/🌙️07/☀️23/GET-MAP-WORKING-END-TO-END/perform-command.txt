@@ -1,0 +1,150 @@
+9170|async function performCommand(client: AppChannelClient, envelope: WireCommandEnvelope, viewState: unknown): Promise<InvocationResponse> {
+9171|  const frames = await client.command(encodePackValue(envelope), viewState);
+9172|  let output: unknown = null;
+9173|  let diagnostics: InvocationResponse["diagnostics"] = [];
+9174|  let requestedEffects: HostEffect[] = [];
+9175|  let events: InvocationResponse["events"] = [];
+9176|  for (const frame of frames) {
+9177|    if ("Invocation" in frame) {
+9178|      output = decodePackValue(new Uint8Array(frame.Invocation.output));
+9179|      const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
+9180|      diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
+9181|    } else if ("Effects" in frame) {
+9182|      requestedEffects = frame.Effects.effects.map((bytes) => decodePackValue(new Uint8Array(bytes)) as HostEffect);
+9183|    } else if ("Events" in frame) {
+9184|      events = frame.Events.events.map((bytes) => decodePackValue(new Uint8Array(bytes))) as InvocationResponse["events"];
+9185|    } else if ("Error" in frame) {
+9186|      throw new Error(`[DEBUG] ${envelope.kind} '${envelope.name}' failed (${frame.Error.code}): ${frame.Error.message}`);
+9187|    }
+9188|  }
+9189|  return {
+9190|    output,
+9191|    operations: [],
+9192|    inverseGroup: { invocationId: "", operations: [], inverseOperations: [] },
+9193|    diagnostics,
+9194|    requestedEffects,
+9195|    events,
+9196|  };
+9197|}
+9198|
+9199|/** 🔄️ One `PluginUiRefreshRequest` section, tagged with where its `AppFrame::UiSection` reply must
+9200| * land in the reassembled `PluginUiRefreshResponse` — `plugin_exchange`'s `AppCommand::RefreshUi`
+9201| * handling always emits exactly one `UiSection` frame per requested `SectionProbe`, in request order
+9202| * (verified against its source), so positional zipping (not `key` round-tripping) is what recovers
+9203| * the window/panel INSTANCE id `SectionProbe.key` can't carry (the wire probe's `key` must instead be
+9204| * the render body-key `plugin_exchange` renders against). */
+9205|type RefreshUiTarget =
+9206|  | { readonly kind: "window" | "panel"; readonly key: string }
+9207|  | { readonly kind: "engagements" | "measures" | "tools" | "labels" };
+9208|
+9209|async function performRefreshUi(client: AppChannelClient, request: PluginUiRefreshRequest): Promise<PluginUiRefreshResponse> {
+9210|  const probes: SectionProbe[] = [];
+9211|  const targets: RefreshUiTarget[] = [];
+9212|  for (const entry of request.windows ?? []) {
+9213|    probes.push({ kind: SECTION_KIND_WINDOW, key: entry.bodyKey ?? entry.key, hash: hashHexToWire(entry.hash) });
+9214|    targets.push({ kind: "window", key: entry.key });
+9215|  }
+9216|  for (const entry of request.panels ?? []) {
+9217|    probes.push({ kind: SECTION_KIND_PANEL, key: entry.bodyKey ?? entry.key, hash: hashHexToWire(entry.hash) });
+9218|    targets.push({ kind: "panel", key: entry.key });
+9219|  }
+9220|  if (request.engagements) {
+9221|    probes.push({ kind: SECTION_KIND_ENGAGEMENTS, key: "engagements", hash: hashHexToWire(request.engagements.hash) });
+9222|    targets.push({ kind: "engagements" });
+9223|  }
+9224|  if (request.measures) {
+9225|    probes.push({ kind: SECTION_KIND_MEASURES, key: "measures", hash: hashHexToWire(request.measures.hash) });
+9226|    targets.push({ kind: "measures" });
+9227|  }
+9228|  if (request.tools) {
+9229|    probes.push({ kind: SECTION_KIND_TOOLS, key: "tools", hash: hashHexToWire(request.tools.hash) });
+9230|    targets.push({ kind: "tools" });
+9231|  }
+9232|  if (request.labels) {
+9233|    probes.push({ kind: SECTION_KIND_LABELS, key: "labels", hash: hashHexToWire(request.labels.hash) });
+9234|    targets.push({ kind: "labels" });
+9235|  }
+9236|  if (probes.length === 0) return {};
+9237|
+9238|  const frames = await client.refreshUi(probes, request.viewState ?? {});
+9239|  const sections = frames.filter((frame): frame is Extract<AppFrameValue, { readonly UiSection: unknown }> => "UiSection" in frame);
+9240|  if (sections.length !== probes.length) {
+9241|    const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+9242|    throw new Error(errorFrame ? `[DEBUG] refreshUi failed (${errorFrame.Error.code}): ${errorFrame.Error.message}` : `[DEBUG] refreshUi: expected ${probes.length} UiSection frames, got ${sections.length}`);
+9243|  }
+9244|
+9245|  const windows: PluginUiRefreshSectionResponse[] = [];
+9246|  const panels: PluginUiRefreshSectionResponse[] = [];
+9247|  let engagements: PluginUiRefreshSectionResponse | undefined;
+9248|  let measures: PluginUiRefreshSectionResponse | undefined;
+9249|  let tools: PluginUiRefreshSectionResponse | undefined;
+9250|  let labels: PluginUiRefreshSectionResponse | undefined;
+9251|  sections.forEach((frame, index) => {
+9252|    const target = targets[index]!;
+9253|    const section = frame.UiSection;
+9254|    const response: PluginUiRefreshSectionResponse = {
+9255|      key: target.kind === "window" || target.kind === "panel" ? target.key : target.kind,
+9256|      hash: hashWireToHex(section.hash),
+9257|      value: section.body !== null ? decodePackValue(new Uint8Array(section.body)) : undefined,
+9258|    };
+9259|    if (target.kind === "window") windows.push(response);
+9260|    else if (target.kind === "panel") panels.push(response);
+9261|    else if (target.kind === "engagements") engagements = response;
+9262|    else if (target.kind === "measures") measures = response;
+9263|    else if (target.kind === "tools") tools = response;
+9264|    else labels = response;
+9265|  });
+9266|  // ⏱️ `requestedEffects` stays empty: `plugin_exchange` only drains `pending_effects` when a
+9267|  // `Command` in the SAME batch mutated the document — a pure `RefreshUi` batch never sets `mutated`,
+9268|  // so no `Effects` frame can appear here. A refresh-triggered effect chain (e.g. resuming a
+9269|  // `flowEvalTick`) is therefore a documented Wave 1 gap, not silently dropped.
+9270|  return { windows, panels, engagements, measures, tools, labels };
+9271|}
+9272|
+9273|async function performContextMenu(client: AppChannelClient, request: PluginContextMenuRequest): Promise<readonly ContextMenuItemSpec[]> {
+9274|  const items = await client.contextMenu(request);
+9275|  return Array.isArray(items) ? (items as ContextMenuItemSpec[]) : [];
+9276|}
+9277|
+9278|/** 📡️ Wraps the framework-core `PluginWasmHandle` (the 5-function binary `exchange` ABI) behind the
+9279| * SAME method surface the rest of this file already calls — the compatibility adapter for
+9280| * `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s ABI flip. One `AppChannelClient` per
+9281| * live instance id (created in `createApp`, dropped in `destroyApp`) frames every call through
+9282| * `AppCommand`/`AppFrame`; no `AppCommand::Hello` handshake is sent — `plugin_exchange` already
+9283| * defaults an un-`Hello`'d instance's actor to `"local"` (see `instance_actor`'s doc), so skipping it
+9284| * avoids the alternative (sending a real `Hello.config`, which would run every migrated app's
+9285| * `apply_config_bytes` against an arbitrary empty/placeholder config — wrong for an app like shooting
+9286| * whose `ShootingConfig` fields have no `#[serde(default)]` and would reject `{}`). */
+9287|export async function adaptPluginHandle(pluginId: string, handle: CorePluginWasmHandle): Promise<PluginWasmHandle> {
+9288|  const manifest = decodePackValue(await handle.manifest()) as unknown as PluginManifest;
+9289|  const channels = new Map<number, AppChannelClient>();
+9290|  const requireChannel = (instanceId: number): AppChannelClient => {
+9291|    const client = channels.get(instanceId);
+9292|    if (!client) throw new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
+9293|    return client;
+9294|  };
+9295|  return {
+9296|    pluginId,
+9297|    manifest,
+9298|    createApp: async (appId) => {
+9299|      const instanceId = await handle.createApp(appId);
+9300|      channels.set(instanceId, new AppChannelClient(handle, instanceId, appId));
+9301|      return instanceId;
+9302|    },
+9303|    destroyApp: async (instanceId) => {
+9304|      channels.delete(instanceId);
+9305|      await handle.destroyApp(instanceId);
+9306|    },
+9307|    handleAction: (instanceId, actionJson, viewState) => {
+9308|      const parsed = decodeActionWire(actionJson);
+9309|      return performCommand(requireChannel(instanceId), { kind: "action", name: parsed.action, args: parsed.args }, viewState);
+9310|    },
+9311|    handleCommand: (instanceId, commandJson, viewState) => {
+9312|      const parsed = decodeActionWire(commandJson);
+9313|      return performCommand(requireChannel(instanceId), { kind: "command", name: parsed.action, args: parsed.args }, viewState);
+9314|    },
+9315|    refreshUi: (instanceId, request) => performRefreshUi(requireChannel(instanceId), request),
+9316|    contextMenu: (instanceId, request) => performContextMenu(requireChannel(instanceId), request),
+9317|    applyOperations: async (instanceId, operationsPack) => {
+9318|      const envelopes = decodeOperationEnvelopesPack(operationsPack);
+9319|      const frames = await requireChannel(instanceId).applyEnvelopes(envelopes);

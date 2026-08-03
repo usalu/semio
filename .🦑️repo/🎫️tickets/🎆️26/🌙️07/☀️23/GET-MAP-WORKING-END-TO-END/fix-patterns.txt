@@ -1,0 +1,131 @@
+--- 5166 ---
+5163|/** @emoji 🖱️ Maps program context-menu specs with app keybinding shortcut enrichment. */
+5164|export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
+5165|  const keysByActionId = useAppKeybindingsByActionId();
+5166|  return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
+5167|}
+5168|
+5169|//#region 🎥️TutorialOverlayHosts
+5170|/** @emoji 📦️ Resolves a `TutorialAssetSrc` to a value usable as an `<video>`/`<audio>` `src` — `Blob` (a
+5171| * studio `BlobStore` reference) isn't resolvable from this scope (no blob-store bridge here) and returns
+5172| * `null` with a console warning; `Url`/`DataUrl` resolve directly. */
+5173|function tutorialAssetSrcToUrl(src: TutorialAssetSrc): string | null {
+--- 13064 ---
+13061|}
+13062|
+13063|/** @emoji 🧪️ Temporary menu-open trace — item ids/icons for end-to-end rich-menu validation. */
+13064|function logContextMenuOpen(source: string, specs: readonly ContextMenuItemSpec[]): void {
+13065|  console.log(
+13066|    `[DEBUG] context menu open (${source})`,
+13067|    specs.map((spec) => ({ id: spec.id, icon: spec.icon, color: spec.color, action: spec.action })),
+13068|  );
+13069|}
+13070|
+13071|/** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
+--- 13073 ---
+13070|
+13071|/** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
+13072|export function mapContextMenuSpecs(
+13073|  specs: readonly ContextMenuItemSpec[],
+13074|  dispatch: (action: string, args?: Record<string, unknown>) => void,
+13075|  keysByActionId?: ReadonlyMap<string, string>,
+13076|): ContextMenuItem[] {
+13077|  return specs.map((spec) => {
+13078|    const boundKeys = spec.action ? keysByActionId?.get(spec.action) : undefined;
+13079|    const shortcut = spec.shortcut ?? (boundKeys ? formatKeybindingShortcut(boundKeys) : undefined);
+13080|    return {
+--- 15796 ---
+15793|    () => getWorldSelectionPreview(node.controllerId),
+15794|    () => getWorldSelectionPreviewServerSnapshot(node.controllerId),
+15795|  );
+15796|  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
+15797|  const cameraRef = useRef<import("three").Camera | null>(null);
+15798|  const catalogueDragDepthRef = useRef(0);
+15799|  const catalogueDragEncodedRef = useRef<string | null>(null);
+15800|  /** 🎉️ Pre-drop instance ids — when the scene gains new ids after {@link commitCatalogueDropAt}, those objects celebrate. */
+15801|  const pendingCelebrateCatalogueDropIdsRef = useRef<ReadonlySet<string> | null>(null);
+15802|  const instancesRef = useRef(instances);
+15803|  instancesRef.current = instances;
+SAFE|16944|        items={mapWorldContextMenuSpecs(contextMenu?.specs ?? [])}
+--- 17413 ---
+17410|  const sessionRef = useRef<FrameworkGraphSession | null>(null);
+17411|  const labelCanvasRef = useRef<HTMLCanvasElement>(null);
+17412|  const containerRef = useRef<HTMLDivElement>(null);
+17413|  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
+17414|  const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
+17415|  const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
+17416|  const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
+17417|  const [sliderStateJson, setSliderStateJson] = useState("{}");
+17418|  const scenePack = useMemo(() => sceneToSyncPack(scene), [scene]);
+17419|
+17420|  const dispatch = useCallback(
+SAFE|17715|        items={mapContextMenu(contextMenu?.specs ?? [])}
+--- 17765 ---
+17762|  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+17763|
+17764|  const containerRef = useRef<HTMLDivElement>(null);
+17765|  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
+17766|
+17767|  return (
+17768|    <div
+17769|      ref={containerRef}
+17770|      className={cn("relative h-full w-full", surfaceClass)}
+17771|      data-level="base"
+17772|      onDragOver={(event) => {
+SAFE|17870|        items={mapContextMenu(contextMenu?.specs ?? [])}
+--- 18585 ---
+18582|    readonly x: number;
+18583|    readonly y: number;
+18584|    readonly widgetId?: string;
+18585|    readonly specs: readonly ContextMenuItemSpec[];
+18586|  } | null>(null);
+18587|  const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
+18588|  const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
+18589|  const [labelStateJson, setLabelStateJson] = useState("{}");
+18590|  const [sliderStateJson, setSliderStateJson] = useState("{}");
+18591|  const [containerSize, setContainerSize] = useState({ w: 800, h: 600 });
+18592|  const [sessionReady, setSessionReady] = useState(false);
+SAFE|19216|        items={mapFlowContextMenu(contextMenu?.specs ?? [])}
+--- 22054 ---
+22051|  const pendingSelectionJsonRef = useRef<string | null>(null);
+22052|  const onPeerGestureEndedRef = useRef<() => void>(() => {});
+22053|  const [sessionEpoch, setSessionEpoch] = useState(0);
+22054|  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
+22055|
+22056|  const dispatch = useCallback(
+22057|    (action: string, args?: Record<string, unknown>) => {
+22058|      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+22059|    },
+22060|    [node.controllerId, node.surfaceId, onAction],
+22061|  );
+SAFE|22688|        items={mapContextMenu(contextMenu?.specs ?? [])}
+
+DEF|9170|async function performCommand(client: AppChannelClient, envelope: WireCommandEnvelope, viewState: unknown): Promise<InvocationResponse> {
+9170|async function performCommand(client: AppChannelClient, envelope: WireCommandEnvelope, viewState: unknown): Promise<InvocationResponse> {
+9171|  const frames = await client.command(encodePackValue(envelope), viewState);
+9172|  let output: unknown = null;
+9173|  let diagnostics: InvocationResponse["diagnostics"] = [];
+9174|  let requestedEffects: HostEffect[] = [];
+9175|  let events: InvocationResponse["events"] = [];
+9176|  for (const frame of frames) {
+9177|    if ("Invocation" in frame) {
+9178|      output = decodePackValue(new Uint8Array(frame.Invocation.output));
+9179|      const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
+9180|      diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
+9181|    } else if ("Effects" in frame) {
+9182|      requestedEffects = frame.Effects.effects.map((bytes) => decodePackValue(new Uint8Array(bytes)) as HostEffect);
+9183|    } else if ("Events" in frame) {
+9184|      events = frame.Events.events.map((bytes) => decodePackValue(new Uint8Array(bytes))) as InvocationResponse["events"];
+9185|    } else if ("Error" in frame) {
+9186|      throw new Error(`[DEBUG] ${envelope.kind} '${envelope.name}' failed (${frame.Error.code}): ${frame.Error.message}`);
+9187|    }
+9188|  }
+9189|  return {
+9190|    output,
+9191|    operations: [],
+9192|    inverseGroup: { invocationId: "", operations: [], inverseOperations: [] },
+9193|    diagnostics,
+9194|    requestedEffects,
+9195|    events,
+9196|  };
+9197|}

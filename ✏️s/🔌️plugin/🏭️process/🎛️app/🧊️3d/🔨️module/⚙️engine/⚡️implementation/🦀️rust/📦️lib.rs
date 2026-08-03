@@ -3,7 +3,7 @@
 use base64::Engine;
 use kernel_3d_brepkit::{BrepkitKernel, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
 use kernel_3d_engine::{BrepKernel, GeometryHandle};
-use process_3d::{Pose, Process3dDocument, ProcessMeasure, ProcessStep, SolidSpec, Stock};
+use process_3d::{Capability, MachineCatalog, MeasureKind, MeasureRecipe, Pose, Process3dDocument, ProcessMeasure, ProcessStep, SolidSpec, Stock, StockQuantity, Workshop, WorkshopMachine};
 use semio_framework_plugin::{MeshData, MeshExporter, MeshImporter};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -159,52 +159,76 @@ pub fn process3d_io() -> semio_framework_plugin::AppIo {
 }
 //#endregion 🔖️Io
 
-//#region 🔖️Modules
-fn default_cut_measure() -> ProcessMeasure {
-    ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.05, depth: 0.5, height: 0.5 }, pose: Pose::default() }
+//#region 🔖️Catalog
+/// 📦️ The built-in generic catalog — wraps `process_3d::generic_machines()`, the same fallback used to
+/// seed a document's default workshop, exposed here as an installable `MachineCatalog` so it appears
+/// alongside domain extension catalogs in the workshop configurator's "installed catalogs" list.
+pub struct GenericCatalog;
+
+impl MachineCatalog for GenericCatalog {
+    fn catalog_id(&self) -> &'static str {
+        "geometry"
+    }
+
+    fn label(&self) -> &'static str {
+        "Geometry"
+    }
+
+    fn icon_id(&self) -> &'static str {
+        "shapes"
+    }
+
+    fn machines(&self) -> Vec<WorkshopMachine> {
+        process_3d::generic_machines()
+    }
 }
 
-fn default_drill_measure() -> ProcessMeasure {
-    ProcessMeasure::Drill { radius: 0.05, depth: 0.3, pose: Pose::default() }
+/// 🧩️ Every machine catalog installed in this build, in stable display order — the built-in generic
+/// catalog first (so it renders as the default-open section), then every domain extension crate this
+/// engine depends on. Adding a new domain is one new extension crate plus one line here.
+pub fn installed_catalogs() -> Vec<Box<dyn MachineCatalog>> {
+    vec![Box::new(GenericCatalog), process_machines_wood::catalog(), process_machines_concrete::catalog(), process_machines_metal::catalog(), process_machines_robotic::catalog()]
 }
 
-fn default_attach_measure() -> ProcessMeasure {
-    ProcessMeasure::Attach { component: SolidSpec::Cylinder { radius: 0.03, height: 0.2 }, pose: Pose::default() }
+/// 🔎️ One machine, by catalog + machine id, with `catalog_id` stamped onto the snapshot — the
+/// "install into workshop" lookup for the workshop configurator's add-machine action.
+pub fn catalog_machine(catalog_id: &str, machine_id: &str) -> Option<WorkshopMachine> {
+    let catalog = installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id)?;
+    let mut machine = catalog.machines().into_iter().find(|machine| machine.id == machine_id)?;
+    machine.catalog_id = Some(catalog_id.to_string());
+    Some(machine)
 }
 
-/// 🔧️ A named numeric machine parameter (e.g. blade diameter) — sizes the tool geometry a
-/// modification kind builds and gates which modifications are legal against the current stock.
-pub struct Capability {
-    pub id: &'static str,
-    pub label: &'static str,
-    pub value: f64,
+/// 🔎️ One workshop machine's capability, by id — the resolution target for `AddStep`'s
+/// `(machine_id, capability_id)` and for re-validating a step's `StepOrigin` provenance.
+pub fn find_capability<'a>(workshop: &'a Workshop, machine_id: &str, capability_id: &str) -> Option<(&'a WorkshopMachine, &'a Capability)> {
+    let machine = workshop.machines.iter().find(|machine| machine.id == machine_id)?;
+    let capability = machine.capabilities.iter().find(|capability| capability.id == capability_id)?;
+    Some((machine, capability))
 }
 
-/// 🪚️ Which kernel-level geometry operation a modification kind produces — `ProcessMeasure`'s three
-/// existing shapes are the fixed, small vocabulary every machine ultimately maps onto.
-#[derive(Clone, Copy, PartialEq)]
-pub enum MeasureKind {
-    Cut,
-    Drill,
-    Attach,
+/// 🔎️ First workshop capability producing `kind` — the routing target for the utility bar,
+/// click/drag placement, and machine-less `addStep` callers. Falls back to a fresh generic machine if
+/// the workshop's generics were removed, so click-to-place utilities never dead-end.
+pub fn capability_for_measure_kind(workshop: &Workshop, kind: MeasureKind) -> (WorkshopMachine, Capability) {
+    for machine in &workshop.machines {
+        for capability in &machine.capabilities {
+            if capability.recipe.measure_kind() == kind {
+                return (machine.clone(), capability.clone());
+            }
+        }
+    }
+    for machine in process_3d::generic_machines() {
+        for capability in machine.capabilities.iter() {
+            if capability.recipe.measure_kind() == kind {
+                return (machine.clone(), capability.clone());
+            }
+        }
+    }
+    unreachable!("every MeasureKind has a generic fallback machine")
 }
 
-/// 📏️ A stock dimension a validation rule checks against a capability value.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum TargetQuantity {
-    StockWidth,
-    StockDepth,
-    StockHeight,
-}
-
-/// ✅️ "quantity must be at least/at most the named capability's value (± margin)" — a modification
-/// kind's rules are ANDed together, e.g. crosscut needs stock width AND height above the blade diameter.
-pub enum ValidationRule {
-    MinAgainstCapability { quantity: TargetQuantity, capability: &'static str, margin: f64 },
-    MaxAgainstCapability { quantity: TargetQuantity, capability: &'static str, margin: f64 },
-}
-
-/// 📐️ The stock dimensions a validation rule is checked against.
+/// 📐️ The stock dimensions a capability rule is checked against.
 #[derive(Clone, Copy)]
 pub struct ValidationContext {
     pub stock_width: f64,
@@ -212,119 +236,52 @@ pub struct ValidationContext {
     pub stock_height: f64,
 }
 
-/// 🚫️ One failed validation rule, with the actual vs. required value for a human-readable reason.
+/// 🚫️ One failed capability rule, with the actual vs. required value for a human-readable reason.
 #[derive(Debug)]
 pub struct ValidationFailure {
-    pub quantity: TargetQuantity,
+    pub quantity: StockQuantity,
     pub actual: f64,
     pub required: f64,
     pub is_min: bool,
 }
 
-/// 🪚️ One thing a machine can do (e.g. "crosscut"), producing `measure_kind` geometry sized from
-/// the machine's capabilities, gated by `rules`.
-pub struct ModificationKind {
-    pub id: &'static str,
-    pub label: &'static str,
-    pub icon_id: &'static str,
-    pub measure_kind: MeasureKind,
-    pub rules: &'static [ValidationRule],
+fn parameter_value(capability: &Capability, parameter_id: &str) -> Option<f64> {
+    capability.parameters.iter().find(|parameter| parameter.id == parameter_id).map(|parameter| parameter.value)
 }
 
-/// 🛠️ A tool (e.g. a circular saw) with capabilities and the modification kinds it offers.
-pub struct Machine {
-    pub id: &'static str,
-    pub label: &'static str,
-    pub icon_id: &'static str,
-    pub capabilities: &'static [Capability],
-    pub modification_kinds: &'static [ModificationKind],
-}
-
-/// 📦️ A domain-specific bundle of machines (e.g. "wood", "concrete"); `geometry` is the generic default.
-pub struct Module {
-    pub id: &'static str,
-    pub label: &'static str,
-    pub machines: &'static [Machine],
-}
-
-pub const GEOMETRY_SAW: Machine = Machine { id: "saw", label: "Generic Saw", icon_id: "scissors", capabilities: &[], modification_kinds: &[ModificationKind { id: "cut", label: "Cut", icon_id: "scissors", measure_kind: MeasureKind::Cut, rules: &[] }] };
-pub const GEOMETRY_DRILL: Machine =
-    Machine { id: "drill", label: "Generic Drill", icon_id: "circle-dot", capabilities: &[], modification_kinds: &[ModificationKind { id: "drill", label: "Drill", icon_id: "circle-dot", measure_kind: MeasureKind::Drill, rules: &[] }] };
-pub const GEOMETRY_ATTACHER: Machine =
-    Machine { id: "attacher", label: "Generic Attacher", icon_id: "plus", capabilities: &[], modification_kinds: &[ModificationKind { id: "attach", label: "Attach", icon_id: "plus", measure_kind: MeasureKind::Attach, rules: &[] }] };
-pub const GEOMETRY_MODULE: Module = Module { id: "geometry", label: "Geometry", machines: &[GEOMETRY_SAW, GEOMETRY_DRILL, GEOMETRY_ATTACHER] };
-
-pub const CROSSCUT_RULES: &[ValidationRule] =
-    &[ValidationRule::MinAgainstCapability { quantity: TargetQuantity::StockWidth, capability: "diameter", margin: 0.0 }, ValidationRule::MinAgainstCapability { quantity: TargetQuantity::StockHeight, capability: "diameter", margin: 0.0 }];
-
-pub const WOOD_CIRCULAR_SAW: Machine = Machine {
-    id: "circularSaw",
-    label: "Circular Saw",
-    icon_id: "scissors",
-    capabilities: &[Capability { id: "diameter", label: "Diameter", value: 0.184 }],
-    modification_kinds: &[ModificationKind { id: "crosscut", label: "Crosscut", icon_id: "scissors", measure_kind: MeasureKind::Cut, rules: CROSSCUT_RULES }],
-};
-pub const WOOD_TABLE_SAW: Machine = Machine {
-    id: "tableSaw",
-    label: "Table Saw",
-    icon_id: "scissors",
-    capabilities: &[Capability { id: "diameter", label: "Diameter", value: 0.315 }],
-    modification_kinds: &[ModificationKind { id: "crosscut", label: "Crosscut", icon_id: "scissors", measure_kind: MeasureKind::Cut, rules: CROSSCUT_RULES }],
-};
-pub const WOOD_MODULE: Module = Module { id: "wood", label: "Wood", machines: &[WOOD_CIRCULAR_SAW, WOOD_TABLE_SAW] };
-
-pub const CONCRETE_DIAMOND_SAW: Machine = Machine {
-    id: "diamondSaw",
-    label: "Diamond Saw",
-    icon_id: "scissors",
-    capabilities: &[Capability { id: "diameter", label: "Diameter", value: 0.35 }],
-    modification_kinds: &[ModificationKind { id: "crosscut", label: "Crosscut", icon_id: "scissors", measure_kind: MeasureKind::Cut, rules: CROSSCUT_RULES }],
-};
-pub const CONCRETE_MODULE: Module = Module { id: "concrete", label: "Concrete", machines: &[CONCRETE_DIAMOND_SAW] };
-
-pub const ALL_MODULES: &[Module] = &[GEOMETRY_MODULE, WOOD_MODULE, CONCRETE_MODULE];
-
-/// 🕳️ Kerf/thickness of a machine-built disc cut tool (crosscut etc.) — the tool's extent along its own normal.
-const CROSSCUT_KERF: f64 = 0.05;
-
-pub fn find_modification(module_id: &str, machine_id: &str, modification_kind_id: &str) -> Option<(&'static Module, &'static Machine, &'static ModificationKind)> {
-    let module = ALL_MODULES.iter().find(|module| module.id == module_id)?;
-    let machine = module.machines.iter().find(|machine| machine.id == machine_id)?;
-    let kind = machine.modification_kinds.iter().find(|kind| kind.id == modification_kind_id)?;
-    Some((module, machine, kind))
-}
-
-/// 🔎️ Finds the geometry module's machine offering a given `measure` kind ("cut"/"drill"/"attach")
-/// — the routing target for the utility bar, click/drag placement, and module-less `addStep` callers.
-pub fn geometry_machine_for_measure(measure_kind: MeasureKind) -> (&'static Machine, &'static ModificationKind) {
-    for machine in GEOMETRY_MODULE.machines {
-        for kind in machine.modification_kinds {
-            if kind.measure_kind == measure_kind {
-                return (machine, kind);
-            }
-        }
+fn quantity_value(ctx: &ValidationContext, quantity: StockQuantity) -> f64 {
+    match quantity {
+        StockQuantity::Width => ctx.stock_width,
+        StockQuantity::Depth => ctx.stock_depth,
+        StockQuantity::Height => ctx.stock_height,
+        StockQuantity::MaxDimension => ctx.stock_width.max(ctx.stock_depth).max(ctx.stock_height),
+        StockQuantity::MinDimension => ctx.stock_width.min(ctx.stock_depth).min(ctx.stock_height),
     }
-    unreachable!("every MeasureKind has a generic geometry machine")
 }
 
-fn capability_value(machine: &Machine, capability_id: &str) -> Option<f64> {
-    machine.capabilities.iter().find(|capability| capability.id == capability_id).map(|capability| capability.value)
+fn quantity_label(quantity: StockQuantity) -> &'static str {
+    match quantity {
+        StockQuantity::Width => "width",
+        StockQuantity::Depth => "depth",
+        StockQuantity::Height => "height",
+        StockQuantity::MaxDimension => "max dimension",
+        StockQuantity::MinDimension => "min dimension",
+    }
 }
 
-pub fn validate_modification(machine: &Machine, kind: &ModificationKind, ctx: &ValidationContext) -> Vec<ValidationFailure> {
-    kind.rules
+/// ✅️ Checks a capability's rules against the current stock — a rule whose parameter is missing from
+/// the capability is skipped (lenient, matches the pre-workshop behavior), never a hard error.
+pub fn validate_capability(capability: &Capability, ctx: &ValidationContext) -> Vec<ValidationFailure> {
+    capability
+        .rules
         .iter()
         .filter_map(|rule| {
-            let (quantity, capability, margin, is_min) = match rule {
-                ValidationRule::MinAgainstCapability { quantity, capability, margin } => (*quantity, *capability, *margin, true),
-                ValidationRule::MaxAgainstCapability { quantity, capability, margin } => (*quantity, *capability, *margin, false),
+            let (quantity, parameter_id, margin, is_min) = match rule {
+                process_3d::CapabilityRule::Min { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, true),
+                process_3d::CapabilityRule::Max { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, false),
             };
-            let actual = match quantity {
-                TargetQuantity::StockWidth => ctx.stock_width,
-                TargetQuantity::StockDepth => ctx.stock_depth,
-                TargetQuantity::StockHeight => ctx.stock_height,
-            };
-            let value = capability_value(machine, capability)?;
+            let value = parameter_value(capability, parameter_id)?;
+            let actual = quantity_value(ctx, quantity);
             let required = if is_min { value + margin } else { value - margin };
             let ok = if is_min { actual >= required } else { actual <= required };
             if ok {
@@ -340,13 +297,8 @@ pub fn validation_reason(failures: &[ValidationFailure]) -> String {
     failures
         .iter()
         .map(|failure| {
-            let axis = match failure.quantity {
-                TargetQuantity::StockWidth => "width",
-                TargetQuantity::StockDepth => "depth",
-                TargetQuantity::StockHeight => "height",
-            };
             let comparator = if failure.is_min { "≥" } else { "≤" };
-            format!("needs stock {axis} {comparator} {:.0}mm (have {:.0}mm)", failure.required * 1000.0, failure.actual * 1000.0)
+            format!("needs stock {} {comparator} {:.0}mm (have {:.0}mm)", quantity_label(failure.quantity), failure.required * 1000.0, failure.actual * 1000.0)
         })
         .collect::<Vec<_>>()
         .join("; ")
@@ -368,17 +320,20 @@ pub fn validation_context_for_stock(stock: &Stock) -> ValidationContext {
     ValidationContext { stock_width: width, stock_depth: depth, stock_height: height }
 }
 
-/// 🪚️ Builds the `ProcessMeasure` a machine's modification kind produces — capability-parameterized
-/// where the machine has one (e.g. a saw's `diameter` capability sizes a disc cut tool), otherwise
-/// falling back to the generic geometry-module defaults.
-pub fn measure_for_modification(machine: &Machine, kind: &ModificationKind, position: Option<[f64; 3]>) -> ProcessMeasure {
-    let mut measure = match kind.measure_kind {
-        MeasureKind::Cut => match capability_value(machine, "diameter") {
-            Some(diameter) => ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius: diameter / 2.0, height: CROSSCUT_KERF }, pose: Pose::default() },
-            None => default_cut_measure(),
-        },
-        MeasureKind::Drill => default_drill_measure(),
-        MeasureKind::Attach => default_attach_measure(),
+/// 🪚️ Builds the `ProcessMeasure` a capability's recipe produces, sized from the capability's own
+/// parameters (a missing parameter resolves to `0.0`, matching `validate_capability`'s lenient lookup).
+pub fn measure_for_capability(capability: &Capability, position: Option<[f64; 3]>) -> ProcessMeasure {
+    let value = |id: &str| parameter_value(capability, id).unwrap_or(0.0);
+    let mut measure = match &capability.recipe {
+        MeasureRecipe::DiscCut { diameter, kerf } => ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius: value(diameter) / 2.0, height: value(kerf) }, pose: Pose::default() },
+        MeasureRecipe::BladeCut { kerf, length, depth } => ProcessMeasure::Cut { tool: SolidSpec::Box { width: value(kerf), depth: value(length), height: value(depth) }, pose: Pose::default() },
+        MeasureRecipe::PocketCut { diameter, depth } => {
+            let side = value(diameter);
+            ProcessMeasure::Cut { tool: SolidSpec::Box { width: side, depth: side, height: value(depth) }, pose: Pose::default() }
+        }
+        MeasureRecipe::BoreDrill { radius, depth } => ProcessMeasure::Drill { radius: value(radius), depth: value(depth), pose: Pose::default() },
+        MeasureRecipe::CylinderAttach { radius, length } => ProcessMeasure::Attach { component: SolidSpec::Cylinder { radius: value(radius), height: value(length) }, pose: Pose::default() },
+        MeasureRecipe::BoxAttach { width, depth, height } => ProcessMeasure::Attach { component: SolidSpec::Box { width: value(width), depth: value(depth), height: value(height) }, pose: Pose::default() },
     };
     if let Some(position) = position {
         let pose = match &mut measure {
@@ -388,7 +343,7 @@ pub fn measure_for_modification(machine: &Machine, kind: &ModificationKind, posi
     }
     measure
 }
-//#endregion 🔖️Modules
+//#endregion 🔖️Catalog
 
 //#region 🔖️KernelReplay
 fn hash_value<T: Serialize>(value: &T) -> u64 {

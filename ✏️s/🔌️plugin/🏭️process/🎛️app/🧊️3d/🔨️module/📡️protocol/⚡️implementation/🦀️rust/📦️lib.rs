@@ -6,7 +6,7 @@
 //! 🎯️ Also hosts `Process3dCommand` — the `DocumentApp::Command` binary command envelope, the SOLE
 //! dispatch surface for `process_3d_ui::Process3dPlayApp::handle` (mirrors `shooting_protocol::ShootingCommand`).
 
-use process_3d::{Process3dDocument, ProcessStep};
+use process_3d::{Process3dDocument, ProcessStep, WorkshopMachine};
 use process_3d_op::Process3dOperation;
 use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
@@ -41,11 +41,20 @@ pub enum Process3dCommand {
     #[dsl(key = "add-step")]
     AddStep {
         measure: Option<String>,
-        module_id: Option<String>,
         machine_id: Option<String>,
-        modification_kind_id: Option<String>,
+        capability_id: Option<String>,
         #[dsl(coord)]
         position: Option<[f64; 3]>,
+    },
+    #[dsl(key = "add-workshop-machine")]
+    AddWorkshopMachine { catalog_id: String, machine_id: String },
+    #[dsl(key = "remove-workshop-machine")]
+    RemoveWorkshopMachine { id: String },
+    /// 🔧️ Programmatic full-machine edit, mirrors `UpdateStep`.
+    #[dsl(key = "update-workshop-machine")]
+    UpdateWorkshopMachine {
+        #[dsl(block)]
+        machine: WorkshopMachine,
     },
     #[dsl(key = "remove-step")]
     RemoveStep { id: String },
@@ -199,7 +208,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use process_3d::{empty_process3d_projection, Pose, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin, PROCESS_3D_SCHEMA};
+    use process_3d::{empty_process3d_projection, Pose, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin, WorkshopMachine, PROCESS_3D_SCHEMA};
     use protocol::CollectionOperation;
     use store::{create_document_envelope, test_support, DocumentCommand};
     use vcs::Author;
@@ -209,7 +218,7 @@ mod tests {
     }
 
     fn drill_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { module_id: "wood".into(), machine_id: "circularSaw".into(), modification_kind_id: "crosscut".into() }), measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() } }
+        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }), measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() } }
     }
 
     fn new_store() -> Process3dStore {
@@ -247,7 +256,7 @@ mod tests {
         store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
         assert!(store.projection().expect("projection").steps[0].origin.is_none());
 
-        let origin = StepOrigin { module_id: "wood".into(), machine_id: "circularSaw".into(), modification_kind_id: "crosscut".into() };
+        let origin = StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() };
         store
             .dispatch(DocumentCommand::Apply {
                 operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { origin: Some(Some(origin.clone())), ..Default::default() } } }],
@@ -337,8 +346,11 @@ mod tests {
     fn process3d_command_op_text_and_binary_round_trip_every_variant() {
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetDocument { document: empty_process3d_projection() });
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetActiveExample { example_id: "drilled-plate".into() });
-        test_support::assert_op_text_binary_equivalence(&Process3dCommand::AddStep { measure: Some("cut".into()), module_id: None, machine_id: None, modification_kind_id: None, position: Some([1.0, 2.0, 3.0]) });
-        test_support::assert_op_text_binary_equivalence(&Process3dCommand::AddStep { measure: None, module_id: Some("wood".into()), machine_id: Some("circularSaw".into()), modification_kind_id: Some("crosscut".into()), position: None });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: Some([1.0, 2.0, 3.0]) });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::RemoveWorkshopMachine { id: "circularSaw".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::UpdateWorkshopMachine { machine: WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![] } });
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::RemoveStep { id: "cut-1".into() });
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::RemoveSelectedStep);
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::MoveStep { id: "cut-1".into(), index: 2 });

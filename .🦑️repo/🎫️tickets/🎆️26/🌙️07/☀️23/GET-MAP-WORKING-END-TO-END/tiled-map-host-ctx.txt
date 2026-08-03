@@ -1,0 +1,297 @@
+index=/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx
+TiledMapHost 21194-21709
+
+--- 21225 ---
+21217|
+21218|  const dispatch = useCallback(
+21219|    (action: string, args?: Record<string, unknown>) => {
+21220|      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+21221|    },
+21222|    [node.controllerId, node.surfaceId, onAction],
+21223|  );
+21224|
+21225|  const mapTiledContextMenu = useMapContextMenuSpecs(dispatch);
+21226|
+21227|  const dispatchCamera = useCallback(
+21228|    (camera: MapCamera) => {
+21229|      dispatch("setCamera", { camera });
+21230|    },
+21231|    [dispatch],
+21232|  );
+21233|
+21234|  const clampMapZoom = useCallback((zoom: number): number => {
+21235|    const { min, max } = getTiledMapCameraLimits(rendererRef.current?.session);
+21236|    return Math.min(max, Math.max(min, zoom));
+21237|  }, []);
+21238|
+21239|  const clampCamera = useCallback((next: MapCamera): MapCamera => ({ x: next.x, y: next.y, zoom: clampMapZoom(next.zoom) }), [clampMapZoom]);
+21240|
+21241|  const mirrorSessionCameraToReact = useCallback(() => {
+21242|    const parsed = rendererRef.current?.readCameraFromSession();
+21243|    if (!parsed) return;
+21244|    rendererRef.current!.camera = parsed;
+21245|    dispatchCamera(parsed);
+21246|  }, [dispatchCamera]);
+21247|
+21248|  const clientToLocal = useCallback((clientX: number, clientY: number): SelectionMarqueePoint => {
+21249|    const rect = canvasRef.current?.getBoundingClientRect();
+21250|    if (!rect) return { x: 0, y: 0 };
+21251|    return { x: clientX - rect.left, y: clientY - rect.top };
+21252|  }, []);
+21253|
+21254|  const queryFeatureHits = useCallback(
+
+--- 21688 ---
+21680|
+21681|  if (!scene) return <div className="semio-tiled-map-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
+21682|
+21683|  return (
+21684|    <div ref={containerRef} className="semio-tiled-map-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none" data-surface-id={node.surfaceId} style={{ touchAction: "none" }}>
+21685|      <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
+21686|      {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
+21687|      {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
+21688|      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={mapTiledContextMenu(contextMenu.specs)} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
+21689|      {hoveredFeature?.kind === "position" ? (
+21690|        <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" style={{ left: 0, top: 0 }}>
+21691|          {(() => {
+21692|            const meta = positionMetaById.get(hoveredFeature.id);
+21693|            const title = meta?.name ?? meta?.label ?? hoveredFeature.id;
+21694|            return (
+21695|              <div className="flex items-start gap-1.5">
+21696|                {meta?.icon ? <Icon icon={meta.icon} size="small" className="mt-0.5 shrink-0" /> : null}
+21697|                <div className="min-w-0">
+21698|                  <div className="truncate text-sm font-medium">{title}</div>
+21699|                  {meta?.sourceUrl ? <span className="text-xs text-secondary underline-offset-2">{sourceAvailableLabel}</span> : null}
+21700|                </div>
+21701|              </div>
+21702|            );
+21703|          })()}
+21704|        </div>
+21705|      ) : null}
+21706|    </div>
+21707|  );
+21708|}
+21709|//#endregion TiledMapHost
+21710|//#endregion 🔖️TiledMapHost
+21711|
+21712|//#region 🔖️Board2dHost
+21713|//#region Types
+21714|type BoardCamera = { readonly x: number; readonly y: number; readonly zoom: number };
+21715|type BoardEventRow = { readonly name: string; readonly payload?: unknown };
+21716|type Puzzle2dFixtureDropPayload = {
+21717|  readonly kindId: string;
+CALL|13106|      children: spec.children?.length ? mapContextMenuSpecs(spec.children, dispatch, keysByActionId) : undefined,
+CALL|16944|        items={mapWorldContextMenuSpecs(contextMenu?.specs ?? [])}
+CALL|16954|          items={mapSuggestionContextMenuSpecs(suggestionMenuItems(interaction.suggestionMenu!, interaction.brushCandidateIndex ?? 0))}
+CALL|17715|        items={mapContextMenu(contextMenu?.specs ?? [])}
+CALL|17870|        items={mapContextMenu(contextMenu?.specs ?? [])}
+CALL|19216|        items={mapFlowContextMenu(contextMenu?.specs ?? [])}
+CALL|21688|      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={mapTiledContextMenu(contextMenu.specs)} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
+CALL|22688|        items={mapContextMenu(contextMenu?.specs ?? [])}
+PROPS|290|  type ComponentSceneHostProps,
+PROPS|560|const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<ComponentType<ComponentSceneHostProps>>> = {
+PROPS|595|  requestContextMenu?: UiInterpreterContext["requestContextMenu"],
+PROPS|618|  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
+
+=== host head ===
+21194|export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
+21195|  const scene = node.tiledMap;
+21196|  const windowInstanceId = useContext(WindowInstanceIdContext);
+21197|  const containerRef = useRef<HTMLDivElement>(null);
+21198|  const canvasRef = useRef<HTMLCanvasElement>(null);
+21199|  const rendererRef = useRef<MapRenderer | null>(null);
+21200|  const panningRef = useRef(false);
+21201|  const userAdjustedCameraRef = useRef(false);
+21202|  const popupRef = useRef<HTMLDivElement>(null);
+21203|  const [marqueeOverlay, setMarqueeOverlay] = useState<
+21204|    { coverage: SelectionMarqueeCoverage; shape: "rect"; rect: { x: number; y: number; width: number; height: number } } | { coverage: SelectionMarqueeCoverage; shape: "polygon"; points: readonly SelectionMarqueePoint[] } | null
+21205|  >(null);
+21206|  const [contextMenu, setContextMenu] = useState<{ open: boolean; position: { x: number; y: number } | null; items: ContextMenuItem[] }>({
+21207|    open: false,
+21208|    position: null,
+21209|    items: [],
+21210|  });
+21211|  const emptySceneLabel = useLabel("ui.host.emptyScene");
+21212|  const sourceAvailableLabel = useLabel("ui.host.sourceAvailable");
+21213|
+21214|  const positionMetaById = useMemo(() => (scene ? parsePositionMeta(scene.mapFixtureJson) : new Map()), [scene?.mapFixtureJson]);
+21215|  const hoveredFeature = useMemo(() => (scene ? parseMapHoveredFeature(scene.hoverJson) : null), [scene?.hoverJson]);
+21216|  const selectionMethod = (scene?.selectionMethod ?? "rectangle") as SelectionMarqueeMethod;
+21217|
+21218|  const dispatch = useCallback(
+21219|    (action: string, args?: Record<string, unknown>) => {
+21220|      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+21221|    },
+21222|    [node.controllerId, node.surfaceId, onAction],
+21223|  );
+21224|
+21225|  const mapTiledContextMenu = useMapContextMenuSpecs(dispatch);
+21226|
+21227|  const dispatchCamera = useCallback(
+21228|    (camera: MapCamera) => {
+21229|      dispatch("setCamera", { camera });
+21230|    },
+21231|    [dispatch],
+21232|  );
+21233|
+
+=== host tail (last 120 lines) ===
+21589|        method,
+21590|        startX: pointer.current.start.x,
+21591|        endX: point.x,
+21592|        path: points,
+21593|      });
+21594|      const rect = screenRectFromPoints(points);
+21595|      setMarqueeOverlay(method === "lasso" ? { coverage, shape: "polygon", points } : { coverage, shape: "rect", rect: rect ?? { x: 0, y: 0, width: 0, height: 0 } });
+21596|    };
+21597|    const onPointerUp = (event: PointerEvent): void => {
+21598|      event.stopPropagation();
+21599|      const point = clientToLocal(event.clientX, event.clientY);
+21600|      if (event.button === 1 && pointer.current.middleDown) {
+21601|        pointer.current.middleDown = false;
+21602|        panningRef.current = false;
+21603|        rendererRef.current?.session.pointerUpScreen(point.x, point.y);
+21604|        if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+21605|        mirrorSessionCameraToReact();
+21606|        rendererRef.current?.scheduleRefreshTiles();
+21607|        return;
+21608|      }
+21609|      if (event.button !== 0 || !pointer.current.leftDown) return;
+21610|      pointer.current.leftDown = false;
+21611|      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+21612|      const distance = Math.hypot(point.x - pointer.current.start.x, point.y - pointer.current.start.y);
+21613|      const mode = marqueeModeFromModifiers(event);
+21614|      const method = selectionMethod;
+21615|      if (pointer.current.marqueeActive && distance >= MAP_MARQUEE_THRESHOLD_PX) {
+21616|        const points = method === "lasso" ? [...pointer.current.points, point] : [pointer.current.start, point];
+21617|        const coverage = marqueeCoverageFromGesture({
+21618|          method,
+21619|          startX: pointer.current.start.x,
+21620|          endX: point.x,
+21621|          path: points,
+21622|        });
+21623|        emitFeatureSelection(queryFeatureHits(points, coverage === "partial"), mode, coverage === "partial");
+21624|      } else if (distance < MAP_MARQUEE_THRESHOLD_PX) {
+21625|        const hit = queryHitFeature(point);
+21626|        emitFeatureSelection(
+21627|          {
+21628|            positions: hit?.kind === "position" ? [hit.id] : [],
+21629|            routes: hit?.kind === "route" ? [hit.id] : [],
+21630|          },
+21631|          mode,
+21632|          false,
+21633|        );
+21634|      }
+21635|      resetMarquee();
+21636|    };
+21637|    const onPointerCancel = (event: PointerEvent): void => {
+21638|      pointer.current.leftDown = false;
+21639|      pointer.current.middleDown = false;
+21640|      panningRef.current = false;
+21641|      resetMarquee();
+21642|      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+21643|      mirrorSessionCameraToReact();
+21644|    };
+21645|    const onContextMenu = (event: MouseEvent): void => {
+21646|      event.preventDefault();
+21647|      event.stopPropagation();
+21648|      if (!requestContextMenu || !scene) return;
+21649|      void (async () => {
+21650|        const point = clientToLocal(event.clientX, event.clientY);
+21651|        const feature = queryHitFeature(point);
+21652|        const hits = feature ? [{ domain: feature.kind === "route" ? "route" : "position", id: feature.id }] : [];
+21653|        const selection = parseFeatureSelection(scene.selectionJson);
+21654|        const selectionGroups = [];
+21655|        if (selection.positions.length > 0) selectionGroups.push({ domain: "position", ids: selection.positions });
+21656|        if (selection.routes.length > 0) selectionGroups.push({ domain: "route", ids: selection.routes });
+21657|        const specs = await requestContextMenu({
+21658|          viewState: {},
+21659|          menu: { id: "tiledMap" },
+21660|          surface: { surfaceId: node.surfaceId, kind: "tiledMap", hits, selection: selectionGroups },
+21661|          point: { x: event.clientX, y: event.clientY },
+21662|        });
+21663|        console.log("[DEBUG] tiled map context menu open", { feature, itemIds: specs.map((item) => item.id) });
+21664|        setContextMenu({ open: specs.length > 0, position: { x: event.clientX, y: event.clientY }, specs });
+21665|      })();
+21666|    };
+21667|    canvas.addEventListener("pointerdown", onPointerDown);
+21668|    window.addEventListener("pointermove", onPointerMove);
+21669|    window.addEventListener("pointerup", onPointerUp);
+21670|    window.addEventListener("pointercancel", onPointerCancel);
+21671|    canvas.addEventListener("contextmenu", onContextMenu);
+21672|    return () => {
+21673|      canvas.removeEventListener("pointerdown", onPointerDown);
+21674|      window.removeEventListener("pointermove", onPointerMove);
+21675|      window.removeEventListener("pointerup", onPointerUp);
+21676|      window.removeEventListener("pointercancel", onPointerCancel);
+21677|      canvas.removeEventListener("contextmenu", onContextMenu);
+21678|    };
+21679|  }, [clientToLocal, dispatch, emitFeatureSelection, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, resetMarquee, scene, selectionMethod]);
+21680|
+21681|  if (!scene) return <div className="semio-tiled-map-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
+21682|
+21683|  return (
+21684|    <div ref={containerRef} className="semio-tiled-map-host absolute inset-0 box-border min-h-0 min-w-0 overflow-hidden select-none" data-surface-id={node.surfaceId} style={{ touchAction: "none" }}>
+21685|      <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
+21686|      {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
+21687|      {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
+21688|      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={mapTiledContextMenu(contextMenu.specs)} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
+21689|      {hoveredFeature?.kind === "position" ? (
+21690|        <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" style={{ left: 0, top: 0 }}>
+21691|          {(() => {
+21692|            const meta = positionMetaById.get(hoveredFeature.id);
+21693|            const title = meta?.name ?? meta?.label ?? hoveredFeature.id;
+21694|            return (
+21695|              <div className="flex items-start gap-1.5">
+21696|                {meta?.icon ? <Icon icon={meta.icon} size="small" className="mt-0.5 shrink-0" /> : null}
+21697|                <div className="min-w-0">
+21698|                  <div className="truncate text-sm font-medium">{title}</div>
+21699|                  {meta?.sourceUrl ? <span className="text-xs text-secondary underline-offset-2">{sourceAvailableLabel}</span> : null}
+21700|                </div>
+21701|              </div>
+21702|            );
+21703|          })()}
+21704|        </div>
+21705|      ) : null}
+21706|    </div>
+21707|  );
+21708|}
+21709|//#endregion TiledMapHost
+
+=== 4075-4110 ===
+4075|}
+4076|
+4077|/** @emoji 🎓️ Whether a utility node tree has a node (leaf or group) with the given id anywhere in it — used
+4078| * to decide if this window's utility bar is the one an introduction step's `Utility` anchor targets. */
+4079|function utilityNodeTreeContainsId(nodes: readonly UtilityNode[], targetId: string): boolean {
+4080|  return nodes.some((node) => node.id === targetId || (node.kind === "collection" && utilityNodeTreeContainsId(node.children, targetId)));
+4081|}
+4082|
+4083|function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void, revealUtilityId?: string | null, utilityOptions?: ReactNode): ReactNode {
+4084|  if (!utilities?.length && !utilityOptions) return undefined;
+4085|  const categories = groupUtilityNodesByCategory(utilities ?? [], UTILITY_CATEGORIES);
+4086|  if (!categories.length && !utilityOptions) return undefined;
+4087|  const grouped: UtilityNode[] = [];
+4088|  for (const node of categories) {
+4089|    if (node.kind === "collection" && (node.category === "utilities" || node.category === "selection")) {
+4090|      if (node.id === "group:Select" || node.id === "group:selection" || node.label === "Select" || node.text === "Select") {
+4091|        grouped.push(...node.children);
+4092|      } else {
+4093|        for (const child of node.children) {
+4094|          if (child.kind === "collection" && (child.id === "group:Select" || child.id === "group:selection" || child.label === "Select" || child.text === "Select")) {
+4095|            grouped.push(...child.children);
+4096|          } else {
+4097|            grouped.push(child);
+4098|          }
+4099|        }
+4100|      }
+4101|    } else {
+4102|      grouped.push(node);
+4103|    }
+4104|  }
+4105|  return <UtilityTree id={`ui.utilities.${windowId}`} utilities={grouped} onAction={onAction} direction="up" revealUtilityId={revealUtilityId} utilityOptions={utilityOptions} />;
+4106|}
+4107|
+4108|//#region 🧰️WindowActionPane
+4109|/**
+4110| * 🎛️ Renders one {@link ActionArgControl} into a STAGED form field — the crucial difference from

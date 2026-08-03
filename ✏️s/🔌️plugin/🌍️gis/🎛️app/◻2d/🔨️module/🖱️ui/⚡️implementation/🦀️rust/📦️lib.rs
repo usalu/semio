@@ -898,6 +898,126 @@ impl DocumentApp for Gis2dPlayApp {
         }
     }
 
+    /// 🎯️ Maps host action id + JSON args onto `Gis2dCommand` — React/wgpu still speak the
+    /// stringly `{action,args}` wire; this is the typed-command bridge until those call sites send
+    /// `OpBinary` bytes directly.
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, String> {
+        let args = args.cloned().unwrap_or(Value::Null);
+        let str_arg = |keys: &[&str]| -> Option<String> {
+            keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string))
+        };
+        let string_list = |key: &str| -> Vec<String> {
+            args.get(key)
+                .and_then(|value| value.as_array())
+                .map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect())
+                .unwrap_or_default()
+        };
+        let f64_arg = |keys: &[&str]| -> Option<f64> {
+            keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64()))
+        };
+        match action {
+            "setActiveExample" => Ok(Gis2dCommand::SetActiveExample {
+                example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default(),
+            }),
+            "patchPositions" => Ok(Gis2dCommand::PatchPositions {
+                positions_json: str_arg(&["positionsJson", "positions_json"])
+                    .or_else(|| args.get("positions").map(|value| value.to_string()))
+                    .unwrap_or_else(|| "[]".into()),
+            }),
+            "patchRoutes" => Ok(Gis2dCommand::PatchRoutes {
+                route_ids: {
+                    let mut ids = string_list("routeIds");
+                    if ids.is_empty() {
+                        ids = string_list("route_ids");
+                    }
+                    ids
+                },
+                field: str_arg(&["field"]).unwrap_or_default(),
+                value: str_arg(&["value"]).unwrap_or_default(),
+            }),
+            "patchRoute" => Ok(Gis2dCommand::PatchRoute {
+                route_id: str_arg(&["routeId", "route_id"]).unwrap_or_default(),
+                field: str_arg(&["field"]).unwrap_or_default(),
+                value: str_arg(&["value"]).unwrap_or_default(),
+            }),
+            "setSelection" => Ok(Gis2dCommand::SetSelection { ids: string_list("ids") }),
+            "toggleLayerVisibility" => Ok(Gis2dCommand::ToggleLayerVisibility {
+                layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default(),
+            }),
+            "fitWorld" => Ok(Gis2dCommand::FitWorld),
+            "setCamera" => {
+                let camera_json = str_arg(&["cameraJson", "camera_json"]).or_else(|| {
+                    args.get("camera").map(|value| {
+                        if value.is_string() {
+                            value.as_str().unwrap_or("{}").to_string()
+                        } else {
+                            value.to_string()
+                        }
+                    })
+                }).unwrap_or_else(|| "{}".into());
+                Ok(Gis2dCommand::SetCamera { camera_json })
+            }
+            "setRenderMode" => Ok(Gis2dCommand::SetRenderMode {
+                value: str_arg(&["value", "renderMode", "render_mode"]).unwrap_or_default(),
+            }),
+            "setVectorStyle" => Ok(Gis2dCommand::SetVectorStyle {
+                value: str_arg(&["value", "vectorStyle", "vector_style"]).unwrap_or_default(),
+            }),
+            "setLodMode" => Ok(Gis2dCommand::SetLodMode {
+                value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default(),
+            }),
+            "setFeatureSelection" => Ok(Gis2dCommand::SetFeatureSelection {
+                positions: string_list("positions"),
+                routes: string_list("routes"),
+                mode: str_arg(&["mode"]).unwrap_or_else(|| "default".into()),
+            }),
+            "setHover" => {
+                let hover_json = str_arg(&["hoverJson", "hover_json"])
+                    .or_else(|| args.get("hover").map(|value| value.to_string()))
+                    .or_else(|| {
+                        let object = args.as_object()?;
+                        if object.is_empty() || object.keys().all(|key| key == "surfaceId") {
+                            Some("null".into())
+                        } else {
+                            Some(args.to_string())
+                        }
+                    })
+                    .unwrap_or_else(|| "null".into());
+                Ok(Gis2dCommand::SetHover { hover_json })
+            }
+            "setSelectionMethod" => Ok(Gis2dCommand::SetSelectionMethod {
+                value: str_arg(&["value", "selectionMethod", "selection_method"]).unwrap_or_default(),
+            }),
+            "setSelectionMode" => Ok(Gis2dCommand::SetSelectionMode {
+                value: str_arg(&["value", "selectionMode", "selection_mode"]).unwrap_or_default(),
+            }),
+            "clearSelection" => Ok(Gis2dCommand::ClearSelection),
+            "selectAll" => Ok(Gis2dCommand::SelectAll),
+            "deselect" => Ok(Gis2dCommand::Deselect {
+                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
+                feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()),
+            }),
+            "focusFeature" => Ok(Gis2dCommand::FocusFeature {
+                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
+                feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()),
+            }),
+            "setLayerStrokeScale" => Ok(Gis2dCommand::SetLayerStrokeScale {
+                layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default(),
+                value: f64_arg(&["value"]).unwrap_or(1.0),
+            }),
+            "setLocale" => Ok(Gis2dCommand::SetLocale {
+                value: str_arg(&["value", "locale"]).unwrap_or_default(),
+            }),
+            "openSource" => Ok(Gis2dCommand::OpenSource {
+                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
+            }),
+            other => Err(format!(
+                "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+            )),
+        }
+    }
+
     fn handle(
         &self,
         command: &Gis2dCommand,

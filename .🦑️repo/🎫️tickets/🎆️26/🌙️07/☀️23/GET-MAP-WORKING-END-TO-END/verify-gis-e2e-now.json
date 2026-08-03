@@ -1,0 +1,21 @@
+{
+  "title": "semio · gis · 2d",
+  "hasRenderError": false,
+  "hasReuseMap": true,
+  "canvasOk": true,
+  "mapHost": 1,
+  "tileRequestCount": 43,
+  "tileSamples": [
+    "http://127.0.0.1:6040/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%97%BA%EF%B8%8Fsurface/%F0%9F%97%BA%EF%B8%8Ftiled-map/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%A6%80%EF%B8%8Frust/pkg/framework_surface_tiled_map.js",
+    "http://127.0.0.1:6040/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%97%BA%EF%B8%8Fsurface/%F0%9F%97%BA%EF%B8%8Ftiled-map/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%A6%80%EF%B8%8Frust/pkg/framework_surface_tiled_map_bg.wasm",
+    "http://127.0.0.1:6040/osm/0/0/0.png",
+    "http://127.0.0.1:6040/vt/3/0/2.pbf",
+    "http://127.0.0.1:6040/vt/3/0/3.pbf",
+    "http://127.0.0.1:6040/vt/3/0/4.pbf",
+    "http://127.0.0.1:6040/vt/3/0/5.pbf",
+    "http://127.0.0.1:6040/vt/3/0/6.pbf"
+  ],
+  "hasRenderMode": false,
+  "errors": [],
+  "ok": true
+}

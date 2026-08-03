@@ -2,11 +2,11 @@
   "title": "Fix Inspector Trees To Match Document",
   "status": "closed",
   "goal": "ui/side-panels",
-  "summary": "Side-panel Inspection bodies must be UiTreeNode (like Document), not Stack of Fields.",
+  "summary": "History and CAD Inspection are pure UiTreeNode side panels like Document/Catalogue (no Stack roots).",
   "created": "2026-08-01",
   "client": "cursor-chat",
   "llm": "gpt-5-5",
-  "closed": "2026-08-01",
+  "closed": "2026-08-03",
   "files": [
     "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugin/\ufe0fblock/\ud83c\udf9b\ufe0fapp/\u25fb2d/.../\ud83d\udce6\ufe0flib.rs",
     "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugin/\ufe0fblock/\ud83c\udf9b\ufe0fapp/\ufe0f3d/.../\ud83d\udce6\ufe0flib.rs",
@@ -14,6 +14,8 @@
     "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugin/\ud83c\udf3f\ufe0fvcs/.../\ud83d\udce6\ufe0flib.rs",
     "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugin/\ud83d\udcdc\ufe0fimperative/.../\ud83d\udce6\ufe0flib.rs",
     "multiple empty-state inspector fallbacks",
-    "\ufe0fframework/.../\ud83d\uddb1\ufe0fui/.../\ud83d\udce6\ufe0flib.rs (tree_icon_id)"
+    "\ufe0fframework/.../\ud83d\uddb1\ufe0fui/.../\ud83d\udce6\ufe0flib.rs (tree_icon_id)",
+    "framework plugin lib.rs (ui_history_panel Tree)",
+    "cad ui lib.rs (empty inspector tree)"
   ]
 }

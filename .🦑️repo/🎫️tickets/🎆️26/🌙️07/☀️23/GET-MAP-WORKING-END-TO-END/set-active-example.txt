@@ -1,0 +1,194 @@
+5358|  const hostCatalogueTabId = hostApp?.panelTabs[0] ? panelTabKindId(hostApp.panelTabs[0].kind) : undefined;
+5359|  const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
+5360|  const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
+5361|  const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
+5362|  const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
+5363|  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById, windowIconsById } = shellState.layout;
+5364|  const { searchOpen, findOpen, introductionStepIndex, introductionCompletedInteractions, dialog: overlayDialog } = shellState.overlays;
+5365|  const { activeTutorialId, playing: tutorialPlaying, rate: tutorialRate, muted: tutorialMuted, captionsOn: tutorialCaptionsOn, recording: tutorialRecording, deviated: tutorialDeviated } = shellState.tutorial;
+5366|  const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
+5367|  const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
+5368|  const importSpaceInputRef = useRef<HTMLInputElement>(null);
+5369|  const refreshGenerationRef = useRef(0);
+5370|  const spawnedRefreshGenerationRef = useRef(0);
+5371|  const contributorInstancesRef = useRef<Map<string, number>>(new Map());
+5372|  const layoutSeedKeyRef = useRef<string | null>(null);
+5373|  const noExampleResetInstanceIdRef = useRef<number | null>(null);
+5374|  const extraWindowCounterRef = useRef(0);
+5375|  // 🖱️ Shell-level context-menu fallback: opens for any right-click the shell hasn't already claimed
+5376|  // (every existing per-surface `onContextMenu` now calls `stopPropagation()` once it decides to show
+5377|  // its own menu — see `ShellContextMenuHost` below). No plugin/scene-target resolution yet (that's
+5378|  // the on-demand WIT `context-menu` round trip, still to come); this covers window-level declared
+5379|  // actions plus the OS command palette, so every window/background always shows *something*.
+5380|  const [shellContextMenu, setShellContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+5381|  // 🪟️ Live extra-window list, updated synchronously on every seed/split/drop — `refreshUi` reads this
+5382|  // instead of the render-closure `extraWindowInstances` so a concurrent action refresh (e.g. boot
+5383|  // `setActiveExample`) that starts after the session-switch refresh wrote extras but before React
+5384|  // re-rendered cannot fetch with `[]` and wipe Top/Perspective bodies to "missing window".
+5385|  const extraWindowInstancesRef = useRef<readonly ExtraWindowInstance[]>([]);
+5386|  extraWindowInstancesRef.current = extraWindowInstances;
+5387|  const setWindowTitle = useCallback((windowId: string, title: string) => {
+5388|    dispatch({ type: "SET_WINDOW_TITLE", windowId, title });
+5389|  }, []);
+5390|  const setWindowIcon = useCallback((windowId: string, iconId: IconName) => {
+5391|    dispatch({ type: "SET_WINDOW_ICON", windowId, iconId });
+5392|  }, []);
+5393|  // 🐢️ Per-instance content-hash cache for the batched `refresh-ui` call, keyed by the same
+5394|  // `pluginId:appId:instanceId` triple as `layoutSeedKeyRef` — cleared on session switch below.
+5395|  const uiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
+5396|  // 🐢️ Same idea for the studio-mode spawned-instance view, keyed by spawned instanceId — cleared when
+5397|  // the spawned instance itself changes (tracked via `spawnedLayoutSeedRef`).
+5398|  const spawnedUiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
+5399|  const spawnedLayoutSeedRef = useRef<string | null>(null);
+5400|  const openSpaceIdRef = useRef<string | null>(null);
+5401|  const openInstanceIdRef = useRef<string | null>(null);
+5402|  const sessionRef = useRef<ActiveSession | null>(null);
+====
+5719|        const settled = await Promise.allSettled(registry.map((entry) => loadPluginModuleResilient(entry.pluginId, entry.moduleUrl)));
+5720|        const loaded = settled.flatMap((result, index) => {
+5721|          if (result.status === "fulfilled" && result.value) return [result.value];
+5722|          if (result.status === "rejected") {
+5723|            console.error(`[DEBUG] program rejected: ${registry[index]?.pluginId}`, result.reason);
+5724|          }
+5725|          return [];
+5726|        });
+5727|        if (loaded.length === 0) throw new Error(shellLabel("ui.common.noPluginsLoaded"));
+5728|        if (cancelled) return;
+5729|        const loadedState = loaded.map((handle) => ({ handle, manifest: handle.manifest }));
+5730|        dispatch({ type: "SET_LOADED_PLUGINS", value: loadedState });
+5731|
+5732|        if (hostConfig) {
+5733|          const sPlugin = loadedState.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
+5734|          const sApp = sPlugin?.manifest.apps.find((app) => app.id === hostConfig.landingAppId) ?? sPlugin?.manifest.apps[0];
+5735|          if (!sPlugin || !sApp) throw new Error("host program missing landing app");
+5736|          const programs = buildSpacePrograms(loadedState);
+5737|          const panelState = buildSpacePanelState(programs, []);
+5738|          const instanceId = await sPlugin.handle.createApp(sApp.id);
+5739|          const viewState: ViewState = {
+5740|            activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id,
+5741|            panelJson: panelJsonFromState(panelState),
+5742|          };
+5743|          // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
+5744|          // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
+5745|          const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY);
+5746|          extraWindowInstancesRef.current = seeded.extraInstances;
+5747|          extraWindowCounterRef.current = seeded.extraInstances.length;
+5748|          dispatch({ type: "SET_SESSION", value: { pluginId: sPlugin.handle.pluginId, instanceId, app: sApp, viewState } });
+5749|          dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+5750|          dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+5751|          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+5752|          return;
+5753|        }
+5754|
+5755|        const registryPluginId = pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined;
+5756|        const primary = (registryPluginId ? loaded.find((entry) => entry.pluginId === registryPluginId) : undefined) ?? loaded[0];
+5757|        const primaryApp = appId
+5758|          ? (() => {
+5759|              const found = primary?.manifest.apps.find((app) => app.id === appId);
+5760|              if (!found) throw new Error(`appId "${appId}" does not resolve to any app in the loaded program manifest`);
+5761|              return found;
+5762|            })()
+5763|          : (() => {
+====
+7799|    return (activePluginManifest?.examples ?? [])
+7800|      .filter((example) => example.appId === appId)
+7801|      .filter((example) => {
+7802|        if (seen.has(example.id)) return false;
+7803|        seen.add(example.id);
+7804|        return true;
+7805|      })
+7806|      .map((example) => ({
+7807|        id: example.id,
+7808|        label: resolveAppLabel(appLabelsOverlay, "example", example.id, example.label),
+7809|        icon: example.iconId,
+7810|      }));
+7811|  }, [activePluginManifest, session?.app.id, appLabelsOverlay]);
+7812|
+7813|  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+7814|  const exampleSelectElement = useMemo(() => {
+7815|    if (!session || exampleOptions.length === 0 || locks.exampleId || (studioMode && session.app.id === landingAppId)) return null;
+7816|    return (
+7817|      <NavbarExampleSelect
+7818|        key="fixture"
+7819|        id="playground.navbar.fixture"
+7820|        value={activeExampleId}
+7821|        options={exampleOptions}
+7822|        onValueChange={(exampleId) => {
+7823|          dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+7824|          onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
+7825|        }}
+7826|      />
+7827|    );
+7828|  }, [session, exampleOptions, locks.exampleId, studioMode, landingAppId, activeExampleId, onAction]);
+7829|
+7830|  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+7831|  const modeSwitcherElement = useMemo(() => {
+7832|    if (!session || session.app.modes.length <= 1) return null;
+7833|    return (
+7834|      <ButtonGroup key="modes" id="playground.navbar.modes">
+7835|        {session.app.modes.map((mode) => {
+7836|          const isActive = activeModeId === mode.id;
+7837|          return (
+7838|            <ButtonGroupItem
+7839|              key={mode.id}
+7840|              id={`playground.navbar.modes.${mode.id}`}
+7841|              className={cn(isActive && interactiveActiveFillClass)}
+7842|              data-state={isActive ? "on" : undefined}
+7843|              onClick={() => applyModeChange(mode.id)}
+====
+8313|      treeContentRevision: { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey },
+8314|    };
+8315|  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId, activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey]);
+8316|
+8317|  useEffect(() => {
+8318|    if (exampleOptions.length === 0) return;
+8319|    dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: (current) => (!current || exampleOptions.some((option) => option.id === current) ? current : "") });
+8320|  }, [exampleOptions, session?.app.id, session?.pluginId]);
+8321|
+8322|  // 🎛️ Announces the boot example to the fresh session exactly once per instance. When nothing is
+8323|  // locked/defaulted, seed the first registered example so the dropdown matches the plugin default
+8324|  // document (e.g. procedural3d hexagonal column) — same rule as wgpu `sync_session_chrome`.
+8325|  // Studio-mode routes load documents via `applyShellUri`/`openSpace`; never boot-override those.
+8326|  useEffect(() => {
+8327|    if (exampleOptions.length === 0 || !session) return;
+8328|    if (studioMode) {
+8329|      noExampleResetInstanceIdRef.current = session.instanceId;
+8330|      return;
+8331|    }
+8332|    if (noExampleResetInstanceIdRef.current === session.instanceId) return;
+8333|    noExampleResetInstanceIdRef.current = session.instanceId;
+8334|    const exampleId = resolveBootExampleId(activeExampleId, exampleOptions, defaults.exampleId);
+8335|    if (exampleId !== activeExampleId) {
+8336|      dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+8337|    }
+8338|    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
+8339|  }, [activeExampleId, defaults.exampleId, exampleOptions, onAction, session, studioMode]);
+8340|
+8341|  //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
+8342|  // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
+8343|  // {@link PANEL_TAB_BAR_HOSTS}) and the floating `Panel` itself (`buildPanelProps`) — the two hosts of the
+8344|  // SAME anchor always read/write the exact same controlled state.
+8345|  const buildPanelSelectionProps = useCallback(
+8346|    (anchor: Anchor): PanelTabSelectionOptions => ({
+8347|      tabs: dock.anchors[anchor],
+8348|      visible: panels[anchor].visible,
+8349|      onVisibleChange: (value: boolean) => {
+8350|        dispatch({ type: "SET_PANEL_VISIBLE", anchor, value });
+8351|        noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor, visible: value });
+8352|      },
+8353|      activeTabPath: panelActivePaths[anchor],
+8354|      onActiveTabPathChange: (path: readonly string[]) => {
+8355|        const pathChanged = (panelActivePaths[anchor] ?? []).join("/") !== path.join("/");
+8356|        dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
+8357|        // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
+====
+ENV|7886|        tutorialRecorderRef.current?.recordEvent({ kind: "command", command: commandId, args });
+ENV|9160|type WireCommandEnvelope = { readonly kind: "action" | "command"; readonly name: string; readonly args: unknown };
+ENV|9170|async function performCommand(client: AppChannelClient, envelope: WireCommandEnvelope, viewState: unknown): Promise<InvocationResponse> {
+ENV|9186|      throw new Error(`[DEBUG] ${envelope.kind} '${envelope.name}' failed (${frame.Error.code}): ${frame.Error.message}`);
+ENV|9313|      return performCommand(requireChannel(instanceId), { kind: "command", name: parsed.action, args: parsed.args }, viewState);
+ACT|2250|    const response = await pluginEntry.handle.handleAction(
+ACT|6269|          const { action: dispatchActionId, args: dispatchArgs, delayMs } = effect.dispatchAction;
+ACT|6399|        const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
+ACT|6405|        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+ACT|6408|        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);

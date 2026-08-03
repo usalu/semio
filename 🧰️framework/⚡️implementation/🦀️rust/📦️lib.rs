@@ -6060,6 +6060,18 @@ pub enum Contribution {
         typology_json: String,
         #[cfg_attr(feature = "typegen", ts(rename = "kindsJson"))]
         kinds_json: String,
+    },
+    /// 🧩️ A machine catalog contributing workshop machines (with capabilities) to a process host app.
+    ProcessMachines {
+        #[cfg_attr(feature = "typegen", ts(rename = "appId"))]
+        app_id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "moduleId"))]
+        module_id: String,
+        label: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
+        icon_id: IconName,
+        #[cfg_attr(feature = "typegen", ts(rename = "machinesJson"))]
+        machines_json: String,
     }
 }
 
