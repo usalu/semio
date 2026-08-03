@@ -17,7 +17,7 @@ use framework_surface_terrain::{build_terrain_scene_json, projection, TerrainDes
 use semio_framework_plugin::{
     app_labels, build_world_3d_scene, create_default_layout, localized_label_map, ui_text,
     world3d_scene_extended, world3d_selection_json,
-    ArtifactKindSpec, AppIo, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
+    ArtifactKindSpec, AppIo, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
     AppLabelsOverlay, AppLabelsOverlayExt, App,
 };
 use serde_json::{json, Value};
@@ -387,7 +387,7 @@ impl DocumentApp for Gis3dPlayApp {
 //#region 🔖️Manifest
 pub fn create_gis3d_app() -> App {
     App::from_builder(
-        App::builder(GIS3D_PLAY_APP_ID, "GIS 3D")
+        App::builder(GIS3D_PLAY_APP_ID, LocalizedLabel::native("GIS 3D", "GIS 3D"))
             .document(["semio", "gis", "3d"])
             // 🔌️ Declared for clarity on both sides of the `map:in` edge (WORKFLOWS-END-TO-END-TYPED-PORTS
             // Wave 2 port recipe) — the canonical declaration is `gis2d_ui::create_gis2d_app`'s;
@@ -421,20 +421,20 @@ pub fn create_gis3d_app() -> App {
             .media_input(gis3d_map_in_port())
             .media_output(gis3d_scene_out_port())
             .icon_id("gis3d")
-            .mode("view", "View", "eye")
+            .mode("view", LocalizedLabel::native("View", "Ansicht"), "eye")
             .default_mode_id("view")
-            .window_kind(GIS3D_PLAY_WINDOW_MAIN, "Terrain", GIS3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, "terrain-3d")
+            .window_kind(GIS3D_PLAY_WINDOW_MAIN, LocalizedLabel::native("Terrain", "Gelände"), GIS3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, "terrain-3d")
             .default_layout(create_default_layout(&[GIS3D_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Terrain".into()])))
-            .view_action("setCamera", "Set Camera")
-            .view_action("setSelection", "Set Selection")
-            .view_action("worldSelect", "Select")
-            .operation("setExaggeration", "Set Exaggeration")
+            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("worldSelect", LocalizedLabel::native("Select", "Auswählen"))
+            .operation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .config(Gis3dPlayApp::default().config_spec())
             .io(gis3d_io()),
     )
-    .example("reuse-terrain", "Reuse Terrain", serde_json::to_string(&default_terrain_document()).unwrap(), "file-text")
+    .example("reuse-terrain", LocalizedLabel::native("Reuse Terrain", "Gelände wiederverwenden"), serde_json::to_string(&default_terrain_document()).unwrap(), "file-text")
     .workflow("gis3d", "GIS 3D", "terrain")
 }
 //#endregion 🔖️Manifest

@@ -17,9 +17,9 @@ use writer_protocol::WriterCommand;
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
     build_text_editor_scene, engagement_token_matches, localized_label_map, strip_engagement_prefix,
     tree_item, ui_declarative_sections_to_tree, ui_text, App,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, AppActionRegistry, AppIo, AppLabelsOverlay, AppLabelsOverlayExt,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, AppActionRegistry, AppIo, AppLabelsOverlay, AppLabelsOverlayExt, LocalizedLabel,
     ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, Menu,
-    DocumentApp, DocumentView, ConfigView, Emit, IconName, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
+    DocumentApp, DocumentView, ConfigView, Emit, IconName, AppLabels, Locale, Terminology, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
     UiTreeItemNode, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -48,12 +48,17 @@ const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";
 //#region 🔖️Locale
 /// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
 /// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
+/// `WriterConfig` carries no terminology axis, so this app is always `Terminology::Native`.
 fn is_de_locale(cfg: &WriterConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &WriterConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn writer_locale(cfg: &WriterConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+fn resolve_labels<L: AppLabels>(cfg: &WriterConfig) -> &'static L {
+    L::labels(writer_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -109,24 +114,24 @@ fn editor_hover_context(document: &WriterProjection, config: &WriterConfig) -> (
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the writer app; one field per label makes every locale combination compile-checked.
     struct WriterPlayLabels {
-        document: &'static str = en: "Document", de: "Dokument";
-        empty_query: &'static str = en: "(empty query)", de: "(leere Abfrage)";
-        language: &'static str = en: "Language", de: "Sprache";
-        jack_description: &'static str = en: "jack — Cypher-inspired trinity query language", de: "jack — von Cypher inspirierte Trinity-Abfragesprache";
-        camera: &'static str = en: "Camera", de: "Kamera";
-        diagnostics: &'static str = en: "Diagnostics", de: "Diagnosen";
-        format: &'static str = en: "Format", de: "Formatieren";
-        lint: &'static str = en: "Lint", de: "Prüfen";
-        line_numbers: &'static str = en: "Line numbers", de: "Zeilennummern";
-        font_size: &'static str = en: "Font size", de: "Schriftgröße";
-        line_height: &'static str = en: "Line height", de: "Zeilenhöhe";
-        tab_size: &'static str = en: "Tab size", de: "Tabulatorgröße";
-        engagement_placeholder: &'static str = en: "Format, lint, line numbers", de: "Format, prüfen, Zeilennummern";
-        editor_mode_status: &'static str = en: "Text editor", de: "Texteditor";
-        window_main: &'static str = en: "Jack", de: "Jack";
-        mode_edit: &'static str = en: "Edit", de: "Bearbeiten";
-        panel_tab_content: &'static str = en: "Content", de: "Inhalt";
-        panel_tab_outline: &'static str = en: "Outline", de: "Gliederung";
+        document: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
+        empty_query: native_en "(empty query)", native_de "(leere Abfrage)", reuse_en "(empty query)", reuse_de "(leere Abfrage)";
+        language: native_en "Language", native_de "Sprache", reuse_en "Language", reuse_de "Sprache";
+        jack_description: native_en "jack — Cypher-inspired trinity query language", native_de "jack — von Cypher inspirierte Trinity-Abfragesprache", reuse_en "jack — Cypher-inspired trinity query language", reuse_de "jack — von Cypher inspirierte Trinity-Abfragesprache";
+        camera: native_en "Camera", native_de "Kamera", reuse_en "Camera", reuse_de "Kamera";
+        diagnostics: native_en "Diagnostics", native_de "Diagnosen", reuse_en "Diagnostics", reuse_de "Diagnosen";
+        format: native_en "Format", native_de "Formatieren", reuse_en "Format", reuse_de "Formatieren";
+        lint: native_en "Lint", native_de "Prüfen", reuse_en "Lint", reuse_de "Prüfen";
+        line_numbers: native_en "Line numbers", native_de "Zeilennummern", reuse_en "Line numbers", reuse_de "Zeilennummern";
+        font_size: native_en "Font size", native_de "Schriftgröße", reuse_en "Font size", reuse_de "Schriftgröße";
+        line_height: native_en "Line height", native_de "Zeilenhöhe", reuse_en "Line height", reuse_de "Zeilenhöhe";
+        tab_size: native_en "Tab size", native_de "Tabulatorgröße", reuse_en "Tab size", reuse_de "Tabulatorgröße";
+        engagement_placeholder: native_en "Format, lint, line numbers", native_de "Format, prüfen, Zeilennummern", reuse_en "Format, lint, line numbers", reuse_de "Format, prüfen, Zeilennummern";
+        editor_mode_status: native_en "Text editor", native_de "Texteditor", reuse_en "Text editor", reuse_de "Texteditor";
+        window_main: native_en "Jack", native_de "Jack", reuse_en "Jack", reuse_de "Jack";
+        mode_edit: native_en "Edit", native_de "Bearbeiten", reuse_en "Edit", reuse_de "Bearbeiten";
+        panel_tab_content: native_en "Content", native_de "Inhalt", reuse_en "Content", reuse_de "Inhalt";
+        panel_tab_outline: native_en "Outline", native_de "Gliederung", reuse_en "Outline", reuse_de "Gliederung";
     }
 }
 //#endregion 🔖️Terminology
@@ -837,19 +842,19 @@ impl DocumentApp for WriterPlayApp {
 //#region 🔖️Manifest
 /// 🙈️ An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
-fn writer_hidden_operation(id: &str, label: &str) -> ActionDefinition {
+fn writer_hidden_operation(id: &str, label: LocalizedLabel) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Operation) }
 }
 
 /// 🙈️ An internal View action kept out of the palette — ephemeral editor/selection/hover/setting events
 /// that mutate only runtime scratch and emit no document operations.
-fn writer_hidden_view(id: &str, label: &str) -> ActionDefinition {
+fn writer_hidden_view(id: &str, label: LocalizedLabel) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::View) }
 }
 
 pub fn create_writer_app() -> App {
     App::from_builder(
-        App::builder(WRITER_PLAY_APP_ID, "Writer").document(["semio", "writer"])
+        App::builder(WRITER_PLAY_APP_ID, LocalizedLabel::native("Writer", "Writer")).document(["semio", "writer"])
             .artifact_kind(ArtifactKindSpec {
                 id: "text.document".into(),
                 name: "Text Document".into(),
@@ -863,9 +868,9 @@ pub fn create_writer_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("writer")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_MAIN, SurfaceKind::TextEditor, "document-jack")
+            .window_kind(WRITER_PLAY_WINDOW_KIND, LocalizedLabel::native("Jack", "Jack"), WRITER_PLAY_BODY_MAIN, SurfaceKind::TextEditor, "document-jack")
             .default_layout(create_default_layout(
                 &[WRITER_PLAY_WINDOW_KIND.into()],
                 "row",
@@ -874,62 +879,62 @@ pub fn create_writer_app() -> App {
             ))
             .panel_tab_tree(PanelTabSpec::group(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 vec![
-                    PanelTabSpec::leaf(WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID, "Content", PanelGroup::Workbench, WRITER_PLAY_BODY_DOCUMENT),
-                    PanelTabSpec::leaf(WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID, "Outline", PanelGroup::Workbench, WRITER_PLAY_BODY_DOCUMENT),
+                    PanelTabSpec::leaf(WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID, LocalizedLabel::native("Content", "Inhalt"), PanelGroup::Workbench, WRITER_PLAY_BODY_DOCUMENT),
+                    PanelTabSpec::leaf(WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID, LocalizedLabel::native("Outline", "Gliederung"), PanelGroup::Workbench, WRITER_PLAY_BODY_DOCUMENT),
                 ],
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 WRITER_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 WRITER_PLAY_BODY_INSPECTION,
             )
             // 🔧️ Panel-visible P0 effects: format rewrites the buffer (Operation), lint re-runs
             // diagnostics into runtime (View — an effect, not a document operation). Categorized for
             // `Menu::group`'s ribbon-parent taxonomy (GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS).
-            .action_with(ActionDefinition::new_catalog("formatDocument", "Format Document", ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("lintDocument", "Lint Document", ActionKind::View).with_category("tools"))
+            .action_with(ActionDefinition::new_catalog("formatDocument", LocalizedLabel::native("Format Document", "Dokument formatieren"), ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("lintDocument", LocalizedLabel::native("Lint Document", "Dokument prüfen"), ActionKind::View).with_category("tools"))
             // 🔧️ P1 example switch (whole-document load) with a staged example choice.
-            .operation("setActiveExample", "Set Active Example")
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
             // and dev-only whole-document JSON setters.
-            .action_with(writer_hidden_operation("textEdit", "Edit Text"))
-            .action_with(writer_hidden_operation("setText", "Set Text"))
-            .action_with(writer_hidden_view("setCamera", "Set Camera"))
-            .action_with(writer_hidden_operation("commitRename", "Commit Rename").with_category("transform"))
-            .action_with(writer_hidden_operation("engagementSubmit", "Engagement Submit"))
-            .action_with(writer_hidden_operation("setDocument", "Set Document"))
-            .action_with(writer_hidden_operation("setDocumentJson", "Set Document JSON"))
-            .action_with(writer_hidden_operation("setFixtureJson", "Set Fixture JSON"))
+            .action_with(writer_hidden_operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten")))
+            .action_with(writer_hidden_operation("setText", LocalizedLabel::native("Set Text", "Text festlegen")))
+            .action_with(writer_hidden_view("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen")))
+            .action_with(writer_hidden_operation("commitRename", LocalizedLabel::native("Commit Rename", "Umbenennung übernehmen")).with_category("transform"))
+            .action_with(writer_hidden_operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen")))
+            .action_with(writer_hidden_operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen")))
+            .action_with(writer_hidden_operation("setDocumentJson", LocalizedLabel::native("Set Document JSON", "Dokument-JSON festlegen")))
+            .action_with(writer_hidden_operation("setFixtureJson", LocalizedLabel::native("Set Fixture JSON", "Fixture-JSON festlegen")))
             // 🙈️ Internal View measures — selection, hover, AST navigation, completions, editor settings.
-            .action_with(writer_hidden_view("requestCompletions", "Request Completions").with_category("tools"))
-            .action_with(writer_hidden_view("textSelect", "Text Select"))
-            .action_with(writer_hidden_view("setEditorSelection", "Set Editor Selection"))
-            .action_with(writer_hidden_view("selectAstNode", "Select Ast Node"))
-            .action_with(writer_hidden_view("setAstSelection", "Set Ast Selection"))
-            .action_with(writer_hidden_view("setAstHover", "Set Ast Hover"))
-            .action_with(writer_hidden_view("textHover", "Text Hover"))
-            .action_with(writer_hidden_view("toggleLineNumbers", "Toggle Line Numbers"))
-            .action_with(writer_hidden_view("setEditorSetting", "Set Editor Setting"))
-            .action_with(writer_hidden_view("engagementInput", "Engagement Input"))
+            .action_with(writer_hidden_view("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern")).with_category("tools"))
+            .action_with(writer_hidden_view("textSelect", LocalizedLabel::native("Text Select", "Text auswählen")))
+            .action_with(writer_hidden_view("setEditorSelection", LocalizedLabel::native("Set Editor Selection", "Editor-Auswahl festlegen")))
+            .action_with(writer_hidden_view("selectAstNode", LocalizedLabel::native("Select Ast Node", "AST-Knoten auswählen")))
+            .action_with(writer_hidden_view("setAstSelection", LocalizedLabel::native("Set Ast Selection", "AST-Auswahl festlegen")))
+            .action_with(writer_hidden_view("setAstHover", LocalizedLabel::native("Set Ast Hover", "Überfahren (AST) festlegen")))
+            .action_with(writer_hidden_view("textHover", LocalizedLabel::native("Text Hover", "Text-Hover")))
+            .action_with(writer_hidden_view("toggleLineNumbers", LocalizedLabel::native("Toggle Line Numbers", "Zeilennummern umschalten")))
+            .action_with(writer_hidden_view("setEditorSetting", LocalizedLabel::native("Set Editor Setting", "Editor-Einstellung festlegen")))
+            .action_with(writer_hidden_view("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe")))
             // 📝️ Staged argument forms: example choice + the dev JSON setters.
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new("jack", "Jack"),
-                    ActionArgOption::new("dag.jack", "Dag Jack"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new("jack", LocalizedLabel::native("Jack", "Jack")),
+                    ActionArgOption::new("dag.jack", LocalizedLabel::native("Dag Jack", "Dag Jack")),
                 ]).default_value("jack"),
             ])
-            .action_args("setDocumentJson", vec![ActionArgDef::text("json", "Document JSON")])
-            .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Fixture JSON")])
+            .action_args("setDocumentJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON"))])
+            .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Fixture JSON", "Fixture-JSON"))])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🎯️ Typed channel surface (mirrors `shooting_ui::create_shooting_app`'s identical wiring) —
@@ -938,8 +943,8 @@ pub fn create_writer_app() -> App {
             .config(WriterPlayApp.config_spec())
             .io(writer_engine::writer_io()),
     )
-    .example("jack", "Jack", jack_example_json(), "file-text")
-    .example("dag.jack", "Dag Jack", dag_jack_example_json(), "file-text")
+    .example("jack", LocalizedLabel::native("Jack", "Jack"), jack_example_json(), "file-text")
+    .example("dag.jack", LocalizedLabel::native("Dag Jack", "Dag Jack"), dag_jack_example_json(), "file-text")
     .workflow("writer", "Writer", "text.document")
 }
 //#endregion 🔖️Manifest

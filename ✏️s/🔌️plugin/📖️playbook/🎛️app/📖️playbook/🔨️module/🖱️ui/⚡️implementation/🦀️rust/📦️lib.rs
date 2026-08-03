@@ -14,8 +14,8 @@ use playbook_op::{
 };
 use playbook_protocol::PlaybookCommand;
 use semio_framework_plugin::{
-    localized_label_map, ui_text, AppIo, ArtifactKindSpec, BlockPaletteEntry, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    App, AppLabelsOverlay, AppLabelsOverlayExt, OsMediaCapability, SurfaceKind, UiNode,
+    ui_text, AppIo, ArtifactKindSpec, BlockPaletteEntry, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    App, OsMediaCapability, SurfaceKind, UiNode,
 };
 use semio_framework_plugin::{app_labels, create_default_layout, ActionArgDef, ActionArgOption};
 
@@ -29,47 +29,16 @@ const PLAYBOOK_PLAY_WINDOW_BUILDER: &str = "playbook-builder";
 const PLAYBOOK_IMPORTED_STEP_ID: &str = "imported";
 //#endregion 🔖️Constants
 
-//#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `writer_ui`/`shooting_ui`'s
-/// identical region.
-fn is_de_locale(cfg: &PlaybookConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
-
-fn resolve_labels<L: LocaleLabels>(cfg: &PlaybookConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
-}
-//#endregion 🔖️Locale
-
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the playbook-play app; one field per label makes every locale combination compile-checked.
+// 🗣️ Complete UI label set for the playbook-play app; one field per label makes every locale combination compile-checked. No separate reuse-terminology concept, so reuse repeats native.
 app_labels! {
     struct PlaybookPlayLabels {
-        window_builder: &'static str = en: "Builder", de: "Builder";
-        mode_builder: &'static str = en: "Builder", de: "Builder";
-        kind_arg: &'static str = en: "Kind", de: "Art";
+        window_builder: native_en "Builder", native_de "Builder", reuse_en "Builder", reuse_de "Builder";
+        mode_builder: native_en "Builder", native_de "Builder", reuse_en "Builder", reuse_de "Builder";
+        kind_arg: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_playbook_play_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn playbook_play_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("addStep", "Add Step", "Schritt hinzufügen"),
-        ("removeStep", "Remove Step", "Schritt entfernen"),
-        ("moveStep", "Move Step", "Schritt verschieben"),
-        ("addBlock", "Add Block", "Baustein hinzufügen"),
-        ("removeBlock", "Remove Block", "Baustein entfernen"),
-        ("moveBlock", "Move Block", "Baustein verschieben"),
-        ("updatePlaybook", "Update Playbook", "Playbook aktualisieren"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-    ])
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Render
 fn playbook_builder_config() -> PlaybookBuilderConfig {
@@ -244,18 +213,8 @@ impl DocumentApp for PlaybookPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
         match body_key {
             PLAYBOOK_PLAY_BODY_BUILDER => render_builder(doc.projection, cfg.projection.selected_ids.first().map(String::as_str)),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, PlaybookConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<PlaybookPlayLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(PLAYBOOK_PLAY_WINDOW_BUILDER, labels.window_builder)
-            .mode_label("builder", labels.mode_builder)
-            .action_labels(playbook_play_action_labels(is_de))
-            .action_arg_label("addBlock.kind", labels.kind_arg)
     }
 }
 //#endregion 🔖️PlaybookPlayApp
@@ -263,7 +222,7 @@ impl DocumentApp for PlaybookPlayApp {
 //#region 🔖️Manifest
 pub fn create_playbook_play_app() -> App {
     App::from_builder(
-        App::builder(PLAYBOOK_PLAY_APP_ID, "Playbook")
+        App::builder(PLAYBOOK_PLAY_APP_ID, LocalizedLabel::native("Playbook", "Playbook"))
             .document(["semio", "playbook"])
             .artifact_kind(ArtifactKindSpec {
                 id: "text.playbook".into(),
@@ -277,24 +236,24 @@ pub fn create_playbook_play_app() -> App {
                 export_formats: vec![],
                 import_formats: vec![],
             })
-            .mode("builder", "Builder", "component")
+            .mode("builder", LocalizedLabel::native("Builder", "Builder"), "component")
             .default_mode_id("builder")
-            .window_kind(PLAYBOOK_PLAY_WINDOW_BUILDER, "Builder", PLAYBOOK_PLAY_BODY_BUILDER, SurfaceKind::BlockList, "clipboard-list")
+            .window_kind(PLAYBOOK_PLAY_WINDOW_BUILDER, LocalizedLabel::native("Builder", "Builder"), PLAYBOOK_PLAY_BODY_BUILDER, SurfaceKind::BlockList, "clipboard-list")
             .default_layout(create_default_layout(&[PLAYBOOK_PLAY_WINDOW_BUILDER.into()], "row", None, None))
-            .operation("addStep", "Add Step")
-            .operation("removeStep", "Remove Step")
-            .operation("moveStep", "Move Step")
-            .operation("addBlock", "Add Block")
-            .operation("removeBlock", "Remove Block")
-            .operation("moveBlock", "Move Block")
-            .operation("updatePlaybook", "Update Playbook")
-            .view_action("setSelection", "Set Selection")
+            .operation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .operation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .operation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
+            .operation("addBlock", LocalizedLabel::native("Add Block", "Baustein hinzufügen"))
+            .operation("removeBlock", LocalizedLabel::native("Remove Block", "Baustein entfernen"))
+            .operation("moveBlock", LocalizedLabel::native("Move Block", "Baustein verschieben"))
+            .operation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             // 📝️ Staged argument form for the panel-visible create action (block kind is a choice).
             .action_args("addBlock", vec![
                 ActionArgDef::select(
                     "kind",
-                    "Kind",
-                    PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, *kind)).collect(),
+                    LocalizedLabel::native("Kind", "Art"),
+                    PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, LocalizedLabel::data(*kind))).collect(),
                 )
                 .default_value("text"),
             ])

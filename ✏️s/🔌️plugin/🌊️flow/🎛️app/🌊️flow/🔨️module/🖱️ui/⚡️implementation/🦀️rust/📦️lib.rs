@@ -12,9 +12,9 @@ use flow_op::{FlowConfigOperation, FlowOperation};
 use flow_protocol::{FlowCommand, FlowNodeGraphEditOp};
 use playbook::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation};
 use semio_framework_plugin::{
-    build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, localized_label_map, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
+    build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind,
-    App, AppLabelsOverlay, AppLabelsOverlayExt, AppActionRegistry, ConfigView, ContextMenuRequest, ContextMenuItemSpec, DocumentApp, DocumentView, Emit, HostEffect, LocaleLabels, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,
+    App, AppLabels, AppActionRegistry, ConfigView, ContextMenuRequest, ContextMenuItemSpec, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, Terminology, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,
     UiTreeItemNode, UiTreeSectionNode, WindowMeasure, MeasureSelectItem, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -48,13 +48,18 @@ const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] =
 //#region 🔖️Locale
 /// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
 /// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors
-/// `procedural_3d_ui`/`dag_ui`'s identical local replacement.
+/// `procedural_3d_ui`/`dag_ui`'s identical local replacement. `FlowConfig` carries no terminology
+/// axis, so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
 fn is_de_locale(cfg: &FlowConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &FlowConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn flow_locale(cfg: &FlowConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+fn resolve_labels<L: AppLabels>(cfg: &FlowConfig) -> &'static L {
+    L::labels(flow_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -349,7 +354,7 @@ fn flow_context_menu_items(
         if !phrase.is_empty() {
             menu = menu.item(ContextMenuItemSpec {
                 id: "delete-selection".into(),
-                label: Some(format!("{} ({phrase})", labels.delete_selection)),
+                label: Some(format!("{} ({phrase})", labels.delete_selection.as_str())),
                 icon: Some("trash".into()),
                 destructive: Some(true),
                 action: Some("deleteSelection".into()),
@@ -363,54 +368,57 @@ fn flow_context_menu_items(
 
 //#region 🔖️Terminology
 semio_framework_plugin::app_labels! {
-    /// 🗣️ Complete UI label set for the flow app; one field per label makes every locale combination compile-checked.
+    /// 🗣️ Complete UI label set for the flow app; one field per label makes every locale×terminology combination compile-checked. `FlowConfig` carries no terminology axis, so `reuse_*` mirrors `native_*` throughout.
     struct FlowPlayLabels {
-        widgets: &'static str = en: "Widgets", de: "Widgets";
-        synapses: &'static str = en: "Synapses", de: "Synapsen";
-        extensions: &'static str = en: "Extensions", de: "Erweiterungen";
-        extension_actions: &'static str = en: "Extension Actions", de: "Erweiterungsaktionen";
-        sources: &'static str = en: "Sources", de: "Quellen";
-        components: &'static str = en: "Components", de: "Komponenten";
-        sinks: &'static str = en: "Sinks", de: "Senken";
-        catalogue_slider: &'static str = en: "Slider", de: "Schieberegler";
-        catalogue_note: &'static str = en: "Note", de: "Notiz";
-        catalogue_add: &'static str = en: "Add", de: "Addieren";
-        catalogue_and: &'static str = en: "And", de: "Und";
-        catalogue_concat: &'static str = en: "Concat", de: "Verketten";
-        catalogue_preview: &'static str = en: "Preview", de: "Vorschau";
-        catalogue_export: &'static str = en: "Export", de: "Exportieren";
-        extension_auto_layout: &'static str = en: "Auto Layout", de: "Automatisches Layout";
-        extension_auto_evaluate: &'static str = en: "Auto Evaluate", de: "Automatisch Auswerten";
-        extension_action_reorganize_canvas: &'static str = en: "Reorganize Canvas", de: "Leinwand neu anordnen";
-        extension_action_evaluate_fixture: &'static str = en: "Evaluate Fixture", de: "Fixture auswerten";
-        canvas: &'static str = en: "Canvas", de: "Leinwand";
-        widget: &'static str = en: "Widget", de: "Widget";
-        delete_selection: &'static str = en: "Delete selection", de: "Auswahl löschen";
-        hide_preview: &'static str = en: "Hide preview", de: "Vorschau ausblenden";
-        show_preview: &'static str = en: "Show preview", de: "Vorschau einblenden";
-        add_node: &'static str = en: "Add node…", de: "Knoten hinzufügen…";
-        reorganize: &'static str = en: "Reorganize", de: "Neu anordnen";
-        replace_image: &'static str = en: "Replace image…", de: "Bild ersetzen…";
-        window_main: &'static str = en: "Flow", de: "Flow";
-        window_compiled: &'static str = en: "DSL", de: "DSL";
-        window_generations: &'static str = en: "Generations", de: "Generationen";
-        window_generate_form: &'static str = en: "Form", de: "Formular";
-        window_generate_preview: &'static str = en: "Preview", de: "Vorschau";
-        lod_mode: &'static str = en: "LOD Mode", de: "LOD-Modus";
-        automatic: &'static str = en: "Automatic", de: "Automatisch";
-        proximity_distance: &'static str = en: "Proximity Distance", de: "Näheabstand";
-        grid: &'static str = en: "Grid", de: "Raster";
-        grid_visible: &'static str = en: "Visible", de: "Sichtbar";
-        grid_snap: &'static str = en: "Snap", de: "Fang";
-        grid_factor: &'static str = en: "Factor", de: "Faktor";
-        select_all: &'static str = en: "Select All", de: "Alles auswählen";
-        zoom_to_selection: &'static str = en: "Zoom to Selection", de: "Auf Auswahl zoomen";
-        clear_selection: &'static str = en: "Clear Selection", de: "Auswahl aufheben";
-        no_selection: &'static str = en: "No selection", de: "Keine Auswahl";
-        value: &'static str = en: "Value", de: "Wert";
-        text: &'static str = en: "Text", de: "Text";
-        kind: &'static str = en: "Kind", de: "Art";
-        id: &'static str = en: "Id", de: "Id";
+        widgets: native_en "Widgets", native_de "Widgets", reuse_en "Widgets", reuse_de "Widgets";
+        synapses: native_en "Synapses", native_de "Synapsen", reuse_en "Synapses", reuse_de "Synapsen";
+        extensions: native_en "Extensions", native_de "Erweiterungen", reuse_en "Extensions", reuse_de "Erweiterungen";
+        extension_actions: native_en "Extension Actions", native_de "Erweiterungsaktionen", reuse_en "Extension Actions", reuse_de "Erweiterungsaktionen";
+        sources: native_en "Sources", native_de "Quellen", reuse_en "Sources", reuse_de "Quellen";
+        components: native_en "Components", native_de "Komponenten", reuse_en "Components", reuse_de "Komponenten";
+        sinks: native_en "Sinks", native_de "Senken", reuse_en "Sinks", reuse_de "Senken";
+        catalogue_slider: native_en "Slider", native_de "Schieberegler", reuse_en "Slider", reuse_de "Schieberegler";
+        catalogue_note: native_en "Note", native_de "Notiz", reuse_en "Note", reuse_de "Notiz";
+        catalogue_add: native_en "Add", native_de "Addieren", reuse_en "Add", reuse_de "Addieren";
+        catalogue_and: native_en "And", native_de "Und", reuse_en "And", reuse_de "Und";
+        catalogue_concat: native_en "Concat", native_de "Verketten", reuse_en "Concat", reuse_de "Verketten";
+        catalogue_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        catalogue_export: native_en "Export", native_de "Exportieren", reuse_en "Export", reuse_de "Exportieren";
+        extension_auto_layout: native_en "Auto Layout", native_de "Automatisches Layout", reuse_en "Auto Layout", reuse_de "Automatisches Layout";
+        extension_auto_evaluate: native_en "Auto Evaluate", native_de "Automatisch Auswerten", reuse_en "Auto Evaluate", reuse_de "Automatisch Auswerten";
+        extension_action_reorganize_canvas: native_en "Reorganize Canvas", native_de "Leinwand neu anordnen", reuse_en "Reorganize Canvas", reuse_de "Leinwand neu anordnen";
+        extension_action_evaluate_fixture: native_en "Evaluate Fixture", native_de "Fixture auswerten", reuse_en "Evaluate Fixture", reuse_de "Fixture auswerten";
+        canvas: native_en "Canvas", native_de "Leinwand", reuse_en "Canvas", reuse_de "Leinwand";
+        widget: native_en "Widget", native_de "Widget", reuse_en "Widget", reuse_de "Widget";
+        delete_selection: native_en "Delete selection", native_de "Auswahl löschen", reuse_en "Delete selection", reuse_de "Auswahl löschen";
+        hide_preview: native_en "Hide preview", native_de "Vorschau ausblenden", reuse_en "Hide preview", reuse_de "Vorschau ausblenden";
+        show_preview: native_en "Show preview", native_de "Vorschau einblenden", reuse_en "Show preview", reuse_de "Vorschau einblenden";
+        add_node: native_en "Add node…", native_de "Knoten hinzufügen…", reuse_en "Add node…", reuse_de "Knoten hinzufügen…";
+        reorganize: native_en "Reorganize", native_de "Neu anordnen", reuse_en "Reorganize", reuse_de "Neu anordnen";
+        replace_image: native_en "Replace image…", native_de "Bild ersetzen…", reuse_en "Replace image…", reuse_de "Bild ersetzen…";
+        window_main: native_en "Flow", native_de "Flow", reuse_en "Flow", reuse_de "Flow";
+        window_compiled: native_en "DSL", native_de "DSL", reuse_en "DSL", reuse_de "DSL";
+        window_generations: native_en "Generations", native_de "Generationen", reuse_en "Generations", reuse_de "Generationen";
+        window_generate_form: native_en "Form", native_de "Formular", reuse_en "Form", reuse_de "Formular";
+        window_generate_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        lod_mode: native_en "LOD Mode", native_de "LOD-Modus", reuse_en "LOD Mode", reuse_de "LOD-Modus";
+        automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";
+        proximity_distance: native_en "Proximity Distance", native_de "Näheabstand", reuse_en "Proximity Distance", reuse_de "Näheabstand";
+        grid: native_en "Grid", native_de "Raster", reuse_en "Grid", reuse_de "Raster";
+        grid_visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
+        grid_snap: native_en "Snap", native_de "Fang", reuse_en "Snap", reuse_de "Fang";
+        grid_factor: native_en "Factor", native_de "Faktor", reuse_en "Factor", reuse_de "Faktor";
+        select_all: native_en "Select All", native_de "Alles auswählen", reuse_en "Select All", reuse_de "Alles auswählen";
+        zoom_to_selection: native_en "Zoom to Selection", native_de "Auf Auswahl zoomen", reuse_en "Zoom to Selection", reuse_de "Auf Auswahl zoomen";
+        clear_selection: native_en "Clear Selection", native_de "Auswahl aufheben", reuse_en "Clear Selection", reuse_de "Auswahl aufheben";
+        no_selection: native_en "No selection", native_de "Keine Auswahl", reuse_en "No selection", reuse_de "Keine Auswahl";
+        value: native_en "Value", native_de "Wert", reuse_en "Value", reuse_de "Wert";
+        text: native_en "Text", native_de "Text", reuse_en "Text", reuse_de "Text";
+        kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
+        none_placeholder: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
+        widget_not_found: native_en "Widget not found", native_de "Widget nicht gefunden", reuse_en "Widget not found", reuse_de "Widget nicht gefunden";
+        generation_needed: native_en "Add a generation to edit input values.", native_de "Füge eine Generation hinzu, um Eingabewerte zu bearbeiten.", reuse_en "Add a generation to edit input values.", reuse_de "Füge eine Generation hinzu, um Eingabewerte zu bearbeiten.";
     }
 }
 
@@ -419,82 +427,39 @@ fn flow_play_labels(cfg: &FlowConfig) -> &'static FlowPlayLabels {
     resolve_labels::<FlowPlayLabels>(cfg)
 }
 
-/// 🗣️ Resolves a built-in extension's display name from its stable id; unknown ids fall back to the extension's native English name.
-fn flow_extension_label(id: &str, name: &'static str, labels: &FlowPlayLabels) -> &'static str {
+/// 🗣️ Resolves a built-in extension's display name from its stable id; unknown ids fall back to the
+/// extension's native English name as genuine runtime data (never authored UI copy).
+fn flow_extension_label(id: &str, name: &'static str, labels: &FlowPlayLabels) -> Label {
     match id {
-        "auto-layout" => labels.extension_auto_layout,
-        "auto-evaluate" => labels.extension_auto_evaluate,
-        _ => name,
+        "auto-layout" => labels.extension_auto_layout.into(),
+        "auto-evaluate" => labels.extension_auto_evaluate.into(),
+        _ => Label::data(name),
     }
 }
 
-/// 🗣️ Resolves a built-in extension action's display title from its stable action id; unknown ids fall back to the action's native English title.
-fn flow_extension_action_title_label(action_id: &str, title: &'static str, labels: &FlowPlayLabels) -> &'static str {
+/// 🗣️ Resolves a built-in extension action's display title from its stable action id; unknown ids
+/// fall back to the action's native English title as genuine runtime data.
+fn flow_extension_action_title_label(action_id: &str, title: &'static str, labels: &FlowPlayLabels) -> Label {
     match action_id {
-        "flow.extension.reorganize" => labels.extension_action_reorganize_canvas,
-        "flow.extension.evaluate" => labels.extension_action_evaluate_fixture,
-        _ => title,
+        "flow.extension.reorganize" => labels.extension_action_reorganize_canvas.into(),
+        "flow.extension.evaluate" => labels.extension_action_evaluate_fixture.into(),
+        _ => Label::data(title),
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_flow_app`'s
-/// static manifest — the manifest itself has no `cfg`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn flow_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addWidget", "Add Widget", "Widget hinzufügen"),
-        ("removeWidget", "Remove Widget", "Widget entfernen"),
-        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-        ("disconnect", "Disconnect", "Trennen"),
-        ("connectMediaPorts", "Connect Ports", "Anschlüsse verbinden"),
-        ("moveMediaNode", "Move Node", "Knoten verschieben"),
-        ("reorganize", "Reorganize", "Neu anordnen"),
-        ("patchFlowWidgets", "Patch Widgets", "Widgets aktualisieren"),
-        ("renameFlowWidget", "Rename Widget", "Widget umbenennen"),
-        ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
-        ("spotlightCommit", "Spotlight Commit", "Spotlight bestätigen"),
-        ("runExtensionAction", "Run Extension Action", "Erweiterungsaktion ausführen"),
-        ("evaluate", "Evaluate", "Auswerten"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("selectNode", "Select Node", "Knoten auswählen"),
-        ("nodeGraphSelect", "Node Graph Select", "Knotengraph auswählen"),
-        ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
-        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
-        ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
-        ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
-        ("setProximityDistance", "Set Proximity Distance", "Näheabstand festlegen"),
-        ("setGridVisible", "Set Grid Visible", "Raster sichtbar"),
-        ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
-        ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
-        ("selectAll", "Select All", "Alles auswählen"),
-        ("focusSelection", "Zoom to Selection", "Auf Auswahl zoomen"),
-        ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-        ("setCatalogueSections", "Set Catalogue Sections", "Katalogabschnitte festlegen"),
-        ("toggleExtension", "Toggle Extension", "Erweiterung umschalten"),
-        ("addGeneration", "Add Generation", "Generation hinzufügen"),
-        ("removeGeneration", "Remove Generation", "Generation entfernen"),
-        ("selectGeneration", "Select Generation", "Generation auswählen"),
-        ("renameGeneration", "Rename Generation", "Generation umbenennen"),
-        ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &FlowPlayLabels) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = fixture
         .widgets
         .iter()
-        .map(|widget| tree_item_with_action(format!("flow-play-document.widget.{}", widget_id(widget)), widget_tree_label(widget), Some(widget_kind_label(widget).into()), flow_action("setSelection", Some(json!({ "ids": [widget_id(widget)] })))))
+        .map(|widget| tree_item_with_action(format!("flow-play-document.widget.{}", widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()), flow_action("setSelection", Some(json!({ "ids": [widget_id(widget)] })))))
         .collect();
     let synapse_items: Vec<UiTreeItemNode> =
-        fixture.synapses.iter().map(|synapse| tree_item_desc(format!("flow-play-document.synapse.{}", synapse.id), format!("{} → {}", synapse.from, synapse.to), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
+        fixture.synapses.iter().map(|synapse| tree_item_desc(format!("flow-play-document.synapse.{}", synapse.id), Label::data(format!("{} → {}", synapse.from, synapse.to)), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
     PanelTreeBuilder::new("flow-play-document")
-        .section_or_placeholder("flow-play-document.widgets", Some(labels.widgets.into()), true, widget_items, "(none)")
-        .section_or_placeholder("flow-play-document.synapses", Some(labels.synapses.into()), false, synapse_items, "(none)")
+        .section_or_placeholder("flow-play-document.widgets", Some(labels.widgets.into()), true, widget_items, labels.none_placeholder)
+        .section_or_placeholder("flow-play-document.synapses", Some(labels.synapses.into()), false, synapse_items, labels.none_placeholder)
         .selected(selected.iter().map(|id| format!("flow-play-document.widget.{id}")).collect())
         .build()
 }
@@ -518,12 +483,12 @@ fn build_catalogue_tree(fixture: &FlowFixture, config: &FlowConfig, labels: &Flo
                             let label = entry.get("name").or_else(|| entry.get("abbreviation")).and_then(|value| value.as_str()).unwrap_or(kind);
                             let descriptor = if kind == "neuron" { flow_widget_descriptor("neuron", entry.get("neuronKind").and_then(|value| value.as_str())) } else { flow_widget_descriptor(kind, None) };
                             let action = flow_action("addWidget", Some(descriptor.clone()));
-                            Some(tree_item_with_action_draggable(format!("flow-play-catalogue.{id}.{kind}.{label}"), label, Some(kind.to_string()), action, &flow_widget_drag_json(&descriptor)))
+                            Some(tree_item_with_action_draggable(format!("flow-play-catalogue.{id}.{kind}.{label}"), Label::data(label), Some(kind.to_string()), action, &flow_widget_drag_json(&descriptor)))
                         })
                         .collect()
                 })
                 .unwrap_or_default();
-            Some(UiTreeSectionNode { presence: UiPresence::default(), id: format!("flow-play-catalogue.{id}"), label: Some(title), default_open: Some(true), items,
+            Some(UiTreeSectionNode { presence: UiPresence::default(), id: format!("flow-play-catalogue.{id}"), label: Some(Label::data(title)), default_open: Some(true), items,
         })
         })
         .collect();
@@ -663,7 +628,7 @@ fn flow_grid_measures_group(config: &FlowConfig, labels: &FlowPlayLabels) -> Win
             },
             WindowMeasure::Slider {
                 id: "flow-play-measures.grid-factor".into(),
-                label: Some(format!("{} {:.1}", labels.grid_factor, config.grid_factor)),
+                label: Some(format!("{} {:.1}", labels.grid_factor.as_str(), config.grid_factor)),
                 value: config.grid_factor,
                 min: 0.5,
                 max: 50.0,
@@ -705,7 +670,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             presence: UiPresence::default(),
             id: "flow-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![ui_text(labels.no_selection)],
             menu: None,
@@ -716,9 +681,9 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             presence: UiPresence::default(),
             id: "flow-play-inspector.missing".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
-            children: vec![ui_text("Widget not found")],
+            children: vec![ui_text(labels.widget_not_found)],
             menu: None,
         }]);
     }
@@ -737,7 +702,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
         groups.push(UiInspectorFieldGroup {
             presence: UiPresence::default(),
             id: "flow-play-inspector.kind.inputSlider".into(),
-            label: "inputSlider".into(),
+            label: Label::data("inputSlider"),
             default_open: None,
             fields: vec![UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: "flow-play-inspector.slider-value".into(),
@@ -746,7 +711,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
                     id: "flow-play-inspector.slider-value.input".into(),
                     input_kind: "number".into(),
                     value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
-                    placeholder: if mixed.uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
+                    placeholder: if mixed.uniform { None } else { Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER)) },
                     commit: None,
                     on_change: flow_action("patchFlowWidgets", Some(json!({ "widgetIds": widget_ids, "field": "value" }))),
                     min: None,
@@ -775,7 +740,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
         groups.push(UiInspectorFieldGroup {
             presence: UiPresence::default(),
             id: "flow-play-inspector.kind.inputNote".into(),
-            label: "inputNote".into(),
+            label: Label::data("inputNote"),
             default_open: None,
             fields: vec![UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: "flow-play-inspector.note-text".into(),
@@ -784,7 +749,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
                     id: "flow-play-inspector.note-text.input".into(),
                     input_kind: "text".into(),
                     value: mixed.value,
-                    placeholder: mixed.placeholder,
+                    placeholder: mixed.placeholder.map(Label::data),
                     commit: Some("blur".into()),
                     on_change: flow_action("patchFlowWidgets", Some(json!({ "widgetIds": widget_ids, "field": "text" }))),
                     min: None,
@@ -879,7 +844,7 @@ fn render_generate_form(fixture: &FlowFixture, config: &FlowConfig) -> UiNode {
     let spec = flow_fixture_to_form_spec(fixture);
     let generation = config.generation();
     let Some(active) = selected_generation(&generation) else {
-        return ui_text("Add a generation to edit input values.");
+        return ui_text(flow_play_labels(config).generation_needed);
     };
     render_generation_form_body(&spec, &active.values, FLOW_PLAY_APP_ID, "updateGenerationValues", &active.id)
 }
@@ -897,7 +862,7 @@ fn render_generate_preview(config: &FlowConfig) -> UiNode {
 #[derive(Default)]
 pub struct FlowPlayApp;
 
-fn flow_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+fn flow_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
@@ -1187,24 +1152,8 @@ impl DocumentApp for FlowPlayApp {
             FLOW_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_node_ids, labels),
             FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, config, labels),
             FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &config.selected_node_ids, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, FlowConfig>) -> AppLabelsOverlay {
-        let config = cfg.projection;
-        let labels = flow_play_labels(config);
-        let is_de = is_de_locale(config);
-        AppLabelsOverlay::default()
-            .window_kind_label(FLOW_PLAY_WINDOW_MAIN, labels.window_main)
-            .window_kind_label(FLOW_PLAY_WINDOW_COMPILED, labels.window_compiled)
-            .window_kind_label(FLOW_PLAY_WINDOW_GENERATIONS, labels.window_generations)
-            .window_kind_label(FLOW_PLAY_WINDOW_GENERATE_FORM, labels.window_generate_form)
-            .window_kind_label(FLOW_PLAY_WINDOW_GENERATE_PREVIEW, labels.window_generate_preview)
-            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
-            .mode_label("generate", if is_de { "Generieren" } else { "Generate" })
-            .action_labels(flow_action_labels(is_de))
-            .example_labels(HashMap::from([("demo".to_string(), "Demo".to_string())]))
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -1225,7 +1174,7 @@ impl DocumentApp for FlowPlayApp {
 //#region 🔖️Manifest
 pub fn create_flow_app() -> App {
     App::from_builder(
-        App::builder(FLOW_PLAY_APP_ID, "Flow").document(["semio", "flow"])
+        App::builder(FLOW_PLAY_APP_ID, LocalizedLabel::native("Flow", "Flow")).document(["semio", "flow"])
             .artifact_kind(ArtifactKindSpec {
                 id: "computation.flow".into(),
                 name: "Flow".into(),
@@ -1239,16 +1188,16 @@ pub fn create_flow_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("flow")
-            .mode("edit", "Edit", "pencil")
-            .mode("generate", "Generate", "sparkles")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
+            .mode("generate", LocalizedLabel::native("Generate", "Generieren"), "sparkles")
             .default_mode_id("edit")
-            .window_kind(FLOW_PLAY_WINDOW_MAIN, "Flow", FLOW_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "flow-graph")
-            .window_kind(FLOW_PLAY_WINDOW_COMPILED, "DSL", FLOW_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
-            .window_kind(FLOW_PLAY_WINDOW_GENERATIONS, "Generations", FLOW_PLAY_BODY_GENERATIONS, SurfaceKind::Canvas2d, "sparkles")
-            .window_kind(FLOW_PLAY_WINDOW_GENERATE_FORM, "Form", FLOW_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d, "clipboard-list")
+            .window_kind(FLOW_PLAY_WINDOW_MAIN, LocalizedLabel::native("Flow", "Flow"), FLOW_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "flow-graph")
+            .window_kind(FLOW_PLAY_WINDOW_COMPILED, LocalizedLabel::native("DSL", "DSL"), FLOW_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
+            .window_kind(FLOW_PLAY_WINDOW_GENERATIONS, LocalizedLabel::native("Generations", "Generationen"), FLOW_PLAY_BODY_GENERATIONS, SurfaceKind::Canvas2d, "sparkles")
+            .window_kind(FLOW_PLAY_WINDOW_GENERATE_FORM, LocalizedLabel::native("Form", "Formular"), FLOW_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d, "clipboard-list")
             .window_kind(
                 FLOW_PLAY_WINDOW_GENERATE_PREVIEW,
-                "Preview",
+                LocalizedLabel::native("Preview", "Vorschau"),
                 FLOW_PLAY_BODY_GENERATE_PREVIEW,
                 SurfaceKind::Canvas2d,
                 "eye",
@@ -1278,70 +1227,70 @@ pub fn create_flow_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 FLOW_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 FLOW_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 FLOW_PLAY_BODY_INSPECTOR,
             )
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .operation("addWidget", "Add Widget")
-            .operation("removeWidget", "Remove Widget")
+            .operation("addWidget", LocalizedLabel::native("Add Widget", "Widget hinzufügen"))
+            .operation("removeWidget", LocalizedLabel::native("Remove Widget", "Widget entfernen"))
             // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
-            .operation("disconnect", "Disconnect")
-            .operation("connectMediaPorts", "Connect Ports")
-            .operation("moveMediaNode", "Move Node")
-            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
-            .operation("patchFlowWidgets", "Patch Widgets")
-            .operation("renameFlowWidget", "Rename Widget")
-            .operation("nodeGraphEdit", "Node Graph Edit")
-            .operation("spotlightCommit", "Spotlight Commit")
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
+            .operation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
+            .operation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Anschlüsse verbinden"))
+            .operation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
+            .operation("patchFlowWidgets", LocalizedLabel::native("Patch Widgets", "Widgets aktualisieren"))
+            .operation("renameFlowWidget", LocalizedLabel::native("Rename Widget", "Widget umbenennen"))
+            .operation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
+            .operation("spotlightCommit", LocalizedLabel::native("Spotlight Commit", "Spotlight bestätigen"))
             // 🧩️ Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("runExtensionAction", "Run Extension Action", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("runExtensionAction", LocalizedLabel::native("Run Extension Action", "Erweiterungsaktion ausführen"), ActionKind::Operation) })
             // 👁️ Ephemeral view/config actions — mutate runtime, emit no operations.
-            .view_action("evaluate", "Evaluate")
+            .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
             // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("selectAll", "Select All", ActionKind::View).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("focusSelection", "Zoom to Selection", ActionKind::View).with_category("view"))
-            .action_with(flow_internal_action("setSelection", "Set Selection", ActionKind::View))
-            .action_with(flow_internal_action("selectNode", "Select Node", ActionKind::View))
-            .action_with(flow_internal_action("nodeGraphSelect", "Node Graph Select", ActionKind::View))
-            .action_with(flow_internal_action("nodeGraphHover", "Node Graph Hover", ActionKind::View))
-            .action_with(flow_internal_action("graphPointerDown", "Graph Pointer Down", ActionKind::View))
-            .action_with(flow_internal_action("nodeGraphViewport", "Node Graph Viewport", ActionKind::View))
-            .action_with(flow_internal_action("setLodMode", "Set LOD Mode", ActionKind::View))
-            .action_with(flow_internal_action("setProximityDistance", "Set Proximity Distance", ActionKind::View))
-            .action_with(flow_internal_action("setGridVisible", "Set Grid Visible", ActionKind::View))
-            .action_with(flow_internal_action("setGridSnapEnabled", "Set Grid Snap Enabled", ActionKind::View))
-            .action_with(flow_internal_action("setGridFactor", "Set Grid Factor", ActionKind::View))
-            .action_with(flow_internal_action("clearSelection", "Clear Selection", ActionKind::View).with_category("selection"))
-            .action_with(flow_internal_action("contextMenuAt", "Context Menu At", ActionKind::View))
-            .action_with(flow_internal_action("setPreviewOff", "Set Preview Off", ActionKind::View).with_category("view"))
-            .action_with(flow_internal_action("openSpotlight", "Open Spotlight", ActionKind::View).with_category("create"))
-            .action_with(flow_internal_action("replaceImage", "Replace Image", ActionKind::View).with_category("actions"))
-            .action_with(flow_internal_action("setCatalogueSections", "Set Catalogue Sections", ActionKind::View))
-            .action_with(flow_internal_action("toggleExtension", "Toggle Extension", ActionKind::View))
-            .action_with(flow_internal_action("addGeneration", "Add Generation", ActionKind::View))
-            .action_with(flow_internal_action("removeGeneration", "Remove Generation", ActionKind::View))
-            .action_with(flow_internal_action("selectGeneration", "Select Generation", ActionKind::View))
-            .action_with(flow_internal_action("renameGeneration", "Rename Generation", ActionKind::View))
-            .action_with(flow_internal_action("updateGenerationValues", "Update Generation Values", ActionKind::View))
+            .action_with(ActionDefinition::new_catalog("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::View).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("focusSelection", LocalizedLabel::native("Zoom to Selection", "Auf Auswahl zoomen"), ActionKind::View).with_category("view"))
+            .action_with(flow_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
+            .action_with(flow_internal_action("selectNode", LocalizedLabel::native("Select Node", "Knoten auswählen"), ActionKind::View))
+            .action_with(flow_internal_action("nodeGraphSelect", LocalizedLabel::native("Node Graph Select", "Knotengraph auswählen"), ActionKind::View))
+            .action_with(flow_internal_action("nodeGraphHover", LocalizedLabel::native("Node Graph Hover", "Knotengraph-Hover"), ActionKind::View))
+            .action_with(flow_internal_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View))
+            .action_with(flow_internal_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View))
+            .action_with(flow_internal_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View))
+            .action_with(flow_internal_action("setProximityDistance", LocalizedLabel::native("Set Proximity Distance", "Näheabstand festlegen"), ActionKind::View))
+            .action_with(flow_internal_action("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Raster sichtbar"), ActionKind::View))
+            .action_with(flow_internal_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View))
+            .action_with(flow_internal_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View))
+            .action_with(flow_internal_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::View).with_category("selection"))
+            .action_with(flow_internal_action("contextMenuAt", LocalizedLabel::native("Context Menu At", "Kontextmenü an Position"), ActionKind::View))
+            .action_with(flow_internal_action("setPreviewOff", LocalizedLabel::native("Set Preview Off", "Vorschau deaktivieren"), ActionKind::View).with_category("view"))
+            .action_with(flow_internal_action("openSpotlight", LocalizedLabel::native("Open Spotlight", "Spotlight öffnen"), ActionKind::View).with_category("create"))
+            .action_with(flow_internal_action("replaceImage", LocalizedLabel::native("Replace Image", "Bild ersetzen"), ActionKind::View).with_category("actions"))
+            .action_with(flow_internal_action("setCatalogueSections", LocalizedLabel::native("Set Catalogue Sections", "Katalogabschnitte festlegen"), ActionKind::View))
+            .action_with(flow_internal_action("toggleExtension", LocalizedLabel::native("Toggle Extension", "Erweiterung umschalten"), ActionKind::View))
+            .action_with(flow_internal_action("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::View))
+            .action_with(flow_internal_action("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::View))
+            .action_with(flow_internal_action("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View))
+            .action_with(flow_internal_action("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::View))
+            .action_with(flow_internal_action("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::View))
             // 📝️ Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
             .action_args("addWidget", vec![
-                ActionArgDef::select("kind", "Kind", vec![
-                    ActionArgOption::new("inputSlider", "Slider"),
-                    ActionArgOption::new("inputNote", "Note"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
+                    ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),
+                    ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
                 ]).default_value("inputSlider"),
             ])
             .keybinding("mod+z", "undo")
@@ -1354,7 +1303,7 @@ pub fn create_flow_app() -> App {
             // channel surface consistent with `shooting_ui::create_shooting_app`'s convention.
             .config(FlowPlayApp::default().config_spec()),
     )
-    .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"), "cylinder")
+    .example("demo", LocalizedLabel::native("Demo", "Demo"), serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"), "cylinder")
     .workflow("flow", "Flow", "graph")
 }
 //#endregion 🔖️Manifest

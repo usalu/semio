@@ -7,10 +7,10 @@
 
 use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use semio_framework_plugin::{
-    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, localized_label_map, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, AppIo, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabelsOverlay, AppLabelsOverlayExt, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
-    ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, DslValue, Emit, LocaleLabels, Media, MediaError, MediaPayload, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup,
-    PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport,
+    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, AppIo, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabels, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
+    ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, DslValue, Emit, Label, Locale, LocalizedLabel, Media, MediaError, MediaPayload, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup,
+    PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, Terminology, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use sequence::{default_fixture, SequenceFixture, SequenceStep, SlotRef, StepParams, SEQUENCE_FIXTURE_SCHEMA};
@@ -18,7 +18,6 @@ use sequence_engine::{control_slots, is_control_kind, sequence_example_json, Seq
 use sequence_op::{sequence_fixture_operations, SequenceConfigOperation, SequenceOperation};
 use sequence_protocol::SequenceCommand;
 use serde_json::{json, Value};
-use std::collections::HashMap;
 
 //#region 🔖️Constants
 const SEQUENCE_PLAY_APP_ID: &str = "sequence-play";
@@ -37,18 +36,16 @@ const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s pilot helpers.
-fn is_de_locale(cfg: &SequenceConfig) -> bool {
-    cfg.locale.starts_with("de")
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
+/// `semio_framework_plugin::resolve_labels` — `SequenceConfig` carries no terminology axis, so this
+/// app is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag, lenient-parsed the same way
+/// `detectShellLocale` does on the TS side — see `home_ui`'s identical pair.
+fn sequence_locale(cfg: &SequenceConfig) -> Locale {
+    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &SequenceConfig) -> &'static L {
-    if is_de_locale(cfg) {
-        L::locale_labels_de()
-    } else {
-        L::locale_labels_en()
-    }
+fn resolve_labels<L: AppLabels>(cfg: &SequenceConfig) -> &'static L {
+    L::labels(sequence_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -113,18 +110,19 @@ fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<N
     (nodes, edges)
 }
 
-/// 🗣️ Localizes a control-flow slot name ("then"/"else"/"body") for tree display; unknown slot names fall back to the raw id.
-fn slot_label<'a>(slot_name: &'a str, labels: &'a SequenceLabels) -> &'a str {
+/// 🗣️ Localizes a control-flow slot name ("then"/"else"/"body") for tree display; unknown slot names
+/// fall back to the raw id as genuine runtime data (never authored UI copy).
+fn slot_label(slot_name: &str, labels: &SequenceLabels) -> Label {
     match slot_name {
-        "then" => labels.slot_then,
-        "else" => labels.slot_else,
-        "body" => labels.slot_body,
-        other => other,
+        "then" => labels.slot_then.into(),
+        "else" => labels.slot_else.into(),
+        "body" => labels.slot_body.into(),
+        other => Label::data(other),
     }
 }
 
 fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: &SequenceLabels) -> UiTreeItemNode {
-    let mut item = tree_item_with_action(format!("sequence-play-document.step.{}", step.id), format!("{} ({})", step.id, step.kind), Some(step.kind.clone()), sequence_action("setSelection", Some(json!({ "ids": [step.id.clone()] }))));
+    let mut item = tree_item_with_action(format!("sequence-play-document.step.{}", step.id), Label::data(format!("{} ({})", step.id, step.kind)), Some(step.kind.clone()), sequence_action("setSelection", Some(json!({ "ids": [step.id.clone()] }))));
     if is_control_kind(&step.kind) {
         item.control = Some(UiControlNode::Toggle(UiToggleNode {
             id: format!("sequence-play-document.collapse.{}", step.id),
@@ -140,8 +138,8 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
                 let nested: Vec<UiTreeItemNode> = fixture.steps.iter().filter(|entry| entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)).map(|entry| build_step_tree_item(entry, fixture, labels)).collect();
                 UiTreeItemNode {
                     id: format!("sequence-play-document.slot.{}.{}", step.id, slot_name),
-                    label: slot_label(slot_name, labels).into(),
-                    description: Some(format!("{} {}", step.id, labels.slot)),
+                    label: slot_label(slot_name, labels),
+                    description: Some(format!("{} {}", step.id, labels.slot.as_str())),
                     icon_id: Some("folder".into()),
                     presence: UiPresence::default(),
                     default_open: Some(true),
@@ -169,81 +167,44 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
 
 //#region 🔖️Terminology
 app_labels! {
-    /// 🗣️ Complete UI label set for the sequence app; one field per label makes every locale combination compile-checked.
+    /// 🗣️ Complete UI label set for the sequence app; one field per label makes every locale×terminology combination compile-checked.
     struct SequenceLabels {
-        steps: &'static str = en: "Steps", de: "Schritte";
-        flow_edges: &'static str = en: "Flow edges", de: "Ablaufkanten";
-        select_prompt: &'static str = en: "Select a step in the canvas or document.", de: "Wähle einen Schritt in der Zeichenfläche oder im Dokument aus.";
-        step_not_found: &'static str = en: "Step not found", de: "Schritt nicht gefunden";
-        kind: &'static str = en: "Kind", de: "Art";
-        params: &'static str = en: "Params", de: "Parameter";
-        id: &'static str = en: "Id", de: "ID";
-        step: &'static str = en: "Step", de: "Schritt";
-        action_set_state: &'static str = en: "Set state", de: "Zustand setzen";
-        action_log_print: &'static str = en: "Print log", de: "Log ausgeben";
-        action_if: &'static str = en: "If", de: "Wenn";
-        action_while: &'static str = en: "While", de: "Solange";
-        action_add: &'static str = en: "Add", de: "Addieren";
-        add_to: &'static str = en: "Add to", de: "Hinzufügen zu";
-        run: &'static str = en: "Run", de: "Ausführen";
-        stop: &'static str = en: "Stop", de: "Stopp";
-        reorganize: &'static str = en: "Reorganize", de: "Neu anordnen";
-        layout: &'static str = en: "Layout", de: "Layout";
-        left_to_right: &'static str = en: "Left to right", de: "Links nach rechts";
-        top_to_bottom: &'static str = en: "Top to bottom", de: "Oben nach unten";
-        window_main: &'static str = en: "Sequence", de: "Sequenz";
-        window_script: &'static str = en: "Script", de: "Skript";
-        window_compiled: &'static str = en: "DSL", de: "DSL";
-        none: &'static str = en: "(none)", de: "(keine)";
-        slot: &'static str = en: "slot", de: "Slot";
-        slot_then: &'static str = en: "Then", de: "Dann";
-        slot_else: &'static str = en: "Else", de: "Sonst";
-        slot_body: &'static str = en: "Body", de: "Rumpf";
+        steps: native_en "Steps", native_de "Schritte", reuse_en "Steps", reuse_de "Schritte";
+        flow_edges: native_en "Flow edges", native_de "Ablaufkanten", reuse_en "Flow edges", reuse_de "Ablaufkanten";
+        select_prompt: native_en "Select a step in the canvas or document.", native_de "Wähle einen Schritt in der Zeichenfläche oder im Dokument aus.", reuse_en "Select a step in the canvas or document.", reuse_de "Wähle einen Schritt in der Zeichenfläche oder im Dokument aus.";
+        step_not_found: native_en "Step not found", native_de "Schritt nicht gefunden", reuse_en "Step not found", reuse_de "Schritt nicht gefunden";
+        kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        params: native_en "Params", native_de "Parameter", reuse_en "Params", reuse_de "Parameter";
+        id: native_en "Id", native_de "ID", reuse_en "Id", reuse_de "ID";
+        step: native_en "Step", native_de "Schritt", reuse_en "Step", reuse_de "Schritt";
+        action_set_state: native_en "Set state", native_de "Zustand setzen", reuse_en "Set state", reuse_de "Zustand setzen";
+        action_log_print: native_en "Print log", native_de "Log ausgeben", reuse_en "Print log", reuse_de "Log ausgeben";
+        action_if: native_en "If", native_de "Wenn", reuse_en "If", reuse_de "Wenn";
+        action_while: native_en "While", native_de "Solange", reuse_en "While", reuse_de "Solange";
+        action_add: native_en "Add", native_de "Addieren", reuse_en "Add", reuse_de "Addieren";
+        add_to: native_en "Add to", native_de "Hinzufügen zu", reuse_en "Add to", reuse_de "Hinzufügen zu";
+        run: native_en "Run", native_de "Ausführen", reuse_en "Run", reuse_de "Ausführen";
+        stop: native_en "Stop", native_de "Stopp", reuse_en "Stop", reuse_de "Stopp";
+        reorganize: native_en "Reorganize", native_de "Neu anordnen", reuse_en "Reorganize", reuse_de "Neu anordnen";
+        layout: native_en "Layout", native_de "Layout", reuse_en "Layout", reuse_de "Layout";
+        left_to_right: native_en "Left to right", native_de "Links nach rechts", reuse_en "Left to right", reuse_de "Links nach rechts";
+        top_to_bottom: native_en "Top to bottom", native_de "Oben nach unten", reuse_en "Top to bottom", reuse_de "Oben nach unten";
+        window_main: native_en "Sequence", native_de "Sequenz", reuse_en "Sequence", reuse_de "Sequenz";
+        window_script: native_en "Script", native_de "Skript", reuse_en "Script", reuse_de "Skript";
+        window_compiled: native_en "DSL", native_de "DSL", reuse_en "DSL", reuse_de "DSL";
+        none: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
+        slot: native_en "slot", native_de "Slot", reuse_en "slot", reuse_de "Slot";
+        slot_then: native_en "Then", native_de "Dann", reuse_en "Then", reuse_de "Dann";
+        slot_else: native_en "Else", native_de "Sonst", reuse_en "Else", reuse_de "Sonst";
+        slot_body: native_en "Body", native_de "Rumpf", reuse_en "Body", reuse_de "Rumpf";
     }
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_sequence_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn sequence_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(
-        is_de,
-        &[
-            ("addStep", "Add Step", "Schritt hinzufügen"),
-            ("addStepToSlot", "Add Step To Slot", "Schritt zu Slot hinzufügen"),
-            ("addStepDropped", "Add Step Dropped", "Schritt per Ablegen hinzufügen"),
-            ("removeStep", "Remove Step", "Schritt entfernen"),
-            ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-            ("moveStep", "Move Step", "Schritt verschieben"),
-            ("connectSteps", "Connect Steps", "Schritte verbinden"),
-            ("disconnectSteps", "Disconnect Steps", "Schritte trennen"),
-            ("setStepParams", "Set Step Params", "Schrittparameter festlegen"),
-            ("setStepCollapsed", "Set Step Collapsed", "Schritt einklappen"),
-            ("reorganize", "Reorganize", "Neu anordnen"),
-            ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
-            ("setViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
-            ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("setOrientation", "Set Orientation", "Ausrichtung festlegen"),
-            ("run", "Run", "Ausführen"),
-            ("stop", "Stop", "Stopp"),
-            ("setLocale", "Set Locale", "Sprache festlegen"),
-        ],
-    )
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_sequence_app`;
-/// this manifest declares none, so this is an empty overlay kept for parity with the shared `app_labels` wiring.
-fn sequence_utility_labels(_is_de: bool) -> HashMap<String, String> {
-    HashMap::new()
-}
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️Panels
 fn build_document_tree(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = fixture.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, fixture, labels)).collect();
-    let edge_items: Vec<UiTreeItemNode> = fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), format!("{} → {}", edge.from, edge.to), Some(edge.id.clone()))).collect();
+    let edge_items: Vec<UiTreeItemNode> = fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), Label::data(format!("{} → {}", edge.from, edge.to)), Some(edge.id.clone()))).collect();
     PanelTreeBuilder::new("sequence-play-document")
         .section_or_placeholder("sequence-play-document.steps", Some(labels.steps.into()), true, step_items, labels.none)
         .section_or_placeholder("sequence-play-document.edges", Some(labels.flow_edges.into()), false, edge_items, labels.none)
@@ -258,7 +219,7 @@ fn build_catalogue_tree(fixture: &SequenceFixture, labels: &SequenceLabels) -> U
         for slot_name in control_slots(&owner.kind) {
             items.push(tree_item_with_action(
                 format!("sequence-play-catalogue.slot.{}.{}", owner.id, slot_name),
-                format!("{} {} → {slot_name}", labels.add_to, owner.id),
+                Label::data(format!("{} {} → {slot_name}", labels.add_to.as_str(), owner.id)),
                 Some(format!("{slot_name} @ {}", owner.id)),
                 sequence_action(
                     "addStepToSlot",
@@ -271,14 +232,14 @@ fn build_catalogue_tree(fixture: &SequenceFixture, labels: &SequenceLabels) -> U
             ));
         }
     }
-    PanelTreeBuilder::new("sequence-play-catalogue").section("sequence-play-catalogue.actions", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, items).selected(vec![]).build()
+    PanelTreeBuilder::new("sequence-play-catalogue").section("sequence-play-catalogue.actions", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).selected(vec![]).build()
 }
 
 fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: &SequenceLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "sequence-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text(labels.select_prompt)],
@@ -289,7 +250,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
     if steps.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "sequence-play-inspector.missing".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text(labels.step_not_found)],
@@ -569,19 +530,8 @@ impl DocumentApp for SequencePlayApp {
             SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_step_ids, labels),
             SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, labels),
             SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &config.selected_step_ids, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, SequenceConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<SequenceLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(SEQUENCE_PLAY_WINDOW_MAIN, labels.window_main)
-            .window_kind_label(SEQUENCE_PLAY_WINDOW_SCRIPT, labels.window_script)
-            .window_kind_label(SEQUENCE_PLAY_WINDOW_COMPILED, labels.window_compiled)
-            .action_labels(sequence_action_labels(is_de))
-            .utility_labels(sequence_utility_labels(is_de))
     }
 
     /// 🗂️ Grouped disclosure: `run`/`stop`/`addStep` stay top-level (the most frequent verbs);
@@ -593,7 +543,7 @@ impl DocumentApp for SequencePlayApp {
     fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = is_de_locale(cfg.projection);
+        let is_de = sequence_locale(cfg.projection) == Locale::De;
         let selected = cfg.projection.selected_step_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
 
@@ -628,7 +578,7 @@ impl DocumentApp for SequencePlayApp {
 //#region 🔖️Manifest
 pub fn create_sequence_app() -> App {
     App::from_builder(
-        App::builder(SEQUENCE_PLAY_APP_ID, "Sequence").document(["semio", "sequence"])
+        App::builder(SEQUENCE_PLAY_APP_ID, LocalizedLabel::native("Sequence", "Sequenz")).document(["semio", "sequence"])
             .artifact_kind(ArtifactKindSpec {
                 id: "computation.sequence".into(),
                 name: "Sequence".into(),
@@ -642,11 +592,11 @@ pub fn create_sequence_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("sequence")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(SEQUENCE_PLAY_WINDOW_MAIN, "Sequence", SEQUENCE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "list-ordered")
-            .window_kind(SEQUENCE_PLAY_WINDOW_SCRIPT, "Script", SEQUENCE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor, "file-code")
-            .window_kind(SEQUENCE_PLAY_WINDOW_COMPILED, "DSL", SEQUENCE_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
+            .window_kind(SEQUENCE_PLAY_WINDOW_MAIN, LocalizedLabel::native("Sequence", "Sequenz"), SEQUENCE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "list-ordered")
+            .window_kind(SEQUENCE_PLAY_WINDOW_SCRIPT, LocalizedLabel::native("Script", "Skript"), SEQUENCE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor, "file-code")
+            .window_kind(SEQUENCE_PLAY_WINDOW_COMPILED, LocalizedLabel::native("DSL", "DSL"), SEQUENCE_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
             .default_layout(create_default_layout(
                 &[
                     SEQUENCE_PLAY_WINDOW_MAIN.into(),
@@ -659,56 +609,56 @@ pub fn create_sequence_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 SEQUENCE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 SEQUENCE_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 SEQUENCE_PLAY_BODY_INSPECTOR,
             )
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .action_with(ActionDefinition::new_catalog("addStep", "Add Step", ActionKind::Operation).with_category("create"))
-            .operation("addStepToSlot", "Add Step To Slot")
-            .operation("addStepDropped", "Add Step Dropped")
-            .operation("removeStep", "Remove Step")
-            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
-            .operation("moveStep", "Move Step")
-            .operation("connectSteps", "Connect Steps")
-            .operation("disconnectSteps", "Disconnect Steps")
-            .operation("setStepParams", "Set Step Params")
-            .action_with(ActionDefinition::new_catalog("setStepCollapsed", "Set Step Collapsed", ActionKind::Operation).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
-            .operation("nodeGraphEdit", "Node Graph Edit")
-            .view_action("setViewport", "Node Graph Viewport")
+            .action_with(ActionDefinition::new_catalog("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"), ActionKind::Operation).with_category("create"))
+            .operation("addStepToSlot", LocalizedLabel::native("Add Step To Slot", "Schritt zu Slot hinzufügen"))
+            .operation("addStepDropped", LocalizedLabel::native("Add Step Dropped", "Schritt per Ablegen hinzufügen"))
+            .operation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
+            .operation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
+            .operation("connectSteps", LocalizedLabel::native("Connect Steps", "Schritte verbinden"))
+            .operation("disconnectSteps", LocalizedLabel::native("Disconnect Steps", "Schritte trennen"))
+            .operation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
+            .action_with(ActionDefinition::new_catalog("setStepCollapsed", LocalizedLabel::native("Set Step Collapsed", "Schritt einklappen"), ActionKind::Operation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
+            .operation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
+            .view_action("setViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
             // 👁️ Ephemeral view state — selection, run output, layout orientation, locale.
-            .view_action("setSelection", "Set Selection")
-            .view_action("setOrientation", "Set Orientation")
-            .action_with(ActionDefinition::new_catalog("run", "Run", ActionKind::View).with_category("actions"))
-            .action_with(ActionDefinition::new_catalog("stop", "Stop", ActionKind::View).with_category("actions"))
-            .view_action("setLocale", "Set Locale")
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("setOrientation", LocalizedLabel::native("Set Orientation", "Ausrichtung festlegen"))
+            .action_with(ActionDefinition::new_catalog("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View).with_category("actions"))
+            .action_with(ActionDefinition::new_catalog("stop", LocalizedLabel::native("Stop", "Stopp"), ActionKind::View).with_category("actions"))
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 📝️ Staged argument forms for the panel-visible create + layout actions.
             .action_args("addStep", vec![
-                ActionArgDef::select("kind", "Kind", vec![
-                    ActionArgOption::new("state.set", "Set State"),
-                    ActionArgOption::new("log.print", "Print"),
-                    ActionArgOption::new("control.if", "If"),
-                    ActionArgOption::new("control.while", "While"),
-                    ActionArgOption::new("math.add", "Add"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
+                    ActionArgOption::new("state.set", LocalizedLabel::native("Set State", "Zustand setzen")),
+                    ActionArgOption::new("log.print", LocalizedLabel::native("Print", "Ausgeben")),
+                    ActionArgOption::new("control.if", LocalizedLabel::native("If", "Wenn")),
+                    ActionArgOption::new("control.while", LocalizedLabel::native("While", "Solange")),
+                    ActionArgOption::new("math.add", LocalizedLabel::native("Add", "Addieren")),
                 ]).default_value("log.print"),
             ])
             .action_args("setOrientation", vec![
-                ActionArgDef::select("orientation", "Orientation", vec![
-                    ActionArgOption::new("leftRight", "Left to Right"),
-                    ActionArgOption::new("topBottom", "Top to Bottom"),
+                ActionArgDef::select("orientation", LocalizedLabel::native("Orientation", "Ausrichtung"), vec![
+                    ActionArgOption::new("leftRight", LocalizedLabel::native("Left to Right", "Links nach rechts")),
+                    ActionArgOption::new("topBottom", LocalizedLabel::native("Top to Bottom", "Oben nach unten")),
                 ]).required(),
             ])
             .keybinding("mod+z", "undo")
@@ -716,7 +666,7 @@ pub fn create_sequence_app() -> App {
             .config(SequencePlayApp.config_spec())
             .io(sequence_engine::sequence_io()),
     )
-    .example("demo", "Demo", sequence_example_json(), "cylinder")
+    .example("demo", LocalizedLabel::native("Demo", "Demo"), sequence_example_json(), "cylinder")
     .workflow("sequence", "Sequence", "graph")
 }
 //#endregion 🔖️Manifest
@@ -849,9 +799,10 @@ mod tests {
         let document_json = serde_json::to_string(&app.render(SEQUENCE_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
         assert!(document_json.contains("\"Steps\""));
         assert!(document_json.contains("\"Flow edges\""));
-        let action_labels = app.app_labels().action_labels;
+        let definition = create_sequence_app().definition;
         for (id, label) in [("run", "Run"), ("stop", "Stop"), ("reorganize", "Reorganize")] {
-            assert_eq!(action_labels.get(id).map(String::as_str), Some(label), "{id} action label");
+            let action = definition.actions.iter().find(|action| action.id == id).expect("action");
+            assert_eq!(action.label.resolve(Terminology::Native, Locale::En), label, "{id} action label");
         }
     }
 
@@ -863,9 +814,10 @@ mod tests {
         assert!(document_json.contains("Schritte"));
         assert!(document_json.contains("Ablaufkanten"));
         assert!(!document_json.contains("\"Steps\""));
-        let action_labels = app.app_labels().action_labels;
+        let definition = create_sequence_app().definition;
         for (id, label) in [("run", "Ausführen"), ("stop", "Stopp"), ("reorganize", "Neu anordnen")] {
-            assert_eq!(action_labels.get(id).map(String::as_str), Some(label), "{id} action label");
+            let action = definition.actions.iter().find(|action| action.id == id).expect("action");
+            assert_eq!(action.label.resolve(Terminology::Native, Locale::De), label, "{id} action label");
         }
     }
 

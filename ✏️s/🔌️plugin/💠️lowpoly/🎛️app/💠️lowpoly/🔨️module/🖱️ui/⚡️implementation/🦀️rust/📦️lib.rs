@@ -21,13 +21,13 @@ use lowpoly_protocol::LowpolyCommand;
 use png::{BitDepth, ColorType, Encoder};
 use semio_framework_plugin::{
     apply_world3d_sun_action, build_canvas_2d_scene, build_world_3d_scene, create_default_layout,
-    create_named_layout, engagement_token_matches, localized_label_map, merge_world_selection_ids, LocaleLabels, SelectionSet,
+    create_named_layout, engagement_token_matches, merge_world_selection_ids, SelectionSet,
     tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures,
-    ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, AppLabelsOverlay, AppLabelsOverlayExt,
-    Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, IconName, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
-    ArtifactKindSpec, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode,
-    UiToggleNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementInput,
+    ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, AppLabels,
+    Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, IconName, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
+    ArtifactKindSpec, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode,
+    UiToggleNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -65,14 +65,20 @@ const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `config.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels`.
+/// 🗣️ B1: `config.locale`-driven counterpart of the deleted `ViewState`-driven `is_de_locale`.
 fn is_de_locale(config: &LowpolyConfig) -> bool {
     config.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(config: &LowpolyConfig) -> &'static L {
-    if is_de_locale(config) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🗣️ `config.locale` mapped onto the SDK's exhaustive `Locale` enum.
+fn lowpoly_locale(config: &LowpolyConfig) -> Locale {
+    if is_de_locale(config) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ `LowpolyConfig` has no terminology axis (lowpoly is never embedded/reused as a building
+/// component sub-widget) — always resolves the native cell.
+fn resolve_labels<L: AppLabels>(config: &LowpolyConfig) -> &'static L {
+    L::labels(lowpoly_locale(config), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -549,59 +555,59 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the lowpoly mesh editor; one field per label makes every locale combination compile-checked.
     struct LowpolyLabels {
-        meshes: &'static str = en: "Meshes", de: "Netze";
-        primitives: &'static str = en: "Primitives", de: "Primitive";
-        paint_layers: &'static str = en: "Paint Layers", de: "Malebenen";
-        vertices: &'static str = en: "Vertices", de: "Eckpunkte";
-        edges: &'static str = en: "Edges", de: "Kanten";
-        faces: &'static str = en: "Faces", de: "Flächen";
-        flip_normal: &'static str = en: "Flip normal", de: "Normale umkehren";
-        primitive_box: &'static str = en: "Cube", de: "Würfel";
-        primitive_plane: &'static str = en: "Plane", de: "Ebene";
-        primitive_cylinder: &'static str = en: "Cylinder", de: "Zylinder";
-        primitive_cone: &'static str = en: "Cone", de: "Kegel";
-        primitive_ico_sphere: &'static str = en: "Ico Sphere", de: "Ikokugel";
-        object: &'static str = en: "Object", de: "Objekt";
-        transform: &'static str = en: "Transform", de: "Transformation";
-        utility_params: &'static str = en: "Utility Params", de: "Werkzeugparameter";
-        window_main: &'static str = en: "Model", de: "Modell";
-        window_uv: &'static str = en: "UV", de: "UV";
+        meshes: native_en "Meshes", native_de "Netze", reuse_en "Meshes", reuse_de "Netze";
+        primitives: native_en "Primitives", native_de "Primitive", reuse_en "Primitives", reuse_de "Primitive";
+        paint_layers: native_en "Paint Layers", native_de "Malebenen", reuse_en "Paint Layers", reuse_de "Malebenen";
+        vertices: native_en "Vertices", native_de "Eckpunkte", reuse_en "Vertices", reuse_de "Eckpunkte";
+        edges: native_en "Edges", native_de "Kanten", reuse_en "Edges", reuse_de "Kanten";
+        faces: native_en "Faces", native_de "Flächen", reuse_en "Faces", reuse_de "Flächen";
+        flip_normal: native_en "Flip normal", native_de "Normale umkehren", reuse_en "Flip normal", reuse_de "Normale umkehren";
+        primitive_box: native_en "Cube", native_de "Würfel", reuse_en "Cube", reuse_de "Würfel";
+        primitive_plane: native_en "Plane", native_de "Ebene", reuse_en "Plane", reuse_de "Ebene";
+        primitive_cylinder: native_en "Cylinder", native_de "Zylinder", reuse_en "Cylinder", reuse_de "Zylinder";
+        primitive_cone: native_en "Cone", native_de "Kegel", reuse_en "Cone", reuse_de "Kegel";
+        primitive_ico_sphere: native_en "Ico Sphere", native_de "Ikokugel", reuse_en "Ico Sphere", reuse_de "Ikokugel";
+        object: native_en "Object", native_de "Objekt", reuse_en "Building component", reuse_de "Baukomponente";
+        transform: native_en "Transform", native_de "Transformation", reuse_en "Transform", reuse_de "Transformation";
+        utility_params: native_en "Utility Params", native_de "Werkzeugparameter", reuse_en "Utility Params", reuse_de "Werkzeugparameter";
+        window_main: native_en "Model", native_de "Modell", reuse_en "Model", reuse_de "Modell";
+        window_uv: native_en "UV", native_de "UV", reuse_en "UV", reuse_de "UV";
         // inspector field labels
-        name: &'static str = en: "Name", de: "Name";
-        smooth_shading: &'static str = en: "Smooth Shading", de: "Weiche Schattierung";
-        selection: &'static str = en: "Selection", de: "Auswahl";
-        selection_mode: &'static str = en: "Selection Mode", de: "Auswahlmodus";
-        utility: &'static str = en: "Utility", de: "Werkzeug";
-        selected: &'static str = en: "selected", de: "ausgewählt";
-        extrude: &'static str = en: "Extrude", de: "Extrudieren";
-        triangulate: &'static str = en: "Triangulate", de: "Triangulieren";
-        extrude_distance: &'static str = en: "Extrude Distance", de: "Extrusionsabstand";
-        inset_amount: &'static str = en: "Inset Amount", de: "Einzugsbetrag";
-        bevel_amount: &'static str = en: "Bevel Amount", de: "Fasenbetrag";
-        bevel_segments: &'static str = en: "Bevel Segments", de: "Fasensegmente";
-        loop_cuts: &'static str = en: "Loop Cuts", de: "Schleifenschnitte";
-        decimate_ratio: &'static str = en: "Decimate Ratio", de: "Dezimierungsverhältnis";
-        snap_grid: &'static str = en: "Snap Grid", de: "Rastergröße";
-        mirror_axis: &'static str = en: "Mirror Axis", de: "Spiegelachse";
-        brush_size: &'static str = en: "Brush Size", de: "Pinselgröße";
-        brush_opacity: &'static str = en: "Brush Opacity", de: "Pinseldeckkraft";
-        brush_hardness: &'static str = en: "Brush Hardness", de: "Pinselhärte";
+        name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        smooth_shading: native_en "Smooth Shading", native_de "Weiche Schattierung", reuse_en "Smooth Shading", reuse_de "Weiche Schattierung";
+        selection: native_en "Selection", native_de "Auswahl", reuse_en "Selection", reuse_de "Auswahl";
+        selection_mode: native_en "Selection Mode", native_de "Auswahlmodus", reuse_en "Selection Mode", reuse_de "Auswahlmodus";
+        utility: native_en "Utility", native_de "Werkzeug", reuse_en "Utility", reuse_de "Werkzeug";
+        selected: native_en "selected", native_de "ausgewählt", reuse_en "selected", reuse_de "ausgewählt";
+        extrude: native_en "Extrude", native_de "Extrudieren", reuse_en "Extrude", reuse_de "Extrudieren";
+        triangulate: native_en "Triangulate", native_de "Triangulieren", reuse_en "Triangulate", reuse_de "Triangulieren";
+        extrude_distance: native_en "Extrude Distance", native_de "Extrusionsabstand", reuse_en "Extrude Distance", reuse_de "Extrusionsabstand";
+        inset_amount: native_en "Inset Amount", native_de "Einzugsbetrag", reuse_en "Inset Amount", reuse_de "Einzugsbetrag";
+        bevel_amount: native_en "Bevel Amount", native_de "Fasenbetrag", reuse_en "Bevel Amount", reuse_de "Fasenbetrag";
+        bevel_segments: native_en "Bevel Segments", native_de "Fasensegmente", reuse_en "Bevel Segments", reuse_de "Fasensegmente";
+        loop_cuts: native_en "Loop Cuts", native_de "Schleifenschnitte", reuse_en "Loop Cuts", reuse_de "Schleifenschnitte";
+        decimate_ratio: native_en "Decimate Ratio", native_de "Dezimierungsverhältnis", reuse_en "Decimate Ratio", reuse_de "Dezimierungsverhältnis";
+        snap_grid: native_en "Snap Grid", native_de "Rastergröße", reuse_en "Snap Grid", reuse_de "Rastergröße";
+        mirror_axis: native_en "Mirror Axis", native_de "Spiegelachse", reuse_en "Mirror Axis", reuse_de "Spiegelachse";
+        brush_size: native_en "Brush Size", native_de "Pinselgröße", reuse_en "Brush Size", reuse_de "Pinselgröße";
+        brush_opacity: native_en "Brush Opacity", native_de "Pinseldeckkraft", reuse_en "Brush Opacity", reuse_de "Pinseldeckkraft";
+        brush_hardness: native_en "Brush Hardness", native_de "Pinselhärte", reuse_en "Brush Hardness", reuse_de "Pinselhärte";
         // engagement + measures
-        snap: &'static str = en: "Snap", de: "Einrasten";
-        smooth: &'static str = en: "Smooth", de: "Glätten";
-        show_edges: &'static str = en: "Show Edges", de: "Kanten anzeigen";
-        select: &'static str = en: "Select", de: "Auswählen";
-        mesh: &'static str = en: "Mesh", de: "Netz";
-        face: &'static str = en: "Face", de: "Fläche";
-        edge: &'static str = en: "Edge", de: "Kante";
-        vertex: &'static str = en: "Vertex", de: "Eckpunkt";
-        rectangle: &'static str = en: "Rectangle", de: "Rechteck";
-        lasso: &'static str = en: "Lasso", de: "Lasso";
-        selective: &'static str = en: "Selective", de: "Selektiv";
-        additive: &'static str = en: "Additive", de: "Additiv";
-        subtractive: &'static str = en: "Subtractive", de: "Subtraktiv";
-        invertive: &'static str = en: "Invertive", de: "Invertierend";
-        brush_group: &'static str = en: "Brush", de: "Pinsel";
+        snap: native_en "Snap", native_de "Einrasten", reuse_en "Snap", reuse_de "Einrasten";
+        smooth: native_en "Smooth", native_de "Glätten", reuse_en "Smooth", reuse_de "Glätten";
+        show_edges: native_en "Show Edges", native_de "Kanten anzeigen", reuse_en "Show Edges", reuse_de "Kanten anzeigen";
+        select: native_en "Select", native_de "Auswählen", reuse_en "Select", reuse_de "Auswählen";
+        mesh: native_en "Mesh", native_de "Netz", reuse_en "Mesh", reuse_de "Netz";
+        face: native_en "Face", native_de "Fläche", reuse_en "Face", reuse_de "Fläche";
+        edge: native_en "Edge", native_de "Kante", reuse_en "Edge", reuse_de "Kante";
+        vertex: native_en "Vertex", native_de "Eckpunkt", reuse_en "Vertex", reuse_de "Eckpunkt";
+        rectangle: native_en "Rectangle", native_de "Rechteck", reuse_en "Rectangle", reuse_de "Rechteck";
+        lasso: native_en "Lasso", native_de "Lasso", reuse_en "Lasso", reuse_de "Lasso";
+        selective: native_en "Selective", native_de "Selektiv", reuse_en "Selective", reuse_de "Selektiv";
+        additive: native_en "Additive", native_de "Additiv", reuse_en "Additive", reuse_de "Additiv";
+        subtractive: native_en "Subtractive", native_de "Subtraktiv", reuse_en "Subtractive", reuse_de "Subtraktiv";
+        invertive: native_en "Invertive", native_de "Invertierend", reuse_en "Invertive", reuse_de "Invertierend";
+        brush_group: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
     }
 }
 
@@ -617,86 +623,6 @@ fn primitive_catalog_label(kind: &str, fallback_label: &'static str, labels: &Lo
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_lowpoly_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn lowpoly_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addPrimitive", "Add Primitive", "Primitive hinzufügen"),
-        ("patchObject", "Patch Object", "Objekt aktualisieren"),
-        ("extrude", "Extrude", "Extrudieren"),
-        ("inset", "Inset", "Einziehen"),
-        ("bevel", "Bevel", "Fasen"),
-        ("loopCut", "Loop Cut", "Schleifenschnitt"),
-        ("subdivide", "Subdivide", "Unterteilen"),
-        ("triangulate", "Triangulate", "Triangulieren"),
-        ("mirror", "Mirror", "Spiegeln"),
-        ("decimate", "Decimate", "Dezimieren"),
-        ("flipFaces", "Flip Faces", "Flächen umkehren"),
-        ("merge", "Merge", "Zusammenführen"),
-        ("dissolve", "Dissolve", "Auflösen"),
-        ("snap", "Snap", "Einrasten"),
-        ("toggleSmooth", "Toggle Smooth", "Glättung umschalten"),
-        ("unwrapActive", "Unwrap", "Abwickeln"),
-        ("markUvSeam", "Mark Seam", "Naht markieren"),
-        ("clearSeam", "Clear Seam", "Naht entfernen"),
-        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
-        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
-        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-        ("transformEnd", "Transform End", "Transformation beenden"),
-        ("addPaintLayer", "Add Paint Layer", "Malebene hinzufügen"),
-        ("paintStrokeEnd", "Paint Stroke End", "Malstrich beenden"),
-        ("paintFill", "Paint Fill", "Füllen malen"),
-        ("fillBucket", "Fill Bucket", "Fülleimer"),
-        ("setProjectionJson", "Set Projection Json", "Projektions-JSON festlegen"),
-        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-        ("setActiveObject", "Set Active Object", "Aktives Objekt festlegen"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("toggleSelectionKind", "Toggle Selection Kind", "Auswahlart umschalten"),
-        ("toggleSelectionTarget", "Toggle Selection Target", "Auswahlziel umschalten"),
-        ("setActivePaintLayer", "Set Active Paint Layer", "Aktive Malebene festlegen"),
-        ("setUtilityParam", "Set Utility Param", "Werkzeugparameter festlegen"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-        ("toggleShowEdges", "Toggle Show Edges", "Kantenanzeige umschalten"),
-        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
-        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("setSelectionModeDefault", "Set Selection Mode Default", "Standardauswahlmodus festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("worldSelect", "World Select", "Welt auswählen"),
-        ("worldHover", "World Hover", "Überfahren (Welt)"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
-        ("paintStrokeBegin", "Paint Stroke Begin", "Malstrich beginnen"),
-        ("paintStroke", "Paint Stroke", "Malstrich"),
-        ("paintAt", "Paint At", "Malen bei"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
-        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
-        ("paintSample", "Paint Sample", "Farbe aufnehmen"),
-        ("transformBegin", "Transform Begin", "Transformation beginnen"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_lowpoly_app`.
-fn lowpoly_utility_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("move", "Move", "Verschieben"),
-        ("rotate", "Rotate", "Drehen"),
-        ("scale", "Scale", "Skalieren"),
-        ("brush", "Brush", "Pinsel"),
-        ("eraser", "Eraser", "Radierer"),
-        ("fill", "Fill", "Füllen"),
-        ("eyedropper", "Eyedropper", "Pipette"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 fn build_document_tree(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabels) -> UiNode {
@@ -2259,27 +2185,13 @@ impl DocumentApp for LowpolyPlayApp {
         ])
     }
 
-    fn app_labels(&self, cfg: &ConfigView<'_, LowpolyConfig>) -> AppLabelsOverlay {
-        let config = cfg.projection;
-        let labels = resolve_labels::<LowpolyLabels>(config);
-        let is_de = is_de_locale(config);
-        AppLabelsOverlay::default()
-            .window_kind_label(LOWPOLY_PLAY_WINDOW_MAIN, labels.window_main)
-            .window_kind_label(LOWPOLY_PLAY_WINDOW_UV, labels.window_uv)
-            .panel_tab_label("framework.panel.layers", if is_de { "Ebenen" } else { "Layers" })
-            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
-            .mode_label("paint", if is_de { "Malen" } else { "Paint" })
-            .action_labels(lowpoly_action_labels(is_de))
-            .utility_labels(lowpoly_utility_labels(is_de))
-            .example_labels(localized_label_map(is_de, &[("default", "Default", "Standard")]))
-    }
 }
 
 //#endregion 🔖️LowpolyPlayApp
 
 //#region 🔖️Manifest
 /// 🧰️ One transform/paint utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
-fn lowpoly_utility(id: &str, label: &str, icon: &str, group: &str) -> UtilityDefinition {
+fn lowpoly_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str) -> UtilityDefinition {
     UtilityDefinition {
         group: Some(group.into()),
         category: Some(UtilityCategory::Utilities),
@@ -2295,11 +2207,11 @@ pub fn create_lowpoly_app() -> App {
         lowpoly_window_engagement(
             LowpolyView { projection: &projection, config: &config },
             LOWPOLY_TRANSFORM_UTILITY_DEFAULT,
-            &LowpolyLabels::EN,
+            &LowpolyLabels::NATIVE_EN,
         )
     };
     App::from_builder(
-        App::builder(LOWPOLY_PLAY_APP_ID, "Lowpoly")
+        App::builder(LOWPOLY_PLAY_APP_ID, LocalizedLabel::native("Lowpoly", "Lowpoly"))
             .document(["semio", "lowpoly"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.lowpoly".into(),
@@ -2326,12 +2238,12 @@ pub fn create_lowpoly_app() -> App {
                 import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
             })
             .icon_id("shapes")
-            .mode("edit", "Edit", "pencil")
-            .mode("paint", "Paint", "paintbrush")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
+            .mode("paint", LocalizedLabel::native("Paint", "Malen"), "paintbrush")
             .mode_layout("paint", "lowpoly-paint")
             .default_mode_id("edit")
-            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, SurfaceKind::World3d, engagement.clone(), "lowpoly-model")
-            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_UV, "UV", LOWPOLY_PLAY_BODY_UV, SurfaceKind::Canvas2d, engagement, "layout-grid")
+            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, LocalizedLabel::native("Model", "Modell"), LOWPOLY_PLAY_BODY_MAIN, SurfaceKind::World3d, engagement.clone(), "lowpoly-model")
+            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_UV, LocalizedLabel::native("UV", "UV"), LOWPOLY_PLAY_BODY_UV, SurfaceKind::Canvas2d, engagement, "layout-grid")
             .default_layout(create_default_layout(&[LOWPOLY_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Model".into()])))
             .named_layout(create_named_layout(
                 "lowpoly-paint",
@@ -2346,101 +2258,101 @@ pub fn create_lowpoly_app() -> App {
                 Some("paintbrush".into()),
                 None,
             ))
-            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, LOWPOLY_PLAY_BODY_DOCUMENT)
-            .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, LOWPOLY_PLAY_BODY_CATALOGUE)
-            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, LOWPOLY_PLAY_BODY_INSPECTION)
-            .panel_tab("framework.panel.layers", "Layers", PanelGroup::Workbench, LOWPOLY_PLAY_BODY_LAYERS)
+            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, LOWPOLY_PLAY_BODY_DOCUMENT)
+            .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, LOWPOLY_PLAY_BODY_CATALOGUE)
+            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, LOWPOLY_PLAY_BODY_INSPECTION)
+            .panel_tab("framework.panel.layers", LocalizedLabel::native("Layers", "Ebenen"), PanelGroup::Workbench, LOWPOLY_PLAY_BODY_LAYERS)
             // 🔧️ Document-mutating operations — dispatched as VCS operations with true inverses.
-            .operation("addPrimitive", "Add Primitive")
-            .operation("patchObject", "Patch Object")
-            .operation("extrude", "Extrude")
-            .operation("inset", "Inset")
-            .operation("bevel", "Bevel")
-            .operation("loopCut", "Loop Cut")
-            .operation("subdivide", "Subdivide")
-            .operation("triangulate", "Triangulate")
-            .operation("mirror", "Mirror")
-            .operation("decimate", "Decimate")
-            .operation("flipFaces", "Flip Faces")
-            .operation("merge", "Merge")
-            .operation("dissolve", "Dissolve")
-            .operation("snap", "Snap")
-            .operation("toggleSmooth", "Toggle Smooth")
-            .operation("unwrapActive", "Unwrap")
-            .operation("markUvSeam", "Mark Seam")
-            .operation("clearSeam", "Clear Seam")
-            .operation("translateSelection", "Translate Selection")
-            .operation("rotateSelection", "Rotate Selection")
-            .operation("scaleSelection", "Scale Selection")
-            .operation("transformEnd", "Transform End")
-            .operation("addPaintLayer", "Add Paint Layer")
-            .operation("paintStrokeEnd", "Paint Stroke End")
-            .operation("paintFill", "Paint Fill")
-            .operation("fillBucket", "Fill Bucket")
-            .operation("setProjectionJson", "Set Projection Json")
-            .operation("setFixtureJson", "Set Fixture Json")
-            .operation("engagementSubmit", "Engagement Submit")
+            .operation("addPrimitive", LocalizedLabel::native("Add Primitive", "Primitive hinzufügen"))
+            .operation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
+            .operation("extrude", LocalizedLabel::native("Extrude", "Extrudieren"))
+            .operation("inset", LocalizedLabel::native("Inset", "Einziehen"))
+            .operation("bevel", LocalizedLabel::native("Bevel", "Fasen"))
+            .operation("loopCut", LocalizedLabel::native("Loop Cut", "Schleifenschnitt"))
+            .operation("subdivide", LocalizedLabel::native("Subdivide", "Unterteilen"))
+            .operation("triangulate", LocalizedLabel::native("Triangulate", "Triangulieren"))
+            .operation("mirror", LocalizedLabel::native("Mirror", "Spiegeln"))
+            .operation("decimate", LocalizedLabel::native("Decimate", "Dezimieren"))
+            .operation("flipFaces", LocalizedLabel::native("Flip Faces", "Flächen umkehren"))
+            .operation("merge", LocalizedLabel::native("Merge", "Zusammenführen"))
+            .operation("dissolve", LocalizedLabel::native("Dissolve", "Auflösen"))
+            .operation("snap", LocalizedLabel::native("Snap", "Einrasten"))
+            .operation("toggleSmooth", LocalizedLabel::native("Toggle Smooth", "Glättung umschalten"))
+            .operation("unwrapActive", LocalizedLabel::native("Unwrap", "Abwickeln"))
+            .operation("markUvSeam", LocalizedLabel::native("Mark Seam", "Naht markieren"))
+            .operation("clearSeam", LocalizedLabel::native("Clear Seam", "Naht entfernen"))
+            .operation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
+            .operation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
+            .operation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
+            .operation("transformEnd", LocalizedLabel::native("Transform End", "Transformation beenden"))
+            .operation("addPaintLayer", LocalizedLabel::native("Add Paint Layer", "Malebene hinzufügen"))
+            .operation("paintStrokeEnd", LocalizedLabel::native("Paint Stroke End", "Malstrich beenden"))
+            .operation("paintFill", LocalizedLabel::native("Paint Fill", "Füllen malen"))
+            .operation("fillBucket", LocalizedLabel::native("Fill Bucket", "Fülleimer"))
+            .operation("setProjectionJson", LocalizedLabel::native("Set Projection Json", "Projektions-JSON festlegen"))
+            .operation("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
+            .operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no operations
             // mid-drag (paint ticks, gumball scratch, eyedropper sample).
-            .view_action("setActiveObject", "Set Active Object")
-            .view_action("setSelection", "Set Selection")
-            .view_action("toggleSelectionKind", "Toggle Selection Kind")
-            .view_action("toggleSelectionTarget", "Toggle Selection Target")
-            .view_action("setActivePaintLayer", "Set Active Paint Layer")
-            .view_action("setUtilityParam", "Set Utility Param")
-            .view_action("engagementInput", "Engagement Input")
-            .view_action("toggleShowEdges", "Toggle Show Edges")
-            .view_action("toggleSun", "Toggle Sun")
-            .view_action("setSunAzimuth", "Set Sun Azimuth")
-            .view_action("setSunElevation", "Set Sun Elevation")
-            .view_action("setSunIntensity", "Set Sun Intensity")
-            .view_action("setSelectionMethod", "Set Selection Method")
-            .view_action("setSelectionModeDefault", "Set Selection Mode Default")
-            .view_action("setCamera", "Set Camera")
-            .view_action("worldSelect", "World Select")
-            .view_action("worldHover", "World Hover")
-            .view_action("setHover", "Set Hover")
-            .view_action("worldPick", "World Pick")
-            .view_action("paintStrokeBegin", "Paint Stroke Begin")
-            .view_action("paintStroke", "Paint Stroke")
-            .view_action("paintAt", "Paint At")
-            .view_action("canvasPointerDown", "Canvas Pointer Down")
-            .view_action("canvasPointerMove", "Canvas Pointer Move")
-            .view_action("paintSample", "Paint Sample")
-            .view_action("transformBegin", "Transform Begin")
+            .view_action("setActiveObject", LocalizedLabel::native("Set Active Object", "Aktives Objekt festlegen"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("toggleSelectionKind", LocalizedLabel::native("Toggle Selection Kind", "Auswahlart umschalten"))
+            .view_action("toggleSelectionTarget", LocalizedLabel::native("Toggle Selection Target", "Auswahlziel umschalten"))
+            .view_action("setActivePaintLayer", LocalizedLabel::native("Set Active Paint Layer", "Aktive Malebene festlegen"))
+            .view_action("setUtilityParam", LocalizedLabel::native("Set Utility Param", "Werkzeugparameter festlegen"))
+            .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
+            .view_action("toggleShowEdges", LocalizedLabel::native("Toggle Show Edges", "Kantenanzeige umschalten"))
+            .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
+            .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
+            .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
+            .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
+            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
+            .view_action("setSelectionModeDefault", LocalizedLabel::native("Set Selection Mode Default", "Standardauswahlmodus festlegen"))
+            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"))
+            .view_action("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"))
+            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
+            .view_action("worldPick", LocalizedLabel::native("World Pick", "Welt-Auswahl (Pick)"))
+            .view_action("paintStrokeBegin", LocalizedLabel::native("Paint Stroke Begin", "Malstrich beginnen"))
+            .view_action("paintStroke", LocalizedLabel::native("Paint Stroke", "Malstrich"))
+            .view_action("paintAt", LocalizedLabel::native("Paint At", "Malen bei"))
+            .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
+            .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
+            .view_action("paintSample", LocalizedLabel::native("Paint Sample", "Farbe aufnehmen"))
+            .view_action("transformBegin", LocalizedLabel::native("Transform Begin", "Transformation beginnen"))
             // 📝️ Staged argument forms for the P1 actions — the panel form seeds from these defaults and
             // stages typed overrides read out of `args`; `config.utility_params_json` remains the live backing store.
-            .action_args("extrude", vec![ActionArgDef::slider("extrudeDistance", "Extrude Distance", 0.01, 2.0).default_value(0.25)])
-            .action_args("inset", vec![ActionArgDef::number("insetAmount", "Inset Amount").default_value(0.1)])
+            .action_args("extrude", vec![ActionArgDef::slider("extrudeDistance", LocalizedLabel::native("Extrude Distance", "Extrusionsabstand"), 0.01, 2.0).default_value(0.25)])
+            .action_args("inset", vec![ActionArgDef::number("insetAmount", LocalizedLabel::native("Inset Amount", "Einzugsbetrag")).default_value(0.1)])
             .action_args("bevel", vec![
-                ActionArgDef::number("bevelAmount", "Bevel Amount").default_value(0.05),
-                ActionArgDef::number("bevelSegments", "Bevel Segments").default_value(1),
+                ActionArgDef::number("bevelAmount", LocalizedLabel::native("Bevel Amount", "Fasenbetrag")).default_value(0.05),
+                ActionArgDef::number("bevelSegments", LocalizedLabel::native("Bevel Segments", "Fasensegmente")).default_value(1),
             ])
-            .action_args("loopCut", vec![ActionArgDef::number("loopCuts", "Loop Cuts").default_value(1)])
-            .action_args("decimate", vec![ActionArgDef::slider("decimateRatio", "Decimate Ratio", 0.05, 1.0).default_value(0.5)])
-            .action_args("mirror", vec![ActionArgDef::select("axis", "Axis", vec![
-                ActionArgOption::new("x", "X"),
-                ActionArgOption::new("y", "Y"),
-                ActionArgOption::new("z", "Z"),
+            .action_args("loopCut", vec![ActionArgDef::number("loopCuts", LocalizedLabel::native("Loop Cuts", "Schleifenschnitte")).default_value(1)])
+            .action_args("decimate", vec![ActionArgDef::slider("decimateRatio", LocalizedLabel::native("Decimate Ratio", "Dezimierungsverhältnis"), 0.05, 1.0).default_value(0.5)])
+            .action_args("mirror", vec![ActionArgDef::select("axis", LocalizedLabel::native("Axis", "Achse"), vec![
+                ActionArgOption::new("x", LocalizedLabel::native("X", "X")),
+                ActionArgOption::new("y", LocalizedLabel::native("Y", "Y")),
+                ActionArgOption::new("z", LocalizedLabel::native("Z", "Z")),
             ]).default_value("x")])
-            .action_args("addPrimitive", vec![ActionArgDef::select("kind", "Kind", vec![
-                ActionArgOption::new("box", "Cube"),
-                ActionArgOption::new("plane", "Plane"),
-                ActionArgOption::new("cylinder", "Cylinder"),
-                ActionArgOption::new("cone", "Cone"),
-                ActionArgOption::new("ico_sphere", "Ico Sphere"),
+            .action_args("addPrimitive", vec![ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
+                ActionArgOption::new("box", LocalizedLabel::native("Cube", "Würfel")),
+                ActionArgOption::new("plane", LocalizedLabel::native("Plane", "Ebene")),
+                ActionArgOption::new("cylinder", LocalizedLabel::native("Cylinder", "Zylinder")),
+                ActionArgOption::new("cone", LocalizedLabel::native("Cone", "Kegel")),
+                ActionArgOption::new("ico_sphere", LocalizedLabel::native("Ico Sphere", "Ikokugel")),
             ]).default_value("box")])
-            .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", "Seam").default_value(true)])
+            .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", LocalizedLabel::native("Seam", "Naht")).default_value(true)])
             // 🧰️ Transform gumball + paint utilities — exclusive per-window active utility is host-owned (never a
             // document operation). Selection method/merge/kind live as an always-visible Select window-options group
             // (mirrors puzzle 3d); the transform group defaults to "move", paint bridges into `config.paint_utility`.
-            .utility(lowpoly_utility("move", "Move", "move", "transform"))
-            .utility(lowpoly_utility("rotate", "Rotate", "rotate-cw", "transform"))
-            .utility(lowpoly_utility("scale", "Scale", "maximize-2", "transform"))
-            .utility(lowpoly_utility("brush", "Brush", "paintbrush", "paint"))
-            .utility(lowpoly_utility("eraser", "Eraser", "eraser", "paint"))
-            .utility(lowpoly_utility("fill", "Fill", "paint-bucket", "paint"))
-            .utility(lowpoly_utility("eyedropper", "Eyedropper", "pipette", "paint"))
+            .utility(lowpoly_utility("move", LocalizedLabel::native("Move", "Verschieben"), "move", "transform"))
+            .utility(lowpoly_utility("rotate", LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw", "transform"))
+            .utility(lowpoly_utility("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2", "transform"))
+            .utility(lowpoly_utility("brush", LocalizedLabel::native("Brush", "Pinsel"), "paintbrush", "paint"))
+            .utility(lowpoly_utility("eraser", LocalizedLabel::native("Eraser", "Radierer"), "eraser", "paint"))
+            .utility(lowpoly_utility("fill", LocalizedLabel::native("Fill", "Füllen"), "paint-bucket", "paint"))
+            .utility(lowpoly_utility("eyedropper", LocalizedLabel::native("Eyedropper", "Pipette"), "pipette", "paint"))
             .window_kind_utilities(LOWPOLY_PLAY_WINDOW_MAIN, vec![
                 "move".into(), "rotate".into(), "scale".into(),
                 "brush".into(), "eraser".into(), "fill".into(), "eyedropper".into(),
@@ -2470,7 +2382,7 @@ pub fn create_lowpoly_app() -> App {
             .config(LowpolyPlayApp::default().config_spec())
             .io(lowpoly_engine::lowpoly_io()),
     )
-    .example("default", "Default", &default_example, "file")
+    .example("default", LocalizedLabel::native("Default", "Standard"), &default_example, "file")
     .workflow("lowpoly", "Lowpoly", "mesh")
 }
 //#endregion 🔖️Manifest
@@ -2531,7 +2443,7 @@ mod tests {
 
     #[test]
     fn paint_utility_params_are_utility_tagged_and_mesh_op_measures_removed() {
-        let measures = lowpoly_window_measures(&LowpolyConfig::default(), &LowpolyLabels::EN);
+        let measures = lowpoly_window_measures(&LowpolyConfig::default(), &LowpolyLabels::NATIVE_EN);
         let group_tag = |id: &str| {
             measures.iter().find_map(|measure| match measure {
                 WindowMeasure::Group { id: gid, active_utility_id, .. } if gid == id => Some(active_utility_id.clone()),
@@ -2555,7 +2467,7 @@ mod tests {
 
     #[test]
     fn select_window_options_mirror_puzzle3d_taxonomy() {
-        let measures = lowpoly_window_measures(&LowpolyConfig::default(), &LowpolyLabels::EN);
+        let measures = lowpoly_window_measures(&LowpolyConfig::default(), &LowpolyLabels::NATIVE_EN);
         let select = measures.iter().find_map(|measure| match measure {
             WindowMeasure::Group { id, children, active_utility_id, .. } if id == "lowpoly-select" => Some((active_utility_id.clone(), children.clone())),
             _ => None,
@@ -2745,7 +2657,7 @@ mod tests {
         // genuine non-utility options (snap/smooth/show-edges) but must never dispatch setActiveUtility.
         let projection = projection(&new_app());
         let config = LowpolyConfig::default();
-        let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, config: &config }, "move", &LowpolyLabels::EN);
+        let engagement = lowpoly_window_engagement(LowpolyView { projection: &projection, config: &config }, "move", &LowpolyLabels::NATIVE_EN);
         let options = engagement.options.expect("lowpoly engagement keeps its non-utility options");
         assert!(
             options.iter().all(|option| option.action.as_ref().map(|action| action.action != SET_ACTIVE_UTILITY_ACTION_ID).unwrap_or(true)),

@@ -903,6 +903,14 @@ This MUST NOT happen.
 
 ---
 
+For the default driver everything show every interaction possibility. Nothing should be hidden and appear only on cursor hover. Everything should be localizable. e.g. drag should be possible on drag handles (expert driver has no drag handles hence the complete item is draggable).
+Some elements such as tree items must have multiple drag handles (one for sort, one for drag and drop on windows such as catalogue, etc)
+Currently violations:
+e.g. drag and drop of cataloge is possible outside the handle
+e.g. buttons for hide, etc on tree items currently only appear on hover but only the most important and frequent ones should show as toggles and buttons and the rest is part of the context menu
+
+---
+
 All context menu items must be enumerated and while the context menu is open, the number keyboard and the arrows can be used to hover over options, when pressing spacebar or enter it is equivalent to clicking the option. 
 For nested context menus, left and right arrow keys also work.
 Make wasd also work.
@@ -10170,6 +10178,11 @@ Complete the extensions with exhaustive machines, capabilities, etc
 ## ♻️mit-bestand
 
 ### demonstrator
+
+---
+
+The demonstrator has an extremly high memory footprint (around 3.6GB just idle).
+Analyze in depth where it comes from and plan exhaustive advances extensions/refactors with clean clean mechanisms how to to reduce it dramatically without sacrificing any feature.
 
 ---
 

@@ -9,7 +9,8 @@ use semio_framework_plugin::{
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
     IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition,
     window_element_id, panel_tab_element_id, panel_tab_first_draggable_element_id,
-    ActionRef, AppLabelsOverlayExt, DialogDefinition, IconName,
+    ActionRef, DialogDefinition, IconName,
+    Label, LabelText, LocalizedLabel, Locale, Terminology, AppLabels,
 };
 use semio_framework_plugin::kernel::HostEffect;
 use serde::{Deserialize, Serialize};
@@ -2371,10 +2372,11 @@ fn puzzle3d_rederive_moved_attractions(fixture: &mut Puzzle3dFixture, moved_ids:
 //#endregion 🔖️AttractionResolve
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the 3d app; two-axis `app_labels!` (locale × terminology) makes
-/// every combination compile-checked — see ticket
-/// 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND.
+// 🗣️ Complete UI label set for the 3d app; two-axis `app_labels!` (locale × terminology) makes
+// every combination compile-checked — see ticket
+// 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND.
 semio_framework_plugin::app_labels! {
+    /// 🗣️ Complete UI label set for the 3d app; one field per label, all four locale×terminology cells required.
     struct Puzzle3dLabels {
         objects: native_en "Objects", native_de "Objekte", reuse_en "Building components", reuse_de "Baukomponenten";
         object: native_en "Object", native_de "Objekt", reuse_en "Building component", reuse_de "Baukomponente";
@@ -2499,7 +2501,7 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_i
     UiTreeItemNode {
         presence: UiPresence::default(),
         id: id.into(),
-        label: label.into(),
+        label: Label::data(label),
         description: None,
         icon_id: icon_id.map(IconName::from),
         default_open: None,
@@ -2586,7 +2588,7 @@ fn document_tree_sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) ->
             UiTreeItemNode {
                 presence: UiPresence::default(),
                 id: format!("puzzle3d-object:{}", object.id),
-                label: object.object_kind.clone().unwrap_or_else(|| object.id.clone()),
+                label: Label::data(object.object_kind.clone().unwrap_or_else(|| object.id.clone())),
                 description: None,
                 icon_id: Some("box".into()),
                 default_open: Some(false),
@@ -2614,7 +2616,7 @@ fn document_tree_sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) ->
             UiTreeItemNode {
                 presence: UiPresence::default(),
                 id: format!("puzzle3d-reference:{}", reference.id),
-                label: reference.id.clone(),
+                label: Label::data(reference.id.clone()),
                 description: Some(reference.source.url.clone()),
                 icon_id: Some("globe".into()),
                 default_open: None,
@@ -2642,7 +2644,7 @@ fn document_tree_sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) ->
             UiTreeItemNode {
                 presence: UiPresence::default(),
                 id: format!("puzzle3d-target-volume:{}", volume.id),
-                label: volume.id.clone(),
+                label: Label::data(volume.id.clone()),
                 description: None,
                 icon_id: Some("cylinder".into()),
                 default_open: None,
@@ -2708,7 +2710,7 @@ fn puzzle3d_object_kind_vortex_items(entry: &Value) -> Vec<UiTreeItemNode> {
                     UiTreeItemNode {
                         presence: UiPresence::default(),
                         id: format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"),
-                        label: vortex_kind.into(),
+                        label: Label::data(vortex_kind),
                         description: Some(position.to_string()),
                         icon_id: Some("circle-dot".into()),
                         default_open: None,
@@ -2736,7 +2738,7 @@ fn puzzle3d_object_kind_item(entry: &Value) -> UiTreeItemNode {
     UiTreeItemNode {
         presence: UiPresence::default(),
         id: format!("puzzle3d-kind:{kind_id}"),
-        label: puzzle3d_catalog_entry_label(entry),
+        label: Label::data(puzzle3d_catalog_entry_label(entry)),
         description: Some(kind_id.clone()),
         icon_id: Some("box".into()),
         default_open: Some(false),
@@ -2764,7 +2766,7 @@ fn puzzle3d_catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
     UiTreeItemNode {
         presence: UiPresence::default(),
         id: format!("puzzle3d-kind-entry:{kind_id}"),
-        label: puzzle3d_catalog_entry_label(entry),
+        label: Label::data(puzzle3d_catalog_entry_label(entry)),
         description: Some(kind_id),
         icon_id: Some(icon_id.into()),
         default_open: None,
@@ -2806,7 +2808,7 @@ fn build_kinds_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode
     })
 }
 
-fn inspector_text_field(id: impl Into<String>, label: impl Into<String>, mixed_text: semio_framework_plugin::UiInspectorMixedText, action: ActionDescriptor) -> UiNode {
+fn inspector_text_field(id: impl Into<String>, label: impl Into<Label>, mixed_text: semio_framework_plugin::UiInspectorMixedText, action: ActionDescriptor) -> UiNode {
     let id = id.into();
     UiNode::Field(UiFieldNode {
         id: id.clone(),
@@ -2815,7 +2817,7 @@ fn inspector_text_field(id: impl Into<String>, label: impl Into<String>, mixed_t
             id: format!("{id}.input"),
             input_kind: "text".into(),
             value: mixed_text.value,
-            placeholder: mixed_text.placeholder,
+            placeholder: mixed_text.placeholder.map(Label::data),
             commit: None,
             on_change: action,
             min: None,
@@ -2838,10 +2840,11 @@ fn inspector_text_field(id: impl Into<String>, label: impl Into<String>, mixed_t
 /// 3-wide shape), so this mirrors that helper's structure one component wider. `axis_action(component)`
 /// builds the per-component action; the patch handler renormalizes after any component edit so the
 /// result stays a valid unit quaternion.
-fn inspector_quat_group(id: &str, label: &str, values: &[[f64; 4]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
+fn inspector_quat_group(id: &str, label: impl Into<Label>, values: &[[f64; 4]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
     let component = |index: usize, name: &str, label: &str| {
         let values: Vec<f64> = values.iter().map(|q| q[index]).collect();
-        ui_inspector_stepper_field(format!("{id}.{name}"), label, &values, step, axis_action(name))
+        // 🔤️ Axis symbols (X/Y/Z/W) are mathematical notation, not translatable UI chrome.
+        ui_inspector_stepper_field(format!("{id}.{name}"), Label::data(label), &values, step, axis_action(name))
     };
     UiNode::Group(UiGroupNode {
         id: id.into(),
@@ -2853,9 +2856,9 @@ fn inspector_quat_group(id: &str, label: &str, values: &[[f64; 4]], step: f64, a
     })
 }
 
-fn inspector_header_and_delete(count: usize, noun: &str, labels: &Puzzle3dLabels) -> Vec<UiNode> {
+fn inspector_header_and_delete(count: usize, noun: LabelText, labels: &Puzzle3dLabels) -> Vec<UiNode> {
     vec![
-        ui_text(format!("{count} {noun} {}", labels.selected_count)),
+        ui_text(Label::data(format!("{count} {} {}", noun.as_str(), labels.selected_count.as_str()))),
         UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash-2".into(), label: labels.delete.into(), action: puzzle3d_action("deleteSelection", None), style: None, presence: UiPresence::default(),
             menu: None,
         }),
@@ -2997,12 +3000,12 @@ fn build_inspector_tree(envelope: &Puzzle3dScene, term_labels: &Puzzle3dLabels) 
     }
     ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "puzzle3d-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![
-                ui_text(format!("{}: {}", term_labels.schema, envelope.fixture.schema)),
-        ui_text(format!("{}: {}", term_labels.domain, envelope.fixture.domain)),
-        ui_text(format!("{}: {}", term_labels.objects, envelope.fixture.objects.len())),
+                ui_text(Label::data(format!("{}: {}", term_labels.schema.as_str(), envelope.fixture.schema))),
+        ui_text(Label::data(format!("{}: {}", term_labels.domain.as_str(), envelope.fixture.domain))),
+        ui_text(Label::data(format!("{}: {}", term_labels.objects.as_str(), envelope.fixture.objects.len()))),
             ],
             presence: UiPresence::default(),
             menu: None,
@@ -3081,8 +3084,8 @@ fn puzzle3d_engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Win
     let object_count = envelope.fixture.objects.len();
     let attraction_count = envelope.fixture.attractions.len();
     let active_utility = envelope.active_utility.as_str();
-    let objects_label = labels.objects;
-    let attractions_label = labels.attractions;
+    let objects_label = labels.objects.as_str();
+    let attractions_label = labels.attractions.as_str();
     WindowEngagement {
         session_active: Some(puzzle3d_engagement_session_active(active_utility)),
         options: None,
@@ -3107,7 +3110,7 @@ fn puzzle3d_engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Win
 /// declared `ActionDefinition` (English-only, see `Menu::action`'s doc comment) cannot resolve, so each
 /// row is emitted via `Menu::item` rather than `Menu::action`. Grouping/ordering/the pre-destructive
 /// separator are still handled by `Menu::group` + the `organize_context_menu` funnel in `context_menu`.
-fn puzzle3d_context_menu_row(id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool) -> semio_framework_plugin::ContextMenuItemSpec {
+fn puzzle3d_context_menu_row(id: &str, label: impl Into<String>, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool) -> semio_framework_plugin::ContextMenuItemSpec {
     semio_framework_plugin::ContextMenuItemSpec {
         id: id.into(),
         label: Some(label.into()),
@@ -3122,35 +3125,34 @@ fn puzzle3d_context_menu_row(id: &str, label: &str, icon: &str, action: &str, ar
 fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::Menu;
     let selection = &envelope.runtime.selection;
-    let row = puzzle3d_context_menu_row;
     if !selection.object_ids.is_empty() {
         let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
         let all_locked = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.locked);
         let count = selection.object_ids.len();
-        let phrase = if count == 1 { format!("1 {}", labels.object) } else { format!("{count} {}", labels.objects) };
+        let phrase = if count == 1 { format!("1 {}", labels.object.as_str()) } else { format!("{count} {}", labels.objects.as_str()) };
         return Menu::of(registry)
-            .item(row("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false))
-            .item(row("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false))
-            .item(row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
+            .item(puzzle3d_context_menu_row("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false))
+            .item(puzzle3d_context_menu_row("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false))
+            .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
             .group("hand", |m| {
-                m.item(row("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false))
-                    .item(row("lock-unlock", if all_locked { labels.unlock } else { labels.lock }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": !all_locked })), false))
+                m.item(puzzle3d_context_menu_row("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false))
+                    .item(puzzle3d_context_menu_row("lock-unlock", if all_locked { labels.unlock } else { labels.lock }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": !all_locked })), false))
             })
-            .item(row("delete", &format!("{} ({phrase})", labels.delete), "trash", "deleteSelection", None, true))
+            .item(puzzle3d_context_menu_row("delete", format!("{} ({phrase})", labels.delete.as_str()), "trash", "deleteSelection", None, true))
             .build();
     }
     if !selection.vortex_ids.is_empty() {
         let mut menu = Menu::of(registry);
         if let [only] = selection.vortex_ids.as_slice() {
-            menu = menu.item(row("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only })), false));
+            menu = menu.item(puzzle3d_context_menu_row("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only })), false));
         }
         return menu
-            .item(row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
-            .item(row("delete", labels.delete, "trash", "deleteSelection", None, true))
+            .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
+            .item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true))
             .build();
     }
     if let Some(id) = selection.attraction_ids.first() {
-        return Menu::of(registry).item(row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id })), true)).build();
+        return Menu::of(registry).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id })), true)).build();
     }
     if let Some(id) = selection.target_volume_ids.first() {
         let target_volume = envelope.fixture.target_volumes.iter().find(|volume| &volume.id == id);
@@ -3158,16 +3160,16 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels
         let locked = target_volume.map(|volume| volume.locked).unwrap_or(false);
         return Menu::of(registry)
             .group("targets", |m| {
-                m.item(row("hide-show", if hidden { labels.show } else { labels.hide }, if hidden { "eye" } else { "eye-off" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "hidden", "value": !hidden })), false))
-                    .item(row("lock-unlock", if locked { labels.unlock } else { labels.lock }, if locked { "lock-open" } else { "lock" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "locked", "value": !locked })), false))
+                m.item(puzzle3d_context_menu_row("hide-show", if hidden { labels.show } else { labels.hide }, if hidden { "eye" } else { "eye-off" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "hidden", "value": !hidden })), false))
+                    .item(puzzle3d_context_menu_row("lock-unlock", if locked { labels.unlock } else { labels.lock }, if locked { "lock-open" } else { "lock" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "locked", "value": !locked })), false))
             })
-            .item(row("delete", labels.delete, "trash", "deleteTargetVolume", Some(json!({ "id": id })), true))
+            .item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteTargetVolume", Some(json!({ "id": id })), true))
             .build();
     }
     if selection.reference_ids.first().is_some() {
         return Menu::of(registry)
-            .item(row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
-            .item(row("delete", labels.delete, "trash", "deleteSelection", None, true))
+            .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
+            .item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true))
             .build();
     }
     Vec::new()
@@ -3266,7 +3268,7 @@ fn puzzle3d_lod_measures_group(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabel
         children: vec![
             WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some(labels.auto_zoom.into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
             WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "lod-depth".into(), label: Some(labels.depth_variable.into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
-            WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("{} {:.0}", labels.lod, runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), ready: None, loading: None, waiting: None, disabled: None, reveal: None, on_change: puzzle3d_action("setLodManual", None) },
+            WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("{} {:.0}", labels.lod.as_str(), runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), ready: None, loading: None, waiting: None, disabled: None, reveal: None, on_change: puzzle3d_action("setLodManual", None) },
         ],
     }
 }
@@ -3288,7 +3290,7 @@ fn puzzle3d_grid_measures_group(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabe
         children: vec![
             WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible"), icon_id: "layout-grid".into(), label: Some(labels.visible.into()), pressed: runtime.grid_visible, text: None, on_change: puzzle3d_action("setGridVisible", None) },
             WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-snap"), icon_id: "magnet".into(), label: Some(labels.snap.into()), pressed: runtime.grid_snap_enabled, text: None, on_change: puzzle3d_action("setGridSnapEnabled", None) },
-            WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing"), label: Some(format!("{} {:.1}", labels.spacing, runtime.grid_spacing)), value: runtime.grid_spacing, min: 0.5, max: 50.0, step: Some(0.5), ready: None, loading: None, waiting: None, disabled: None, reveal: None, on_change: puzzle3d_action("setGridSpacing", None) },
+            WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing"), label: Some(format!("{} {:.1}", labels.spacing.as_str(), runtime.grid_spacing)), value: runtime.grid_spacing, min: 0.5, max: 50.0, step: Some(0.5), ready: None, loading: None, waiting: None, disabled: None, reveal: None, on_change: puzzle3d_action("setGridSpacing", None) },
         ],
     }
 }
@@ -3480,9 +3482,9 @@ fn puzzle3d_fill_count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPr
 /// 🧊️ Voxel width/depth/height measures for the Volume Brush utility.
 fn puzzle3d_voxel_dim_measures(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
     let [w, d, h] = runtime.voxel_dims;
-    let axis_slider = |axis: &str, label: &str, value: u32| WindowMeasure::Slider {
+    let axis_slider = |axis: &str, label: LabelText, value: u32| WindowMeasure::Slider {
         id: format!("puzzle3d-voxel-{axis}"),
-        label: Some(format!("{} {label} {value}", labels.voxel)),
+        label: Some(format!("{} {} {value}", labels.voxel.as_str(), label.as_str())),
         value: value as f64,
         min: 1.0,
         max: 64.0,
@@ -4125,7 +4127,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
             PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
             PUZZLE3D_PLAY_BODY_SETTINGS => build_settings_body(&envelope, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -5712,26 +5714,39 @@ mod tests {
         assert_eq!(dialog.args.len(), 1);
     }
 
+    /// 🗣️ B1: the old `DocumentApp::app_labels() -> AppLabelsOverlay` per-id runtime map is deleted;
+    /// manifest text is now baked into `AppDefinition`/`App` as `LocalizedLabel` and resolved directly
+    /// via `.resolve(Terminology, Locale)` — no shell round-trip needed to assert on it.
     #[test]
-    fn app_labels_overlay_is_german_reuse_branded_for_aggregator() {
-        let mut app = testkit::new_app::<Puzzle3dPlayApp>();
-        dispatch_action(&mut app, "setLocale", Some(&json!({ "value": "de" })), None, &testkit::meta("local")).expect("setLocale");
-        dispatch_action(&mut app, "setTerminology", Some(&json!({ "value": "reuse" })), None, &testkit::meta("local")).expect("setTerminology");
-        let overlay = app.app_labels();
-        assert_eq!(overlay.mode_labels.get("edit").map(String::as_str), Some("Bearbeiten"));
-        assert_eq!(overlay.window_kind_labels.get(PUZZLE3D_PLAY_WINDOW_MAIN).map(String::as_str), Some("Aggregator"));
-        assert_eq!(overlay.dialog_labels.get("addObject.title").map(String::as_str), Some("Baukomponente hinzufügen"));
-        assert_eq!(overlay.dialog_labels.get("addObject.submit").map(String::as_str), Some("Hinzufügen"));
-        assert_eq!(overlay.action_arg_labels.get("addObject.objectKind.option.Object").map(String::as_str), Some("Baukomponente"));
-        assert_eq!(overlay.action_labels.get("addObjectKind").map(String::as_str), Some("Baukomponente hinzufügen"));
-        assert_eq!(overlay.action_labels.get("contextMenuAt").map(String::as_str), Some("Aktionsmenü öffnen"));
-        assert_eq!(overlay.action_labels.get("worldPick").map(String::as_str), Some("Punkt in der Welt wählen"));
-        assert_eq!(overlay.action_labels.get("openVortexSuggestions").map(String::as_str), Some("Verbindungspunkt-Vorschläge öffnen"));
-        assert_eq!(overlay.action_labels.get("createAttraction").map(String::as_str), Some("Verbindung erstellen"));
-        assert_eq!(overlay.utility_labels.get("transform").map(String::as_str), Some("Transformieren"));
-        assert_eq!(overlay.example_labels.get(PUZZLE3D_EXAMPLE_CONCRETE_FOREST).map(String::as_str), Some("Abbau Aufbau"));
-        assert!(!overlay.action_labels.get("contextMenuAt").is_some_and(|label| label.contains("Kontextmenü") || label.contains("Context Menu")));
-        assert!(!overlay.action_labels.values().any(|label| label.contains("Hover") || label.contains("Pick") || label.contains("hovern")));
+    fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
+        let app = create_puzzle3d_app();
+        let def = &app.definition;
+        let (terminology, locale) = (Terminology::Reuse, Locale::De);
+        let action = |id: &str| def.actions.iter().find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
+        assert_eq!(def.modes.iter().find(|entry| entry.id == "edit").expect("edit mode").label.resolve(terminology, locale), "Bearbeiten");
+        assert_eq!(def.window_kinds.iter().find(|entry| entry.id == PUZZLE3D_PLAY_WINDOW_MAIN).expect("window kind").label.resolve(terminology, locale), "Aggregator");
+        let dialog = def.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog");
+        assert_eq!(dialog.title.resolve(terminology, locale), "Baukomponente hinzufügen");
+        assert_eq!(dialog.submit_label.resolve(terminology, locale), "Hinzufügen");
+        let arg = dialog.args.iter().find(|entry| entry.id == "objectKind").expect("objectKind arg");
+        let option = match &arg.control {
+            semio_framework_plugin::ActionArgControl::Select { options } => options.iter().find(|entry| entry.value == "Object").expect("Object option"),
+            _ => panic!("objectKind arg is not a select"),
+        };
+        assert_eq!(option.label.resolve(terminology, locale), "Baukomponente");
+        assert_eq!(action("addObjectKind").label.resolve(terminology, locale), "Baukomponente hinzufügen");
+        assert_eq!(action("contextMenuAt").label.resolve(terminology, locale), "Aktionsmenü öffnen");
+        assert_eq!(action("worldPick").label.resolve(terminology, locale), "Punkt in der Welt wählen");
+        assert_eq!(action("openVortexSuggestions").label.resolve(terminology, locale), "Verbindungspunkt-Vorschläge öffnen");
+        assert_eq!(action("createAttraction").label.resolve(terminology, locale), "Verbindung erstellen");
+        assert_eq!(def.utilities.iter().find(|entry| entry.id == "transform").expect("transform utility").label.resolve(terminology, locale), "Transformieren");
+        assert_eq!(app.examples.iter().find(|entry| entry.id == PUZZLE3D_EXAMPLE_CONCRETE_FOREST).expect("concrete forest example").label.resolve(terminology, locale), "Abbau Aufbau");
+        let context_menu_at = action("contextMenuAt").label.resolve(terminology, locale);
+        assert!(!context_menu_at.contains("Kontextmenü") && !context_menu_at.contains("Context Menu"));
+        for entry in &def.actions {
+            let text = entry.label.resolve(terminology, locale);
+            assert!(!text.contains("Hover") && !text.contains("Pick") && !text.contains("hovern"), "leftover English/mistranslation in {}: {text}", entry.id);
+        }
     }
 
     #[test]
@@ -5755,14 +5770,16 @@ mod tests {
     }
 
     #[test]
-    fn app_labels_overlay_stays_english_native_without_brand_locks() {
-        let mut app = testkit::new_app::<Puzzle3dPlayApp>();
-        let overlay = app.app_labels();
-        assert_eq!(overlay.mode_labels.get("edit").map(String::as_str), Some("Edit"));
-        assert_eq!(overlay.window_kind_labels.get(PUZZLE3D_PLAY_WINDOW_MAIN).map(String::as_str), Some("Puzzle 3D"));
-        assert_eq!(overlay.dialog_labels.get("addObject.title").map(String::as_str), Some("Add Object"));
-        assert_eq!(overlay.action_labels.get("contextMenuAt").map(String::as_str), Some("Open Actions Menu"));
-        assert_eq!(overlay.action_labels.get("addObjectKind").map(String::as_str), Some("Add Object"));
+    fn app_definition_labels_stay_english_native_without_brand_locks() {
+        let app = create_puzzle3d_app();
+        let def = &app.definition;
+        let (terminology, locale) = (Terminology::Native, Locale::En);
+        let action = |id: &str| def.actions.iter().find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
+        assert_eq!(def.modes.iter().find(|entry| entry.id == "edit").expect("edit mode").label.resolve(terminology, locale), "Edit");
+        assert_eq!(def.window_kinds.iter().find(|entry| entry.id == PUZZLE3D_PLAY_WINDOW_MAIN).expect("window kind").label.resolve(terminology, locale), "Puzzle 3D");
+        assert_eq!(def.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog").title.resolve(terminology, locale), "Add Object");
+        assert_eq!(action("contextMenuAt").label.resolve(terminology, locale), "Open Actions Menu");
+        assert_eq!(action("addObjectKind").label.resolve(terminology, locale), "Add Object");
     }
 
     //#region 🧭️ Suggestions, select-then-open context menu, fill build progress (Round 2)
@@ -6646,7 +6663,7 @@ mod tests {
         session.precompute_step(1);
         match puzzle3d_fill_count_measure(&scene, &session, &Puzzle3dLabels::NATIVE_EN) {
             WindowMeasure::Slider { label: Some(label), max, ready, loading, .. } => {
-                assert_eq!(label, Puzzle3dLabels::NATIVE_EN.count, "fill count label stays fixed as Count while planning");
+                assert_eq!(label, Puzzle3dLabels::NATIVE_EN.count.as_str(), "fill count label stays fixed as Count while planning");
                 assert_eq!(max, PUZZLE3D_FILL_COUNT_MAX as f64, "fill slider max stays fixed while planning");
                 let ready = ready.expect("planning must expose a ready extent");
                 assert!(ready >= 0.0 && ready <= max, "ready extent must lie on the fixed range");

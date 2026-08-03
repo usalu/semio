@@ -13,7 +13,7 @@ use fem_core::{Dof, ElementResult};
 use fem_shared::{hex_to_rgb01, next_id, normalize_mode_shape, result_display_action_args, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ArtifactKindSpec, Canvas2dScene, ConfigSpec, ConfigView, DocumentApp,
-    DocumentView, Emit, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode, AppLabelsOverlay,
+    DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -314,17 +314,17 @@ fn render_fem2d_results(doc: &Fem2dDocument, display: &ResultDisplay, camera: &F
 fn render_fem2d_results_static(doc: &Fem2dDocument, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
     let results = match fem2d_engine::fem2d_solve_all(doc) {
         Ok(results) => results,
-        Err(e) => return ui_text(format!("Analysis error: {e}")),
+        Err(e) => return ui_text(Label::data(format!("Analysis error: {e}"))),
     };
     let case_id = source_id
         .filter(|id| results.contains_key(*id))
         .map(str::to_string)
         .or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
     let Some(case_id) = case_id else {
-        return ui_text("No load case defined");
+        return ui_text(Label::data("No load case defined"));
     };
     let Some(result) = results.get(&case_id) else {
-        return ui_text(format!("Result not found: {case_id}"));
+        return ui_text(Label::data(format!("Result not found: {case_id}")));
     };
 
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
@@ -420,7 +420,7 @@ fn render_fem2d_results_static(doc: &Fem2dDocument, source_id: Option<&str>, cam
 fn render_fem2d_results_modal(doc: &Fem2dDocument, mode_index: usize, camera: &FemCamera) -> UiNode {
     let (freq_hz, mut disp_map) = match fem2d_engine::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
-        Err(e) => return ui_text(format!("Modal analysis error: {e}")),
+        Err(e) => return ui_text(Label::data(format!("Modal analysis error: {e}"))),
     };
     normalize_mode_shape(&mut disp_map);
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
@@ -440,11 +440,11 @@ fn render_fem2d_results_modal(doc: &Fem2dDocument, mode_index: usize, camera: &F
 /// load case, falling back to the first load case when `None`.
 fn render_fem2d_results_buckling(doc: &Fem2dDocument, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
-        return ui_text("No load case defined");
+        return ui_text(Label::data("No load case defined"));
     };
     let (factor, mut disp_map) = match fem2d_engine::fem2d_buckling_mode_values(doc, &case_id, mode_index) {
         Ok(values) => values,
-        Err(e) => return ui_text(format!("Buckling analysis error: {e}")),
+        Err(e) => return ui_text(Label::data(format!("Buckling analysis error: {e}"))),
     };
     normalize_mode_shape(&mut disp_map);
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
@@ -795,82 +795,16 @@ impl DocumentApp for Fem2dPlayApp {
         match body_key {
             FEM2D_BODY_MODEL => render_fem2d_model(doc.projection, camera),
             FEM2D_BODY_RESULTS => render_fem2d_results(doc.projection, &config_result_display(cfg.projection), camera),
-            _ => ui_text(format!("Unknown body: {body_key}")),
-        }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, Fem2dConfig>) -> AppLabelsOverlay {
-        let is_de = cfg.projection.locale.starts_with("de");
-        let labels = fem2d_labels(is_de);
-        AppLabelsOverlay {
-            window_kind_labels: HashMap::from([
-                (FEM2D_WINDOW_MODEL.to_string(), labels.window_model.to_string()),
-                (FEM2D_WINDOW_RESULTS.to_string(), labels.window_results.to_string()),
-            ]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::from([("edit".to_string(), labels.mode_edit.to_string())]),
-            action_labels: fem2d_action_labels(is_de),
-            utility_labels: HashMap::new(),
-            example_labels: HashMap::from([("default".to_string(), labels.example_default.to_string())]),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-            tutorial_labels: HashMap::new(),
-            group_labels: HashMap::new(),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Fem2dPlayApp
 
-//#region 🔖️Fem2dTerminology
-struct Fem2dLabels {
-    window_model: &'static str,
-    window_results: &'static str,
-    mode_edit: &'static str,
-    example_default: &'static str,
-}
-
-const FEM2D_LABELS_EN: Fem2dLabels = Fem2dLabels { window_model: "Model", window_results: "Results", mode_edit: "Edit", example_default: "Default" };
-const FEM2D_LABELS_DE: Fem2dLabels = Fem2dLabels { window_model: "Modell", window_results: "Ergebnisse", mode_edit: "Bearbeiten", example_default: "Standard" };
-
-fn fem2d_labels(is_de: bool) -> &'static Fem2dLabels {
-    if is_de {
-        &FEM2D_LABELS_DE
-    } else {
-        &FEM2D_LABELS_EN
-    }
-}
-
-fn fem2d_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addNode", "Add Node", "Knoten hinzufügen"),
-        ("addBar", "Add Bar", "Stab hinzufügen"),
-        ("addBeam", "Add Beam", "Balken hinzufügen"),
-        ("addMaterial", "Add Material", "Material hinzufügen"),
-        ("addSection", "Add Section", "Querschnitt hinzufügen"),
-        ("addSupport", "Add Support", "Lager hinzufügen"),
-        ("addNodalLoad", "Add Nodal Load", "Knotenlast hinzufügen"),
-        ("addMemberUdl", "Add Member UDL", "Streckenlast hinzufügen"),
-        ("addAreaLoad", "Add Area Load", "Flächenlast hinzufügen"),
-        ("addRegion", "Add Region", "Bereich hinzufügen"),
-        ("addLoadCase", "Add Load Case", "Lastfall hinzufügen"),
-        ("addCombination", "Add Combination", "Kombination hinzufügen"),
-        ("setSelfWeight", "Set Self Weight", "Eigengewicht festlegen"),
-        ("setAnalysisSettings", "Set Analysis Settings", "Analyseeinstellungen festlegen"),
-        ("removeSelection", "Remove Selection", "Auswahl entfernen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("setResultDisplay", "Set Result Display", "Ergebnisanzeige festlegen"),
-        ("setLocale", "Set Locale", "Sprache festlegen"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-//#endregion 🔖️Fem2dTerminology
-
 //#region 🔖️Manifest
 pub fn create_fem2d_app() -> App {
     App::from_builder(
-        App::builder(FEM2D_APP_ID, "FEM 2D")
+        App::builder(FEM2D_APP_ID, LocalizedLabel::native("FEM 2D", "FEM 2D"))
             .document(["semio", "fem", "fem2d"])
             // 🔌️ The computed-results output artifact (`results:out`'s `kind_id`, see `fem2d_engine::fem2d_io`)
             // — the OS-catalog-level resource descriptor for `computation.fem2d`; deliberately a
@@ -889,72 +823,84 @@ pub fn create_fem2d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("fem-app")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(FEM2D_WINDOW_MODEL, "Model", FEM2D_BODY_MODEL, SurfaceKind::Canvas2d, "fem-model")
-            .window_kind(FEM2D_WINDOW_RESULTS, "Results", FEM2D_BODY_RESULTS, SurfaceKind::Canvas2d, "bar-chart-3")
+            .window_kind(FEM2D_WINDOW_MODEL, LocalizedLabel::native("Model", "Modell"), FEM2D_BODY_MODEL, SurfaceKind::Canvas2d, "fem-model")
+            .window_kind(FEM2D_WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), FEM2D_BODY_RESULTS, SurfaceKind::Canvas2d, "bar-chart-3")
             .default_layout(create_default_layout(
                 &[FEM2D_WINDOW_MODEL.into(), FEM2D_WINDOW_RESULTS.into()],
                 "row",
                 Some(&[50.0, 50.0]),
                 Some(&["Model".into(), "Results".into()]),
             ))
-            .operation("addNode", "Add Node")
-            .action_args("addNode", vec![ActionArgDef::number("x", "X").required(), ActionArgDef::number("y", "Y").required()])
-            .operation("addBar", "Add Bar")
-            .operation("addBeam", "Add Beam")
-            .operation("addMaterial", "Add Material")
-            .operation("addSection", "Add Section")
-            .operation("addSupport", "Add Support")
-            .operation("addNodalLoad", "Add Nodal Load")
-            .action_args("addNodalLoad", vec![ActionArgDef::text("caseId", "Case")])
-            .operation("addMemberUdl", "Add Member UDL")
-            .action_args("addMemberUdl", vec![ActionArgDef::text("caseId", "Case")])
-            .operation("addAreaLoad", "Add Area Load")
+            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .action_args("addNode", vec![
+                ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required(),
+                ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required(),
+            ])
+            .operation("addBar", LocalizedLabel::native("Add Bar", "Stab hinzufügen"))
+            .operation("addBeam", LocalizedLabel::native("Add Beam", "Balken hinzufügen"))
+            .operation("addMaterial", LocalizedLabel::native("Add Material", "Material hinzufügen"))
+            .operation("addSection", LocalizedLabel::native("Add Section", "Querschnitt hinzufügen"))
+            .operation("addSupport", LocalizedLabel::native("Add Support", "Lager hinzufügen"))
+            .operation("addNodalLoad", LocalizedLabel::native("Add Nodal Load", "Knotenlast hinzufügen"))
+            .action_args("addNodalLoad", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
+            .operation("addMemberUdl", LocalizedLabel::native("Add Member UDL", "Streckenlast hinzufügen"))
+            .action_args("addMemberUdl", vec![ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall"))])
+            .operation("addAreaLoad", LocalizedLabel::native("Add Area Load", "Flächenlast hinzufügen"))
             .action_args("addAreaLoad", vec![
-                ActionArgDef::text("regionId", "Region").required(),
-                ActionArgDef::number("pressure", "Pressure").required(),
-                ActionArgDef::text("caseId", "Case"),
+                ActionArgDef::text("regionId", LocalizedLabel::native("Region", "Bereich")).required(),
+                ActionArgDef::number("pressure", LocalizedLabel::native("Pressure", "Druck")).required(),
+                ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")),
             ])
-            .operation("addRegion", "Add Region")
+            .operation("addRegion", LocalizedLabel::native("Add Region", "Bereich hinzufügen"))
             .action_args("addRegion", vec![
-                ActionArgDef::number("x", "X").required(),
-                ActionArgDef::number("y", "Y").required(),
-                ActionArgDef::number("width", "Width").required(),
-                ActionArgDef::number("height", "Height").required(),
-                ActionArgDef::text("materialId", "Material").required(),
-                ActionArgDef::number("thickness", "Thickness").default_value(0.02),
-                ActionArgDef::number("meshSize", "Mesh Size").default_value(0.25),
+                ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required(),
+                ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required(),
+                ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).required(),
+                ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).required(),
+                ActionArgDef::text("materialId", LocalizedLabel::native("Material", "Material")).required(),
+                ActionArgDef::number("thickness", LocalizedLabel::native("Thickness", "Dicke")).default_value(0.02),
+                ActionArgDef::number("meshSize", LocalizedLabel::native("Mesh Size", "Netzgröße")).default_value(0.25),
             ])
-            .operation("addLoadCase", "Add Load Case")
-            .action_args("addLoadCase", vec![ActionArgDef::text("name", "Name").required(), ActionArgDef::toggle("selfWeight", "Self Weight").default_value(false)])
+            .operation("addLoadCase", LocalizedLabel::native("Add Load Case", "Lastfall hinzufügen"))
+            .action_args("addLoadCase", vec![
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
+                ActionArgDef::toggle("selfWeight", LocalizedLabel::native("Self Weight", "Eigengewicht")).default_value(false),
+            ])
             // 🎯️ `terms` is now `Fem2dCommand::AddCombination`'s typed `Vec<fem2d::FemCombinationTerm>`
             // (no longer a JSON-string blob) — no single `ActionArgDef` control maps to that shape, so
             // (mirroring `shooting_ui`'s precedent for commands with no matching staged form, e.g.
             // `SetShotCamera`) this action simply has no `.action_args(...)` declaration.
-            .operation("addCombination", "Add Combination")
-            .operation("setSelfWeight", "Set Self Weight")
-            .action_args("setSelfWeight", vec![ActionArgDef::text("caseId", "Case").required(), ActionArgDef::toggle("enabled", "Enabled").required()])
-            .operation("setAnalysisSettings", "Set Analysis Settings")
-            .action_args("setAnalysisSettings", vec![
-                ActionArgDef::number("modalCount", "Modal Count"),
-                ActionArgDef::number("bucklingCount", "Buckling Count"),
-                ActionArgDef::number("deformationScale", "Deformation Scale"),
+            .operation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
+            .operation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
+            .action_args("setSelfWeight", vec![
+                ActionArgDef::text("caseId", LocalizedLabel::native("Case", "Lastfall")).required(),
+                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).required(),
             ])
-            .operation("removeSelection", "Remove Selection")
-            .view_action("setCamera", "Set Camera")
-            .operation("setActiveExample", "Set Active Example")
-            .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", "Example", vec![ActionArgOption::new("default", "Default")]).default_value("default")])
-            .view_action("setResultDisplay", "Set Result Display")
+            .operation("setAnalysisSettings", LocalizedLabel::native("Set Analysis Settings", "Analyseeinstellungen festlegen"))
+            .action_args("setAnalysisSettings", vec![
+                ActionArgDef::number("modalCount", LocalizedLabel::native("Modal Count", "Anzahl Eigenformen")),
+                ActionArgDef::number("bucklingCount", LocalizedLabel::native("Buckling Count", "Anzahl Knickformen")),
+                ActionArgDef::number("deformationScale", LocalizedLabel::native("Deformation Scale", "Verformungsmaßstab")),
+            ])
+            .operation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
+            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("default", LocalizedLabel::native("Default", "Standard"))])
+                    .default_value("default"),
+            ])
+            .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", result_display_action_args())
-            .view_action("setLocale", "Set Locale")
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
             // `config_spec()`/`fem2d_io()` are this same information's single source of truth, reused
             // here rather than duplicated.
             .config(Fem2dPlayApp::default().config_spec())
             .io(fem2d_engine::fem2d_io()),
     )
-    .example("default", "Family House", FEM2D_EXAMPLE_DSL, "file")
+    .example("default", LocalizedLabel::native("Family House", "Einfamilienhaus"), FEM2D_EXAMPLE_DSL, "file")
     .workflow("fem2d", "FEM 2D", "structure")
 }
 //#endregion 🔖️Manifest
@@ -1019,7 +965,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionKind, HistoryView};
+    use semio_framework_plugin::{ActionKind, HistoryView, Locale, Terminology};
 
     fn history_view() -> HistoryView {
         HistoryView::empty()
@@ -1427,15 +1373,21 @@ mod tests {
         assert!(json.contains("Unknown body: nonsense"));
     }
 
+    /// 🗣️ B1: the manifest itself (not a runtime `cfg.locale`-driven overlay) now carries every
+    /// locale's translation via `LocalizedLabel` — see `create_fem2d_app`'s `.window_kind`/`.operation`/
+    /// `.view_action` calls. Replaces the deleted `Fem2dPlayApp::app_labels`/`AppLabelsOverlay` test.
     #[test]
-    fn app_labels_use_german_locale_2d() {
-        let app = Fem2dPlayApp::default();
-        let config = Fem2dConfig { locale: "de".into(), ..Fem2dConfig::default() };
-        let cfg = ConfigView { projection: &config };
-        let labels = app.app_labels(&cfg);
-        assert_eq!(labels.window_kind_labels.get(FEM2D_WINDOW_MODEL).map(String::as_str), Some("Modell"));
-        assert_eq!(labels.action_labels.get("addNode").map(String::as_str), Some("Knoten hinzufügen"));
-        assert_eq!(labels.action_labels.get("setLocale").map(String::as_str), Some("Sprache festlegen"));
+    fn manifest_labels_resolve_german_locale_2d() {
+        let definition = create_fem2d_app().definition;
+        let window_model = definition.window_kinds.iter().find(|window| window.id == FEM2D_WINDOW_MODEL).expect("model window kind declared");
+        assert_eq!(window_model.label.resolve(Terminology::Native, Locale::En), "Model");
+        assert_eq!(window_model.label.resolve(Terminology::Native, Locale::De), "Modell");
+        let add_node = definition.actions.iter().find(|action| action.id == "addNode").expect("addNode action declared");
+        assert_eq!(add_node.label.resolve(Terminology::Native, Locale::En), "Add Node");
+        assert_eq!(add_node.label.resolve(Terminology::Native, Locale::De), "Knoten hinzufügen");
+        let set_locale = definition.actions.iter().find(|action| action.id == "setLocale").expect("setLocale action declared");
+        assert_eq!(set_locale.label.resolve(Terminology::Native, Locale::En), "Set Locale");
+        assert_eq!(set_locale.label.resolve(Terminology::Native, Locale::De), "Sprache festlegen");
     }
 
     #[test]

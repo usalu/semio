@@ -3,7 +3,7 @@
 use semio_framework_plugin::{SurfaceKind,
     build_graph_timeline_scene, create_default_layout, localized_label_map,
     tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, ActionDescriptor,
-    AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit, HistoryView, LocaleLabels, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
+    AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit, HistoryView, LocaleLabels, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
     ArtifactKindSpec, UiButtonNode, UiFieldNode, UiInspectorFieldGroup, UiInputNode, UiNode, UiPresence, UiStackNode,
     UiTreeItemNode, GraphTimelineScene, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -670,7 +670,7 @@ impl DocumentApp for VcsPlayApp {
 //#region 🔖️Manifest
 pub fn create_vcs_app() -> App {
     App::from_builder(
-        App::builder(VCS_PLAY_APP_ID, "VCS").document(["semio", "vcs"])
+        App::builder(VCS_PLAY_APP_ID, LocalizedLabel::native("VCS", "VCS")).document(["semio", "vcs"])
             .artifact_kind(ArtifactKindSpec {
                 id: "vcs.document".into(),
                 name: "VCS Document".into(),
@@ -684,22 +684,22 @@ pub fn create_vcs_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("git-branch")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(VCS_PLAY_WINDOW_EDITOR, "Editor", VCS_PLAY_BODY_EDITOR, SurfaceKind::Canvas2d, "pen-tool")
-            .window_kind(VCS_PLAY_WINDOW_HISTORY, "History", VCS_PLAY_BODY_HISTORY, SurfaceKind::GraphTimeline, "git-branch")
-            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, VCS_PLAY_BODY_DOCUMENT)
-            .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, VCS_PLAY_BODY_INSPECTION)
-            .operation("incrementCounter", "Increment Counter")
-            .operation("patchProjection", "Patch Projection")
-            .operation("textEdit", "Edit Text")
-            .operation("edit", "Edit")
-            .view_action("setSelection", "Set Selection")
-            .view_action("noOperation", "No-operation")
-            .view_action("canvasPointerDown", "Canvas Pointer Down")
-            .view_action("canvasPointerMove", "Canvas Pointer Move")
-            .view_action("canvasPointerUp", "Canvas Pointer Up")
-            .view_action("canvasWheel", "Canvas Wheel")
+            .window_kind(VCS_PLAY_WINDOW_EDITOR, LocalizedLabel::native("Editor", "Editor"), VCS_PLAY_BODY_EDITOR, SurfaceKind::Canvas2d, "pen-tool")
+            .window_kind(VCS_PLAY_WINDOW_HISTORY, LocalizedLabel::native("History", "Verlauf"), VCS_PLAY_BODY_HISTORY, SurfaceKind::GraphTimeline, "git-branch")
+            .panel_tab("framework.panel.document", LocalizedLabel::native("Document", "Dokument"), PanelGroup::Workbench, VCS_PLAY_BODY_DOCUMENT)
+            .panel_tab("framework.panel.inspection", LocalizedLabel::native("Inspection", "Inspektion"), PanelGroup::Details, VCS_PLAY_BODY_INSPECTION)
+            .operation("incrementCounter", LocalizedLabel::native("Increment Counter", "Zähler erhöhen"))
+            .operation("patchProjection", LocalizedLabel::native("Patch Projection", "Projektion aktualisieren"))
+            .operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"))
+            .operation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("noOperation", LocalizedLabel::native("No-operation", "Keine Aktion"))
+            .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
+            .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
+            .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"))
+            .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Leinwand-Mausrad"))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(create_default_layout(

@@ -11,8 +11,8 @@ use block_3d_op::{Block3dConfigOperation, Block3dOperation};
 use block_3d_protocol::Block3dCommand;
 use block_shared::BlockRepresentation;
 use semio_framework_plugin::{
-    localized_label_map, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiFieldNode, UiInspectorFieldGroup,
+    tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App,
+    AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup,
     UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiTreeItemNode,
 };
 use serde_json::{json, Value};
@@ -31,51 +31,43 @@ const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
-fn is_de_locale(cfg: &Block3dConfig) -> bool {
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `cad_ui`'s identical region.
+fn block3d_is_de_locale(cfg: &Block3dConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &Block3dConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🗣️ `Block3dConfig.locale` (a BCP-47 tag, was shell-provided `ViewState.locale` pre-B1) mapped onto
+/// the SDK's exhaustive `Locale` enum.
+fn block3d_locale(cfg: &Block3dConfig) -> Locale {
+    if block3d_is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ Resolves the active `Block3dLabels` cell from the config-carried locale (was shell-provided
+/// `ViewState`, deleted by B1) via the SDK's two-axis `AppLabels::labels`. `Block3dConfig` carries no
+/// terminology field, so terminology is always `Native`.
+fn block3d_labels(cfg: &Block3dConfig) -> &'static Block3dLabels {
+    Block3dLabels::labels(block3d_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
 //#region 🔖️Terminology
+// 🗣️ Complete UI label set for the block3d-play app; one field per label makes every locale combination compile-checked. No separate reuse-terminology concept, so reuse repeats native.
 semio_framework_plugin::app_labels! {
     struct Block3dLabels {
-        window_world: &'static str = en: "Object Kind", de: "Objektart";
-        name: &'static str = en: "Name", de: "Name";
-        label: &'static str = en: "Label", de: "Bezeichnung";
-        representation: &'static str = en: "Representation", de: "Darstellung";
-        representations: &'static str = en: "Representations", de: "Darstellungen";
-        vortex_kinds: &'static str = en: "Vortex Kinds", de: "Wirbelarten";
-        vortices: &'static str = en: "Vortices", de: "Wirbel";
-        no_representations: &'static str = en: "(no representations)", de: "(keine Darstellungen)";
-        no_vortices: &'static str = en: "(no vortices)", de: "(keine Wirbel)";
-        summary: &'static str = en: "Object kind", de: "Objektart";
+        window_world: native_en "Object Kind", native_de "Objektart", reuse_en "Object Kind", reuse_de "Objektart";
+        name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        representation: native_en "Representation", native_de "Darstellung", reuse_en "Representation", reuse_de "Darstellung";
+        representations: native_en "Representations", native_de "Darstellungen", reuse_en "Representations", reuse_de "Darstellungen";
+        vortex_kinds: native_en "Vortex Kinds", native_de "Wirbelarten", reuse_en "Vortex Kinds", reuse_de "Wirbelarten";
+        vortices: native_en "Vortices", native_de "Wirbel", reuse_en "Vortices", reuse_de "Wirbel";
+        no_representations: native_en "(no representations)", native_de "(keine Darstellungen)", reuse_en "(no representations)", reuse_de "(keine Darstellungen)";
+        no_vortices: native_en "(no vortices)", native_de "(keine Wirbel)", reuse_en "(no vortices)", reuse_de "(keine Wirbel)";
+        summary: native_en "Object kind", native_de "Objektart", reuse_en "Object kind", reuse_de "Objektart";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-fn block3d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("patchObjectKind", "Patch Object Kind", "Objektart bearbeiten"),
-        ("addRepresentation", "Add Representation", "Darstellung hinzufügen"),
-        ("removeRepresentation", "Remove Representation", "Darstellung entfernen"),
-        ("addVortexKind", "Add Vortex Kind", "Wirbelart hinzufügen"),
-        ("removeVortexKind", "Remove Vortex Kind", "Wirbelart entfernen"),
-        ("addVortex", "Add Vortex", "Wirbel hinzufügen"),
-        ("removeVortex", "Remove Vortex", "Wirbel entfernen"),
-        ("setActiveRepresentation", "Set Active Representation", "Aktive Darstellung festlegen"),
-        ("edit", "Edit", "Bearbeiten"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-//#endregion 🔖️CommandLabels
 
 fn block3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: BLOCK3D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
@@ -90,7 +82,7 @@ fn build_document_tree(definition: &Block3dDefinition, selected: &[String], labe
         .map(|representation| {
             UiTreeItemNode {
                 icon_id: Some("box".into()),
-                ..tree_item_with_action(builder.item_id("representation", &representation.id), representation.name.clone(), representation.mesh_url.clone(), block3d_action("setSelection", None))
+                ..tree_item_with_action(builder.item_id("representation", &representation.id), Label::data(representation.name.clone()), representation.mesh_url.clone(), block3d_action("setSelection", None))
             }
         })
         .collect();
@@ -100,7 +92,7 @@ fn build_document_tree(definition: &Block3dDefinition, selected: &[String], labe
         .map(|vortex| {
             UiTreeItemNode {
                 icon_id: Some("circle-dot".into()),
-                ..tree_item_with_action(builder.item_id("vortex", &vortex.id), vortex.vortex_kind.clone(), None, block3d_action("setSelection", None))
+                ..tree_item_with_action(builder.item_id("vortex", &vortex.id), Label::data(vortex.vortex_kind.clone()), None, block3d_action("setSelection", None))
             }
         })
         .collect();
@@ -112,7 +104,7 @@ fn build_document_tree(definition: &Block3dDefinition, selected: &[String], labe
         .build()
 }
 
-fn text_field(id: &str, label: &str, value: &str, field: &str) -> UiNode {
+fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> UiNode {
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
         id: id.into(),
@@ -142,7 +134,7 @@ fn build_inspection_tree(definition: &Block3dDefinition, active_representation_i
     let representation_select = UiNode::Select(UiSelectNode {
         id: "block3d-play-inspector.representation".into(),
         value: active_representation_id.unwrap_or_default().into(),
-        items: definition.representations.iter().map(|representation| UiSelectItem { value: representation.id.clone(), label: representation.name.clone(),
+        items: definition.representations.iter().map(|representation| UiSelectItem { value: representation.id.clone(), label: Label::data(representation.name.clone()),
         }).collect(),
         placeholder: None,
         on_change: block3d_action("setActiveRepresentation", None),
@@ -172,9 +164,9 @@ fn render_world(definition: &Block3dDefinition, active_representation_id: Option
         .and_then(|representation| representation.mesh_url.as_deref())
         .unwrap_or("—");
     ui_stack_vertical(vec![
-        ui_text(format!("{}: {}", labels.summary, if definition.object_kind.label.is_empty() { "—" } else { &definition.object_kind.label })),
-        ui_text(format!("mesh: {mesh_url}")),
-        ui_text(format!("{} {}", definition.vortices.len(), labels.vortices)),
+        ui_text(Label::data(format!("{}: {}", labels.summary.as_str(), if definition.object_kind.label.is_empty() { "—" } else { &definition.object_kind.label }))),
+        ui_text(Label::data(format!("mesh: {mesh_url}"))),
+        ui_text(Label::data(format!("{} {}", definition.vortices.len(), labels.vortices.as_str()))),
     ])
 }
 //#endregion 🔖️Panels
@@ -285,20 +277,14 @@ impl DocumentApp for Block3dPlayApp {
     }
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Block3dDefinition>, cfg: &ConfigView<'_, Block3dConfig>) -> UiNode {
-        let labels = resolve_labels::<Block3dLabels>(cfg.projection);
+        let labels = block3d_labels(cfg.projection);
         let active_representation_id = cfg.projection.active_representation_id.as_deref();
         match body_key {
             BLOCK3D_BODY_WORLD => render_world(doc.projection, active_representation_id, labels),
             BLOCK3D_BODY_DOCUMENT => build_document_tree(doc.projection, &cfg.projection.selected_ids, labels),
             BLOCK3D_BODY_INSPECTOR => build_inspection_tree(doc.projection, active_representation_id, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, Block3dConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<Block3dLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default().window_kind_label(BLOCK3D_WINDOW_WORLD, labels.window_world).action_labels(block3d_action_labels(is_de))
     }
 
     /// 🌉️ The flagship seam: `puzzle3d_catalog_fragment`'s first real caller. Wraps the block-3d
@@ -334,7 +320,7 @@ impl DocumentApp for Block3dPlayApp {
 //#region 🔖️Manifest
 pub fn create_block3d_app() -> App {
     App::from_builder(
-        App::builder(BLOCK3D_PLAY_APP_ID, "Block 3D")
+        App::builder(BLOCK3D_PLAY_APP_ID, LocalizedLabel::native("Block 3D", "Block 3D"))
             .document(["semio", "block", "3d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.block".into(),
@@ -364,26 +350,26 @@ pub fn create_block3d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("box")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(BLOCK3D_WINDOW_WORLD, "Object Kind", BLOCK3D_BODY_WORLD, SurfaceKind::World3d, "box")
-            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, BLOCK3D_BODY_DOCUMENT)
-            .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, BLOCK3D_BODY_INSPECTOR)
-            .operation("patchObjectKind", "Patch Object Kind")
-            .operation("addRepresentation", "Add Representation")
-            .operation("removeRepresentation", "Remove Representation")
-            .operation("addVortexKind", "Add Vortex Kind")
-            .operation("removeVortexKind", "Remove Vortex Kind")
-            .operation("addVortex", "Add Vortex")
-            .operation("removeVortex", "Remove Vortex")
-            .operation("setActiveExample", "Set Active Example")
-            .operation("edit", "Edit")
-            .view_action("setSelection", "Set Selection")
-            .view_action("setActiveRepresentation", "Set Active Representation")
+            .window_kind(BLOCK3D_WINDOW_WORLD, LocalizedLabel::native("Object Kind", "Objektart"), BLOCK3D_BODY_WORLD, SurfaceKind::World3d, "box")
+            .panel_tab("framework.panel.document", LocalizedLabel::native("Document", "Dokument"), PanelGroup::Workbench, BLOCK3D_BODY_DOCUMENT)
+            .panel_tab("framework.panel.inspection", LocalizedLabel::native("Inspection", "Inspektion"), PanelGroup::Details, BLOCK3D_BODY_INSPECTOR)
+            .operation("patchObjectKind", LocalizedLabel::native("Patch Object Kind", "Objektart bearbeiten"))
+            .operation("addRepresentation", LocalizedLabel::native("Add Representation", "Darstellung hinzufügen"))
+            .operation("removeRepresentation", LocalizedLabel::native("Remove Representation", "Darstellung entfernen"))
+            .operation("addVortexKind", LocalizedLabel::native("Add Vortex Kind", "Wirbelart hinzufügen"))
+            .operation("removeVortexKind", LocalizedLabel::native("Remove Vortex Kind", "Wirbelart entfernen"))
+            .operation("addVortex", LocalizedLabel::native("Add Vortex", "Wirbel hinzufügen"))
+            .operation("removeVortex", LocalizedLabel::native("Remove Vortex", "Wirbel entfernen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("setActiveRepresentation", LocalizedLabel::native("Set Active Representation", "Aktive Darstellung festlegen"))
             .io(block_3d_engine::block3d_io()),
     )
-    .example(BLOCK3D_EXAMPLE_CAPSULE, "Nakagin Capsule", serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "building")
-    .example(BLOCK3D_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
+    .example(BLOCK3D_EXAMPLE_CAPSULE, LocalizedLabel::native("Nakagin Capsule", "Nakagin Capsule"), serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "building")
+    .example(BLOCK3D_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links"), serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
     .workflow("block3d", "Block 3D", "model")
 }
 //#endregion 🔖️Manifest

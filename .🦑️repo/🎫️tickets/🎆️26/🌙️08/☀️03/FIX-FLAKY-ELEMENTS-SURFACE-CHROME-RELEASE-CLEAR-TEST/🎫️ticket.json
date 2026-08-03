@@ -1,0 +1,11 @@
+{
+  "title": "Fix Flaky Elements Surface Chrome Release Clear Test",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix flaky ElementsSurfaceChrome test 'applies every driver axis attribute and clears them on release' by awaiting a real animation frame after calling release().",
+  "summary": "Fixed the flaky ElementsSurfaceChrome test 'applies every driver axis attribute and clears them on release' in 🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx. Updated the test to be async and await a requestAnimationFrame callback after release() so that scheduleElementsSurfaceChromeDeferredClear's rAF callback runs before dataset assertions. Verified with bun nx run @semio-tech/ui-react:test-quick that the test now passes.",
+  "goal": "",
+  "sessions": [
+    "c951572f-ad4d-42b6-8a8f-cc7266049509"
+  ]
+}

@@ -9,7 +9,7 @@ use semio_framework_plugin::{
     merge_world_selection_ids, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
     ActionDescriptor, AppIo, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, OsMediaCapability, PanelGroup, PortMultiplicity, ArtifactKindSpec, ArtifactPresentation, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, WindowEngagement, ui_tree_stamp_presence, IconName,
     WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, SelectionSet};
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, SelectionSet, AppLabels, Label, Locale, Terminology, LocalizedLabel, LabelText};
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -64,204 +64,81 @@ static PUZZLE5D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖️Constants
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the 5D app; one field per label makes every locale combination compile-checked.
-struct Puzzle5dLabels {
-    parts: &'static str,
-    fasteners: &'static str,
-    grips: &'static str,
-    ropes: &'static str,
-    part: &'static str,
-    grip: &'static str,
-    select: &'static str,
-    brush: &'static str,
-    fill: &'static str,
-    count: &'static str,
-    placement: &'static str,
-    duplicate: &'static str,
-    select_same_kind: &'static str,
-    zoom_to_selection: &'static str,
-    delete: &'static str,
-    hide: &'static str,
-    show: &'static str,
-    lock: &'static str,
-    unlock: &'static str,
-    lod: &'static str,
-    automatic: &'static str,
-    suggestion: &'static str,
-    offset: &'static str,
-    part_weights: &'static str,
-    grip_weights: &'static str,
-    overlap: &'static str,
-    window_2d: &'static str,
-    window_3d: &'static str,
-    // inspector field labels
-    id: &'static str,
-    kind: &'static str,
-    label: &'static str,
-    flat_text: &'static str,
-    flat_x: &'static str,
-    flat_y: &'static str,
-    volume_origin: &'static str,
-    flat_angle: &'static str,
-    radius: &'static str,
-    position: &'static str,
-    direction: &'static str,
-    source: &'static str,
-    target: &'static str,
-    schema: &'static str,
-    utility: &'static str,
-    none: &'static str,
-    example_concrete_forest: &'static str,
-    gap: &'static str,
-    shift: &'static str,
-    rise: &'static str,
-    rotation: &'static str,
-    turn: &'static str,
-    tilt: &'static str,
-    mixed: &'static str,
+// 🗣️ Complete UI label set for the 5D app — every field declares all four locale×terminology cells
+// explicitly via `app_labels!`, so a missing translation fails to compile rather than silently
+// falling back. Reuse-terminology fields that read identically to native just repeat the native text.
+semio_framework_plugin::app_labels! {
+    struct Puzzle5dLabels {
+        parts: native_en "Parts", native_de "Teile", reuse_en "Building components", reuse_de "Baukomponenten";
+        fasteners: native_en "Fasteners", native_de "Verbinder", reuse_en "Component connections", reuse_de "Baukomponentenverbindungen";
+        grips: native_en "Grips", native_de "Griffe", reuse_en "Connection points", reuse_de "Verbindungspunkte";
+        ropes: native_en "Ropes", native_de "Seile", reuse_en "Ropes", reuse_de "Seile";
+        part: native_en "Part", native_de "Teil", reuse_en "Building component", reuse_de "Baukomponente";
+        grip: native_en "Grip", native_de "Griff", reuse_en "Connection point", reuse_de "Verbindungspunkt";
+        select: native_en "Select", native_de "Auswählen", reuse_en "Select", reuse_de "Auswählen";
+        brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
+        fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
+        count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
+        placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
+        duplicate: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
+        select_same_kind: native_en "Select all of same kind", native_de "Alle gleicher Art auswählen", reuse_en "Select all of same kind", reuse_de "Alle gleicher Art auswählen";
+        zoom_to_selection: native_en "Zoom to selection", native_de "Auf Auswahl zoomen", reuse_en "Zoom to selection", reuse_de "Auf Auswahl zoomen";
+        delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
+        hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
+        show: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";
+        lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";
+        unlock: native_en "Unlock", native_de "Entsperren", reuse_en "Unlock", reuse_de "Entsperren";
+        lod: native_en "LOD", native_de "LOD", reuse_en "LOD", reuse_de "LOD";
+        automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";
+        suggestion: native_en "Suggestion", native_de "Vorschlag", reuse_en "Suggestion", reuse_de "Vorschlag";
+        offset: native_en "Offset", native_de "Versatz", reuse_en "Offset", reuse_de "Versatz";
+        part_weights: native_en "Part Weights", native_de "Teilgewichte", reuse_en "Part Weights", reuse_de "Teilgewichte";
+        grip_weights: native_en "Grip Weights", native_de "Griffgewichte", reuse_en "Grip Weights", reuse_de "Griffgewichte";
+        overlap: native_en "Overlap", native_de "Überlappung", reuse_en "Overlap", reuse_de "Überlappung";
+        window_2d: native_en "Puzzle 2D", native_de "Puzzle 2D", reuse_en "Puzzle 2D", reuse_de "Puzzle 2D";
+        window_3d: native_en "Puzzle 3D", native_de "Puzzle 3D", reuse_en "Puzzle 3D", reuse_de "Puzzle 3D";
+        // inspector field labels
+        id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
+        kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        flat_text: native_en "Flat text", native_de "Flachtext", reuse_en "Flat text", reuse_de "Flachtext";
+        flat_x: native_en "Flat x", native_de "Flach-X", reuse_en "Flat x", reuse_de "Flach-X";
+        flat_y: native_en "Flat y", native_de "Flach-Y", reuse_en "Flat y", reuse_de "Flach-Y";
+        volume_origin: native_en "Volume origin", native_de "Volumenursprung", reuse_en "Volume origin", reuse_de "Volumenursprung";
+        flat_angle: native_en "Flat angle", native_de "Flachwinkel", reuse_en "Flat angle", reuse_de "Flachwinkel";
+        radius: native_en "Radius", native_de "Radius", reuse_en "Radius", reuse_de "Radius";
+        position: native_en "Position", native_de "Position", reuse_en "Position", reuse_de "Position";
+        direction: native_en "Direction", native_de "Richtung", reuse_en "Direction", reuse_de "Richtung";
+        source: native_en "Source", native_de "Quelle", reuse_en "Source", reuse_de "Quelle";
+        target: native_en "Target", native_de "Ziel", reuse_en "Target", reuse_de "Ziel";
+        schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
+        utility: native_en "Utility", native_de "Werkzeug", reuse_en "Utility", reuse_de "Werkzeug";
+        none: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
+        example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
+        gap: native_en "Gap", native_de "Abstand", reuse_en "Gap", reuse_de "Abstand";
+        shift: native_en "Shift", native_de "Verschiebung", reuse_en "Shift", reuse_de "Verschiebung";
+        rise: native_en "Rise", native_de "Anstieg", reuse_en "Rise", reuse_de "Anstieg";
+        rotation: native_en "Rotation", native_de "Rotation", reuse_en "Rotation", reuse_de "Rotation";
+        turn: native_en "Turn", native_de "Drehung", reuse_en "Turn", reuse_de "Drehung";
+        tilt: native_en "Tilt", native_de "Neigung", reuse_en "Tilt", reuse_de "Neigung";
+        mixed: native_en "Mixed", native_de "Gemischt", reuse_en "Mixed", reuse_de "Gemischt";
+    }
 }
 
-const PUZZLE5D_LABELS_NATIVE_EN: Puzzle5dLabels = Puzzle5dLabels {
-    parts: "Parts",
-    fasteners: "Fasteners",
-    grips: "Grips",
-    ropes: "Ropes",
-    part: "Part",
-    grip: "Grip",
-    select: "Select",
-    brush: "Brush",
-    fill: "Fill",
-    count: "Count",
-    placement: "Placement",
-    duplicate: "Duplicate",
-    select_same_kind: "Select all of same kind",
-    zoom_to_selection: "Zoom to selection",
-    delete: "Delete",
-    hide: "Hide",
-    show: "Show",
-    lock: "Lock",
-    unlock: "Unlock",
-    lod: "LOD",
-    automatic: "Automatic",
-    suggestion: "Suggestion",
-    offset: "Offset",
-    part_weights: "Part Weights",
-    grip_weights: "Grip Weights",
-    overlap: "Overlap",
-    window_2d: "Puzzle 2D",
-    window_3d: "Puzzle 3D",
-    id: "Id",
-    kind: "Kind",
-    label: "Label",
-    flat_text: "Flat text",
-    flat_x: "Flat x",
-    flat_y: "Flat y",
-    volume_origin: "Volume origin",
-    flat_angle: "Flat angle",
-    radius: "Radius",
-    position: "Position",
-    direction: "Direction",
-    source: "Source",
-    target: "Target",
-    schema: "Schema",
-    utility: "Utility",
-    none: "(none)",
-    example_concrete_forest: "Concrete Forest",
-    gap: "Gap",
-    shift: "Shift",
-    rise: "Rise",
-    rotation: "Rotation",
-    turn: "Turn",
-    tilt: "Tilt",
-    mixed: "Mixed",
-};
-
-const PUZZLE5D_LABELS_NATIVE_DE: Puzzle5dLabels = Puzzle5dLabels {
-    parts: "Teile",
-    fasteners: "Verbinder",
-    grips: "Griffe",
-    ropes: "Seile",
-    part: "Teil",
-    grip: "Griff",
-    select: "Auswählen",
-    brush: "Pinsel",
-    fill: "Füllen",
-    count: "Anzahl",
-    placement: "Platzierung",
-    duplicate: "Duplizieren",
-    select_same_kind: "Alle gleicher Art auswählen",
-    zoom_to_selection: "Auf Auswahl zoomen",
-    delete: "Löschen",
-    show: "Anzeigen",
-    hide: "Ausblenden",
-    lock: "Sperren",
-    unlock: "Entsperren",
-    lod: "LOD",
-    automatic: "Automatisch",
-    suggestion: "Vorschlag",
-    offset: "Versatz",
-    part_weights: "Teilgewichte",
-    grip_weights: "Griffgewichte",
-    overlap: "Überlappung",
-    window_2d: "Puzzle 2D",
-    window_3d: "Puzzle 3D",
-    id: "Id",
-    kind: "Art",
-    label: "Bezeichnung",
-    flat_text: "Flachtext",
-    flat_x: "Flach-X",
-    flat_y: "Flach-Y",
-    volume_origin: "Volumenursprung",
-    flat_angle: "Flachwinkel",
-    radius: "Radius",
-    position: "Position",
-    direction: "Richtung",
-    source: "Quelle",
-    target: "Ziel",
-    schema: "Schema",
-    utility: "Werkzeug",
-    none: "(keine)",
-    example_concrete_forest: "Betonwald",
-    gap: "Abstand",
-    shift: "Verschiebung",
-    rise: "Anstieg",
-    rotation: "Rotation",
-    turn: "Drehung",
-    tilt: "Neigung",
-    mixed: "Gemischt",
-};
-
-const PUZZLE5D_LABELS_REUSE_EN: Puzzle5dLabels = Puzzle5dLabels {
-    parts: "Building components",
-    part: "Building component",
-    grips: "Connection points",
-    grip: "Connection point",
-    fasteners: "Component connections",
-    example_concrete_forest: "Abbau Aufbau",
-    ..PUZZLE5D_LABELS_NATIVE_EN
-};
-const PUZZLE5D_LABELS_REUSE_DE: Puzzle5dLabels = Puzzle5dLabels {
-    parts: "Baukomponenten",
-    part: "Baukomponente",
-    grips: "Verbindungspunkte",
-    grip: "Verbindungspunkt",
-    fasteners: "Baukomponentenverbindungen",
-    example_concrete_forest: "Abbau Aufbau",
-    ..PUZZLE5D_LABELS_NATIVE_DE
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native — mirrors `puzzle3d_labels`.
-/// ⚠️ Not routed through the SDK's `LocaleLabels`/`app_labels!`/`resolve_labels` — see `puzzle2d_labels`'s
-/// doc comment for why (an extra terminology axis the SDK's `Terminology` region does not model).
+/// 🗣️ Resolves the active label set from this document's persisted locale/terminology config
+/// (see `Puzzle5dRuntime.locale`/`.terminology` — this app VCS's its own axes rather than reading
+/// `ViewState`, so `resolve_labels::<Puzzle5dLabels>(view_state)` doesn't apply here).
 fn puzzle5d_labels(config: &Puzzle5dConfig) -> &'static Puzzle5dLabels {
-    let terminology = config.terminology.as_str();
-    let is_de = puzzle5d_is_de_locale(config);
-    match (terminology, is_de) {
-        ("reuse", true) => &PUZZLE5D_LABELS_REUSE_DE,
-        ("reuse", false) => &PUZZLE5D_LABELS_REUSE_EN,
-        (_, true) => &PUZZLE5D_LABELS_NATIVE_DE,
-        (_, false) => &PUZZLE5D_LABELS_NATIVE_EN,
-    }
+    let locale = if puzzle5d_is_de_locale(config) { Locale::De } else { Locale::En };
+    let terminology = if config.terminology == "reuse" { Terminology::Reuse } else { Terminology::Native };
+    Puzzle5dLabels::labels(locale, terminology)
+}
+
+/// 🗣️ Lifts a `Puzzle5dLabels` field accessor into a full manifest-level `LocalizedLabel` matrix —
+/// for `.operation`/`.utility`/arg-option declarations that should track this app's own native/reuse
+/// naming instead of a fixed, terminology-invariant string.
+fn puzzle5d_localized(field: fn(&Puzzle5dLabels) -> LabelText) -> LocalizedLabel {
+    LocalizedLabel::from_fn(|terminology, locale| field(Puzzle5dLabels::labels(locale, terminology)).as_str().to_string())
 }
 //#endregion 🔖️Terminology
 
@@ -1609,7 +1486,7 @@ fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels
                 false,
             ))
         })
-        .item(bespoke("delete", format!("{} ({phrase})", labels.delete), "trash", "deleteSelection", None, true))
+        .item(bespoke("delete", format!("{} ({phrase})", labels.delete.as_str()), "trash", "deleteSelection", None, true))
         .build()
 }
 
@@ -1673,7 +1550,7 @@ fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzzle5d
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus { id: format!("puzzle5d-status-{window}"), text: format!("{part_count} {} · {fastener_count} {} · {} {active_utility}", labels.parts, labels.fasteners, labels.utility) }]),
+        status: Some(vec![WindowEngagementStatus { id: format!("puzzle5d-status-{window}"), text: format!("{part_count} {} · {fastener_count} {} · {} {active_utility}", labels.parts.as_str(), labels.fasteners.as_str(), labels.utility.as_str()) }]),
         options: None,
         possible_engagements: None,
     }
@@ -1804,7 +1681,7 @@ fn puzzle5d_brush_distribution_children(envelope: &Puzzle5dScene, labels: &Puzzl
     vec![
         WindowMeasure::Group {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-parts"),
-            label: format!("{} ({:.0}%)", labels.part_weights, puzzle5d_kind_weight_sum(&envelope.runtime.object_kind_weights, &part_ids) * 100.0).into(),
+            label: format!("{} ({:.0}%)", labels.part_weights.as_str(), puzzle5d_kind_weight_sum(&envelope.runtime.object_kind_weights, &part_ids) * 100.0).into(),
             default_open: Some(false),
             active_utility_id: None,
             value: None,
@@ -1819,7 +1696,7 @@ fn puzzle5d_brush_distribution_children(envelope: &Puzzle5dScene, labels: &Puzzl
         },
         WindowMeasure::Group {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-grips"),
-            label: format!("{} ({:.0}%)", labels.grip_weights, puzzle5d_kind_weight_sum(&envelope.runtime.vortex_kind_weights, &grip_ids) * 100.0).into(),
+            label: format!("{} ({:.0}%)", labels.grip_weights.as_str(), puzzle5d_kind_weight_sum(&envelope.runtime.vortex_kind_weights, &grip_ids) * 100.0).into(),
             default_open: Some(false),
             active_utility_id: None,
             value: None,
@@ -1972,15 +1849,18 @@ fn puzzle5d_window_measures(window: &str, envelope: &Puzzle5dScene, precompute: 
 //#endregion 🔖️Measures
 
 //#region 🔖️Panels
+/// 📊️ `label` is always genuine runtime document content here (a part/grip/fastener/catalog name),
+/// never `app_labels!` chrome text — wrapped via `Label::data` accordingly.
 fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
-    let mut item = UiTreeItemNode::base(id, label);
+    let mut item = UiTreeItemNode::base(id, Label::data(label));
     item.icon_id = icon_id.map(IconName::from);
     item.action = Some(action);
     item
 }
 
+/// 📊️ See `tree_item_with_action`'s doc comment — same `Label::data` rationale.
 fn tree_info_item(id: impl Into<String>, label: impl Into<String>, description: Option<String>) -> UiTreeItemNode {
-    let mut item = UiTreeItemNode::base(id, label);
+    let mut item = UiTreeItemNode::base(id, Label::data(label));
     item.description = description;
     item
 }
@@ -2091,7 +1971,7 @@ fn puzzle5d_catalog_item_drag_data(kind_id: &str, entry: &Value) -> HashMap<Stri
     HashMap::from([(PUZZLE5D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
 }
 
-fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value], add_action: Option<&str>, none_label: &str) -> UiTreeSectionNode {
+fn kind_catalog_section(section_id: &str, label: LabelText, entries: &[Value], add_action: Option<&str>, none_label: LabelText) -> UiTreeSectionNode {
     let items: Vec<UiTreeItemNode> = entries
         .iter()
         .enumerate()
@@ -2144,7 +2024,7 @@ fn build_kinds_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode
     })
 }
 
-fn inspector_text_field(id: &str, label: &str, value: String, action: ActionDescriptor) -> UiNode {
+fn inspector_text_field(id: &str, label: LabelText, value: String, action: ActionDescriptor) -> UiNode {
     UiNode::Field(UiFieldNode {
         id: id.into(),
         label: label.into(),
@@ -2252,13 +2132,13 @@ fn build_inspector_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Ui
     }
     ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
         id: "puzzle5d-play-inspector.empty".into(),
-        label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+        label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
         default_open: Some(true),
         children: vec![
-            ui_text(format!("{}: {}", labels.schema, envelope.document.schema)),
-            ui_text(format!("{}: {}", labels.parts, envelope.document.parts.len())),
-            ui_text(format!("{}: {}", labels.fasteners, envelope.document.fasteners.len())),
-            ui_text(format!("{}: {}", labels.utility, envelope.active_utility)),
+            ui_text(Label::data(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))),
+            ui_text(Label::data(format!("{}: {}", labels.parts.as_str(), envelope.document.parts.len()))),
+            ui_text(Label::data(format!("{}: {}", labels.fasteners.as_str(), envelope.document.fasteners.len()))),
+            ui_text(Label::data(format!("{}: {}", labels.utility.as_str(), envelope.active_utility))),
         ],
         presence: UiPresence::default(),
         menu: None,
@@ -2809,7 +2689,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             PUZZLE5D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
             PUZZLE5D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
             PUZZLE5D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -2844,28 +2724,6 @@ impl DocumentApp for Puzzle5dPlayApp {
                 })
             })
             .collect()
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, Puzzle5dConfig>) -> semio_framework_plugin::AppLabelsOverlay {
-        let config = cfg.projection;
-        let labels = puzzle5d_labels(config);
-        let is_de = puzzle5d_is_de_locale(config);
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: HashMap::from([
-                (PUZZLE5D_PLAY_WINDOW_2D.to_string(), labels.window_2d.to_string()),
-                (PUZZLE5D_PLAY_WINDOW_3D.to_string(), labels.window_3d.to_string()),
-            ]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::new(),
-            action_labels: puzzle5d_action_labels(is_de),
-            utility_labels: puzzle5d_utility_labels(labels, is_de),
-            example_labels: HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-            tutorial_labels: HashMap::new(),
-            group_labels: HashMap::new(),
-        }
     }
 
     fn context_menu(
@@ -3618,92 +3476,13 @@ impl Puzzle5dPlayApp {
 
 //#endregion 🔖️Puzzle5dPlayAppTrait
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_puzzle5d_app`'s
-/// static manifest — mirrors `puzzle3d_action_labels`.
-fn puzzle5d_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("addNode", "Add Node", "Knoten hinzufügen"),
-        ("addPartKind", "Add Part", "Teil hinzufügen"),
-        ("addBrushPart", "Add Brush Part", "Pinselteil hinzufügen"),
-        ("addBrushObject", "Add Brush Object", "Pinselobjekt hinzufügen"),
-        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-        ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
-        ("setSelectionFlag", "Set Selection Flag", "Auswahlmarkierung festlegen"),
-        ("zoomToSelection", "Zoom To Selection", "Auf Auswahl zoomen"),
-        ("focusSelection", "Focus Selection", "Auswahl fokussieren"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-        ("setFillCount", "Set Fill Count", "Füllanzahl festlegen"),
-        ("patchPart", "Patch Part", "Teil aktualisieren"),
-        ("patchGrip", "Patch Grip", "Griff aktualisieren"),
-        ("patchFastener", "Patch Fastener", "Verbinder aktualisieren"),
-        ("importComposeKit", "Import Compose Kit", "Compose-Kit importieren"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setCamera2d", "Set Camera 2D", "Kamera 2D festlegen"),
-        ("setCamera3d", "Set Camera 3D", "Kamera 3D festlegen"),
-        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
-        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
-        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-        ("worldRelocate", "Relocate Part", "Teil verlagern"),
-        ("applyBoardEvents", "Apply Board Events", "Board-Ereignisse anwenden"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("documentSelect", "Document Select", "Dokument auswählen"),
-        ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-        ("selectAll", "Select All", "Alles auswählen"),
-        ("selectSameKindSelection", "Select Same Kind", "Gleiche Art auswählen"),
-        ("selectSameKind", "Select Same Kind (alias)", "Gleiche Art auswählen (Alias)"),
-        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-        ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-        ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswählen"),
-        ("cycleBrushCandidate", "Cycle Brush Candidate", "Pinselkandidat wechseln"),
-        ("registerBrushMesh", "Register Brush Mesh", "Pinsel-Mesh registrieren"),
-        ("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"),
-        ("setObjectKindWeight", "Set Object Kind Weight", "Objektart-Gewicht festlegen"),
-        ("setVortexKindWeight", "Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"),
-        ("worldSelect", "World Select", "Welt auswählen"),
-        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
-        ("worldHover", "World Hover", "Überfahren (Welt)"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("worldVortexHover", "World Vortex Hover", "Welt-Vortex-Hover"),
-        ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswählen"),
-        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("setLodMode", "Set Lod Mode", "LOD-Modus festlegen"),
-        ("setSuggestionOffset", "Set Suggestion Offset", "Vorschlagsversatz festlegen"),
-        ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
-        ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
-        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_puzzle5d_app`.
-fn puzzle5d_utility_labels(labels: &Puzzle5dLabels, is_de: bool) -> HashMap<String, String> {
-    HashMap::from([
-        ("select".to_string(), labels.select.to_string()),
-        ("move".to_string(), (if is_de { "Verschieben" } else { "Move" }).to_string()),
-        ("rotate".to_string(), (if is_de { "Drehen" } else { "Rotate" }).to_string()),
-        ("scale".to_string(), (if is_de { "Skalieren" } else { "Scale" }).to_string()),
-        ("brush".to_string(), labels.brush.to_string()),
-        ("fill".to_string(), labels.fill.to_string()),
-        ("worldRelocate".to_string(), (if is_de { "Verlagern" } else { "Relocate" }).to_string()),
-    ])
-}
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️Manifest
 pub fn create_puzzle5d_app() -> App {
     let envelope = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: PUZZLE5D_DEFAULT_UTILITY.into() };
     let precompute = Puzzle5dPrecomputeSession::new();
     let manifest_labels = puzzle5d_labels(&Puzzle5dConfig::default());
     let mut app = App::from_builder(
-        App::builder(PUZZLE5D_PLAY_APP_ID, "Puzzle 5D")
+        App::builder(PUZZLE5D_PLAY_APP_ID, LocalizedLabel::native("Puzzle 5D", "Puzzle 5D"))
             .document(["semio", "puzzle", "5d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "5d.puzzle".into(),
@@ -3720,93 +3499,93 @@ pub fn create_puzzle5d_app() -> App {
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "5d"])
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Board2d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels), "layout-grid")
-            .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels), "puzzle5d-3d")
+            .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, puzzle5d_localized(|l| l.window_2d), PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Board2d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels), "layout-grid")
+            .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, puzzle5d_localized(|l| l.window_3d), PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels), "puzzle5d-3d")
             // 🏗️ 3D-first 60/40 split — mirrors semio_compose_rs's design app (scene 60% / diagram 40%,
             // `semio_compose_rs/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
             // this app replaces.
             .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_3D.into(), PUZZLE5D_PLAY_WINDOW_2D.into()], "row", Some(&[60.0, 40.0]), Some(&["Puzzle 3D".into(), "Puzzle 2D".into()])))
-            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
-            .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
-            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE5D_PLAY_BODY_INSPECTOR)
+            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
+            .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
+            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, PUZZLE5D_PLAY_BODY_INSPECTOR)
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after document delta).
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
-            .operation("setActiveExample", "Set Active Example")
-            .operation("addNode", "Add Node")
-            .operation("addPartKind", "Add Part")
-            .operation("addBrushPart", "Add Brush Part")
-            .operation("addBrushObject", "Add Brush Object")
-            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("duplicateSelection", "Duplicate Selection", ActionKind::Operation).with_category("create"))
-            .action_with(ActionDefinition::new_catalog("setSelectionFlag", "Set Selection Flag", ActionKind::Operation).with_category("settings"))
-            .action_with(ActionDefinition::new_catalog("zoomToSelection", "Zoom To Selection", ActionKind::Operation).with_category("view"))
-            .operation("focusSelection", "Focus Selection")
-            .operation("engagementSubmit", "Engagement Submit")
-            .operation("setFillCount", "Set Fill Count")
-            .operation("patchPart", "Patch Part")
-            .operation("patchGrip", "Patch Grip")
-            .operation("patchFastener", "Patch Fastener")
-            .operation("importComposeKit", "Import Compose Kit")
-            .operation("translateSelection", "Translate Selection")
-            .operation("rotateSelection", "Rotate Selection")
-            .operation("scaleSelection", "Scale Selection")
-            .operation("worldRelocate", "Relocate Part")
-            .operation("applyBoardEvents", "Apply Board Events")
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Operation) })
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .operation("addPartKind", LocalizedLabel::native("Add Part", "Teil hinzufügen"))
+            .operation("addBrushPart", LocalizedLabel::native("Add Brush Part", "Pinselteil hinzufügen"))
+            .operation("addBrushObject", LocalizedLabel::native("Add Brush Object", "Pinselobjekt hinzufügen"))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Operation).with_category("create"))
+            .action_with(ActionDefinition::new_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Operation).with_category("settings"))
+            .action_with(ActionDefinition::new_catalog("zoomToSelection", LocalizedLabel::native("Zoom To Selection", "Auf Auswahl zoomen"), ActionKind::Operation).with_category("view"))
+            .operation("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
+            .operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
+            .operation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
+            .operation("patchPart", LocalizedLabel::native("Patch Part", "Teil aktualisieren"))
+            .operation("patchGrip", LocalizedLabel::native("Patch Grip", "Griff aktualisieren"))
+            .operation("patchFastener", LocalizedLabel::native("Patch Fastener", "Verbinder aktualisieren"))
+            .operation("importComposeKit", LocalizedLabel::native("Import Compose Kit", "Compose-Kit importieren"))
+            .operation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
+            .operation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
+            .operation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
+            .operation("worldRelocate", LocalizedLabel::native("Relocate Part", "Teil verlagern"))
+            .operation("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"))
             // 👁️ Ephemeral view state — selection, hover, utility parameters, brush cycling, camera pose.
-            .view_action("setCamera", "Set Camera")
-            .view_action("setCamera2d", "Set Camera 2D")
-            .view_action("setCamera3d", "Set Camera 3D")
-            .view_action("setSelection", "Set Selection")
-            .view_action("documentSelect", "Document Select")
-            .view_action("clearSelection", "Clear Selection")
-            .view_action("selectAll", "Select All")
-            .action_with(ActionDefinition::new_catalog("selectSameKindSelection", "Select Same Kind", ActionKind::View).with_category("selection"))
-            .view_action("selectSameKind", "Select Same Kind (alias)")
-            .view_action("toggleSun", "Toggle Sun")
-            .view_action("setSunAzimuth", "Set Sun Azimuth")
-            .view_action("setSunElevation", "Set Sun Elevation")
-            .view_action("setSunIntensity", "Set Sun Intensity")
-            .view_action("engagementInput", "Engagement Input")
-            .view_action("engagementAbort", "Engagement Abort")
-            .view_action("engagementControlSelect", "Engagement Control Select")
-            .view_action("cycleBrushCandidate", "Cycle Brush Candidate")
-            .view_action("registerBrushMesh", "Register Brush Mesh")
-            .view_action("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget")
-            .view_action("setObjectKindWeight", "Set Object Kind Weight")
-            .view_action("setVortexKindWeight", "Set Vortex Kind Weight")
-            .view_action("worldSelect", "World Select")
-            .view_action("worldPick", "World Pick")
-            .view_action("worldHover", "World Hover")
-            .view_action("setHover", "Set Hover")
-            .view_action("worldVortexHover", "World Vortex Hover")
-            .view_action("worldVortexSelect", "World Vortex Select")
-            .view_action("setSelectionMethod", "Set Selection Method")
-            .view_action("setLodMode", "Set Lod Mode")
-            .view_action("setSuggestionOffset", "Set Suggestion Offset")
-            .view_action("setGridSnapEnabled", "Set Grid Snap Enabled")
-            .view_action("setGridFactor", "Set Grid Factor")
-            .view_action("worldPointerDown", "World Pointer Down")
-            .view_action("canvasPointerDown", "Canvas Pointer Down")
+            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .view_action("setCamera2d", LocalizedLabel::native("Set Camera 2D", "Kamera 2D festlegen"))
+            .view_action("setCamera3d", LocalizedLabel::native("Set Camera 3D", "Kamera 3D festlegen"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("documentSelect", LocalizedLabel::native("Document Select", "Dokument auswählen"))
+            .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
+            .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
+            .action_with(ActionDefinition::new_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection"))
+            .view_action("selectSameKind", LocalizedLabel::native("Select Same Kind (alias)", "Gleiche Art auswählen (Alias)"))
+            .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
+            .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
+            .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
+            .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
+            .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
+            .view_action("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"))
+            .view_action("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"))
+            .view_action("cycleBrushCandidate", LocalizedLabel::native("Cycle Brush Candidate", "Pinselkandidat wechseln"))
+            .view_action("registerBrushMesh", LocalizedLabel::native("Register Brush Mesh", "Pinsel-Mesh registrieren"))
+            .view_action("setBrushPlacementOverlapBudget", LocalizedLabel::native("Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"))
+            .view_action("setObjectKindWeight", LocalizedLabel::native("Set Object Kind Weight", "Objektart-Gewicht festlegen"))
+            .view_action("setVortexKindWeight", LocalizedLabel::native("Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"))
+            .view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"))
+            .view_action("worldPick", LocalizedLabel::native("World Pick", "Welt-Auswahl (Pick)"))
+            .view_action("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"))
+            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
+            .view_action("worldVortexHover", LocalizedLabel::native("World Vortex Hover", "Welt-Vortex-Hover"))
+            .view_action("worldVortexSelect", LocalizedLabel::native("World Vortex Select", "Welt-Vortex auswählen"))
+            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
+            .view_action("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"))
+            .view_action("setSuggestionOffset", LocalizedLabel::native("Set Suggestion Offset", "Vorschlagsversatz festlegen"))
+            .view_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"))
+            .view_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"))
+            .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
+            .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
             // 📝️ Staged argument forms for the brush create actions (P1).
             .action_args("addPartKind", vec![
-                ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
+                ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value("Part"),
             ])
             .action_args("addBrushPart", vec![
-                ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
+                ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value("Part"),
             ])
             .action_args("addBrushObject", vec![
-                ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
+                ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value("Part"),
             ])
             // 🧰️ Flat per-window set of utilities (host-owned `view_state.active_utility_id`); `select` is the default.
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", manifest_labels.select, "mouse-pointer") })
-            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
-            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
-            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
-            .utility(UtilityDefinition::new("brush", "Brush", "paintbrush"))
-            .utility(UtilityDefinition::new("fill", "Fill", "paint-bucket"))
-            .utility(UtilityDefinition::new("worldRelocate", "Relocate", "relocate-3d"))
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", puzzle5d_localized(|l| l.select), "mouse-pointer") })
+            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", LocalizedLabel::native("Move", "Verschieben"), "move") })
+            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw") })
+            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2") })
+            .utility(UtilityDefinition::new("brush", puzzle5d_localized(|l| l.brush), "paintbrush"))
+            .utility(UtilityDefinition::new("fill", puzzle5d_localized(|l| l.fill), "paint-bucket"))
+            .utility(UtilityDefinition::new("worldRelocate", LocalizedLabel::native("Relocate", "Verlagern"), "relocate-3d"))
             .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_2D, vec!["select".into(), "brush".into(), "fill".into()])
             .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_3D, vec!["move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
             // 📇️ Per-window action scoping — the 3D window (World3d) owns the transform-gumball operations
@@ -3827,8 +3606,8 @@ pub fn create_puzzle5d_app() -> App {
             window_kind.options.measures = puzzle5d_window_measures(window, &envelope, &precompute, manifest_labels);
         }
     }
-    app.example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON.clone(), "list-tree")
-        .example(PUZZLE5D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON.clone(), "building")
+    app.example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, puzzle5d_localized(|l| l.example_concrete_forest), CONCRETE_FOREST_EXAMPLE_JSON.clone(), "list-tree")
+        .example(PUZZLE5D_EXAMPLE_NAKAGIN, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin-Kapselturm"), NAKAGIN_EXAMPLE_JSON.clone(), "building")
         .workflow("puzzle5d", "Puzzle 5D", "model")
 }
 

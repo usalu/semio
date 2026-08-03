@@ -2389,15 +2389,13 @@ describe("framework renderer hosts", () => {
   });
 
   it("uses the world surface selection mode instead of a stale shared invertive mode", () => {
-    const previousMode = (globalThis as any).__selectionMode;
-    (globalThis as any).__selectionMode = "invertive";
-    try {
-      expect(resolveWorldSelectionMergeMode("default", {})).toBe("default");
-      expect(resolveWorldSelectionMergeMode("default", { shiftKey: true })).toBe("additive");
-      expect(resolveWorldSelectionMergeMode("invertive", {})).toBe("invertive");
-    } finally {
-      (globalThis as any).__selectionMode = previousMode;
-    }
+    // 🐚️ "invertive" here plays the role the old page-global `__selectionMode` used to (a shell's
+    // persistent toolbar toggle) — passed explicitly now via the `persistentMode` param instead of a
+    // `globalThis` singleton, but the priority rule under test is unchanged: an explicitly *configured*
+    // world-surface mode still wins over it.
+    expect(resolveWorldSelectionMergeMode("default", {}, "invertive")).toBe("default");
+    expect(resolveWorldSelectionMergeMode("default", { shiftKey: true }, "invertive")).toBe("additive");
+    expect(resolveWorldSelectionMergeMode("invertive", {}, "invertive")).toBe("invertive");
   });
 
   it("resolves mesh style by priority: disabled > celebrated > selected > highlighted > hovered > neutral", () => {

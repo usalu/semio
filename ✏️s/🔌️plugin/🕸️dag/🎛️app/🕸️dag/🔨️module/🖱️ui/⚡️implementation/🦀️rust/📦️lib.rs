@@ -10,7 +10,7 @@ use infinite_board_port_directed_dag::{
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
-    ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
+    ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, LocalizedLabel, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
     UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -771,7 +771,7 @@ impl DocumentApp for DagPlayApp {
 //#region 🔖️Manifest
 pub fn create_dag_app() -> App {
     App::from_builder(
-        App::builder(DAG_PLAY_APP_ID, "DAG").document(["semio", "mathematical", "graph", "port", "directed", "dag"])
+        App::builder(DAG_PLAY_APP_ID, LocalizedLabel::native("DAG", "DAG")).document(["semio", "mathematical", "graph", "port", "directed", "dag"])
             .artifact_kind(ArtifactKindSpec {
                 id: "graph.dag".into(),
                 name: "DAG".into(),
@@ -785,10 +785,10 @@ pub fn create_dag_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("dag")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(DAG_PLAY_WINDOW_MAIN, "DAG", DAG_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "graph-dag")
-            .window_kind(DAG_PLAY_WINDOW_COMPILED, "DSL", DAG_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
+            .window_kind(DAG_PLAY_WINDOW_MAIN, LocalizedLabel::native("DAG", "DAG"), DAG_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "graph-dag")
+            .window_kind(DAG_PLAY_WINDOW_COMPILED, LocalizedLabel::native("DSL", "DSL"), DAG_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
             .default_layout(create_default_layout(
                 &[DAG_PLAY_WINDOW_MAIN.into(), DAG_PLAY_WINDOW_COMPILED.into()],
                 "row",
@@ -797,51 +797,51 @@ pub fn create_dag_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 DAG_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 DAG_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 DAG_PLAY_BODY_INSPECTOR,
             )
             // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
             // 🗂️ Referenced by `DagPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("addNode", "Add Node", ActionKind::Operation).with_category("create"))
-            .operation("removeNode", "Remove Node")
-            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", "Node Graph Edit", ActionKind::Operation).with_category("selection"))
-            .operation("connectMediaPorts", "Connect Ports")
-            .action_with(ActionDefinition::new_catalog("disconnect", "Disconnect", ActionKind::Operation).with_category("transfer"))
-            .operation("moveMediaNode", "Move Node")
-            .action_with(ActionDefinition::new_catalog("renameDagNode", "Rename Node", ActionKind::Operation).with_category("actions"))
-            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
-            .operation("patchDagNodes", "Patch Nodes")
+            .action_with(ActionDefinition::new_catalog("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"), ActionKind::Operation).with_category("create"))
+            .operation("removeNode", LocalizedLabel::native("Remove Node", "Knoten entfernen"))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"), ActionKind::Operation).with_category("selection"))
+            .operation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
+            .action_with(ActionDefinition::new_catalog("disconnect", LocalizedLabel::native("Disconnect", "Trennen"), ActionKind::Operation).with_category("transfer"))
+            .operation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
+            .action_with(ActionDefinition::new_catalog("renameDagNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"), ActionKind::Operation).with_category("actions"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
+            .operation("patchDagNodes", LocalizedLabel::native("Patch Nodes", "Knoten patchen"))
             // 👁️ Ephemeral view state — selection and camera/viewport.
-            .view_action("setSelection", "Set Selection")
-            .view_action("selectNode", "Select Node")
-            .view_action("nodeGraphSelect", "Node Graph Select")
-            .view_action("nodeGraphHover", "Node Graph Hover")
-            .view_action("nodeGraphViewport", "Node Graph Viewport")
-            .view_action("graphPointerDown", "Graph Pointer Down")
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("selectNode", LocalizedLabel::native("Select Node", "Knoten auswählen"))
+            .view_action("nodeGraphSelect", LocalizedLabel::native("Node Graph Select", "Knotengraph auswählen"))
+            .view_action("nodeGraphHover", LocalizedLabel::native("Node Graph Hover", "Knotengraph-Hover"))
+            .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
+            .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
             .keybinding("delete,backspace", "deleteSelection")
             // 📝️ Staged argument form for the panel-visible create action.
             .action_args("addNode", vec![
-                ActionArgDef::select("kind", "Kind", vec![
-                    ActionArgOption::new("computation", "Computation"),
-                    ActionArgOption::new("slider", "Slider"),
-                    ActionArgOption::new("select", "Select"),
-                    ActionArgOption::new("screen", "Screen"),
-                    ActionArgOption::new("note", "Note"),
-                    ActionArgOption::new("preview", "Preview"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Typ"), vec![
+                    ActionArgOption::new("computation", LocalizedLabel::native("Computation", "Berechnung")),
+                    ActionArgOption::new("slider", LocalizedLabel::native("Slider", "Schieberegler")),
+                    ActionArgOption::new("select", LocalizedLabel::native("Select", "Auswahl")),
+                    ActionArgOption::new("screen", LocalizedLabel::native("Screen", "Bildschirm")),
+                    ActionArgOption::new("note", LocalizedLabel::native("Note", "Notiz")),
+                    ActionArgOption::new("preview", LocalizedLabel::native("Preview", "Vorschau")),
                 ]).default_value("computation"),
             ])
             // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1)
@@ -850,7 +850,7 @@ pub fn create_dag_app() -> App {
             // channel surface consistent with `shooting_ui::create_shooting_app`'s convention.
             .config(DagPlayApp::default().config_spec()),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_dag_document()).expect("default DAG document has no non-string map keys or non-finite floats, so JSON serialization is infallible"), "cylinder")
+    .example("demo", LocalizedLabel::native("Demo", "Demo"), serde_json::to_string(&default_dag_document()).expect("default DAG document has no non-string map keys or non-finite floats, so JSON serialization is infallible"), "cylinder")
     .workflow("dag", "DAG", "graph")
 }
 //#endregion 🔖️Manifest

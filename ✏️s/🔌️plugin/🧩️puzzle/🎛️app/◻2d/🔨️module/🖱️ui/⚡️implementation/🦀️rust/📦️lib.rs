@@ -1263,12 +1263,12 @@ fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value
 //#endregion 🔖️Canvas
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale
-/// combination compile-checked via `semio_framework_plugin::app_labels!` (see ticket
-/// 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND). Fields whose reuse
-/// cells repeat the native text verbatim were previously inherited via `..PUZZLE2D_LABELS_NATIVE_EN`
-/// struct-update syntax — the new macro has no implicit inheritance, so those cells are now spelled
-/// out explicitly (same text, four times).
+// 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale
+// combination compile-checked via `semio_framework_plugin::app_labels!` (see ticket
+// 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND). Fields whose reuse
+// cells repeat the native text verbatim were previously inherited via `..PUZZLE2D_LABELS_NATIVE_EN`
+// struct-update syntax — the new macro has no implicit inheritance, so those cells are now spelled
+// out explicitly (same text, four times).
 semio_framework_plugin::app_labels! {
     struct Puzzle2dLabels {
         // entity nouns — remapped under the "reuse" terminology
@@ -1973,28 +1973,6 @@ impl DocumentApp for Puzzle2dPlayApp {
         HashMap::from([(PUZZLE2D_UTILITY_FILL.to_string(), vec![puzzle2d_fill_tool_measures(&envelope, labels)])])
     }
 
-    fn app_labels(&self, cfg: &ConfigView<'_, Puzzle2dConfig>) -> semio_framework_plugin::AppLabelsOverlay {
-        let config = cfg.projection;
-        let labels = puzzle2d_labels(config);
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: HashMap::from([
-                (PUZZLE2D_PANE_OVERVIEW.to_string(), labels.window_overview.to_string()),
-                (PUZZLE2D_PANE_DETAIL.to_string(), labels.window_detail.to_string()),
-                (PUZZLE2D_PANE_SELECTION.to_string(), labels.window_selection.to_string()),
-            ]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::new(),
-            action_labels: puzzle2d_action_labels(is_de_locale(config)),
-            utility_labels: puzzle2d_utility_labels(labels),
-            example_labels: HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-            tutorial_labels: HashMap::new(),
-            group_labels: HashMap::new(),
-        }
-    }
-
     fn context_menu(
         &self,
         request: &semio_framework_plugin::ContextMenuRequest,
@@ -2465,74 +2443,17 @@ impl Puzzle2dPlayApp {
 
 //#endregion 🔖️Puzzle2dPlayApp
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_puzzle2d_app`'s
-/// static manifest — mirrors `puzzle3d_action_labels`.
-fn puzzle2d_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addNode", "Add Node", "Knoten hinzufügen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-        ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
-        ("forceLayout", "Force Layout", "Kraftbasiertes Layout"),
-        ("focusSelection", "Focus Selection", "Auswahl fokussieren"),
-        ("selectAll", "Select All", "Alles auswählen"),
-        ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-        ("selectSameKind", "Select Same Kind", "Gleiche Art auswählen"),
-        ("setSelectionFlag", "Set Selection Flag", "Auswahlmarkierung festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("patchInspectorNodes", "Patch Inspector Nodes", "Inspektorknoten aktualisieren"),
-        ("redrawHandles", "Redraw Handles", "Anschlüsse neu zeichnen"),
-        ("reorganize", "Reorganize", "Neu anordnen"),
-        ("applyBoardEvents", "Apply Board Events", "Board-Ereignisse anwenden"),
-        ("setFillCount", "Set Fill Count", "Füllanzahl festlegen"),
-        ("brushFillSessionStep", "Brush Fill Session Step", "Pinsel-Füllsitzung-Schritt"),
-        ("brushCommitSlot", "Brush Commit Slot", "Pinsel-Platz übernehmen"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("documentSelect", "Document Select", "Dokument auswählen"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-        ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-        ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswählen"),
-        ("setLodModeForPane", "Set Lod Mode For Pane", "LOD-Modus für Bereich festlegen"),
-        ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
-        ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
-        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("setBrushKindWeights", "Set Brush Kind Weights", "Pinsel-Artgewichte festlegen"),
-        ("setBrushNodeSize", "Set Brush Node Size", "Pinsel-Knotengröße festlegen"),
-        ("setSuggestionOffset", "Set Suggestion Offset", "Vorschlagsversatz festlegen"),
-        ("brushCycleCandidate", "Brush Cycle Candidate", "Pinselkandidat wechseln"),
-        ("brushSetCandidateIndex", "Brush Set Candidate Index", "Pinselkandidatenindex festlegen"),
-        ("brushOpenSlot", "Brush Open Slot", "Pinsel-Platz öffnen"),
-        ("brushCancelSlot", "Brush Cancel Slot", "Pinsel-Platz abbrechen"),
-        ("brushFillSessionBegin", "Brush Fill Session Begin", "Pinsel-Füllsitzung beginnen"),
-        ("brushFillSessionClear", "Brush Fill Session Clear", "Pinsel-Füllsitzung leeren"),
-        ("lodScaleJson", "Lod Scale Json", "LOD-Skalierung-Json"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_puzzle2d_app`.
-fn puzzle2d_utility_labels(labels: &Puzzle2dLabels) -> HashMap<String, String> {
-    HashMap::from([
-        (PUZZLE2D_UTILITY_SELECT.into(), labels.select.to_string()),
-        (PUZZLE2D_UTILITY_BRUSH.into(), labels.brush.to_string()),
-        (PUZZLE2D_UTILITY_FILL.into(), labels.fill.to_string()),
-    ])
-}
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/engagement-bound
 /// vocabulary dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
-fn puzzle2d_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+fn puzzle2d_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (host-owned active utility). Select/brush/fill are this window's entire
 /// top-level exclusive utility set — not a sub-collection — so each carries `group: None` and renders as
 /// its own flat utility bar icon (matching the `process` utility bar), never a collapsed dropdown.
-fn puzzle2d_utility(id: &str, label: &str, icon: &str, category: UtilityCategory) -> UtilityDefinition {
+fn puzzle2d_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 
@@ -2542,7 +2463,7 @@ pub fn create_puzzle2d_app() -> App {
     sync_host_from_envelope(&mut host, &envelope);
     let labels = puzzle2d_labels(&Puzzle2dConfig::default());
     let mut app = App::from_builder(
-        App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D")
+        App::builder(PUZZLE2D_PLAY_APP_ID, LocalizedLabel::native("Puzzle 2D", "Puzzle 2D"))
             .document(["semio", "puzzle", "2d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.puzzle".into(),
@@ -2559,78 +2480,78 @@ pub fn create_puzzle2d_app() -> App {
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "2d"])
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW, labels), "layout-grid")
-            .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, "Detail", PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL, labels), "focus")
-            .window_kind_with_engagement(PUZZLE2D_PANE_SELECTION, "Selection", PUZZLE2D_PLAY_BODY_SELECTION, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION, labels), "crosshair")
-            .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_LAYERS)
-            .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_CATALOGUE)
-            .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE2D_PLAY_BODY_PROPERTIES)
+            .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, puzzle2d_localized(|l| l.window_overview), PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW, labels), "layout-grid")
+            .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, puzzle2d_localized(|l| l.window_detail), PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL, labels), "focus")
+            .window_kind_with_engagement(PUZZLE2D_PANE_SELECTION, puzzle2d_localized(|l| l.window_selection), PUZZLE2D_PLAY_BODY_SELECTION, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION, labels), "crosshair")
+            .panel_tab("framework.panel.document", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_LAYERS)
+            .panel_tab("framework.panel.catalogue", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_CATALOGUE)
+            .panel_tab("framework.panel.inspection", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, PUZZLE2D_PLAY_BODY_PROPERTIES)
             // ✏️ Palette-visible content operations.
-            .operation("addNode", "Add Node")
-            .operation("setActiveExample", "Set Active Example")
+            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🗂️ Referenced by `puzzle2d_context_menu_items` — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
             .keybinding("delete,backspace", "deleteSelection")
-            .action_with(ActionDefinition::new_catalog("duplicateSelection", "Duplicate Selection", ActionKind::Operation).with_category("create"))
-            .operation("forceLayout", "Force Layout")
-            .action_with(ActionDefinition::new_catalog("focusSelection", "Focus Selection", ActionKind::Operation).with_category("view"))
+            .action_with(ActionDefinition::new_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Operation).with_category("create"))
+            .operation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
+            .action_with(ActionDefinition::new_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Operation).with_category("view"))
             // 👁️ Palette-visible ephemeral view/selection commands.
-            .action_with(ActionDefinition::new_catalog("selectAll", "Select All", ActionKind::View).with_category("selection"))
-            .view_action("clearSelection", "Clear Selection")
-            .action_with(ActionDefinition::new_catalog("selectSameKind", "Select Same Kind", ActionKind::View).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::View).with_category("selection"))
+            .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
+            .action_with(ActionDefinition::new_catalog("selectSameKind", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection"))
             // 🔧️ Internal content operations — inspector/panel/board/import-bound, not palette commands.
             // 🗂️ Referenced by `puzzle2d_context_menu_items` (toggleHidden/toggleLocked rows) — categorized for grouped-context-menu disclosure.
-            .action_with(puzzle2d_internal_action("setSelectionFlag", "Set Selection Flag", ActionKind::Operation).with_category("settings"))
-            .action_with(puzzle2d_internal_action("patchInspectorNodes", "Patch Inspector Nodes", ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("redrawHandles", "Redraw Handles", ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("reorganize", "Reorganize", ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("applyBoardEvents", "Apply Board Events", ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("setFillCount", "Set Fill Count", ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("brushFillSessionStep", "Brush Fill Session Step", ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("brushCommitSlot", "Brush Commit Slot", ActionKind::Operation))
+            .action_with(puzzle2d_internal_action("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Operation).with_category("settings"))
+            .action_with(puzzle2d_internal_action("patchInspectorNodes", LocalizedLabel::native("Patch Inspector Nodes", "Inspektorknoten aktualisieren"), ActionKind::Operation))
+            .action_with(puzzle2d_internal_action("redrawHandles", LocalizedLabel::native("Redraw Handles", "Anschlüsse neu zeichnen"), ActionKind::Operation))
+            .action_with(puzzle2d_internal_action("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation))
+            .action_with(puzzle2d_internal_action("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"), ActionKind::Operation))
+            .action_with(puzzle2d_internal_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"), ActionKind::Operation))
+            .action_with(puzzle2d_internal_action("brushFillSessionStep", LocalizedLabel::native("Brush Fill Session Step", "Pinsel-Füllsitzung-Schritt"), ActionKind::Operation))
+            .action_with(puzzle2d_internal_action("brushCommitSlot", LocalizedLabel::native("Brush Commit Slot", "Pinsel-Platz übernehmen"), ActionKind::Operation))
             // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no operations.
             // 🎥️ `setCamera` is session-only view state (never a VCS edit — see `Puzzle2dPlayRuntime`'s
             // camera fields), so it belongs in this View-kind group, not the operations above.
-            .action_with(puzzle2d_internal_action("setCamera", "Set Camera", ActionKind::View))
-            .action_with(puzzle2d_internal_action("setSelection", "Set Selection", ActionKind::View))
-            .action_with(puzzle2d_internal_action("documentSelect", "Document Select", ActionKind::View))
-            .action_with(puzzle2d_internal_action("engagementInput", "Engagement Input", ActionKind::View))
-            .action_with(puzzle2d_internal_action("engagementSubmit", "Engagement Submit", ActionKind::View))
-            .action_with(puzzle2d_internal_action("engagementAbort", "Engagement Abort", ActionKind::View))
-            .action_with(puzzle2d_internal_action("engagementControlSelect", "Engagement Control Select", ActionKind::View))
-            .action_with(puzzle2d_internal_action("setLodModeForPane", "Set LOD Mode For Pane", ActionKind::View))
-            .action_with(puzzle2d_internal_action("setGridSnapEnabled", "Set Grid Snap Enabled", ActionKind::View))
-            .action_with(puzzle2d_internal_action("setGridFactor", "Set Grid Factor", ActionKind::View))
-            .action_with(puzzle2d_internal_action("setSelectionMethod", "Set Selection Method", ActionKind::View))
-            .action_with(puzzle2d_internal_action("setBrushKindWeights", "Set Brush Kind Weights", ActionKind::View))
-            .action_with(puzzle2d_internal_action("setBrushNodeSize", "Set Brush Node Size", ActionKind::View))
-            .action_with(puzzle2d_internal_action("setSuggestionOffset", "Set Suggestion Offset", ActionKind::View))
-            .action_with(puzzle2d_internal_action("brushCycleCandidate", "Brush Cycle Candidate", ActionKind::View))
-            .action_with(puzzle2d_internal_action("brushSetCandidateIndex", "Brush Set Candidate Index", ActionKind::View))
-            .action_with(puzzle2d_internal_action("brushOpenSlot", "Brush Open Slot", ActionKind::View))
-            .action_with(puzzle2d_internal_action("brushCancelSlot", "Brush Cancel Slot", ActionKind::View))
-            .action_with(puzzle2d_internal_action("brushFillSessionBegin", "Brush Fill Session Begin", ActionKind::View))
-            .action_with(puzzle2d_internal_action("brushFillSessionClear", "Brush Fill Session Clear", ActionKind::View))
-            .action_with(puzzle2d_internal_action("lodScaleJson", "LOD Scale Json", ActionKind::View))
+            .action_with(puzzle2d_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("documentSelect", LocalizedLabel::native("Document Select", "Dokument auswählen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("setLodModeForPane", LocalizedLabel::native("Set LOD Mode For Pane", "LOD-Modus für Bereich festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("setGridFactor", LocalizedLabel::native("Set Grid Factor", "Rasterfaktor festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("setBrushKindWeights", LocalizedLabel::native("Set Brush Kind Weights", "Pinsel-Artgewichte festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("setBrushNodeSize", LocalizedLabel::native("Set Brush Node Size", "Pinsel-Knotengröße festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("setSuggestionOffset", LocalizedLabel::native("Set Suggestion Offset", "Vorschlagsversatz festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("brushCycleCandidate", LocalizedLabel::native("Brush Cycle Candidate", "Pinselkandidat wechseln"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("brushSetCandidateIndex", LocalizedLabel::native("Brush Set Candidate Index", "Pinselkandidatenindex festlegen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("brushOpenSlot", LocalizedLabel::native("Brush Open Slot", "Pinsel-Platz öffnen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("brushCancelSlot", LocalizedLabel::native("Brush Cancel Slot", "Pinsel-Platz abbrechen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("brushFillSessionBegin", LocalizedLabel::native("Brush Fill Session Begin", "Pinsel-Füllsitzung beginnen"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("brushFillSessionClear", LocalizedLabel::native("Brush Fill Session Clear", "Pinsel-Füllsitzung leeren"), ActionKind::View))
+            .action_with(puzzle2d_internal_action("lodScaleJson", LocalizedLabel::native("LOD Scale Json", "LOD-Skalierung-Json"), ActionKind::View))
             // 📝️ Staged palette args for the two content commands that need a target.
             .action_args("addNode", vec![
-                ActionArgDef::select("kind", "Kind", vec![ActionArgOption::new("node", "Node")]).required().default_value("node"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![ActionArgOption::new("node", LocalizedLabel::native("Node", "Knoten"))]).required().default_value("node"),
             ])
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest"),
-                    ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, puzzle2d_localized(|l| l.example_concrete_forest)),
+                    ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower")),
                 ]).required().default_value(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
             ])
             // 🧰️ Canvas utilities — one exclusive set, active utility host-owned (never a document operation). The
             // select/brush switcher is rendered by the framework utility bar for the interactive pane.
-            .utility(puzzle2d_utility(PUZZLE2D_UTILITY_SELECT, labels.select, "mouse-pointer", UtilityCategory::Selection))
-            .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, labels.brush, "paintbrush", UtilityCategory::Utilities))
+            .utility(puzzle2d_utility(PUZZLE2D_UTILITY_SELECT, puzzle2d_localized(|l| l.select), "mouse-pointer", UtilityCategory::Selection))
+            .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, puzzle2d_localized(|l| l.brush), "paintbrush", UtilityCategory::Utilities))
             .window_kind_utilities(PUZZLE2D_PANE_OVERVIEW, vec![PUZZLE2D_UTILITY_SELECT.into(), PUZZLE2D_UTILITY_BRUSH.into()])
             // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
-            .tool_simple(PUZZLE2D_UTILITY_FILL, labels.fill, "paint-bucket")
+            .tool_simple(PUZZLE2D_UTILITY_FILL, puzzle2d_localized(|l| l.fill), "paint-bucket")
             .mode_tools("edit", vec![ToolRef::new(PUZZLE2D_UTILITY_FILL)])
             .default_layout(create_default_layout(&[PUZZLE2D_PANE_OVERVIEW.into(), PUZZLE2D_PANE_DETAIL.into(), PUZZLE2D_PANE_SELECTION.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))),
     );
@@ -2639,8 +2560,8 @@ pub fn create_puzzle2d_app() -> App {
             window.options.measures = puzzle2d_window_measures(pane, &envelope, labels);
         }
     }
-    app.example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest", serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON.as_str())).unwrap(), "list-tree")
-        .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower", serde_json::to_string(&example_fixture(NAKAGIN_EXAMPLE_JSON.as_str())).unwrap(), "building")
+    app.example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, puzzle2d_localized(|l| l.example_concrete_forest), serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON.as_str())).unwrap(), "list-tree")
+        .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower"), serde_json::to_string(&example_fixture(NAKAGIN_EXAMPLE_JSON.as_str())).unwrap(), "building")
         .workflow("puzzle2d", "Puzzle 2D", "layout")
 }
 

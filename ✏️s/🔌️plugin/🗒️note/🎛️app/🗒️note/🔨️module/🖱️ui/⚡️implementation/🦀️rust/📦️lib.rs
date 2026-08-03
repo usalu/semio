@@ -13,7 +13,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App, MediaClass, MediaForm, MediaType, OsMediaCapability, ArtifactKindSpec,
-    InkCanvasScene, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, ConfigView, Emit, LocaleLabels,
+    InkCanvasScene, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, ConfigView, Emit, LocaleLabels, LocalizedLabel,
     HostEffect, PanelTreeBuilder, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiToggleNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -828,13 +828,13 @@ fn note_navigator_engagement(active_utility: &str) -> WindowEngagement {
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()`/utility bar).
-fn note_utility(id: &str, label: &str, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+fn note_utility(id: &str, label: LocalizedLabel, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/keybound vocabulary
 /// dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
-fn note_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+fn note_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 //#endregion 🔖️Shell
@@ -1272,7 +1272,7 @@ impl DocumentApp for NotePlayApp {
 pub fn create_note_app() -> App {
     let document = empty_note_document();
     let mut app = App::from_builder(
-        App::builder(NOTE_PLAY_APP_ID, "Note").document(["semio", "note"])
+        App::builder(NOTE_PLAY_APP_ID, LocalizedLabel::native("Note", "Notiz")).document(["semio", "note"])
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.note".into(),
                 name: "2D Note".into(),
@@ -1286,10 +1286,10 @@ pub fn create_note_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("note")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::InkCanvas, note_canvas_engagement(&document, &NoteCamera::default(), &[], ""), "pen-tool")
-            .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::InkCanvas, note_navigator_engagement("selectDirect"), "focus")
+            .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, LocalizedLabel::native("Canvas", "Zeichenfläche"), NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::InkCanvas, note_canvas_engagement(&document, &NoteCamera::default(), &[], ""), "pen-tool")
+            .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, LocalizedLabel::native("Navigator", "Navigator"), NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::InkCanvas, note_navigator_engagement("selectDirect"), "focus")
             .default_layout(create_default_layout(
                 &[NOTE_PLAY_WINDOW_COMPOSITE.into(), NOTE_PLAY_WINDOW_NAVIGATOR.into()],
                 "row",
@@ -1298,100 +1298,100 @@ pub fn create_note_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 NOTE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 NOTE_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 NOTE_PLAY_BODY_PROPERTIES,
             )
             // 📇️ Palette-visible selection commands (P0) — ephemeral selection is View, block edits are Operations.
-            .view_action("selectAll", "Select All")
-            .view_action("clearSelection", "Clear Selection")
-            .operation("deleteSelection", "Delete Selection")
-            .operation("duplicateSelection", "Duplicate Selection")
+            .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
+            .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
+            .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .operation("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"))
             // ➕️ Palette-visible block insertion (P1) with a staged argument form.
-            .operation("addBlock", "Add Block")
-            .operation("setActiveExample", "Set Active Example")
+            .operation("addBlock", LocalizedLabel::native("Add Block", "Block hinzufügen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🐚️ Import/export footer actions → panel Shell actions emitting host effects (S).
-            .shell_action("loadRequest", "Import")
-            .shell_action("saveDownload", "Export")
+            .shell_action("loadRequest", LocalizedLabel::native("Import", "Importieren"))
+            .shell_action("saveDownload", LocalizedLabel::native("Export", "Exportieren"))
             // 🔧️ Internal content operations — inspector/tree/drag/import-bound, not palette commands.
             // B1: the old `"setGridVisible" | "toggleGrid"`/`"setSnapEnabled" | "toggleSnap"`/
             // `"addBlock" | "dropBlockKind"` action-id aliases collapsed onto one `NoteCommand` variant
             // each (see `note_protocol::NoteCommand`'s doc comment) — `toggleGrid`/`toggleSnap`/
             // `dropBlockKind` were never independently wired to any UI element or host caller, so their
             // dead alias declarations are dropped here rather than kept as unreachable synonyms.
-            .action_with(note_internal_action("setGridVisible", "Set Grid Visible", ActionKind::Operation))
-            .action_with(note_internal_action("setGridSpacing", "Set Grid Spacing", ActionKind::Operation))
-            .action_with(note_internal_action("setGridSubdivisions", "Set Grid Subdivisions", ActionKind::Operation))
-            .action_with(note_internal_action("setGridOpacity", "Set Grid Opacity", ActionKind::Operation))
-            .action_with(note_internal_action("setSnapEnabled", "Set Snap Enabled", ActionKind::Operation))
-            .action_with(note_internal_action("setSnapGridSpacing", "Set Snap Grid Spacing", ActionKind::Operation))
-            .action_with(note_internal_action("setPencilWidth", "Set Pencil Width", ActionKind::Operation))
-            .action_with(note_internal_action("setEraserRadius", "Set Eraser Radius", ActionKind::Operation))
-            .action_with(note_internal_action("moveBlock", "Move Block", ActionKind::Operation))
-            .action_with(note_internal_action("deleteBlock", "Delete Block", ActionKind::Operation))
-            .action_with(note_internal_action("duplicateBlock", "Duplicate Block", ActionKind::Operation))
-            .action_with(note_internal_action("patchBlocks", "Patch Blocks", ActionKind::Operation))
-            .action_with(note_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Operation))
-            .action_with(note_internal_action("setFixtureJson", "Set Fixture Json", ActionKind::Operation))
-            .action_with(note_internal_action("inkApplyEvents", "Apply Note Events", ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelection", "Nudge Selection", ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionUp", "Nudge Selection Up", ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionDown", "Nudge Selection Down", ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionLeft", "Nudge Selection Left", ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionRight", "Nudge Selection Right", ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionUpFast", "Nudge Selection Up Fast", ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionDownFast", "Nudge Selection Down Fast", ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionLeftFast", "Nudge Selection Left Fast", ActionKind::Operation))
-            .action_with(note_internal_action("nudgeSelectionRightFast", "Nudge Selection Right Fast", ActionKind::Operation))
+            .action_with(note_internal_action("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Rastersichtbarkeit festlegen"), ActionKind::Operation))
+            .action_with(note_internal_action("setGridSpacing", LocalizedLabel::native("Set Grid Spacing", "Rasterabstand festlegen"), ActionKind::Operation))
+            .action_with(note_internal_action("setGridSubdivisions", LocalizedLabel::native("Set Grid Subdivisions", "Rasterunterteilungen festlegen"), ActionKind::Operation))
+            .action_with(note_internal_action("setGridOpacity", LocalizedLabel::native("Set Grid Opacity", "Rasterdeckkraft festlegen"), ActionKind::Operation))
+            .action_with(note_internal_action("setSnapEnabled", LocalizedLabel::native("Set Snap Enabled", "Einrasten aktivieren"), ActionKind::Operation))
+            .action_with(note_internal_action("setSnapGridSpacing", LocalizedLabel::native("Set Snap Grid Spacing", "Rasterabstand für Einrasten festlegen"), ActionKind::Operation))
+            .action_with(note_internal_action("setPencilWidth", LocalizedLabel::native("Set Pencil Width", "Stiftbreite festlegen"), ActionKind::Operation))
+            .action_with(note_internal_action("setEraserRadius", LocalizedLabel::native("Set Eraser Radius", "Radiergummi-Radius festlegen"), ActionKind::Operation))
+            .action_with(note_internal_action("moveBlock", LocalizedLabel::native("Move Block", "Block verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("deleteBlock", LocalizedLabel::native("Delete Block", "Block löschen"), ActionKind::Operation))
+            .action_with(note_internal_action("duplicateBlock", LocalizedLabel::native("Duplicate Block", "Block duplizieren"), ActionKind::Operation))
+            .action_with(note_internal_action("patchBlocks", LocalizedLabel::native("Patch Blocks", "Blöcke aktualisieren"), ActionKind::Operation))
+            .action_with(note_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Operation))
+            .action_with(note_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Operation))
+            .action_with(note_internal_action("inkApplyEvents", LocalizedLabel::native("Apply Note Events", "Notiz-Ereignisse anwenden"), ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelection", LocalizedLabel::native("Nudge Selection", "Auswahl verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionUp", LocalizedLabel::native("Nudge Selection Up", "Auswahl nach oben verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionDown", LocalizedLabel::native("Nudge Selection Down", "Auswahl nach unten verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionLeft", LocalizedLabel::native("Nudge Selection Left", "Auswahl nach links verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionRight", LocalizedLabel::native("Nudge Selection Right", "Auswahl nach rechts verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionUpFast", LocalizedLabel::native("Nudge Selection Up Fast", "Auswahl schnell nach oben verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionDownFast", LocalizedLabel::native("Nudge Selection Down Fast", "Auswahl schnell nach unten verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionLeftFast", LocalizedLabel::native("Nudge Selection Left Fast", "Auswahl schnell nach links verschieben"), ActionKind::Operation))
+            .action_with(note_internal_action("nudgeSelectionRightFast", LocalizedLabel::native("Nudge Selection Right Fast", "Auswahl schnell nach rechts verschieben"), ActionKind::Operation))
             // 👁️ Ephemeral view state — selection/hover/engagement/camera scratch, never a document operation.
-            .action_with(note_internal_action("setSelection", "Set Selection", ActionKind::View))
-            .action_with(note_internal_action("setHover", "Set Hover", ActionKind::View))
-            .action_with(note_internal_action("engagementInput", "Engagement Input", ActionKind::View))
-            .action_with(note_internal_action("navigatorEngagementInput", "Navigator Engagement Input", ActionKind::View))
-            .action_with(note_internal_action("setCamera", "Set Camera", ActionKind::View))
-            .action_with(note_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::View))
+            .action_with(note_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
+            .action_with(note_internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
+            .action_with(note_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
+            .action_with(note_internal_action("navigatorEngagementInput", LocalizedLabel::native("Navigator Engagement Input", "Navigator-Eingabe"), ActionKind::View))
+            .action_with(note_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_with(note_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
             // 📝️ Staged argument forms for the palette-eligible actions.
             .action_args("addBlock", vec![
-                ActionArgDef::select("kind", "Kind", vec![
-                    ActionArgOption::new("text", "Text"),
-                    ActionArgOption::new("image", "Image"),
-                    ActionArgOption::new("table", "Table"),
-                    ActionArgOption::new("math", "Math"),
-                    ActionArgOption::new("stroke", "Ink"),
-                    ActionArgOption::new("group", "Group"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Typ"), vec![
+                    ActionArgOption::new("text", LocalizedLabel::native("Text", "Text")),
+                    ActionArgOption::new("image", LocalizedLabel::native("Image", "Bild")),
+                    ActionArgOption::new("table", LocalizedLabel::native("Table", "Tabelle")),
+                    ActionArgOption::new("math", LocalizedLabel::native("Math", "Mathe")),
+                    ActionArgOption::new("stroke", LocalizedLabel::native("Ink", "Tinte")),
+                    ActionArgOption::new("group", LocalizedLabel::native("Group", "Gruppe")),
                 ]).required().default_value("text"),
-                ActionArgDef::number("x", "X").default_value(0.0),
-                ActionArgDef::number("y", "Y").default_value(0.0),
+                ActionArgDef::number("x", LocalizedLabel::native("X", "X")).default_value(0.0),
+                ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).default_value(0.0),
             ])
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new("semio", "Semio"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new("semio", LocalizedLabel::native("Semio", "Semio")),
                 ]).required().default_value("semio"),
             ])
-            .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Document JSON").required()])
+            .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
             // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
-            .utility(note_utility("selectDirect", "Direct", "cursor", "Select", UtilityCategory::Selection))
-            .utility(note_utility("selectMarquee", "Marquee", "selection", "Select", UtilityCategory::Selection))
-            .utility(note_utility("text", "Text", "type", "Block", UtilityCategory::Utilities))
-            .utility(note_utility("image", "Image", "image", "Block", UtilityCategory::Utilities))
-            .utility(note_utility("table", "Table", "table", "Block", UtilityCategory::Utilities))
-            .utility(note_utility("math", "Math", "sigma", "Block", UtilityCategory::Utilities))
-            .utility(note_utility("pencil", "Pencil", "pencil", "Draw", UtilityCategory::Utilities))
-            .utility(note_utility("eraserStroke", "Stroke Eraser", "eraser", "Draw", UtilityCategory::Utilities))
-            .utility(note_utility("eraserPoint", "Point Eraser", "eraser", "Draw", UtilityCategory::Utilities))
-            .utility(note_utility("pan", "Pan", "hand", "View", UtilityCategory::Utilities))
+            .utility(note_utility("selectDirect", LocalizedLabel::native("Direct", "Direkt"), "cursor", "Select", UtilityCategory::Selection))
+            .utility(note_utility("selectMarquee", LocalizedLabel::native("Marquee", "Rahmenauswahl"), "selection", "Select", UtilityCategory::Selection))
+            .utility(note_utility("text", LocalizedLabel::native("Text", "Text"), "type", "Block", UtilityCategory::Utilities))
+            .utility(note_utility("image", LocalizedLabel::native("Image", "Bild"), "image", "Block", UtilityCategory::Utilities))
+            .utility(note_utility("table", LocalizedLabel::native("Table", "Tabelle"), "table", "Block", UtilityCategory::Utilities))
+            .utility(note_utility("math", LocalizedLabel::native("Math", "Mathe"), "sigma", "Block", UtilityCategory::Utilities))
+            .utility(note_utility("pencil", LocalizedLabel::native("Pencil", "Stift"), "pencil", "Draw", UtilityCategory::Utilities))
+            .utility(note_utility("eraserStroke", LocalizedLabel::native("Stroke Eraser", "Strich-Radiergummi"), "eraser", "Draw", UtilityCategory::Utilities))
+            .utility(note_utility("eraserPoint", LocalizedLabel::native("Point Eraser", "Punkt-Radiergummi"), "eraser", "Draw", UtilityCategory::Utilities))
+            .utility(note_utility("pan", LocalizedLabel::native("Pan", "Schwenken"), "hand", "View", UtilityCategory::Utilities))
             .window_kind_utilities(NOTE_PLAY_WINDOW_COMPOSITE, vec![
                 "selectDirect".into(), "selectMarquee".into(),
                 "text".into(), "image".into(), "table".into(), "math".into(),
@@ -1426,7 +1426,7 @@ pub fn create_note_app() -> App {
             window.options.measures = note_navigator_measures(&document, &NoteCamera::default(), &NotePlayLabels::EN);
         }
     }
-    app.example("semio", "Semio", semio_example_json(), "sparkles")
+    app.example("semio", LocalizedLabel::native("Semio", "Semio"), semio_example_json(), "sparkles")
         .workflow("note", "Note", "document")
 }
 //#endregion 🔖️Manifest

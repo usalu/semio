@@ -40,12 +40,12 @@ use semio_framework_os::{
 use semio_framework_os::host::{export_os_space_dsl, export_os_space_pack, import_os_space_from_pack};
 use semio_framework_plugin::{
     app_labels, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
-    create_default_layout, host_now_ms, localized_label_map, tree_item_desc,
+    create_default_layout, host_now_ms, tree_item_desc,
     ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, IconName, MeasureSelectItem, WindowEngagementStatus,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, LocaleLabels,
+    AppLabels, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel,
     NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphOperatorRecord, NodeGraphViewport, PanelGroup,
-    PanelTreeBuilder, SurfaceKind, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
+    PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
     UiNumberStepperNode, UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode,
     VirtualFileSystemScene, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowLayout,
     WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -59,14 +59,23 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::{LazyLock, Mutex};
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — see `shooting_ui`'s identical pair.
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `cad_ui`'s identical region.
 fn is_de_locale(cfg: &SpaceConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &SpaceConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🗣️ `SpaceConfig.locale` (a BCP-47 tag, was shell-provided `ViewState.locale` pre-B1) mapped onto
+/// the SDK's exhaustive `Locale` enum.
+fn space_locale(cfg: &SpaceConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ Resolves the active label-struct cell from the config-carried locale (was shell-provided
+/// `ViewState`, deleted by B1) via the SDK's two-axis `AppLabels::labels`. `SpaceConfig` carries no
+/// terminology field, so terminology is always `Native`.
+fn resolve_labels<L: AppLabels>(cfg: &SpaceConfig) -> &'static L {
+    L::labels(space_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -177,9 +186,9 @@ fn space_workflow_context_menu_items(
             &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })],
         );
         let remove_label = if phrase.is_empty() {
-            labels.context_remove.to_string()
+            labels.context_remove.as_str().to_string()
         } else {
-            format!("{} ({phrase})", labels.context_remove)
+            format!("{} ({phrase})", labels.context_remove.as_str())
         };
         // 🎯️ Destructive tail always comes last — kept unconditionally after the "selection" group so
         // remove-instance is the final row regardless of whether clear-selection was appended above.
@@ -272,113 +281,59 @@ fn primary_selected_node_id(config: &SpaceConfig) -> Option<String> {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Terminology
+// 🗣️ Complete UI label set for the Studio app; one field per label makes every locale combination compile-checked.
 app_labels! {
-    /// 🗣️ Complete UI label set for the Studio app; one field per label makes every locale combination compile-checked.
     struct SStudioLabels {
-        apps_section: &'static str = en: "Apps", de: "Apps";
-        media_vfs_empty_message: &'static str = en: "No app instances in the workflow.", de: "Keine App-Instanzen im Workflows.";
-        add_parameter: &'static str = en: "Add Parameter", de: "Parameter hinzufügen";
-        name: &'static str = en: "Name", de: "Name";
-        value: &'static str = en: "Value", de: "Wert";
-        min: &'static str = en: "Min", de: "Min";
-        max: &'static str = en: "Max", de: "Max";
-        step: &'static str = en: "Step", de: "Schritt";
-        add_option: &'static str = en: "Add option", de: "Option hinzufügen";
-        new_option_placeholder: &'static str = en: "New option", de: "Neue Option";
-        remove: &'static str = en: "Remove", de: "Entfernen";
-        node_id: &'static str = en: "Node id", de: "Knoten-ID";
-        label: &'static str = en: "Label", de: "Beschriftung";
-        direct_value: &'static str = en: "Direct value", de: "Direkter Wert";
-        workflow_node: &'static str = en: "Workflow node", de: "Workflow-Knoten";
-        workflow_nodes: &'static str = en: "Workflow nodes", de: "Workflow-Knoten";
-        app_instance: &'static str = en: "App instance", de: "App-Instanz";
-        app_instances: &'static str = en: "App instances", de: "App-Instanzen";
-        select_hint: &'static str = en: "Select workflow nodes in the canvas.", de: "Wähle Workflow-Knoten im Arbeitsbereich aus.";
-        program_prefix: &'static str = en: "Program", de: "Programm";
-        app_prefix: &'static str = en: "App", de: "App";
-        instance_id_prefix: &'static str = en: "Instance id", de: "Instanz-ID";
-        bound_value_prefix: &'static str = en: "Bound value", de: "Gebundener Wert";
-        active_app: &'static str = en: "Active app", de: "Aktive App";
-        window_workflow: &'static str = en: "Workflow", de: "Workflow";
-        window_media_vfs: &'static str = en: "Media VFS", de: "Media-VFS";
-        window_compiled_dag: &'static str = en: "Compiled DAG", de: "Kompilierter DAG";
-        toggle_on: &'static str = en: "On", de: "An";
-        toggle_off: &'static str = en: "Off", de: "Aus";
-        mixed_placeholder: &'static str = en: "Mixed", de: "Gemischt";
-        parameter_count_suffix: &'static str = en: "parameter(s)", de: "Parameter";
-        media_node_count_label: &'static str = en: "node(s)", de: "Knoten";
-        app_instance_count_label: &'static str = en: "app instance(s)", de: "App-Instanz(en)";
-        context_open_instance: &'static str = en: "Open instance", de: "Instanz öffnen";
-        context_duplicate: &'static str = en: "Duplicate", de: "Duplizieren";
-        context_copy: &'static str = en: "Copy", de: "Kopieren";
-        context_paste: &'static str = en: "Paste", de: "Einfügen";
-        context_rename_label: &'static str = en: "Rename label…", de: "Bezeichnung umbenennen…";
-        context_remove: &'static str = en: "Remove", de: "Entfernen";
-        context_select_all: &'static str = en: "Select all", de: "Alle auswählen";
-        context_clear_selection: &'static str = en: "Clear selection", de: "Auswahl aufheben";
-        context_reorganize: &'static str = en: "Reorganize", de: "Neu anordnen";
+        apps_section: native_en "Apps", native_de "Apps", reuse_en "Apps", reuse_de "Apps";
+        media_vfs_empty_message: native_en "No app instances in the workflow.", native_de "Keine App-Instanzen im Workflows.", reuse_en "No app instances in the workflow.", reuse_de "Keine App-Instanzen im Workflows.";
+        add_parameter: native_en "Add Parameter", native_de "Parameter hinzufügen", reuse_en "Add Parameter", reuse_de "Parameter hinzufügen";
+        name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        value: native_en "Value", native_de "Wert", reuse_en "Value", reuse_de "Wert";
+        min: native_en "Min", native_de "Min", reuse_en "Min", reuse_de "Min";
+        max: native_en "Max", native_de "Max", reuse_en "Max", reuse_de "Max";
+        step: native_en "Step", native_de "Schritt", reuse_en "Step", reuse_de "Schritt";
+        add_option: native_en "Add option", native_de "Option hinzufügen", reuse_en "Add option", reuse_de "Option hinzufügen";
+        new_option_placeholder: native_en "New option", native_de "Neue Option", reuse_en "New option", reuse_de "Neue Option";
+        remove: native_en "Remove", native_de "Entfernen", reuse_en "Remove", reuse_de "Entfernen";
+        node_id: native_en "Node id", native_de "Knoten-ID", reuse_en "Node id", reuse_de "Knoten-ID";
+        label: native_en "Label", native_de "Beschriftung", reuse_en "Label", reuse_de "Beschriftung";
+        direct_value: native_en "Direct value", native_de "Direkter Wert", reuse_en "Direct value", reuse_de "Direkter Wert";
+        workflow_node: native_en "Workflow node", native_de "Workflow-Knoten", reuse_en "Workflow node", reuse_de "Workflow-Knoten";
+        workflow_nodes: native_en "Workflow nodes", native_de "Workflow-Knoten", reuse_en "Workflow nodes", reuse_de "Workflow-Knoten";
+        app_instance: native_en "App instance", native_de "App-Instanz", reuse_en "App instance", reuse_de "App-Instanz";
+        app_instances: native_en "App instances", native_de "App-Instanzen", reuse_en "App instances", reuse_de "App-Instanzen";
+        select_hint: native_en "Select workflow nodes in the canvas.", native_de "Wähle Workflow-Knoten im Arbeitsbereich aus.", reuse_en "Select workflow nodes in the canvas.", reuse_de "Wähle Workflow-Knoten im Arbeitsbereich aus.";
+        program_prefix: native_en "Program", native_de "Programm", reuse_en "Program", reuse_de "Programm";
+        app_prefix: native_en "App", native_de "App", reuse_en "App", reuse_de "App";
+        instance_id_prefix: native_en "Instance id", native_de "Instanz-ID", reuse_en "Instance id", reuse_de "Instanz-ID";
+        bound_value_prefix: native_en "Bound value", native_de "Gebundener Wert", reuse_en "Bound value", reuse_de "Gebundener Wert";
+        active_app: native_en "Active app", native_de "Aktive App", reuse_en "Active app", reuse_de "Aktive App";
+        window_workflow: native_en "Workflow", native_de "Workflow", reuse_en "Workflow", reuse_de "Workflow";
+        window_media_vfs: native_en "Media VFS", native_de "Media-VFS", reuse_en "Media VFS", reuse_de "Media-VFS";
+        window_compiled_dag: native_en "Compiled DAG", native_de "Kompilierter DAG", reuse_en "Compiled DAG", reuse_de "Kompilierter DAG";
+        toggle_on: native_en "On", native_de "An", reuse_en "On", reuse_de "An";
+        toggle_off: native_en "Off", native_de "Aus", reuse_en "Off", reuse_de "Aus";
+        mixed_placeholder: native_en "Mixed", native_de "Gemischt", reuse_en "Mixed", reuse_de "Gemischt";
+        parameter_count_suffix: native_en "parameter(s)", native_de "Parameter", reuse_en "parameter(s)", reuse_de "Parameter";
+        media_node_count_label: native_en "node(s)", native_de "Knoten", reuse_en "node(s)", reuse_de "Knoten";
+        app_instance_count_label: native_en "app instance(s)", native_de "App-Instanz(en)", reuse_en "app instance(s)", reuse_de "App-Instanz(en)";
+        context_open_instance: native_en "Open instance", native_de "Instanz öffnen", reuse_en "Open instance", reuse_de "Instanz öffnen";
+        context_duplicate: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
+        context_copy: native_en "Copy", native_de "Kopieren", reuse_en "Copy", reuse_de "Kopieren";
+        context_paste: native_en "Paste", native_de "Einfügen", reuse_en "Paste", reuse_de "Einfügen";
+        context_rename_label: native_en "Rename label…", native_de "Bezeichnung umbenennen…", reuse_en "Rename label…", reuse_de "Bezeichnung umbenennen…";
+        context_remove: native_en "Remove", native_de "Entfernen", reuse_en "Remove", reuse_de "Entfernen";
+        context_select_all: native_en "Select all", native_de "Alle auswählen", reuse_en "Select all", reuse_de "Alle auswählen";
+        context_clear_selection: native_en "Clear selection", native_de "Auswahl aufheben", reuse_en "Clear selection", reuse_de "Auswahl aufheben";
+        context_reorganize: native_en "Reorganize", native_de "Neu anordnen", reuse_en "Reorganize", reuse_de "Neu anordnen";
     }
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in
-/// `create_space_app`'s static manifest — same rationale as `app_home`'s `s_home_action_labels`. The
-/// dead `"setParameter"` action (never dispatched by any real UI call site pre-B1) is dropped along
-/// with its `SpaceCommand` variant.
-fn s_studio_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        // 🔧️ Document-mutating operations
-        ("patchParameter", "Patch Parameter", "Parameter aktualisieren"),
-        ("addParameter", "Add Parameter", "Parameter hinzufügen"),
-        ("removeParameter", "Remove Parameter", "Parameter entfernen"),
-        ("spawnApp", "Spawn App", "App erzeugen"),
-        ("moveMediaNode", "Move Media Node", "Medienknoten verschieben"),
-        ("connectMediaPorts", "Connect Media Ports", "Medien-Ports verbinden"),
-        ("disconnectMediaEdge", "Disconnect Media Edge", "Medienverbindung trennen"),
-        ("removeAppInstance", "Remove App Instance", "App-Instanz entfernen"),
-        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-        ("copyAppInstance", "Copy App Instance", "App-Instanz kopieren"),
-        ("duplicateAppInstance", "Duplicate App Instance", "App-Instanz duplizieren"),
-        ("pasteAppInstance", "Paste App Instance", "App-Instanz einfügen"),
-        ("renameAppInstance", "Rename App Instance", "App-Instanz umbenennen"),
-        ("patchMediaNodes", "Patch Media Nodes", "Medienknoten aktualisieren"),
-        ("patchAppInstances", "Patch App Instances", "App-Instanzen aktualisieren"),
-        ("bindParameterField", "Bind Parameter Field", "Parameterfeld verknüpfen"),
-        ("unbindParameterField", "Unbind Parameter Field", "Parameterfeld lösen"),
-        ("reorganizeWorkflow", "Reorganize Workflow", "Workflow neu anordnen"),
-        ("workflowEngagementSubmit", "Workflow Engagement Submit", "Workflow-Eingabe bestätigen"),
-        ("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen"),
-        ("nodeGraphEdit", "Edit Workflow", "Workflow bearbeiten"),
-        // 👁️ Ephemeral view state (config-only now)
-        ("setActivePanelTab", "Set Active Panel Tab", "Aktiven Panel-Tab festlegen"),
-        ("selectInstance", "Select Instance", "Instanz auswählen"),
-        ("nodeGraphSelect", "Select Graph Node", "Graphknoten auswählen"),
-        ("setMediaNodeSelection", "Set Media Node Selection", "Medienknoten-Auswahl festlegen"),
-        ("nodeGraphHover", "Hover Graph Node", "Graphknoten hovern"),
-        ("textHover", "Text Hover", "Text-Hover"),
-        ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansichtsfenster festlegen"),
-        ("presenceHeartbeat", "Presence Heartbeat", "Anwesenheits-Heartbeat"),
-        ("setAppInstanceSelection", "Set App Instance Selection", "App-Instanz-Auswahl festlegen"),
-        ("workflowEngagementInput", "Workflow Engagement Input", "Workflow-Eingabe"),
-        ("compiledDagEngagementInput", "Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe"),
-        // 🗨️ Shell-only effects
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("exportMedia", "Export Media", "Medien exportieren"),
-        ("importMedia", "Import Media", "Medien importieren"),
-        ("importMediaPayload", "Import Media Payload", "Medien-Payload importieren"),
-        ("exportStudioPack", "Export Studio Pack", "Studio-Paket exportieren"),
-        ("exportStudioDsl", "Export Studio DSL", "Studio-DSL exportieren"),
-        ("importSpacePack", "Import Studio Pack", "Studio-Paket importieren"),
-        ("importSpacePackPayload", "Import Studio Pack Payload", "Studio-Paket-Payload importieren"),
-        ("openSpace", "Open Studio", "Studio öffnen"),
-        ("openInstance", "Open Instance", "Instanz öffnen"),
-        ("closeFocusedInstance", "Close Focused Instance", "Fokussierte Instanz schließen"),
-        ("goHome", "Go Home", "Zur Startseite"),
-        ("navigateVirtualFileSystemNode", "Navigate File System Node", "Dateisystemknoten navigieren"),
-    ])
-}
-//#endregion 🔖️CommandLabels
+// 🗣️ Every operation/view-action/shell-action's German translation now lives directly at its
+// `.operation()`/`.view_action()`/`.shell_action()` call site in `create_space_app`'s manifest (see
+// `🔖️SpaceManifest` below) — this used to be a separate `s_studio_action_labels` id->label overlay
+// map, deleted along with `AppLabelsOverlay`.
 
 //#region 🔖️Panels
 #[derive(Default)]
@@ -414,7 +369,7 @@ fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> U
         .collect::<Vec<_>>();
     let app = node.app;
     let description = app.as_ref().and_then(|entry| (!entry.yields.is_empty()).then(|| entry.yields.clone()));
-    let mut item = tree_item_desc(format!("s-play-catalogue.document.{id_path}"), label, description);
+    let mut item = tree_item_desc(format!("s-play-catalogue.document.{id_path}"), Label::data(label), description);
     item.icon_id = app.as_ref().and_then(|entry| IconName::from_str(&entry.app_id));
     item.default_open = (!children.is_empty()).then_some(true);
     if let Some(app) = &app {
@@ -435,7 +390,7 @@ fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> U
 /// breadcrumb/primary output kind. Replaces the pre-merge `list_os_workflows()`
 /// (`BUILTIN_WORKFLOWS`/`EXTENSION_WORKFLOWS`, deleted) + `SpacePanelState.workflows` cache fallback —
 /// always live, never stale.
-fn build_catalogue_tree(labels: &SStudioLabels) -> UiNode {
+fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> UiNode {
     let mut document = AppCatalogueNode::default();
     for entry in workflow_palette() {
         if entry.app_id == S_PLAY_APP_ID {
@@ -448,7 +403,11 @@ fn build_catalogue_tree(labels: &SStudioLabels) -> UiNode {
         for segment in &doc_path {
             node = node.children.entry(segment.clone()).or_default();
         }
-        node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label: entry.label, yields });
+        // 🗺️ `AppPaletteEntry.label` is a full locale×terminology `LocalizedLabel` now; the catalogue
+        // has no app-specific terminology axis of its own, so it always projects the `Native` cell at
+        // the Studio app's own active locale.
+        let label = entry.label.resolve(Terminology::Native, locale).to_string();
+        node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label, yields });
     }
     let items = document
         .children
@@ -484,7 +443,7 @@ fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> U
                 .iter()
                 .map(|option| UiSelectItem {
                     value: option.clone(),
-                    label: option.clone(),
+                    label: Label::data(option.clone()),
                 })
                 .collect(),
             placeholder: None,
@@ -609,7 +568,7 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                 .map(|option| {
                     UiNode::Field(UiFieldNode {
                         id: format!("s-play-parameters.{id}.option.{option}"),
-                        label: option.clone(),
+                        label: Label::data(option.clone()),
                         presence: UiPresence::default(),
                         child: Box::new(UiNode::Button(UiButtonNode {
                             id: Some(format!("s-play-parameters.{id}.option.{option}.remove")),
@@ -663,7 +622,7 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
 fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> UiNode {
     let mut children = vec![UiSectionNode {
         id: "s-play-parameters.header".into(),
-        label: Some(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL.into()),
+        label: Some(Label::data(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL)),
         default_open: Some(true),
         presence: UiPresence::default(),
         children: vec![
@@ -676,7 +635,7 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
                 presence: UiPresence::default(),
                 menu: None,
             }),
-            ui_text(format!("{} {}", projection.parameters.len(), labels.parameter_count_suffix)),
+            ui_text(Label::data(format!("{} {}", projection.parameters.len(), labels.parameter_count_suffix.as_str()))),
         ],
         menu: None,
     }];
@@ -737,12 +696,12 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
         }));
         children.push(UiSectionNode {
             id: format!("s-play-parameters.{parameter_id}"),
-            label: Some(match parameter {
+            label: Some(Label::data(match parameter {
                 OsParameter::Numeric { name, .. }
                 | OsParameter::Categorical { name, .. }
                 | OsParameter::Toggle { name, .. }
                 | OsParameter::Text { name, .. } => name.clone(),
-            }),
+            })),
             default_open: Some(true),
             presence: UiPresence::default(),
             children: parameter_children,
@@ -759,10 +718,10 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
     let selected_node_ids = &config.selected_node_ids;
     let mut children = vec![UiSectionNode {
         id: "s-play-inspector.header".into(),
-        label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+        label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
         default_open: Some(true),
         presence: UiPresence::default(),
-        children: vec![ui_text(format!("{} {}", selected_node_ids.len(), term_labels.media_node_count_label))],
+        children: vec![ui_text(Label::data(format!("{} {}", selected_node_ids.len(), term_labels.media_node_count_label.as_str())))],
         menu: None,
     }];
     let nodes: Vec<&WorkflowNode> = selected_node_ids
@@ -800,7 +759,9 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
         }
         node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
             id: "s-play-inspector.media-node.x".into(),
-            label: "X".into(),
+            // 📊️ Coordinate-axis notation, identical in every locale — genuine runtime/technical data,
+            // not translatable prose (see `Label::data` doc comment).
+            label: Label::data("X"),
             child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
                 id: "s-play-inspector.media-node.x.input".into(),
                 input_kind: "number".into(),
@@ -828,7 +789,7 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
         }));
         node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
             id: "s-play-inspector.media-node.y".into(),
-            label: "Y".into(),
+            label: Label::data("Y"),
             child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
                 id: "s-play-inspector.media-node.y.input".into(),
                 input_kind: "number".into(),
@@ -859,7 +820,7 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
             label: Some(if selected_node_ids.len() == 1 {
                 term_labels.workflow_node.into()
             } else {
-                format!("{} ({})", term_labels.workflow_nodes, selected_node_ids.len())
+                Label::data(format!("{} ({})", term_labels.workflow_nodes.as_str(), selected_node_ids.len()))
             }),
             default_open: Some(true),
             presence: UiPresence::default(),
@@ -874,24 +835,24 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
         let program_uniform = ui_inspector_all_equal(&programs);
         let app_uniform = ui_inspector_all_equal(&apps);
         let mut instance_fields = vec![
-            ui_text(format!(
+            ui_text(Label::data(format!(
                 "{}: {}",
-                term_labels.program_prefix,
+                term_labels.program_prefix.as_str(),
                 if program_uniform {
                     programs.first().cloned().unwrap_or_default()
                 } else {
-                    term_labels.mixed_placeholder.into()
+                    term_labels.mixed_placeholder.as_str().to_string()
                 }
-            )),
-            ui_text(format!(
+            ))),
+            ui_text(Label::data(format!(
                 "{}: {}",
-                term_labels.app_prefix,
+                term_labels.app_prefix.as_str(),
                 if app_uniform {
                     apps.first().cloned().unwrap_or_default()
                 } else {
-                    term_labels.mixed_placeholder.into()
+                    term_labels.mixed_placeholder.as_str().to_string()
                 }
-            )),
+            ))),
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: "s-play-inspector.app-instance.label".into(),
                 label: term_labels.label.into(),
@@ -922,7 +883,7 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
             }),
         ];
         if selected_node_ids.len() == 1 {
-            instance_fields.insert(2, ui_text(format!("{}: {}", term_labels.instance_id_prefix, selected_node_ids[0])));
+            instance_fields.insert(2, ui_text(Label::data(format!("{}: {}", term_labels.instance_id_prefix.as_str(), selected_node_ids[0]))));
         }
         if selected_node_ids.len() == 1 {
             if let Some(node) = nodes.first() {
@@ -953,17 +914,17 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
                         for parameter in compatible {
                             items.push(UiSelectItem {
                                 value: parameter_entity_id(parameter).into(),
-                                label: match parameter {
+                                label: Label::data(match parameter {
                                     OsParameter::Numeric { name, .. }
                                     | OsParameter::Categorical { name, .. }
                                     | OsParameter::Toggle { name, .. }
                                     | OsParameter::Text { name, .. } => name.clone(),
-                                },
+                                }),
                             });
                         }
                         instance_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                             id: format!("s-play-inspector.app-parameter.{}", field_spec.field_path),
-                            label: field_spec.label.clone(),
+                            label: Label::data(field_spec.label.clone()),
                             child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(),
                                 id: format!(
                                     "s-play-inspector.app-parameter.{}.select",
@@ -994,11 +955,11 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
                                 .iter()
                                 .find(|entry| entry.id() == binding.parameter_id)
                             {
-                                instance_fields.push(ui_text(format!(
+                                instance_fields.push(ui_text(Label::data(format!(
                                     "{}: {}",
-                                    term_labels.bound_value_prefix,
+                                    term_labels.bound_value_prefix.as_str(),
                                     os_parameter_value(parameter)
-                                )));
+                                ))));
                             }
                         }
                     }
@@ -1010,7 +971,7 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
             label: Some(if selected_node_ids.len() == 1 {
                 term_labels.app_instance.into()
             } else {
-                format!("{} ({})", term_labels.app_instances, selected_node_ids.len())
+                Label::data(format!("{} ({})", term_labels.app_instances.as_str(), selected_node_ids.len()))
             }),
             default_open: Some(true),
             presence: UiPresence::default(),
@@ -1635,26 +1596,16 @@ impl DocumentApp for SpaceApp {
             S_PLAY_BODY_WORKFLOW => render_workflow(projection, config, labels),
             S_PLAY_BODY_MEDIA_VFS => render_media_vfs(projection, labels),
             S_PLAY_BODY_COMPILED_DAG => render_compiled_dag(projection),
-            S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(labels),
+            S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(labels, space_locale(config)),
             S_PLAY_PARAMETERS_BODY_KEY => build_parameters_tree(projection, labels),
             S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(projection, config, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
     fn window_measures(&self, doc: &DocumentView<'_, OsProjection>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<SStudioLabels>(cfg.projection);
         HashMap::from([(S_PLAY_WINDOW_WORKFLOW.into(), workflow_measures(cfg.projection, &doc.projection.workflow.nodes, labels))])
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, SpaceConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<SStudioLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(S_PLAY_WINDOW_WORKFLOW, labels.window_workflow)
-            .window_kind_label(S_PLAY_WINDOW_MEDIA_VFS, labels.window_media_vfs)
-            .window_kind_label(S_PLAY_WINDOW_COMPILED_DAG, labels.window_compiled_dag)
-            .action_labels(s_studio_action_labels(is_de))
     }
 
     fn context_menu(
@@ -1759,91 +1710,91 @@ pub fn create_space_app() -> App {
     let config = SpaceConfig::default();
     let engagement = workflow_engagement(&config, projection.workflow.nodes.len());
     let measures = workflow_measures(&config, &projection.workflow.nodes, resolve_labels::<SStudioLabels>(&config));
-    let builder = App::builder(S_PLAY_APP_ID, "Space").document(["semio", "s", "studio"])
+    let builder = App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space")).document(["semio", "s", "studio"])
         .icon_id("s")
-        .mode("main", "Space", "globe")
+        .mode("main", LocalizedLabel::native("Space", "Space"), "globe")
         .default_mode_id("main")
-        .window_kind(S_PLAY_WINDOW_WORKFLOW, "Workflow", S_PLAY_BODY_WORKFLOW, SurfaceKind::NodeGraph, "graph-media")
-        .window_kind(S_PLAY_WINDOW_MEDIA_VFS, "Media VFS", S_PLAY_BODY_MEDIA_VFS, SurfaceKind::VirtualFileSystem, "folder")
+        .window_kind(S_PLAY_WINDOW_WORKFLOW, LocalizedLabel::native("Workflow", "Workflow"), S_PLAY_BODY_WORKFLOW, SurfaceKind::NodeGraph, "graph-media")
+        .window_kind(S_PLAY_WINDOW_MEDIA_VFS, LocalizedLabel::native("Media VFS", "Media-VFS"), S_PLAY_BODY_MEDIA_VFS, SurfaceKind::VirtualFileSystem, "folder")
         .window_kind(
             S_PLAY_WINDOW_COMPILED_DAG,
-            "Compiled DAG",
+            LocalizedLabel::native("Compiled DAG", "Kompilierter DAG"),
             S_PLAY_BODY_COMPILED_DAG,
             SurfaceKind::NodeGraph,
             "git-merge",
         )
         .panel_tab(
             S_PLAY_CATALOGUE_TAB_ID,
-            FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+            LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
             PanelGroup::Workbench,
             S_PLAY_CATALOGUE_BODY_KEY,
         )
         .panel_tab(
             S_PLAY_PARAMETERS_TAB_ID,
-            FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+            LocalizedLabel::native(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, "Parameter"),
             PanelGroup::Workbench,
             S_PLAY_PARAMETERS_BODY_KEY,
         )
         .panel_tab(
             S_PLAY_INSPECTOR_TAB_ID,
-            FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+            LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
             PanelGroup::Details,
             S_PLAY_INSPECTOR_BODY_KEY,
         )
         .default_layout(space_play_layout())
-        .operation("patchParameter", "Patch Parameter")
-        .operation("addParameter", "Add Parameter")
-        .operation("removeParameter", "Remove Parameter")
-        .operation("spawnApp", "Spawn App")
-        .operation("moveMediaNode", "Move Media Node")
-        .operation("connectMediaPorts", "Connect Media Ports")
-        .operation("disconnectMediaEdge", "Disconnect Media Edge")
-        .action_with(ActionDefinition::new_catalog("removeAppInstance", "Remove App Instance", ActionKind::Operation).with_category("selection"))
-        .operation("deleteSelection", "Delete Selection")
-        .action_with(ActionDefinition::new_catalog("copyAppInstance", "Copy App Instance", ActionKind::Operation).with_category("transfer"))
-        .action_with(ActionDefinition::new_catalog("duplicateAppInstance", "Duplicate App Instance", ActionKind::Operation).with_category("create"))
-        .action_with(ActionDefinition::new_catalog("pasteAppInstance", "Paste App Instance", ActionKind::Operation).with_category("transfer"))
-        .action_with(ActionDefinition::new_catalog("renameAppInstance", "Rename App Instance", ActionKind::Operation).with_category("settings"))
-        .operation("patchMediaNodes", "Patch Media Nodes")
-        .operation("patchAppInstances", "Patch App Instances")
-        .operation("bindParameterField", "Bind Parameter Field")
-        .operation("unbindParameterField", "Unbind Parameter Field")
-        .action_with(ActionDefinition::new_catalog("reorganizeWorkflow", "Reorganize Workflow", ActionKind::Operation).with_category("transform"))
-        .operation("workflowEngagementSubmit", "Workflow Engagement Submit")
-        .operation("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit")
-        .operation("nodeGraphEdit", "Edit Workflow")
-        .view_action("setActivePanelTab", "Set Active Panel Tab")
-        .view_action("selectInstance", "Select Instance")
-        .view_action("nodeGraphSelect", "Select Graph Node")
-        .action_with(ActionDefinition::new_catalog("setMediaNodeSelection", "Set Media Node Selection", ActionKind::View).with_category("selection"))
-        .view_action("nodeGraphHover", "Hover Graph Node")
-        .view_action("textHover", "Text Hover")
-        .view_action("nodeGraphViewport", "Set Graph Viewport")
-        .view_action("presenceHeartbeat", "Presence Heartbeat")
-        .view_action("setAppInstanceSelection", "Set App Instance Selection")
-        .view_action("workflowEngagementInput", "Workflow Engagement Input")
-        .view_action("compiledDagEngagementInput", "Compiled DAG Engagement Input")
-        .shell_action("setActiveExample", "Set Active Example")
-        .shell_action("exportMedia", "Export Media")
-        .shell_action("importMedia", "Import Media")
-        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importMediaPayload", "Import Media Payload", ActionKind::Shell) })
-        .shell_action("exportStudioPack", "Export Studio Pack")
-        .shell_action("exportStudioDsl", "Export Studio DSL")
-        .shell_action("importSpacePack", "Import Studio Pack")
-        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importSpacePackPayload", "Import Studio Pack Payload", ActionKind::Shell) })
-        .shell_action("openSpace", "Open Studio")
-        .action_with(ActionDefinition::new_catalog("openInstance", "Open Instance", ActionKind::Shell).with_category("open"))
-        .shell_action("closeFocusedInstance", "Close Focused Instance")
-        .shell_action("goHome", "Go Home")
-        .shell_action("navigateVirtualFileSystemNode", "Navigate File System Node")
+        .operation("patchParameter", LocalizedLabel::native("Patch Parameter", "Parameter aktualisieren"))
+        .operation("addParameter", LocalizedLabel::native("Add Parameter", "Parameter hinzufügen"))
+        .operation("removeParameter", LocalizedLabel::native("Remove Parameter", "Parameter entfernen"))
+        .operation("spawnApp", LocalizedLabel::native("Spawn App", "App erzeugen"))
+        .operation("moveMediaNode", LocalizedLabel::native("Move Media Node", "Medienknoten verschieben"))
+        .operation("connectMediaPorts", LocalizedLabel::native("Connect Media Ports", "Medien-Ports verbinden"))
+        .operation("disconnectMediaEdge", LocalizedLabel::native("Disconnect Media Edge", "Medienverbindung trennen"))
+        .action_with(ActionDefinition::new_catalog("removeAppInstance", LocalizedLabel::native("Remove App Instance", "App-Instanz entfernen"), ActionKind::Operation).with_category("selection"))
+        .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+        .action_with(ActionDefinition::new_catalog("copyAppInstance", LocalizedLabel::native("Copy App Instance", "App-Instanz kopieren"), ActionKind::Operation).with_category("transfer"))
+        .action_with(ActionDefinition::new_catalog("duplicateAppInstance", LocalizedLabel::native("Duplicate App Instance", "App-Instanz duplizieren"), ActionKind::Operation).with_category("create"))
+        .action_with(ActionDefinition::new_catalog("pasteAppInstance", LocalizedLabel::native("Paste App Instance", "App-Instanz einfügen"), ActionKind::Operation).with_category("transfer"))
+        .action_with(ActionDefinition::new_catalog("renameAppInstance", LocalizedLabel::native("Rename App Instance", "App-Instanz umbenennen"), ActionKind::Operation).with_category("settings"))
+        .operation("patchMediaNodes", LocalizedLabel::native("Patch Media Nodes", "Medienknoten aktualisieren"))
+        .operation("patchAppInstances", LocalizedLabel::native("Patch App Instances", "App-Instanzen aktualisieren"))
+        .operation("bindParameterField", LocalizedLabel::native("Bind Parameter Field", "Parameterfeld verknüpfen"))
+        .operation("unbindParameterField", LocalizedLabel::native("Unbind Parameter Field", "Parameterfeld lösen"))
+        .action_with(ActionDefinition::new_catalog("reorganizeWorkflow", LocalizedLabel::native("Reorganize Workflow", "Workflow neu anordnen"), ActionKind::Operation).with_category("transform"))
+        .operation("workflowEngagementSubmit", LocalizedLabel::native("Workflow Engagement Submit", "Workflow-Eingabe bestätigen"))
+        .operation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen"))
+        .operation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten"))
+        .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"))
+        .view_action("selectInstance", LocalizedLabel::native("Select Instance", "Instanz auswählen"))
+        .view_action("nodeGraphSelect", LocalizedLabel::native("Select Graph Node", "Graphknoten auswählen"))
+        .action_with(ActionDefinition::new_catalog("setMediaNodeSelection", LocalizedLabel::native("Set Media Node Selection", "Medienknoten-Auswahl festlegen"), ActionKind::View).with_category("selection"))
+        .view_action("nodeGraphHover", LocalizedLabel::native("Hover Graph Node", "Graphknoten hovern"))
+        .view_action("textHover", LocalizedLabel::native("Text Hover", "Text-Hover"))
+        .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansichtsfenster festlegen"))
+        .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Anwesenheits-Heartbeat"))
+        .view_action("setAppInstanceSelection", LocalizedLabel::native("Set App Instance Selection", "App-Instanz-Auswahl festlegen"))
+        .view_action("workflowEngagementInput", LocalizedLabel::native("Workflow Engagement Input", "Workflow-Eingabe"))
+        .view_action("compiledDagEngagementInput", LocalizedLabel::native("Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe"))
+        .shell_action("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+        .shell_action("exportMedia", LocalizedLabel::native("Export Media", "Medien exportieren"))
+        .shell_action("importMedia", LocalizedLabel::native("Import Media", "Medien importieren"))
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importMediaPayload", LocalizedLabel::native("Import Media Payload", "Medien-Payload importieren"), ActionKind::Shell) })
+        .shell_action("exportStudioPack", LocalizedLabel::native("Export Studio Pack", "Studio-Paket exportieren"))
+        .shell_action("exportStudioDsl", LocalizedLabel::native("Export Studio DSL", "Studio-DSL exportieren"))
+        .shell_action("importSpacePack", LocalizedLabel::native("Import Studio Pack", "Studio-Paket importieren"))
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importSpacePackPayload", LocalizedLabel::native("Import Studio Pack Payload", "Studio-Paket-Payload importieren"), ActionKind::Shell) })
+        .shell_action("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"))
+        .action_with(ActionDefinition::new_catalog("openInstance", LocalizedLabel::native("Open Instance", "Instanz öffnen"), ActionKind::Shell).with_category("open"))
+        .shell_action("closeFocusedInstance", LocalizedLabel::native("Close Focused Instance", "Fokussierte Instanz schließen"))
+        .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"))
+        .shell_action("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"))
         // 📝️ Staged argument form for parameter creation (spawnApp/exportMedia stay context/registry-driven).
         .action_args("addParameter", vec![
-            ActionArgDef::text("name", "Name").default_value("Parameter"),
-            ActionArgDef::select("type", "Type", vec![
-                ActionArgOption::new("numeric", "Numeric"),
-                ActionArgOption::new("categorical", "Categorical"),
-                ActionArgOption::new("toggle", "Toggle"),
-                ActionArgOption::new("text", "Text"),
+            ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("Parameter"),
+            ActionArgDef::select("type", LocalizedLabel::native("Type", "Typ"), vec![
+                ActionArgOption::new("numeric", LocalizedLabel::native("Numeric", "Numerisch")),
+                ActionArgOption::new("categorical", LocalizedLabel::native("Categorical", "Kategorisch")),
+                ActionArgOption::new("toggle", LocalizedLabel::native("Toggle", "Schalter")),
+                ActionArgOption::new("text", LocalizedLabel::native("Text", "Text")),
             ]).default_value("numeric"),
         ])
         // 📇️ Per-window action scoping — the Workflow (NodeGraph) window owns all graph/instance/
@@ -1893,7 +1844,10 @@ pub fn create_space_app() -> App {
     let mut app = app.workflow("s", "S Studio", "studio");
     for (id, label) in S_STUDIO_EXAMPLES {
         let json = os_document_to_json(&parse_demo_space_document()).expect("serialize demo studio document");
-        app = app.example(*id, *label, json, "file-text");
+        // 📊️ `label` is sourced from `space::S_STUDIO_EXAMPLES` (a plain `&str` fixture list owned by
+        // the sibling non-`ui` crate, out of this ticket's scope) — no per-locale split is available
+        // at the source, so it is genuine runtime data here, not compile-checked native copy.
+        app = app.example(*id, LocalizedLabel::data(*label), json, "file-text");
     }
     app
 }
@@ -1938,10 +1892,12 @@ mod tests {
     /// seeding (both deleted). Every declared port additionally carries the implicit `document:in`/
     /// `document:out` pair (see `AppIo::all_ports`).
     fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str, ports: Vec<MediaPortSpec>) -> AppDefinition {
-        let definition = App::builder(app_id, label)
+        // 📊️ `label` is a synthetic per-call test fixture name (not real translatable UI copy), so it
+        // is wrapped as runtime data rather than compile-checked native copy.
+        let definition = App::builder(app_id, LocalizedLabel::data(label))
             .document(document.iter().map(|segment| segment.to_string()))
-            .mode("edit", "Edit", "pencil")
-            .window_kind("main", "Main", format!("{app_id}.main"), SurfaceKind::Canvas2d, "square-pen")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
+            .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), SurfaceKind::Canvas2d, "square-pen")
             .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() }).with_ports(ports))
             .build_definition();
         register_app_io(plugin_id, &definition);
@@ -2383,7 +2339,7 @@ mod tests {
     fn catalogue_tree_nests_apps_by_canonical_document() {
         seed_catalogue_apps();
         let config = SpaceConfig::default();
-        let tree = build_catalogue_tree(resolve_labels::<SStudioLabels>(&config));
+        let tree = build_catalogue_tree(resolve_labels::<SStudioLabels>(&config), space_locale(&config));
         let json = serde_json::to_string(&tree).unwrap();
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.2d"));
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.3d"));

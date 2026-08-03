@@ -12,7 +12,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     localized_label_map, text_identifier_occurrences_json, tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
     ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest, ConfigView, DocumentApp,
-    DocumentView, Emit, LocaleLabels, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, MediaClass, MediaForm, MediaType, PanelTreeBuilder, ArtifactKindSpec,
+    DocumentView, Emit, LocaleLabels, LocalizedLabel, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, MediaClass, MediaForm, MediaType, PanelTreeBuilder, ArtifactKindSpec,
     TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -960,7 +960,7 @@ fn jack_layout() -> WindowLayout {
 
 pub fn create_trinity_jack_app() -> App {
     App::from_builder(
-        App::builder(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack").document(["semio", "trinity", "jack"])
+        App::builder(TRINITY_JACK_PLAY_APP_ID, LocalizedLabel::native("Trinity Jack", "Trinity Jack")).document(["semio", "trinity", "jack"])
             .artifact_kind(ArtifactKindSpec {
                 id: "graph.trinity".into(),
                 name: "Trinity Graph".into(),
@@ -974,66 +974,66 @@ pub fn create_trinity_jack_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("trinity")
-            .mode("explore", "Explore", "focus")
+            .mode("explore", LocalizedLabel::native("Explore", "Erkunden"), "focus")
             .default_mode_id("explore")
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_GRAPH, "Nakagin Graph", TRINITY_JACK_PLAY_BODY_GRAPH, SurfaceKind::NodeGraph, "graph-dag")
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_EDITOR, "Jack Query", TRINITY_JACK_PLAY_BODY_EDITOR, SurfaceKind::TextEditor, "document-jack")
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_RESULTS, "Results", TRINITY_JACK_PLAY_BODY_RESULTS, SurfaceKind::Table, "table-2")
+            .window_kind(TRINITY_JACK_PLAY_WINDOW_GRAPH, LocalizedLabel::native("Nakagin Graph", "Nakagin-Graph"), TRINITY_JACK_PLAY_BODY_GRAPH, SurfaceKind::NodeGraph, "graph-dag")
+            .window_kind(TRINITY_JACK_PLAY_WINDOW_EDITOR, LocalizedLabel::native("Jack Query", "Jack-Abfrage"), TRINITY_JACK_PLAY_BODY_EDITOR, SurfaceKind::TextEditor, "document-jack")
+            .window_kind(TRINITY_JACK_PLAY_WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), TRINITY_JACK_PLAY_BODY_RESULTS, SurfaceKind::Table, "table-2")
             .default_layout(jack_layout())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 TRINITY_JACK_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 TRINITY_JACK_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 TRINITY_JACK_PLAY_BODY_INSPECTION,
             )
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
-            .operation("patchNodes", "Patch Nodes")
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("runQuery", "Run Jack Query", ActionKind::Operation).with_category("methods"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("loadExampleQuery", "Load Example Query", ActionKind::Operation).with_category("open"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setActiveExample", "Set Active Example", ActionKind::Operation).with_category("mode"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).with_category("selection"))
+            .operation("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("runQuery", LocalizedLabel::native("Run Jack Query", "Jack-Abfrage ausführen"), ActionKind::Operation).with_category("methods"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Operation).with_category("open"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Operation).with_category("mode"))
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
-            .view_action("setSelection", "Set Selection")
-            .view_action("setViewport", "Set Graph Viewport")
-            .view_action("textEdit", "Edit Jack Query")
-            .view_action("textSelect", "Select Jack Query Text")
-            .view_action("requestCompletions", "Request Completions")
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("formatDocument", "Format Jack Query", ActionKind::View).with_category("utilities"))
-            .view_action("setLodMode", "Set LOD Mode")
-            .view_action("editorEngagementInput", "Editor Engagement Input")
-            .view_action("graphEngagementInput", "Graph Engagement Input")
-            .view_action("resultsEngagementInput", "Results Engagement Input")
-            .view_action("graphPointerDown", "Graph Pointer Down")
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Operation) })
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
+            .view_action("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"))
+            .view_action("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"))
+            .view_action("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::View).with_category("utilities"))
+            .view_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"))
+            .view_action("editorEngagementInput", LocalizedLabel::native("Editor Engagement Input", "Editor-Eingabe"))
+            .view_action("graphEngagementInput", LocalizedLabel::native("Graph Engagement Input", "Graph-Eingabe"))
+            .view_action("resultsEngagementInput", LocalizedLabel::native("Results Engagement Input", "Ergebnis-Eingabe"))
+            .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
             // 📝️ Staged argument forms for the panel-visible preset loaders.
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Fixture", vec![
-                    ActionArgOption::new("nakagin", "Nakagin — Table"),
-                    ActionArgOption::new("branch-chain", "Branch — Graph"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Fixture", "Fixtur"), vec![
+                    ActionArgOption::new("nakagin", LocalizedLabel::native("Nakagin — Table", "Nakagin — Tabelle")),
+                    ActionArgOption::new("branch-chain", LocalizedLabel::native("Branch — Graph", "Branch — Graph")),
                 ]).required(),
             ])
             .action_args("loadExampleQuery", vec![
-                ActionArgDef::select("query", "Example", vec![
-                    ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name", "Where Or"),
-                    ActionArgOption::new("MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' RETURN a, r, b", "Return Graph"),
-                    ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'demo-label'", "Set Label"),
-                    ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 'b' SET a.x = 300, a.y = 120", "Set Position"),
-                    ActionArgOption::new("CREATE (n:Piece)", "Create Node"),
-                    ActionArgOption::new("MATCH (a:Piece), (b:Piece) WHERE a.name = 'b' AND b.name != 'b' CREATE (a)-[:Connection]->(b)", "Create Edge"),
-                    ActionArgOption::new("MATCH (n:Piece) WHERE n.name = 'b' DELETE n", "Delete Leaf"),
-                    ActionArgOption::new("MERGE (x:Piece)-[:Connection]->(y:Piece)", "Merge Edge"),
+                ActionArgDef::select("query", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name", LocalizedLabel::native("Where Or", "Wo-Oder")),
+                    ActionArgOption::new("MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' RETURN a, r, b", LocalizedLabel::native("Return Graph", "Graph zurückgeben")),
+                    ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'demo-label'", LocalizedLabel::native("Set Label", "Label setzen")),
+                    ActionArgOption::new("MATCH (a:Piece) WHERE a.name = 'b' SET a.x = 300, a.y = 120", LocalizedLabel::native("Set Position", "Position setzen")),
+                    ActionArgOption::new("CREATE (n:Piece)", LocalizedLabel::native("Create Node", "Knoten erstellen")),
+                    ActionArgOption::new("MATCH (a:Piece), (b:Piece) WHERE a.name = 'b' AND b.name != 'b' CREATE (a)-[:Connection]->(b)", LocalizedLabel::native("Create Edge", "Kante erstellen")),
+                    ActionArgOption::new("MATCH (n:Piece) WHERE n.name = 'b' DELETE n", LocalizedLabel::native("Delete Leaf", "Blatt löschen")),
+                    ActionArgOption::new("MERGE (x:Piece)-[:Connection]->(y:Piece)", LocalizedLabel::native("Merge Edge", "Kante zusammenführen")),
                 ]).required(),
             ])
             .keybinding("mod+z", "undo")
@@ -1041,7 +1041,7 @@ pub fn create_trinity_jack_app() -> App {
             .keybinding("mod+alt+s", "commitCheckpoint")
             .io(jack_io()),
     )
-    .example("nakagin", "Nakagin", default_fixture().print_dsl(), "building")
+    .example("nakagin", LocalizedLabel::native("Nakagin", "Nakagin"), default_fixture().print_dsl(), "building")
     .workflow("trinity", "Trinity", "graph")
 }
 //#endregion 🔖️Manifest

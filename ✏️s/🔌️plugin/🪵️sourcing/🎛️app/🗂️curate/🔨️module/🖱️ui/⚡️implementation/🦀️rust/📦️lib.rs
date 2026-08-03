@@ -98,21 +98,21 @@ fn selection_json_for(cfg: &SourcingCurateConfig) -> String {
 app_labels! {
     /// 🗣️ Complete UI label set for the curate app; one field per label makes every locale combination compile-checked.
     struct SourcingLabels {
-        window_pool: &'static str = en: "Pool", de: "Pool";
-        window_curated: &'static str = en: "Curated", de: "Kuratiert";
-        window_preview: &'static str = en: "Preview", de: "Vorschau";
-        window_grid: &'static str = en: "Grid", de: "Raster";
-        mode_curate: &'static str = en: "Curate", de: "Kuratieren";
-        search_placeholder: &'static str = en: "Search…", de: "Suchen…";
-        all_typologies: &'static str = en: "All Typologies", de: "Alle Typologien";
-        col_name: &'static str = en: "Name", de: "Name";
-        col_module: &'static str = en: "Module", de: "Modul";
-        col_typology: &'static str = en: "Typology", de: "Typologie";
-        col_availability: &'static str = en: "Availability", de: "Verfügbarkeit";
-        col_curated: &'static str = en: "Curated", de: "Kuratiert";
-        col_count: &'static str = en: "Count", de: "Anzahl";
-        remove: &'static str = en: "Remove", de: "Entfernen";
-        no_selection: &'static str = en: "No selection", de: "Keine Auswahl";
+        window_pool: native_en "Pool", native_de "Pool", reuse_en "Pool", reuse_de "Pool";
+        window_curated: native_en "Curated", native_de "Kuratiert", reuse_en "Curated", reuse_de "Kuratiert";
+        window_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        window_grid: native_en "Grid", native_de "Raster", reuse_en "Grid", reuse_de "Raster";
+        mode_curate: native_en "Curate", native_de "Kuratieren", reuse_en "Curate", reuse_de "Kuratieren";
+        search_placeholder: native_en "Search…", native_de "Suchen…", reuse_en "Search…", reuse_de "Suchen…";
+        all_typologies: native_en "All Typologies", native_de "Alle Typologien", reuse_en "All Typologies", reuse_de "Alle Typologien";
+        col_name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        col_module: native_en "Module", native_de "Modul", reuse_en "Module", reuse_de "Modul";
+        col_typology: native_en "Typology", native_de "Typologie", reuse_en "Typology", reuse_de "Typologie";
+        col_availability: native_en "Availability", native_de "Verfügbarkeit", reuse_en "Availability", reuse_de "Verfügbarkeit";
+        col_curated: native_en "Curated", native_de "Kuratiert", reuse_en "Curated", reuse_de "Kuratiert";
+        col_count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
+        remove: native_en "Remove", native_de "Entfernen", reuse_en "Remove", reuse_de "Entfernen";
+        no_selection: native_en "No selection", native_de "Keine Auswahl", reuse_en "No selection", reuse_de "Keine Auswahl";
     }
 }
 //#endregion 🔖️Terminology

@@ -33,18 +33,18 @@ use semio_framework_plugin::{
     ui_inspector_vec3_group, ui_text, world3d_camera_projection_json, world3d_chunking_json,
     world3d_environment_json, world3d_mesh_id_from_url, world3d_projection_action_moves_pose,
     world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json,
-    world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabelsOverlay,
-    AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Media, MediaClass, MediaError, MediaForm,
+    world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels,
+    ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, IconName, SET_ACTIVE_UTILITY_ACTION_ID,
-    UiFieldNode, UiGroupNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
+    Terminology, UiFieldNode, UiGroupNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
     UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement,
     AppActionRegistry, ContextMenuItemSpec, ContextMenuRequest, Menu,
     WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode,
     WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure,
     WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, localized_label_map, tree_item,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, tree_item,
 };
 use semio_framework_core::kernel::HostEffect;
 use kernel_3d_engine::{BrepKernel, GeometryHandle};
@@ -919,257 +919,95 @@ fn build_world_scene_for_pane(
     )
 }
 
-/// 🗣️ Complete UI label set for the CAD app; one field per label makes every terminology×locale combination compile-checked.
 //#endregion 🔖️Document
 
 //#region 🔖️Terminology
-struct CadLabels {
-    // entity nouns — remapped under the "reuse" terminology
-    object: &'static str,
-    objects: &'static str,
-    primitive: &'static str,
-    // model-definition pane / document-tree section names
-    pane_shape: &'static str,
-    pane_building: &'static str,
-    pane_energy: &'static str,
-    pane_structure_classic: &'static str,
-    references: &'static str,
-    nodes: &'static str,
-    // catalogue
-    typologies: &'static str,
-    typology_box: &'static str,
-    typology_slab: &'static str,
-    typology_column: &'static str,
-    typology_beam: &'static str,
-    typology_wall: &'static str,
-    typology_external_wall: &'static str,
-    // inspector group titles
-    reference: &'static str,
-    node: &'static str,
-    // tree item actions
-    hide: &'static str,
-    show: &'static str,
-    lock: &'static str,
-    unlock: &'static str,
-    duplicate: &'static str,
-    delete: &'static str,
-    // inspector field chrome
-    label: &'static str,
-    typology: &'static str,
-    hidden: &'static str,
-    locked: &'static str,
-    position: &'static str,
-    scale: &'static str,
-    rotation: &'static str,
-    slot: &'static str,
-    kind: &'static str,
-    id: &'static str,
-    source: &'static str,
-    width_world: &'static str,
-    // catalogue / tree chrome
-    none_placeholder: &'static str,
-    // properties fallback + engagement chrome
-    schema: &'static str,
-    utility: &'static str,
-    action_placeholder: &'static str,
-    ok: &'static str,
-    selected: &'static str,
-    step: &'static str,
+semio_framework_plugin::app_labels! {
+    /// 🗣️ Complete UI label set for the CAD app; one field per label makes every terminology×locale combination compile-checked.
+    struct CadLabels {
+        // entity nouns — remapped under the "reuse" terminology
+        object: native_en "Object", native_de "Objekt", reuse_en "Building component", reuse_de "Baukomponente";
+        objects: native_en "Objects", native_de "Objekte", reuse_en "Building components", reuse_de "Baukomponenten";
+        primitive: native_en "Primitive", native_de "Grundkörper", reuse_en "Component part", reuse_de "Bauteil";
+        // model-definition pane / document-tree section names
+        pane_shape: native_en "Shape", native_de "Form", reuse_en "Shape", reuse_de "Form";
+        pane_building: native_en "Building", native_de "Gebäude", reuse_en "Building", reuse_de "Gebäude";
+        pane_energy: native_en "Energy", native_de "Energie", reuse_en "Energy", reuse_de "Energie";
+        pane_structure_classic: native_en "Structure Classic", native_de "Tragwerk Klassisch", reuse_en "Structure Classic", reuse_de "Tragwerk Klassisch";
+        references: native_en "References", native_de "Referenzen", reuse_en "References", reuse_de "Referenzen";
+        nodes: native_en "Nodes", native_de "Knoten", reuse_en "Nodes", reuse_de "Knoten";
+        // catalogue
+        typologies: native_en "Typologies", native_de "Typologien", reuse_en "Typologies", reuse_de "Typologien";
+        typology_box: native_en "Box", native_de "Quader", reuse_en "Box", reuse_de "Quader";
+        typology_slab: native_en "Slab", native_de "Platte", reuse_en "Slab", reuse_de "Platte";
+        typology_column: native_en "Column", native_de "Stütze", reuse_en "Column", reuse_de "Stütze";
+        typology_beam: native_en "Beam", native_de "Träger", reuse_en "Beam", reuse_de "Träger";
+        typology_wall: native_en "Wall", native_de "Wand", reuse_en "Wall", reuse_de "Wand";
+        typology_external_wall: native_en "External Wall", native_de "Außenwand", reuse_en "External Wall", reuse_de "Außenwand";
+        // inspector group titles
+        reference: native_en "Reference", native_de "Referenz", reuse_en "Reference", reuse_de "Referenz";
+        node: native_en "Node", native_de "Knoten", reuse_en "Node", reuse_de "Knoten";
+        // tree item actions
+        hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
+        show: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";
+        lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";
+        unlock: native_en "Unlock", native_de "Entsperren", reuse_en "Unlock", reuse_de "Entsperren";
+        duplicate: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
+        delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
+        // inspector field chrome
+        label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        typology: native_en "Typology", native_de "Typologie", reuse_en "Typology", reuse_de "Typologie";
+        hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
+        locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
+        position: native_en "Position", native_de "Position", reuse_en "Position", reuse_de "Position";
+        scale: native_en "Scale", native_de "Skalierung", reuse_en "Scale", reuse_de "Skalierung";
+        rotation: native_en "Rotation", native_de "Drehung", reuse_en "Rotation", reuse_de "Drehung";
+        slot: native_en "Slot", native_de "Platz", reuse_en "Slot", reuse_de "Platz";
+        kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
+        source: native_en "Source", native_de "Quelle", reuse_en "Source", reuse_de "Quelle";
+        width_world: native_en "Width (world)", native_de "Breite (Weltkoordinaten)", reuse_en "Width (world)", reuse_de "Breite (Weltkoordinaten)";
+        // catalogue / tree chrome
+        none_placeholder: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
+        // properties fallback + engagement chrome
+        schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
+        utility: native_en "Utility", native_de "Werkzeug", reuse_en "Utility", reuse_de "Werkzeug";
+        action_placeholder: native_en "Action", native_de "Aktion", reuse_en "Action", reuse_de "Aktion";
+        ok: native_en "OK", native_de "OK", reuse_en "OK", reuse_de "OK";
+        selected: native_en "selected", native_de "ausgewählt", reuse_en "selected", reuse_de "ausgewählt";
+        step: native_en "Step", native_de "Schritt", reuse_en "Step", reuse_de "Schritt";
+    }
 }
 
-const CAD_LABELS_NATIVE_EN: CadLabels = CadLabels {
-    object: "Object",
-    objects: "Objects",
-    primitive: "Primitive",
-    pane_shape: "Shape",
-    pane_building: "Building",
-    pane_energy: "Energy",
-    pane_structure_classic: "Structure Classic",
-    references: "References",
-    nodes: "Nodes",
-    typologies: "Typologies",
-    typology_box: "Box",
-    typology_slab: "Slab",
-    typology_column: "Column",
-    typology_beam: "Beam",
-    typology_wall: "Wall",
-    typology_external_wall: "External Wall",
-    reference: "Reference",
-    node: "Node",
-    hide: "Hide",
-    show: "Show",
-    lock: "Lock",
-    unlock: "Unlock",
-    duplicate: "Duplicate",
-    delete: "Delete",
-    label: "Label",
-    typology: "Typology",
-    hidden: "Hidden",
-    locked: "Locked",
-    position: "Position",
-    scale: "Scale",
-    rotation: "Rotation",
-    slot: "Slot",
-    kind: "Kind",
-    id: "Id",
-    source: "Source",
-    width_world: "Width (world)",
-    none_placeholder: "(none)",
-    schema: "Schema",
-    utility: "Utility",
-    action_placeholder: "Action",
-    ok: "OK",
-    selected: "selected",
-    step: "Step",
-};
+/// 🗣️ `CadConfig.locale` (a BCP-47 tag, was shell-provided `ViewState.locale` pre-B1) mapped onto the
+/// SDK's exhaustive `Locale` enum.
+fn cad_locale(cfg: &CadConfig) -> Locale {
+    if cad_is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
 
-const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels {
-    object: "Objekt",
-    objects: "Objekte",
-    primitive: "Grundkörper",
-    pane_shape: "Form",
-    pane_building: "Gebäude",
-    pane_energy: "Energie",
-    pane_structure_classic: "Tragwerk Klassisch",
-    references: "Referenzen",
-    nodes: "Knoten",
-    typologies: "Typologien",
-    typology_box: "Quader",
-    typology_slab: "Platte",
-    typology_column: "Stütze",
-    typology_beam: "Träger",
-    typology_wall: "Wand",
-    typology_external_wall: "Außenwand",
-    reference: "Referenz",
-    node: "Knoten",
-    hide: "Ausblenden",
-    show: "Anzeigen",
-    lock: "Sperren",
-    unlock: "Entsperren",
-    duplicate: "Duplizieren",
-    delete: "Löschen",
-    label: "Bezeichnung",
-    typology: "Typologie",
-    hidden: "Ausgeblendet",
-    locked: "Gesperrt",
-    position: "Position",
-    scale: "Skalierung",
-    rotation: "Drehung",
-    slot: "Platz",
-    kind: "Art",
-    id: "Id",
-    source: "Quelle",
-    width_world: "Breite (Weltkoordinaten)",
-    none_placeholder: "(keine)",
-    schema: "Schema",
-    utility: "Werkzeug",
-    action_placeholder: "Aktion",
-    ok: "OK",
-    selected: "ausgewählt",
-    step: "Schritt",
-};
+/// 🗣️ `CadConfig.terminology` mapped onto the SDK's exhaustive `Terminology` enum; unknown/empty ids
+/// fall back to `Native`.
+fn cad_terminology(cfg: &CadConfig) -> Terminology {
+    if cfg.terminology == "reuse" { Terminology::Reuse } else { Terminology::Native }
+}
 
-const CAD_LABELS_REUSE_EN: CadLabels = CadLabels {
-    object: "Building component",
-    objects: "Building components",
-    primitive: "Component part",
-    ..CAD_LABELS_NATIVE_EN
-};
-
-const CAD_LABELS_REUSE_DE: CadLabels = CadLabels {
-    object: "Baukomponente",
-    objects: "Baukomponenten",
-    primitive: "Bauteil",
-    ..CAD_LABELS_NATIVE_DE
-};
-
-/// 🗣️ Resolves the active label set from the config-carried locale/terminology (was shell-provided
-/// `ViewState`, deleted by B1); unknown terminology ids fall back to native. Two-dimensional (locale ×
-/// terminology) label selection doesn't fit the SDK's `LocaleLabels`/`app_labels!` (locale-only, one
-/// struct type per resolution), so this stays hand-rolled — reusing `cad_is_de_locale` for the locale
-/// half instead of duplicating its `starts_with("de")` check.
+/// 🗣️ Resolves the active `CadLabels` cell from the config-carried locale/terminology (was
+/// shell-provided `ViewState`, deleted by B1) via the SDK's two-axis `AppLabels::labels`.
 fn cad_labels(cfg: &CadConfig) -> &'static CadLabels {
-    let terminology = if cfg.terminology.is_empty() { "native" } else { cfg.terminology.as_str() };
-    let is_de = cad_is_de_locale(cfg);
-    match (terminology, is_de) {
-        ("reuse", true) => &CAD_LABELS_REUSE_DE,
-        ("reuse", false) => &CAD_LABELS_REUSE_EN,
-        (_, true) => &CAD_LABELS_NATIVE_DE,
-        (_, false) => &CAD_LABELS_NATIVE_EN,
-    }
+    CadLabels::labels(cad_locale(cfg), cad_terminology(cfg))
 }
 
 /// 🗣️ Resolves a typology catalog entry's display label from its stable id; unknown ids fall back to the catalog's native English text or the raw id.
 fn typology_label<'a>(typology: &'a str, labels: &CadLabels) -> &'a str {
     match typology {
-        "spatial.shape.primitive.box" => labels.typology_box,
-        "building.building.slab" | "structure.structure.onewayreinforcedconcreteslab" => labels.typology_slab,
-        "building.building.column" | "structure.structure.reinforcedconcretecolumn" => labels.typology_column,
-        "building.building.beam" => labels.typology_beam,
-        "building.building.wall" => labels.typology_wall,
-        "energy.energy.externalwall" => labels.typology_external_wall,
+        "spatial.shape.primitive.box" => labels.typology_box.as_str(),
+        "building.building.slab" | "structure.structure.onewayreinforcedconcreteslab" => labels.typology_slab.as_str(),
+        "building.building.column" | "structure.structure.reinforcedconcretecolumn" => labels.typology_column.as_str(),
+        "building.building.beam" => labels.typology_beam.as_str(),
+        "building.building.wall" => labels.typology_wall.as_str(),
+        "energy.energy.externalwall" => labels.typology_external_wall.as_str(),
         other => TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == other).map(|entry| entry.label).unwrap_or(other),
     }
-}
-
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_cad_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("addObject", "Add Object", "Objekt hinzufügen"),
-        ("patchObject", "Patch Object", "Objekt aktualisieren"),
-        ("patchSelection", "Patch Selection", "Auswahl aktualisieren"),
-        ("deleteObject", "Delete Object", "Objekt löschen"),
-        ("duplicateObject", "Duplicate Object", "Objekt duplizieren"),
-        ("addNode", "Add Node", "Knoten hinzufügen"),
-        ("renameNode", "Rename Node", "Knoten umbenennen"),
-        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
-        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
-        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-        ("applyTransformation", "Apply Transformation", "Transformation anwenden"),
-        ("importCadFile", "Import CAD File", "CAD-Datei importieren"),
-        ("patchCadPlayReference", "Patch Reference", "Referenz aktualisieren"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setProjection", "Set Projection", "Projektion festlegen"),
-        ("setProjectionParam", "Set Projection Parameter", "Projektionsparameter festlegen"),
-        ("focusModelDefinition", "Focus Model Definition", "Modelldefinition fokussieren"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setNodeSelection", "Set Node Selection", "Knotenauswahl festlegen"),
-        ("worldSelect", "World Select", "Welt auswählen"),
-        ("worldHover", "World Hover", "Überfahren (Welt)"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("worldPick", "World Pick", "Punkt in der Welt wählen"),
-        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("setReferenceSelection", "Set Reference Selection", "Referenzauswahl festlegen"),
-        ("referenceHover", "Reference Hover", "Überfahren (Referenz)"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-        ("engagementPossibleSelect", "Engagement Possible Select", "Eingabeoption auswählen"),
-        ("engagementRepeatLast", "Engagement Repeat Last", "Letzte Eingabe wiederholen"),
-        ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
-        ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
-        ("engagementPointerDown", "Engagement Pointer Down", "Eingabe-Zeiger gedrückt"),
-        ("setPrimitiveSelection", "Set Primitive Selection", "Grundkörperauswahl festlegen"),
-        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
-        ("setDislocateOption", "Set Dislocate Option", "Versetzen-Option festlegen"),
-        ("saveSelected", "Save Selected", "Auswahl speichern"),
-        ("saveInPlay", "Save In Play", "Im Play speichern"),
-        ("saveCurrent", "Save Current", "Aktuelles speichern"),
-        ("loadRawRequest", "Load Raw Request", "Rohdaten laden"),
-    ])
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_cad_app`.
-fn cad_utility_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        (CAD_DISLOCATE_UTILITY_ID, "Dislocate", "Versetzen"),
-    ])
 }
 
 //#endregion 🔖️Terminology
@@ -1218,7 +1056,7 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
         .map(|primitive| {
             let mut item = cad_tree_item(
                 format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id),
-                format!("{}: {}", primitive.slot, primitive.primitive_id),
+                Label::data(format!("{}: {}", primitive.slot, primitive.primitive_id)),
                 Some("hexagon"),
                 cad_action(
                     "setPrimitiveSelection",
@@ -1236,7 +1074,7 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
         .collect();
     let mut item = cad_tree_item(
         format!("cad-object:{id_suffix}:{}", object.id),
-        object.label.clone(),
+        Label::data(object.label.clone()),
         Some("box"),
         cad_action("worldSelect", Some(json!({ "ids": [object.id], "merge": "replace" }))),
     );
@@ -1289,7 +1127,7 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
 fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiTreeItemNode {
     let mut item = cad_tree_item(
         format!("cad-reference:{model_definition_id}:{}", reference.id),
-        reference.id.clone(),
+        Label::data(reference.id.clone()),
         Some("image"),
         cad_action(
             "setReferenceSelection",
@@ -1339,7 +1177,7 @@ fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labe
 /// 🌳️ Cad's tree items carry an icon rather than the SDK `tree_item_with_action`'s description slot, so
 /// this stays a thin app-specific wrapper — built on the SDK's bare `tree_item` rather than hand-rolling
 /// the full `UiTreeItemNode` struct literal.
-fn cad_tree_item(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
+fn cad_tree_item(id: impl Into<String>, label: impl Into<Label>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
     let mut item = tree_item(id, label);
     item.icon_id = icon_id.and_then(IconName::from_str);
     item.action = Some(action);
@@ -1409,7 +1247,7 @@ fn document_tree_highlighted_ids(document: &CadScene, runtime: &CadPlayRuntime) 
 }
 
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded.
-fn document_pane_section(label: &str, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> (String, Option<String>, bool, Vec<UiTreeItemNode>) {
+fn document_pane_section(label: impl Into<Label>, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
     (
         format!("cad-play-document.{id_suffix}"),
         Some(label.into()),
@@ -1419,7 +1257,7 @@ fn document_pane_section(label: &str, id_suffix: &str, objects: &[CadObject], la
 }
 
 /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
-fn document_references_section(document: &CadScene, model_definition_id: &str, labels: &CadLabels) -> (String, Option<String>, bool, Vec<UiTreeItemNode>) {
+fn document_references_section(document: &CadScene, model_definition_id: &str, labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
     (
         format!("cad-play-document.references.{model_definition_id}"),
         Some(labels.references.into()),
@@ -1439,7 +1277,7 @@ fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
         .map(|node| {
             cad_tree_item(
                 format!("cad-node:{}", node.id),
-                node.label.clone(),
+                Label::data(node.label.clone()),
                 Some("git-branch"),
                 cad_action("setNodeSelection", Some(json!({ "nodeIds": [node.id] }))),
             )
@@ -1485,7 +1323,7 @@ fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
         .map(|entry| {
             cad_tree_item(
                 format!("cad-play-catalogue.{}", entry.typology),
-                typology_label(entry.typology, labels),
+                Label::data(typology_label(entry.typology, labels)),
                 Some(entry.icon),
                 cad_action("addObject", Some(json!({ "typology": entry.typology, "modelDefinitionId": entry.model_definition_id }))),
             )
@@ -1561,7 +1399,7 @@ fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_uti
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "cad-play-inspector.empty".into(),
-        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into(),
+        label: Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
         default_open: Some(true),
         presence: UiPresence::default(),
         fields: vec![
@@ -1569,7 +1407,7 @@ fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_uti
             ui_inspector_readonly_field(
                 "cad-play-inspector.utility",
                 labels.utility,
-                active_utility.unwrap_or(labels.none_placeholder),
+                active_utility.unwrap_or(labels.none_placeholder.as_str()),
             ),
             ui_inspector_readonly_field(
                 "cad-play-inspector.objects",
@@ -1585,10 +1423,11 @@ fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_uti
 /// fields have no shared helper (quaternions aren't `ui_inspector_vec3_group`'s 3-wide shape), so
 /// this mirrors that helper's structure one component wider. The patch handler renormalizes after
 /// any component edit so the result stays a valid unit quaternion.
-fn inspector_quat_group(id: &str, label: &str, values: &[[f64; 4]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
-    let component = |index: usize, name: &str, label: &str| {
+fn inspector_quat_group(id: &str, label: impl Into<Label>, values: &[[f64; 4]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
+    // 🔤️ Axis symbols (X/Y/Z/W) are mathematical notation, not translatable UI chrome.
+    let component = |index: usize, name: &str, label: &'static str| {
         let values: Vec<f64> = values.iter().map(|q| q[index]).collect();
-        ui_inspector_stepper_field(format!("{id}.{name}"), label, &values, step, axis_action(name))
+        ui_inspector_stepper_field(format!("{id}.{name}"), Label::data(label), &values, step, axis_action(name))
     };
     UiNode::Group(UiGroupNode {
         id: id.into(),
@@ -1624,7 +1463,7 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
         label: if objects.len() == 1 {
             term_labels.object.into()
         } else {
-            format!("{} {}", objects.len(), term_labels.objects)
+            Label::data(format!("{} {}", objects.len(), term_labels.objects.as_str()))
         },
         default_open: None,
         presence: UiPresence::default(),
@@ -1636,7 +1475,7 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                     id: "cad-play-inspector.object.label.input".into(),
                     input_kind: "text".into(),
                     value: label_mixed.value.clone(),
-                    placeholder: label_mixed.placeholder.clone(),
+                    placeholder: label_mixed.placeholder.clone().map(Label::data),
                     commit: None,
                     on_change: cad_action(
                         "patchSelection",
@@ -1665,10 +1504,10 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                         .iter()
                         .map(|entry| UiSelectItem {
                             value: entry.typology.into(),
-                            label: typology_label(entry.typology, term_labels).into(),
+                            label: Label::data(typology_label(entry.typology, term_labels)),
                         })
                         .collect(),
-                    placeholder: typology_mixed.placeholder.clone(),
+                    placeholder: typology_mixed.placeholder.clone().map(Label::data),
                     on_change: cad_action(
                         "patchSelection",
                         Some(json!({ "objectIds": object_ids, "field": "typology" })),
@@ -1909,11 +1748,11 @@ fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLa
         status: Some(vec![
             WindowEngagementStatus {
                 id: "cad-status".into(),
-                text: format!("{selected_count} {}", labels.selected),
+                text: format!("{selected_count} {}", labels.selected.as_str()),
             },
             WindowEngagementStatus {
                 id: "cad-step".into(),
-                text: format!("{}: {step_text}", labels.step),
+                text: format!("{}: {step_text}", labels.step.as_str()),
             },
             WindowEngagementStatus {
                 id: "cad-response".into(),
@@ -2944,7 +2783,7 @@ impl DocumentApp for CadPlayApp {
             CAD_PLAY_BODY_DOCUMENT => build_document_tree(&view, labels),
             CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&view, labels, active_utility),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -2993,22 +2832,6 @@ impl DocumentApp for CadPlayApp {
         .into_iter()
         .map(|(window_kind_id, pane)| (window_kind_id.to_string(), pane_measures(pane, window_kind_id)))
         .collect()
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, CadConfig>) -> AppLabelsOverlay {
-        let labels = cad_labels(cfg.projection);
-        let is_de = cad_is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(CAD_PLAY_WINDOW_SHAPE, labels.pane_shape)
-            .window_kind_label(CAD_PLAY_WINDOW_BUILDING, labels.pane_building)
-            .window_kind_label(CAD_PLAY_WINDOW_ENERGY, labels.pane_energy)
-            .window_kind_label(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, labels.pane_structure_classic)
-            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
-            .action_labels(cad_action_labels(is_de))
-            .utility_labels(cad_utility_labels(is_de))
-            .example_labels(HashMap::from([
-                (CAD_EXAMPLE_FOREST_LEFT.to_string(), (if is_de { "Sechseckig geschnittener Betonwald links" } else { "Hexagonal Cut Concrete Forest Left" }).to_string()),
-            ]))
     }
 
     /// 🖱️ Selection-gated menu: transform/duplicate/delete only once something is selected — a bare
@@ -3085,7 +2908,7 @@ fn cad_quad_layout() -> WindowLayout {
 fn cad_dislocate_utility() -> UtilityDefinition {
     UtilityDefinition {
         category: Some(UtilityCategory::Utilities),
-        ..UtilityDefinition::new(CAD_DISLOCATE_UTILITY_ID, "Dislocate", "move-3d")
+        ..UtilityDefinition::new(CAD_DISLOCATE_UTILITY_ID, LocalizedLabel::native("Dislocate", "Versetzen"), "move-3d")
     }
 }
 
@@ -3096,7 +2919,7 @@ fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
 
 pub fn create_cad_app() -> App {
     App::from_builder(
-        App::builder(CAD_PLAY_APP_ID, "CAD").document(["semio", "cad"])
+        App::builder(CAD_PLAY_APP_ID, LocalizedLabel::native("CAD", "CAD")).document(["semio", "cad"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.cad".into(),
                 name: "3D CAD".into(),
@@ -3112,71 +2935,71 @@ pub fn create_cad_app() -> App {
             .icon_id("box")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "cad"])
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE, SurfaceKind::World3d, "cad-shape")
-            .window_kind(CAD_PLAY_WINDOW_BUILDING, "Building", CAD_PLAY_BODY_BUILDING, SurfaceKind::World3d, "landmark")
-            .window_kind(CAD_PLAY_WINDOW_ENERGY, "Energy", CAD_PLAY_BODY_ENERGY, SurfaceKind::World3d, "sun")
-            .window_kind(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, "Structure Classic", CAD_PLAY_BODY_STRUCTURE_CLASSIC, SurfaceKind::World3d, "component")
+            .window_kind(CAD_PLAY_WINDOW_SHAPE, LocalizedLabel::native("Shape", "Form"), CAD_PLAY_BODY_SHAPE, SurfaceKind::World3d, "cad-shape")
+            .window_kind(CAD_PLAY_WINDOW_BUILDING, LocalizedLabel::native("Building", "Gebäude"), CAD_PLAY_BODY_BUILDING, SurfaceKind::World3d, "landmark")
+            .window_kind(CAD_PLAY_WINDOW_ENERGY, LocalizedLabel::native("Energy", "Energie"), CAD_PLAY_BODY_ENERGY, SurfaceKind::World3d, "sun")
+            .window_kind(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, LocalizedLabel::native("Structure Classic", "Tragwerk Klassisch"), CAD_PLAY_BODY_STRUCTURE_CLASSIC, SurfaceKind::World3d, "component")
             .default_layout(cad_quad_layout())
-            .operation("addObject", "Add Object")
-            .operation("patchObject", "Patch Object")
-            .operation("patchSelection", "Patch Selection")
-            .action_with(ActionDefinition::new_catalog("deleteObject", "Delete Object", ActionKind::Operation).category("actions"))
-            .action_with(ActionDefinition::new_catalog("duplicateObject", "Duplicate Object", ActionKind::Operation).category("create"))
-            .operation("addNode", "Add Node")
-            .operation("renameNode", "Rename Node")
-            .action_with(ActionDefinition::new_catalog("translateSelection", "Translate Selection", ActionKind::Operation).category("transform"))
-            .action_with(ActionDefinition::new_catalog("rotateSelection", "Rotate Selection", ActionKind::Operation).category("transform"))
-            .action_with(ActionDefinition::new_catalog("scaleSelection", "Scale Selection", ActionKind::Operation).category("transform"))
-            .operation("applyTransformation", "Apply Transformation")
-            .operation("importCadFile", "Import CAD File")
-            .action_with(ActionDefinition::new_catalog("patchCadPlayReference", "Patch Reference", ActionKind::Operation).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("engagementSubmit", "Engagement Submit", ActionKind::Operation).in_palette(false))
-            .view_action("setCamera", "Set Camera")
-            .view_action("setProjection", "Set Projection")
-            .view_action("setProjectionParam", "Set Projection Parameter")
-            .operation("focusModelDefinition", "Focus Model Definition")
-            .operation("setActiveExample", "Set Active Example")
-            .action_with(ActionDefinition::new_catalog("setSelection", "Set Selection", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("setNodeSelection", "Set Node Selection", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("worldSelect", "World Select", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("worldHover", "World Hover", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("setHover", "Set Hover", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("worldPick", "World Pick", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("setSelectionMethod", "Set Selection Method", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("setReferenceSelection", "Set Reference Selection", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("referenceHover", "Reference Hover", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("engagementInput", "Engagement Input", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("engagementPossibleSelect", "Engagement Possible Select", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("engagementRepeatLast", "Engagement Repeat Last", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("engagementAbort", "Engagement Abort", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("worldPointerDown", "World Pointer Down", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("worldPointerMove", "World Pointer Move", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("engagementPointerDown", "Engagement Pointer Down", ActionKind::View).in_palette(false))
-            .action_with(ActionDefinition::new_catalog("setPrimitiveSelection", "Set Primitive Selection", ActionKind::View).in_palette(false))
-            .view_action("toggleSun", "Toggle Sun")
-            .view_action("setSunAzimuth", "Set Sun Azimuth")
-            .view_action("setSunElevation", "Set Sun Elevation")
-            .view_action("setSunIntensity", "Set Sun Intensity")
-            .action_with(ActionDefinition::new_catalog("setDislocateOption", "Set Dislocate Option", ActionKind::View).in_palette(false))
-            .shell_action("saveSelected", "Save Selected")
-            .shell_action("saveInPlay", "Save In Play")
-            .shell_action("saveCurrent", "Save Current")
-            .shell_action("loadRawRequest", "Load Raw Request")
-            .action_args("saveCurrent", vec![ActionArgDef::select("format", "Format", vec![
-                ActionArgOption::new("step", "STEP"),
-                ActionArgOption::new("obj", "OBJ"),
-                ActionArgOption::new("stl", "STL"),
+            .operation("addObject", LocalizedLabel::native("Add Object", "Objekt hinzufügen"))
+            .operation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
+            .operation("patchSelection", LocalizedLabel::native("Patch Selection", "Auswahl aktualisieren"))
+            .action_with(ActionDefinition::new_catalog("deleteObject", LocalizedLabel::native("Delete Object", "Objekt löschen"), ActionKind::Operation).category("actions"))
+            .action_with(ActionDefinition::new_catalog("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"), ActionKind::Operation).category("create"))
+            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .operation("renameNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"))
+            .action_with(ActionDefinition::new_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Operation).category("transform"))
+            .action_with(ActionDefinition::new_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Operation).category("transform"))
+            .action_with(ActionDefinition::new_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Operation).category("transform"))
+            .operation("applyTransformation", LocalizedLabel::native("Apply Transformation", "Transformation anwenden"))
+            .operation("importCadFile", LocalizedLabel::native("Import CAD File", "CAD-Datei importieren"))
+            .action_with(ActionDefinition::new_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Operation).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Operation).in_palette(false))
+            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
+            .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
+            .operation("focusModelDefinition", LocalizedLabel::native("Focus Model Definition", "Modelldefinition fokussieren"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(ActionDefinition::new_catalog("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setNodeSelection", LocalizedLabel::native("Set Node Selection", "Knotenauswahl festlegen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldPick", LocalizedLabel::native("World Pick", "Punkt in der Welt wählen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setReferenceSelection", LocalizedLabel::native("Set Reference Selection", "Referenzauswahl festlegen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("referenceHover", LocalizedLabel::native("Reference Hover", "Überfahren (Referenz)"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementPossibleSelect", LocalizedLabel::native("Engagement Possible Select", "Eingabeoption auswählen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementPointerDown", LocalizedLabel::native("Engagement Pointer Down", "Eingabe-Zeiger gedrückt"), ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setPrimitiveSelection", LocalizedLabel::native("Set Primitive Selection", "Grundkörperauswahl festlegen"), ActionKind::View).in_palette(false))
+            .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
+            .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
+            .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
+            .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
+            .action_with(ActionDefinition::new_catalog("setDislocateOption", LocalizedLabel::native("Set Dislocate Option", "Versetzen-Option festlegen"), ActionKind::View).in_palette(false))
+            .shell_action("saveSelected", LocalizedLabel::native("Save Selected", "Auswahl speichern"))
+            .shell_action("saveInPlay", LocalizedLabel::native("Save In Play", "Im Play speichern"))
+            .shell_action("saveCurrent", LocalizedLabel::native("Save Current", "Aktuelles speichern"))
+            .shell_action("loadRawRequest", LocalizedLabel::native("Load Raw Request", "Rohdaten laden"))
+            .action_args("saveCurrent", vec![ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![
+                ActionArgOption::new("step", LocalizedLabel::native("STEP", "STEP")),
+                ActionArgOption::new("obj", LocalizedLabel::native("OBJ", "OBJ")),
+                ActionArgOption::new("stl", LocalizedLabel::native("STL", "STL")),
             ]).default_value("step")])
-            .action_args("focusModelDefinition", vec![ActionArgDef::select("modelDefinitionId", "Model Definition", vec![
-                ActionArgOption::new(CAD_MODEL_DEFINITION_SHAPE, "Shape"),
-                ActionArgOption::new(CAD_MODEL_DEFINITION_BUILDING, "Building"),
-                ActionArgOption::new(CAD_MODEL_DEFINITION_ENERGY, "Energy"),
-                ActionArgOption::new(CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, "Structure Classic"),
+            .action_args("focusModelDefinition", vec![ActionArgDef::select("modelDefinitionId", LocalizedLabel::native("Model Definition", "Modelldefinition"), vec![
+                ActionArgOption::new(CAD_MODEL_DEFINITION_SHAPE, LocalizedLabel::native("Shape", "Form")),
+                ActionArgOption::new(CAD_MODEL_DEFINITION_BUILDING, LocalizedLabel::native("Building", "Gebäude")),
+                ActionArgOption::new(CAD_MODEL_DEFINITION_ENERGY, LocalizedLabel::native("Energy", "Energie")),
+                ActionArgOption::new(CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, LocalizedLabel::native("Structure Classic", "Tragwerk Klassisch")),
             ]).required()])
-            .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", "Example", vec![
-                ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left"),
+            .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links")),
             ]).required()])
             .utility(cad_dislocate_utility())
             .window_kind_utilities(CAD_PLAY_WINDOW_SHAPE, cad_dislocate_utility_refs())
@@ -3185,19 +3008,19 @@ pub fn create_cad_app() -> App {
             .window_kind_utilities(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, cad_dislocate_utility_refs())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 CAD_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 CAD_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 CAD_PLAY_BODY_PROPERTIES,
             )
@@ -3210,7 +3033,7 @@ pub fn create_cad_app() -> App {
     )
     .example(
         CAD_EXAMPLE_FOREST_LEFT,
-        "Hexagonal Cut Concrete Forest Left",
+        LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links"),
         &serde_json::to_string(&forest_play_scene()).unwrap(),
         "list-tree",
     )
@@ -3668,7 +3491,7 @@ mod tests {
             .sections
             .iter()
             .flat_map(|section| section.items.iter())
-            .find(|item| item.id.contains("cad-object:") && item.label == "U2")
+            .find(|item| item.id.contains("cad-object:") && item.label.as_str() == "U2")
             .expect("named object tree item");
         assert_eq!(object_item.description.as_deref(), Some("Beam"));
 
@@ -3685,7 +3508,7 @@ mod tests {
             .sections
             .iter()
             .flat_map(|section| section.items.iter())
-            .find(|item| item.id.contains("cad-object:") && item.label == "U2")
+            .find(|item| item.id.contains("cad-object:") && item.label.as_str() == "U2")
             .expect("named object tree item in German");
         assert_eq!(de_object_item.description.as_deref(), Some("Träger"));
     }

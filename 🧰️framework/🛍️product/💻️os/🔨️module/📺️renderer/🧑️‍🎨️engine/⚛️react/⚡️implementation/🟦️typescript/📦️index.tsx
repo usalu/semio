@@ -288,6 +288,7 @@ import {
   ShellScopeProvider,
   useShellScope,
   useShellScopeOptional,
+  type SelectionMode,
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/ui-asset";
 import {
@@ -375,6 +376,7 @@ import {
   type NodeGraphFindItem,
   type NodeGraphHover,
   type InkCanvasScene,
+  type LocalizedLabel,
   type PluginAppLabelsOverlay,
   type ProgramHotSwapEvent,
   type PanelTabKind,
@@ -603,7 +605,7 @@ function renderComponentSceneHost(
   requestContextMenu?: UiInterpreterContext["requestContextMenu"],
 ): ReactNode {
   if (node.componentKind === "virtualFileSystem") {
-    return <VirtualFileSystemHost node={node} onAction={onAction} />;
+    return <VirtualFileSystemHost node={node} onAction={onAction} requestContextMenu={requestContextMenu} />;
   }
   const Host = COMPONENT_SCENE_HOSTS[node.componentKind as ComponentKind];
   if (!Host) {
@@ -969,14 +971,25 @@ function parseSceneJsonField<T>(encoded: string): T {
   return JSON.parse(encoded) as T;
 }
 
-function VirtualFileSystemHost({ node, onAction }: { readonly node: Extract<UiNode, { type: "componentScene" }>; readonly onAction: (action: ActionDescriptor) => void }) {
+function VirtualFileSystemHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.virtualFileSystem;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const dispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+    },
+    [node.controllerId, node.surfaceId, onAction],
+  );
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
   if (!scene) return <div className="semio-vfs-empty">{emptySceneLabel}</div>;
   const schema = parseSceneJsonField<Parameters<typeof VirtualFileSystem>[0]["schema"]>(scene.schemaJson);
   const rows = parseSceneJsonField<Parameters<typeof VirtualFileSystem>[0]["rows"]>(scene.rowsJson);
   const selectedRowIds = scene.selectedRowIdsJson ? parseSceneJsonField<string[]>(scene.selectedRowIdsJson) : undefined;
   return (
+    <>
     <VirtualFileSystem
       className="min-h-0 flex-1"
       schema={schema}
@@ -991,6 +1004,32 @@ function VirtualFileSystemHost({ node, onAction }: { readonly node: Extract<UiNo
           args: { surfaceId: node.surfaceId, ids },
         })
       }
+      onRowContextMenu={(row, index, event) => {
+        if (!requestContextMenu) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const rowId = String(row.id ?? index);
+        void (async () => {
+          const items = await openSurfaceContextMenu(
+            requestContextMenu,
+            {
+              viewState: {},
+              menu: { id: "virtualFileSystem" },
+              surface: {
+                surfaceId: node.surfaceId,
+                kind: "virtualFileSystem",
+                hits: [{ domain: "row", id: rowId }],
+                selection: selectedRowIds && selectedRowIds.length > 0 ? [{ domain: "row", ids: selectedRowIds }] : [],
+              },
+              windowInstanceId: windowInstanceId ?? undefined,
+              point: { x: event.clientX, y: event.clientY },
+            },
+            mapContextMenu,
+            shellContextMenuFallback,
+          );
+          setContextMenu({ x: event.clientX, y: event.clientY, items });
+        })();
+      }}
       onRowDoubleClick={(row) => {
         const uri = row.navigateUri;
         if (!uri) return;
@@ -1044,6 +1083,15 @@ function VirtualFileSystemHost({ node, onAction }: { readonly node: Extract<UiNo
         }
       }}
     />
+    <ContextMenuController
+      open={contextMenu != null}
+      position={contextMenu ?? { x: 0, y: 0 }}
+      items={contextMenu?.items ?? []}
+      onOpenChange={(open) => {
+        if (!open) setContextMenu(null);
+      }}
+    />
+    </>
   );
 }
 //#endregion VirtualFileSystemHost
@@ -2811,11 +2859,11 @@ export function resolveDocumentByAppId(loadedPlugins: readonly LoadedProgramStat
   return document;
 }
 
-export function appWindowDocumentLabel(app: AppDefinition, terminology: string, windowLabel: string): string {
+export function appWindowDocumentLabel(app: AppDefinition, terminology: string, windowLabel: string, locale: string = SHELL_LOCALES[0]): string {
   const trimmed = windowLabel.trim();
   if (trimmed) return trimmed;
   const override = app.terminologyDocuments?.[terminology];
-  return override?.[override.length - 1]?.trim() || app.label.trim();
+  return override?.[override.length - 1]?.trim() || resolveManifestLabel(app.label, terminology, locale).trim();
 }
 
 function buildSpacePanelState(programs: readonly SpaceProgramEntry[], spawnedApps: readonly SpawnedAppEntry[], activePanelTab = "s-play-catalogue", activeSpawnedId?: string): SpacePanelState {
@@ -2942,8 +2990,10 @@ function retitleWindowLayoutNode(node: WindowLayoutNode, appLabelsOverlay: Plugi
 /** @emoji 🪟️ Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
 export function resolveFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
-  windowKinds: readonly { readonly id: string; readonly label: string }[],
+  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
   appLabelsOverlay: PluginAppLabelsOverlay,
+  terminology: string,
+  locale: string,
 ): {
   readonly modeLayout: WindowLayoutNode;
   readonly extraInstances: readonly ExtraWindowInstance[];
@@ -2968,7 +3018,7 @@ export function resolveFrameworkLayoutSeed(
       extraInstances.push({
         id: seed.windowId,
         windowKindId: seed.windowKindId,
-        title: resolveAppLabel(appLabelsOverlay, "windowKind", seed.windowId, seed.title ?? kind.label),
+        title: resolveAppLabel(appLabelsOverlay, "windowKind", seed.windowId, seed.title ?? resolveManifestLabel(kind.label, terminology, locale)),
       });
     }
     if (seed.templateId) pendingProjections.push({ windowId: seed.windowId, templateId: seed.templateId });
@@ -2983,13 +3033,15 @@ export function resolveFrameworkLayoutSeed(
 /** @emoji 🪟️ Applies a resolved framework layout seed: registers one-shot world projections, then returns the live layout payload. */
 function applyFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
-  windowKinds: readonly { readonly id: string; readonly label: string }[],
+  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
   appLabelsOverlay: PluginAppLabelsOverlay,
+  terminology: string,
+  locale: string,
 ): {
   readonly modeLayout: WindowLayoutNode;
   readonly extraInstances: readonly ExtraWindowInstance[];
 } {
-  const seed = resolveFrameworkLayoutSeed(layout, windowKinds, appLabelsOverlay);
+  const seed = resolveFrameworkLayoutSeed(layout, windowKinds, appLabelsOverlay, terminology, locale);
   for (const pending of seed.pendingProjections) {
     const projectionSpec = decodeWorldProjectionTemplateId(pending.templateId);
     if (projectionSpec) registerPendingWorldProjection(pending.windowId, projectionSpec);
@@ -3222,9 +3274,18 @@ export function flattenPanelTabLeaves<T extends { readonly children?: readonly T
 }
 
 /** @emoji 🌳️ Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}. */
-export function panelTabDefinitionToNode(tab: AppPanelTabDefinition, group: string, panelUiByKey: Readonly<Record<string, UiNode>>, onAction: (action: ActionDescriptor) => void, order: number, appLabelsOverlay: PluginAppLabelsOverlay): PanelTabNode {
+export function panelTabDefinitionToNode(
+  tab: AppPanelTabDefinition,
+  group: string,
+  panelUiByKey: Readonly<Record<string, UiNode>>,
+  onAction: (action: ActionDescriptor) => void,
+  order: number,
+  appLabelsOverlay: PluginAppLabelsOverlay,
+  terminology: string = UI_TERMINOLOGY_NATIVE,
+  locale: string = SHELL_LOCALES[0],
+): PanelTabNode {
   const tabId = panelTabKindId(tab.kind);
-  const label = resolvePanelTabLabel(appLabelsOverlay, tabId, tab.label);
+  const label = resolvePanelTabLabel(appLabelsOverlay, tabId, resolveManifestLabel(tab.label, terminology, locale));
   if (tab.children && tab.children.length > 0) {
     return {
       kind: "branch",
@@ -3232,7 +3293,7 @@ export function panelTabDefinitionToNode(tab: AppPanelTabDefinition, group: stri
       icon: panelTabIcon(tabId, group),
       name: label,
       order,
-      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay)),
+      children: tab.children.map((child, childOrder) => panelTabDefinitionToNode(child, group, panelUiByKey, onAction, childOrder, appLabelsOverlay, terminology, locale)),
     };
   }
   return singleTreeLeaf({
@@ -3281,11 +3342,11 @@ function resolveUtilityGroupLabel(group: string, appLabelsOverlay: PluginAppLabe
   return resolveAppLabel(appLabelsOverlay, "group", group, fallback);
 }
 
-/** 🧰️ One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}, resolving the label (and, for grouped utilities, the group label) through the app's locale/terminology overlay. */
-function utilityDefinitionToSpec(utility: UtilityDefinition, appLabelsOverlay: PluginAppLabelsOverlay): DerivedUtilitySpec {
+/** 🧰️ One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}, resolving the label (and, for grouped utilities, the group label) through the app's locale/terminology overlay. `UtilityDefinition.label` is a manifest `LocalizedLabel` field. */
+function utilityDefinitionToSpec(utility: UtilityDefinition, appLabelsOverlay: PluginAppLabelsOverlay, terminology: string, locale: string): DerivedUtilitySpec {
   return {
     id: utility.id,
-    label: resolveAppLabel(appLabelsOverlay, "utility", utility.id, utility.label),
+    label: resolveAppLabel(appLabelsOverlay, "utility", utility.id, resolveManifestLabel(utility.label, terminology, locale)),
     iconId: utility.iconId,
     group: utility.group ?? undefined,
     groupLabel: utility.group ? resolveUtilityGroupLabel(utility.group, appLabelsOverlay) : undefined,
@@ -3315,13 +3376,15 @@ export function resolveUtilityNodes(
   activeUtilityId: string | null | undefined,
   windowId: string,
   appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
+  terminology: string = UI_TERMINOLOGY_NATIVE,
+  locale: string = SHELL_LOCALES[0],
 ): UtilityNode[] {
   const utilities = resolveUtilities(app, windowKind);
   if (utilities.length === 0) return [];
   return tagSetActiveUtilityWindow(
     deriveUtilityNodes(
       app.controllerId,
-      utilities.map((utility) => utilityDefinitionToSpec(utility, appLabelsOverlay)),
+      utilities.map((utility) => utilityDefinitionToSpec(utility, appLabelsOverlay, terminology, locale)),
       activeUtilityId ?? undefined,
     ),
     windowId,
@@ -3534,6 +3597,22 @@ const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   groupLabels: {},
 };
 
+/** 🗺️ Resolves a manifest label field for the active terminology/locale. Every app-manifest struct's
+ * `label`/`title`/`body`/`submitLabel`/`cancelLabel`/`description`/`text` field is now Rust's
+ * `LocalizedLabel` on the wire — a `{ native: { en, de }, reuse: { en, de } }` matrix — instead of the
+ * plain string these fields used to be. Falls back gracefully (reuse→native, missing locale→en, missing
+ * entirely→"") so a stale/partial payload never throws; also tolerates a bare `string` defensively since
+ * the ts-rs mirror for these fields is still `unknown`/stale (see `framework/core/rs/lib.rs`'s
+ * `LocalizedLabel` follow-up notes) — some call sites may still see the pre-migration shape until that
+ * typegen lands. */
+function resolveManifestLabel(label: LocalizedLabel | string | undefined, terminology: string, locale: string): string {
+  if (label === undefined) return "";
+  if (typeof label === "string") return label;
+  const byTerminology = label[terminology as keyof LocalizedLabel] ?? label.native ?? label.reuse;
+  if (!byTerminology) return "";
+  return byTerminology[locale as keyof typeof byTerminology] ?? byTerminology.en ?? Object.values(byTerminology)[0] ?? "";
+}
+
 /** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction/group id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
 function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction" | "group", id: string, fallback: string): string {
   const map =
@@ -3559,35 +3638,38 @@ function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "
   return map[id] ?? fallback;
 }
 
-/** @emoji 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms or a dialog id for dialog args. */
-function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay): ActionArgDef {
-  const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, def.label);
+/** @emoji 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms, a dialog id for dialog args, or a command id for command args. `ActionArgDef.label`/`ActionArgOption.label` are manifest `LocalizedLabel` fields, resolved for `terminology`/`locale` before the overlay's (always-empty, see the `AppLabelsOverlay` deletion note) fallback lookup even applies. */
+function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): ActionArgDef {
+  const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, resolveManifestLabel(def.label, terminology, locale));
   if (def.control.kind !== "select") return label === def.label ? def : { ...def, label };
-  const options = def.control.options.map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, option.label) }));
+  const options = def.control.options.map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, resolveManifestLabel(option.label, terminology, locale)) }));
   return { ...def, label, control: { ...def.control, options } };
 }
 
-/** @emoji 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. */
-function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay): DialogDefinition {
+/** @emoji 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
+function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): DialogDefinition {
   return {
     ...dialog,
-    title: resolveAppLabel(overlay, "dialog", `${dialog.id}.title`, dialog.title),
-    body: dialog.body ? resolveAppLabel(overlay, "dialog", `${dialog.id}.body`, dialog.body) : dialog.body,
-    submitLabel: resolveAppLabel(overlay, "dialog", `${dialog.id}.submit`, dialog.submitLabel),
-    args: dialog.args.map((def) => resolveActionArgDef(def, dialog.id, overlay)),
+    title: resolveAppLabel(overlay, "dialog", `${dialog.id}.title`, resolveManifestLabel(dialog.title, terminology, locale)),
+    body: dialog.body ? resolveAppLabel(overlay, "dialog", `${dialog.id}.body`, resolveManifestLabel(dialog.body, terminology, locale)) : dialog.body,
+    submitLabel: resolveAppLabel(overlay, "dialog", `${dialog.id}.submit`, resolveManifestLabel(dialog.submitLabel, terminology, locale)),
+    cancelLabel: dialog.cancelLabel ? resolveAppLabel(overlay, "dialog", `${dialog.id}.cancel`, resolveManifestLabel(dialog.cancelLabel, terminology, locale)) : dialog.cancelLabel,
+    args: dialog.args.map((def) => resolveActionArgDef(def, dialog.id, overlay, terminology, locale)),
   };
 }
 
-/** @emoji 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body/interaction labels
- * from the overlay's `introductionLabels` map. */
-function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: PluginAppLabelsOverlay): IntroductionDefinition {
+/** @emoji 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body labels from the
+ * overlay's `introductionLabels` map. `title`/`body` are manifest `LocalizedLabel` fields;
+ * `IntroductionInteraction.label` is a short checklist caption that is still a plain `String` on the Rust
+ * side (not part of the `LocalizedLabel` migration), so it is left as-is. */
+function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): IntroductionDefinition {
   return {
-    title: resolveAppLabel(overlay, "introduction", "intro.title", introduction.title),
+    title: resolveAppLabel(overlay, "introduction", "intro.title", resolveManifestLabel(introduction.title, terminology, locale)),
     steps: introduction.steps.map(
       (step): IntroductionStepDefinition => ({
         ...step,
-        title: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.title`, step.title),
-        body: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.body`, step.body),
+        title: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.title`, resolveManifestLabel(step.title, terminology, locale)),
+        body: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.body`, resolveManifestLabel(step.body, terminology, locale)),
         interactions: (step.interactions ?? []).map((interaction, index) => ({
           ...interaction,
           label: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.interaction.${index}.label`, interaction.label),
@@ -3630,12 +3712,14 @@ function captureTutorialUiSnapshot(state: ShellState, session: ActiveSession | n
 type TutorialUiBridgeContext = {
   readonly session: ActiveSession | null;
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
+  readonly terminology: string;
+  readonly locale: string;
 };
 
 /** @emoji 🎥️ Applies a full `TutorialUiSnapshot` (a `TutorialUiSample::Snapshot`, or the composed target of a seek/deviation-converge) onto the live `ShellState` — snaps every field instantly (camera is the only interpolated track, applied separately by the director). Dispatches the atomic `APPLY_TUTORIAL_UI_SNAPSHOT` for everything resolvable purely from `ShellState`, plus one `SET_SESSION` for the fields that live on `ActiveSession.viewState` (`activeModeId`/`panelJson`/`selectionJson`). */
 function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) => void, snapshot: TutorialUiSnapshot, ctx: TutorialUiBridgeContext): void {
   const windowKinds = ctx.session?.app.windowKinds.map((kind) => ({ id: kind.id, label: kind.label })) ?? [];
-  const seed = applyFrameworkLayoutSeed(snapshot.layout, windowKinds, ctx.appLabelsOverlay);
+  const seed = applyFrameworkLayoutSeed(snapshot.layout, windowKinds, ctx.appLabelsOverlay, ctx.terminology, ctx.locale);
   const panelPatches: Partial<Record<Anchor, { readonly visible: boolean; readonly path: readonly string[] }>> = {};
   for (const anchor of ANCHORS) {
     const tabId = snapshot.activePanelTabByGroup[anchor];
@@ -3694,7 +3778,7 @@ function applyTutorialUiChangeToShell(dispatch: (action: ShellAction) => void, c
       return;
     case "layout": {
       const windowKinds = ctx.session?.app.windowKinds.map((kind) => ({ id: kind.id, label: kind.label })) ?? [];
-      const seed = applyFrameworkLayoutSeed(change.layout, windowKinds, ctx.appLabelsOverlay);
+      const seed = applyFrameworkLayoutSeed(change.layout, windowKinds, ctx.appLabelsOverlay, ctx.terminology, ctx.locale);
       dispatch({ type: "SET_SHELL_LAYOUT", value: seed.modeLayout });
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seed.extraInstances });
       return;
@@ -4138,15 +4222,16 @@ function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { read
   const subtractiveLabel = useLabel("ui.selection.subtractive");
   const invertiveLabel = useLabel("ui.selection.invertive");
   const selectionMethod = activeUtilityId === "selectLasso" ? "lasso" : "rectangle";
+  // 🐚️ Replaces the old `(globalThis).__selectionMode` + `window` `"semio:selectionOptionsChanged"`
+  // broadcast — this shell's own store, so its selection-mode toggle never reconfigures another mounted
+  // shell's marquee gestures.
+  const selectionStore = useShellScope().selection;
 
-  const [selectionMode, setSelectionMode] = useState<"default" | "additive" | "subtractive" | "invertive">(() => {
-    return (globalThis as any).__selectionMode || "default";
-  });
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>(() => selectionStore.get());
 
-  const handleModeChange = (mode: "default" | "additive" | "subtractive" | "invertive") => {
-    (globalThis as any).__selectionMode = mode;
+  const handleModeChange = (mode: SelectionMode) => {
+    selectionStore.set(mode);
     setSelectionMode(mode);
-    window.dispatchEvent(new CustomEvent("semio:selectionOptionsChanged"));
   };
 
   const handleMethodChange = (method: "rectangle" | "lasso") => {
@@ -4608,13 +4693,15 @@ function windowActionPaneNode(
   onAction: (action: ActionDescriptor) => void,
   dispatch: (action: ShellAction) => void,
   appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
+  terminology: string = UI_TERMINOLOGY_NATIVE,
+  locale: string = SHELL_LOCALES[0],
 ): ReactNode {
   const resolvedActions = resolveWindowActions(app, windowKind);
   if (resolvedActions.length === 0) return undefined;
   const actions = resolvedActions.map((action) => ({
     ...action,
-    label: resolveAppLabel(appLabelsOverlay, "action", action.id, action.label),
-    args: action.args.map((def) => resolveActionArgDef(def, action.id, appLabelsOverlay)),
+    label: resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label, terminology, locale)),
+    args: action.args.map((def) => resolveActionArgDef(def, action.id, appLabelsOverlay, terminology, locale)),
   }));
   const activeUtilityId = actionPane.activeUtilityByWindowId[windowId] ?? null;
   const activeUtility = activeUtilityId ? (app.utilities ?? []).find((utility) => utility.id === activeUtilityId) : undefined;
@@ -4655,17 +4742,30 @@ export function resolveCommands(
   activePluginManifest: Pick<PluginManifest, "commands"> | null | undefined,
   app: Pick<AppDefinition, "commands" | "modes"> | null | undefined,
   activeModeId: string,
+  overlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
+  terminology: string = UI_TERMINOLOGY_NATIVE,
+  locale: string = SHELL_LOCALES[0],
 ): ResolvedCommand[] {
-  const resolved: ResolvedCommand[] = osCommands.map((definition) => ({ definition, source: { kind: "os" as const } }));
+  // 🗺️ `CommandDefinition.label`/`.args[].label` are manifest `LocalizedLabel` fields — there is no
+  // "command"/"commandArg" overlay category (commands never went through `AppLabelsOverlay`), so this is
+  // the single choke point that resolves them to plain strings for every downstream consumer (the
+  // footer command panel, the command palette, `noteShellCommand`'s history label); `osCommands` are
+  // already plain strings (built by `buildOsCommands` via `shellLabel`) and pass through unchanged.
+  const resolveDefinition = (definition: CommandDefinition): CommandDefinition => ({
+    ...definition,
+    label: resolveManifestLabel(definition.label, terminology, locale),
+    args: definition.args.map((def) => resolveActionArgDef(def, definition.id, overlay, terminology, locale)),
+  });
+  const resolved: ResolvedCommand[] = osCommands.map((definition) => ({ definition: resolveDefinition(definition), source: { kind: "os" as const } }));
   for (const definition of activePluginManifest?.commands ?? []) {
-    resolved.push({ definition, source: { kind: "plugin" as const } });
+    resolved.push({ definition: resolveDefinition(definition), source: { kind: "plugin" as const } });
   }
   if (!app) return resolved;
   const activeMode = (app.modes as readonly AppModeDefinition[] | undefined)?.find((mode) => mode.id === activeModeId);
   const modeCommandIds = new Set(activeMode?.commands ?? []);
   for (const definition of app.commands ?? []) {
-    if (definition.scope === "app") resolved.push({ definition, source: { kind: "app" as const } });
-    else if (definition.scope === "mode" && modeCommandIds.has(definition.id)) resolved.push({ definition, source: { kind: "mode" as const, modeId: activeModeId } });
+    if (definition.scope === "app") resolved.push({ definition: resolveDefinition(definition), source: { kind: "app" as const } });
+    else if (definition.scope === "mode" && modeCommandIds.has(definition.id)) resolved.push({ definition: resolveDefinition(definition), source: { kind: "mode" as const, modeId: activeModeId } });
   }
   return resolved;
 }
@@ -4711,8 +4811,10 @@ export function buildOsCommands(
   hasIntroduction: boolean,
   locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS,
   driverList: readonly UiDriver[] = builtinUiDrivers(),
-  tutorials: readonly { readonly id: string; readonly title: string }[] = [],
+  tutorials: readonly { readonly id: string; readonly title: LocalizedLabel | string }[] = [],
   tutorialRecorderAvailable = false,
+  terminology: string = UI_TERMINOLOGY_NATIVE,
+  locale: string = SHELL_LOCALES[0],
 ): CommandDefinition[] {
   const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
   const commands: CommandDefinition[] = [
@@ -4721,7 +4823,7 @@ export function buildOsCommands(
     // `os.recordTutorial` is dev/studio-only (see `isTutorialRecorderAvailable`) and needs no declared
     // tutorial at all — recording an app IS the authoring path for one.
     ...(tutorials.length > 0
-      ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), scope: "os" as const, category: "app", inPalette: true, args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: tutorial.title })))] }]
+      ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), scope: "os" as const, category: "app", inPalette: true, args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: resolveManifestLabel(tutorial.title, terminology, locale) })))] }]
       : []),
     ...(tutorialRecorderAvailable ? [{ id: "os.recordTutorial", label: shellLabel("ui.command.recordTutorial"), scope: "os" as const, category: "app", inPalette: true, args: [] }] : []),
     {
@@ -5319,10 +5421,10 @@ function tutorialAssetSrcToUrl(src: TutorialAssetSrc): string | null {
 }
 
 /** @emoji 💬️ Self-subscribes to the tutorial clock (see `useTutorialClock`) so only THIS leaf re-renders every frame — never the whole shell — mirroring `TutorialBar`'s own subscription. */
-const TutorialCaptionsHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort; readonly captionsOn: boolean }> = ({ tutorial, clock, captionsOn }) => {
+const TutorialCaptionsHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort; readonly captionsOn: boolean; readonly terminology: string; readonly locale: string }> = ({ tutorial, clock, captionsOn, terminology, locale }) => {
   const timeMs = useTutorialClock(clock);
   const cue = tutorialCuesBetween(tutorial.tracks.narration, timeMs)[0] ?? null;
-  return <TutorialCaptions text={cue?.text ?? null} visible={captionsOn} />;
+  return <TutorialCaptions text={cue ? resolveManifestLabel(cue.text, terminology, locale) : null} visible={captionsOn} />;
 };
 
 const TUTORIAL_DEFAULT_VIDEO_RECT = { x: 0.72, y: 0.7, width: 0.24, height: 0.24 } as const;
@@ -5498,8 +5600,16 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
   const { shellId, storageNamespace, ownsPage = false, brand, ...innerProps } = props;
   const ephemeral = isEphemeralShellBrand(brand);
   const [scope] = useState<ShellScope>(() => createShellScope({ shellId, ownsPage, storage: resolveShellScopeStorage(ephemeral, storageNamespace) }));
+  // 🐚️ `scope.rootRef` is a stable object (its identity never changes), so a descendant hook that puts
+  // the REF ITSELF in a `useEffect`/`useLayoutEffect` dependency array would never re-fire once the ref
+  // attaches. This state bump forces one guaranteed re-render right after attachment so descendants that
+  // read `scope.rootRef.current` fresh at render time (see `FrameworkOsShellInner`'s
+  // `useElementsSurfaceChrome`/`useCanvasAppearanceSync` calls) pick up the real element instead of
+  // sticking with whatever they saw (usually `null`) on the very first render.
+  const [, bumpAfterRootAttach] = useState(0);
   const setRoot = useCallback((node: HTMLDivElement | null) => {
     scope.rootRef.current = node;
+    bumpAfterRootAttach((n) => n + 1);
   }, [scope]);
   const setPortalLayer = useCallback((node: HTMLDivElement | null) => {
     scope.portalLayerRef.current = node;
@@ -5663,7 +5773,9 @@ function FrameworkOsShellInner({
     return worker;
   }, []);
 
-  const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode);
+  // 🐚️ Only a page-owning studio shell syncs to the real browser URL bar/history — an embedded shell
+  // sharing the page with others must not fight them over `window.history`.
+  const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode && scope.ownsPage);
 
   const shellStorage = useMemo(() => (ephemeral ? createMemoryStoragePort() : createBrowserStoragePort()), [ephemeral]);
   const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", shellStorage), [session?.app.id, shellStorage]);
@@ -5783,7 +5895,7 @@ function FrameworkOsShellInner({
    * across every mounted UI element. Skip/escape passes `completed: false` and does not celebrate. */
   const dismissIntroduction = useCallback(
     (completed: boolean) => {
-      if (completed) celebrateAllElements();
+      if (completed && scope.rootRef.current) celebrateAllElements(CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
       dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
       if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
     },
@@ -5808,7 +5920,7 @@ function FrameworkOsShellInner({
         return;
       }
       const celebrateId = celebrateOverride ?? step?.introduce;
-      if (step && (step.interactions ?? []).length > 0 && celebrateId) celebrateElements(elementIdSelector(celebrateId));
+      if (step && (step.interactions ?? []).length > 0 && celebrateId && scope.rootRef.current) celebrateElements(elementIdSelector(celebrateId), CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
       dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
     },
     [dismissIntroduction],
@@ -5835,7 +5947,7 @@ function FrameworkOsShellInner({
       if (index < 0) return;
       if (step.ordered && index !== completed.length) return;
       const celebrateId = celebrateOverride ?? interactions[index].celebrate ?? step.introduce;
-      if (celebrateId) celebrateElements(elementIdSelector(celebrateId));
+      if (celebrateId && scope.rootRef.current) celebrateElements(elementIdSelector(celebrateId), CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
       introductionCompletedInteractionsRef.current = [...completed, index];
       dispatch({ type: "COMPLETE_INTRODUCTION_INTERACTION", index });
       if (introductionCompletedInteractionsRef.current.length >= interactions.length) advanceIntroductionByDoing(celebrateOverride);
@@ -5924,12 +6036,15 @@ function FrameworkOsShellInner({
   }, []);
 
   useEffect(() => {
+    // 🐚️ Only the page-owning shell may write the browser tab title — an embedded shell (e.g. one
+    // demonstrator pane) sharing the page with others must not fight them over it.
+    if (!scope.ownsPage) return;
     if (brand) {
       document.title = brand.windowTitle;
     } else if (activeAppTitle) {
       document.title = activeAppTitle;
     }
-  }, [activeAppTitle, brand]);
+  }, [activeAppTitle, brand, scope.ownsPage]);
 
   useEffect(() => {
     let cancelled = false;
@@ -5961,7 +6076,7 @@ function FrameworkOsShellInner({
           };
           // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
           // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
-          const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY);
+          const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
           extraWindowInstancesRef.current = seeded.extraInstances;
           extraWindowCounterRef.current = seeded.extraInstances.length;
           dispatch({ type: "SET_SESSION", value: { pluginId: sPlugin.handle.pluginId, instanceId, app: sApp, viewState } });
@@ -5985,7 +6100,7 @@ function FrameworkOsShellInner({
             })();
         if (primary && primaryApp) {
           const instanceId = await primary.createApp(primaryApp.id);
-          const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, primaryApp.windowKinds, EMPTY_APP_LABELS_OVERLAY);
+          const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, primaryApp.windowKinds, EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
           extraWindowInstancesRef.current = seeded.extraInstances;
           extraWindowCounterRef.current = seeded.extraInstances.length;
           dispatch({
@@ -6067,7 +6182,7 @@ function FrameworkOsShellInner({
       // 🪟️ On a session switch, seed the default layout's extra instances BEFORE fetching (not after), so
       // this very first fetch already requests every default-layout pane's body/measures/engagements
       // instead of leaving newly-seeded panes to show "missing window" until some later, unrelated refresh.
-      const layoutSeed = isSessionSwitch ? applyFrameworkLayoutSeed(nextSession.app.defaultLayout, nextSession.app.windowKinds, appLabelsOverlay) : undefined;
+      const layoutSeed = isSessionSwitch ? applyFrameworkLayoutSeed(nextSession.app.defaultLayout, nextSession.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale) : undefined;
       // 🪟️ Prefer the override, then the just-computed session-switch seed, then the live ref (never the
       // render-closure snapshot) so a concurrent refresh cannot drop default-layout panes.
       const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
@@ -6285,7 +6400,7 @@ function FrameworkOsShellInner({
       };
       const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
       dispatch({ type: "SET_SESSION", value: nextSession });
-      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, app.windowKinds, appLabelsOverlay);
+      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale);
       extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
@@ -6298,7 +6413,7 @@ function FrameworkOsShellInner({
       await refreshUi(nextSession);
       return nextSession;
     },
-    [loadedPlugins, refreshUi, session, appLabelsOverlay, hostConfig, landingAppId],
+    [loadedPlugins, refreshUi, session, appLabelsOverlay, hostConfig, landingAppId, uiTerminology, uiLocale],
   );
 
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
@@ -7055,8 +7170,8 @@ function FrameworkOsShellInner({
     else tutorialClock.pause();
   }, [tutorialPlaying, tutorialClock]);
 
-  const uiBridgeCtxRef = useRef<TutorialUiBridgeContext>({ session, appLabelsOverlay });
-  uiBridgeCtxRef.current = { session, appLabelsOverlay };
+  const uiBridgeCtxRef = useRef<TutorialUiBridgeContext>({ session, appLabelsOverlay, terminology: uiTerminology, locale: uiLocale });
+  uiBridgeCtxRef.current = { session, appLabelsOverlay, terminology: uiTerminology, locale: uiLocale };
 
   /** ⏱️ Playhead (ms) the director/seek last applied document/UI tracks up to — the "from" side of the
    * next `tutorialSlice(def, from, to)` call. Reset to 0 on sandbox (re)start. */
@@ -7148,7 +7263,7 @@ function FrameworkOsShellInner({
       for (const event of slice.events) {
         const kind = event.kind;
         const targetId = kind.kind === "action" ? kind.action : kind.kind === "command" ? kind.command : undefined;
-        if (targetId) celebrateElements(elementIdSelector(targetId));
+        if (targetId && scope.rootRef.current) celebrateElements(elementIdSelector(targetId), CELEBRATE_STAMP_DURATION_MS, scope.rootRef.current);
       }
       if (documentTouched) await refreshUi(activeSession, { kind: "full" });
     },
@@ -7361,8 +7476,8 @@ function FrameworkOsShellInner({
   }, []);
 
   const tutorialChapterMarkers = useMemo(
-    (): readonly TutorialChapterMarker[] => (activeTutorial ? activeTutorial.chapters.map((chapter) => ({ id: chapter.id, title: chapter.title, atMs: chapter.at })) : []),
-    [activeTutorial],
+    (): readonly TutorialChapterMarker[] => (activeTutorial ? activeTutorial.chapters.map((chapter) => ({ id: chapter.id, title: resolveManifestLabel(chapter.title, uiTerminology, uiLocale), atMs: chapter.at })) : []),
+    [activeTutorial, uiTerminology, uiLocale],
   );
   //#endregion 🎥️TutorialOrchestration
 
@@ -7393,7 +7508,7 @@ function FrameworkOsShellInner({
     },
   });
 
-  useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, driver: uiDriver }, scope.rootRef);
+  useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, driver: uiDriver }, scope.rootRef.current ?? undefined);
 
   //#region 💾️ uiPrefs persistence (skips localStorage writes for any locked preference; skipped entirely for ephemeral brands)
   useEffect(() => {
@@ -7448,7 +7563,7 @@ function FrameworkOsShellInner({
   const applyNamedLayout = useCallback(
     (layout: WindowLayout) => {
       if (!session) return;
-      const seeded = applyFrameworkLayoutSeed(layout, session.app.windowKinds, appLabelsOverlay);
+      const seeded = applyFrameworkLayoutSeed(layout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale);
       extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
@@ -7459,7 +7574,7 @@ function FrameworkOsShellInner({
       // body/measures/engagement gets fetched immediately instead of showing "missing window" until later.
       void refreshUi(session, { kind: "full" }, seeded.extraInstances);
     },
-    [session, appLabelsOverlay, refreshUi],
+    [session, appLabelsOverlay, refreshUi, uiTerminology, uiLocale],
   );
 
   const applyModeChange = useCallback(
@@ -7474,7 +7589,7 @@ function FrameworkOsShellInner({
           const layout = resolveLayoutForMode(current.app, modeId);
           const nextSession: ActiveSession = { ...current, viewState: { ...current.viewState, activeModeId: modeId, activeToolId: undefined } };
           if (layout) {
-            const seeded = applyFrameworkLayoutSeed(layout, current.app.windowKinds, appLabelsOverlay);
+            const seeded = applyFrameworkLayoutSeed(layout, current.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale);
             extraWindowInstancesRef.current = seeded.extraInstances;
             extraWindowCounterRef.current = seeded.extraInstances.length;
             dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
@@ -7486,7 +7601,7 @@ function FrameworkOsShellInner({
         },
       });
     },
-    [appLabelsOverlay, refreshUi],
+    [appLabelsOverlay, refreshUi, uiTerminology, uiLocale],
   );
 
   const handleTemplateDrop = useCallback(
@@ -7498,7 +7613,7 @@ function FrameworkOsShellInner({
       const instanceId = `${payload.windowKindId}-${extraWindowCounterRef.current}`;
       const projectionSpec = decodeWorldProjectionTemplateId(payload.templateId);
       if (projectionSpec) registerPendingWorldProjection(instanceId, projectionSpec);
-      const title = projectionSpec ? worldProjectionSpecLabel(projectionSpec) : resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label);
+      const title = projectionSpec ? worldProjectionSpecLabel(projectionSpec) : resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale));
       const nextExtraInstances = [...extraWindowInstancesRef.current, { id: instanceId, windowKindId: payload.windowKindId, title }];
       extraWindowInstancesRef.current = nextExtraInstances;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: nextExtraInstances });
@@ -7514,20 +7629,20 @@ function FrameworkOsShellInner({
         value: (current) => {
           const base =
             current ??
-            resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay).modeLayout;
+            resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout;
           return insertWindowAtDropZone(base, instanceId, target);
         },
       });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
       noteShellCommand("shell.windowSplit", shellLabel("ui.shellCommand.windowSplit"), { windowKindId: payload.windowKindId, instanceId });
     },
-    [appLabelsOverlay, refreshUi, session, noteShellCommand],
+    [appLabelsOverlay, refreshUi, session, noteShellCommand, uiTerminology, uiLocale],
   );
 
   const displayHostRef = useRef<DisplayHostApi | null>(null);
   const displayHost = useNamedLayoutHost({
     appId: session?.app.id ?? "framework-os",
-    windowKinds: session?.app.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label) })) ?? [],
+    windowKinds: session?.app.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)) })) ?? [],
     builtinLayouts: session?.app.namedLayouts ?? [],
     currentLayout: captureCurrentFrameworkLayout(shellLayout, extraWindowInstances, session?.app.defaultLayout),
     onApplyLayout: applyNamedLayout,
@@ -7541,7 +7656,7 @@ function FrameworkOsShellInner({
   const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
   const uiDriverList = useMemo((): readonly UiDriver[] => [...builtinUiDrivers(), ...Object.values(uiCustomDrivers)], [uiCustomDrivers]);
   const osCommands = useMemo(
-    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable),
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable, uiTerminology, uiLocale),
     [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable],
   );
 
@@ -7931,7 +8046,7 @@ function FrameworkOsShellInner({
 
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
+    const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
     if (studioMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
     if (hasPluginDocumentTab) return pluginLeftTabs;
@@ -7951,12 +8066,12 @@ function FrameworkOsShellInner({
       }),
     });
     return [documentTab, ...pluginLeftTabs];
-  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode, uiLocale, hostAppId]);
+  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode, uiLocale, uiTerminology, hostAppId]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
-    return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
-  }, [appLabelsOverlay, onAction, panelUiByKey, session]);
+    return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
+  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale]);
 
   const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
@@ -7966,8 +8081,8 @@ function FrameworkOsShellInner({
     if (!session) return null;
     const tab = session.app.panelTabs.find((candidate) => panelTabKindId(candidate.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID);
     if (!tab) return null;
-    return panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, 1, appLabelsOverlay);
-  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiLocale]);
+    return panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, 1, appLabelsOverlay, uiTerminology, uiLocale);
+  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale]);
   //#endregion 🧰️FooterUtilityLeaves
 
   //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
@@ -8030,10 +8145,10 @@ function FrameworkOsShellInner({
       })
       .map((example) => ({
         id: example.id,
-        label: resolveAppLabel(appLabelsOverlay, "example", example.id, example.label),
+        label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
         icon: example.iconId,
       }));
-  }, [activePluginManifest, session?.app.id, appLabelsOverlay]);
+  }, [activePluginManifest, session?.app.id, appLabelsOverlay, uiTerminology, uiLocale]);
 
   /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
   const exampleSelectElement = useMemo(() => {
@@ -8067,15 +8182,18 @@ function FrameworkOsShellInner({
               data-state={isActive ? "on" : undefined}
               onClick={() => applyModeChange(mode.id)}
               icon={mode.iconId}
-              text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label)}
+              text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label, uiTerminology, uiLocale))}
             />
           );
         })}
       </ButtonGroup>
     );
-  }, [session, activeModeId, applyModeChange, appLabelsOverlay]);
+  }, [session, activeModeId, applyModeChange, appLabelsOverlay, uiTerminology, uiLocale]);
 
-  const resolvedCommands = useMemo(() => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId), [osCommands, activePluginManifest, session?.app, activeModeId]);
+  const resolvedCommands = useMemo(
+    () => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale),
+    [osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale],
+  );
 
   const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
 
@@ -8125,7 +8243,13 @@ function FrameworkOsShellInner({
 
   const commandCategoryTabs = useMemo(() => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch), [resolvedCommands, commandCategoryList, onCommand]);
 
-  const resolvedModeTools = useMemo(() => resolveModeTools(session?.app, activeModeId), [session?.app, activeModeId]);
+  // 🗺️ `ToolDefinition.label` is a manifest `LocalizedLabel` field — resolved here, right after
+  // `resolveModeTools` (an external `framework-os-core` helper this file cannot edit), so every
+  // downstream consumer (`buildToolTree`/`buildToolTabs`) keeps reading an already-plain-string `label`.
+  const resolvedModeTools = useMemo(
+    () => resolveModeTools(session?.app, activeModeId).map((tool) => ({ ...tool, label: resolveManifestLabel(tool.label, uiTerminology, uiLocale) })),
+    [session?.app, activeModeId, uiTerminology, uiLocale],
+  );
 
   const toolTabs = useMemo(
     () => (session ? buildToolTabs(resolvedModeTools, session.app.controllerId, activeToolIdRef, toolMeasuresByToolIdRef, onActionStable) : []),
@@ -8328,11 +8452,11 @@ function FrameworkOsShellInner({
   const introductionUtilityWindowId = useMemo(() => {
     if (!introductionUtilityId || !session) return null;
     for (const kind of session.app.windowKinds) {
-      const utilities = resolveUtilityNodes(session.app, kind, null, kind.id, appLabelsOverlay);
+      const utilities = resolveUtilityNodes(session.app, kind, null, kind.id, appLabelsOverlay, uiTerminology, uiLocale);
       if (utilityNodeTreeContainsId(utilities, introductionUtilityId)) return kind.id;
     }
     return null;
-  }, [appLabelsOverlay, introductionUtilityId, session]);
+  }, [appLabelsOverlay, introductionUtilityId, session, uiTerminology, uiLocale]);
   /** 🎓️ Window-kind id whose measures tree owns an introduce/show measure id — force-unfolds the Window
    * Options rail so targets like `puzzle3d-play-vortex-show` can mount for the tour. */
   const introductionMeasureWindowId = useMemo(() => {
@@ -8663,7 +8787,7 @@ function FrameworkOsShellInner({
       const tabId = panelTabKindId(tab.kind);
       items.push({
         id: `panel.${tabId}`,
-        label: resolvePanelTabLabel(appLabelsOverlay, tabId, tab.label),
+        label: resolvePanelTabLabel(appLabelsOverlay, tabId, resolveManifestLabel(tab.label, uiTerminology, uiLocale)),
         category: shellLabel("ui.search.category.panels"),
         icon: <Icon icon="panel-left" size="small" />,
         onSelect: () => onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } }),
@@ -8672,7 +8796,7 @@ function FrameworkOsShellInner({
     for (const kind of session.app.windowKinds) {
       items.push({
         id: `window.${kind.id}`,
-        label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label),
+        label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)),
         category: shellLabel("ui.search.category.windows"),
         icon: <Icon icon="app-window" size="small" />,
         onSelect: () => dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: kind.id }),
@@ -8692,7 +8816,7 @@ function FrameworkOsShellInner({
       if (!action.inPalette) continue;
       declaredActionIds.add(action.id);
       const argCarrying = actionRequiresStagedForm(action);
-      const resolvedActionLabel = resolveAppLabel(appLabelsOverlay, "action", action.id, action.label);
+      const resolvedActionLabel = resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label, uiTerminology, uiLocale));
       items.push({
         id: `action.${action.id}`,
         // ✍️ Arg-carrying actions never fire from the palette (P3): the "…" entry activates the hosting
@@ -8816,7 +8940,7 @@ function FrameworkOsShellInner({
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
         const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawned.id, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id], onActionStable) : undefined;
-        const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay) : [];
+        const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay, uiTerminology, uiLocale) : [];
         return [
           {
             id: spawned.id,
@@ -8829,7 +8953,7 @@ function FrameworkOsShellInner({
             search: chrome?.search,
             utilityBar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId, chrome?.utilityOptions) : undefined,
             utilityBarFolded: utilityBarFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
-            actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay) : undefined,
+            actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
             children: (
@@ -8843,13 +8967,13 @@ function FrameworkOsShellInner({
     }
     if (Object.keys(windowUiByWindowId).length === 0) return [];
     const baseWindows = session.app.windowKinds.map((kind) => {
-      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay);
+      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay, uiTerminology, uiLocale);
       const chrome = windowMeasuresChrome(windowMeasuresByWindowId[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
       return {
         id: kind.id,
         iconId: windowIconsById[kind.id] ?? kind.iconId,
-        title: windowTitlesById[kind.id] ?? appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
+        title: windowTitlesById[kind.id] ?? appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label, uiTerminology, uiLocale)), uiLocale),
         fill: true,
         showControls: true,
         measures: chrome.measures,
@@ -8858,7 +8982,7 @@ function FrameworkOsShellInner({
         search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
         utilityBar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
         utilityBarFolded: utilityBarFoldedFor(kind.id, kind.id),
-        actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
+        actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
         actionsFolded: actionsFoldedFor(kind.id, kind.id),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
         children: (
@@ -8878,7 +9002,7 @@ function FrameworkOsShellInner({
     const extraWindows = extraWindowInstances.flatMap((instance) => {
       const kind = session.app.windowKinds.find((entry) => entry.id === instance.windowKindId);
       if (!kind) return [];
-      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay);
+      const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay, uiTerminology, uiLocale);
       const chrome = windowMeasuresChrome(windowMeasuresByWindowId[instance.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, instance.id, windowEngagementsByWindowId);
       return [
@@ -8894,7 +9018,7 @@ function FrameworkOsShellInner({
           search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
           utilityBar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
           utilityBarFolded: utilityBarFoldedFor(instance.id, instance.windowKindId),
-          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
+          actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale),
           actionsFolded: actionsFoldedFor(instance.id, instance.windowKindId),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           children: (
@@ -8943,8 +9067,8 @@ function FrameworkOsShellInner({
   const effectiveModeLayout = useMemo(
     () =>
       shellLayout ??
-      (session ? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay).modeLayout : { kind: "stack" as const, children: [] }),
-    [appLabelsOverlay, session, shellLayout],
+      (session ? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout : { kind: "stack" as const, children: [] }),
+    [appLabelsOverlay, session, shellLayout, uiTerminology, uiLocale],
   );
 
   const handleActiveWindowChange = useCallback(
@@ -9052,7 +9176,7 @@ function FrameworkOsShellInner({
         />
         <div className="min-h-0 flex-1">
           <App
-            modes={modes.map((mode) => ({ id: mode.id, label: resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label), children: null }))}
+            modes={modes.map((mode) => ({ id: mode.id, label: resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label, uiTerminology, uiLocale)), children: null }))}
             activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id}
             onActiveModeChange={applyModeChange}
             chrome={false}
@@ -9083,7 +9207,7 @@ function FrameworkOsShellInner({
                 });
                 dispatch({
                   type: "SET_SHELL_LAYOUT",
-                  value: (current) => current ?? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay).modeLayout,
+                  value: (current) => current ?? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout,
                 });
               }}
             />
@@ -9201,7 +9325,7 @@ function FrameworkOsShellInner({
         categoryByActionId.set(action.id, actionCategoryId(action));
         specs.push({
           id: `shell-menu.action.${action.id}`,
-          label: resolveAppLabel(appLabelsOverlay, "action", action.id, action.label) + (argCarrying ? "…" : ""),
+          label: resolveAppLabel(appLabelsOverlay, "action", action.id, resolveManifestLabel(action.label, uiTerminology, uiLocale)) + (argCarrying ? "…" : ""),
           icon: action.iconId,
           shortcut: action.keys ?? keysByActionId.get(action.id),
           destructive: action.kind === "operation" && action.id.toLowerCase().includes("delete"),
@@ -9219,7 +9343,7 @@ function FrameworkOsShellInner({
     });
     const organized = organizeContextMenu(specs, (id) => categoryByActionId.get(id));
     return mapContextMenuSpecs(organized, dispatchShellMenuAction, keysByActionId);
-  }, [session, activeWindowId, appLabelsOverlay, keysByActionId, dispatchShellMenuAction]);
+  }, [session, activeWindowId, appLabelsOverlay, keysByActionId, dispatchShellMenuAction, uiTerminology, uiLocale]);
 
   useEffect(() => {
     const handleContextMenu = (event: MouseEvent) => {
@@ -9251,7 +9375,7 @@ function FrameworkOsShellInner({
               subnavbar={
                 activeTutorial ? (
                   <TutorialBar
-                    title={activeTutorial.title}
+                    title={resolveManifestLabel(activeTutorial.title, uiTerminology, uiLocale)}
                     durationMs={activeTutorial.durationMs}
                     playing={tutorialPlaying}
                     rate={tutorialRate}
@@ -9291,7 +9415,7 @@ function FrameworkOsShellInner({
         />
         {session && activeIntroduction && introductionStepIndex != null && (
           <UIIntroduction
-            introduction={brand?.introduction ?? resolveIntroductionDefinition(activeIntroduction, appLabelsOverlay)}
+            introduction={brand?.introduction ?? resolveIntroductionDefinition(activeIntroduction, appLabelsOverlay, uiTerminology, uiLocale)}
             stepIndex={introductionStepIndex}
             completedInteractionIndices={introductionCompletedInteractions}
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
@@ -9300,7 +9424,7 @@ function FrameworkOsShellInner({
         )}
         {activeTutorial && (
           <>
-            <TutorialCaptionsHost tutorial={activeTutorial} clock={tutorialClock} captionsOn={tutorialCaptionsOn} />
+            <TutorialCaptionsHost tutorial={activeTutorial} clock={tutorialClock} captionsOn={tutorialCaptionsOn} terminology={uiTerminology} locale={uiLocale} />
             <TutorialVideoOverlayHost tutorial={activeTutorial} clock={tutorialClock} muted={tutorialMuted} playing={tutorialPlaying} rate={tutorialRate} />
             <TutorialGhostPointerHost tutorial={activeTutorial} clock={tutorialClock} />
           </>
@@ -9312,7 +9436,7 @@ function FrameworkOsShellInner({
             if (!dialog) return null;
             return (
               <UIDialog
-                dialog={resolveDialogDefinition(dialog, appLabelsOverlay)}
+                dialog={resolveDialogDefinition(dialog, appLabelsOverlay, uiTerminology, uiLocale)}
                 seedArgs={overlayDialog.seedArgs}
                 renderField={(def, value, onChange) => renderStagedArgControl(def, value, onChange)}
                 onSubmit={(args) => {
@@ -12222,7 +12346,7 @@ const CAMERA_SYNC_DEBOUNCE_MS = 120;
 const DRAG_OVER_THROTTLE_MS = 50;
 const DRAG_OVER_THROTTLE_DISTANCE = 4;
 
-export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
+export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.canvas2d;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
@@ -12233,6 +12357,7 @@ export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cameraSyncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragOverStateRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       onAction({
@@ -12243,6 +12368,8 @@ export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
     },
     [node.controllerId, node.surfaceId, onAction],
   );
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
   const sessionFactory = useMemo(() => {
     return () => {
       const session = new JsonLayersCanvasSession(
@@ -12378,11 +12505,56 @@ export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch],
   );
 
+  //#region ContextMenu
+  /** @emoji 🖱️ No layer pick/selection is tracked at this level (`Canvas2dScene` carries only camera + `layersJson`) — `hits`/`selection` stay empty per surface convention until layer picking lands here. */
+  const onContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>): void => {
+      if (!requestContextMenu) return;
+      event.preventDefault();
+      event.stopPropagation();
+      void (async () => {
+        const items = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            viewState: {},
+            menu: { id: "canvas2d" },
+            surface: { surfaceId: node.surfaceId, kind: "canvas2d", hits: [], selection: [] },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          },
+          mapContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ x: event.clientX, y: event.clientY, items });
+      })();
+    },
+    [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],
+  );
+  //#endregion ContextMenu
+
   if (!scene) return <div className="semio-canvas-2d-empty">{emptySceneLabel}</div>;
 
   return (
-    <div ref={containerRef} className="semio-canvas-2d-host h-full min-h-[24rem] w-full ui-surface" data-level="base" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+    <div
+      ref={containerRef}
+      className="semio-canvas-2d-host h-full min-h-[24rem] w-full ui-surface"
+      data-level="base"
+      data-controller-id={node.controllerId}
+      data-surface-id={node.surfaceId}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      onContextMenu={onContextMenu}
+    >
       <GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
+      <ContextMenuController
+        open={contextMenu != null}
+        position={contextMenu ?? { x: 0, y: 0 }}
+        items={contextMenu?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setContextMenu(null);
+        }}
+      />
     </div>
   );
 }
@@ -12672,7 +12844,7 @@ function useMeshStylePalette(): MeshStylePalette {
       setPalette(resolveMeshStylePalette());
     }, []),
     true,
-    shellScope?.rootRef,
+    shellScope?.rootRef.current ?? undefined,
   );
   return palette;
 }
@@ -14357,6 +14529,7 @@ function WorldInstancesLayer({
   instances,
   meshes,
   selection,
+  persistentSelectionMode,
   palette,
   projectionSpec,
   onInstancePointerDown,
@@ -14379,6 +14552,8 @@ function WorldInstancesLayer({
   readonly instances: readonly WorldInstanceRecord[];
   readonly meshes: readonly WorldMeshRecord[];
   readonly selection: WorldSelectionRecord;
+  /** 🐚️ This shell's own `SelectionModeStore` value — see `resolveWorldSelectionMergeMode`'s doc. */
+  readonly persistentSelectionMode: SelectionMode;
   readonly palette: MeshStylePalette;
   readonly projectionSpec?: WorldProjectionSpec;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
@@ -14633,7 +14808,7 @@ function WorldInstancesLayer({
     [applyGumballLivePreview, onGumballDragEnd],
   );
 
-  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event));
+  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
 
   const paintFromHit = (objectId: string, mesh: WorldMeshData, event: ThreeEvent<PointerEvent> & { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
     if (!onPaintAt) return;
@@ -15177,8 +15352,9 @@ function instanceMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): st
 export function resolveWorldSelectionMergeMode(
   configuredMode: SelectionMergeMode | undefined,
   modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean },
+  persistentMode?: SelectionMergeMode,
 ): SelectionMergeMode {
-  if (configuredMode === undefined) return marqueeModeFromModifiers(modifiers);
+  if (configuredMode === undefined) return marqueeModeFromModifiers(modifiers, persistentMode);
   if (configuredMode !== "default") return configuredMode;
   const shift = modifiers.shiftKey === true;
   const ctrl = modifiers.ctrlKey === true || modifiers.metaKey === true;
@@ -15895,6 +16071,17 @@ function clearPendingWorldProjection(windowId: string | null): void {
 //#region World3dHost
 export function World3dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.world3d;
+  // 🐚️ Optional — this host is also unit-tested standalone, outside any `ShellScopeProvider`.
+  const shellScope = useShellScopeOptional();
+  // 🐚️ Read as reactive state (not `shellScope.selection.get()` inline at each use) because this value
+  // is consumed inside `<Canvas>` r3f subtrees (`WorldInstancesLayer`) via a prop, not context — R3F
+  // primitives aren't guaranteed to re-render just because an *outer* DOM component's context changed,
+  // so the toolbar's mode toggle needs an explicit subscription to actually propagate.
+  const [persistentSelectionMode, setPersistentSelectionMode] = useState<SelectionMode>(() => shellScope?.selection.get() ?? "default");
+  useEffect(() => {
+    if (!shellScope) return;
+    return shellScope.selection.subscribe(() => setPersistentSelectionMode(shellScope.selection.get()));
+  }, [shellScope]);
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const setWindowTitle = useContext(SetWindowTitleContext);
   const setWindowIcon = useContext(SetWindowIconContext);
@@ -16074,7 +16261,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const marqueeStart = marqueePath[0];
   const marqueeEnd = marqueePath[marqueePath.length - 1];
   const marqueeDragActive = marqueeDown && marqueePath.length > 1 && marqueeStart != null && marqueeEnd != null && Math.hypot(marqueeEnd.x - marqueeStart.x, marqueeEnd.y - marqueeStart.y) > MARQUEE_DRAG_THRESHOLD_PX;
-  const marqueeMergeMode = useMemo(() => resolveWorldSelectionMergeMode(selection.selectionMergeMode, marqueeModifiers), [marqueeModifiers, selection.selectionMergeMode]);
+  const marqueeMergeMode = useMemo(() => resolveWorldSelectionMergeMode(selection.selectionMergeMode, marqueeModifiers, persistentSelectionMode), [marqueeModifiers, selection.selectionMergeMode, persistentSelectionMode]);
   const marqueeCoverage: SelectionMarqueeCoverage = useMemo(() => {
     if (!marqueeDragActive || !marqueeStart || !marqueeEnd) return "full";
     return marqueeCoverageFromGesture({ method, startX: marqueeStart.x, endX: marqueeEnd.x, path: marqueePath });
@@ -16362,7 +16549,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleInstancePointerDown = useCallback(
     (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => {
-      const merge = instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event));
+      const merge = instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event, persistentSelectionMode));
       const record = instances.find((entry) => entry.id === id);
       if (record?.disabled) {
         dispatch("worldPick", { granularity: selectionMode, id: null, merge });
@@ -16425,7 +16612,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handleVortexSelect = useCallback(
     (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
-      const merge = instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event ?? {}));
+      const merge = instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event ?? {}, persistentSelectionMode));
       dispatch("worldVortexSelect", { fullId, merge });
     },
     [dispatch, selection.selectionMergeMode],
@@ -16875,7 +17062,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (interaction.suggestionMenu?.open) {
         handleSuggestionClose();
       }
-      dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event)) });
+      dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event, persistentSelectionMode)) });
     },
     [dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, paintMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
   );
@@ -17157,6 +17344,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
                 instances={instances}
                 meshes={meshes}
                 selection={selection}
+                persistentSelectionMode={persistentSelectionMode}
                 palette={meshStylePalette}
                 projectionSpec={worldProjectionSpec}
                 onInstancePointerDown={handleInstancePointerDown}
@@ -17798,7 +17986,7 @@ function WasmGraphSurface({
       paintOverlays();
     },
     true,
-    wasmGraphSurfaceShellScope?.rootRef,
+    wasmGraphSurfaceShellScope?.rootRef.current ?? undefined,
   );
 
   const [wasmSession, setWasmSession] = useState<FrameworkGraphSession | null>(null);
@@ -19165,7 +19353,7 @@ export function FlowGraphCanvasHost({
       paintOverlays();
     },
     true,
-    flowGraphCanvasHostShellScope?.rootRef,
+    flowGraphCanvasHostShellScope?.rootRef.current ?? undefined,
   );
 
   const pickInteraction = useCanvasPickInteraction({
@@ -19708,7 +19896,7 @@ function WasmEditorSurface({
       }
     },
     true,
-    wasmEditorSurfaceShellScope?.rootRef,
+    wasmEditorSurfaceShellScope?.rootRef.current ?? undefined,
   );
 
   const emitSelection = useCallback(() => {
@@ -20365,9 +20553,21 @@ function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescrip
 //#endregion Helpers
 
 //#region Component
-export function TableHost({ node, onAction }: ComponentSceneHostProps) {
+export function TableHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.table;
+  // 🐚️ Optional — this host is also unit-tested standalone, outside any `ShellScopeProvider`.
+  const shellScope = useShellScopeOptional();
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const dispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+    },
+    [node.controllerId, node.surfaceId, onAction],
+  );
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
   const columns = useMemo(() => {
     if (!scene) return [] as TableColumnRecord[];
     try {
@@ -20484,6 +20684,40 @@ export function TableHost({ node, onAction }: ComponentSceneHostProps) {
             args: { surfaceId: node.surfaceId, row },
           })
         }
+        onRowContextMenu={(row, index, event) => {
+          if (!requestContextMenu) return;
+          event.preventDefault();
+          event.stopPropagation();
+          const rowId = String(row.id ?? row.pluginId ?? index);
+          void (async () => {
+            const items = await openSurfaceContextMenu(
+              requestContextMenu,
+              {
+                viewState: {},
+                menu: { id: "table" },
+                surface: {
+                  surfaceId: node.surfaceId,
+                  kind: "table",
+                  hits: [{ domain: "row", id: rowId }],
+                  selection: selectedRows && selectedRows.size > 0 ? [{ domain: "row", ids: [...selectedRows] }] : [],
+                },
+                windowInstanceId: windowInstanceId ?? undefined,
+                point: { x: event.clientX, y: event.clientY },
+              },
+              mapContextMenu,
+              shellContextMenuFallback,
+            );
+            setContextMenu({ x: event.clientX, y: event.clientY, items });
+          })();
+        }}
+      />
+      <ContextMenuController
+        open={contextMenu != null}
+        position={contextMenu ?? { x: 0, y: 0 }}
+        items={contextMenu?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setContextMenu(null);
+        }}
       />
     </div>
   );
@@ -20600,7 +20834,17 @@ type Paint2dMarqueeOverlay =
 //#endregion Paint2dMarqueeOverlay
 
 //#region Paint2dCanvasSurface
-function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComponentSceneNode; readonly scene: Paint2dScene; readonly onAction: (action: ActionDescriptor) => void }) {
+function Paint2dCanvasSurface({
+  node,
+  scene,
+  onAction,
+  requestContextMenu,
+}: {
+  readonly node: UiComponentSceneNode;
+  readonly scene: Paint2dScene;
+  readonly onAction: (action: ActionDescriptor) => void;
+  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
+}) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const isNavigator = scene.viewMode === "navigator";
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20620,6 +20864,7 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
   const [attachError, setAttachError] = useState<string | null>(null);
   const [marqueeOverlay, setMarqueeOverlay] = useState<Paint2dMarqueeOverlay | null>(null);
   const [overlayRect, setOverlayRect] = useState<Paint2dScreenRect | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const canvasUnavailableLabel = useLabel("ui.host.canvasUnavailable");
 
   const dispatch = useCallback(
@@ -20628,6 +20873,8 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
     },
     [node.controllerId, node.surfaceId, onAction],
   );
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
 
   // 🎯️ Raster layers have no per-entity world position — only `canvasPoint` (camera-space world
   // coordinates) is targetable here, not `entity`/`curve`.
@@ -20734,7 +20981,7 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
       sessionRef.current.renderFrame();
     },
     true,
-    paint2dCanvasSurfaceShellScope?.rootRef,
+    paint2dCanvasSurfaceShellScope?.rootRef.current ?? undefined,
   );
 
   const onSessionReady = useCallback(
@@ -20798,11 +21045,14 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
       dispatch("setHover", { id });
     },
     onSelectTarget: (target, request) => {
-      const mergeMode = marqueeModeFromModifiers({
-        shiftKey: request.modifiers?.shift === true,
-        ctrlKey: request.modifiers?.ctrl === true,
-        metaKey: request.modifiers?.meta === true,
-      });
+      const mergeMode = marqueeModeFromModifiers(
+        {
+          shiftKey: request.modifiers?.shift === true,
+          ctrlKey: request.modifiers?.ctrl === true,
+          metaKey: request.modifiers?.meta === true,
+        },
+        shellScope?.selection.get(),
+      );
       dispatch("setSelection", { ids: selectionMergeIds(mergeMode, parsePaint2dSelection(scene.selectionJson), [target.id]) });
     },
   });
@@ -20925,7 +21175,7 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
       const marquee = marqueeRef.current;
       if (marquee.tracking) {
         if (marquee.active) {
-          const mergeMode = marqueeModeFromModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
+          const mergeMode = marqueeModeFromModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey }, shellScope?.selection.get());
           commitMarqueeSelection(point, mergeMode);
         }
         marqueeRef.current = { tracking: false, active: false, start: point, points: [] };
@@ -20962,6 +21212,48 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
     },
     [clientPoint, dispatch, isNavigator, scene.cameraJson, scene.compositeViewportJson],
   );
+
+  /** @emoji 🖱️ Pick targets fresh at the click point via the raster wasm session (mirrors `pickInteraction.resolveTargetsAtClient`) — raster layers have no live pick/hover state cached in React, so hits are recomputed here rather than reused. */
+  const onContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>): void => {
+      event.preventDefault();
+      if (isNavigator || !requestContextMenu) return;
+      event.stopPropagation();
+      const session = sessionRef.current;
+      const point = clientPoint(event);
+      let targets: Paint2dPickTarget[] = [];
+      if (session) {
+        try {
+          targets = JSON.parse(session.pickTargetsAtScreenJson(point.x, point.y)) as Paint2dPickTarget[];
+        } catch {
+          targets = [];
+        }
+      }
+      const hits = targets.map((target) => ({ domain: target.domain, id: target.id }));
+      const selectionIds = parsePaint2dSelection(scene.selectionJson);
+      void (async () => {
+        const items = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            viewState: {},
+            menu: { id: "paint2d" },
+            surface: {
+              surfaceId: node.surfaceId,
+              kind: "paint2d",
+              hits,
+              selection: selectionIds.length > 0 ? [{ domain: "layer", ids: selectionIds }] : [],
+            },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          },
+          mapContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ x: event.clientX, y: event.clientY, items });
+      })();
+    },
+    [clientPoint, isNavigator, mapContextMenu, node.surfaceId, requestContextMenu, scene.selectionJson, shellContextMenuFallback, windowInstanceId],
+  );
   //#endregion Pointer
 
   return (
@@ -20982,11 +21274,19 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
         onPointerUp={onPointerUp}
         onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
         onWheel={onWheel}
-        onContextMenu={(event) => event.preventDefault()}
+        onContextMenu={onContextMenu}
       />
       {!isNavigator ? (
         <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       ) : null}
+      <ContextMenuController
+        open={contextMenu != null}
+        position={contextMenu ?? { x: 0, y: 0 }}
+        items={contextMenu?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setContextMenu(null);
+        }}
+      />
     </div>
   );
 }
@@ -21061,11 +21361,11 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
 //#endregion Paint2dWasmCanvas
 
 //#region Paint2dHost
-export function Paint2dHost({ node, onAction }: ComponentSceneHostProps) {
+export function Paint2dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.paint2d;
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   if (!scene) return <div className="semio-paint-2d-empty">{emptySceneLabel}</div>;
-  return <Paint2dCanvasSurface node={node} scene={scene} onAction={onAction} />;
+  return <Paint2dCanvasSurface node={node} scene={scene} onAction={onAction} requestContextMenu={requestContextMenu} />;
 }
 //#endregion Paint2dHost
 //#endregion 🔖️Paint2dHost
@@ -21548,6 +21848,8 @@ class MapRenderer {
 //#region TiledMapHost
 export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.tiledMap;
+  // 🐚️ Optional — this host is also unit-tested standalone, outside any `ShellScopeProvider`.
+  const shellScope = useShellScopeOptional();
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -21970,7 +22272,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       pointer.current.leftDown = false;
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       const distance = Math.hypot(point.x - pointer.current.start.x, point.y - pointer.current.start.y);
-      const mode = marqueeModeFromModifiers(event);
+      const mode = marqueeModeFromModifiers(event, shellScope?.selection.get());
       const method = selectionMethod;
       if (pointer.current.marqueeActive && distance >= MAP_MARQUEE_THRESHOLD_PX) {
         const points = method === "lasso" ? [...pointer.current.points, point] : [pointer.current.start, point];
@@ -22397,6 +22699,7 @@ export function pushPuzzle2dFixtureDropPreview(controllerId: string, previewJson
 //#region Board2dHost
 export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.board2d;
+  const board2dHostShellScope = useShellScopeOptional();
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
@@ -22733,18 +23036,15 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [sessionEpoch, scene?.activeUtility]);
 
   useEffect(() => {
-    if (!scene) return;
+    if (!scene || !board2dHostShellScope) return;
     const updateOptions = () => {
-      const mode = (globalThis as any).__selectionMode || "default";
+      const mode = board2dHostShellScope.selection.get();
       const wasmMode = mode === "default" ? "replace" : mode;
       applyToSession(sessionRef.current, (session) => session.setSelectionOptions?.(scene.selectionMethod, wasmMode, true, true, true));
     };
     updateOptions();
-    window.addEventListener("semio:selectionOptionsChanged", updateOptions);
-    return () => {
-      window.removeEventListener("semio:selectionOptionsChanged", updateOptions);
-    };
-  }, [sessionEpoch, scene?.selectionMethod]);
+    return board2dHostShellScope.selection.subscribe(updateOptions);
+  }, [sessionEpoch, scene?.selectionMethod, board2dHostShellScope]);
 
   useEffect(() => {
     if (!scene) return;
@@ -22779,7 +23079,6 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [sessionEpoch, scene?.lodMode]);
   //#endregion SceneSync
 
-  const board2dHostShellScope = useShellScopeOptional();
   useCanvasAppearanceSync(
     () => {
       syncSessionCanvasTheme(sessionRef.current);
@@ -22790,7 +23089,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       }
     },
     true,
-    board2dHostShellScope?.rootRef,
+    board2dHostShellScope?.rootRef.current ?? undefined,
   );
 
   //#region Pointer
@@ -24052,7 +24351,7 @@ const INK_MARQUEE_THRESHOLD_PX = 4;
 //#endregion DragState
 
 //#region InkCanvasHost
-export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
+export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.inkCanvas;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -24064,6 +24363,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   const [marqueePoints, setMarqueePoints] = useState<readonly SelectionMarqueePoint[]>([]);
   const [textEdit, setTextEdit] = useState<InkTextEditState | null>(null);
   const [tableEdit, setTableEdit] = useState<InkTableEditState | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
 
   const sceneDoc = useMemo(() => parseInkScene(scene?.documentJson), [scene?.documentJson]);
@@ -24131,6 +24431,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
     },
     [node.controllerId, node.surfaceId, onAction],
   );
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
 
   const flushPendingLive = useCallback(() => {
     if (rafRef.current != null) {
@@ -24446,6 +24748,44 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
     [atomicGesture, dispatch, doc, interactive, isNavigator],
   );
 
+  //#region ContextMenu
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>): void => {
+      if (!rootRef.current || !doc || !requestContextMenu) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const rect = rootRef.current.getBoundingClientRect();
+      const [worldX, worldY] = screenToWorld(doc.camera, event.clientX - rect.left, event.clientY - rect.top);
+      const hitItems = inkItemsAtPoint(doc.blocks, worldX, worldY);
+      const top = hitItems[0];
+      const selectionIds = top && !selectedSet.has(top.id) ? [top.id] : selectedIds;
+      if (top && !selectedSet.has(top.id)) dispatch(inkCanvasActions.setSelection, { ids: selectionIds });
+      const hits = hitItems.map((item) => ({ domain: "block", id: item.id }));
+      void (async () => {
+        const items = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            viewState: {},
+            menu: { id: "inkCanvas" },
+            surface: {
+              surfaceId: node.surfaceId,
+              kind: "inkCanvas",
+              hits,
+              selection: selectionIds.length > 0 ? [{ domain: "block", ids: selectionIds }] : [],
+            },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          },
+          mapContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ x: event.clientX, y: event.clientY, items });
+      })();
+    },
+    [dispatch, doc, mapContextMenu, node.surfaceId, requestContextMenu, selectedIds, selectedSet, shellContextMenuFallback, windowInstanceId],
+  );
+  //#endregion ContextMenu
+
   const commitTextEdit = useCallback(
     (blockId: string, paragraphs: readonly InkTextParagraph[], created?: boolean) => {
       if (!doc) {
@@ -24599,6 +24939,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       onPointerLeave={handlePointerUp}
       onWheel={handleWheel}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
       onCopy={handleCopy}
       onPaste={handlePaste}
     >
@@ -24651,6 +24992,14 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
           rect={screenRectFromPoints(marqueePoints) ?? { x: 0, y: 0, width: 0, height: 0 }}
         />
       ) : null}
+      <ContextMenuController
+        open={contextMenu != null}
+        position={contextMenu ?? { x: 0, y: 0 }}
+        items={contextMenu?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setContextMenu(null);
+        }}
+      />
     </div>
   );
 }
@@ -24659,9 +25008,19 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
 
 //#region 🔖️GraphTimelineHost
 //#region GraphTimelineHost
-export function GraphTimelineHost({ node, onAction }: ComponentSceneHostProps) {
+export function GraphTimelineHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.graphTimeline;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const dispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+    },
+    [node.controllerId, node.surfaceId, onAction],
+  );
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
   const columns = useMemo(() => {
     if (!scene) return [] as HistoryColumn[];
     try {
@@ -24671,10 +25030,37 @@ export function GraphTimelineHost({ node, onAction }: ComponentSceneHostProps) {
     }
   }, [scene]);
 
+  //#region ContextMenu
+  /** @emoji 🖱️ `GraphTimelineScene` carries only `columnsJson` — no per-row pick/selection state reaches this host (`HistoryTable` doesn't expose a row-context-menu hook either) — so `hits`/`selection` stay empty per surface convention. */
+  const onContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>): void => {
+      if (!requestContextMenu) return;
+      event.preventDefault();
+      event.stopPropagation();
+      void (async () => {
+        const items = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            viewState: {},
+            menu: { id: "graphTimeline" },
+            surface: { surfaceId: node.surfaceId, kind: "graphTimeline", hits: [], selection: [] },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          },
+          mapContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ x: event.clientX, y: event.clientY, items });
+      })();
+    },
+    [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],
+  );
+  //#endregion ContextMenu
+
   if (!scene) return <div className="semio-graph-timeline-empty">{emptySceneLabel}</div>;
 
   return (
-    <div className="semio-graph-timeline-host h-full min-h-0 w-full overflow-auto p-single" data-surface-id={node.surfaceId}>
+    <div className="semio-graph-timeline-host h-full min-h-0 w-full overflow-auto p-single" data-surface-id={node.surfaceId} onContextMenu={onContextMenu}>
       <HistoryTable
         id={childElementId(node.surfaceId, "table")}
         columns={columns}
@@ -24685,6 +25071,14 @@ export function GraphTimelineHost({ node, onAction }: ComponentSceneHostProps) {
             args: { checkpointId },
           })
         }
+      />
+      <ContextMenuController
+        open={contextMenu != null}
+        position={contextMenu ?? { x: 0, y: 0 }}
+        items={contextMenu?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setContextMenu(null);
+        }}
       />
     </div>
   );
@@ -24815,8 +25209,18 @@ function PalettePanel({ palette, controllerId, onAction }: { readonly palette: r
 //#endregion Palette
 
 //#region Component
-export function BlockListHost({ node, onAction }: ComponentSceneHostProps) {
+export function BlockListHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.blockList;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const dispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+    },
+    [node.controllerId, node.surfaceId, onAction],
+  );
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
   const steps = useMemo(() => {
     if (!scene) return [] as StepRecord[];
     try {
@@ -24838,6 +25242,34 @@ export function BlockListHost({ node, onAction }: ComponentSceneHostProps) {
   const addStepLabel = useLabel("ui.blockList.addStep");
   const emptyLabel = useLabel("ui.host.emptyScene");
 
+  //#region ContextMenu
+  /** @emoji 🖱️ `BlockListScene` carries only `stepsJson`/`paletteJson` — no per-step pick/selection state reaches this
+   * host — so `hits`/`selection` stay empty per surface convention (see `GraphTimelineHost`). */
+  const onContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>): void => {
+      if (!requestContextMenu) return;
+      event.preventDefault();
+      event.stopPropagation();
+      void (async () => {
+        const items = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            viewState: {},
+            menu: { id: "blockList" },
+            surface: { surfaceId: node.surfaceId, kind: "blockList", hits: [], selection: [] },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          },
+          mapContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ x: event.clientX, y: event.clientY, items });
+      })();
+    },
+    [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],
+  );
+  //#endregion ContextMenu
+
   if (!scene) return <div className="semio-block-list-empty">{emptyLabel}</div>;
 
   function handleStepDragEnd(event: DragEndEvent) {
@@ -24849,7 +25281,7 @@ export function BlockListHost({ node, onAction }: ComponentSceneHostProps) {
   }
 
   return (
-    <div className="semio-block-list-host flex h-full min-h-0 w-full" data-surface-id={node.surfaceId}>
+    <div className="semio-block-list-host flex h-full min-h-0 w-full" data-surface-id={node.surfaceId} onContextMenu={onContextMenu}>
       <div className="flex min-w-0 flex-1 flex-col gap-2 overflow-auto p-single">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">{stepsLabel}</span>
@@ -24866,6 +25298,14 @@ export function BlockListHost({ node, onAction }: ComponentSceneHostProps) {
         </DndContext>
       </div>
       <PalettePanel palette={palette} controllerId={node.controllerId} onAction={onAction} />
+      <ContextMenuController
+        open={contextMenu != null}
+        position={contextMenu ?? { x: 0, y: 0 }}
+        items={contextMenu?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setContextMenu(null);
+        }}
+      />
     </div>
   );
 }
@@ -24992,18 +25432,61 @@ function SplitDiffPane({ rows, side }: { readonly rows: readonly SplitRow[]; rea
 
 //#region Component
 /** @emoji 🆚️ Renders a `DiffViewScene`: a minimal, dependency-free line-based diff between `before`/`after`, unified (default) or split per `mode`. */
-export function DiffViewHost({ node }: ComponentSceneHostProps) {
+export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.diffView;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const dispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+    },
+    [node.controllerId, node.surfaceId, onAction],
+  );
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const before = scene?.before ?? "";
   const after = scene?.after ?? "";
   const lines = useMemo(() => diffLines(before.split("\n"), after.split("\n")), [before, after]);
   const splitRows = useMemo(() => (scene?.mode === "split" ? buildSplitRows(lines) : []), [lines, scene?.mode]);
 
+  //#region ContextMenu
+  /** @emoji 🖱️ `DiffViewScene` carries only `before`/`after`/`mode` — no per-line pick/selection state reaches this
+   * host — so `hits`/`selection` stay empty per surface convention (see `GraphTimelineHost`). */
+  const onContextMenu = useCallback(
+    (event: MouseEvent<HTMLDivElement>): void => {
+      if (!requestContextMenu) return;
+      event.preventDefault();
+      event.stopPropagation();
+      void (async () => {
+        const items = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            viewState: {},
+            menu: { id: "diffView" },
+            surface: { surfaceId: node.surfaceId, kind: "diffView", hits: [], selection: [] },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          },
+          mapContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ x: event.clientX, y: event.clientY, items });
+      })();
+    },
+    [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],
+  );
+  //#endregion ContextMenu
+
   if (!scene) return <div className="semio-diff-view-empty">{emptySceneLabel}</div>;
 
   return (
-    <div className="semio-diff-view-host h-full min-h-0 w-full overflow-auto p-single" data-surface-id={node.surfaceId} data-diff-language={scene.language}>
+    <div
+      className="semio-diff-view-host h-full min-h-0 w-full overflow-auto p-single"
+      data-surface-id={node.surfaceId}
+      data-diff-language={scene.language}
+      onContextMenu={onContextMenu}
+    >
       {scene.mode === "split" ? (
         <div className="flex min-h-0 w-full gap-single">
           <SplitDiffPane rows={splitRows} side="left" />
@@ -25013,6 +25496,14 @@ export function DiffViewHost({ node }: ComponentSceneHostProps) {
       ) : (
         <UnifiedDiff lines={lines} />
       )}
+      <ContextMenuController
+        open={contextMenu != null}
+        position={contextMenu ?? { x: 0, y: 0 }}
+        items={contextMenu?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setContextMenu(null);
+        }}
+      />
     </div>
   );
 }
@@ -25041,8 +25532,18 @@ function formatFeedTimestamp(timestampMs: number): string {
 
 //#region Component
 /** @emoji 📰️ Renders an `EventFeedScene`: a scrollable log of `entriesJson` entries (icon + timestamp + title/detail), auto-scrolling to the newest entry while `follow` is set, dispatching `activateAction` on entry click. */
-export function EventFeedHost({ node, onAction }: ComponentSceneHostProps) {
+export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.eventFeed;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
+  const dispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+    },
+    [node.controllerId, node.surfaceId, onAction],
+  );
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const entries = useMemo(() => {
     if (!scene?.entriesJson) return [] as EventFeedEntry[];
@@ -25059,6 +25560,35 @@ export function EventFeedHost({ node, onAction }: ComponentSceneHostProps) {
     if (!list) return;
     list.scrollTop = list.scrollHeight;
   }, [entries, scene?.follow]);
+
+  //#region ContextMenu
+  /** @emoji 🖱️ `EventFeedScene` tracks no selection concept — each log row's `id` is still known at the click
+   * site, so unlike the whole-surface-only hosts this reports the right-clicked entry as a `hit` (see
+   * `TableHost`'s `onRowContextMenu` for the analogous per-row convention). */
+  const onEntryContextMenu = useCallback(
+    (entryId: string, event: MouseEvent<HTMLDivElement>): void => {
+      if (!requestContextMenu) return;
+      event.preventDefault();
+      event.stopPropagation();
+      void (async () => {
+        const items = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            viewState: {},
+            menu: { id: "eventFeed" },
+            surface: { surfaceId: node.surfaceId, kind: "eventFeed", hits: [{ domain: "entry", id: entryId }], selection: [] },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          },
+          mapContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ x: event.clientX, y: event.clientY, items });
+      })();
+    },
+    [mapContextMenu, node.surfaceId, requestContextMenu, shellContextMenuFallback, windowInstanceId],
+  );
+  //#endregion ContextMenu
 
   if (!scene) return <div className="semio-event-feed-empty">{emptySceneLabel}</div>;
 
@@ -25080,6 +25610,7 @@ export function EventFeedHost({ node, onAction }: ComponentSceneHostProps) {
                   })
               : undefined
           }
+          onContextMenu={(event) => onEntryContextMenu(entry.id, event)}
         >
           <Icon icon={entry.iconId as IconName} size="small" />
           <div className="min-w-0 flex-1">
@@ -25091,6 +25622,14 @@ export function EventFeedHost({ node, onAction }: ComponentSceneHostProps) {
           </div>
         </div>
       ))}
+      <ContextMenuController
+        open={contextMenu != null}
+        position={contextMenu ?? { x: 0, y: 0 }}
+        items={contextMenu?.items ?? []}
+        onOpenChange={(open) => {
+          if (!open) setContextMenu(null);
+        }}
+      />
     </div>
   );
 }

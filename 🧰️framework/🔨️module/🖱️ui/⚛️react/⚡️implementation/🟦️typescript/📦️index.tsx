@@ -300,10 +300,41 @@ export function configureHostPorts(overrides: HostPortOverrides): void {
 // #endregion 🔌️PortWiring
 
 // #region 🐚️ShellScope
+/** @emoji 🐚️ Marquee-drag selection-merge mode — mirrors the `SelectionUtilityOptions` control panel's
+ * own union (kept as a bare string union here, not an import, to avoid a cycle with the os-renderer
+ * package that both defines the control and reads this store). */
+export type SelectionMode = "default" | "additive" | "subtractive" | "invertive";
+
+/** @emoji 🐚️ Per-shell replacement for the old `(globalThis).__selectionMode` global plus its
+ * `window`-wide `"semio:selectionOptionsChanged"` broadcast — those meant one shell's selection-mode
+ * change silently reconfigured every other mounted shell's WASM session too. */
+export interface SelectionModeStore {
+  get(): SelectionMode;
+  set(mode: SelectionMode): void;
+  /** Registers a callback invoked whenever `set` changes the mode. Returns an unsubscribe function. */
+  subscribe(callback: () => void): () => void;
+}
+
+function createSelectionModeStore(): SelectionModeStore {
+  let mode: SelectionMode = "default";
+  const subscribers = new Set<() => void>();
+  return {
+    get: () => mode,
+    set: (next) => {
+      if (next === mode) return;
+      mode = next;
+      for (const callback of subscribers) callback();
+    },
+    subscribe: (callback) => {
+      subscribers.add(callback);
+      return () => subscribers.delete(callback);
+    },
+  };
+}
+
 /** @emoji 🐚️ Per-mounted-`FrameworkOsShell` scope — the seam every document-global mechanism (element
  * ids, theming, i18n, keybindings, storage, portals, ...) threads through so several shells can coexist
- * on one page. Populated incrementally: this wave only carries what shell-root DOM scoping and storage
- * namespacing need; theming/i18n/keyboard/selection fields land with their own waves. */
+ * on one page. Populated incrementally: theming/i18n/keyboard fields land with their own waves. */
 export interface ShellScope {
   readonly shellId: string;
   /** The shell's own root element (the `.semio-scope` div `FrameworkOsShell` renders into). */
@@ -319,6 +350,7 @@ export interface ShellScope {
   query(selector: string): HTMLElement | null;
   /** `querySelectorAll` scoped to this shell's root, replacing document-wide lookups. */
   queryAll(selector: string): HTMLElement[];
+  readonly selection: SelectionModeStore;
 }
 
 let shellScopeAutoIdSeq = 0;
@@ -337,6 +369,7 @@ export function createShellScope(options: { readonly shellId?: string; readonly 
     ownsPage: options.ownsPage ?? false,
     query: (selector) => rootRef.current?.querySelector<HTMLElement>(selector) ?? null,
     queryAll: (selector) => (rootRef.current ? Array.from(rootRef.current.querySelectorAll<HTMLElement>(selector)) : []),
+    selection: createSelectionModeStore(),
   };
 }
 
@@ -841,11 +874,15 @@ export function marqueeCoverageFromGesture(input: { readonly method: SelectionMa
   return marqueeCoverageFromDrag(input.startX, input.endX);
 }
 
-/** @emoji 🎯️ Maps shift/ctrl modifiers to marquee selection mode (ctrl+shift → invertive). */
-export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }): SelectionMergeMode {
-  const globalMode = (globalThis as any).__selectionMode;
-  if (globalMode && globalMode !== "default") {
-    return globalMode;
+/** @emoji 🎯️ Maps shift/ctrl modifiers to marquee selection mode (ctrl+shift → invertive). `persistentMode`
+ * — a shell's own {@link SelectionModeStore} value, e.g. `useShellScope().selection.get()` — takes
+ * precedence when set to something other than "default", mirroring the toolbar toggle in
+ * `SelectionUtilityOptions`; omitted, behaves as if the toolbar is at its "default" setting (was: read a
+ * page-global `(globalThis).__selectionMode`, so one shell's toolbar choice silently applied to every
+ * other mounted shell's marquee gestures too). */
+export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean }, persistentMode?: SelectionMergeMode): SelectionMergeMode {
+  if (persistentMode && persistentMode !== "default") {
+    return persistentMode;
   }
   const shift = modifiers.shiftKey === true;
   const ctrl = modifiers.ctrlKey === true || modifiers.metaKey === true;
@@ -916,6 +953,9 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
   const menuRef = React.useRef<HTMLDivElement | null>(null);
   const selectTargetLabel = useLabel("ui.common.selectTarget");
   const resolvedTitle = title ?? selectTargetLabel;
+  // 🐚️ Falls back to `document.body` outside any shell — inside one, portals into that shell's own
+  // overlay layer instead so this menu never visually escapes into another mounted shell's stacking context.
+  const shellScope = useShellScopeOptional();
 
   React.useEffect(() => {
     if (!request) return;
@@ -980,7 +1020,7 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
       <div className="text-muted-foreground px-single py-half text-2xs">{resolvedTitle}</div>
       {body}
     </div>,
-    document.body,
+    shellScope?.portalLayerRef.current ?? document.body,
   );
 }
 
@@ -2305,6 +2345,9 @@ export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): C
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title = "Menu", titleIcon = "list", closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
+  // 🐚️ Falls back to `document.body` outside any shell — inside one, portals into that shell's own
+  // overlay layer so a context menu never visually escapes into another mounted shell's stacking context.
+  const shellScope = useShellScopeOptional();
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const chromeRef = reactHostPort.useRef<HTMLDivElement | null>(null);
@@ -2470,7 +2513,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
         {renderFixedContextMenuItems(items, [], renderOptions)}
       </div>
     </ContextMenuChrome>,
-    getDocumentBody(),
+    shellScope?.portalLayerRef.current ?? getDocumentBody(),
   );
 };
 
@@ -2848,7 +2891,7 @@ function applyElementsSurfaceChromeDriverDom(root: HTMLElement, driver: UiDriver
   root.dataset.uiChromeReveal = driver.chrome;
   root.dataset.uiGumballReveal = driver.gumball;
   root.dataset.uiTooltips = driver.tooltips;
-  syncUiChromeRevealController(driver.chrome);
+  syncUiChromeRevealController(root, driver.chrome);
 }
 
 function clearElementsSurfaceChromeDriverDom(root: HTMLElement): void {
@@ -2858,7 +2901,7 @@ function clearElementsSurfaceChromeDriverDom(root: HTMLElement): void {
   delete root.dataset.uiChromeReveal;
   delete root.dataset.uiGumballReveal;
   delete root.dataset.uiTooltips;
-  teardownUiChromeRevealController();
+  teardownUiChromeRevealController(root);
 }
 
 // #region 🫥️ChromeReveal
@@ -2867,9 +2910,12 @@ const CHROME_REVEAL_ACTIVATION_BAND_PX = 24;
 /** @emoji 🫥️ Screen-edge band (px) that reveals a region anchored to that edge (navbar top, footer bottom), even before the cursor reaches the region's own rect. */
 const CHROME_REVEAL_EDGE_BAND_PX = 8;
 
-let chromeRevealBindings: ReturnType<typeof createDOMEventBinding> | null = null;
-let chromeRevealFrame = 0;
-let chromeRevealLastPoint: { x: number; y: number } | null = null;
+/** @emoji 🐚️ One independent reveal controller per surface-chrome root — was a single page-global
+ * controller, which meant hovering ANY mounted shell revealed hover-reveal chrome for EVERY shell that
+ * had opted into it (and a pointer-move over shell B's DOM would drive shell A's reveal state). */
+const chromeRevealBindingsByRoot = new Map<HTMLElement, ReturnType<typeof createDOMEventBinding>>();
+const chromeRevealFrameByRoot = new Map<HTMLElement, number>();
+const chromeRevealLastPointByRoot = new Map<HTMLElement, { x: number; y: number }>();
 
 function chromeRevealStackAncestor(region: HTMLElement): HTMLElement | null {
   return region.closest<HTMLElement>('[data-slot="window-chrome-stack"], [data-slot="mode-dock-stack"]');
@@ -2893,57 +2939,59 @@ function chromeRevealRegionRevealed(region: HTMLElement, x: number, y: number): 
   return false;
 }
 
-function applyChromeRevealAtPoint(x: number, y: number): void {
-  if (typeof document === "undefined") return;
-  document.querySelectorAll<HTMLElement>("[data-ui-reveal-region]").forEach((region) => {
+function applyChromeRevealAtPoint(root: HTMLElement, x: number, y: number): void {
+  root.querySelectorAll<HTMLElement>("[data-ui-reveal-region]").forEach((region) => {
     if (chromeRevealRegionRevealed(region, x, y)) region.dataset.uiRevealed = "true";
     else delete region.dataset.uiRevealed;
   });
 }
 
-function scheduleChromeRevealUpdate(): void {
-  if (chromeRevealFrame !== 0 || typeof requestAnimationFrame === "undefined") return;
-  chromeRevealFrame = requestAnimationFrame(() => {
-    chromeRevealFrame = 0;
-    if (chromeRevealLastPoint) applyChromeRevealAtPoint(chromeRevealLastPoint.x, chromeRevealLastPoint.y);
+function scheduleChromeRevealUpdate(root: HTMLElement): void {
+  if (chromeRevealFrameByRoot.has(root) || typeof requestAnimationFrame === "undefined") return;
+  const frame = requestAnimationFrame(() => {
+    chromeRevealFrameByRoot.delete(root);
+    const point = chromeRevealLastPointByRoot.get(root);
+    if (point) applyChromeRevealAtPoint(root, point.x, point.y);
   });
+  chromeRevealFrameByRoot.set(root, frame);
 }
 
-function ensureUiChromeRevealController(): void {
-  if (chromeRevealBindings || typeof window === "undefined" || typeof document === "undefined") return;
+function ensureUiChromeRevealController(root: HTMLElement): void {
+  if (chromeRevealBindingsByRoot.has(root) || typeof window === "undefined") return;
   const bindings = createDOMEventBinding();
   bindings.listen(window, "pointermove", (event: PointerEvent) => {
-    chromeRevealLastPoint = { x: event.clientX, y: event.clientY };
-    scheduleChromeRevealUpdate();
+    // 🐚️ `pointermove` only ever bubbles to `window` (never scoped to a subtree), so this root only
+    // reacts to points actually over its own DOM — otherwise hovering shell B would reveal shell A's chrome.
+    if (!root.contains(event.target as Node | null)) return;
+    chromeRevealLastPointByRoot.set(root, { x: event.clientX, y: event.clientY });
+    scheduleChromeRevealUpdate(root);
   });
-  bindings.listen(document, "focusin", (event: FocusEvent) => {
+  bindings.listen(root, "focusin", (event: FocusEvent) => {
     const region = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-ui-reveal-region]");
     if (region) region.dataset.uiRevealed = "true";
   });
-  bindings.listen(document, "focusout", (event: FocusEvent) => {
+  bindings.listen(root, "focusout", (event: FocusEvent) => {
     const region = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-ui-reveal-region]");
     const related = event.relatedTarget as Node | null;
     if (region && (!related || !region.contains(related))) delete region.dataset.uiRevealed;
   });
-  chromeRevealBindings = bindings;
+  chromeRevealBindingsByRoot.set(root, bindings);
 }
 
-function teardownUiChromeRevealController(): void {
-  chromeRevealBindings?.dispose();
-  chromeRevealBindings = null;
-  if (typeof cancelAnimationFrame !== "undefined" && chromeRevealFrame !== 0) {
-    cancelAnimationFrame(chromeRevealFrame);
-  }
-  chromeRevealFrame = 0;
-  chromeRevealLastPoint = null;
-  if (typeof document === "undefined") return;
-  document.querySelectorAll<HTMLElement>("[data-ui-reveal-region][data-ui-revealed]").forEach((region) => delete region.dataset.uiRevealed);
+function teardownUiChromeRevealController(root: HTMLElement): void {
+  chromeRevealBindingsByRoot.get(root)?.dispose();
+  chromeRevealBindingsByRoot.delete(root);
+  const frame = chromeRevealFrameByRoot.get(root);
+  if (frame !== undefined && typeof cancelAnimationFrame !== "undefined") cancelAnimationFrame(frame);
+  chromeRevealFrameByRoot.delete(root);
+  chromeRevealLastPointByRoot.delete(root);
+  root.querySelectorAll<HTMLElement>("[data-ui-reveal-region][data-ui-revealed]").forEach((region) => delete region.dataset.uiRevealed);
 }
 
 /** @emoji 🫥️ Ensures the pointer/focus reveal tracker is installed iff the driver wants hover-reveal chrome; called whenever driver DOM attrs are (re)applied. */
-function syncUiChromeRevealController(chrome: UiDriverReveal): void {
-  if (chrome === "hover") ensureUiChromeRevealController();
-  else teardownUiChromeRevealController();
+function syncUiChromeRevealController(root: HTMLElement, chrome: UiDriverReveal): void {
+  if (chrome === "hover") ensureUiChromeRevealController(root);
+  else teardownUiChromeRevealController(root);
 }
 // #endregion 🫥️ChromeReveal
 
@@ -2996,7 +3044,6 @@ function scheduleElementsSurfaceChromeDeferredClear(root: HTMLElement): void {
 }
 
 function applyElementsSurfaceChromeDom(root: HTMLElement, input: ElementsSurfaceChromeInput): void {
-  console.log("[DEBUG-PROBE] applyElementsSurfaceChromeDom", root.getAttribute("data-shell-id"), input.appearance);
   cancelElementsSurfaceChromeDeferredClear(root);
   applyElementsSurfaceChromeAppearanceDom(root, input.appearance);
   root.dataset.uiDevice = input.device;
@@ -3075,14 +3122,13 @@ export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput, ro
 /**
  * @emoji 🌓️ Syncs a surface-chrome root (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis
  * attrs), base colors, and {@link setUiDriverProvider}; returns `mobile` for {@link AppProps.mobile}.
- * `rootRef` scopes this to one shell (e.g. `ShellScope.rootRef`) — omitted, targets
- * `document.documentElement` as before. Takes the REF itself, not its `.current` value: reading a ref
- * during render (as resolving to a plain `HTMLElement` here would require) can observe a stale `null`
- * before the shell root's own ref callback has committed; reading `.current` inside the effect below,
- * which runs after commit, does not have that race.
+ * `root` scopes this to one shell — omitted, targets `document.documentElement` as before. Callers reading
+ * this from a ref (e.g. `ShellScope.rootRef.current`) must re-render once that ref attaches (`FrameworkOsShell`
+ * bumps state in its callback ref for exactly this) — a ref OBJECT in this hook's own deps would never
+ * re-trigger the effect once populated, since the object's identity never changes.
  */
-export function useElementsSurfaceChrome({ appearance, device, driver }: ElementsSurfaceChromeInput, rootRef?: { readonly current: HTMLElement | null }): { mobile: boolean } {
-  reactHostPort.useLayoutEffect(() => applyElementsSurfaceChrome({ appearance, device, driver }, rootRef?.current ?? undefined), [appearance, device, driver, rootRef]);
+export function useElementsSurfaceChrome({ appearance, device, driver }: ElementsSurfaceChromeInput, root?: HTMLElement): { mobile: boolean } {
+  reactHostPort.useLayoutEffect(() => applyElementsSurfaceChrome({ appearance, device, driver }, root), [appearance, device, driver, root]);
 
   return { mobile: device === "mobile" };
 }
@@ -3091,22 +3137,21 @@ export function useElementsSurfaceChrome({ appearance, device, driver }: Element
  * @emoji 🌓️ Observes a surface-chrome root's appearance attributes and runs `sync` on mount and whenever
  * they change. Holds `sync` in a ref so callers can pass an inline arrow without retriggering the effect
  * every render (React 19: unstable `sync` identity → effect → `paintOverlays`/`setState` → re-render →
- * Maximum update depth). `rootRef` scopes the observed element (e.g. `ShellScope.rootRef`) — omitted,
- * observes `document.documentElement`; see {@link useElementsSurfaceChrome}'s doc for why this takes the
- * ref itself rather than a resolved element.
+ * Maximum update depth). `root` scopes the observed element — omitted, observes `document.documentElement`;
+ * see {@link useElementsSurfaceChrome}'s doc for why this takes a resolved element, not a ref.
  */
-export function useCanvasAppearanceSync(sync: () => void, enabled = true, rootRef?: { readonly current: HTMLElement | null }): void {
+export function useCanvasAppearanceSync(sync: () => void, enabled = true, root?: HTMLElement): void {
   const syncRef = reactHostPort.useRef(sync);
   syncRef.current = sync;
   reactHostPort.useEffect(() => {
-    const observedRoot = resolveElementsSurfaceChromeRoot(rootRef?.current ?? undefined);
+    const observedRoot = resolveElementsSurfaceChromeRoot(root);
     if (!enabled || !observedRoot || typeof MutationObserver === "undefined") return;
     const run = () => syncRef.current();
     run();
     const observer = new MutationObserver(run);
     observer.observe(observedRoot, { attributes: true, attributeFilter: ["class", "style", "data-ui-appearance", "data-ui-theme"] });
     return () => observer.disconnect();
-  }, [enabled, rootRef]);
+  }, [enabled, root]);
 }
 
 /** @emoji 🧪️ Clears every surface-chrome root's leases and DOM overrides between vitest cases (tests only
@@ -6115,12 +6160,18 @@ type IntroductionRect = { readonly top: number; readonly left: number; readonly 
  * late-arriving aliases (extra window instances) join the pulse set. */
 function useIntroductionAnchorRect(selector: string | null): IntroductionRect | null {
   const [rect, setRect] = reactHostPort.useState<IntroductionRect | null>(null);
+  // 🐚️ Falls back to `document`/`document.body` outside any shell (e.g. the mit-bestand demonstrator's
+  // own standalone tour) — inside one, scopes the search+observe to that shell's own root so an id/alias
+  // shared across two mounted shells only anchors within the one actually running this introduction.
+  const shellScope = useShellScopeOptional();
 
   reactHostPort.useEffect(() => {
     if (!selector) {
       setRect(null);
       return;
     }
+    const searchRoot: ParentNode = shellScope?.rootRef.current ?? document;
+    const observeRoot: Node = shellScope?.rootRef.current ?? document.body;
     let elements: Element[] = [];
     let resizeObserver: ResizeObserver | null = null;
     // 🐢️ The mutation observer below fires on every DOM change anywhere on the page — including ones
@@ -6150,7 +6201,7 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
       if (next) setRect(next);
     };
     const attach = () => {
-      const candidates = [...document.querySelectorAll(selector)];
+      const candidates = [...searchRoot.querySelectorAll(selector)];
       if (candidates.length === 0) {
         if (elements.length > 0) {
           elements.forEach((el) => el.removeAttribute("data-introduced"));
@@ -6181,7 +6232,7 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
 
     attach();
     const mutationObserver = new MutationObserver(attach);
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    mutationObserver.observe(observeRoot, { childList: true, subtree: true });
     const onResize = () => measure();
     window.addEventListener("resize", onResize);
     return () => {
@@ -6191,7 +6242,7 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
       window.removeEventListener("resize", onResize);
       setRect(null);
     };
-  }, [selector]);
+  }, [selector, shellScope]);
 
   return rect;
 }
@@ -6212,12 +6263,16 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
  * are undone on id-list change and unmount. */
 function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
   const [resolved, setResolved] = reactHostPort.useState<ReadonlySet<string>>(() => new Set());
+  // 🐚️ See `useIntroductionAnchorRect`'s doc for why this is scoped to a shell's own root when one exists.
+  const shellScope = useShellScopeOptional();
 
   reactHostPort.useEffect(() => {
     if (ids.length === 0) {
       setResolved(new Set());
       return;
     }
+    const searchRoot: ParentNode = shellScope?.rootRef.current ?? document;
+    const observeRoot: Node = shellScope?.rootRef.current ?? document.body;
     // 🐢️ Cleanup remembers the exact stamped element references (rather than re-querying `document` at
     // cleanup time) because React detaches a torn-down subtree from the document BEFORE running passive
     // effect cleanups — a `document.querySelectorAll` lookup in the cleanup would find nothing on unmount,
@@ -6230,7 +6285,7 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
       const nextResolved = new Set<string>();
       const wantedRoots = new Set<Element>();
       for (const id of ids) {
-        const targets = document.querySelectorAll(elementIdSelector(id));
+        const targets = searchRoot.querySelectorAll(elementIdSelector(id));
         if (targets.length === 0) continue;
         nextResolved.add(id);
         targets.forEach((target) =>
@@ -6261,7 +6316,7 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
 
     resolve();
     const mutationObserver = new MutationObserver(resolve);
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    mutationObserver.observe(observeRoot, { childList: true, subtree: true });
     return () => {
       mutationObserver.disconnect();
       stampedRoots.forEach((root) => {
@@ -6270,7 +6325,7 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
       });
       setResolved(new Set());
     };
-  }, [ids]);
+  }, [ids, shellScope]);
 
   return resolved;
 }
@@ -6476,10 +6531,10 @@ export function sampleBezierSegments(
  * still moving (a resizing panel, an orbiting 3D camera, a panning 2D canvas). `null` means "not
  * resolvable yet" (element not mounted, no surface resolver registered, entity not found/hidden, or a 3D
  * point off-camera) — callers wait and retry next frame rather than treating it as an error. */
-export function resolveIntroductionPoint(point: IntroductionPoint): IntroductionResolvedPoint | null {
+export function resolveIntroductionPoint(point: IntroductionPoint, root: ParentNode = document): IntroductionResolvedPoint | null {
   switch (point.kind) {
     case "element": {
-      const element = document.querySelector(elementIdSelector(point.id));
+      const element = root.querySelector(elementIdSelector(point.id));
       if (!element) return null;
       const rect = element.getBoundingClientRect();
       const [offsetX, offsetY] = point.offset ?? [0.5, 0.5];
@@ -6490,13 +6545,13 @@ export function resolveIntroductionPoint(point: IntroductionPoint): Introduction
     case "screenNormalized":
       return { x: point.x * window.innerWidth, y: point.y * window.innerHeight };
     case "window": {
-      const element = document.querySelector(elementIdSelector(point.id));
+      const element = root.querySelector(elementIdSelector(point.id));
       if (!element) return null;
       const rect = element.getBoundingClientRect();
       return { x: rect.left + point.x, y: rect.top + point.y };
     }
     case "windowNormalized": {
-      const element = document.querySelector(elementIdSelector(point.id));
+      const element = root.querySelector(elementIdSelector(point.id));
       if (!element) return null;
       const rect = element.getBoundingClientRect();
       return { x: rect.left + point.x * rect.width, y: rect.top + point.y * rect.height };
@@ -6853,8 +6908,8 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       const dragCursor = demonstration.cursor ?? (gesture.kind === "orbit" ? "move" : "grabbing");
       const targets: { readonly start: IntroductionPoint; readonly end: IntroductionPoint | null } = isDragLike ? { start: gesture.from, end: gesture.to } : { start: gesture.at, end: null };
 
-      const start = resolveIntroductionPoint(targets.start);
-      const end = targets.end ? resolveIntroductionPoint(targets.end) : null;
+      const start = resolveIntroductionPoint(targets.start, demonstratingRoot());
+      const end = targets.end ? resolveIntroductionPoint(targets.end, demonstratingRoot()) : null;
       if (!start || (targets.end && !end)) {
         rafId = requestAnimationFrame(tick);
         return;
@@ -7856,12 +7911,15 @@ export type TutorialGhostPointerProps = {
 /** @emoji 👻️ Tutorial-playback ghost cursor — a lean, parallel implementation of `IntroductionDemonstrationOverlay`'s point resolution (reuses {@link resolveIntroductionPoint}/{@link introductionDemoArcPoint}/{@link introductionDemoResolveVisual} verbatim rather than re-deriving them) driven by the tutorial playhead's `progress` instead of its own internal rAF phase machine — click-family/scroll gestures render statically at their point, `drag` lerps linearly from→to, `orbit` bulges along the same quadratic arc the introduction overlay uses. */
 export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue, progress }) => {
   const [point, setPoint] = reactHostPort.useState<{ readonly x: number; readonly y: number } | null>(null);
+  // 🐚️ See `IntroductionDemonstrationOverlay`'s doc for why this falls back to `document.documentElement`.
+  const shellScope = useShellScopeOptional();
 
   reactHostPort.useEffect(() => {
     if (!cue) {
       setPoint(null);
       return;
     }
+    const root: Element = shellScope?.rootRef.current ?? document.documentElement;
     const gesture = cue.gesture;
     let next: { readonly x: number; readonly y: number } | null = null;
     switch (gesture.kind) {
@@ -7869,17 +7927,17 @@ export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue,
       case "rightClick":
       case "doubleClick":
       case "scroll":
-        next = resolveIntroductionPoint(gesture.at);
+        next = resolveIntroductionPoint(gesture.at, root);
         break;
       case "drag": {
-        const from = resolveIntroductionPoint(gesture.from);
-        const to = resolveIntroductionPoint(gesture.to);
+        const from = resolveIntroductionPoint(gesture.from, root);
+        const to = resolveIntroductionPoint(gesture.to, root);
         next = from && to ? { x: from.x + (to.x - from.x) * progress, y: from.y + (to.y - from.y) * progress } : (from ?? to ?? null);
         break;
       }
       case "orbit": {
-        const from = resolveIntroductionPoint(gesture.from);
-        const to = resolveIntroductionPoint(gesture.to);
+        const from = resolveIntroductionPoint(gesture.from, root);
+        const to = resolveIntroductionPoint(gesture.to, root);
         next = from && to ? introductionDemoArcPoint(from, to, progress) : (from ?? to ?? null);
         break;
       }
@@ -7887,7 +7945,7 @@ export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue,
         next = null;
     }
     setPoint(next);
-  }, [cue, progress]);
+  }, [cue, progress, shellScope]);
 
   if (!cue || !point) return null;
   const glyph = cue.cursor ?? INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR[cue.gesture.kind];
@@ -10633,22 +10691,25 @@ export function celebrateElement(target: Element, durationMs = CELEBRATE_STAMP_D
 
 /** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
  * then removes it — the selector form of {@link celebrateElement}. Returns a cancel that un-stamps
- * every match immediately. */
-export function celebrateElements(selector: string, durationMs = CELEBRATE_STAMP_DURATION_MS): () => void {
-  const cancels = [...document.querySelectorAll(selector)].map((el) => celebrateElement(el, durationMs));
+ * every match immediately. `root` scopes the search (e.g. a shell's own root) — omitted, searches the
+ * whole document as before; matters because element ids/aliases are not guaranteed unique across
+ * several mounted shells, and an unscoped search can stamp another shell's element by mistake. */
+export function celebrateElements(selector: string, durationMs = CELEBRATE_STAMP_DURATION_MS, root: ParentNode = document): () => void {
+  const cancels = [...root.querySelectorAll(selector)].map((el) => celebrateElement(el, durationMs));
   return () => cancels.forEach((cancel) => cancel());
 }
 
 /** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
  * element carrying a valid `data-element-alias`) for `durationMs` — the tour-finale counterpart of
  * {@link celebrateElements}. Skips the introduction chrome itself (`ui.introduction.*`) so the
- * dismiss unmount doesn't race the stamp. Returns a cancel that un-stamps every match immediately. */
-export function celebrateAllElements(durationMs = CELEBRATE_STAMP_DURATION_MS): () => void {
+ * dismiss unmount doesn't race the stamp. Returns a cancel that un-stamps every match immediately.
+ * `root` scopes the search — see {@link celebrateElements}'s doc for why this matters across shells. */
+export function celebrateAllElements(durationMs = CELEBRATE_STAMP_DURATION_MS, root: ParentNode = document): () => void {
   const targets = new Set<Element>();
-  for (const el of document.querySelectorAll("[id]")) {
+  for (const el of root.querySelectorAll("[id]")) {
     if (isElementId(el.id) && !el.id.startsWith("ui.introduction.")) targets.add(el);
   }
-  for (const el of document.querySelectorAll("[data-element-alias]")) {
+  for (const el of root.querySelectorAll("[data-element-alias]")) {
     const aliases = (el.getAttribute("data-element-alias") ?? "").split(/\s+/).filter(Boolean);
     if (aliases.some((alias) => isElementId(alias) && !alias.startsWith("ui.introduction."))) targets.add(el);
   }
@@ -15578,21 +15639,27 @@ export function readDocumentFullscreenActive(doc: Document = document): boolean 
   return !!(typed.fullscreenElement ?? typed.webkitFullscreenElement);
 }
 
-/** @emoji 🖥️ Enter or exit browser fullscreen for the shell document. */
-export async function toggleDocumentFullscreen(doc: Document = document): Promise<void> {
+/** @emoji 🖥️ Enter or exit browser fullscreen. `root` is the element requesting fullscreen — a shell's
+ * own root (e.g. `ShellScope.rootRef.current`) so going fullscreen from within one embedded shell fills
+ * the screen with just that shell's content, not the whole page (other mounted shells included);
+ * omitted, defaults to `document.documentElement` (the single-shell-per-page case, unchanged). The
+ * Fullscreen API only ever has one fullscreen element at a time regardless of which root requested it. */
+export async function toggleDocumentFullscreen(root: Element = document.documentElement): Promise<void> {
+  const typedRoot = root as FullscreenHTMLElement;
+  const doc = root.ownerDocument;
   const typedDoc = doc as FullscreenDocument;
-  const root = doc.documentElement as FullscreenHTMLElement;
   if (readDocumentFullscreenActive(doc)) {
     if (typedDoc.exitFullscreen) await typedDoc.exitFullscreen();
     else typedDoc.webkitExitFullscreen?.();
     return;
   }
-  if (root.requestFullscreen) await root.requestFullscreen();
-  else root.webkitRequestFullscreen?.();
+  if (typedRoot.requestFullscreen) await typedRoot.requestFullscreen();
+  else typedRoot.webkitRequestFullscreen?.();
 }
 
-/** @emoji 🖥️ Tracks browser fullscreen state for shell chrome. */
-export function useDocumentFullscreen(): { isFullscreen: boolean; toggle: () => void } {
+/** @emoji 🖥️ Tracks browser fullscreen state for shell chrome. `root` scopes which element requests
+ * fullscreen — see {@link toggleDocumentFullscreen}'s doc. */
+export function useDocumentFullscreen(root?: Element): { isFullscreen: boolean; toggle: () => void } {
   const [isFullscreen, setIsFullscreen] = reactHostPort.useState(() => (typeof document !== "undefined" ? readDocumentFullscreenActive() : false));
 
   reactHostPort.useEffect(() => {
@@ -15610,8 +15677,8 @@ export function useDocumentFullscreen(): { isFullscreen: boolean; toggle: () => 
   }, []);
 
   const toggle = reactHostPort.useCallback(() => {
-    void toggleDocumentFullscreen();
-  }, []);
+    void toggleDocumentFullscreen(root);
+  }, [root]);
 
   return { isFullscreen, toggle };
 }
@@ -15644,7 +15711,8 @@ export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSPr
 }
 
 function NavbarFullscreenToggle() {
-  const { isFullscreen, toggle } = useDocumentFullscreen();
+  const shellScope = useShellScopeOptional();
+  const { isFullscreen, toggle } = useDocumentFullscreen(shellScope?.rootRef.current ?? undefined);
   return <Toggle id="ui.fullscreen.toggle" pressed={isFullscreen} onPressedChange={toggle} icon={isFullscreen ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />} />;
 }
 
@@ -16815,24 +16883,30 @@ export function isTreeReorderDragEvent(event: React.DragEvent): boolean {
 /** @emoji 👁️ Fixed overlay showing where a tree reorder drop will land. */
 function TreeReorderDropPreview(props: { readonly preview: { readonly targetId: string; readonly position: TreeDropPosition } | null }): React.ReactElement | null {
   const [frame, setFrame] = reactHostPort.useState<DOMRect | null>(null);
+  // 🐚️ Falls back to `document`/`document.body` outside any shell — inside one, scopes the id lookup and
+  // portal target to that shell's own root/overlay layer (a tree row id is not guaranteed unique across
+  // several mounted shells of the same plugin).
+  const shellScope = useShellScopeOptional();
   reactHostPort.useLayoutEffect(() => {
     if (!props.preview || typeof document === "undefined") {
       setFrame(null);
       return;
     }
-    const row = document.getElementById(props.preview.targetId);
+    const searchRoot: ParentNode = shellScope?.rootRef.current ?? document;
+    const row = searchRoot.querySelector(`[id="${CSS.escape(props.preview.targetId)}"]`);
     setFrame(row?.getBoundingClientRect() ?? null);
-  }, [props.preview]);
-  if (!props.preview || !frame || typeof document === "undefined" || !document.body) return null;
+  }, [props.preview, shellScope]);
+  const portalTarget = shellScope?.portalLayerRef.current ?? (typeof document !== "undefined" ? document.body : null);
+  if (!props.preview || !frame || !portalTarget) return null;
   if (props.preview.position === "before") {
-    return createPortal(<div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.top, width: frame.width }} />, document.body);
+    return createPortal(<div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.top, width: frame.width }} />, portalTarget);
   }
   if (props.preview.position === "after") {
-    return createPortal(<div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.bottom - 2, width: frame.width }} />, document.body);
+    return createPortal(<div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial h-0.5 bg-primary" style={{ left: frame.left, top: frame.bottom - 2, width: frame.width }} />, portalTarget);
   }
   return createPortal(
     <div data-slot="tree-drop-preview" className="pointer-events-none fixed z-tutorial border-2 border-primary/80 bg-primary/10" style={{ left: frame.left, top: frame.top, width: frame.width, height: frame.height }} />,
-    document.body,
+    portalTarget,
   );
 }
 
@@ -37547,7 +37621,7 @@ if (treeVitest) {
       resetElementsSurfaceChromeForTests();
     });
 
-    it("applies every driver axis attribute and clears them on release", () => {
+    it("applies every driver axis attribute and clears them on release", async () => {
       resetElementsSurfaceChromeForTests();
       const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
       const root = document.documentElement;
@@ -37558,6 +37632,7 @@ if (treeVitest) {
       expect(root.dataset.uiGumballReveal).toBe("hover");
       expect(root.dataset.uiTooltips).toBe("none");
       release();
+      await new Promise((resolve) => requestAnimationFrame(resolve));
       expect(root.dataset.uiDriver).toBeUndefined();
       expect(root.dataset.uiLabels).toBeUndefined();
       expect(root.dataset.uiDrag).toBeUndefined();
@@ -37574,11 +37649,11 @@ if (treeVitest) {
       region.dataset.uiRevealRegion = "navbar";
       region.getBoundingClientRect = () => ({ left: 0, right: 100, top: 200, bottom: 240, width: 100, height: 40 }) as DOMRect;
       document.body.appendChild(region);
-      applyChromeRevealAtPoint(50, 2);
+      applyChromeRevealAtPoint(document.documentElement, 50, 2);
       expect(region.dataset.uiRevealed).toBe("true");
-      applyChromeRevealAtPoint(50, 400);
+      applyChromeRevealAtPoint(document.documentElement, 50, 400);
       expect(region.dataset.uiRevealed).toBeUndefined();
-      applyChromeRevealAtPoint(50, 220);
+      applyChromeRevealAtPoint(document.documentElement, 50, 220);
       expect(region.dataset.uiRevealed).toBe("true");
       document.body.removeChild(region);
       release();
@@ -37594,9 +37669,9 @@ if (treeVitest) {
       region.dataset.uiRevealRegion = "footer";
       region.getBoundingClientRect = () => ({ left: 0, right: 100, top: 760, bottom: 800, width: 100, height: 40 }) as DOMRect;
       document.body.appendChild(region);
-      applyChromeRevealAtPoint(50, 795);
+      applyChromeRevealAtPoint(document.documentElement, 50, 795);
       expect(region.dataset.uiRevealed).toBe("true");
-      applyChromeRevealAtPoint(50, 400);
+      applyChromeRevealAtPoint(document.documentElement, 50, 400);
       expect(region.dataset.uiRevealed).toBeUndefined();
       Object.defineProperty(window, "innerHeight", { value: innerHeight, configurable: true });
       document.body.removeChild(region);
@@ -37615,11 +37690,11 @@ if (treeVitest) {
       cap.getBoundingClientRect = () => ({ left: 100, right: 400, top: 50, bottom: 50, width: 300, height: 0 }) as DOMRect;
       stack.appendChild(cap);
       document.body.appendChild(stack);
-      applyChromeRevealAtPoint(250, 55);
+      applyChromeRevealAtPoint(document.documentElement, 250, 55);
       expect(cap.dataset.uiRevealed).toBe("true");
-      applyChromeRevealAtPoint(250, 100);
+      applyChromeRevealAtPoint(document.documentElement, 250, 100);
       expect(cap.dataset.uiRevealed).toBeUndefined();
-      applyChromeRevealAtPoint(250, 58);
+      applyChromeRevealAtPoint(document.documentElement, 250, 58);
       expect(cap.dataset.uiRevealed).toBe("true");
       document.body.removeChild(stack);
       release();

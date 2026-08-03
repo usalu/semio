@@ -14,7 +14,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     app_labels, build_tiled_map_scene, create_default_layout, localized_label_map, tree_item_with_action,
     MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
     ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ArtifactKindSpec, AppLabelsOverlay, AppLabelsOverlayExt,
-    ActionDefinition, ActionKind, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, TiledMapScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
+    ActionDefinition, ActionKind, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, TiledMapScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
     UiToggleNode, UiTreeItemNode, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -1163,7 +1163,7 @@ fn patch_routes_operations(document: &gis2d::GisMapDocument, route_ids: &[String
 /// 🔽️ The static LOD-mode choices for the palette arg schema: the automatic mode plus each LOD scale
 /// tier from the map descriptor, labelled in the app's base locale (localization is applied by overlay).
 fn lod_arg_options() -> Vec<ActionArgOption> {
-    std::iter::once(ActionArgOption::new(GIS_MAP_LOD_MODE_AUTOMATIC, Gis2dPlayLabels::EN.lod_automatic))
+    std::iter::once(ActionArgOption::new(GIS_MAP_LOD_MODE_AUTOMATIC, LocalizedLabel::native("Automatic", "Automatisch")))
         .chain(
             serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json())
                 .unwrap_or_default()
@@ -1171,7 +1171,7 @@ fn lod_arg_options() -> Vec<ActionArgOption> {
                 .filter_map(|lod| {
                     let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
                     let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
-                    Some(ActionArgOption::new(id, name))
+                    Some(ActionArgOption::new(id, LocalizedLabel::data(name)))
                 }),
         )
         .collect()
@@ -1179,7 +1179,7 @@ fn lod_arg_options() -> Vec<ActionArgOption> {
 
 pub fn create_gis2d_app() -> App {
     App::from_builder(
-        App::builder(GIS2D_PLAY_APP_ID, "GIS 2D").document(["semio", "gis", "2d"])
+        App::builder(GIS2D_PLAY_APP_ID, LocalizedLabel::native("GIS 2D", "GIS 2D")).document(["semio", "gis", "2d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.map".into(),
                 name: "2D Map".into(),
@@ -1198,9 +1198,9 @@ pub fn create_gis2d_app() -> App {
             .media_input(gis2d_features_in_port())
             .media_output(gis2d_map_out_port())
             .icon_id("gis2d")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(GIS2D_PLAY_WINDOW_MAIN, "Map", GIS2D_PLAY_BODY_COMPOSITE, SurfaceKind::TiledMap, "globe")
+            .window_kind(GIS2D_PLAY_WINDOW_MAIN, LocalizedLabel::native("Map", "Karte"), GIS2D_PLAY_BODY_COMPOSITE, SurfaceKind::TiledMap, "globe")
             .default_layout(create_default_layout(
                 &[GIS2D_PLAY_WINDOW_MAIN.into()],
                 "row",
@@ -1209,76 +1209,76 @@ pub fn create_gis2d_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 GIS2D_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 GIS2D_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 GIS2D_PLAY_BODY_INSPECTION,
             )
             // ✏️ Operation actions — flow through the document store with true inverses. `setActiveExample`
             // replaces document content via `SetDocument` operations, so it is an Operation, not a View action.
-            .operation("setActiveExample", "Set Active Example")
-            .operation("patchPositions", "Patch Positions")
-            .operation("patchRoutes", "Patch Routes")
-            .operation("patchRoute", "Patch Route")
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("patchPositions", LocalizedLabel::native("Patch Positions", "Positionen aktualisieren"))
+            .operation("patchRoutes", LocalizedLabel::native("Patch Routes", "Routen aktualisieren"))
+            .operation("patchRoute", LocalizedLabel::native("Patch Route", "Route aktualisieren"))
             // 👁️ View actions — mutate ephemeral config state (selection, camera, render config,
             // hover, layer visibility, stroke weights), never the document.
-            .view_action("setSelection", "Set Selection")
-            .view_action("toggleLayerVisibility", "Toggle Layer Visibility")
-            .action_with(ActionDefinition::new_catalog("fitWorld", "Fit World", ActionKind::View).with_category("view"))
-            .view_action("setCamera", "Set Camera")
-            .view_action("setRenderMode", "Set Render Mode")
-            .view_action("setVectorStyle", "Set Vector Style")
-            .view_action("setLodMode", "Set LOD Mode")
-            .action_with(ActionDefinition::new_catalog("setFeatureSelection", "Set Feature Selection", ActionKind::View).with_category("selection"))
-            .view_action("setHover", "Set Hover")
-            .view_action("setSelectionMethod", "Set Selection Method")
-            .view_action("setSelectionMode", "Set Selection Mode")
-            .action_with(ActionDefinition::new_catalog("clearSelection", "Clear Selection", ActionKind::View).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("selectAll", "Select All", ActionKind::View).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("deselect", "Deselect", ActionKind::View).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("focusFeature", "Focus Feature", ActionKind::View).with_category("view"))
-            .view_action("setLayerStrokeScale", "Set Layer Stroke Scale")
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("toggleLayerVisibility", LocalizedLabel::native("Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"))
+            .action_with(ActionDefinition::new_catalog("fitWorld", LocalizedLabel::native("Fit World", "Welt einpassen"), ActionKind::View).with_category("view"))
+            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .view_action("setRenderMode", LocalizedLabel::native("Set Render Mode", "Darstellungsmodus festlegen"))
+            .view_action("setVectorStyle", LocalizedLabel::native("Set Vector Style", "Vektorstil festlegen"))
+            .view_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"))
+            .action_with(ActionDefinition::new_catalog("setFeatureSelection", LocalizedLabel::native("Set Feature Selection", "Objektauswahl festlegen"), ActionKind::View).with_category("selection"))
+            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
+            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
+            .view_action("setSelectionMode", LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"))
+            .action_with(ActionDefinition::new_catalog("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::View).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::View).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("deselect", LocalizedLabel::native("Deselect", "Abwählen"), ActionKind::View).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("focusFeature", LocalizedLabel::native("Focus Feature", "Objekt fokussieren"), ActionKind::View).with_category("view"))
+            .view_action("setLayerStrokeScale", LocalizedLabel::native("Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"))
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
-            .action_with(ActionDefinition::new_catalog("openSource", "Open Source", ActionKind::Shell).with_category("open"))
+            .action_with(ActionDefinition::new_catalog("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell).with_category("open"))
             // 📝️ Argument schemas for the discrete-choice actions so the command palette can stage them
             // and the registry validates the vocabulary. The arg id matches the key each handler reads.
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new("reuse-map", "Reuse Map"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new("reuse-map", LocalizedLabel::native("Reuse Map", "Karte wiederverwenden")),
                 ]).default_value("reuse-map"),
             ])
             .action_args("setRenderMode", vec![
-                ActionArgDef::select("value", "Render Mode", vec![
-                    ActionArgOption::new("image", "Image"),
-                    ActionArgOption::new("vector", "Vector"),
-                    ActionArgOption::new("combined", "Combined"),
+                ActionArgDef::select("value", LocalizedLabel::native("Render Mode", "Darstellungsmodus"), vec![
+                    ActionArgOption::new("image", LocalizedLabel::native("Image", "Bild")),
+                    ActionArgOption::new("vector", LocalizedLabel::native("Vector", "Vektor")),
+                    ActionArgOption::new("combined", LocalizedLabel::native("Combined", "Kombiniert")),
                 ]).default_value("combined"),
             ])
             .action_args("setVectorStyle", vec![
-                ActionArgDef::select("value", "Vector Style", vec![
-                    ActionArgOption::new("colored", "Colored"),
-                    ActionArgOption::new("figureGround", "Figure Ground"),
-                    ActionArgOption::new("invertedFigure", "Inverted Figure"),
+                ActionArgDef::select("value", LocalizedLabel::native("Vector Style", "Vektorstil"), vec![
+                    ActionArgOption::new("colored", LocalizedLabel::native("Colored", "Farbig")),
+                    ActionArgOption::new("figureGround", LocalizedLabel::native("Figure Ground", "Figur-Grund")),
+                    ActionArgOption::new("invertedFigure", LocalizedLabel::native("Inverted Figure", "Invertierte Figur")),
                 ]).default_value("colored"),
             ])
             .action_args("setLodMode", vec![
-                ActionArgDef::select("value", "LOD Mode", lod_arg_options()).default_value(GIS_MAP_LOD_MODE_AUTOMATIC),
+                ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), lod_arg_options()).default_value(GIS_MAP_LOD_MODE_AUTOMATIC),
             ])
             .action_args("setSelectionMethod", vec![
-                ActionArgDef::select("value", "Selection Method", vec![
-                    ActionArgOption::new("rectangle", "Rectangle"),
-                    ActionArgOption::new("lasso", "Lasso"),
+                ActionArgDef::select("value", LocalizedLabel::native("Selection Method", "Auswahlmethode"), vec![
+                    ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")),
+                    ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso")),
                 ]).default_value("rectangle"),
             ])
             .keybinding("mod+z", "undo")
@@ -1286,7 +1286,7 @@ pub fn create_gis2d_app() -> App {
             .config(Gis2dPlayApp::default().config_spec())
             .io(gis2d_io()),
     )
-    .example("reuse-map", "Reuse Map", serde_json::to_string(&default_document()).unwrap(), "file-text")
+    .example("reuse-map", LocalizedLabel::native("Reuse Map", "Karte wiederverwenden"), serde_json::to_string(&default_document()).unwrap(), "file-text")
     .workflow("gis2d", "GIS 2D", "map")
 }
 //#endregion 🔖️Manifest

@@ -13,7 +13,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     localized_label_map, tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest,
-    ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, NodeGraphHover, MediaClass, MediaForm, MediaType, PanelTreeBuilder,
+    ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, LocalizedLabel, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, NodeGraphHover, MediaClass, MediaForm, MediaType, PanelTreeBuilder,
     TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -1516,18 +1516,18 @@ fn rewrite_layout() -> WindowLayout {
 
 pub fn create_rewrite_app() -> App {
     App::from_builder(
-        App::builder(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite").document(["semio", "trinity", "rewrite"])
+        App::builder(TRINITY_REWRITE_PLAY_APP_ID, LocalizedLabel::native("Trinity Rewrite", "Trinity Rewrite")).document(["semio", "trinity", "rewrite"])
             .icon_id("trinity-rewrite")
-            .mode("explore", "Explore", "focus")
+            .mode("explore", LocalizedLabel::native("Explore", "Erkunden"), "focus")
             .default_mode_id("explore")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, "Before", TRINITY_REWRITE_PLAY_BODY_BEFORE, SurfaceKind::NodeGraph, "git-branch")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_AFTER, "After", TRINITY_REWRITE_PLAY_BODY_AFTER, SurfaceKind::NodeGraph, "arrow-right")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_LHS, "LHS", TRINITY_REWRITE_PLAY_BODY_LHS, SurfaceKind::NodeGraph, "trinity-lhs")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_RHS, "RHS", TRINITY_REWRITE_PLAY_BODY_RHS, SurfaceKind::NodeGraph, "trinity-rhs")
-            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_JACK, "Jack", TRINITY_REWRITE_PLAY_BODY_JACK, SurfaceKind::TextEditor, "document-jack")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, LocalizedLabel::native("Before", "Vorher"), TRINITY_REWRITE_PLAY_BODY_BEFORE, SurfaceKind::NodeGraph, "git-branch")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_AFTER, LocalizedLabel::native("After", "Nachher"), TRINITY_REWRITE_PLAY_BODY_AFTER, SurfaceKind::NodeGraph, "arrow-right")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_LHS, LocalizedLabel::native("LHS", "LHS"), TRINITY_REWRITE_PLAY_BODY_LHS, SurfaceKind::NodeGraph, "trinity-lhs")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_RHS, LocalizedLabel::native("RHS", "RHS"), TRINITY_REWRITE_PLAY_BODY_RHS, SurfaceKind::NodeGraph, "trinity-rhs")
+            .window_kind(TRINITY_REWRITE_PLAY_WINDOW_JACK, LocalizedLabel::native("Jack", "Jack"), TRINITY_REWRITE_PLAY_BODY_JACK, SurfaceKind::TextEditor, "document-jack")
             .window_kind(
                 TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS,
-                "Parameters",
+                LocalizedLabel::native("Parameters", "Parameter"),
                 TRINITY_REWRITE_PLAY_BODY_PARAMETERS,
                 SurfaceKind::Canvas2d,
                 "settings-2",
@@ -1535,59 +1535,59 @@ pub fn create_rewrite_app() -> App {
             .default_layout(rewrite_layout())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 TRINITY_REWRITE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 TRINITY_REWRITE_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 TRINITY_REWRITE_PLAY_BODY_INSPECTION,
             )
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("addRuleClause", "Add Rule Clause", ActionKind::Operation).with_category("create"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("resetRule", "Reset Rule", ActionKind::Operation).with_category("history"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setParameter", "Set Parameter", ActionKind::Operation).with_category("settings"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("patchNodes", "Patch Nodes", ActionKind::Operation).with_category("transform"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphEdit", "Edit Graph", ActionKind::Operation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("addRuleClause", LocalizedLabel::native("Add Rule Clause", "Regelklausel hinzufügen"), ActionKind::Operation).with_category("create"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("resetRule", LocalizedLabel::native("Reset Rule", "Regel zurücksetzen"), ActionKind::Operation).with_category("history"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setParameter", LocalizedLabel::native("Set Parameter", "Parameter festlegen"), ActionKind::Operation).with_category("settings"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"), ActionKind::Operation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Operation).with_category("transform"))
             // 🛠️ Dev-only raw rule editors — kept out of the command palette.
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setLhsJson", "Set LHS Json", ActionKind::Operation).with_category("tools") })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setRhsJson", "Set RHS Json", ActionKind::Operation).with_category("tools") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setLhsJson", LocalizedLabel::native("Set LHS Json", "LHS-JSON festlegen"), ActionKind::Operation).with_category("tools") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setRhsJson", LocalizedLabel::native("Set RHS Json", "RHS-JSON festlegen"), ActionKind::Operation).with_category("tools") })
             // 👁️ Ephemeral view state — selection, hover, text cursor, recompute/layout, LOD.
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setSelection", "Set Selection", ActionKind::View).with_category("selection"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphHover", "Hover Graph Node", ActionKind::View).with_category("hand"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setViewport", "Set Graph Viewport", ActionKind::View).with_category("view"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("graphPointerDown", "Graph Pointer Down", ActionKind::View).with_category("hand"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("textSelect", "Select Text", ActionKind::View).with_category("selection"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("textHover", "Hover Text", ActionKind::View).with_category("hand"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::View).with_category("view"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setLodMode", "Set LOD Mode", ActionKind::View).with_category("mode"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View).with_category("selection"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphHover", LocalizedLabel::native("Hover Graph Node", "Graph-Knoten hovern"), ActionKind::View).with_category("hand"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"), ActionKind::View).with_category("view"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View).with_category("hand"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("textSelect", LocalizedLabel::native("Select Text", "Text auswählen"), ActionKind::View).with_category("selection"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("textHover", LocalizedLabel::native("Hover Text", "Text hovern"), ActionKind::View).with_category("hand"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::View).with_category("view"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View).with_category("mode"))
             // 📝️ Staged argument forms.
             .action_args("addRuleClause", vec![
-                ActionArgDef::select("kind", "Clause", vec![
-                    ActionArgOption::new("where", "Where"),
-                    ActionArgOption::new("create", "Create"),
-                    ActionArgOption::new("merge", "Merge"),
-                    ActionArgOption::new("set", "Set"),
-                    ActionArgOption::new("delete", "Delete"),
-                    ActionArgOption::new("parameter", "Parameter"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Clause", "Klausel"), vec![
+                    ActionArgOption::new("where", LocalizedLabel::native("Where", "Wo")),
+                    ActionArgOption::new("create", LocalizedLabel::native("Create", "Erstellen")),
+                    ActionArgOption::new("merge", LocalizedLabel::native("Merge", "Zusammenführen")),
+                    ActionArgOption::new("set", LocalizedLabel::native("Set", "Setzen")),
+                    ActionArgOption::new("delete", LocalizedLabel::native("Delete", "Löschen")),
+                    ActionArgOption::new("parameter", LocalizedLabel::native("Parameter", "Parameter")),
                 ]).required(),
             ])
-            .action_args("setLhsJson", vec![ActionArgDef::text("value", "LHS JSON").required()])
-            .action_args("setRhsJson", vec![ActionArgDef::text("value", "RHS JSON").required()])
+            .action_args("setLhsJson", vec![ActionArgDef::text("value", LocalizedLabel::native("LHS JSON", "LHS-JSON")).required()])
+            .action_args("setRhsJson", vec![ActionArgDef::text("value", LocalizedLabel::native("RHS JSON", "RHS-JSON")).required()])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+alt+s", "commitCheckpoint")
             .io(rewrite_io()),
     )
-    .example("label-core", "Label Core", default_rule_state().print_dsl(), "file-text")
+    .example("label-core", LocalizedLabel::native("Label Core", "Label-Kern"), default_rule_state().print_dsl(), "file-text")
     .workflow("trinity-rewrite", "Trinity Rewrite", "graph")
 }
 //#endregion 🔖️Manifest

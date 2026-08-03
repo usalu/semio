@@ -25,11 +25,11 @@ use forms_engine::{building_component_spec, can_advance, default_value_for_quest
 use forms_op::{FormOperation, FormsConfigOperation};
 use forms_protocol::FormsCommand;
 use semio_framework_plugin::{SurfaceKind,
-    create_default_layout, localized_label_map, tree_item_with_action,
+    create_default_layout, tree_item_with_action,
     ui_external_slot, ui_image, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption,
-    ActionDefinition, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, BlockPaletteEntry, Contribution,
-    ConfigView, DocumentApp, DocumentView, Emit, HostEffect, IconName, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, ActionDescriptor,
+    ActionDefinition, ActionKind, App, AppLabels, BlockPaletteEntry, Contribution,
+    ConfigView, DocumentApp, DocumentView, Emit, HostEffect, IconName, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, ActionDescriptor, Terminology,
     UiButtonNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode, UiPresence,
     UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -66,8 +66,16 @@ fn is_de_locale(cfg: &FormsConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &FormsConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🌐️ `FormsConfig` carries no terminology axis yet (unlike `CadConfig::terminology`) — forms has no
+/// native/reuse vocabulary split, so every cell resolves `Terminology::Native`.
+fn forms_locale(cfg: &FormsConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
+/// `AppLabels::labels` (was the deleted `LocaleLabels::locale_labels_en/de`).
+fn resolve_labels<L: AppLabels>(cfg: &FormsConfig) -> &'static L {
+    L::labels(forms_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -570,106 +578,61 @@ fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &FormsLab
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the forms app; one field per label makes every locale combination compile-checked.
     struct FormsLabels {
-        label: &'static str = en: "Label", de: "Bezeichnung";
-        kind: &'static str = en: "Kind", de: "Art";
-        id: &'static str = en: "Id", de: "Id";
-        required: &'static str = en: "Required", de: "Erforderlich";
-        description: &'static str = en: "Description", de: "Beschreibung";
-        placeholder: &'static str = en: "Placeholder", de: "Platzhalter";
-        default: &'static str = en: "Default", de: "Standard";
-        min: &'static str = en: "Min", de: "Min";
-        max: &'static str = en: "Max", de: "Max";
-        step_field: &'static str = en: "Step", de: "Schrittweite";
-        unit: &'static str = en: "Unit", de: "Einheit";
-        schema: &'static str = en: "Schema", de: "Schema";
-        text: &'static str = en: "Text", de: "Text";
-        src: &'static str = en: "Src", de: "Quelle";
-        accept: &'static str = en: "Accept", de: "Akzeptierte Dateien";
-        yes: &'static str = en: "Yes", de: "Ja";
-        no: &'static str = en: "No", de: "Nein";
-        option: &'static str = en: "Option", de: "Option";
-        remove: &'static str = en: "Remove", de: "Entfernen";
-        add_option: &'static str = en: "Add Option", de: "Option hinzufügen";
-        remove_option: &'static str = en: "Remove Option", de: "Option entfernen";
-        add_vector_field: &'static str = en: "Add Vector Field", de: "Vektorfeld hinzufügen";
-        vector_field_label_suffix: &'static str = en: "label", de: "Bezeichnung";
-        vector_field_value_suffix: &'static str = en: "value", de: "Wert";
-        add_step: &'static str = en: "Add Step", de: "Schritt hinzufügen";
-        add_text_question: &'static str = en: "Add Text Question", de: "Textfrage hinzufügen";
-        question: &'static str = en: "Question", de: "Frage";
-        selected: &'static str = en: "selected", de: "ausgewählt";
-        no_steps_in_form: &'static str = en: "No steps in this form.", de: "Keine Schritte in diesem Formular.";
-        form_fallback_title: &'static str = en: "Form", de: "Formular";
-        step_progress: &'static str = en: "Step", de: "Schritt";
-        back: &'static str = en: "Back", de: "Zurück";
-        next: &'static str = en: "Next", de: "Weiter";
-        submit: &'static str = en: "Submit", de: "Absenden";
-        fixture_slug: &'static str = en: "Fixture Slug", de: "Fixture-Slug";
-        no_steps_tree_item: &'static str = en: "(no steps)", de: "(keine Schritte)";
-        actions: &'static str = en: "Actions", de: "Aktionen";
-        kind_text: &'static str = en: "Text", de: "Text";
-        kind_long_text: &'static str = en: "Long Text", de: "Langtext";
-        kind_number: &'static str = en: "Number", de: "Zahl";
-        kind_slider: &'static str = en: "Slider", de: "Schieberegler";
-        kind_boolean: &'static str = en: "Boolean", de: "Boolescher Wert";
-        kind_single: &'static str = en: "Single Select", de: "Einzelauswahl";
-        kind_multi: &'static str = en: "Multi Select", de: "Mehrfachauswahl";
-        kind_date: &'static str = en: "Date", de: "Datum";
-        kind_color: &'static str = en: "Color", de: "Farbe";
-        kind_image: &'static str = en: "Image", de: "Bild";
-        kind_file: &'static str = en: "File", de: "Datei";
-        kind_vector: &'static str = en: "Vector", de: "Vektor";
-        kind_note: &'static str = en: "Note", de: "Notiz";
-        window_blueprint: &'static str = en: "Blueprint", de: "Entwurf";
-        window_try: &'static str = en: "Try", de: "Testen";
+        label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
+        required: native_en "Required", native_de "Erforderlich", reuse_en "Required", reuse_de "Erforderlich";
+        description: native_en "Description", native_de "Beschreibung", reuse_en "Description", reuse_de "Beschreibung";
+        placeholder: native_en "Placeholder", native_de "Platzhalter", reuse_en "Placeholder", reuse_de "Platzhalter";
+        default: native_en "Default", native_de "Standard", reuse_en "Default", reuse_de "Standard";
+        min: native_en "Min", native_de "Min", reuse_en "Min", reuse_de "Min";
+        max: native_en "Max", native_de "Max", reuse_en "Max", reuse_de "Max";
+        step_field: native_en "Step", native_de "Schrittweite", reuse_en "Step", reuse_de "Schrittweite";
+        unit: native_en "Unit", native_de "Einheit", reuse_en "Unit", reuse_de "Einheit";
+        schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
+        text: native_en "Text", native_de "Text", reuse_en "Text", reuse_de "Text";
+        src: native_en "Src", native_de "Quelle", reuse_en "Src", reuse_de "Quelle";
+        accept: native_en "Accept", native_de "Akzeptierte Dateien", reuse_en "Accept", reuse_de "Akzeptierte Dateien";
+        yes: native_en "Yes", native_de "Ja", reuse_en "Yes", reuse_de "Ja";
+        no: native_en "No", native_de "Nein", reuse_en "No", reuse_de "Nein";
+        option: native_en "Option", native_de "Option", reuse_en "Option", reuse_de "Option";
+        remove: native_en "Remove", native_de "Entfernen", reuse_en "Remove", reuse_de "Entfernen";
+        add_option: native_en "Add Option", native_de "Option hinzufügen", reuse_en "Add Option", reuse_de "Option hinzufügen";
+        remove_option: native_en "Remove Option", native_de "Option entfernen", reuse_en "Remove Option", reuse_de "Option entfernen";
+        add_vector_field: native_en "Add Vector Field", native_de "Vektorfeld hinzufügen", reuse_en "Add Vector Field", reuse_de "Vektorfeld hinzufügen";
+        vector_field_label_suffix: native_en "label", native_de "Bezeichnung", reuse_en "label", reuse_de "Bezeichnung";
+        vector_field_value_suffix: native_en "value", native_de "Wert", reuse_en "value", reuse_de "Wert";
+        add_step: native_en "Add Step", native_de "Schritt hinzufügen", reuse_en "Add Step", reuse_de "Schritt hinzufügen";
+        add_text_question: native_en "Add Text Question", native_de "Textfrage hinzufügen", reuse_en "Add Text Question", reuse_de "Textfrage hinzufügen";
+        question: native_en "Question", native_de "Frage", reuse_en "Question", reuse_de "Frage";
+        selected: native_en "selected", native_de "ausgewählt", reuse_en "selected", reuse_de "ausgewählt";
+        no_steps_in_form: native_en "No steps in this form.", native_de "Keine Schritte in diesem Formular.", reuse_en "No steps in this form.", reuse_de "Keine Schritte in diesem Formular.";
+        form_fallback_title: native_en "Form", native_de "Formular", reuse_en "Form", reuse_de "Formular";
+        step_progress: native_en "Step", native_de "Schritt", reuse_en "Step", reuse_de "Schritt";
+        back: native_en "Back", native_de "Zurück", reuse_en "Back", reuse_de "Zurück";
+        next: native_en "Next", native_de "Weiter", reuse_en "Next", reuse_de "Weiter";
+        submit: native_en "Submit", native_de "Absenden", reuse_en "Submit", reuse_de "Absenden";
+        fixture_slug: native_en "Fixture Slug", native_de "Fixture-Slug", reuse_en "Fixture Slug", reuse_de "Fixture-Slug";
+        no_steps_tree_item: native_en "(no steps)", native_de "(keine Schritte)", reuse_en "(no steps)", reuse_de "(keine Schritte)";
+        actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
+        kind_text: native_en "Text", native_de "Text", reuse_en "Text", reuse_de "Text";
+        kind_long_text: native_en "Long Text", native_de "Langtext", reuse_en "Long Text", reuse_de "Langtext";
+        kind_number: native_en "Number", native_de "Zahl", reuse_en "Number", reuse_de "Zahl";
+        kind_slider: native_en "Slider", native_de "Schieberegler", reuse_en "Slider", reuse_de "Schieberegler";
+        kind_boolean: native_en "Boolean", native_de "Boolescher Wert", reuse_en "Boolean", reuse_de "Boolescher Wert";
+        kind_single: native_en "Single Select", native_de "Einzelauswahl", reuse_en "Single Select", reuse_de "Einzelauswahl";
+        kind_multi: native_en "Multi Select", native_de "Mehrfachauswahl", reuse_en "Multi Select", reuse_de "Mehrfachauswahl";
+        kind_date: native_en "Date", native_de "Datum", reuse_en "Date", reuse_de "Datum";
+        kind_color: native_en "Color", native_de "Farbe", reuse_en "Color", reuse_de "Farbe";
+        kind_image: native_en "Image", native_de "Bild", reuse_en "Image", reuse_de "Bild";
+        kind_file: native_en "File", native_de "Datei", reuse_en "File", reuse_de "Datei";
+        kind_vector: native_en "Vector", native_de "Vektor", reuse_en "Vector", reuse_de "Vektor";
+        kind_note: native_en "Note", native_de "Notiz", reuse_en "Note", reuse_de "Notiz";
+        window_blueprint: native_en "Blueprint", native_de "Entwurf", reuse_en "Blueprint", reuse_de "Entwurf";
+        window_try: native_en "Try", native_de "Testen", reuse_en "Try", reuse_de "Testen";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_forms_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn forms_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addStep", "Add Step", "Schritt hinzufügen"),
-        ("addQuestion", "Add Question", "Frage hinzufügen"),
-        ("removeQuestion", "Remove Question", "Frage entfernen"),
-        ("patchQuestions", "Patch Questions", "Fragen aktualisieren"),
-        ("patchQuestionOptions", "Patch Question Options", "Fragenoptionen aktualisieren"),
-        ("addQuestionOption", "Add Question Option", "Fragenoption hinzufügen"),
-        ("removeQuestionOption", "Remove Question Option", "Fragenoption entfernen"),
-        ("patchVectorField", "Patch Vector Field", "Vektorfeld aktualisieren"),
-        ("addVectorField", "Add Vector Field", "Vektorfeld hinzufügen"),
-        ("removeVectorField", "Remove Vector Field", "Vektorfeld entfernen"),
-        ("moveQuestion", "Move Question", "Frage verschieben"),
-        ("moveStep", "Move Step", "Schritt verschieben"),
-        ("removeStep", "Remove Step", "Schritt entfernen"),
-        ("patchStep", "Patch Step", "Schritt aktualisieren"),
-        ("updateForm", "Update Form", "Formular aktualisieren"),
-        ("updatePlaybook", "Update Playbook", "Playbook aktualisieren"),
-        ("dropQuestionKind", "Drop Question Kind", "Frageart ablegen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("setSpecJson", "Set Spec JSON", "Spezifikations-JSON festlegen"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setTryValue", "Set Try Value", "Testwert festlegen"),
-        ("setTryValues", "Set Try Values", "Testwerte festlegen"),
-        ("resetTry", "Reset Try", "Test zurücksetzen"),
-        ("previousStep", "Previous Step", "Vorheriger Schritt"),
-        ("nextStep", "Next Step", "Nächster Schritt"),
-        ("submit", "Submit", "Absenden"),
-        ("exportFixture", "Export Fixture", "Fixture exportieren"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_forms_app`.
-/// The forms manifest declares no utilities for the utility bar, so this always resolves empty; kept for parity with the
-/// other play apps' terminology plumbing.
-fn forms_utility_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[])
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsLabels) -> UiNode {
@@ -768,7 +731,7 @@ fn inspector_patch(question_ids: &[String], field: &str) -> ActionDescriptor {
     forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": field })))
 }
 
-fn inspector_text_field(question_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
+fn inspector_text_field(question_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_text(values);
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
@@ -795,7 +758,7 @@ fn inspector_text_field(question_ids: &[String], field_id: &str, label: &str, va
     })
 }
 
-fn inspector_number_field(question_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
+fn inspector_number_field(question_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
@@ -1891,33 +1854,13 @@ impl DocumentApp for FormsPlayApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, FormsConfig>) -> AppLabelsOverlay {
-        let config = cfg.projection;
-        let labels = resolve_labels::<FormsLabels>(config);
-        let is_de = is_de_locale(config);
-        AppLabelsOverlay::with_framework_panel_tabs(
-            ["framework.panel.document", "framework.panel.catalogue", "framework.panel.inspection"],
-            is_de,
-        )
-        .window_kind_label(FORMS_PLAY_WINDOW_BLUEPRINT, labels.window_blueprint)
-        .window_kind_label(FORMS_PLAY_WINDOW_TRY, labels.window_try)
-        .mode_label("blueprint", labels.window_blueprint)
-        .action_labels(forms_action_labels(is_de))
-        .utility_labels(forms_utility_labels(is_de))
-        .example_labels(HashMap::from([
-            ("default".to_string(), (if is_de { "Kontakt" } else { "Contact" }).to_string()),
-            ("onboarding".to_string(), "Onboarding".to_string()),
-            ("building-component".to_string(), (if is_de { "Baukomponente" } else { "Building Component" }).to_string()),
-        ]))
-    }
 }
 //#endregion 🔖️FormsPlayApp
 
 //#region 🔖️Manifest
 pub fn create_forms_app() -> App {
     App::from_builder(
-        App::builder(FORMS_PLAY_APP_ID, "Forms").document(["semio", "forms"])
+        App::builder(FORMS_PLAY_APP_ID, LocalizedLabel::native("Forms", "Formulare")).document(["semio", "forms"])
             .artifact_kind(ArtifactKindSpec {
                 id: "form.dictionary".into(),
                 name: "Form Dictionary".into(),
@@ -1931,58 +1874,58 @@ pub fn create_forms_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("forms")
-            .mode("blueprint", "Blueprint", "cad-shape")
+            .mode("blueprint", LocalizedLabel::native("Blueprint", "Entwurf"), "cad-shape")
             .default_mode_id("blueprint")
-            .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT, SurfaceKind::BlockList, "clipboard-list")
-            .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY, SurfaceKind::Canvas2d, "play")
-            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, FORMS_PLAY_BODY_DOCUMENT)
-            .panel_tab("framework.panel.catalogue", "Catalogue", PanelGroup::Workbench, FORMS_PLAY_BODY_CATALOGUE)
-            .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, FORMS_PLAY_BODY_INSPECTION)
-            .operation("addStep", "Add Step")
-            .operation("addQuestion", "Add Question")
-            .operation("removeQuestion", "Remove Question")
-            .operation("patchQuestions", "Patch Questions")
-            .operation("patchQuestionOptions", "Patch Question Options")
-            .operation("addQuestionOption", "Add Question Option")
-            .operation("removeQuestionOption", "Remove Question Option")
-            .operation("patchVectorField", "Patch Vector Field")
-            .operation("addVectorField", "Add Vector Field")
-            .operation("removeVectorField", "Remove Vector Field")
-            .operation("moveQuestion", "Move Question")
-            .operation("moveStep", "Move Step")
-            .operation("removeStep", "Remove Step")
-            .operation("patchStep", "Patch Step")
-            .operation("updateForm", "Update Form")
-            .operation("updatePlaybook", "Update Playbook")
-            .operation("dropQuestionKind", "Drop Question Kind")
-            .operation("setActiveExample", "Set Active Example")
+            .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, LocalizedLabel::native("Blueprint", "Entwurf"), FORMS_PLAY_BODY_BLUEPRINT, SurfaceKind::BlockList, "clipboard-list")
+            .window_kind(FORMS_PLAY_WINDOW_TRY, LocalizedLabel::native("Try", "Testen"), FORMS_PLAY_BODY_TRY, SurfaceKind::Canvas2d, "play")
+            .panel_tab("framework.panel.document", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, FORMS_PLAY_BODY_DOCUMENT)
+            .panel_tab("framework.panel.catalogue", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, FORMS_PLAY_BODY_CATALOGUE)
+            .panel_tab("framework.panel.inspection", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, FORMS_PLAY_BODY_INSPECTION)
+            .operation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .operation("addQuestion", LocalizedLabel::native("Add Question", "Frage hinzufügen"))
+            .operation("removeQuestion", LocalizedLabel::native("Remove Question", "Frage entfernen"))
+            .operation("patchQuestions", LocalizedLabel::native("Patch Questions", "Fragen aktualisieren"))
+            .operation("patchQuestionOptions", LocalizedLabel::native("Patch Question Options", "Fragenoptionen aktualisieren"))
+            .operation("addQuestionOption", LocalizedLabel::native("Add Question Option", "Fragenoption hinzufügen"))
+            .operation("removeQuestionOption", LocalizedLabel::native("Remove Question Option", "Fragenoption entfernen"))
+            .operation("patchVectorField", LocalizedLabel::native("Patch Vector Field", "Vektorfeld aktualisieren"))
+            .operation("addVectorField", LocalizedLabel::native("Add Vector Field", "Vektorfeld hinzufügen"))
+            .operation("removeVectorField", LocalizedLabel::native("Remove Vector Field", "Vektorfeld entfernen"))
+            .operation("moveQuestion", LocalizedLabel::native("Move Question", "Frage verschieben"))
+            .operation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
+            .operation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .operation("patchStep", LocalizedLabel::native("Patch Step", "Schritt aktualisieren"))
+            .operation("updateForm", LocalizedLabel::native("Update Form", "Formular aktualisieren"))
+            .operation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
+            .operation("dropQuestionKind", LocalizedLabel::native("Drop Question Kind", "Frageart ablegen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSpecJson", "Set Spec JSON", ActionKind::Operation) })
-            .view_action("setSelection", "Set Selection")
-            .view_action("setTryValue", "Set Try Value")
-            .view_action("setTryValues", "Set Try Values")
-            .view_action("resetTry", "Reset Try")
-            .view_action("previousStep", "Previous Step")
-            .view_action("nextStep", "Next Step")
-            .view_action("submit", "Submit")
-            .shell_action("exportFixture", "Export Fixture")
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Operation) })
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("setTryValue", LocalizedLabel::native("Set Try Value", "Testwert festlegen"))
+            .view_action("setTryValues", LocalizedLabel::native("Set Try Values", "Testwerte festlegen"))
+            .view_action("resetTry", LocalizedLabel::native("Reset Try", "Test zurücksetzen"))
+            .view_action("previousStep", LocalizedLabel::native("Previous Step", "Vorheriger Schritt"))
+            .view_action("nextStep", LocalizedLabel::native("Next Step", "Nächster Schritt"))
+            .view_action("submit", LocalizedLabel::native("Submit", "Absenden"))
+            .shell_action("exportFixture", LocalizedLabel::native("Export Fixture", "Fixture exportieren"))
             // 📝️ Staged argument forms for the panel-visible create/switch actions.
             .action_args("addQuestion", vec![
                 ActionArgDef::select(
                     "kind",
-                    "Kind",
-                    FORM_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, *kind)).collect(),
+                    LocalizedLabel::native("Kind", "Art"),
+                    FORM_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, LocalizedLabel::data(*kind))).collect(),
                 )
                 .default_value("text"),
             ])
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new("default", "Default"),
-                    ActionArgOption::new("onboarding", "Onboarding"),
-                    ActionArgOption::new("building-component", "Building Component"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new("default", LocalizedLabel::native("Default", "Standard")),
+                    ActionArgOption::new("onboarding", LocalizedLabel::native("Onboarding", "Einführung")),
+                    ActionArgOption::new("building-component", LocalizedLabel::native("Building Component", "Baukomponente")),
                 ]).default_value("default"),
             ])
-            .action_args("setSpecJson", vec![ActionArgDef::text("json", "Spec JSON")])
+            .action_args("setSpecJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Spec JSON", "Spezifikations-JSON"))])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(create_default_layout(
@@ -1996,9 +1939,9 @@ pub fn create_forms_app() -> App {
             .config(FormsPlayApp.config_spec())
             .io(forms_engine::forms_io()),
     )
-    .example("default", "Contact", forms_engine::default_example_json(), "file")
-    .example("onboarding", "Onboarding", forms_engine::onboarding_example_json(), "user")
-    .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_TEXT, "building")
+    .example("default", LocalizedLabel::native("Contact", "Kontakt"), forms_engine::default_example_json(), "file")
+    .example("onboarding", LocalizedLabel::native("Onboarding", "Einführung"), forms_engine::onboarding_example_json(), "user")
+    .example("building-component", LocalizedLabel::native("Building Component", "Baukomponente"), BUILDING_COMPONENT_EXAMPLE_TEXT, "building")
     .workflow("forms", "Forms", "data")
 }
 //#endregion 🔖️Manifest

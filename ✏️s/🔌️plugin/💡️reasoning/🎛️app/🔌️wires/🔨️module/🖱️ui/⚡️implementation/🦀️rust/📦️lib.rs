@@ -12,7 +12,7 @@ use reasoning_wires_protocol::WiresCommand;
 use semio_framework_plugin::{
     app_labels, build_canvas_2d_scene, create_default_layout, localized_label_map,
     tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, Emit, ActionDescriptor, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, ConfigView, DocumentApp, DocumentView, LocaleLabels, MediaClass, MediaForm, MediaType, OsMediaCapability,
+    AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, ConfigView, DocumentApp, DocumentView, LocaleLabels, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability,
     PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, UiNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -681,7 +681,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
 //#region 🔖️Manifest
 pub fn create_wires_app() -> App {
     App::from_builder(
-        App::builder(WIRES_PLAY_APP_ID, "Mindmap Wires").document(["semio", "reasoning", "mindmap", "wires"])
+        App::builder(WIRES_PLAY_APP_ID, LocalizedLabel::native("Mindmap Wires", "Mindmap-Wires")).document(["semio", "reasoning", "mindmap", "wires"])
             .artifact_kind(ArtifactKindSpec {
                 id: "graph.wires".into(),
                 name: "Wires Graph".into(),
@@ -695,12 +695,12 @@ pub fn create_wires_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("reasoning-wires")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind("reasoning-wires-composite", "Canvas", WIRES_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, "git-branch")
-            .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, WIRES_PLAY_BODY_DOCUMENT)
-            .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, WIRES_PLAY_BODY_CATALOGUE)
-            .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, WIRES_PLAY_BODY_PROPERTIES)
+            .window_kind("reasoning-wires-composite", LocalizedLabel::native("Canvas", "Leinwand"), WIRES_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, "git-branch")
+            .panel_tab("framework.panel.document", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, WIRES_PLAY_BODY_DOCUMENT)
+            .panel_tab("framework.panel.catalogue", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, WIRES_PLAY_BODY_CATALOGUE)
+            .panel_tab("framework.panel.inspection", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, WIRES_PLAY_BODY_PROPERTIES)
             .default_layout(create_default_layout(
                 &["reasoning-wires-composite".into()],
                 "row",
@@ -708,18 +708,18 @@ pub fn create_wires_app() -> App {
                 Some(&["Canvas".into()]),
             ))
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .operation("setActiveExample", "Set Active Example")
-            .operation("addNode", "Add Node")
-            .operation("addRelationship", "Add Relationship")
-            .operation("deleteSelection", "Delete Selection")
-            .operation("forceLayout", "Force Layout")
-            .operation("reorganize", "Reorganize")
-            .operation("canvasPointerMove", "Canvas Pointer Move")
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
+            .operation("addRelationship", LocalizedLabel::native("Add Relationship", "Beziehung hinzufügen"))
+            .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .operation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
+            .operation("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"))
+            .operation("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"))
             // 👁️ Ephemeral view state — selection and in-flight drag.
-            .view_action("setSelection", "Set Selection")
-            .view_action("documentSelect", "Document Select")
-            .view_action("canvasPointerDown", "Canvas Pointer Down")
-            .view_action("canvasPointerUp", "Canvas Pointer Up")
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("documentSelect", LocalizedLabel::native("Document Select", "Dokument auswählen"))
+            .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
+            .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"))
             // 🎯️ Typed channel surface (B1 pure-trait conversion) — `config_spec()`'s single source of
             // truth (the trait default `ConfigSpec::empty()`: none of `WiresConfig`'s fields are
             // user-visible settings, they're ephemeral view state) reused here rather than duplicated.
@@ -727,7 +727,7 @@ pub fn create_wires_app() -> App {
     )
     .example(
         WIRES_PLAY_EXAMPLE_METABOLISM_ID,
-        "Metabolism",
+        LocalizedLabel::native("Metabolism", "Stoffwechsel"),
         serde_json::to_string(&metabolism_wires_example_document()).unwrap(),
         "network",
     )
