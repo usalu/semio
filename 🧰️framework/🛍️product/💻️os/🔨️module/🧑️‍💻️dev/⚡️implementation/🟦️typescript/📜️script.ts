@@ -661,7 +661,10 @@ async function createPluginApiInner() {
       return await plugin.manifest();
     },
     async createApp(appId) {
-      const instanceId = await plugin.instantiateApp(appId, appId);
+      // 🐚️ A random instance id (not \`appId\` itself) so two shells sharing this worker's plugin module
+      // (see acquirePluginModule in framework/core) can each instantiate the same app without colliding
+      // on the guest's instance-id-keyed \`INSTANCES\` table.
+      const instanceId = await plugin.instantiateApp(appId, crypto.randomUUID());
       apps.add(instanceId);
       return instanceId;
     },
@@ -999,8 +1002,28 @@ async function buildEngineWasm(variant: string, renderer: string): Promise<void>
   }
 }
 
+/** @emoji 🐚️ Fixed port for `dev multi` — the multi-shell harness (`🧩️multi.tsx`), free in the 60xx range
+ * used by every other os-dev variant/launch.json entry. */
+const FRAMEWORK_OS_MULTI_HARNESS_PORT = "6071";
+
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "multi") {
+      // 🐚️ The multi-shell harness mounts several already-built playground variants' plugin modules
+      // side by side (see `🧩️multi.tsx`) — it doesn't own any one variant's plugin/engine build, so it
+      // never triggers `buildPlugins`/`buildEngineWasm` itself (unlike every other `dev <variant>`
+      // branch below): run `dev note`/`dev gis2d` (or set `SKIP_PLUGIN_BUILD=1` and build by hand) first
+      // if their `🔌️plugin-modules/` output is missing or stale. Leaving `SEMIO_PLUGIN` unset makes the
+      // vite config fall back to its studio ("s") default, which serves the whole unfiltered
+      // `plugin-modules/` directory — exactly what hosting several distinct plugins at once needs.
+      runViteBunxDev(this.root, segments.slice(1), {
+        portEnv: "S_OS_PORT",
+        defaultPort: FRAMEWORK_OS_MULTI_HARNESS_PORT,
+        fixedPort: true,
+        env: { SEMIO_RENDERER: "react", VITE_SEMIO_RENDERER: "react" },
+      });
+      return;
+    }
     const variantSegment = segments[0] && !segments[0].startsWith("-") ? segments[0] : undefined;
     const viteSegments = variantSegment ? segments.slice(1) : segments;
     const filterPlugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";

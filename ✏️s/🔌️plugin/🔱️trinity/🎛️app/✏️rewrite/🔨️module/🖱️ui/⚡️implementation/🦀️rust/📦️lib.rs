@@ -1445,7 +1445,22 @@ impl DocumentApp for TrinityRewritePlayApp {
         let is_de = is_de_locale(cfg.projection);
         let selected = cfg.projection.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
-        let mut menu = Menu::of(registry);
+
+        // 🗂️ Grouped disclosure: `addRuleClause`/`nodeGraphEdit`/`setParameter`/`reorganize` stay
+        // top-level (the 3-5 most frequent verbs); `patchNodes`/`resetRule`/`setLodMode`/the dev-only
+        // JSON editors fold into taxonomy groups; `delete-selection` stays a direct destructive item
+        // last — `organize_context_menu` (applied automatically at the `VcsDocumentApp::context_menu`
+        // funnel) sorts the groups into `RIBBON_PARENT_CATEGORIES` order and inserts the
+        // pre-destructive separator itself.
+        let mut menu = Menu::of(registry)
+            .action("addRuleClause")
+            .action("nodeGraphEdit")
+            .action("setParameter")
+            .action("reorganize")
+            .group("transform", |m| m.action("patchNodes"))
+            .group("history", |m| m.action("resetRule"))
+            .group("mode", |m| m.action("setLodMode"))
+            .group("tools", |m| m.action("setLhsJson").action("setRhsJson"));
         if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
@@ -1537,23 +1552,23 @@ pub fn create_rewrite_app() -> App {
                 TRINITY_REWRITE_PLAY_BODY_INSPECTION,
             )
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .operation("addRuleClause", "Add Rule Clause")
-            .operation("resetRule", "Reset Rule")
-            .operation("setParameter", "Set Parameter")
-            .operation("patchNodes", "Patch Nodes")
-            .operation("nodeGraphEdit", "Edit Graph")
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("addRuleClause", "Add Rule Clause", ActionKind::Operation).with_category("create"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("resetRule", "Reset Rule", ActionKind::Operation).with_category("history"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setParameter", "Set Parameter", ActionKind::Operation).with_category("settings"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("patchNodes", "Patch Nodes", ActionKind::Operation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphEdit", "Edit Graph", ActionKind::Operation).with_category("transform"))
             // 🛠️ Dev-only raw rule editors — kept out of the command palette.
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setLhsJson", "Set LHS Json", ActionKind::Operation) })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setRhsJson", "Set RHS Json", ActionKind::Operation) })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setLhsJson", "Set LHS Json", ActionKind::Operation).with_category("tools") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setRhsJson", "Set RHS Json", ActionKind::Operation).with_category("tools") })
             // 👁️ Ephemeral view state — selection, hover, text cursor, recompute/layout, LOD.
-            .view_action("setSelection", "Set Selection")
-            .view_action("nodeGraphHover", "Hover Graph Node")
-            .view_action("setViewport", "Set Graph Viewport")
-            .view_action("graphPointerDown", "Graph Pointer Down")
-            .view_action("textSelect", "Select Text")
-            .view_action("textHover", "Hover Text")
-            .view_action("reorganize", "Reorganize")
-            .view_action("setLodMode", "Set LOD Mode")
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setSelection", "Set Selection", ActionKind::View).with_category("selection"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphHover", "Hover Graph Node", ActionKind::View).with_category("hand"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setViewport", "Set Graph Viewport", ActionKind::View).with_category("view"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("graphPointerDown", "Graph Pointer Down", ActionKind::View).with_category("hand"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("textSelect", "Select Text", ActionKind::View).with_category("selection"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("textHover", "Hover Text", ActionKind::View).with_category("hand"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::View).with_category("view"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setLodMode", "Set LOD Mode", ActionKind::View).with_category("mode"))
             // 📝️ Staged argument forms.
             .action_args("addRuleClause", vec![
                 ActionArgDef::select("kind", "Clause", vec![
@@ -1589,6 +1604,27 @@ mod tests {
 
     fn new_app() -> VcsDocumentApp<TrinityRewritePlayApp> {
         testkit::new_app::<TrinityRewritePlayApp>()
+    }
+
+    /// 🗂️ Grouped disclosure: top-level menu (leaves+groups+separator) stays within the row budget
+    /// and the known-destructive `delete-selection` row (dispatched via `nodeGraphEdit`) is last —
+    /// mirrors the flow app's `context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last`.
+    #[test]
+    fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+        let mut app = new_app();
+        app.dispatch_typed(TrinityRewriteCommand::SetSelection { ids: vec!["n1".into(), "n2".into()], surface_id: None }, &meta("local")).expect("select");
+        let request = semio_framework_plugin::ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+            surface: None,
+            window_instance_id: None,
+            point: None,
+        };
+        let menu = app.context_menu(&request);
+        assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
+        let last = menu.last().expect("grouped disclosure menu should not be empty");
+        let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
+        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).map(|child| child.destructive == Some(true)).unwrap_or(false);
+        assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive delete-selection must be last: {menu:?}");
     }
 
     #[test]

@@ -103,6 +103,16 @@
       "port": 6070
     },
     {
+      "name": "framework-os-multi-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:os:multi"],
+      "env": {
+        "S_OS_PORT": "6071",
+        "SEMIO_RENDERER": "react"
+      },
+      "port": 6071
+    },
+    {
       "name": "s-wgpu-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["nx", "run", "@semio-tech/framework-os-dev:dev"],

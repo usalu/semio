@@ -9,6 +9,7 @@ use semio_framework_plugin::{
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ActionDescriptor, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, ArtifactPresentation, Board2dScene, PortMultiplicity, SurfaceKind, ToolRef, UiInspectorFieldGroup, UiPresence, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
     WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
     tree_item, tree_item_with_action,
+    AppLabels, Label, LocalizedLabel, Locale, Terminology,
 };
 use semio_framework_plugin::kernel::HostEffect;
 use serde::{Deserialize, Serialize};
@@ -945,7 +946,7 @@ fn puzzle2d_brush_utility_options(envelope: &Puzzle2dScene, labels: &Puzzle2dLab
     let mut children = vec![
         WindowMeasure::Slider {
             id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-offset"),
-            label: Some(format!("{} ({})", labels.suggestion, labels.offset)),
+            label: Some(format!("{} ({})", labels.suggestion.as_str(), labels.offset.as_str())),
             value: envelope.runtime.suggestion_offset,
             min: PUZZLE2D_SUGGESTION_OFFSET_MIN,
             max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
@@ -958,7 +959,7 @@ fn puzzle2d_brush_utility_options(envelope: &Puzzle2dScene, labels: &Puzzle2dLab
         },
         WindowMeasure::Group {
             id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-nodes"),
-            label: format!("{} ({:.0}%)", labels.node_weights, puzzle2d_kind_weight_sum(&envelope.runtime.node_kind_weights, &node_ids) * 100.0).into(),
+            label: format!("{} ({:.0}%)", labels.node_weights.as_str(), puzzle2d_kind_weight_sum(&envelope.runtime.node_kind_weights, &node_ids) * 100.0),
             default_open: Some(false),
             active_utility_id: None,
             value: None,
@@ -973,7 +974,7 @@ fn puzzle2d_brush_utility_options(envelope: &Puzzle2dScene, labels: &Puzzle2dLab
         },
         WindowMeasure::Group {
             id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-handles"),
-            label: format!("{} ({:.0}%)", labels.handle_weights, puzzle2d_kind_weight_sum(&envelope.runtime.handle_kind_weights, &handle_ids) * 100.0).into(),
+            label: format!("{} ({:.0}%)", labels.handle_weights.as_str(), puzzle2d_kind_weight_sum(&envelope.runtime.handle_kind_weights, &handle_ids) * 100.0),
             default_open: Some(false),
             active_utility_id: None,
             value: None,
@@ -1082,7 +1083,7 @@ fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &str, l
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} {} · {edge_count} {} · {} {lod}", labels.nodes, labels.edges, labels.lod) }]),
+        status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} {} · {edge_count} {} · {} {lod}", labels.nodes.as_str(), labels.edges.as_str(), labels.lod.as_str()) }]),
         // 🧰️ The select/brush/fill switcher now lives in the framework utility bar (declared via `.utility` +
         // `.window_kind_utilities`), so the engagement no longer duplicates it as toggle options.
         options: None,
@@ -1262,132 +1263,64 @@ fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value
 //#endregion 🔖️Canvas
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale combination compile-checked.
-struct Puzzle2dLabels {
-    // entity nouns — remapped under the "reuse" terminology
-    nodes: &'static str,
-    handles: &'static str,
-    // document tree / catalogue section labels
-    edges: &'static str,
-    none: &'static str,
-    // window-kind titles (window headers / tab titles)
-    window_overview: &'static str,
-    window_detail: &'static str,
-    window_selection: &'static str,
-    // properties panel summary labels
-    schema: &'static str,
-    extension: &'static str,
-    // inspector field labels
-    id: &'static str,
-    node_kind: &'static str,
-    x: &'static str,
-    y: &'static str,
-    // measures
-    automatic: &'static str,
-    lod: &'static str,
-    suggestion: &'static str,
-    offset: &'static str,
-    node_weights: &'static str,
-    handle_weights: &'static str,
-    // engagement
-    select: &'static str,
-    brush: &'static str,
-    fill: &'static str,
-    count: &'static str,
-    placement: &'static str,
-    // example picker
-    example_concrete_forest: &'static str,
+/// 🗣️ Complete UI label set for the 2d app; one field per label makes every terminology×locale
+/// combination compile-checked via `semio_framework_plugin::app_labels!` (see ticket
+/// 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND). Fields whose reuse
+/// cells repeat the native text verbatim were previously inherited via `..PUZZLE2D_LABELS_NATIVE_EN`
+/// struct-update syntax — the new macro has no implicit inheritance, so those cells are now spelled
+/// out explicitly (same text, four times).
+semio_framework_plugin::app_labels! {
+    struct Puzzle2dLabels {
+        // entity nouns — remapped under the "reuse" terminology
+        nodes: native_en "Nodes", native_de "Knoten", reuse_en "Building components", reuse_de "Baukomponenten";
+        handles: native_en "Handles", native_de "Anschlüsse", reuse_en "Connection points", reuse_de "Verbindungspunkte";
+        // document tree / catalogue section labels
+        edges: native_en "Edges", native_de "Kanten", reuse_en "Edges", reuse_de "Kanten";
+        none: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
+        // window-kind titles (window headers / tab titles)
+        window_overview: native_en "Overview", native_de "Übersicht", reuse_en "Assembly", reuse_de "Baugruppe";
+        window_detail: native_en "Detail", native_de "Detail", reuse_en "Connection Detail", reuse_de "Verbindungsdetail";
+        window_selection: native_en "Selection", native_de "Auswahl", reuse_en "Component Selection", reuse_de "Komponentenauswahl";
+        // properties panel summary labels
+        schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
+        extension: native_en "Extension", native_de "Erweiterung", reuse_en "Extension", reuse_de "Erweiterung";
+        // inspector field labels
+        id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
+        node_kind: native_en "Node Kind", native_de "Knotenart", reuse_en "Node Kind", reuse_de "Knotenart";
+        x: native_en "X", native_de "X", reuse_en "X", reuse_de "X";
+        y: native_en "Y", native_de "Y", reuse_en "Y", reuse_de "Y";
+        // measures
+        automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";
+        lod: native_en "LOD", native_de "LOD", reuse_en "LOD", reuse_de "LOD";
+        suggestion: native_en "Suggestion", native_de "Vorschlag", reuse_en "Suggestion", reuse_de "Vorschlag";
+        offset: native_en "Offset", native_de "Versatz", reuse_en "Offset", reuse_de "Versatz";
+        node_weights: native_en "Node Weights", native_de "Knotengewichte", reuse_en "Node Weights", reuse_de "Knotengewichte";
+        handle_weights: native_en "Handle Weights", native_de "Anschlussgewichte", reuse_en "Handle Weights", reuse_de "Anschlussgewichte";
+        // engagement
+        select: native_en "Select", native_de "Auswählen", reuse_en "Select", reuse_de "Auswählen";
+        brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
+        fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
+        count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
+        placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
+        // example picker
+        example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
+    }
 }
 
-const PUZZLE2D_LABELS_NATIVE_EN: Puzzle2dLabels = Puzzle2dLabels {
-    nodes: "Nodes",
-    handles: "Handles",
-    edges: "Edges",
-    none: "(none)",
-    window_overview: "Overview",
-    window_detail: "Detail",
-    window_selection: "Selection",
-    schema: "Schema",
-    extension: "Extension",
-    id: "Id",
-    node_kind: "Node Kind",
-    x: "X",
-    y: "Y",
-    automatic: "Automatic",
-    lod: "LOD",
-    suggestion: "Suggestion",
-    offset: "Offset",
-    node_weights: "Node Weights",
-    handle_weights: "Handle Weights",
-    select: "Select",
-    brush: "Brush",
-    fill: "Fill",
-    count: "Count",
-    placement: "Placement",
-    example_concrete_forest: "Concrete Forest",
-};
-
-const PUZZLE2D_LABELS_NATIVE_DE: Puzzle2dLabels = Puzzle2dLabels {
-    nodes: "Knoten",
-    handles: "Anschlüsse",
-    edges: "Kanten",
-    none: "(keine)",
-    window_overview: "Übersicht",
-    window_detail: "Detail",
-    window_selection: "Auswahl",
-    schema: "Schema",
-    extension: "Erweiterung",
-    id: "Id",
-    node_kind: "Knotenart",
-    x: "X",
-    y: "Y",
-    automatic: "Automatisch",
-    lod: "LOD",
-    suggestion: "Vorschlag",
-    offset: "Versatz",
-    node_weights: "Knotengewichte",
-    handle_weights: "Anschlussgewichte",
-    select: "Auswählen",
-    brush: "Pinsel",
-    fill: "Füllen",
-    count: "Anzahl",
-    placement: "Platzierung",
-    example_concrete_forest: "Betonwald",
-};
-
-const PUZZLE2D_LABELS_REUSE_EN: Puzzle2dLabels = Puzzle2dLabels {
-    nodes: "Building components",
-    handles: "Connection points",
-    window_overview: "Assembly",
-    window_detail: "Connection Detail",
-    window_selection: "Component Selection",
-    example_concrete_forest: "Abbau Aufbau",
-    ..PUZZLE2D_LABELS_NATIVE_EN
-};
-const PUZZLE2D_LABELS_REUSE_DE: Puzzle2dLabels = Puzzle2dLabels {
-    nodes: "Baukomponenten",
-    handles: "Verbindungspunkte",
-    window_overview: "Baugruppe",
-    window_detail: "Verbindungsdetail",
-    window_selection: "Komponentenauswahl",
-    example_concrete_forest: "Abbau Aufbau",
-    ..PUZZLE2D_LABELS_NATIVE_DE
-};
-
-/// 🗣️ Resolves the active label set from `Puzzle2dConfig`'s locale/terminology; unknown terminology
-/// ids fall back to native. ⚠️ Not routed through `semio_framework_plugin`'s
-/// `LocaleLabels`/`app_labels!`/`resolve_labels` — those only resolve a locale (en/de) axis, but this
-/// app additionally resolves a "terminology" (native/reuse) axis via `Puzzle2dConfig::terminology`
-/// (B1: was `view_state.terminology`), which the SDK's `Terminology` region does not model.
+/// 🗣️ Resolves the active label set from `Puzzle2dConfig`'s own persisted locale/terminology
+/// strings (B1: was `view_state.locale`/`view_state.terminology`) through the generated
+/// `Puzzle2dLabels::labels` (`AppLabels`) exhaustive resolver.
 fn puzzle2d_labels(config: &Puzzle2dConfig) -> &'static Puzzle2dLabels {
-    let terminology = config.terminology.as_str();
-    let is_de = is_de_locale(config);
-    match (terminology, is_de) {
-        ("reuse", true) => &PUZZLE2D_LABELS_REUSE_DE,
-        ("reuse", false) => &PUZZLE2D_LABELS_REUSE_EN,
-        (_, true) => &PUZZLE2D_LABELS_NATIVE_DE,
-        (_, false) => &PUZZLE2D_LABELS_NATIVE_EN,
-    }
+    let locale = if is_de_locale(config) { Locale::De } else { Locale::En };
+    let terminology = if config.terminology.as_str() == "reuse" { Terminology::Reuse } else { Terminology::Native };
+    Puzzle2dLabels::labels(locale, terminology)
+}
+
+/// 🗺️ Builds the full `LocalizedLabel` matrix for one `Puzzle2dLabels` field — for the static
+/// manifest (`create_puzzle2d_app`), which must carry every (terminology, locale) cell up front
+/// rather than a single resolved-at-render-time `LabelText` (see `puzzle2d_labels`).
+fn puzzle2d_localized(field: impl Fn(&Puzzle2dLabels) -> semio_framework_plugin::LabelText) -> LocalizedLabel {
+    LocalizedLabel::from_fn(|terminology, locale| field(Puzzle2dLabels::labels(locale, terminology)).as_str().to_string())
 }
 //#endregion 🔖️Terminology
 
@@ -1425,14 +1358,14 @@ fn render_document_panel(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> U
         .iter()
         .filter_map(|node| {
             let id = node.get("id")?.as_str()?;
-            Some(tree_item_with_action(format!("puzzle2d-play-document.node.{id}"), node_label(node), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_action("setSelection", Some(json!({ "ids": [id] })))))
+            Some(tree_item_with_action(format!("puzzle2d-play-document.node.{id}"), Label::data(node_label(node)), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_action("setSelection", Some(json!({ "ids": [id] })))))
         })
         .collect();
     let edge_items: Vec<UiTreeItemNode> = fixture_edges(fixture)
         .iter()
         .filter_map(|edge| {
             let id = edge.get("id")?.as_str()?;
-            Some(tree_item_with_action(format!("puzzle2d-play-document.edge.{id}"), edge_label(edge, fixture), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_action("setSelection", Some(json!({ "ids": [id] })))))
+            Some(tree_item_with_action(format!("puzzle2d-play-document.edge.{id}"), Label::data(edge_label(edge, fixture)), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_action("setSelection", Some(json!({ "ids": [id] })))))
         })
         .collect();
     PanelTreeBuilder::new("puzzle2d-play-document")
@@ -1507,7 +1440,7 @@ fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) ->
     HashMap::from([(PUZZLE2D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
 }
 
-fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[Value], labels: &Puzzle2dLabels) -> UiTreeSectionNode {
+fn kind_catalog_section(section_id: &str, slice: &str, label: impl Into<Label>, entries: &[Value], labels: &Puzzle2dLabels) -> UiTreeSectionNode {
     let items: Vec<UiTreeItemNode> = entries
         .iter()
         .enumerate()
@@ -1517,7 +1450,7 @@ fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[V
             UiTreeItemNode {
                 presence: UiPresence::default(),
                 id: format!("{section_id}.{index}.{kind_id}"),
-                label: catalog_kind_label(entry),
+                label: Label::data(catalog_kind_label(entry)),
                 description: Some(kind_id.into()),
                 icon_id: None,
                 default_open: None,
@@ -1571,10 +1504,10 @@ fn render_properties_panel(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) ->
     let selected_nodes: Vec<&Value> = envelope.runtime.selected_ids.iter().filter_map(|id| fixture_nodes(&envelope.fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).collect();
     if selected_nodes.is_empty() {
         return ui_stack_vertical(vec![
-            ui_text(format!("{}: {PUZZLE2D_FIXTURE_SCHEMA}", labels.schema)),
-            ui_text(format!("{}: {}", labels.extension, puzzle_extension_id())),
-            ui_text(format!("{}: {}", labels.nodes, fixture_nodes(&envelope.fixture).len())),
-            ui_text(format!("{}: {}", labels.edges, fixture_edges(&envelope.fixture).len())),
+            ui_text(Label::data(format!("{}: {PUZZLE2D_FIXTURE_SCHEMA}", labels.schema.as_str()))),
+            ui_text(Label::data(format!("{}: {}", labels.extension.as_str(), puzzle_extension_id()))),
+            ui_text(Label::data(format!("{}: {}", labels.nodes.as_str(), fixture_nodes(&envelope.fixture).len()))),
+            ui_text(Label::data(format!("{}: {}", labels.edges.as_str(), fixture_edges(&envelope.fixture).len()))),
         ]);
     }
     let ids: Vec<String> = selected_nodes.iter().filter_map(|node| node.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect();
@@ -1727,26 +1660,34 @@ impl Default for Puzzle2dPlayApp {
 }
 
 
-/// 🖱️ On-demand puzzle 2d board context menu from selection snapshot.
+/// 🖱️ On-demand puzzle 2d board context menu from selection snapshot. Grouped disclosure:
+/// toggleHidden/toggleLocked/duplicate/focusSelection stay top-level (the four most frequent
+/// verbs); selectSameKind folds into the "selection" taxonomy group; deleteSelection stays the
+/// destructive tail. `organize_context_menu` (applied automatically at the
+/// `VcsDocumentApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
+/// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed
+/// here (unlike the pre-migration hand-written `sep-selection`/`sep-delete` rows).
 fn puzzle2d_context_menu_items(
+    registry: &semio_framework_plugin::AppActionRegistry,
     fixture: &Value,
     selected: &[String],
     is_de: bool,
 ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec};
-    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<Value>, destructive: bool, separator: bool, disabled: bool| ContextMenuItemSpec {
+    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
+    // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
+    // declared-action lookup) — appended via `Menu::item(...)`, the documented escape hatch.
+    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<Value>, destructive: bool, disabled: bool| ContextMenuItemSpec {
         id: id.into(),
-        label: if separator { None } else { Some(label.into()) },
-        icon: if separator { None } else { Some(icon.into()) },
-        action: if separator { None } else { Some(action.into()) },
+        label: Some(label.into()),
+        icon: Some(icon.into()),
+        action: Some(action.into()),
         args: semio_framework_plugin::optional_json_to_dsl(args),
         destructive: destructive.then_some(true),
-        separator: separator.then_some(true),
         disabled: disabled.then_some(true),
         ..Default::default()
     };
     if selected.is_empty() {
-        return vec![item("selectAll", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false, false, false)];
+        return Menu::of(registry).item(item("selectAll", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false, false)).build();
     }
     let selected_set: std::collections::HashSet<&str> = selected.iter().map(String::as_str).collect();
     let mut entities: Vec<&Value> = Vec::new();
@@ -1776,16 +1717,14 @@ fn puzzle2d_context_menu_items(
     let any_visible = entities.iter().any(|entity| entity.get("hidden").and_then(|v| v.as_bool()) != Some(true));
     let any_unlocked = entities.iter().any(|entity| entity.get("locked").and_then(|v| v.as_bool()) != Some(true));
     let phrase = selection_count_phrase(is_de, &[(selected.len(), if is_de { "Element" } else { "item" }, if is_de { "Elemente" } else { "items" })]);
-    vec![
-        item("toggleHidden", if any_visible { if is_de { "Ausblenden" } else { "Hide" } } else { if is_de { "Einblenden" } else { "Show" } }, if any_visible { "eye-off" } else { "eye" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": any_visible })), false, false, false),
-        item("toggleLocked", if any_unlocked { if is_de { "Sperren" } else { "Lock" } } else { if is_de { "Entsperren" } else { "Unlock" } }, if any_unlocked { "lock" } else { "lock-open" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": any_unlocked })), false, false, false),
-        item("sep-selection", "", "", "", None, false, true, false),
-        item("duplicate", if is_de { "Duplizieren" } else { "Duplicate" }, "copy", "duplicateSelection", None, false, false, !has_selected_node),
-        item("selectSameKind", if is_de { "Gleiche Art auswählen" } else { "Select same kind" }, "layers", "selectSameKind", None, false, false, false),
-        item("focusSelection", if is_de { "Auf Auswahl zoomen" } else { "Zoom to selection" }, "crosshair", "focusSelection", None, false, false, false),
-        item("sep-delete", "", "", "", None, false, true, false),
-        item("deleteSelection", &format!("{} ({phrase})", if is_de { "Löschen" } else { "Delete" }), "trash", "deleteSelection", None, true, false, false),
-    ]
+    Menu::of(registry)
+        .item(item("toggleHidden", if any_visible { if is_de { "Ausblenden" } else { "Hide" } } else { if is_de { "Einblenden" } else { "Show" } }, if any_visible { "eye-off" } else { "eye" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": any_visible })), false, false))
+        .item(item("toggleLocked", if any_unlocked { if is_de { "Sperren" } else { "Lock" } } else { if is_de { "Entsperren" } else { "Unlock" } }, if any_unlocked { "lock" } else { "lock-open" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": any_unlocked })), false, false))
+        .item(item("duplicate", if is_de { "Duplizieren" } else { "Duplicate" }, "copy", "duplicateSelection", None, false, !has_selected_node))
+        .item(item("focusSelection", if is_de { "Auf Auswahl zoomen" } else { "Zoom to selection" }, "crosshair", "focusSelection", None, false, false))
+        .group("selection", |m| m.item(item("selectSameKind", if is_de { "Gleiche Art auswählen" } else { "Select same kind" }, "layers", "selectSameKind", None, false, false)))
+        .item(item("deleteSelection", &format!("{} ({phrase})", if is_de { "Löschen" } else { "Delete" }), "trash", "deleteSelection", None, true, false))
+        .build()
 }
 
 //#region 🔖️Puzzle2dCommand
@@ -1993,7 +1932,7 @@ impl DocumentApp for Puzzle2dPlayApp {
             PUZZLE2D_PLAY_BODY_LAYERS => render_document_panel(&envelope, labels),
             PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture, labels),
             PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -2061,7 +2000,7 @@ impl DocumentApp for Puzzle2dPlayApp {
         request: &semio_framework_plugin::ContextMenuRequest,
         doc: &DocumentView<'_, Puzzle2dPlayProjection>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
-        _registry: &semio_framework_plugin::AppActionRegistry,
+        registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let config = cfg.projection;
         let is_de = is_de_locale(config);
@@ -2072,7 +2011,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                 selected = ids;
             }
         }
-        puzzle2d_context_menu_items(&doc.projection.0, &selected, is_de)
+        puzzle2d_context_menu_items(registry, &doc.projection.0, &selected, is_de)
     }
 }
 
@@ -2631,17 +2570,19 @@ pub fn create_puzzle2d_app() -> App {
             // ✏️ Palette-visible content operations.
             .operation("addNode", "Add Node")
             .operation("setActiveExample", "Set Active Example")
-            .operation("deleteSelection", "Delete Selection")
+            // 🗂️ Referenced by `puzzle2d_context_menu_items` — categorized for grouped-context-menu disclosure.
+            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
             .keybinding("delete,backspace", "deleteSelection")
-            .operation("duplicateSelection", "Duplicate Selection")
+            .action_with(ActionDefinition::new_catalog("duplicateSelection", "Duplicate Selection", ActionKind::Operation).with_category("create"))
             .operation("forceLayout", "Force Layout")
-            .operation("focusSelection", "Focus Selection")
+            .action_with(ActionDefinition::new_catalog("focusSelection", "Focus Selection", ActionKind::Operation).with_category("view"))
             // 👁️ Palette-visible ephemeral view/selection commands.
-            .view_action("selectAll", "Select All")
+            .action_with(ActionDefinition::new_catalog("selectAll", "Select All", ActionKind::View).with_category("selection"))
             .view_action("clearSelection", "Clear Selection")
-            .view_action("selectSameKind", "Select Same Kind")
+            .action_with(ActionDefinition::new_catalog("selectSameKind", "Select Same Kind", ActionKind::View).with_category("selection"))
             // 🔧️ Internal content operations — inspector/panel/board/import-bound, not palette commands.
-            .action_with(puzzle2d_internal_action("setSelectionFlag", "Set Selection Flag", ActionKind::Operation))
+            // 🗂️ Referenced by `puzzle2d_context_menu_items` (toggleHidden/toggleLocked rows) — categorized for grouped-context-menu disclosure.
+            .action_with(puzzle2d_internal_action("setSelectionFlag", "Set Selection Flag", ActionKind::Operation).with_category("settings"))
             .action_with(puzzle2d_internal_action("patchInspectorNodes", "Patch Inspector Nodes", ActionKind::Operation))
             .action_with(puzzle2d_internal_action("redrawHandles", "Redraw Handles", ActionKind::Operation))
             .action_with(puzzle2d_internal_action("reorganize", "Reorganize", ActionKind::Operation))
@@ -3205,6 +3146,25 @@ mod tests {
             let result = dispatch_action(&mut app, action, args_ref, None, &testkit::meta("local")).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error}"));
             assert!(result.operations.is_empty(), "view action '{action}' must not emit document operations");
         }
+    }
+
+    /// 🗂️ Grouped-context-menu disclosure: the top-level row budget stays small (leaves+groups
+    /// combined) and the known `deleteSelection` destructive row stays last — mirrors
+    /// `dag_ui`'s `context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last`.
+    #[test]
+    fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+        use semio_framework_plugin::{ContextMenuRequest, UiMenuRef};
+
+        let mut app = registry_app();
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None, &testkit::meta("local")).expect("load example");
+        let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+        dispatch_action(&mut app, "setSelection", Some(&json!({ "ids": [node_id.clone()] })), None, &testkit::meta("local")).expect("select node");
+        let request = ContextMenuRequest { menu: UiMenuRef { id: "puzzle2d".into(), args: None }, surface: None, window_instance_id: None, point: None };
+        let menu = app.context_menu(&request);
+        assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
+        let last = menu.last().expect("grouped disclosure menu should not be empty");
+        assert_eq!(last.id, "deleteSelection", "the destructive row must stay last as a top-level leaf");
+        assert_eq!(last.destructive, Some(true), "the destructive row must carry destructive: true");
     }
 }
 //#endregion 🧪️Tests

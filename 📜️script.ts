@@ -386,6 +386,18 @@ export class DevScript extends Script {
       runFrameworkOsPlaygroundDev("s", segments.slice(1));
       return;
     }
+    if (segments[0] === "multi") {
+      // 🐚️ Not a registered playground variant (no matching Cargo.toml), so this deliberately bypasses
+      // `runFrameworkOsPlaygroundDev`/`frameworkOsPlaygroundDevEnv` — those resolve `SEMIO_PLUGIN` from
+      // the registry catalog, which a non-variant id would only satisfy by accident. `SEMIO_PLUGIN`
+      // stays unset here on purpose (see the `os-dev` `dev multi` branch it forwards to).
+      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", "multi", ...segments.slice(1)], {
+        cwd: this.root,
+        env: { ...process.env, S_OS_PORT: process.env.S_OS_PORT || "6071", SEMIO_RENDERER: process.env.SEMIO_RENDERER ?? "react" },
+        ...daemonBudgetOpts(),
+      });
+      return;
+    }
     const playgroundApp = resolvePlaygroundDevApp(segments);
     if (playgroundApp) {
       runFrameworkOsPlaygroundDev(playgroundApp.app, playgroundApp.rest);

@@ -10,7 +10,7 @@ use infinite_board_port_directed_dag::{
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
-    ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
+    ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
     UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -745,7 +745,21 @@ impl DocumentApp for DagPlayApp {
         let is_de = is_de_locale(cfg.projection);
         let selected = &cfg.projection.selected_node_ids;
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), selected, &[]);
-        let mut menu = Menu::of(registry);
+        let hit_edge_id = request.surface.as_ref().and_then(|target| target.hits.iter().find(|hit| hit.domain == "edge")).map(|hit| hit.id.clone());
+
+        // 🗂️ Grouped disclosure: `addNode`/`reorganize` stay top-level (the most frequent verbs);
+        // `renameDagNode` joins them only for a single-node selection; `disconnect` folds into the
+        // "transfer" taxonomy group when an edge is hit — `organize_context_menu` (applied automatically
+        // at the `VcsDocumentApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES`
+        // order and inserts the pre-destructive separator itself, so no `.separator()` call is needed
+        // ahead of the `deleteSelection`/`nodeGraphEdit` destructive row below.
+        let mut menu = Menu::of(registry).action_args("addNode", json!({ "kind": "computation" })).action("reorganize");
+        if nodes.len() == 1 {
+            menu = menu.action("renameDagNode");
+        }
+        if let Some(edge_id) = hit_edge_id {
+            menu = menu.group("transfer", |m| m.action_args("disconnect", json!({ "edgeId": edge_id })));
+        }
         if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
@@ -800,15 +814,16 @@ pub fn create_dag_app() -> App {
                 DAG_PLAY_BODY_INSPECTOR,
             )
             // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
-            .operation("addNode", "Add Node")
+            // 🗂️ Referenced by `DagPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
+            .action_with(ActionDefinition::new_catalog("addNode", "Add Node", ActionKind::Operation).with_category("create"))
             .operation("removeNode", "Remove Node")
-            .operation("deleteSelection", "Delete Selection")
-            .operation("nodeGraphEdit", "Node Graph Edit")
+            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", "Node Graph Edit", ActionKind::Operation).with_category("selection"))
             .operation("connectMediaPorts", "Connect Ports")
-            .operation("disconnect", "Disconnect")
+            .action_with(ActionDefinition::new_catalog("disconnect", "Disconnect", ActionKind::Operation).with_category("transfer"))
             .operation("moveMediaNode", "Move Node")
-            .operation("renameDagNode", "Rename Node")
-            .operation("reorganize", "Reorganize")
+            .action_with(ActionDefinition::new_catalog("renameDagNode", "Rename Node", ActionKind::Operation).with_category("actions"))
+            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
             .operation("patchDagNodes", "Patch Nodes")
             // 👁️ Ephemeral view state — selection and camera/viewport.
             .view_action("setSelection", "Set Selection")
@@ -1047,6 +1062,37 @@ mod tests {
         let restored = app.projection().expect("projection");
         let original = default_dag_document().nodes.iter().find(|node| node.id == node_id).map(|node| node.x).expect("original x");
         assert_eq!(restored.nodes.iter().find(|node| node.id == node_id).unwrap().x, original, "undoing the coalesced drag restores the pre-drag position");
+    }
+
+    /// 🗂️ Grouped-context-menu disclosure: the top-level row budget stays small even with a large
+    /// selection, and the known `deleteSelection` destructive row (dispatched via `nodeGraphEdit` —
+    /// `NodeGraphDeleteDispatch::ViaNodeGraphEdit`) is always last, either as a top-level leaf or as the
+    /// tail of its group — mirrors `flow_ui`'s `context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last`.
+    #[test]
+    fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+        use semio_framework_plugin::{ContextMenuHit, ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
+
+        let mut app = new_app_with_registry();
+        let node_ids: Vec<String> = app.projection().expect("projection").nodes.iter().map(|node| node.id.clone()).collect();
+        app.dispatch_typed(DagCommand::SetSelection { ids: node_ids.clone() }, &testkit::meta("local")).expect("setSelection");
+        let request = ContextMenuRequest {
+            menu: UiMenuRef { id: "nodeGraph".into(), args: None },
+            surface: Some(ContextMenuSurfaceTarget {
+                surface_id: "main".into(),
+                kind: "nodeGraph".into(),
+                hits: vec![ContextMenuHit { domain: "node".into(), id: node_ids[0].clone(), label: None }],
+                selection: vec![ContextMenuSelectionGroup { domain: "node".into(), ids: node_ids.clone() }],
+                text: None,
+            }),
+            window_instance_id: None,
+            point: None,
+        };
+        let menu = app.context_menu(&request);
+        assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
+        let last = menu.last().expect("grouped disclosure menu should not be empty");
+        let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
+        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).map(|child| child.destructive == Some(true)).unwrap_or(false);
+        assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection (via nodeGraphEdit) must be last: {menu:?}");
     }
 
     #[test]

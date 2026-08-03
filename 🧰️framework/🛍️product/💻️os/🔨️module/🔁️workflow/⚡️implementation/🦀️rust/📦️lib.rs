@@ -8,6 +8,7 @@
 // #endregion 🔖️InstanceIdentity
 
 use semio_framework_core::{AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, OsMediaFormat, PortMultiplicity};
+use semio_framework_core::{Locale, Terminology};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -481,7 +482,10 @@ pub fn workflow_node_for_app(app: &AppDefinition, plugin_id: &str, node_id: &str
         id: node_id.into(),
         plugin_id: plugin_id.into(),
         app_id: app.id.clone(),
-        label: app.label.clone(),
+        // 🚧️ `workflow_node_for_app` carries no locale/terminology context (this node-graph node
+        // builder isn't rendered per-request the way UiNode trees are); resolves native/English
+        // pending a locale plumbed through the workflow canvas API.
+        label: app.label.resolve(Terminology::Native, Locale::En).to_string(),
         yields,
         document_ref: format!("documents/{node_id}"),
         config_ref: format!("config/{node_id}"),

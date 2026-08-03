@@ -107,7 +107,7 @@ export const ZUKUNFT_BAU_PROJECT_URL = "https://www.zukunftbau.de/projekte/forsc
  * chrome rather than page content; the click opens the funded project page in a new tab.
  * @emoji 📱️ On mobile the credit shrinks to just its logo — the "Funded by"/"Ein Projekt von" text has no room.
  **/
-export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale: UiLocale = "en", iconOnly = false): NavbarItem {
+export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale: UiLocale = "de", iconOnly = false): NavbarItem {
   return {
     key,
     className: "relative z-40",

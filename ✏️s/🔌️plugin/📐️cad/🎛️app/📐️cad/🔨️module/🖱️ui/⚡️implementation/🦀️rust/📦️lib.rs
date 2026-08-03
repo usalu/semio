@@ -3028,8 +3028,7 @@ impl DocumentApp for CadPlayApp {
             .action("translateSelection")
             .action("rotateSelection")
             .action("scaleSelection")
-            .separator()
-            .action("duplicateObject")
+            .group("create", |m| m.action("duplicateObject"))
             .destructive("deleteObject")
             .build()
     }
@@ -3123,13 +3122,13 @@ pub fn create_cad_app() -> App {
             .operation("addObject", "Add Object")
             .operation("patchObject", "Patch Object")
             .operation("patchSelection", "Patch Selection")
-            .operation("deleteObject", "Delete Object")
-            .operation("duplicateObject", "Duplicate Object")
+            .action_with(ActionDefinition::new_catalog("deleteObject", "Delete Object", ActionKind::Operation).category("actions"))
+            .action_with(ActionDefinition::new_catalog("duplicateObject", "Duplicate Object", ActionKind::Operation).category("create"))
             .operation("addNode", "Add Node")
             .operation("renameNode", "Rename Node")
-            .operation("translateSelection", "Translate Selection")
-            .operation("rotateSelection", "Rotate Selection")
-            .operation("scaleSelection", "Scale Selection")
+            .action_with(ActionDefinition::new_catalog("translateSelection", "Translate Selection", ActionKind::Operation).category("transform"))
+            .action_with(ActionDefinition::new_catalog("rotateSelection", "Rotate Selection", ActionKind::Operation).category("transform"))
+            .action_with(ActionDefinition::new_catalog("scaleSelection", "Scale Selection", ActionKind::Operation).category("transform"))
             .operation("applyTransformation", "Apply Transformation")
             .operation("importCadFile", "Import CAD File")
             .action_with(ActionDefinition::new_catalog("patchCadPlayReference", "Patch Reference", ActionKind::Operation).in_palette(false))
@@ -3924,6 +3923,27 @@ mod tests {
             items.iter().any(|item| item.id == "deleteObject" && item.destructive == Some(true)),
             "deleteObject must be marked destructive: {items:?}"
         );
+    }
+
+    /// 🗂️ GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: the selection context menu stays a shallow,
+    /// disclosed list (top-level verbs + a handful of taxonomy groups) rather than a flat wall of rows,
+    /// and the destructive `deleteObject` action stays the trailing item.
+    #[test]
+    fn context_menu_is_grouped_and_keeps_deleteObject_last() {
+        let app = CadPlayApp::default();
+        let scene = default_document();
+        let history = empty_history();
+        let doc = DocumentView { projection: &scene, history: &history };
+        let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
+        let empty_config = CadConfig::default();
+
+        let emit = drive(&app, &scene, "worldSelect", Some(json!({ "ids": ["object-box-1"], "merge": "replace" })));
+        let config = config_after(&emit, &empty_config);
+        let items = context_menu_direct(&app, &doc, &config, &registry);
+
+        assert!(items.len() <= 9, "top-level context menu should stay progressively disclosed: {items:?}");
+        assert_eq!(items.last().map(|item| item.id.as_str()), Some("deleteObject"), "deleteObject must stay the trailing item: {items:?}");
+        assert_eq!(items.last().and_then(|item| item.destructive), Some(true), "trailing deleteObject must be marked destructive: {items:?}");
     }
 
     /// @emoji 🎛️ Dislocate move/rotate options are now keyed by PANE (`CadConfig::dislocate_shape`/

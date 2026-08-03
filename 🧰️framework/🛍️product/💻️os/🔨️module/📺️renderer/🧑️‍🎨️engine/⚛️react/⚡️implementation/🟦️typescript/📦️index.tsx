@@ -253,6 +253,7 @@ import {
   verticalListSortingStrategy,
   type DragEndEvent,
   type UiRibbonParentCategory,
+  UI_RIBBON_PARENT_CATEGORIES,
   Spinner,
   registerIntroductionSurfaceResolver,
   type IntroductionResolvedGeometry,
@@ -285,9 +286,12 @@ import {
   type ShellScope,
   createShellScope,
   ShellScopeProvider,
+  useShellScope,
+  useShellScopeOptional,
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/ui-asset";
 import {
+  organizeContextMenu,
   type ActionDescriptor,
   type ComponentKind,
   type ComponentSceneHostProps,
@@ -319,8 +323,9 @@ import {
   type DockSkeleton,
   type DockUiPanelState,
   type DockUiState,
-  loadPluginModule as loadCorePluginModule,
-  loadPluginWasm as loadCorePluginWasm,
+  acquirePluginModule,
+  type PluginModuleLease,
+  registerPluginBackboneRoute,
   buildContributionsJson,
   expandPluginRegistry,
   nodeGraphActions,
@@ -380,7 +385,6 @@ import {
   type PluginUiRefreshResponse,
   type PluginUiRefreshSectionResponse,
   type PluginViewState,
-  type PluginWasmHandle as CorePluginWasmHandle,
   type PresencePeer,
   type UiDirtyScope,
   type Paint2dScene,
@@ -429,7 +433,6 @@ import {
   type WindowMeasure,
   type World3dScene,
   postPluginBackboneInbound,
-  setPluginBackboneOutboundRelay,
   inkCanvasActions,
   type EventFeedEntry,
   type ShellBrand,
@@ -629,6 +632,30 @@ const PluginSurfaceActionsContext = createContext<UiInterpreterContext["requestC
 /** @emoji 🖱️ On-demand context menu from the active document app instance. */
 export function usePluginSurfaceActions(): UiInterpreterContext["requestContextMenu"] {
   return useContext(PluginSurfaceActionsContext);
+}
+
+const ShellContextMenuFallbackContext = createContext<(() => ContextMenuItem[]) | undefined>(undefined);
+
+/** @emoji 🖱️ Shell-level fallback menu builder (the active window's declared actions plus the command
+ * palette, see `buildShellContextMenuItems`) — surfaces read this via {@link openSurfaceContextMenu} so
+ * a right-click over a scene with no plugin-declared menu still shows *something* instead of nothing. */
+export function useShellContextMenuFallback(): (() => ContextMenuItem[]) | undefined {
+  return useContext(ShellContextMenuFallbackContext);
+}
+
+/** @emoji 🖱️ Shared per-surface context-menu open flow — requests specs from the plugin at `request`,
+ * maps them to UI items with the surface's own `mapSpecs` (its `useMapContextMenuSpecs`-bound mapper),
+ * and falls back to the shell menu ({@link useShellContextMenuFallback}) when the plugin answers empty
+ * or there's no `requestContextMenu` wired at all. Every `onContextMenu` surface (world3d, node-graph
+ * ×3, text-editor, tiled-map, board2d) routes through this instead of hand-rolling the fallback. */
+export async function openSurfaceContextMenu(
+  requestContextMenu: ((request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>) | undefined,
+  request: PluginContextMenuRequest,
+  mapSpecs: (specs: readonly ContextMenuItemSpec[]) => ContextMenuItem[],
+  shellFallback: (() => ContextMenuItem[]) | undefined,
+): Promise<ContextMenuItem[]> {
+  const specs = requestContextMenu ? await requestContextMenu(request) : [];
+  return specs.length > 0 ? mapSpecs(specs) : (shellFallback?.() ?? []);
 }
 
 //#region ActionDispatch
@@ -3246,7 +3273,7 @@ export function resolveUtilities(app: Pick<AppDefinition, "utilities">, windowKi
 }
 
 /** 🧰️ Chrome-known ribbon-group ids that already have a `ui.ribbon.parent.*` translation key — the fallback tier for plugin-declared utility groups not covered by that plugin's own `groupLabels` overlay. */
-const CHROME_KNOWN_RIBBON_PARENT_CATEGORIES = new Set(["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export", "utilities", "sync"]);
+const CHROME_KNOWN_RIBBON_PARENT_CATEGORIES = new Set(UI_RIBBON_PARENT_CATEGORIES);
 
 /** 🧰️ Resolves a `UtilityDefinition.group` id's display label: the app's own `groupLabels` overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids, else the raw id. */
 function resolveUtilityGroupLabel(group: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
@@ -5503,6 +5530,7 @@ function FrameworkOsShellInner({
   readonly defaults?: FrameworkOsDefaults;
   readonly brand?: ShellBrand;
 }) {
+  const scope = useShellScope();
   // 🏠️🧳️ `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
   // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
   // manifest's own `controllerId`/`panelTabs` on those apps below, never from a separate literal.
@@ -5540,9 +5568,8 @@ function FrameworkOsShellInner({
   const extraWindowCounterRef = useRef(0);
   // 🖱️ Shell-level context-menu fallback: opens for any right-click the shell hasn't already claimed
   // (every existing per-surface `onContextMenu` now calls `stopPropagation()` once it decides to show
-  // its own menu — see `ShellContextMenuHost` below). No plugin/scene-target resolution yet (that's
-  // the on-demand WIT `context-menu` round trip, still to come); this covers window-level declared
-  // actions plus the OS command palette, so every window/background always shows *something*.
+  // its own menu — see the `🖱️ShellContextMenu` region below). Covers window-level declared actions
+  // plus the OS command palette, so every window/background always shows *something*.
   const [shellContextMenu, setShellContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   // 🪟️ Live extra-window list, updated synchronously on every seed/split/drop — `refreshUi` reads this
   // instead of the render-closure `extraWindowInstances` so a concurrent action refresh (e.g. boot
@@ -5579,6 +5606,13 @@ function FrameworkOsShellInner({
   const shellActorIdRef = useRef<string>(`client-${Math.random().toString(36).slice(2)}`);
   /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
   const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle }>>(new Map());
+  /** 🐚️ Unregisters this shell's `registerPluginBackboneRoute` entry for each open document id — called
+   * from `closeDocument` and (for whatever is still open) on shell unmount. */
+  const pluginBackboneRouteUnregistersRef = useRef<Map<string, () => void>>(new Map());
+  /** 🐚️ Mirrors `loadedPlugins` for the unmount-cleanup effect below, which needs the latest value at
+   * teardown time without depending on it (a dependency would tear down and re-run on every reload). */
+  const loadedPluginsRef = useRef<readonly LoadedProgramState[]>([]);
+  loadedPluginsRef.current = loadedPlugins;
 
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
@@ -5837,37 +5871,56 @@ function FrameworkOsShellInner({
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
   }, [panel?.activeSpawnedId, session, studioMode]);
 
-  useEffect(() => {
-    setPluginBackboneOutboundRelay((uri, messageBytes) => {
-      const documentId = uri.startsWith("actor://") ? uri.slice("actor://".length) : null;
-      if (!documentId) return;
-      const worker = backboneWorkerRef.current;
-      if (!worker) return;
-      let actorMessage: DocumentActorMsg;
-      try {
-        const parsed = decodeBackboneMessage(messageBytes);
-        if (parsed.kind === "operations") {
-          actorMessage = {
-            kind: "localOperations",
-            envelopes: parsed.envelopes.map((envelope) => operationEnvelopeFromWire(envelope)),
-          };
-        } else if (parsed.kind === "snapshot") {
-          actorMessage = { kind: "localSnapshot", pack: Array.from(parsed.pack), spr: Array.from(parsed.spr) };
-        } else {
-          return;
-        }
-      } catch {
+  /** 🐚️ The relay a document's `registerPluginBackboneRoute` entry uses — forwards a plugin's outbound
+   * backbone bytes into THIS shell's own backbone worker. Registered per open document (in
+   * `openDocument`/`closeDocument` below) rather than once for the whole shell: the old single
+   * page-global relay slot (`setPluginBackboneOutboundRelay`) meant a second mounted shell silently
+   * stole every document's outbound routing, then severed it entirely on that shell's unmount. */
+  const relayPluginBackboneMessage = useCallback((uri: string, messageBytes: Uint8Array) => {
+    const documentId = uri.startsWith("actor://") ? uri.slice("actor://".length) : null;
+    if (!documentId) return;
+    const worker = backboneWorkerRef.current;
+    if (!worker) return;
+    let actorMessage: DocumentActorMsg;
+    try {
+      const parsed = decodeBackboneMessage(messageBytes);
+      if (parsed.kind === "operations") {
+        actorMessage = {
+          kind: "localOperations",
+          envelopes: parsed.envelopes.map((envelope) => operationEnvelopeFromWire(envelope)),
+        };
+      } else if (parsed.kind === "snapshot") {
+        actorMessage = { kind: "localSnapshot", pack: Array.from(parsed.pack), spr: Array.from(parsed.spr) };
+      } else {
         return;
       }
-      const request: BackboneWorkerRequest = { kind: "send", documentId, message: actorMessage };
-      worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
-    });
-    return () => setPluginBackboneOutboundRelay(null);
+    } catch {
+      return;
+    }
+    const request: BackboneWorkerRequest = { kind: "send", documentId, message: actorMessage };
+    worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
   }, []);
 
   useEffect(() => {
     const worker = backboneWorkerRef.current;
     return () => worker?.terminate();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      for (const unregister of pluginBackboneRouteUnregistersRef.current.values()) unregister();
+      pluginBackboneRouteUnregistersRef.current.clear();
+      const primary = sessionRef.current;
+      if (primary) {
+        // 🚧️ Wave 1 gap (documented, not silently dropped): only the primary session instance is
+        // destroyed here — studio-mode spawned apps (`panel.spawnedApps`) and external-slot contributor
+        // instances (`contributorInstancesRef`) are a separate, materially larger teardown surface,
+        // deferred to when studio/spawned-app multi-instance support is itself in scope.
+        const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === primary.pluginId)?.handle;
+        void plugin?.destroyApp(primary.instanceId).catch(() => {});
+      }
+      for (const entry of loadedPluginsRef.current) entry.handle.dispose();
+    };
   }, []);
 
   useEffect(() => {
@@ -6620,6 +6673,10 @@ function FrameworkOsShellInner({
       if (!plugin) return;
       const worker = ensureBackboneWorker();
       openDocumentSessionsRef.current.set(ref.documentId, { session: targetSession, plugin });
+      // 🐚️ Registers THIS shell as the route for this document's outbound backbone bytes before the
+      // plugin can possibly emit any (attachBackbone below) — see `relayPluginBackboneMessage`'s doc.
+      pluginBackboneRouteUnregistersRef.current.get(ref.documentId)?.();
+      pluginBackboneRouteUnregistersRef.current.set(ref.documentId, registerPluginBackboneRoute(ref.documentId, relayPluginBackboneMessage));
       const request: BackboneWorkerRequest = {
         kind: "open",
         documentId: ref.documentId,
@@ -6634,13 +6691,15 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
       dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
     },
-    [loadedPlugins, resolveSyncTargetSession],
+    [loadedPlugins, relayPluginBackboneMessage, resolveSyncTargetSession],
   );
 
   const closeDocument = useCallback((documentId: string) => {
     const entry = openDocumentSessionsRef.current.get(documentId);
     if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
     openDocumentSessionsRef.current.delete(documentId);
+    pluginBackboneRouteUnregistersRef.current.get(documentId)?.();
+    pluginBackboneRouteUnregistersRef.current.delete(documentId);
     const request: BackboneWorkerRequest = { kind: "close", documentId };
     backboneWorkerRef.current?.postMessage(request);
   }, []);
@@ -7334,7 +7393,7 @@ function FrameworkOsShellInner({
     },
   });
 
-  useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, driver: uiDriver });
+  useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, driver: uiDriver }, scope.rootRef);
 
   //#region 💾️ uiPrefs persistence (skips localStorage writes for any locked preference; skipped entirely for ephemeral brands)
   useEffect(() => {
@@ -9096,14 +9155,42 @@ function FrameworkOsShellInner({
   const keysByActionId = useMemo(() => buildKeysByActionId(session?.app.keybindings ?? []), [session?.app.keybindings]);
 
   //#region 🖱️ShellContextMenu
+  /** 🖱️ Dispatch sink for the shell fallback menu's `ContextMenuItemSpec`s (see
+   * `buildShellContextMenuItems`) — intercepts the two reserved ids the builder emits in place of a
+   * real dispatch (`"shell.openActionPane"`/`"shell.openPalette"`) and forwards everything else to
+   * `onAction`, mirroring the command palette's own arg-carrying redirect. */
+  const dispatchShellMenuAction = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      if (!session) return;
+      if (action === "shell.openActionPane") {
+        const windowKind = session.app.windowKinds.find((kind) => kind.id === activeWindowId) ?? session.app.windowKinds[0];
+        const actionId = typeof args?.actionId === "string" ? args.actionId : undefined;
+        if (!windowKind || !actionId) return;
+        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowKind.id });
+        dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId: windowKind.id, value: false });
+        dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId: windowKind.id, value: actionId });
+        return;
+      }
+      if (action === "shell.openPalette") {
+        dispatch({ type: "SET_SEARCH_OPEN", value: true });
+        return;
+      }
+      onAction({ controllerId: session.app.controllerId, action });
+    },
+    [session, activeWindowId, onAction, dispatch],
+  );
+
   /** 🖱️ Builds the shell-level fallback menu: the active window's declared actions (undo/redo, view
    * actions, ...) plus a command-palette opener — shown for any right-click no inner surface claimed
    * (window background, empty panel/navbar/footer space, an app with no scene at all). Arg-carrying
-   * actions redirect to the window's action pane, mirroring the command palette's own redirect. */
+   * actions route through the reserved `"shell.openActionPane"` id (parity with the wgpu shell's
+   * `build_shell_context_menu_specs`), the whole spec list runs through `organizeContextMenu`, then
+   * `mapContextMenuSpecs` binds it to `dispatchShellMenuAction`. */
   const buildShellContextMenuItems = useCallback((): ContextMenuItem[] => {
     if (!session) return [];
     const windowKind = session.app.windowKinds.find((kind) => kind.id === activeWindowId) ?? session.app.windowKinds[0];
-    const items: ContextMenuItem[] = [];
+    const specs: ContextMenuItemSpec[] = [];
+    const categoryByActionId = new Map<string, string>();
     if (windowKind) {
       for (const action of resolveWindowActions(session.app, windowKind)) {
         // 🧹️ Same curation as the command palette (`if (!action.inPalette) continue`) — most apps
@@ -9111,33 +9198,28 @@ function FrameworkOsShellInner({
         // actions purely for dispatch plumbing; only palette-worthy ones belong in a user-facing menu.
         if (!action.inPalette) continue;
         const argCarrying = actionRequiresStagedForm(action);
-        items.push({
+        categoryByActionId.set(action.id, actionCategoryId(action));
+        specs.push({
           id: `shell-menu.action.${action.id}`,
           label: resolveAppLabel(appLabelsOverlay, "action", action.id, action.label) + (argCarrying ? "…" : ""),
           icon: action.iconId,
           shortcut: action.keys ?? keysByActionId.get(action.id),
           destructive: action.kind === "operation" && action.id.toLowerCase().includes("delete"),
-          onSelect: () => {
-            if (argCarrying) {
-              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowKind.id });
-              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId: windowKind.id, value: false });
-              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId: windowKind.id, value: action.id });
-              return;
-            }
-            onAction({ controllerId: session.app.controllerId, action: action.id });
-          },
+          action: argCarrying ? "shell.openActionPane" : action.id,
+          args: argCarrying ? { actionId: action.id } : undefined,
         });
       }
     }
-    if (items.length > 0) items.push({ id: "shell-menu.separator", separator: true });
-    items.push({
-      id: "shell-menu.commandPalette",
+    if (specs.length > 0) specs.push({ id: "shell-menu.separator", separator: true });
+    specs.push({
+      id: "shell.openPalette",
       label: shellLabel("ui.search.toggle"),
       icon: "search",
-      onSelect: () => dispatch({ type: "SET_SEARCH_OPEN", value: true }),
+      action: "shell.openPalette",
     });
-    return items;
-  }, [session, activeWindowId, appLabelsOverlay, keysByActionId, onAction, dispatch]);
+    const organized = organizeContextMenu(specs, (id) => categoryByActionId.get(id));
+    return mapContextMenuSpecs(organized, dispatchShellMenuAction, keysByActionId);
+  }, [session, activeWindowId, appLabelsOverlay, keysByActionId, dispatchShellMenuAction]);
 
   useEffect(() => {
     const handleContextMenu = (event: MouseEvent) => {
@@ -9157,6 +9239,7 @@ function FrameworkOsShellInner({
     <SetWindowIconContext.Provider value={setWindowIcon}>
     <AppKeybindingsContext.Provider value={keysByActionId}>
     <PluginSurfaceActionsContext.Provider value={requestContextMenu}>
+    <ShellContextMenuFallbackContext.Provider value={buildShellContextMenuItems}>
     <UIFindProvider>
       <LevelProvider level="base">
         <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base">
@@ -9245,6 +9328,7 @@ function FrameworkOsShellInner({
           })()}
       </LevelProvider>
     </UIFindProvider>
+    </ShellContextMenuFallbackContext.Provider>
     </PluginSurfaceActionsContext.Provider>
     </AppKeybindingsContext.Provider>
     </SetWindowIconContext.Provider>
@@ -9287,12 +9371,12 @@ export type PluginWasmHandle = {
 
 export type { PluginRegistryEntry };
 
+/** 🐚️ Acquires a refcounted lease on the shared core module (see `acquirePluginModule`) and adapts it —
+ * this `PluginWasmHandle`'s own `dispose()` releases that lease rather than tearing down the shared
+ * module directly, so several shells (or several call sites within one shell) loading the same
+ * `moduleUrl` don't dispose it out from under each other. */
 export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  return adaptPluginHandle(pluginId, await loadCorePluginModule(pluginId, moduleUrl));
-}
-
-export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  return adaptPluginHandle(pluginId, await loadCorePluginWasm(pluginId, moduleUrl));
+  return adaptPluginHandle(pluginId, await acquirePluginModule(pluginId, moduleUrl));
 }
 
 //#region 🔖️ChannelAdapter
@@ -9451,7 +9535,8 @@ async function performContextMenu(client: AppChannelClient, request: PluginConte
  * avoids the alternative (sending a real `Hello.config`, which would run every migrated app's
  * `apply_config_bytes` against an arbitrary empty/placeholder config — wrong for an app like shooting
  * whose `ShootingConfig` fields have no `#[serde(default)]` and would reject `{}`). */
-export async function adaptPluginHandle(pluginId: string, handle: CorePluginWasmHandle): Promise<PluginWasmHandle> {
+export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLease): Promise<PluginWasmHandle> {
+  const handle = lease.handle;
   const manifest = decodePackValue(await handle.manifest()) as unknown as PluginManifest;
   const channels = new Map<number, AppChannelClient>();
   const requireChannel = (instanceId: number): AppChannelClient => {
@@ -9499,7 +9584,7 @@ export async function adaptPluginHandle(pluginId: string, handle: CorePluginWasm
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
       if (errorFrame) console.error(`[DEBUG] program ${pluginId}: detachBackbone failed (${errorFrame.Error.code}): ${errorFrame.Error.message}`);
     },
-    dispose: () => handle.dispose(),
+    dispose: () => lease.release(),
   };
 }
 //#endregion 🔖️ChannelAdapter
@@ -12579,12 +12664,15 @@ function resolveMeshStylePalette(): MeshStylePalette {
 
 function useMeshStylePalette(): MeshStylePalette {
   const [palette, setPalette] = useState(resolveMeshStylePalette);
+  const shellScope = useShellScopeOptional();
   useCanvasAppearanceSync(
     useCallback(() => {
       // 🎨️ resolveColorHex caches by CSS-expression string only (no theme key), so a theme flip must bust it before re-resolving or every kind keeps its stale color.
       clearColorResolveCache();
       setPalette(resolveMeshStylePalette());
     }, []),
+    true,
+    shellScope?.rootRef,
   );
   return palette;
 }
@@ -13225,14 +13313,6 @@ function selectionGroupsFromDomains(domains: { readonly nodes: string[]; readonl
   if (domains.edges.length > 0) groups.push({ domain: "edge", ids: domains.edges });
   if (domains.handles.length > 0) groups.push({ domain: "handle", ids: domains.handles });
   return groups;
-}
-
-/** @emoji 🧪️ Temporary menu-open trace — item ids/icons for end-to-end rich-menu validation. */
-function logContextMenuOpen(source: string, specs: readonly ContextMenuItemSpec[]): void {
-  console.log(
-    `[DEBUG] context menu open (${source})`,
-    specs.map((spec) => ({ id: spec.id, icon: spec.icon, color: spec.color, action: spec.action })),
-  );
 }
 
 /** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
@@ -15960,7 +16040,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     () => getWorldSelectionPreview(node.controllerId),
     () => getWorldSelectionPreviewServerSnapshot(node.controllerId),
   );
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const cameraRef = useRef<import("three").Camera | null>(null);
   const catalogueDragDepthRef = useRef(0);
   const catalogueDragEncodedRef = useRef<string | null>(null);
@@ -15984,14 +16064,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
   const suggestionMenuOpen = Boolean(interaction.suggestionMenu?.open);
   const suggestionMenuOwnsThisWindow = worldSuggestionMenuOwnsWindow(interaction.suggestionMenu, windowInstanceId);
-  useEffect(() => {
-    if (contextMenu == null || contextMenu.specs.length === 0 || suggestionMenuOwnsThisWindow) return;
-    logContextMenuOpen("world3d", contextMenu.specs);
-  }, [contextMenu, suggestionMenuOwnsThisWindow]);
-  useEffect(() => {
-    if (!interaction.suggestionMenu?.open) return;
-    logContextMenuOpen("world3d-suggestions", suggestionMenuItems(interaction.suggestionMenu, interaction.brushCandidateIndex ?? 0));
-  }, [interaction.suggestionMenu, interaction.brushCandidateIndex]);
   useEffect(() => {
     if (!brushPreview) return;
     console.log(`[DEBUG] brushPreview`, { color: brushPreview.color, objectKindId: brushPreview.objectKindId, meshUrl: brushPreview.meshUrl });
@@ -16205,6 +16277,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   );
 
   const mapWorldContextMenuSpecs = useMapContextMenuSpecs(handleWorldMenuDispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
   const mapSuggestionContextMenuSpecs = useMapContextMenuSpecs((action, args) => {
     if (action === "acceptSuggestion") {
       setVortexPointerArm(null);
@@ -16973,15 +17046,19 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           if ((selection.ids?.length ?? 0) > 0) selectionGroups.push({ domain: "object", ids: [...(selection.ids ?? [])] });
           if ((selection.componentIds?.length ?? 0) > 0) selectionGroups.push({ domain: "feature", ids: (selection.componentIds ?? []).map(String) });
           const hits = target ? [{ domain: target.kind, id: target.id }] : [];
-          const specs = await requestContextMenu({
-            viewState: {},
-            menu: { id: "world3d" },
-            surface: { surfaceId: node.surfaceId, kind: "world3d", hits, selection: selectionGroups },
-            windowInstanceId: windowInstanceId ?? undefined,
-            point: { x: event.clientX, y: event.clientY },
-          });
-          console.log("[DEBUG] world3d context menu open", { target, itemIds: specs.map((item) => item.id) });
-          setContextMenu({ x: event.clientX, y: event.clientY, specs });
+          const items = await openSurfaceContextMenu(
+            requestContextMenu,
+            {
+              viewState: {},
+              menu: { id: "world3d" },
+              surface: { surfaceId: node.surfaceId, kind: "world3d", hits, selection: selectionGroups },
+              windowInstanceId: windowInstanceId ?? undefined,
+              point: { x: event.clientX, y: event.clientY },
+            },
+            mapWorldContextMenuSpecs,
+            shellContextMenuFallback,
+          );
+          setContextMenu({ x: event.clientX, y: event.clientY, items });
         })();
       }}
       onPointerDown={handlePointerDown}
@@ -17178,9 +17255,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         )
       ) : null}
       <ContextMenuController
-        open={contextMenu != null && (contextMenu.specs?.length ?? 0) > 0 && !suggestionMenuOwnsThisWindow}
+        open={contextMenu != null && (contextMenu.items?.length ?? 0) > 0 && !suggestionMenuOwnsThisWindow}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapWorldContextMenuSpecs(contextMenu?.specs ?? [])}
+        items={contextMenu?.items ?? []}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -17649,7 +17726,7 @@ function WasmGraphSurface({
   const sessionRef = useRef<FrameworkGraphSession | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
@@ -17664,6 +17741,7 @@ function WasmGraphSurface({
   );
 
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
 
   const paintOverlays = useCallback(() => {
     const session = sessionRef.current;
@@ -17708,15 +17786,20 @@ function WasmGraphSurface({
     [scenePack, paintOverlays],
   );
 
-  useCanvasAppearanceSync(() => {
-    syncSessionCanvasTheme(sessionRef.current);
-    try {
-      sessionRef.current?.renderFrame();
-    } catch {
-      /* gpu not ready */
-    }
-    paintOverlays();
-  });
+  const wasmGraphSurfaceShellScope = useShellScopeOptional();
+  useCanvasAppearanceSync(
+    () => {
+      syncSessionCanvasTheme(sessionRef.current);
+      try {
+        sessionRef.current?.renderFrame();
+      } catch {
+        /* gpu not ready */
+      }
+      paintOverlays();
+    },
+    true,
+    wasmGraphSurfaceShellScope?.rootRef,
+  );
 
   const [wasmSession, setWasmSession] = useState<FrameworkGraphSession | null>(null);
 
@@ -17864,15 +17947,19 @@ function WasmGraphSurface({
               domains = { nodes: [], edges: [], handles: [] };
             }
           }
-          const specs = await requestContextMenu({
-            viewState: {},
-            menu: { id: "nodeGraph" },
-            surface: { surfaceId, kind: "nodeGraph", hits, selection: selectionGroupsFromDomains(domains) },
-            windowInstanceId: windowInstanceId ?? undefined,
-            point: { x: event.clientX, y: event.clientY },
-          });
-          console.log("[DEBUG] wasm graph context menu open", { itemIds: specs.map((item) => item.id), domains });
-          setContextMenu({ x: event.clientX, y: event.clientY, specs });
+          const items = await openSurfaceContextMenu(
+            requestContextMenu,
+            {
+              viewState: {},
+              menu: { id: "nodeGraph" },
+              surface: { surfaceId, kind: "nodeGraph", hits, selection: selectionGroupsFromDomains(domains) },
+              windowInstanceId: windowInstanceId ?? undefined,
+              point: { x: event.clientX, y: event.clientY },
+            },
+            mapContextMenu,
+            shellContextMenuFallback,
+          );
+          setContextMenu({ x: event.clientX, y: event.clientY, items });
         })();
       }}
       onPointerUp={emitInteractionState}
@@ -17951,7 +18038,7 @@ function WasmGraphSurface({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenu(contextMenu?.specs ?? [])}
+        items={contextMenu?.items ?? []}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -17999,9 +18086,10 @@ function DiagramGraphFallback({
   );
 
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
 
   return (
     <div
@@ -18034,14 +18122,18 @@ function DiagramGraphFallback({
         event.preventDefault();
         event.stopPropagation();
         void (async () => {
-          const specs = await requestContextMenu({
-            viewState: {},
-            menu: { id: "nodeGraph" },
-            surface: { surfaceId: node.surfaceId, kind: "nodeGraph", hits: [], selection: [] },
-            point: { x: event.clientX, y: event.clientY },
-          });
-          console.log("[DEBUG] diagram context menu open", { itemIds: specs.map((item) => item.id) });
-          setContextMenu({ x: event.clientX, y: event.clientY, specs });
+          const items = await openSurfaceContextMenu(
+            requestContextMenu,
+            {
+              viewState: {},
+              menu: { id: "nodeGraph" },
+              surface: { surfaceId: node.surfaceId, kind: "nodeGraph", hits: [], selection: [] },
+              point: { x: event.clientX, y: event.clientY },
+            },
+            mapContextMenu,
+            shellContextMenuFallback,
+          );
+          setContextMenu({ x: event.clientX, y: event.clientY, items });
         })();
       }}
     >
@@ -18106,7 +18198,7 @@ function DiagramGraphFallback({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenu(contextMenu?.specs ?? [])}
+        items={contextMenu?.items ?? []}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -18821,7 +18913,7 @@ export function FlowGraphCanvasHost({
     readonly x: number;
     readonly y: number;
     readonly widgetId?: string;
-    readonly specs: readonly ContextMenuItemSpec[];
+    readonly items: readonly ContextMenuItem[];
   } | null>(null);
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
@@ -18836,11 +18928,6 @@ export function FlowGraphCanvasHost({
   sceneRef.current = scene;
 
   useEffect(() => {
-    if (contextMenu == null || contextMenu.specs.length === 0) return;
-    logContextMenuOpen("flow-graph", contextMenu.specs);
-  }, [contextMenu]);
-
-  useEffect(() => {
     if (!windowInstanceId) return;
     return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), dagIntroductionResolver(sessionRef, containerRef));
   }, [windowInstanceId]);
@@ -18852,18 +18939,22 @@ export function FlowGraphCanvasHost({
     [controllerId, onAction, surfaceId],
   );
 
-  const handleFlowMenuDispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
+  const flowMenuKeysByActionId = useAppKeybindingsByActionId();
+  const shellContextMenuFallback = useShellContextMenuFallback();
+  /** 🖱️ Builds the dispatch sink for one flow-graph context-menu opening — bound to that opening's own
+   * `widgetId`/coordinates rather than closing over the (async, not-yet-committed) `contextMenu` state,
+   * so `openInstance`'s fixture lookup always resolves against the widget actually right-clicked. */
+  const buildFlowMenuDispatch = useCallback(
+    (widgetId: string | undefined, x: number, y: number) => (action: string, args?: Record<string, unknown>) => {
       if (action === "openSpotlight") {
         const host = containerRef.current;
-        if (host) openSpotlightAtClient(contextMenu?.x ?? 0, contextMenu?.y ?? 0, host);
+        if (host) openSpotlightAtClient(x, y, host);
         return;
       }
-      dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) } : args);
+      dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, widgetId) } : args);
     },
-    [contextMenu, dispatch, scene.fixtureJson],
+    [dispatch, scene.fixtureJson],
   );
-  const mapFlowContextMenu = useMapContextMenuSpecs(handleFlowMenuDispatch);
 
   // 🧵️ Dispatches the mutated fixture to the plugin and returns immediately — evaluation happens
   // off the main thread in the plugin worker's `flowEvalTick` chain, never here. The next scene
@@ -19062,15 +19153,20 @@ export function FlowGraphCanvasHost({
     paintOverlays();
   }, [sceneSignature, paintOverlays, scene, sessionReady]);
 
-  useCanvasAppearanceSync(() => {
-    syncSessionCanvasTheme(sessionRef.current);
-    try {
-      sessionRef.current?.renderFrame();
-    } catch {
-      /* gpu not ready */
-    }
-    paintOverlays();
-  });
+  const flowGraphCanvasHostShellScope = useShellScopeOptional();
+  useCanvasAppearanceSync(
+    () => {
+      syncSessionCanvasTheme(sessionRef.current);
+      try {
+        sessionRef.current?.renderFrame();
+      } catch {
+        /* gpu not ready */
+      }
+      paintOverlays();
+    },
+    true,
+    flowGraphCanvasHostShellScope?.rootRef,
+  );
 
   const pickInteraction = useCanvasPickInteraction({
     resolveTargetsAtClient: (client) => {
@@ -19337,20 +19433,24 @@ export function FlowGraphCanvasHost({
           } else if (widgetId) {
             dispatch("contextMenuAt", { id: widgetId });
           }
-          const specs = await requestContextMenu({
-            viewState: {},
-            menu: { id: "nodeGraph" },
-            surface: {
-              surfaceId,
-              kind: "nodeGraph",
-              hits,
-              selection: selectionGroupsFromDomains(domains),
+          const items = await openSurfaceContextMenu(
+            requestContextMenu,
+            {
+              viewState: {},
+              menu: { id: "nodeGraph" },
+              surface: {
+                surfaceId,
+                kind: "nodeGraph",
+                hits,
+                selection: selectionGroupsFromDomains(domains),
+              },
+              windowInstanceId: windowInstanceId ?? undefined,
+              point: { x: event.clientX, y: event.clientY },
             },
-            windowInstanceId: windowInstanceId ?? undefined,
-            point: { x: event.clientX, y: event.clientY },
-          });
-          console.log("[DEBUG] flow context menu open", { widgetId, domains, itemIds: specs.map((item) => item.id) });
-          setContextMenu({ x: event.clientX, y: event.clientY, widgetId, specs });
+            (specs) => mapContextMenuSpecs(specs, buildFlowMenuDispatch(widgetId, event.clientX, event.clientY), flowMenuKeysByActionId),
+            shellContextMenuFallback,
+          );
+          setContextMenu({ x: event.clientX, y: event.clientY, widgetId, items });
           paintOverlays();
         })();
       }}
@@ -19452,7 +19552,7 @@ export function FlowGraphCanvasHost({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapFlowContextMenu(contextMenu?.specs ?? [])}
+        items={contextMenu?.items ?? []}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -19556,7 +19656,19 @@ function parseJsonOr<T>(json: string | undefined, fallback: T): T {
 //#endregion EditingHelpers
 
 //#region WasmEditorSurface
-function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { readonly scene: TextEditorScene; readonly controllerId: string; readonly surfaceId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+function WasmEditorSurface({
+  scene,
+  controllerId,
+  surfaceId,
+  onAction,
+  requestContextMenu,
+}: {
+  readonly scene: TextEditorScene;
+  readonly controllerId: string;
+  readonly surfaceId: string;
+  readonly onAction: (action: ActionDescriptor) => void;
+  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
+}) {
   const sessionRef = useRef<FrameworkEditorSession | null>(null);
   const renameActiveRef = useRef(false);
   const lastHoverRangeRef = useRef<SpanRange | null>(null);
@@ -19568,6 +19680,8 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
     },
     [controllerId, onAction, surfaceId],
   );
+  const textEditorMenuKeysByActionId = useAppKeybindingsByActionId();
+  const shellContextMenuFallback = useShellContextMenuFallback();
 
   const syncSession = useCallback(() => {
     if (renameActiveRef.current) return;
@@ -19583,14 +19697,19 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
     // since the attach lifecycle is independent of scene changes and a ref update alone would not otherwise re-trigger this effect.
   }, [syncSession, sessionEpoch]);
 
-  useCanvasAppearanceSync(() => {
-    syncSessionCanvasTheme(sessionRef.current);
-    try {
-      sessionRef.current?.renderFrame();
-    } catch {
-      /* gpu not ready */
-    }
-  });
+  const wasmEditorSurfaceShellScope = useShellScopeOptional();
+  useCanvasAppearanceSync(
+    () => {
+      syncSessionCanvasTheme(sessionRef.current);
+      try {
+        sessionRef.current?.renderFrame();
+      } catch {
+        /* gpu not ready */
+      }
+    },
+    true,
+    wasmEditorSurfaceShellScope?.rootRef,
+  );
 
   const emitSelection = useCallback(() => {
     const session = sessionRef.current;
@@ -19888,44 +20007,36 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
               /* pick handled via menu row args if present */
             };
           }
-          if (!requestContextMenu) return;
-          const specs = await requestContextMenu({
-            viewState: {},
-            menu: { id: "textEditor" },
-            surface: {
-              surfaceId,
-              kind: "textEditor",
-              hits: pickTargets.map((target) => ({ domain: target.domain, id: target.id, label: target.label })),
-              selection: [],
-              text: {
-                caret: session.caret(),
-                hasSelection,
-                word: undefined,
-                canRename: renameInfo != null,
-                hasCompletions: completions.length > 0,
+          const dispatchTextEditorMenu = (action: string, args?: Record<string, unknown>) => {
+            if (localActions[action]) {
+              localActions[action]!();
+              return;
+            }
+            dispatch(action, args);
+          };
+          const items = await openSurfaceContextMenu(
+            requestContextMenu,
+            {
+              viewState: {},
+              menu: { id: "textEditor" },
+              surface: {
+                surfaceId,
+                kind: "textEditor",
+                hits: pickTargets.map((target) => ({ domain: target.domain, id: target.id, label: target.label })),
+                selection: [],
+                text: {
+                  caret: session.caret(),
+                  hasSelection,
+                  word: undefined,
+                  canRename: renameInfo != null,
+                  hasCompletions: completions.length > 0,
+                },
               },
+              point: { x: event.clientX, y: event.clientY },
             },
-            point: { x: event.clientX, y: event.clientY },
-          });
-          console.log("[DEBUG] text editor context menu open", { itemIds: specs.map((item) => item.id), hasSelection });
-          const items = specs.map((spec) => ({
-            id: spec.id,
-            label: spec.label,
-            icon: spec.icon,
-            shortcut: spec.shortcut,
-            disabled: spec.disabled,
-            separator: spec.separator,
-            destructive: spec.destructive,
-            onSelect: () => {
-              const action = spec.action;
-              if (!action) return;
-              if (localActions[action]) {
-                localActions[action]!();
-                return;
-              }
-              dispatch(action, spec.args as Record<string, unknown> | undefined);
-            },
-          }));
+            (specs) => mapContextMenuSpecs(specs, dispatchTextEditorMenu, textEditorMenuKeysByActionId),
+            shellContextMenuFallback,
+          );
           setContextMenu({ position: { x: event.clientX, y: event.clientY }, items });
           })();
         }}
@@ -20615,11 +20726,16 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
     syncAll();
   }, [syncAll]);
 
-  useCanvasAppearanceSync(() => {
-    if (!sessionRef.current) return;
-    syncSessionCanvasTheme(sessionRef.current);
-    sessionRef.current.renderFrame();
-  });
+  const paint2dCanvasSurfaceShellScope = useShellScopeOptional();
+  useCanvasAppearanceSync(
+    () => {
+      if (!sessionRef.current) return;
+      syncSessionCanvasTheme(sessionRef.current);
+      sessionRef.current.renderFrame();
+    },
+    true,
+    paint2dCanvasSurfaceShellScope?.rootRef,
+  );
 
   const onSessionReady = useCallback(
     (session: RasterWasmSession) => {
@@ -21445,11 +21561,11 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   const [contextMenu, setContextMenu] = useState<{
     open: boolean;
     position: { x: number; y: number } | null;
-    specs: readonly ContextMenuItemSpec[];
+    items: readonly ContextMenuItem[];
   }>({
     open: false,
     position: null,
-    specs: [],
+    items: [],
   });
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const sourceAvailableLabel = useLabel("ui.host.sourceAvailable");
@@ -21466,6 +21582,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   );
 
   const mapTiledContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
 
   const dispatchCamera = useCallback(
     (camera: MapCamera) => {
@@ -21897,14 +22014,18 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         const selectionGroups = [];
         if (selection.positions.length > 0) selectionGroups.push({ domain: "position", ids: selection.positions });
         if (selection.routes.length > 0) selectionGroups.push({ domain: "route", ids: selection.routes });
-        const specs = await requestContextMenu({
-          viewState: {},
-          menu: { id: "tiledMap" },
-          surface: { surfaceId: node.surfaceId, kind: "tiledMap", hits, selection: selectionGroups },
-          point: { x: event.clientX, y: event.clientY },
-        });
-        console.log("[DEBUG] tiled map context menu open", { feature, itemIds: specs.map((item) => item.id) });
-        setContextMenu({ open: specs.length > 0, position: { x: event.clientX, y: event.clientY }, specs });
+        const items = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            viewState: {},
+            menu: { id: "tiledMap" },
+            surface: { surfaceId: node.surfaceId, kind: "tiledMap", hits, selection: selectionGroups },
+            point: { x: event.clientX, y: event.clientY },
+          },
+          mapTiledContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ open: items.length > 0, position: { x: event.clientX, y: event.clientY }, items });
       })();
     };
     canvas.addEventListener("pointerdown", onPointerDown);
@@ -21919,7 +22040,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       window.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("contextmenu", onContextMenu);
     };
-  }, [clientToLocal, dispatch, emitFeatureSelection, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, resetMarquee, scene, selectionMethod]);
+  }, [clientToLocal, dispatch, emitFeatureSelection, mapTiledContextMenu, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, requestContextMenu, resetMarquee, scene, selectionMethod, shellContextMenuFallback]);
 
   if (!scene) return <div className="semio-tiled-map-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
@@ -21928,7 +22049,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
       {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
-      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={mapTiledContextMenu(contextMenu.specs ?? [])} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
+      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={contextMenu.items} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
       {hoveredFeature?.kind === "position" ? (
         <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" style={{ left: 0, top: 0 }}>
           {(() => {
@@ -22294,7 +22415,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const pendingSelectionJsonRef = useRef<string | null>(null);
   const onPeerGestureEndedRef = useRef<() => void>(() => {});
   const [sessionEpoch, setSessionEpoch] = useState(0);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -22304,6 +22425,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   );
 
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
+  const shellContextMenuFallback = useShellContextMenuFallback();
 
   /** @emoji 🎞️ Coalesces renderFrame() to at most one per animation frame, no matter how many raw pointer/wheel events fire in between — mirrors the premigration `scheduleInputInvalidate()` pattern. */
   const scheduleRender = useCallback((): void => {
@@ -22657,14 +22779,19 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [sessionEpoch, scene?.lodMode]);
   //#endregion SceneSync
 
-  useCanvasAppearanceSync(() => {
-    syncSessionCanvasTheme(sessionRef.current);
-    try {
-      sessionRef.current?.renderFrame();
-    } catch {
-      /* gpu not ready */
-    }
-  });
+  const board2dHostShellScope = useShellScopeOptional();
+  useCanvasAppearanceSync(
+    () => {
+      syncSessionCanvasTheme(sessionRef.current);
+      try {
+        sessionRef.current?.renderFrame();
+      } catch {
+        /* gpu not ready */
+      }
+    },
+    true,
+    board2dHostShellScope?.rootRef,
+  );
 
   //#region Pointer
   useEffect(() => {
@@ -22835,22 +22962,26 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
           dispatch("setSelection", { ids: selectionIds });
         }
         const hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));
-        const specs = await requestContextMenu({
-          viewState: {},
-          menu: { id: "board2d" },
-          surface: {
-            surfaceId: node.surfaceId,
-            kind: "board2d",
-            hits,
-            selection: selectionIds.length > 0 ? [{ domain: "node", ids: selectionIds }] : [],
+        const items = await openSurfaceContextMenu(
+          requestContextMenu,
+          {
+            viewState: {},
+            menu: { id: "board2d" },
+            surface: {
+              surfaceId: node.surfaceId,
+              kind: "board2d",
+              hits,
+              selection: selectionIds.length > 0 ? [{ domain: "node", ids: selectionIds }] : [],
+            },
+            point: { x: event.clientX, y: event.clientY },
           },
-          point: { x: event.clientX, y: event.clientY },
-        });
-        console.log("[DEBUG] board2d context menu open", { itemIds: specs.map((item) => item.id), selectionIds });
-        setContextMenu({ x: event.clientX, y: event.clientY, specs });
+          mapContextMenu,
+          shellContextMenuFallback,
+        );
+        setContextMenu({ x: event.clientX, y: event.clientY, items });
       })();
     },
-    [dispatch, node.surfaceId, requestContextMenu, scene?.interactive, scene?.selectionJson],
+    [dispatch, mapContextMenu, node.surfaceId, requestContextMenu, scene?.interactive, scene?.selectionJson, shellContextMenuFallback],
   );
   //#endregion ContextMenu
 
@@ -22928,7 +23059,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenu(contextMenu?.specs ?? [])}
+        items={contextMenu?.items ?? []}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}

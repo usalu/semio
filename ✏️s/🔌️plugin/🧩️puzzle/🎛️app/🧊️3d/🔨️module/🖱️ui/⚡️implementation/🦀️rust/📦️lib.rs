@@ -2371,321 +2371,126 @@ fn puzzle3d_rederive_moved_attractions(fixture: &mut Puzzle3dFixture, moved_ids:
 //#endregion 🔖️AttractionResolve
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the 3d app; one field per label makes every terminology×locale combination compile-checked.
-struct Puzzle3dLabels {
-    objects: &'static str,
-    object: &'static str,
-    vortices: &'static str,
-    vortex: &'static str,
-    attractions: &'static str,
-    attraction: &'static str,
-    cables: &'static str,
-    references: &'static str,
-    reference: &'static str,
-    target_volumes: &'static str,
-    target_volume: &'static str,
-    window_main: &'static str,
-    example_concrete_forest: &'static str,
-    fill: &'static str,
-    count: &'static str,
-    brush: &'static str,
-    move_flag: &'static str,
-    rotate_flag: &'static str,
-    volume_brush: &'static str,
-    voxel: &'static str,
-    width: &'static str,
-    depth: &'static str,
-    height: &'static str,
-    placement: &'static str,
-    show: &'static str,
-    hide: &'static str,
-    lock: &'static str,
-    unlock: &'static str,
-    always: &'static str,
-    selected: &'static str,
-    selected_count: &'static str,
-    vortex_show: &'static str,
-    outwards: &'static str,
-    inwards: &'static str,
-    vortex_direction: &'static str,
-    distribution: &'static str,
-    suggest_objects: &'static str,
-    duplicate: &'static str,
-    select_same_kind: &'static str,
-    zoom_to_selection: &'static str,
-    delete: &'static str,
-    select: &'static str,
-    rectangle: &'static str,
-    lasso: &'static str,
-    selective: &'static str,
-    additive: &'static str,
-    subtractive: &'static str,
-    invertive: &'static str,
-    lod: &'static str,
-    auto_zoom: &'static str,
-    depth_variable: &'static str,
-    grid: &'static str,
-    visible: &'static str,
-    snap: &'static str,
-    spacing: &'static str,
-    overlap_budget: &'static str,
-    id: &'static str,
-    label: &'static str,
-    kind: &'static str,
-    origin: &'static str,
-    orientation: &'static str,
-    scale: &'static str,
-    mesh_url: &'static str,
-    hidden: &'static str,
-    locked: &'static str,
-    full_id: &'static str,
-    vortex_kind: &'static str,
-    position: &'static str,
-    direction: &'static str,
-    radius: &'static str,
-    attracting: &'static str,
-    attracted: &'static str,
-    gap: &'static str,
-    shift: &'static str,
-    rise: &'static str,
-    rotation_deg: &'static str,
-    turn_deg: &'static str,
-    tilt_deg: &'static str,
-    source_url: &'static str,
-    media_kind: &'static str,
-    settings: &'static str,
-    selection_mode: &'static str,
-    proximity_radius: &'static str,
-    chunk_size: &'static str,
-    schema: &'static str,
-    domain: &'static str,
+/// 🗣️ Complete UI label set for the 3d app; two-axis `app_labels!` (locale × terminology) makes
+/// every combination compile-checked — see ticket
+/// 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND.
+semio_framework_plugin::app_labels! {
+    struct Puzzle3dLabels {
+        objects: native_en "Objects", native_de "Objekte", reuse_en "Building components", reuse_de "Baukomponenten";
+        object: native_en "Object", native_de "Objekt", reuse_en "Building component", reuse_de "Baukomponente";
+        vortices: native_en "Vortices", native_de "Vortices", reuse_en "Connection points", reuse_de "Verbindungspunkte";
+        vortex: native_en "Vortex", native_de "Vortex", reuse_en "Connection point", reuse_de "Verbindungspunkt";
+        attractions: native_en "Attractions", native_de "Anziehungen", reuse_en "Connections", reuse_de "Verbindungen";
+        attraction: native_en "Attraction", native_de "Anziehung", reuse_en "Connection", reuse_de "Verbindung";
+        cables: native_en "Cables", native_de "Kabel", reuse_en "Cables", reuse_de "Kabel";
+        references: native_en "References", native_de "Referenzen", reuse_en "References", reuse_de "Referenzen";
+        reference: native_en "Reference", native_de "Referenz", reuse_en "Reference", reuse_de "Referenz";
+        target_volumes: native_en "Target Volumes", native_de "Zielvolumina", reuse_en "Target Volumes", reuse_de "Zielvolumina";
+        target_volume: native_en "Target Volume", native_de "Zielvolumen", reuse_en "Target Volume", reuse_de "Zielvolumen";
+        window_main: native_en "Puzzle 3D", native_de "Puzzle 3D", reuse_en "Aggregator", reuse_de "Aggregator";
+        example_concrete_forest: native_en "Concrete Forest", native_de "Betonwald", reuse_en "Abbau Aufbau", reuse_de "Abbau Aufbau";
+        fill: native_en "Fill", native_de "Füllen", reuse_en "Fill", reuse_de "Füllen";
+        count: native_en "Count", native_de "Anzahl", reuse_en "Count", reuse_de "Anzahl";
+        brush: native_en "Brush", native_de "Pinsel", reuse_en "Brush", reuse_de "Pinsel";
+        move_flag: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";
+        rotate_flag: native_en "Rotate", native_de "Drehen", reuse_en "Rotate", reuse_de "Drehen";
+        volume_brush: native_en "Volume Brush", native_de "Volumenpinsel", reuse_en "Volume Brush", reuse_de "Volumenpinsel";
+        voxel: native_en "Voxel", native_de "Voxel", reuse_en "Voxel", reuse_de "Voxel";
+        width: native_en "Width", native_de "Breite", reuse_en "Width", reuse_de "Breite";
+        depth: native_en "Depth", native_de "Tiefe", reuse_en "Depth", reuse_de "Tiefe";
+        height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
+        placement: native_en "Placement", native_de "Platzierung", reuse_en "Placement", reuse_de "Platzierung";
+        show: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";
+        hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
+        lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";
+        unlock: native_en "Unlock", native_de "Entsperren", reuse_en "Unlock", reuse_de "Entsperren";
+        always: native_en "Always", native_de "Immer", reuse_en "Always", reuse_de "Immer";
+        selected: native_en "Selected", native_de "Auswahl", reuse_en "Selected", reuse_de "Auswahl";
+        selected_count: native_en "selected", native_de "ausgewählt", reuse_en "selected", reuse_de "ausgewählt";
+        vortex_show: native_en "Vortex Show", native_de "Vortex-Anzeige", reuse_en "Show connection points", reuse_de "Verbindungspunkte anzeigen";
+        outwards: native_en "Outwards", native_de "Auswärts", reuse_en "Outwards", reuse_de "Auswärts";
+        inwards: native_en "Inwards", native_de "Einwärts", reuse_en "Inwards", reuse_de "Einwärts";
+        vortex_direction: native_en "Vortex Direction", native_de "Vortex-Richtung", reuse_en "Connection point direction", reuse_de "Richtung der Verbindungspunkte";
+        distribution: native_en "Distribution", native_de "Verteilung", reuse_en "Distribution", reuse_de "Verteilung";
+        suggest_objects: native_en "Suggest objects", native_de "Objekte vorschlagen", reuse_en "Suggest building components", reuse_de "Baukomponenten vorschlagen";
+        duplicate: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
+        select_same_kind: native_en "Select all of same kind", native_de "Alle gleicher Art auswählen", reuse_en "Select all of same kind", reuse_de "Alle gleicher Art auswählen";
+        zoom_to_selection: native_en "Zoom to selection", native_de "Zur Auswahl zoomen", reuse_en "Zoom to selection", reuse_de "Zur Auswahl zoomen";
+        delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
+        select: native_en "Select", native_de "Auswählen", reuse_en "Select", reuse_de "Auswählen";
+        rectangle: native_en "Rectangle", native_de "Rechteck", reuse_en "Rectangle", reuse_de "Rechteck";
+        lasso: native_en "Lasso", native_de "Lasso", reuse_en "Lasso", reuse_de "Lasso";
+        selective: native_en "Selective", native_de "Selektiv", reuse_en "Selective", reuse_de "Selektiv";
+        additive: native_en "Additive", native_de "Additiv", reuse_en "Additive", reuse_de "Additiv";
+        subtractive: native_en "Subtractive", native_de "Subtraktiv", reuse_en "Subtractive", reuse_de "Subtraktiv";
+        invertive: native_en "Invertive", native_de "Invertierend", reuse_en "Invertive", reuse_de "Invertierend";
+        lod: native_en "LOD", native_de "Detailstufe", reuse_en "LOD", reuse_de "Detailstufe";
+        auto_zoom: native_en "Auto zoom", native_de "Automatischer Zoom", reuse_en "Auto zoom", reuse_de "Automatischer Zoom";
+        depth_variable: native_en "Depth-variable", native_de "Tiefenvariabel", reuse_en "Depth-variable", reuse_de "Tiefenvariabel";
+        grid: native_en "Grid", native_de "Raster", reuse_en "Grid", reuse_de "Raster";
+        visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
+        snap: native_en "Snap", native_de "Fang", reuse_en "Snap", reuse_de "Fang";
+        spacing: native_en "Spacing", native_de "Abstand", reuse_en "Spacing", reuse_de "Abstand";
+        overlap_budget: native_en "Overlap budget (m³)", native_de "Überlappungsbudget (m³)", reuse_en "Overlap budget (m³)", reuse_de "Überlappungsbudget (m³)";
+        id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
+        label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        origin: native_en "Origin", native_de "Ursprung", reuse_en "Origin", reuse_de "Ursprung";
+        orientation: native_en "Orientation", native_de "Orientierung", reuse_en "Orientation", reuse_de "Orientierung";
+        scale: native_en "Scale", native_de "Skalierung", reuse_en "Scale", reuse_de "Skalierung";
+        mesh_url: native_en "Mesh Url", native_de "Mesh-URL", reuse_en "Mesh Url", reuse_de "Mesh-URL";
+        hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
+        locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
+        full_id: native_en "Full Id", native_de "Vollständige Id", reuse_en "Full Id", reuse_de "Vollständige Id";
+        vortex_kind: native_en "Vortex Kind", native_de "Vortex-Art", reuse_en "Connection point kind", reuse_de "Verbindungspunkt-Art";
+        position: native_en "Position", native_de "Position", reuse_en "Position", reuse_de "Position";
+        direction: native_en "Direction", native_de "Richtung", reuse_en "Direction", reuse_de "Richtung";
+        radius: native_en "Radius", native_de "Radius", reuse_en "Radius", reuse_de "Radius";
+        attracting: native_en "Attracting", native_de "Anziehend", reuse_en "Host connection point", reuse_de "Wirts-Verbindungspunkt";
+        attracted: native_en "Attracted", native_de "Angezogen", reuse_en "Guest connection point", reuse_de "Gast-Verbindungspunkt";
+        gap: native_en "Gap", native_de "Spalt", reuse_en "Gap", reuse_de "Spalt";
+        shift: native_en "Shift", native_de "Verschiebung", reuse_en "Shift", reuse_de "Verschiebung";
+        rise: native_en "Rise", native_de "Anstieg", reuse_en "Rise", reuse_de "Anstieg";
+        rotation_deg: native_en "Rotation (°)", native_de "Drehung (°)", reuse_en "Rotation (°)", reuse_de "Drehung (°)";
+        turn_deg: native_en "Turn (°)", native_de "Drehung um Achse (°)", reuse_en "Turn (°)", reuse_de "Drehung um Achse (°)";
+        tilt_deg: native_en "Tilt (°)", native_de "Neigung (°)", reuse_en "Tilt (°)", reuse_de "Neigung (°)";
+        source_url: native_en "Source Url", native_de "Quell-URL", reuse_en "Source Url", reuse_de "Quell-URL";
+        media_kind: native_en "Media Kind", native_de "Medienart", reuse_en "Media Kind", reuse_de "Medienart";
+        settings: native_en "Settings", native_de "Einstellungen", reuse_en "Settings", reuse_de "Einstellungen";
+        selection_mode: native_en "Selection Mode", native_de "Auswahlmodus", reuse_en "Selection Mode", reuse_de "Auswahlmodus";
+        proximity_radius: native_en "Proximity Radius", native_de "Näheradius", reuse_en "Proximity Radius", reuse_de "Näheradius";
+        chunk_size: native_en "Chunk Size", native_de "Blockgröße", reuse_en "Chunk Size", reuse_de "Blockgröße";
+        schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
+        domain: native_en "Domain", native_de "Domäne", reuse_en "Domain", reuse_de "Domäne";
+    }
 }
 
-const PUZZLE3D_LABELS_NATIVE_EN: Puzzle3dLabels = Puzzle3dLabels {
-    objects: "Objects",
-    object: "Object",
-    vortices: "Vortices",
-    vortex: "Vortex",
-    attractions: "Attractions",
-    attraction: "Attraction",
-    cables: "Cables",
-    references: "References",
-    reference: "Reference",
-    target_volumes: "Target Volumes",
-    target_volume: "Target Volume",
-    window_main: "Puzzle 3D",
-    example_concrete_forest: "Concrete Forest",
-    fill: "Fill",
-    count: "Count",
-    brush: "Brush",
-    move_flag: "Move",
-    rotate_flag: "Rotate",
-    volume_brush: "Volume Brush",
-    voxel: "Voxel",
-    width: "Width",
-    depth: "Depth",
-    height: "Height",
-    placement: "Placement",
-    show: "Show",
-    hide: "Hide",
-    lock: "Lock",
-    unlock: "Unlock",
-    always: "Always",
-    selected: "Selected",
-    selected_count: "selected",
-    vortex_show: "Vortex Show",
-    outwards: "Outwards",
-    inwards: "Inwards",
-    vortex_direction: "Vortex Direction",
-    distribution: "Distribution",
-    suggest_objects: "Suggest objects",
-    duplicate: "Duplicate",
-    select_same_kind: "Select all of same kind",
-    zoom_to_selection: "Zoom to selection",
-    delete: "Delete",
-    select: "Select",
-    rectangle: "Rectangle",
-    lasso: "Lasso",
-    selective: "Selective",
-    additive: "Additive",
-    subtractive: "Subtractive",
-    invertive: "Invertive",
-    lod: "LOD",
-    auto_zoom: "Auto zoom",
-    depth_variable: "Depth-variable",
-    grid: "Grid",
-    visible: "Visible",
-    snap: "Snap",
-    spacing: "Spacing",
-    overlap_budget: "Overlap budget (m³)",
-    id: "Id",
-    label: "Label",
-    kind: "Kind",
-    origin: "Origin",
-    orientation: "Orientation",
-    scale: "Scale",
-    mesh_url: "Mesh Url",
-    hidden: "Hidden",
-    locked: "Locked",
-    full_id: "Full Id",
-    vortex_kind: "Vortex Kind",
-    position: "Position",
-    direction: "Direction",
-    radius: "Radius",
-    attracting: "Attracting",
-    attracted: "Attracted",
-    gap: "Gap",
-    shift: "Shift",
-    rise: "Rise",
-    rotation_deg: "Rotation (°)",
-    turn_deg: "Turn (°)",
-    tilt_deg: "Tilt (°)",
-    source_url: "Source Url",
-    media_kind: "Media Kind",
-    settings: "Settings",
-    selection_mode: "Selection Mode",
-    proximity_radius: "Proximity Radius",
-    chunk_size: "Chunk Size",
-    schema: "Schema",
-    domain: "Domain",
-};
-const PUZZLE3D_LABELS_NATIVE_DE: Puzzle3dLabels = Puzzle3dLabels {
-    objects: "Objekte",
-    object: "Objekt",
-    vortices: "Vortices",
-    vortex: "Vortex",
-    attractions: "Anziehungen",
-    attraction: "Anziehung",
-    cables: "Kabel",
-    references: "Referenzen",
-    reference: "Referenz",
-    target_volumes: "Zielvolumina",
-    target_volume: "Zielvolumen",
-    window_main: "Puzzle 3D",
-    example_concrete_forest: "Betonwald",
-    fill: "Füllen",
-    count: "Anzahl",
-    brush: "Pinsel",
-    move_flag: "Verschieben",
-    rotate_flag: "Drehen",
-    volume_brush: "Volumenpinsel",
-    voxel: "Voxel",
-    width: "Breite",
-    depth: "Tiefe",
-    height: "Höhe",
-    placement: "Platzierung",
-    show: "Anzeigen",
-    hide: "Ausblenden",
-    lock: "Sperren",
-    unlock: "Entsperren",
-    always: "Immer",
-    selected: "Auswahl",
-    selected_count: "ausgewählt",
-    vortex_show: "Vortex-Anzeige",
-    outwards: "Auswärts",
-    inwards: "Einwärts",
-    vortex_direction: "Vortex-Richtung",
-    distribution: "Verteilung",
-    suggest_objects: "Objekte vorschlagen",
-    duplicate: "Duplizieren",
-    select_same_kind: "Alle gleicher Art auswählen",
-    zoom_to_selection: "Zur Auswahl zoomen",
-    delete: "Löschen",
-    select: "Auswählen",
-    rectangle: "Rechteck",
-    lasso: "Lasso",
-    selective: "Selektiv",
-    additive: "Additiv",
-    subtractive: "Subtraktiv",
-    invertive: "Invertierend",
-    lod: "Detailstufe",
-    auto_zoom: "Automatischer Zoom",
-    depth_variable: "Tiefenvariabel",
-    grid: "Raster",
-    visible: "Sichtbar",
-    snap: "Fang",
-    spacing: "Abstand",
-    overlap_budget: "Überlappungsbudget (m³)",
-    id: "Id",
-    label: "Bezeichnung",
-    kind: "Art",
-    origin: "Ursprung",
-    orientation: "Orientierung",
-    scale: "Skalierung",
-    mesh_url: "Mesh-URL",
-    hidden: "Ausgeblendet",
-    locked: "Gesperrt",
-    full_id: "Vollständige Id",
-    vortex_kind: "Vortex-Art",
-    position: "Position",
-    direction: "Richtung",
-    radius: "Radius",
-    attracting: "Anziehend",
-    attracted: "Angezogen",
-    gap: "Spalt",
-    shift: "Verschiebung",
-    rise: "Anstieg",
-    rotation_deg: "Drehung (°)",
-    turn_deg: "Drehung um Achse (°)",
-    tilt_deg: "Neigung (°)",
-    source_url: "Quell-URL",
-    media_kind: "Medienart",
-    settings: "Einstellungen",
-    selection_mode: "Auswahlmodus",
-    proximity_radius: "Näheradius",
-    chunk_size: "Blockgröße",
-    schema: "Schema",
-    domain: "Domäne",
-};
-const PUZZLE3D_LABELS_REUSE_EN: Puzzle3dLabels = Puzzle3dLabels {
-    objects: "Building components",
-    object: "Building component",
-    vortices: "Connection points",
-    vortex: "Connection point",
-    attractions: "Connections",
-    attraction: "Connection",
-    cables: "Cables",
-    window_main: "Aggregator",
-    example_concrete_forest: "Abbau Aufbau",
-    vortex_show: "Show connection points",
-    vortex_direction: "Connection point direction",
-    vortex_kind: "Connection point kind",
-    suggest_objects: "Suggest building components",
-    attracting: "Host connection point",
-    attracted: "Guest connection point",
-    ..PUZZLE3D_LABELS_NATIVE_EN
-};
-const PUZZLE3D_LABELS_REUSE_DE: Puzzle3dLabels = Puzzle3dLabels {
-    objects: "Baukomponenten",
-    object: "Baukomponente",
-    vortices: "Verbindungspunkte",
-    vortex: "Verbindungspunkt",
-    attractions: "Verbindungen",
-    attraction: "Verbindung",
-    cables: "Kabel",
-    window_main: "Aggregator",
-    example_concrete_forest: "Abbau Aufbau",
-    vortex_show: "Verbindungspunkte anzeigen",
-    vortex_direction: "Richtung der Verbindungspunkte",
-    vortex_kind: "Verbindungspunkt-Art",
-    suggest_objects: "Baukomponenten vorschlagen",
-    attracting: "Wirts-Verbindungspunkt",
-    attracted: "Gast-Verbindungspunkt",
-    ..PUZZLE3D_LABELS_NATIVE_DE
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
-/// ⚠️ Not routed through the SDK's `LocaleLabels`/`app_labels!`/`resolve_labels` — see `puzzle2d_labels`'s
-/// doc comment for why (an extra terminology axis the SDK's `Terminology` region does not model).
+/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewState)`
+/// (see the local `is_de_locale` above) — resolves the active `Puzzle3dLabels` cell from the
+/// shell-provided locale/terminology strings on `Puzzle3dConfig`.
 fn puzzle3d_labels(config: &Puzzle3dConfig) -> &'static Puzzle3dLabels {
-    let terminology = config.terminology.as_str();
-    let is_de = is_de_locale(config);
-    match (terminology, is_de) {
-        ("reuse", true) => &PUZZLE3D_LABELS_REUSE_DE,
-        ("reuse", false) => &PUZZLE3D_LABELS_REUSE_EN,
-        (_, true) => &PUZZLE3D_LABELS_NATIVE_DE,
-        (_, false) => &PUZZLE3D_LABELS_NATIVE_EN,
-    }
+    let locale = if is_de_locale(config) { Locale::De } else { Locale::En };
+    let terminology = Terminology::parse(config.terminology.as_str()).unwrap_or(Terminology::Native);
+    Puzzle3dLabels::labels(locale, terminology)
+}
+
+/// 🗺️ Builds a full locale×terminology `LocalizedLabel` from one `Puzzle3dLabels` field, reusing
+/// the field's own terminology-aware text instead of re-authoring it at the manifest call site
+/// (e.g. the "Puzzle 3D"/"Aggregator" window title, or the "Concrete Forest"/"Abbau Aufbau" example name).
+fn puzzle3d_localized(field: impl Fn(&Puzzle3dLabels) -> LabelText) -> LocalizedLabel {
+    LocalizedLabel::from_fn(move |terminology, locale| field(Puzzle3dLabels::labels(locale, terminology)).as_str().to_string())
+}
+
+/// 🗺️ Builds a full locale×terminology `LocalizedLabel` whose English/German manifest phrasing
+/// wraps one terminology-aware `Puzzle3dLabels` word (e.g. "Add {object}" / "{object} hinzufügen").
+fn puzzle3d_localized_phrase(field: impl Fn(&Puzzle3dLabels) -> LabelText, en: impl Fn(&str) -> String + 'static, de: impl Fn(&str) -> String + 'static) -> LocalizedLabel {
+    LocalizedLabel::from_fn(move |terminology, locale| {
+        let word = field(Puzzle3dLabels::labels(locale, terminology)).as_str();
+        match locale {
+            Locale::En => en(word),
+            Locale::De => de(word),
+        }
+    })
 }
 //#endregion 🔖️Terminology
 
@@ -3298,67 +3103,72 @@ fn puzzle3d_engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Win
     }
 }
 
-fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::ContextMenuItemSpec;
-    let selection = &envelope.runtime.selection;
-    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool, separator: bool| ContextMenuItemSpec {
+/// 🖱️ Bespoke row builder — every row here carries a localized (`Puzzle3dLabels`) label/icon that the
+/// declared `ActionDefinition` (English-only, see `Menu::action`'s doc comment) cannot resolve, so each
+/// row is emitted via `Menu::item` rather than `Menu::action`. Grouping/ordering/the pre-destructive
+/// separator are still handled by `Menu::group` + the `organize_context_menu` funnel in `context_menu`.
+fn puzzle3d_context_menu_row(id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool) -> semio_framework_plugin::ContextMenuItemSpec {
+    semio_framework_plugin::ContextMenuItemSpec {
         id: id.into(),
-        label: if separator { None } else { Some(label.into()) },
-        icon: if separator { None } else { Some(icon.into()) },
-        action: if separator { None } else { Some(action.into()) },
+        label: Some(label.into()),
+        icon: Some(icon.into()),
+        action: Some(action.into()),
         args: semio_framework_plugin::optional_json_to_dsl(args),
         destructive: destructive.then_some(true),
-        separator: separator.then_some(true),
         ..Default::default()
-    };
+    }
+}
+
+fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::Menu;
+    let selection = &envelope.runtime.selection;
+    let row = puzzle3d_context_menu_row;
     if !selection.object_ids.is_empty() {
         let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
         let all_locked = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.locked);
         let count = selection.object_ids.len();
         let phrase = if count == 1 { format!("1 {}", labels.object) } else { format!("{count} {}", labels.objects) };
-        return vec![
-            item("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false, false),
-            item("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false, false),
-            item("sep-flags", "", "", "", None, false, true),
-            item("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false, false),
-            item("lock-unlock", if all_locked { labels.unlock } else { labels.lock }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": !all_locked })), false, false),
-            item("sep-zoom", "", "", "", None, false, true),
-            item("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false, false),
-            item("sep-delete", "", "", "", None, false, true),
-            item("delete", &format!("{} ({phrase})", labels.delete), "trash", "deleteSelection", None, true, false),
-        ];
+        return Menu::of(registry)
+            .item(row("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false))
+            .item(row("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false))
+            .item(row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
+            .group("hand", |m| {
+                m.item(row("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false))
+                    .item(row("lock-unlock", if all_locked { labels.unlock } else { labels.lock }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": !all_locked })), false))
+            })
+            .item(row("delete", &format!("{} ({phrase})", labels.delete), "trash", "deleteSelection", None, true))
+            .build();
     }
     if !selection.vortex_ids.is_empty() {
-        let mut items = Vec::new();
+        let mut menu = Menu::of(registry);
         if let [only] = selection.vortex_ids.as_slice() {
-            items.push(item("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only })), false, false));
-            items.push(item("sep-suggest", "", "", "", None, false, true));
+            menu = menu.item(row("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only })), false));
         }
-        items.push(item("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false, false));
-        items.push(item("sep-delete", "", "", "", None, false, true));
-        items.push(item("delete", labels.delete, "trash", "deleteSelection", None, true, false));
-        return items;
+        return menu
+            .item(row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
+            .item(row("delete", labels.delete, "trash", "deleteSelection", None, true))
+            .build();
     }
     if let Some(id) = selection.attraction_ids.first() {
-        return vec![item("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id })), true, false)];
+        return Menu::of(registry).item(row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id })), true)).build();
     }
     if let Some(id) = selection.target_volume_ids.first() {
         let target_volume = envelope.fixture.target_volumes.iter().find(|volume| &volume.id == id);
         let hidden = target_volume.map(|volume| volume.hidden).unwrap_or(false);
         let locked = target_volume.map(|volume| volume.locked).unwrap_or(false);
-        return vec![
-            item("hide-show", if hidden { labels.show } else { labels.hide }, if hidden { "eye" } else { "eye-off" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "hidden", "value": !hidden })), false, false),
-            item("lock-unlock", if locked { labels.unlock } else { labels.lock }, if locked { "lock-open" } else { "lock" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "locked", "value": !locked })), false, false),
-            item("sep-delete", "", "", "", None, false, true),
-            item("delete", labels.delete, "trash", "deleteTargetVolume", Some(json!({ "id": id })), true, false),
-        ];
+        return Menu::of(registry)
+            .group("targets", |m| {
+                m.item(row("hide-show", if hidden { labels.show } else { labels.hide }, if hidden { "eye" } else { "eye-off" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "hidden", "value": !hidden })), false))
+                    .item(row("lock-unlock", if locked { labels.unlock } else { labels.lock }, if locked { "lock-open" } else { "lock" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "locked", "value": !locked })), false))
+            })
+            .item(row("delete", labels.delete, "trash", "deleteTargetVolume", Some(json!({ "id": id })), true))
+            .build();
     }
     if selection.reference_ids.first().is_some() {
-        return vec![
-            item("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false, false),
-            item("sep-delete", "", "", "", None, false, true),
-            item("delete", labels.delete, "trash", "deleteSelection", None, true, false),
-        ];
+        return Menu::of(registry)
+            .item(row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
+            .item(row("delete", labels.delete, "trash", "deleteSelection", None, true))
+            .build();
     }
     Vec::new()
 }
@@ -4374,16 +4184,12 @@ impl DocumentApp for Puzzle3dPlayApp {
         HashMap::from([("fill".to_string(), puzzle3d_fill_tool_measures(&envelope, &*self.precompute.borrow(), labels))])
     }
 
-    fn app_labels(&self, cfg: &semio_framework_plugin::ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::AppLabelsOverlay {
-        puzzle3d_app_labels_overlay(cfg.projection)
-    }
-
     fn context_menu(
         &self,
         request: &semio_framework_plugin::ContextMenuRequest,
         doc: &DocumentView<'_, Puzzle3dPlayProjection>,
         cfg: &semio_framework_plugin::ConfigView<'_, Puzzle3dConfig>,
-        _registry: &semio_framework_plugin::AppActionRegistry,
+        registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let config = cfg.projection;
         let labels = puzzle3d_labels(config);
@@ -4396,7 +4202,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                 envelope.runtime.selection.object_ids = object_ids.into();
             }
         }
-        puzzle3d_context_menu_items(&envelope, labels)
+        puzzle3d_context_menu_items(&envelope, labels, registry)
     }
 }
 
@@ -5275,270 +5081,6 @@ impl Puzzle3dPlayApp {
 
 //#endregion 🔖️Puzzle3dPlayApp
 
-//#region 🔖️CommandLabels
-/// 🗣️ Full chrome overlay for puzzle3d — locale × terminology (native/reuse). Empty maps used to leak English
-/// manifest labels ("Edit", "Add Object", "Context Menu At") into locale-locked brand shells.
-fn puzzle3d_app_labels_overlay(config: &Puzzle3dConfig) -> semio_framework_plugin::AppLabelsOverlay {
-    let labels = puzzle3d_labels(config);
-    let is_de = is_de_locale(config);
-    let object = labels.object;
-    let objects = labels.objects;
-    semio_framework_plugin::AppLabelsOverlay::default()
-        .window_kind_label(PUZZLE3D_PLAY_WINDOW_MAIN, labels.window_main)
-        .panel_tab_label("puzzle3d.panel.settings", if is_de { "Einstellungen" } else { "Settings" })
-        .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
-        .action_labels(puzzle3d_action_labels(config))
-        .utility_labels(puzzle3d_utility_labels(&labels, is_de))
-        .example_labels(HashMap::from([
-            (PUZZLE3D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string()),
-            (PUZZLE3D_EXAMPLE_NAKAGIN.to_string(), "Nakagin Capsule Tower".to_string()),
-        ]))
-        .action_arg_label("addObjectKind.objectKind", if is_de { "Art" } else { "Kind" })
-        .action_arg_label("addObjectKind.objectKind.option.Object", object)
-        .action_arg_label("addObject.objectKind", if is_de { "Art" } else { "Kind" })
-        .action_arg_label("addObject.objectKind.option.Object", object)
-        .dialog_labels(HashMap::from([
-            (
-                "addObject.title".to_string(),
-                if is_de { format!("{object} hinzufügen") } else { format!("Add {object}") },
-            ),
-            (
-                "addObject.body".to_string(),
-                if is_de {
-                    "Wählen Sie die Art zum Hinzufügen.".into()
-                } else {
-                    format!("Choose the kind of {object} to add to the scene.")
-                },
-            ),
-            ("addObject.submit".to_string(), if is_de { "Hinzufügen".to_string() } else { "Add".to_string() }),
-        ]))
-        .introduction_labels(HashMap::from([
-            (
-                "intro.title".to_string(),
-                if is_de {
-                    format!("Willkommen bei {}", labels.window_main)
-                } else {
-                    format!("Welcome to {}", labels.window_main)
-                },
-            ),
-            (
-                "intro.step.welcome.title".to_string(),
-                if is_de {
-                    format!("Willkommen bei {}", labels.window_main)
-                } else {
-                    format!("Welcome to {}", labels.window_main)
-                },
-            ),
-            (
-                "intro.step.welcome.body".to_string(),
-                if is_de {
-                    "Eine kurze Tour durch Ansicht, Hilfsmittel und Paneele, bevor Sie mit dem Zusammenfügen beginnen.".into()
-                } else {
-                    "A quick tour of the viewport, utilities, and panels before you start composing.".into()
-                },
-            ),
-            (
-                "intro.step.viewport.title".to_string(),
-                if is_de { "Die 3D-Ansicht".into() } else { "The Viewport".into() },
-            ),
-            (
-                "intro.step.viewport.body".to_string(),
-                if is_de {
-                    "Das ist Ihre 3D-Szene — orbitieren, verschieben und zoomen Sie, um sich umzusehen.".into()
-                } else {
-                    "This is your 3D scene — orbit, pan, and zoom to look around.".into()
-                },
-            ),
-            (
-                "intro.step.catalogue.title".to_string(),
-                if is_de { "Der Katalog".into() } else { "The Catalogue".into() },
-            ),
-            (
-                "intro.step.catalogue.body".to_string(),
-                if is_de {
-                    format!("Durchstöbern Sie hier die verfügbaren {objects}.")
-                } else {
-                    format!("Browse the {objects} available to place from here.")
-                },
-            ),
-            (
-                "intro.step.add-object.title".to_string(),
-                if is_de { format!("{object} hinzufügen") } else { format!("Add a {object}") },
-            ),
-            (
-                "intro.step.add-object.body".to_string(),
-                if is_de {
-                    "Ziehen Sie den ersten Eintrag per Drag-and-Drop aus dem Katalog in die 3D-Ansicht.".into()
-                } else {
-                    format!("Drag the first {object} from the catalogue into the viewport.")
-                },
-            ),
-            (
-                "intro.step.transform-utility.title".to_string(),
-                if is_de {
-                    format!("{objects} transformieren")
-                } else {
-                    format!("Transform {objects}")
-                },
-            ),
-            (
-                "intro.step.transform-utility.body".to_string(),
-                if is_de {
-                    format!("Aktivieren Sie das Transformieren-Hilfsmittel, um {objects} zu verschieben und zu drehen.")
-                } else {
-                    format!("Activate the Transform utility to move and rotate {objects} in the scene.")
-                },
-            ),
-        ]))
-        .group_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
-}
-
-/// 🗣️ (action id) → localized, terminology-aware label for every operation/view/shell action in `create_puzzle3d_app`.
-fn puzzle3d_action_labels(config: &Puzzle3dConfig) -> HashMap<String, String> {
-    let labels = puzzle3d_labels(config);
-    let is_de = is_de_locale(config);
-    let object = labels.object;
-    let vortex = labels.vortex;
-    let pick = |en: &str, de: &str| (if is_de { de } else { en }).to_string();
-    let mut map = HashMap::from([
-        ("setFixtureJson".to_string(), pick("Set Fixture Json", "Rohdaten festlegen")),
-        ("setActiveExample".to_string(), pick("Set Active Example", "Aktives Beispiel festlegen")),
-        ("deleteSelection".to_string(), pick("Delete Selection", "Auswahl löschen")),
-        ("duplicateSelection".to_string(), pick("Duplicate Selection", "Auswahl duplizieren")),
-        ("setCamera".to_string(), pick("Set Camera", "Kamera festlegen")),
-        ("setProjection".to_string(), pick("Set Projection", "Projektion festlegen")),
-        ("setProjectionParam".to_string(), pick("Set Projection Parameter", "Projektionsparameter festlegen")),
-        ("translateSelection".to_string(), pick("Translate Selection", "Auswahl verschieben")),
-        ("rotateSelection".to_string(), pick("Rotate Selection", "Auswahl drehen")),
-        ("scaleSelection".to_string(), pick("Scale Selection", "Auswahl skalieren")),
-        ("setSelectionFlag".to_string(), pick("Set Selection Flag", "Auswahlmarkierung festlegen")),
-        ("patchInspector".to_string(), pick("Patch Inspector", "Inspektor aktualisieren")),
-        ("focusSelection".to_string(), pick("Focus Selection", "Auswahl fokussieren")),
-        ("engagementSubmit".to_string(), pick("Engagement Submit", "Eingabe bestätigen")),
-        ("engagementRepeatLast".to_string(), pick("Engagement Repeat Last", "Letzte Eingabe wiederholen")),
-        ("deleteTargetVolume".to_string(), pick("Delete Target Volume", "Zielvolumen löschen")),
-        ("relocateTargetVolume".to_string(), pick("Relocate Target Volume", "Zielvolumen verlagern")),
-        ("setTargetVolumeFlag".to_string(), pick("Set Target Volume Flag", "Zielvolumenmarkierung festlegen")),
-        ("setFillCount".to_string(), pick("Set Fill Count", "Füllanzahl festlegen")),
-        ("acceptSuggestion".to_string(), pick("Accept Suggestion", "Vorschlag annehmen")),
-        ("fillBuildTick".to_string(), pick("Fill Build Tick", "Füllaufbau-Takt")),
-        ("setSelection".to_string(), pick("Set Selection", "Auswahl festlegen")),
-        ("selectSameKindSelection".to_string(), pick("Select Same Kind", "Gleiche Art auswählen")),
-        ("setJackQuery".to_string(), pick("Set Jack Query", "Abfrage festlegen")),
-        ("worldSelect".to_string(), pick("World Select", "In der Welt auswählen")),
-        ("worldHover".to_string(), pick("World Hover", "Überfahren (Welt)")),
-        ("setHover".to_string(), pick("Set Hover", "Überfahren festlegen")),
-        ("worldPick".to_string(), pick("World Pick", "Punkt in der Welt wählen")),
-        ("setSelectionMethod".to_string(), pick("Set Selection Method", "Auswahlmethode festlegen")),
-        ("toggleSun".to_string(), pick("Toggle Sun", "Sonne umschalten")),
-        ("setSunAzimuth".to_string(), pick("Set Sun Azimuth", "Sonnenazimut festlegen")),
-        ("setSunElevation".to_string(), pick("Set Sun Elevation", "Sonnenhöhe festlegen")),
-        ("setSunIntensity".to_string(), pick("Set Sun Intensity", "Sonnenintensität festlegen")),
-        ("setLodAutomatic".to_string(), pick("Set Lod Automatic", "Detailstufe automatisch")),
-        ("setLodDepthVariable".to_string(), pick("Set Lod Depth Variable", "Detailstufen-Tiefe festlegen")),
-        ("setGridVisible".to_string(), pick("Set Grid Visible", "Raster anzeigen")),
-        ("setLodManual".to_string(), pick("Set Lod Manual", "Detailstufe manuell")),
-        ("setGridSnapEnabled".to_string(), pick("Set Grid Snap Enabled", "Rasterfang aktivieren")),
-        ("setGridSpacing".to_string(), pick("Set Grid Spacing", "Rasterabstand festlegen")),
-        ("setSelectionModeDefault".to_string(), pick("Set Selection Mode Default", "Standardauswahlmodus festlegen")),
-        ("setProximityRadius".to_string(), pick("Set Proximity Radius", "Näheradius festlegen")),
-        ("setChunkSize".to_string(), pick("Set Chunk Size", "Blockgröße festlegen")),
-        ("setSelectableKind".to_string(), pick("Set Selectable Kind", "Auswählbare Art festlegen")),
-        ("setKindHover".to_string(), pick("Set Kind Hover", "Überfahren (Art) festlegen")),
-        ("selectAll".to_string(), pick("Select All", "Alles auswählen")),
-        ("clearSelection".to_string(), pick("Clear Selection", "Auswahl aufheben")),
-        ("contextMenuAt".to_string(), pick("Open Actions Menu", "Aktionsmenü öffnen")),
-        ("engagementInput".to_string(), pick("Engagement Input", "Eingabe")),
-        ("engagementAbort".to_string(), pick("Engagement Abort", "Eingabe abbrechen")),
-        ("engagementControlSelect".to_string(), pick("Engagement Control Select", "Eingabesteuerung auswählen")),
-        ("setTransformGumballFlag".to_string(), pick("Set Transform Gumball Flag", "Transformieren-Griff festlegen")),
-        ("setVoxelDims".to_string(), pick("Set Voxel Dims", "Voxel-Abmessungen festlegen")),
-        ("setBrushPlacementOverlapBudget".to_string(), pick("Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen")),
-        ("cycleBrushCandidate".to_string(), pick("Cycle Brush Candidate", "Pinselkandidat wechseln")),
-        ("cycleBrushCandidateBack".to_string(), pick("Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln")),
-        ("hoverSuggestion".to_string(), pick("Hover Suggestion", "Vorschlag überfahren")),
-        ("suggestionsTick".to_string(), pick("Suggestions Tick", "Vorschläge-Takt")),
-        ("registerBrushMesh".to_string(), pick("Register Brush Mesh", "Pinsel-Mesh registrieren")),
-        ("worldPointerDown".to_string(), pick("World Pointer Down", "Welt-Zeiger gedrückt")),
-        ("transformEnd".to_string(), pick("Transform End", "Transformieren beenden")),
-        ("transformBegin".to_string(), pick("Transform Begin", "Transformieren beginnen")),
-    ]);
-    map.insert(
-        "addObjectKind".into(),
-        if is_de { format!("{object} hinzufügen") } else { format!("Add {object}") },
-    );
-    map.insert(
-        "openAddObjectDialog".into(),
-        if is_de { format!("{object} hinzufügen…") } else { format!("Add {object}…") },
-    );
-    map.insert(
-        "worldRelocate".into(),
-        if is_de { format!("{object} verlagern") } else { format!("Relocate {object}") },
-    );
-    map.insert(
-        "addBrushObject".into(),
-        if is_de { format!("Pinsel-{object} hinzufügen") } else { format!("Add Brush {object}") },
-    );
-    map.insert(
-        "createAttraction".into(),
-        if is_de { format!("{} erstellen", labels.attraction) } else { format!("Create {}", labels.attraction) },
-    );
-    map.insert(
-        "deleteAttraction".into(),
-        if is_de { format!("{} löschen", labels.attraction) } else { format!("Delete {}", labels.attraction) },
-    );
-    map.insert(
-        "addTargetVolume".into(),
-        if is_de { format!("{} hinzufügen", labels.target_volume) } else { format!("Add {}", labels.target_volume) },
-    );
-    map.insert(
-        "worldVortexHover".into(),
-        if is_de { format!("Überfahren ({vortex})") } else { format!("World {vortex} Hover") },
-    );
-    map.insert(
-        "worldVortexSelect".into(),
-        if is_de { format!("{vortex} in der Welt auswählen") } else { format!("World {vortex} Select") },
-    );
-    map.insert(
-        "setVortexShow".into(),
-        if is_de { format!("{} festlegen", labels.vortex_show) } else { format!("Set {}", labels.vortex_show) },
-    );
-    map.insert(
-        "setVortexDirection".into(),
-        if is_de { format!("{} festlegen", labels.vortex_direction) } else { format!("Set {}", labels.vortex_direction) },
-    );
-    map.insert(
-        "setObjectKindWeight".into(),
-        if is_de { format!("{object}-Art-Gewicht festlegen") } else { format!("Set {object} Kind Weight") },
-    );
-    map.insert(
-        "setVortexKindWeight".into(),
-        if is_de { format!("{vortex}-Art-Gewicht festlegen") } else { format!("Set {vortex} Kind Weight") },
-    );
-    map.insert(
-        "openVortexSuggestions".into(),
-        if is_de { format!("{vortex}-Vorschläge öffnen") } else { format!("Open {vortex} Suggestions") },
-    );
-    map.insert(
-        "closeVortexSuggestions".into(),
-        if is_de { format!("{vortex}-Vorschläge schließen") } else { format!("Close {vortex} Suggestions") },
-    );
-    map
-}
-
-/// 🗣️ (utility id) → localized utility bar button label for every `.utility(...)` / `.tool_simple(...)` in `create_puzzle3d_app`.
-fn puzzle3d_utility_labels(labels: &Puzzle3dLabels, is_de: bool) -> HashMap<String, String> {
-    HashMap::from([
-        ("select".to_string(), labels.select.to_string()),
-        ("transform".to_string(), (if is_de { "Transformieren" } else { "Transform" }).to_string()),
-        ("brush".to_string(), labels.brush.to_string()),
-        ("volumeBrush".to_string(), labels.volume_brush.to_string()),
-        ("fill".to_string(), labels.fill.to_string()),
-        ("worldRelocate".to_string(), (if is_de { "Verlagern" } else { "Relocate" }).to_string()),
-    ])
-}
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️DefaultLayout
 /// 🪟️ Top (left ⅓) + Perspective (right ⅔) — the default dual-pane workbench for Puzzle 3D and the Aggregator.
 fn puzzle3d_default_layout() -> WindowLayout {
@@ -5579,7 +5121,7 @@ fn puzzle3d_default_layout() -> WindowLayout {
 pub fn create_puzzle3d_app() -> App {
     let envelope = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     App::from_builder(
-        App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D")
+        App::builder(PUZZLE3D_PLAY_APP_ID, puzzle3d_localized(|l| l.window_main))
             .document(["semio", "puzzle", "3d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.puzzle".into(),
@@ -5611,14 +5153,14 @@ pub fn create_puzzle3d_app() -> App {
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope, &PUZZLE3D_LABELS_NATIVE_EN), "puzzle")
+            .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, puzzle3d_localized(|l| l.window_main), PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope, &Puzzle3dLabels::NATIVE_EN), "puzzle")
             .default_layout(puzzle3d_default_layout())
-            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_DOCUMENT)
-            .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_KINDS)
-            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE3D_PLAY_BODY_INSPECTOR)
-            .panel_tab("puzzle3d.panel.settings", "Settings", PanelGroup::Settings, PUZZLE3D_PLAY_BODY_SETTINGS)
+            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_DOCUMENT)
+            .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_KINDS)
+            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, PUZZLE3D_PLAY_BODY_INSPECTOR)
+            .panel_tab("puzzle3d.panel.settings", LocalizedLabel::native("Settings", "Einstellungen"), PanelGroup::Settings, PUZZLE3D_PLAY_BODY_SETTINGS)
             .keybinding("mod+a", "selectAll")
             .keybinding("escape", "engagementAbort")
             .keybinding("delete", "deleteSelection")
@@ -5628,125 +5170,155 @@ pub fn create_puzzle3d_app() -> App {
             .keybinding("shift+tab", "cycleBrushCandidateBack")
             .keybinding("f", "focusSelection")
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after fixture delta).
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
-            .operation("setActiveExample", "Set Active Example")
-            .operation("addObjectKind", "Add Object")
-            .operation("deleteSelection", "Delete Selection")
-            .operation("duplicateSelection", "Duplicate Selection")
-            .operation("translateSelection", "Translate Selection")
-            .operation("rotateSelection", "Rotate Selection")
-            .operation("scaleSelection", "Scale Selection")
-            .operation("transformEnd", "Transform End")
-            .operation("worldRelocate", "Relocate Object")
-            .operation("setSelectionFlag", "Set Selection Flag")
-            .operation("patchInspector", "Patch Inspector")
-            .operation("engagementSubmit", "Engagement Submit")
-            .operation("engagementRepeatLast", "Engagement Repeat Last")
-            .operation("createAttraction", "Create Attraction")
-            .operation("deleteAttraction", "Delete Attraction")
-            .operation("addTargetVolume", "Add Target Volume")
-            .operation("deleteTargetVolume", "Delete Target Volume")
-            .operation("setTargetVolumeFlag", "Set Target Volume Flag")
-            .operation("addBrushObject", "Add Brush Object")
-            .operation("setFillCount", "Set Fill Count")
-            .operation("acceptSuggestion", "Accept Suggestion")
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Rohdaten festlegen"), ActionKind::Operation) })
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("addObjectKind", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
+            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Operation).category("selection"))
+            .action_with(ActionDefinition::new_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Operation).category("create"))
+            .operation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
+            .operation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
+            .operation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
+            .operation("transformEnd", LocalizedLabel::native("Transform End", "Transformieren beenden"))
+            .operation("worldRelocate", puzzle3d_localized_phrase(|l| l.object, |w| format!("Relocate {w}"), |w| format!("{w} verlagern")))
+            .action_with(ActionDefinition::new_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Operation).category("hand"))
+            .operation("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"))
+            .operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
+            .operation("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"))
+            .operation("createAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Create {w}"), |w| format!("{w} erstellen")))
+            .action_with(ActionDefinition::new_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Operation).category("targets"))
+            .operation("addTargetVolume", puzzle3d_localized_phrase(|l| l.target_volume, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
+            .action_with(ActionDefinition::new_catalog("deleteTargetVolume", LocalizedLabel::native("Delete Target Volume", "Zielvolumen löschen"), ActionKind::Operation).category("targets"))
+            .action_with(ActionDefinition::new_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Operation).category("targets"))
+            .operation("addBrushObject", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add Brush {w}"), |w| format!("Pinsel-{w} hinzufügen")))
+            .operation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
+            .operation("acceptSuggestion", LocalizedLabel::native("Accept Suggestion", "Vorschlag annehmen"))
             // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog.
-            .shell_action("openAddObjectDialog", "Add Object…")
+            .shell_action("openAddObjectDialog", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}…"), |w| format!("{w} hinzufügen…")))
             // 👁️ Ephemeral view state — selection, hover, camera scratch, utility-parameter runtime.
-            .view_action("setCamera", "Set Camera")
-            .view_action("setProjection", "Set Projection")
-            .view_action("setProjectionParam", "Set Projection Parameter")
-            .view_action("focusSelection", "Focus Selection")
-            .view_action("setSelection", "Set Selection")
-            .view_action("selectSameKindSelection", "Select Same Kind")
-            .view_action("setJackQuery", "Set Jack Query")
-            .view_action("worldSelect", "World Select")
-            .view_action("worldHover", "World Hover")
-            .view_action("setHover", "Set Hover")
-            .view_action("worldPick", "World Pick")
-            .view_action("worldVortexHover", "World Vortex Hover")
-            .view_action("worldVortexSelect", "World Vortex Select")
-            .view_action("setSelectionMethod", "Set Selection Method")
-            .view_action("setVortexShow", "Set Vortex Show")
-            .view_action("setVortexDirection", "Set Vortex Direction")
-            .view_action("toggleSun", "Toggle Sun")
-            .view_action("setSunAzimuth", "Set Sun Azimuth")
-            .view_action("setSunElevation", "Set Sun Elevation")
-            .view_action("setSunIntensity", "Set Sun Intensity")
-            .view_action("setLodAutomatic", "Set Lod Automatic")
-            .view_action("setLodDepthVariable", "Set Lod Depth Variable")
-            .view_action("setGridVisible", "Set Grid Visible")
-            .view_action("setLodManual", "Set Lod Manual")
-            .view_action("setGridSnapEnabled", "Set Grid Snap Enabled")
-            .view_action("setGridSpacing", "Set Grid Spacing")
-            .view_action("setSelectionModeDefault", "Set Selection Mode Default")
-            .view_action("setProximityRadius", "Set Proximity Radius")
-            .view_action("setChunkSize", "Set Chunk Size")
-            .view_action("setSelectableKind", "Set Selectable Kind")
-            .view_action("setKindHover", "Set Kind Hover")
-            .view_action("selectAll", "Select All")
-            .view_action("clearSelection", "Clear Selection")
-            .view_action("contextMenuAt", "Open Actions Menu")
-            .view_action("engagementInput", "Engagement Input")
-            .view_action("engagementAbort", "Engagement Abort")
-            .view_action("engagementControlSelect", "Engagement Control Select")
-            .view_action("setTransformGumballFlag", "Set Transform Gumball Flag")
-            .view_action("transformBegin", "Transform Begin")
-            .view_action("setVoxelDims", "Set Voxel Dims")
-            .view_action("relocateTargetVolume", "Relocate Target Volume")
-            .view_action("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget")
-            .view_action("setObjectKindWeight", "Set Object Kind Weight")
-            .view_action("setVortexKindWeight", "Set Vortex Kind Weight")
-            .view_action("cycleBrushCandidate", "Cycle Brush Candidate")
-            .view_action("cycleBrushCandidateBack", "Cycle Brush Candidate Back")
-            .view_action("openVortexSuggestions", "Open Vortex Suggestions")
-            .view_action("closeVortexSuggestions", "Close Vortex Suggestions")
-            .view_action("hoverSuggestion", "Hover Suggestion")
-            .view_action("suggestionsTick", "Suggestions Tick")
-            .view_action("fillBuildTick", "Fill Build Tick")
-            .view_action("registerBrushMesh", "Register Brush Mesh")
-            .view_action("worldPointerDown", "World Pointer Down")
+            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
+            .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
+            .view_action("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .action_with(ActionDefinition::new_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).category("selection"))
+            .view_action("setJackQuery", LocalizedLabel::native("Set Jack Query", "Abfrage festlegen"))
+            .view_action("worldSelect", LocalizedLabel::native("World Select", "In der Welt auswählen"))
+            .view_action("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"))
+            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
+            .view_action("worldPick", LocalizedLabel::native("World Pick", "Punkt in der Welt wählen"))
+            .view_action("worldVortexHover", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("World {w} Hover"), |w| format!("Überfahren ({w})")))
+            .view_action("worldVortexSelect", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("World {w} Select"), |w| format!("{w} in der Welt auswählen")))
+            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
+            .view_action("setVortexShow", puzzle3d_localized_phrase(|l| l.vortex_show, |w| format!("Set {w}"), |w| format!("{w} festlegen")))
+            .view_action("setVortexDirection", puzzle3d_localized_phrase(|l| l.vortex_direction, |w| format!("Set {w}"), |w| format!("{w} festlegen")))
+            .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
+            .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
+            .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
+            .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
+            .view_action("setLodAutomatic", LocalizedLabel::native("Set Lod Automatic", "Detailstufe automatisch"))
+            .view_action("setLodDepthVariable", LocalizedLabel::native("Set Lod Depth Variable", "Detailstufen-Tiefe festlegen"))
+            .view_action("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Raster anzeigen"))
+            .view_action("setLodManual", LocalizedLabel::native("Set Lod Manual", "Detailstufe manuell"))
+            .view_action("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"))
+            .view_action("setGridSpacing", LocalizedLabel::native("Set Grid Spacing", "Rasterabstand festlegen"))
+            .view_action("setSelectionModeDefault", LocalizedLabel::native("Set Selection Mode Default", "Standardauswahlmodus festlegen"))
+            .view_action("setProximityRadius", LocalizedLabel::native("Set Proximity Radius", "Näheradius festlegen"))
+            .view_action("setChunkSize", LocalizedLabel::native("Set Chunk Size", "Blockgröße festlegen"))
+            .view_action("setSelectableKind", LocalizedLabel::native("Set Selectable Kind", "Auswählbare Art festlegen"))
+            .view_action("setKindHover", LocalizedLabel::native("Set Kind Hover", "Überfahren (Art) festlegen"))
+            .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
+            .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
+            .view_action("contextMenuAt", LocalizedLabel::native("Open Actions Menu", "Aktionsmenü öffnen"))
+            .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
+            .view_action("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"))
+            .view_action("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"))
+            .view_action("setTransformGumballFlag", LocalizedLabel::native("Set Transform Gumball Flag", "Transformieren-Griff festlegen"))
+            .view_action("transformBegin", LocalizedLabel::native("Transform Begin", "Transformieren beginnen"))
+            .view_action("setVoxelDims", LocalizedLabel::native("Set Voxel Dims", "Voxel-Abmessungen festlegen"))
+            .view_action("relocateTargetVolume", LocalizedLabel::native("Relocate Target Volume", "Zielvolumen verlagern"))
+            .view_action("setBrushPlacementOverlapBudget", LocalizedLabel::native("Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"))
+            .view_action("setObjectKindWeight", puzzle3d_localized_phrase(|l| l.object, |w| format!("Set {w} Kind Weight"), |w| format!("{w}-Art-Gewicht festlegen")))
+            .view_action("setVortexKindWeight", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Set {w} Kind Weight"), |w| format!("{w}-Art-Gewicht festlegen")))
+            .view_action("cycleBrushCandidate", LocalizedLabel::native("Cycle Brush Candidate", "Pinselkandidat wechseln"))
+            .view_action("cycleBrushCandidateBack", LocalizedLabel::native("Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln"))
+            .action_with(ActionDefinition::new_catalog("openVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Open {w} Suggestions"), |w| format!("{w}-Vorschläge öffnen")), ActionKind::View).category("tools"))
+            .view_action("closeVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Close {w} Suggestions"), |w| format!("{w}-Vorschläge schließen")))
+            .view_action("hoverSuggestion", LocalizedLabel::native("Hover Suggestion", "Vorschlag überfahren"))
+            .view_action("suggestionsTick", LocalizedLabel::native("Suggestions Tick", "Vorschläge-Takt"))
+            .view_action("fillBuildTick", LocalizedLabel::native("Fill Build Tick", "Füllaufbau-Takt"))
+            .view_action("registerBrushMesh", LocalizedLabel::native("Register Brush Mesh", "Pinsel-Mesh registrieren"))
+            .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
             // 📝️ Staged argument forms for the panel-visible create/query actions (P1).
             .action_args("addObjectKind", vec![
-                ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object"),
+                ActionArgDef::select("objectKind", puzzle3d_localized(|l| l.kind), vec![ActionArgOption::new("Object", puzzle3d_localized(|l| l.object))]).default_value("Object"),
             ])
             // 🧰️ Flat per-window set of utilities (host-owned `view_state.active_utility_id`); no utility is active until the host presses one — the transform gumball exposes translate and rotate together via Move/Rotate flags.
-            .utility(UtilityDefinition::new("transform", "Transform", "transform-3d"))
-            .utility(UtilityDefinition::new("brush", "Brush", "paintbrush"))
-            .utility(UtilityDefinition::new("volumeBrush", "Volume Brush", "volume-brush"))
-            .utility(UtilityDefinition::new("worldRelocate", "Relocate", "relocate-3d"))
+            .utility(UtilityDefinition::new("transform", LocalizedLabel::native("Transform", "Transformieren"), "transform-3d"))
+            .utility(UtilityDefinition::new("brush", puzzle3d_localized(|l| l.brush), "paintbrush"))
+            .utility(UtilityDefinition::new("volumeBrush", puzzle3d_localized(|l| l.volume_brush), "volume-brush"))
+            .utility(UtilityDefinition::new("worldRelocate", LocalizedLabel::native("Relocate", "Verlagern"), "relocate-3d"))
             .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["transform".into(), "brush".into(), "volumeBrush".into(), "worldRelocate".into()])
             // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility — it keeps
             // its viewport interaction via `ViewState.active_tool_id` (see `puzzle3d_scene_active_utility`).
-            .tool_simple("fill", "Fill", "paint-bucket")
+            .tool_simple("fill", puzzle3d_localized(|l| l.fill), "paint-bucket")
             .mode_tools("edit", vec![ToolRef::new("fill")])
             // 🎓️ Reference introduction (proof of the framework's Introduction mechanism, see
             // `IntroductionDefinition` in `framework/core/rs/lib.rs`): a short first-run walkthrough
             // of the viewport, the catalogue panel, adding an object, and the Move utility.
             .introduction(IntroductionDefinition {
-                title: "Welcome to Puzzle 3D".into(),
+                title: puzzle3d_localized_phrase(|l| l.window_main, |w| format!("Welcome to {w}"), |w| format!("Willkommen bei {w}")),
                 steps: vec![
                     IntroductionStepDefinition::new(
                         "welcome",
-                        "Welcome to Puzzle 3D",
-                        "A quick tour of the viewport, utilities, and panels before you start composing.",
+                        puzzle3d_localized_phrase(|l| l.window_main, |w| format!("Welcome to {w}"), |w| format!("Willkommen bei {w}")),
+                        LocalizedLabel::native(
+                            "A quick tour of the viewport, utilities, and panels before you start composing.",
+                            "Eine kurze Tour durch Ansicht, Hilfsmittel und Paneele, bevor Sie mit dem Zusammenfügen beginnen.",
+                        ),
                     ),
-                    IntroductionStepDefinition::new("viewport", "The Viewport", "This is your 3D scene — orbit, pan, and zoom to look around.")
+                    IntroductionStepDefinition::new(
+                        "viewport",
+                        LocalizedLabel::native("The Viewport", "Die 3D-Ansicht"),
+                        LocalizedLabel::native(
+                            "This is your 3D scene — orbit, pan, and zoom to look around.",
+                            "Das ist Ihre 3D-Szene — orbitieren, verschieben und zoomen Sie, um sich umzusehen.",
+                        ),
+                    )
                         .introduce(window_element_id(PUZZLE3D_PLAY_WINDOW_MAIN))
                         .interact(vec![
                             IntroductionInteraction::zoom(PUZZLE3D_PLAY_WINDOW_MAIN, "Zoom"),
                             IntroductionInteraction::pan(PUZZLE3D_PLAY_WINDOW_MAIN, "Pan"),
                             IntroductionInteraction::orbit(PUZZLE3D_PLAY_WINDOW_MAIN, "Orbit"),
                         ]),
-                    IntroductionStepDefinition::new("catalogue", "The Catalogue", "Browse the object kinds available to place from here.")
+                    IntroductionStepDefinition::new(
+                        "catalogue",
+                        LocalizedLabel::native("The Catalogue", "Der Katalog"),
+                        puzzle3d_localized_phrase(|l| l.objects, |w| format!("Browse the {w} available to place from here."), |w| format!("Durchstöbern Sie hier die verfügbaren {w}.")),
+                    )
                         .introduce(panel_tab_element_id(FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
                         .placement(IntroductionPlacement::Right),
-                    IntroductionStepDefinition::new("add-object", "Add an Object", "Drag the first object kind from the catalogue into the viewport.")
+                    IntroductionStepDefinition::new(
+                        "add-object",
+                        puzzle3d_localized_phrase(|l| l.object, |w| format!("Add a {w}"), |w| format!("{w} hinzufügen")),
+                        puzzle3d_localized_phrase(
+                            |l| l.object,
+                            |w| format!("Drag the first {w} from the catalogue into the viewport."),
+                            |_w| "Ziehen Sie den ersten Eintrag per Drag-and-Drop aus dem Katalog in die 3D-Ansicht.".to_string(),
+                        ),
+                    )
                         .introduce(panel_tab_first_draggable_element_id(FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
                         .show(vec![panel_tab_element_id(FRAMEWORK_PANEL_TAB_CATALOGUE_ID), window_element_id(PUZZLE3D_PLAY_WINDOW_MAIN)])
                         .placement(IntroductionPlacement::Right)
                         .interact(vec![IntroductionInteraction::action("addObjectKind", "Add an object")]),
-                    IntroductionStepDefinition::new("transform-utility", "Transform Objects", "Activate the Transform utility to move and rotate objects in the scene.")
+                    IntroductionStepDefinition::new(
+                        "transform-utility",
+                        puzzle3d_localized_phrase(|l| l.objects, |w| format!("Transform {w}"), |w| format!("{w} transformieren")),
+                        puzzle3d_localized_phrase(
+                            |l| l.objects,
+                            |w| format!("Activate the Transform utility to move and rotate {w} in the scene."),
+                            |w| format!("Aktivieren Sie das Transformieren-Hilfsmittel, um {w} zu verschieben und zu drehen."),
+                        ),
+                    )
                         .introduce("transform")
                         .show(vec![window_element_id(PUZZLE3D_PLAY_WINDOW_MAIN)])
                         .interact(vec![IntroductionInteraction::utility("transform", "Activate Transform")]),
@@ -5756,16 +5328,24 @@ pub fn create_puzzle3d_app() -> App {
             // in `framework/core/rs/lib.rs`): opened by `openAddObjectDialog`, drives the existing
             // `addObjectKind` operation's `objectKind` select arg.
             .dialog(
-                DialogDefinition::new("addObject", "Add Object", ActionRef::new("addObjectKind"))
-                    .body("Choose the kind of object to add to the scene.")
+                DialogDefinition::new(
+                    "addObject",
+                    puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")),
+                    ActionRef::new("addObjectKind"),
+                )
+                    .body(puzzle3d_localized_phrase(
+                        |l| l.object,
+                        |w| format!("Choose the kind of {w} to add to the scene."),
+                        |_w| "Wählen Sie die Art zum Hinzufügen.".to_string(),
+                    ))
                     .args(vec![
-                        ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object").required(),
+                        ActionArgDef::select("objectKind", puzzle3d_localized(|l| l.kind), vec![ActionArgOption::new("Object", puzzle3d_localized(|l| l.object))]).default_value("Object").required(),
                     ])
-                    .submit_label("Add"),
+                    .submit_label(LocalizedLabel::native("Add", "Hinzufügen")),
             ),
     )
-    .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON.clone(), "list-tree")
-    .example(PUZZLE3D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON.clone(), "building")
+    .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, puzzle3d_localized(|l| l.example_concrete_forest), CONCRETE_FOREST_EXAMPLE_JSON.clone(), "list-tree")
+    .example(PUZZLE3D_EXAMPLE_NAKAGIN, LocalizedLabel::native("Nakagin Capsule Tower", "Nakagin Capsule Tower"), NAKAGIN_EXAMPLE_JSON.clone(), "building")
     .workflow("puzzle3d", "Puzzle 3D", "model")
 }
 
@@ -5921,7 +5501,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, FRAMEWORK_HISTORY_BODY_KEY};
+    use semio_framework_plugin::{testkit, ContextMenuRequest, PluginApp, UiMenuRef, VcsDocumentApp, FRAMEWORK_HISTORY_BODY_KEY};
     use semio_framework_core::ViewWindowInstance;
     use protocol::OperationDiff;
 
@@ -6283,8 +5863,11 @@ mod tests {
         })
     }
 
-    fn context_menu_of(node: &Value) -> Value {
-        node.pointer("/world3d/contextMenuJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
+    /// 🖱️ `context_menu()` is called through the `VcsDocumentApp` funnel (already-organized rows) rather
+    /// than round-tripping through the (deleted) `world3d.contextMenuJson` scene field.
+    fn context_menu_direct(app: &mut VcsDocumentApp<Puzzle3dPlayApp>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
+        app.context_menu(&request)
     }
 
     fn brush_preview_of(node: &Value) -> Value {
@@ -6296,7 +5879,7 @@ mod tests {
         let mut app = testkit::new_app::<Puzzle3dPlayApp>();
         let vortex = first_vortex_full_id(&app);
         dispatch_action(&mut app, "contextMenuAt", Some(&json!({ "kind": "vortex", "id": vortex })), None, &testkit::meta("local")).expect("contextMenuAt");
-        let menu = context_menu_of(&render_composite(&mut app));
+        let menu = context_menu_direct(&mut app);
         let menu_json = serde_json::to_string(&menu).unwrap();
         assert!(menu_json.contains("Suggest objects"), "menu should be {menu_json}");
         assert!(menu_json.contains("openVortexSuggestions"));
@@ -6312,12 +5895,34 @@ mod tests {
         let projection = app.projection().expect("projection").0;
         let volume_id = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("id")).and_then(Value::as_str).expect("volume id").to_string();
         dispatch_action(&mut app, "contextMenuAt", Some(&json!({ "kind": "targetVolume", "id": volume_id })), None, &testkit::meta("local")).expect("contextMenuAt");
-        let menu_json = serde_json::to_string(&context_menu_of(&render_composite(&mut app))).unwrap();
+        let menu = context_menu_direct(&mut app);
+        let menu_json = serde_json::to_string(&menu).unwrap();
         assert!(menu_json.contains("setTargetVolumeFlag"), "menu should be {menu_json}");
+        assert!(menu_json.contains("menu.group.targets"), "hide/lock rows should be grouped under targets: {menu_json}");
+        assert_eq!(menu.last().and_then(|item| item.destructive), Some(true), "destructive delete must be the last top-level row: {menu_json}");
         dispatch_action(&mut app, "setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "hidden", "value": true })), None, &testkit::meta("local")).expect("setTargetVolumeFlag");
         let projection = app.projection().expect("projection").0;
         let hidden = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("hidden")).and_then(Value::as_bool);
         assert_eq!(hidden, Some(true));
+    }
+
+    /// 🗂️ D3 grouped-disclosure contract for the object-selection branch: the top-level menu stays
+    /// scannable (leaves + groups + separator combined) and the destructive `deleteSelection` row is
+    /// the last top-level entry (`organize_context_menu` inserts the separator ahead of it).
+    #[test]
+    fn context_menu_at_selects_object_groups_flags_and_keeps_delete_last() {
+        let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+        dispatch_action(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None, &testkit::meta("local")).expect("addObjectKind");
+        let projection = app.projection().expect("projection").0;
+        let object_id = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("object id").to_string();
+        dispatch_action(&mut app, "contextMenuAt", Some(&json!({ "kind": "object", "id": object_id })), None, &testkit::meta("local")).expect("contextMenuAt");
+        let menu = context_menu_direct(&mut app);
+        assert!(menu.len() <= 9, "top-level menu should stay scannable, got {} rows: {menu:?}", menu.len());
+        let menu_json = serde_json::to_string(&menu).unwrap();
+        assert!(menu_json.contains("menu.group.hand"), "hide/lock rows should be grouped under hand: {menu_json}");
+        assert!(menu_json.contains("duplicateSelection"), "menu should be {menu_json}");
+        assert_eq!(menu.last().map(|item| item.id.as_str()), Some("delete"), "delete must be the last top-level row: {menu_json}");
+        assert_eq!(menu.last().and_then(|item| item.destructive), Some(true), "delete must be marked destructive: {menu_json}");
     }
 
     #[test]
@@ -7039,9 +6644,9 @@ mod tests {
         let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "fill".into() };
         sync_precompute_session(&mut session, &scene);
         session.precompute_step(1);
-        match puzzle3d_fill_count_measure(&scene, &session, &PUZZLE3D_LABELS_NATIVE_EN) {
+        match puzzle3d_fill_count_measure(&scene, &session, &Puzzle3dLabels::NATIVE_EN) {
             WindowMeasure::Slider { label: Some(label), max, ready, loading, .. } => {
-                assert_eq!(label, PUZZLE3D_LABELS_NATIVE_EN.count, "fill count label stays fixed as Count while planning");
+                assert_eq!(label, Puzzle3dLabels::NATIVE_EN.count, "fill count label stays fixed as Count while planning");
                 assert_eq!(max, PUZZLE3D_FILL_COUNT_MAX as f64, "fill slider max stays fixed while planning");
                 let ready = ready.expect("planning must expose a ready extent");
                 assert!(ready >= 0.0 && ready <= max, "ready extent must lie on the fixed range");
@@ -7248,11 +6853,11 @@ mod tests {
             Some(Some("volumeBrush".into()))
         );
         assert!(find_measure_slider(&puzzle3d_window_measures(&volume_brush_scene, &session, labels), "puzzle3d-voxel-w").is_some(), "volume brush utility exposes voxel width slider");
-        let fill_engagement = puzzle3d_engagement(&fill_scene, &PUZZLE3D_LABELS_NATIVE_EN);
+        let fill_engagement = puzzle3d_engagement(&fill_scene, &Puzzle3dLabels::NATIVE_EN);
         assert!(fill_engagement.control.is_none() && fill_engagement.controls.is_none(), "fill engagement HUD must no longer carry the relocated controls");
         let brush_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "brush".into() };
         assert_eq!(measure_group_tag(&puzzle3d_window_measures(&brush_scene, &session, labels), "puzzle3d-play-utility-options-brush"), Some(Some("brush".into())));
-        let brush_engagement = puzzle3d_engagement(&brush_scene, &PUZZLE3D_LABELS_NATIVE_EN);
+        let brush_engagement = puzzle3d_engagement(&brush_scene, &Puzzle3dLabels::NATIVE_EN);
         assert!(brush_engagement.control.is_none() && brush_engagement.controls.is_none(), "brush engagement HUD must no longer carry the relocated control");
         // 🖌️ Positive case: while already in the brush utility, opening a vortex's suggestions
         // selects it and drives precompute so real candidates exist — the brush Utility Options
@@ -7399,7 +7004,7 @@ mod tests {
         // 🧰️ select/brush/fill switching lives only on the framework utility bar (declared via `.utility` +
         // `.window_kind_utilities`); the engagement HUD must not duplicate it as options.
         let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
-        let engagement = puzzle3d_engagement(&scene, &PUZZLE3D_LABELS_NATIVE_EN);
+        let engagement = puzzle3d_engagement(&scene, &Puzzle3dLabels::NATIVE_EN);
         assert!(engagement.options.is_none(), "the puzzle3d engagement must not re-expose utility switching as options");
     }
 
@@ -7698,7 +7303,7 @@ mod tests {
     #[test]
     fn transform_engagement_does_not_block_background_deselect() {
         let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "transform".into() };
-        let engagement = puzzle3d_engagement(&scene, &PUZZLE3D_LABELS_NATIVE_EN);
+        let engagement = puzzle3d_engagement(&scene, &Puzzle3dLabels::NATIVE_EN);
         assert_eq!(engagement.session_active, Some(false));
     }
 

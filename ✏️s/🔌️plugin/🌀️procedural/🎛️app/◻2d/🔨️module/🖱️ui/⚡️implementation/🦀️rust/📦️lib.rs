@@ -14,7 +14,7 @@ use procedural_2d_op::{procedural2d_fixture_operations, Procedural2dConfigOperat
 use procedural_2d_protocol::Procedural2dCommand;
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
-    ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabelsOverlayExt, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabelsOverlayExt, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, ui_declarative_sections_to_tree,
@@ -716,6 +716,13 @@ impl DocumentApp for Procedural2dPlayApp {
             .example_labels(semio_framework_plugin::localized_label_map(is_de, &[("default", "Default", "Standard")]))
     }
 
+    /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level (the most frequent
+    /// verbs on a procedural-2d canvas); the display-mode toggle, generation authoring, and generation
+    /// selection each fold into their own taxonomy group; the delete-selection item stays a direct
+    /// destructive item last — `organize_context_menu` (applied automatically at the
+    /// `VcsDocumentApp::context_menu` funnel) sorts the groups into `RIBBON_PARENT_CATEGORIES` order
+    /// and inserts the pre-destructive separator itself, so this emitter needs no separator/ordering
+    /// logic of its own.
     fn context_menu(
         &self,
         request: &semio_framework_plugin::ContextMenuRequest,
@@ -729,7 +736,13 @@ impl DocumentApp for Procedural2dPlayApp {
         let is_de = is_de_locale(cfg.projection);
         let selected = cfg.projection.selected_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
-        let mut menu = Menu::of(registry);
+        let mut menu = Menu::of(registry)
+            .action("addWidget")
+            .action("reorganize")
+            .action("generate")
+            .group("mode", |m| m.action("setShowMode"))
+            .group("create", |m| m.action("addGeneration"))
+            .group("methods", |m| m.action("selectGeneration"));
         if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
@@ -866,13 +879,14 @@ pub fn create_procedural2d_app() -> App {
                 PROCEDURAL2D_PLAY_BODY_INSPECTION,
             )
             // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
-            .operation("nodeGraphEdit", "Edit Graph")
+            // 🗂️ Referenced by `Procedural2dPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
+            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", "Edit Graph", ActionKind::Operation).with_category("selection"))
             .operation("moveMediaNode", "Move Node")
-            .operation("addWidget", "Add Widget")
+            .action_with(ActionDefinition::new_catalog("addWidget", "Add Widget", ActionKind::Operation).with_category("create"))
             .operation("removeWidget", "Remove Widget")
             .operation("connectMediaPorts", "Connect Ports")
-            .operation("reorganize", "Reorganize")
-            .operation("addGeneration", "Add Generation")
+            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("addGeneration", "Add Generation", ActionKind::Operation).with_category("create"))
             .operation("removeGeneration", "Remove Generation")
             .operation("renameGeneration", "Rename Generation")
             .operation("updateGenerationValues", "Update Generation Values")
@@ -882,14 +896,15 @@ pub fn create_procedural2d_app() -> App {
             .view_action("selectNode", "Select Node")
             .view_action("nodeGraphSelect", "Node Graph Select")
             .view_action("nodeGraphHover", "Node Graph Hover")
-            .view_action("setShowMode", "Set Show Mode")
-            .view_action("generate", "Generate")
+            // 🗂️ Referenced by `Procedural2dPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
+            .action_with(ActionDefinition::new_catalog("setShowMode", "Set Show Mode", ActionKind::View).with_category("mode"))
+            .action_with(ActionDefinition::new_catalog("generate", "Generate", ActionKind::View).with_category("actions"))
             .view_action("setEvalOutputs", "Set Eval Outputs")
             .view_action("canvasPointerDown", "Canvas Pointer Down")
             .view_action("canvasPointerMove", "Canvas Pointer Move")
             .view_action("canvasPointerUp", "Canvas Pointer Up")
             .view_action("canvasWheel", "Canvas Wheel")
-            .view_action("selectGeneration", "Select Generation")
+            .action_with(ActionDefinition::new_catalog("selectGeneration", "Select Generation", ActionKind::View).with_category("methods"))
             // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", "Kind", vec![
@@ -1149,6 +1164,24 @@ mod tests {
         let inspector_json = serde_json::to_string(&inspector).unwrap();
         assert!(inspector_json.contains("Elemente:"));
     }
+
+    //#region 🔖️ContextMenuTests
+    #[test]
+    fn context_menu_stays_within_disclosure_budget_with_destructive_last() {
+        let mut app = new_app_with_registry();
+        app.dispatch_typed(Procedural2dCommand::SetSelection { ids: vec!["rect".into()] }, &meta("local")).expect("select");
+        let request = semio_framework_plugin::ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+            surface: None,
+            window_instance_id: None,
+            point: None,
+        };
+        let items = app.context_menu(&request);
+        assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
+        assert_eq!(items.last().map(|item| item.id.as_str()), Some("delete-selection"), "the destructive delete row must be last");
+        assert_eq!(items.last().and_then(|item| item.destructive), Some(true));
+    }
+    //#endregion 🔖️ContextMenuTests
 
     //#region 🔖️PortTests
     #[test]

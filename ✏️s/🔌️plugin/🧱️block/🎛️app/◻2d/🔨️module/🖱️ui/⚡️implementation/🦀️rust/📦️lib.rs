@@ -11,8 +11,8 @@ use block_2d_op::{Block2dConfigOperation, Block2dOperation};
 use block_2d_protocol::Block2dCommand;
 use block_shared::BlockCompatibilityRule;
 use semio_framework_plugin::{
-    localized_label_map, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiFieldNode, UiInspectorFieldGroup,
+    tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App,
+    AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup,
     UiInputNode, UiNode, UiPresence, UiTreeItemNode,
 };
 use serde_json::{json, Value};
@@ -32,49 +32,36 @@ const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
-fn is_de_locale(cfg: &Block2dConfig) -> bool {
-    cfg.locale.starts_with("de")
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
+/// `semio_framework_plugin::resolve_labels` — `Block2dConfig` carries no terminology axis, so this
+/// app is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag, lenient-parsed the same way
+/// `detectShellLocale` does on the TS side — see `home_ui`'s identical pair.
+fn block2d_locale(cfg: &Block2dConfig) -> Locale {
+    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &Block2dConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn resolve_labels<L: AppLabels>(cfg: &Block2dConfig) -> &'static L {
+    L::labels(block2d_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
 //#region 🔖️Terminology
 semio_framework_plugin::app_labels! {
-    /// 🗣️ Complete UI label set for the block-2d app.
+    /// 🗣️ Complete UI label set for the block-2d app; one field per label makes every locale×terminology combination compile-checked.
     struct Block2dLabels {
-        window_board: &'static str = en: "Node Kind", de: "Knotenart";
-        name: &'static str = en: "Name", de: "Name";
-        label: &'static str = en: "Label", de: "Bezeichnung";
-        variant: &'static str = en: "Variant", de: "Variante";
-        description: &'static str = en: "Description", de: "Beschreibung";
-        handle_kinds: &'static str = en: "Handle Kinds", de: "Griffarten";
-        handles: &'static str = en: "Handles", de: "Griffe";
-        no_handle_kinds: &'static str = en: "(no handle kinds)", de: "(keine Griffarten)";
-        no_handles: &'static str = en: "(no handles)", de: "(keine Griffe)";
-        summary: &'static str = en: "Node kind", de: "Knotenart";
+        window_board: native_en "Node Kind", native_de "Knotenart", reuse_en "Node Kind", reuse_de "Knotenart";
+        name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        variant: native_en "Variant", native_de "Variante", reuse_en "Variant", reuse_de "Variante";
+        description: native_en "Description", native_de "Beschreibung", reuse_en "Description", reuse_de "Beschreibung";
+        handle_kinds: native_en "Handle Kinds", native_de "Griffarten", reuse_en "Handle Kinds", reuse_de "Griffarten";
+        handles: native_en "Handles", native_de "Griffe", reuse_en "Handles", reuse_de "Griffe";
+        no_handle_kinds: native_en "(no handle kinds)", native_de "(keine Griffarten)", reuse_en "(no handle kinds)", reuse_de "(keine Griffarten)";
+        no_handles: native_en "(no handles)", native_de "(keine Griffe)", reuse_en "(no handles)", reuse_de "(keine Griffe)";
+        summary: native_en "Node kind", native_de "Knotenart", reuse_en "Node kind", reuse_de "Knotenart";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-fn block2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("patchNodeKind", "Patch Node Kind", "Knotenart bearbeiten"),
-        ("addHandleKind", "Add Handle Kind", "Griffart hinzufügen"),
-        ("removeHandleKind", "Remove Handle Kind", "Griffart entfernen"),
-        ("addHandle", "Add Handle", "Griff hinzufügen"),
-        ("removeHandle", "Remove Handle", "Griff entfernen"),
-        ("edit", "Edit", "Bearbeiten"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️DocumentHelpers
 fn block2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -91,7 +78,7 @@ fn build_document_tree(definition: &Block2dDefinition, selected: &[String], labe
         .map(|kind| {
             UiTreeItemNode {
                 icon_id: Some("circle".into()),
-                ..tree_item_with_action(builder.item_id("handle-kind", &kind.id), kind.label.clone(), Some(kind.color.clone()), block2d_action("setSelection", None))
+                ..tree_item_with_action(builder.item_id("handle-kind", &kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()), block2d_action("setSelection", None))
             }
         })
         .collect();
@@ -101,7 +88,7 @@ fn build_document_tree(definition: &Block2dDefinition, selected: &[String], labe
         .map(|handle| {
             UiTreeItemNode {
                 icon_id: Some("circle-dot".into()),
-                ..tree_item_with_action(builder.item_id("handle", &handle.id), handle.handle_kind.clone(), Some(format!("{:.2}", handle.angle)), block2d_action("setSelection", None))
+                ..tree_item_with_action(builder.item_id("handle", &handle.id), Label::data(handle.handle_kind.clone()), Some(format!("{:.2}", handle.angle)), block2d_action("setSelection", None))
             }
         })
         .collect();
@@ -114,7 +101,7 @@ fn build_document_tree(definition: &Block2dDefinition, selected: &[String], labe
         .build()
 }
 
-fn text_field(id: &str, label: &str, value: &str, field: &str) -> UiNode {
+fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> UiNode {
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
         id: id.into(),
@@ -158,8 +145,8 @@ fn build_inspection_tree(definition: &Block2dDefinition, labels: &Block2dLabels)
 
 fn render_board(definition: &Block2dDefinition, labels: &Block2dLabels) -> UiNode {
     ui_stack_vertical(vec![
-        ui_text(format!("{}: {}", labels.summary, if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label })),
-        ui_text(format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds, definition.handles.len(), labels.handles)),
+        ui_text(Label::data(format!("{}: {}", labels.summary.as_str(), if definition.node_kind.label.is_empty() { "—" } else { &definition.node_kind.label }))),
+        ui_text(Label::data(format!("{} {}, {} {}", definition.handle_kinds.len(), labels.handle_kinds.as_str(), definition.handles.len(), labels.handles.as_str()))),
     ])
 }
 //#endregion 🔖️Panels
@@ -277,14 +264,8 @@ impl DocumentApp for Block2dPlayApp {
             BLOCK2D_BODY_BOARD => render_board(doc.projection, labels),
             BLOCK2D_BODY_DOCUMENT | BLOCK2D_BODY_KINDS => build_document_tree(doc.projection, &cfg.projection.selected_ids, labels),
             BLOCK2D_BODY_INSPECTOR => build_inspection_tree(doc.projection, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, Block2dConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<Block2dLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default().window_kind_label(BLOCK2D_WINDOW_BOARD, labels.window_board).action_labels(block2d_action_labels(is_de))
     }
 
     /// 🌉️ `puzzle2d_manifest_fragment`'s first real caller — wraps the block-2d document's
@@ -317,7 +298,7 @@ impl DocumentApp for Block2dPlayApp {
 //#region 🔖️Manifest
 pub fn create_block2d_app() -> App {
     App::from_builder(
-        App::builder(BLOCK2D_PLAY_APP_ID, "Block 2D")
+        App::builder(BLOCK2D_PLAY_APP_ID, LocalizedLabel::native("Block 2D", "Block 2D"))
             .document(["semio", "block", "2d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.block".into(),
@@ -346,25 +327,25 @@ pub fn create_block2d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("layout-grid")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(BLOCK2D_WINDOW_BOARD, "Node Kind", BLOCK2D_BODY_BOARD, SurfaceKind::Board2d, "layout-grid")
-            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, BLOCK2D_BODY_DOCUMENT)
-            .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, BLOCK2D_BODY_INSPECTOR)
-            .operation("patchNodeKind", "Patch Node Kind")
-            .operation("addHandleKind", "Add Handle Kind")
-            .operation("removeHandleKind", "Remove Handle Kind")
-            .operation("addHandle", "Add Handle")
-            .operation("removeHandle", "Remove Handle")
-            .operation("addCompatibilityRule", "Add Compatibility Rule")
-            .operation("removeCompatibilityRule", "Remove Compatibility Rule")
-            .operation("setActiveExample", "Set Active Example")
-            .operation("edit", "Edit")
-            .view_action("setSelection", "Set Selection")
+            .window_kind(BLOCK2D_WINDOW_BOARD, LocalizedLabel::native("Node Kind", "Knotenart"), BLOCK2D_BODY_BOARD, SurfaceKind::Board2d, "layout-grid")
+            .panel_tab("framework.panel.document", LocalizedLabel::native("Document", "Dokument"), PanelGroup::Workbench, BLOCK2D_BODY_DOCUMENT)
+            .panel_tab("framework.panel.inspection", LocalizedLabel::native("Inspection", "Inspektion"), PanelGroup::Details, BLOCK2D_BODY_INSPECTOR)
+            .operation("patchNodeKind", LocalizedLabel::native("Patch Node Kind", "Knotenart bearbeiten"))
+            .operation("addHandleKind", LocalizedLabel::native("Add Handle Kind", "Griffart hinzufügen"))
+            .operation("removeHandleKind", LocalizedLabel::native("Remove Handle Kind", "Griffart entfernen"))
+            .operation("addHandle", LocalizedLabel::native("Add Handle", "Griff hinzufügen"))
+            .operation("removeHandle", LocalizedLabel::native("Remove Handle", "Griff entfernen"))
+            .operation("addCompatibilityRule", LocalizedLabel::native("Add Compatibility Rule", "Kompatibilitätsregel hinzufügen"))
+            .operation("removeCompatibilityRule", LocalizedLabel::native("Remove Compatibility Rule", "Kompatibilitätsregel entfernen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .io(block_2d_engine::block2d_io()),
     )
-    .example(BLOCK2D_EXAMPLE_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
-    .example(BLOCK2D_EXAMPLE_RIGHT, "Hexagonal Cut Concrete Forest Right", serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
+    .example(BLOCK2D_EXAMPLE_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"), serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
+    .example(BLOCK2D_EXAMPLE_RIGHT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Right", "Hexagonal Cut Concrete Forest Right"), serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
     .workflow("block2d", "Block 2D", "model")
 }
 //#endregion 🔖️Manifest

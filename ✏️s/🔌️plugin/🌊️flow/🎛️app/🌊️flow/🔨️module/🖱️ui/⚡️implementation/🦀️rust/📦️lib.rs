@@ -295,6 +295,11 @@ fn flow_context_menu_items(
     let primary = hits.first();
     let hit_node = primary.filter(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
 
+    // 🗂️ Grouped disclosure: `add-node`/`selectAll`/`focusSelection`/`clearSelection` stay top-level
+    // (the 3-5 most frequent verbs); `reorganize`/`replaceImage`/`toggle-preview` fold into taxonomy
+    // groups; `delete-selection` stays a direct destructive item last — `organize_context_menu`
+    // (applied automatically at the `VcsDocumentApp::context_menu` funnel) sorts the groups into
+    // `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive separator itself.
     let mut menu = Menu::of(registry);
     if hits.is_empty() {
         menu = menu
@@ -306,31 +311,34 @@ fn flow_context_menu_items(
                 ..Default::default()
             })
             .action("selectAll")
-            .action("reorganize");
+            .group("transform", |m| m.action("reorganize"));
     }
     if let Some(node_id) = hit_node {
         if is_image {
-            menu = menu.item(ContextMenuItemSpec {
-                id: "replace-image".into(),
-                label: Some(labels.replace_image.into()),
-                icon: Some("image".into()),
-                action: Some("replaceImage".into()),
-                args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": node_id }))),
-                ..Default::default()
+            menu = menu.group("actions", |m| {
+                m.item(ContextMenuItemSpec {
+                    id: "replace-image".into(),
+                    label: Some(labels.replace_image.into()),
+                    icon: Some("image".into()),
+                    action: Some("replaceImage".into()),
+                    args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": node_id }))),
+                    ..Default::default()
+                })
             });
         }
     }
     if has_selection {
-        menu = menu.separator().item(ContextMenuItemSpec {
-            id: "toggle-preview".into(),
-            label: Some(if all_preview_off { labels.show_preview.into() } else { labels.hide_preview.into() }),
-            icon: Some(if all_preview_off { "eye".into() } else { "eye-off".into() }),
-            checked: Some(!all_preview_off),
-            action: Some("setPreviewOff".into()),
-            args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "ids": nodes, "value": !all_preview_off }))),
-            ..Default::default()
+        menu = menu.action("focusSelection").action("clearSelection").group("view", |m| {
+            m.item(ContextMenuItemSpec {
+                id: "toggle-preview".into(),
+                label: Some(if all_preview_off { labels.show_preview.into() } else { labels.hide_preview.into() }),
+                icon: Some(if all_preview_off { "eye".into() } else { "eye-off".into() }),
+                checked: Some(!all_preview_off),
+                action: Some("setPreviewOff".into()),
+                args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "ids": nodes, "value": !all_preview_off }))),
+                ..Default::default()
+            })
         });
-        menu = menu.action("focusSelection").action("clearSelection");
         let phrase = selection_count_phrase(
             is_de,
             &[
@@ -339,7 +347,7 @@ fn flow_context_menu_items(
             ],
         );
         if !phrase.is_empty() {
-            menu = menu.separator().item(ContextMenuItemSpec {
+            menu = menu.item(ContextMenuItemSpec {
                 id: "delete-selection".into(),
                 label: Some(format!("{} ({phrase})", labels.delete_selection)),
                 icon: Some("trash".into()),
@@ -1289,11 +1297,12 @@ pub fn create_flow_app() -> App {
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
             .operation("addWidget", "Add Widget")
             .operation("removeWidget", "Remove Widget")
-            .operation("deleteSelection", "Delete Selection")
+            // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
+            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
             .operation("disconnect", "Disconnect")
             .operation("connectMediaPorts", "Connect Ports")
             .operation("moveMediaNode", "Move Node")
-            .operation("reorganize", "Reorganize")
+            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
             .operation("patchFlowWidgets", "Patch Widgets")
             .operation("renameFlowWidget", "Rename Widget")
             .operation("nodeGraphEdit", "Node Graph Edit")
@@ -1302,8 +1311,9 @@ pub fn create_flow_app() -> App {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("runExtensionAction", "Run Extension Action", ActionKind::Operation) })
             // 👁️ Ephemeral view/config actions — mutate runtime, emit no operations.
             .view_action("evaluate", "Evaluate")
-            .view_action("selectAll", "Select All")
-            .view_action("focusSelection", "Zoom to Selection")
+            // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
+            .action_with(ActionDefinition::new_catalog("selectAll", "Select All", ActionKind::View).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("focusSelection", "Zoom to Selection", ActionKind::View).with_category("view"))
             .action_with(flow_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(flow_internal_action("selectNode", "Select Node", ActionKind::View))
             .action_with(flow_internal_action("nodeGraphSelect", "Node Graph Select", ActionKind::View))
@@ -1315,11 +1325,11 @@ pub fn create_flow_app() -> App {
             .action_with(flow_internal_action("setGridVisible", "Set Grid Visible", ActionKind::View))
             .action_with(flow_internal_action("setGridSnapEnabled", "Set Grid Snap Enabled", ActionKind::View))
             .action_with(flow_internal_action("setGridFactor", "Set Grid Factor", ActionKind::View))
-            .action_with(flow_internal_action("clearSelection", "Clear Selection", ActionKind::View))
+            .action_with(flow_internal_action("clearSelection", "Clear Selection", ActionKind::View).with_category("selection"))
             .action_with(flow_internal_action("contextMenuAt", "Context Menu At", ActionKind::View))
-            .action_with(flow_internal_action("setPreviewOff", "Set Preview Off", ActionKind::View))
-            .action_with(flow_internal_action("openSpotlight", "Open Spotlight", ActionKind::View))
-            .action_with(flow_internal_action("replaceImage", "Replace Image", ActionKind::View))
+            .action_with(flow_internal_action("setPreviewOff", "Set Preview Off", ActionKind::View).with_category("view"))
+            .action_with(flow_internal_action("openSpotlight", "Open Spotlight", ActionKind::View).with_category("create"))
+            .action_with(flow_internal_action("replaceImage", "Replace Image", ActionKind::View).with_category("actions"))
             .action_with(flow_internal_action("setCatalogueSections", "Set Catalogue Sections", ActionKind::View))
             .action_with(flow_internal_action("toggleExtension", "Toggle Extension", ActionKind::View))
             .action_with(flow_internal_action("addGeneration", "Add Generation", ActionKind::View))
@@ -1652,6 +1662,43 @@ mod tests {
         eprintln!("[DEBUG] edge selection context menu: {menu}");
         assert!(menu.contains(r#""id":"delete-selection""#), "edge selection must expose delete: {menu}");
         assert!(menu.contains("1 edge") || menu.contains("1 Kante"), "edge count phrase missing: {menu}");
+    }
+
+    #[test]
+    fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+        let mut app = flow_app_with_registry();
+        app.dispatch_typed(
+            FlowCommand::SetSelection {
+                ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()],
+                edge_ids: (1..=13).map(|i| format!("e{i}")).collect(),
+                handle_ids: Vec::new(),
+            },
+            &meta("local"),
+        ).expect("setSelection");
+        let request = ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+            surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+                surface_id: "main".into(),
+                kind: "nodeGraph".into(),
+                hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
+                selection: vec![
+                    semio_framework_plugin::ContextMenuSelectionGroup {
+                        domain: "node".into(),
+                        ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()],
+                    },
+                    semio_framework_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: (1..=13).map(|i| format!("e{i}")).collect() },
+                ],
+                text: None,
+            }),
+            window_instance_id: None,
+            point: None,
+        };
+        let menu = app.context_menu(&request);
+        assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
+        let last = menu.last().expect("grouped disclosure menu should not be empty");
+        let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");
+        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).map(|child| child.destructive == Some(true)).unwrap_or(false);
+        assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must be last: {menu:?}");
     }
 
     #[test]

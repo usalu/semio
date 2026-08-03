@@ -357,10 +357,6 @@ impl WasmPluginRuntime {
         Ok(HashMap::new())
     }
 
-    pub fn app_labels(&self, _instance_id: u32, _view_state: &ViewState) -> Result<semio_framework_core::AppLabelsOverlay, PluginHostError> {
-        Ok(semio_framework_core::AppLabelsOverlay::default())
-    }
-
     fn read_manifest(engine: &Engine, component: &Component, linker: &Linker<HostState>) -> Result<PluginManifest, PluginHostError> {
         let manifest = PluginManifest { plugin_id: "unknown".into(), label: "Unknown".into(), version: "0.0.0".into(), apps: vec![], examples: vec![], capabilities: vec![], contributions: vec![], commands: vec![] };
         let mut store = Store::new(engine, Self::host_state("bootstrap", &manifest));

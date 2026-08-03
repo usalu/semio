@@ -557,7 +557,7 @@ pub mod generation_forms {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Map, Value};
     use ui_wgpu::{
-        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
+        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
         UiTreeSectionNode,
     };
 
@@ -761,20 +761,23 @@ pub mod generation_forms {
         let items: Vec<UiTreeItemNode> = generations
             .iter()
             .map(|generation| {
-                let mut actions = vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some("Remove".into()), action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))), reveal_on_hover: Some(true),
+                // 🚧️ Chrome literals ("Remove"/"Rename"/etc below) — genuinely static app copy, not yet
+                // routed through app_labels! (this crate predates the two-axis macro); flagged as a
+                // follow-up rather than fixed in this pass. `Label::data` unblocks compilation.
+                let mut actions = vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(Label::data("Remove")), action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))), reveal_on_hover: Some(true),
         }];
                 actions.insert(
                     0,
                     UiTreeItemAction {
                         icon_id: "pencil".into(),
-                        label: Some("Rename".into()),
+                        label: Some(Label::data("Rename")),
                         action: generation_action(controller_id, "renameGeneration", Some(json!({ "id": generation.id, "name": format!("{} copy", generation.name) }))),
                         reveal_on_hover: Some(true),
                     },
                 );
                 UiTreeItemNode {
                     id: format!("{surface_prefix}.generation.{}", generation.id),
-                    label: generation.name.clone(),
+                    label: Label::data(generation.name.clone()),
                     description: Some(format!("{} values", generation.values.len())),
                     icon_id: Some("layers".into()),
                     presence: UiPresence::selected(selected_id == Some(generation.id.as_str())),
@@ -794,12 +797,12 @@ pub mod generation_forms {
             .collect();
         let mut sections = vec![UiTreeSectionNode {
             id: format!("{surface_prefix}.generations"),
-            label: Some("Generations".into()),
+            label: Some(Label::data("Generations")),
             default_open: Some(true),
             items: if items.is_empty() {
                 vec![UiTreeItemNode {
                     id: format!("{surface_prefix}.generations.empty"),
-                    label: "(no generations)".into(),
+                    label: Label::data("(no generations)"),
                     description: None,
                     icon_id: None,
                     presence: UiPresence::default(),
@@ -822,11 +825,11 @@ pub mod generation_forms {
         }];
         sections.push(UiTreeSectionNode {
             id: format!("{surface_prefix}.actions"),
-            label: Some("Actions".into()),
+            label: Some(Label::data("Actions")),
             default_open: Some(true),
             items: vec![UiTreeItemNode {
                 id: format!("{surface_prefix}.add-generation"),
-                label: "Add Generation".into(),
+                label: Label::data("Add Generation"),
                 description: None,
                 icon_id: Some("plus".into()),
                 presence: UiPresence::default(),
@@ -876,7 +879,7 @@ pub mod generation_forms {
                 id: format!("{field_id}.input"),
                 input_kind: if question.kind == "longText" { "textarea".into() } else { "text".into() },
                 value: value.as_str().unwrap_or_default().to_string(),
-                placeholder: question.placeholder.clone(),
+                placeholder: question.placeholder.clone().map(Label::data),
                 commit: None,
                 on_change: on_change(),
                 min: None,
@@ -890,7 +893,7 @@ pub mod generation_forms {
                 id: format!("{field_id}.input"),
                 input_kind: "number".into(),
                 value: value.as_f64().map(|number| number.to_string()).unwrap_or_default(),
-                placeholder: question.placeholder.clone(),
+                placeholder: question.placeholder.clone().map(Label::data),
                 commit: None,
                 on_change: on_change(),
                 min: None,
@@ -911,13 +914,13 @@ pub mod generation_forms {
                 presence: UiPresence::default(),
                 menu: None,
             }),
-            "boolean" => UiControlNode::Toggle(UiToggleNode { id: format!("{field_id}.toggle"), icon_id: "toggle-left".into(), text: Some(question.label.clone()), on_change: on_change(), presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
+            "boolean" => UiControlNode::Toggle(UiToggleNode { id: format!("{field_id}.toggle"), icon_id: "toggle-left".into(), text: Some(Label::data(question.label.clone())), on_change: on_change(), presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
         menu: None,
     }),
             "single" => {
-                let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: option.label.clone(),
+                let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.clone()),
         }).collect()).unwrap_or_default();
-                UiControlNode::Select(UiSelectNode { id: format!("{field_id}.select"), value: value.as_str().unwrap_or_default().to_string(), items, placeholder: question.placeholder.clone(), on_change: on_change(), presence: UiPresence::default(),
+                UiControlNode::Select(UiSelectNode { id: format!("{field_id}.select"), value: value.as_str().unwrap_or_default().to_string(), items, placeholder: question.placeholder.clone().map(Label::data), on_change: on_change(), presence: UiPresence::default(),
         menu: None,
     })
             }
@@ -935,7 +938,7 @@ pub mod generation_forms {
                         let label = labels.get(index).cloned().unwrap_or_else(|| format!("Field {}", index + 1));
                         UiNode::Field(UiFieldNode {
                             id: format!("{field_id}.vector.{index}"),
-                            label,
+                            label: Label::data(label),
                             child: Box::new(UiNode::Input(UiInputNode {
                                 id: format!("{field_id}.vector.{index}.input"),
                                 input_kind: "number".into(),
@@ -968,13 +971,13 @@ pub mod generation_forms {
                     .collect();
                 return Some(ui_stack_vertical(children));
             }
-            "note" => return Some(ui_text(question.text.clone().unwrap_or_default())),
-            "image" => return Some(ui_text(question.src.clone().unwrap_or_else(|| "(no image)".into()))),
+            "note" => return Some(ui_text(Label::data(question.text.clone().unwrap_or_default()))),
+            "image" => return Some(ui_text(Label::data(question.src.clone().unwrap_or_else(|| "(no image)".into())))),
             _ => UiControlNode::Input(UiInputNode {
                 id: format!("{field_id}.input"),
                 input_kind: "text".into(),
                 value: value.to_string(),
-                placeholder: question.placeholder.clone(),
+                placeholder: question.placeholder.clone().map(Label::data),
                 commit: None,
                 on_change: on_change(),
                 min: None,
@@ -985,7 +988,7 @@ pub mod generation_forms {
                 menu: None,
             }),
         };
-        Some(UiNode::Field(UiFieldNode { id: field_id, label: question.label.clone(), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default(),
+        Some(UiNode::Field(UiFieldNode { id: field_id, label: Label::data(question.label.clone()), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default(),
         menu: None,
     }))
     }
@@ -994,7 +997,7 @@ pub mod generation_forms {
         let mut children = Vec::new();
         for step in &form_spec.steps {
             if !step.blocks.is_empty() {
-                children.push(ui_text(step.title.clone()));
+                children.push(ui_text(Label::data(step.title.clone())));
             }
             for question in &step.blocks {
                 if let Some(field) = render_question_field(question, values, controller_id, patch_action, generation_id) {
@@ -1003,7 +1006,7 @@ pub mod generation_forms {
             }
         }
         if children.is_empty() {
-            return ui_text("No input widgets to generate from.");
+            return ui_text(Label::data("No input widgets to generate from."));
         }
         ui_stack_vertical(children)
     }

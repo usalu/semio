@@ -13,9 +13,9 @@ use semio_framework_os::{
     OS_SPACE_BACKBONE_URI_PREFIX, VcsError,
 };
 use semio_framework_plugin::{
-    app_labels, build_virtual_file_system_scene, create_tab_stack_layout, localized_label_map,
-    App, AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit,
-    HostEffect, LocaleLabels, SurfaceKind, UiNode, VirtualFileSystemScene,
+    app_labels, build_virtual_file_system_scene, create_tab_stack_layout,
+    App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit,
+    HostEffect, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, VirtualFileSystemScene,
 };
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
@@ -32,14 +32,16 @@ const OS_BOOT_STUDIO_ID: &str = "default";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — see `shooting_ui`'s identical pair.
-fn is_de_locale(cfg: &HomeConfig) -> bool {
-    cfg.locale.starts_with("de")
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
+/// `semio_framework_plugin::resolve_labels` — `HomeConfig` carries no terminology axis, so this app
+/// is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag (e.g. "en-US"), lenient-parsed the
+/// same way `detectShellLocale` does on the TS side — see `shooting_ui`'s identical pair.
+fn home_locale(cfg: &HomeConfig) -> Locale {
+    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &HomeConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn resolve_labels<L: AppLabels>(cfg: &HomeConfig) -> &'static L {
+    L::labels(home_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -267,31 +269,14 @@ fn home_vfs_rows() -> Vec<Value> {
 
 //#region 🔖️Terminology
 app_labels! {
-    /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale combination compile-checked.
+    /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale×terminology combination compile-checked.
     struct SHomeLabels {
-        vfs_empty_message: &'static str = en: "No studios yet. Create one from the navbar.", de: "Noch keine Studios vorhanden. Erstelle eines über die Navigationsleiste.";
-        window_main: &'static str = en: "Studios", de: "Studios";
+        vfs_empty_message: native_en "No studios yet. Create one from the navbar.", native_de "Noch keine Studios vorhanden. Erstelle eines über die Navigationsleiste.",
+            reuse_en "No studios yet. Create one from the navbar.", reuse_de "Noch keine Studios vorhanden. Erstelle eines über die Navigationsleiste.";
+        window_main: native_en "Studios", native_de "Studios", reuse_en "Studios", reuse_de "Studios";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every shell/view action declared in `create_home_app`'s static
-/// manifest — the manifest itself has no locale parameter, so this overlay is how the command palette
-/// and Actions rail get a translated label without threading locale through the builder.
-fn s_home_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("createStudio", "Create Studio", "Studio erstellen"),
-        ("bindSpaceFile", "Bind Studio File", "Studio-Datei verknüpfen"),
-        ("importSpace", "Import Studio", "Studio importieren"),
-        ("openSpace", "Open Studio", "Studio öffnen"),
-        ("navigateVirtualFileSystemNode", "Navigate File System Node", "Dateisystemknoten navigieren"),
-        ("deleteVirtualFileSystemNode", "Delete File System Node", "Dateisystemknoten löschen"),
-        ("goHome", "Go Home", "Zur Startseite"),
-        ("setActivePanelTab", "Set Active Panel Tab", "Aktiven Panel-Tab festlegen"),
-    ])
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Render
 fn render_home_vfs(labels: &SHomeLabels) -> UiNode {
@@ -303,7 +288,7 @@ fn render_home_vfs(labels: &SHomeLabels) -> UiNode {
             rows_json: serde_json::to_string(&home_vfs_rows()).unwrap_or_else(|_| "[]".into()),
             selected_row_ids_json: None,
             hovered_row_id: None,
-            empty_message: Some(labels.vfs_empty_message.into()),
+            empty_message: Some(labels.vfs_empty_message.as_str().to_string()),
             drag_drop_enabled: None,
         },
         Some(S_HOME_WINDOW.into()),
@@ -435,16 +420,8 @@ impl DocumentApp for HomeApp {
         let labels = resolve_labels::<SHomeLabels>(cfg.projection);
         match body_key {
             S_HOME_BODY => render_home_vfs(labels),
-            _ => semio_framework_plugin::ui_text(format!("Unknown body: {body_key}")),
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, HomeConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<SHomeLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(S_HOME_WINDOW, labels.window_main)
-            .action_labels(s_home_action_labels(is_de))
     }
 }
 //#endregion 🔖️HomeApp
@@ -452,23 +429,23 @@ impl DocumentApp for HomeApp {
 //#region 🔖️HomeManifest
 pub fn create_home_app() -> App {
     let mut app = App::from_builder(
-        App::builder(S_HOME_APP_ID, "Home").document(["semio", "s", "home"])
+        App::builder(S_HOME_APP_ID, LocalizedLabel::native("Home", "Startseite")).document(["semio", "s", "home"])
             .icon_id("home")
-            .mode("explore", "Explore", "focus")
+            .mode("explore", LocalizedLabel::native("Explore", "Erkunden"), "focus")
             .default_mode_id("explore")
-            .window_kind(S_HOME_WINDOW, "Studios", S_HOME_BODY, SurfaceKind::Canvas2d, "home")
+            .window_kind(S_HOME_WINDOW, LocalizedLabel::native("Studios", "Studios"), S_HOME_BODY, SurfaceKind::Canvas2d, "home")
             .default_layout(create_tab_stack_layout(
                 &[S_HOME_WINDOW.into()],
                 Some(&["Studios".into()]),
             ))
-            .operation("createStudio", "Create Studio")
-            .shell_action("bindSpaceFile", "Bind Studio File")
-            .operation("importSpace", "Import Studio")
-            .shell_action("openSpace", "Open Studio")
-            .shell_action("navigateVirtualFileSystemNode", "Navigate File System Node")
-            .operation("deleteVirtualFileSystemNode", "Delete File System Node")
-            .shell_action("goHome", "Go Home")
-            .view_action("setActivePanelTab", "Set Active Panel Tab")
+            .operation("createStudio", LocalizedLabel::native("Create Studio", "Studio erstellen"))
+            .shell_action("bindSpaceFile", LocalizedLabel::native("Bind Studio File", "Studio-Datei verknüpfen"))
+            .operation("importSpace", LocalizedLabel::native("Import Studio", "Studio importieren"))
+            .shell_action("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"))
+            .shell_action("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"))
+            .operation("deleteVirtualFileSystemNode", LocalizedLabel::native("Delete File System Node", "Dateisystemknoten löschen"))
+            .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"))
+            .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"))
             .keybinding("mod+n", "createStudio")
             .keybinding("mod+o", "importSpace"),
     );

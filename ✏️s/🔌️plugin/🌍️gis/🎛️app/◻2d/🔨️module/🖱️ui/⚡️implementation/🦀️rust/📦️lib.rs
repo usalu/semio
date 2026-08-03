@@ -14,7 +14,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     app_labels, build_tiled_map_scene, create_default_layout, localized_label_map, tree_item_with_action,
     MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
     ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ArtifactKindSpec, AppLabelsOverlay, AppLabelsOverlayExt,
-    ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, TiledMapScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
+    ActionDefinition, ActionKind, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, TiledMapScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
     UiToggleNode, UiTreeItemNode, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -718,74 +718,44 @@ fn render_canvas(document: &gis2d::GisMapDocument, cfg: &Gis2dConfig) -> UiNode 
 #[derive(Default)]
 pub struct Gis2dPlayApp;
 
-/// 🖱️ On-demand GIS tiled-map context menu from feature hit-test and selection.
+/// 🖱️ On-demand GIS tiled-map context menu from feature hit-test and selection — grouped
+/// disclosure via `Menu::of(registry)`; `organize_context_menu` (run automatically at the
+/// `VcsDocumentApp::context_menu` funnel) sorts the declared `.group(...)` rows into
+/// `RIBBON_PARENT_CATEGORIES` taxonomy order and inserts the pre-destructive separator itself.
 fn gis2d_context_menu_items(
+    registry: &semio_framework_plugin::AppActionRegistry,
     surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>,
     selected_ids: &[String],
-    is_de: bool,
 ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::ContextMenuItemSpec;
-    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, disabled: bool| ContextMenuItemSpec {
-        id: id.into(),
-        label: Some(label.into()),
-        icon: Some(icon.into()),
-        action: Some(action.into()),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-        disabled: disabled.then_some(true),
-        ..Default::default()
-    };
     let hits = surface.map(|s| s.hits.as_slice()).unwrap_or(&[]);
     let feature = hits.iter().find(|h| h.domain == "feature" || h.domain == "position" || h.domain == "route");
     if let Some(feature) = feature {
         let kind = if feature.domain == "route" { "route" } else { "position" };
         let selected = selected_ids.iter().any(|id| id == &feature.id);
-        let mut items = vec![item(
-            "tiled-map.ctx.select",
-            if is_de { "Auswählen" } else { "Select" },
-            "mouse-pointer",
-            "setFeatureSelection",
-            Some(json!({
+        return Menu::of(registry)
+            .action_args("setFeatureSelection", json!({
                 "positions": if kind == "position" { vec![&feature.id] } else { Vec::<&String>::new() },
                 "routes": if kind == "route" { vec![&feature.id] } else { Vec::<&String>::new() },
                 "mode": "default",
-            })),
-            false,
-        )];
-        if selected {
-            items.push(item(
-                "tiled-map.ctx.deselect",
-                if is_de { "Abwählen" } else { "Deselect" },
-                "square-dashed",
-                "deselect",
-                Some(json!({ "featureId": feature.id, "featureKind": kind })),
-                false,
-            ));
-        }
-        items.push(item(
-            "tiled-map.ctx.focus",
-            if is_de { "Fokussieren / Zoomen" } else { "Focus / Zoom" },
-            "crosshair",
-            "focusFeature",
-            Some(json!({ "featureId": feature.id, "featureKind": kind })),
-            false,
-        ));
-        if kind == "position" {
-            items.push(item(
-                "tiled-map.ctx.source",
-                if is_de { "Quelle öffnen" } else { "Open source" },
-                "external-link",
-                "openSource",
-                Some(json!({ "featureId": feature.id })),
-                false,
-            ));
-        }
-        return items;
+            }))
+            .action_args("focusFeature", json!({ "featureId": feature.id, "featureKind": kind }))
+            .when(selected, |m| {
+                m.group("selection", |m| m.action_args("deselect", json!({ "featureId": feature.id, "featureKind": kind })))
+            })
+            .when(kind == "position", |m| {
+                m.group("open", |m| m.action_args("openSource", json!({ "featureId": feature.id })))
+            })
+            .build();
     }
-    vec![
-        item("tiled-map.ctx.select-all", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false),
-        item("tiled-map.ctx.clear", if is_de { "Auswahl aufheben" } else { "Clear selection" }, "square-dashed", "clearSelection", None, selected_ids.is_empty()),
-        item("tiled-map.ctx.fit-world", if is_de { "Welt einpassen" } else { "Fit world" }, "maximize-2", "fitWorld", None, false),
-    ]
+    let mut items = Menu::of(registry)
+        .action("selectAll")
+        .action("fitWorld")
+        .destructive("clearSelection")
+        .build();
+    if let Some(clear) = items.iter_mut().find(|entry| entry.id == "clearSelection") {
+        clear.disabled = selected_ids.is_empty().then_some(true);
+    }
+    items
 }
 
 impl DocumentApp for Gis2dPlayApp {
@@ -1155,10 +1125,9 @@ impl DocumentApp for Gis2dPlayApp {
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &DocumentView<'_, gis2d::GisMapDocument>,
         cfg: &ConfigView<'_, Gis2dConfig>,
-        _registry: &semio_framework_plugin::AppActionRegistry,
+        registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let is_de = is_de_locale(cfg.projection);
-        gis2d_context_menu_items(request.surface.as_ref(), &cfg.projection.selected_ids, is_de)
+        gis2d_context_menu_items(registry, request.surface.as_ref(), &cfg.projection.selected_ids)
     }
 }
 
@@ -1266,22 +1235,22 @@ pub fn create_gis2d_app() -> App {
             // hover, layer visibility, stroke weights), never the document.
             .view_action("setSelection", "Set Selection")
             .view_action("toggleLayerVisibility", "Toggle Layer Visibility")
-            .view_action("fitWorld", "Fit World")
+            .action_with(ActionDefinition::new_catalog("fitWorld", "Fit World", ActionKind::View).with_category("view"))
             .view_action("setCamera", "Set Camera")
             .view_action("setRenderMode", "Set Render Mode")
             .view_action("setVectorStyle", "Set Vector Style")
             .view_action("setLodMode", "Set LOD Mode")
-            .view_action("setFeatureSelection", "Set Feature Selection")
+            .action_with(ActionDefinition::new_catalog("setFeatureSelection", "Set Feature Selection", ActionKind::View).with_category("selection"))
             .view_action("setHover", "Set Hover")
             .view_action("setSelectionMethod", "Set Selection Method")
             .view_action("setSelectionMode", "Set Selection Mode")
-            .view_action("clearSelection", "Clear Selection")
-            .view_action("selectAll", "Select All")
-            .view_action("deselect", "Deselect")
-            .view_action("focusFeature", "Focus Feature")
+            .action_with(ActionDefinition::new_catalog("clearSelection", "Clear Selection", ActionKind::View).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("selectAll", "Select All", ActionKind::View).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("deselect", "Deselect", ActionKind::View).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("focusFeature", "Focus Feature", ActionKind::View).with_category("view"))
             .view_action("setLayerStrokeScale", "Set Layer Stroke Scale")
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
-            .shell_action("openSource", "Open Source")
+            .action_with(ActionDefinition::new_catalog("openSource", "Open Source", ActionKind::Shell).with_category("open"))
             // 📝️ Argument schemas for the discrete-choice actions so the command palette can stage them
             // and the registry validates the vocabulary. The arg id matches the key each handler reads.
             .action_args("setActiveExample", vec![
@@ -1403,7 +1372,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionKind, PluginApp, ViewState, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, ActionKind, ContextMenuRequest, PluginApp, ViewState, VcsDocumentApp};
 
     fn new_app() -> VcsDocumentApp<Gis2dPlayApp> {
         testkit::new_app::<Gis2dPlayApp>()
@@ -1599,6 +1568,25 @@ mod tests {
         let ports = app.media_ports();
         assert!(ports.iter().any(|port| port.id == "features:in"));
         assert!(ports.iter().any(|port| port.id == "map:out"));
+    }
+
+    /// 🖱️ Grouped disclosure: the empty-canvas context menu (no feature under the pointer) stays
+    /// within the row budget and keeps the known destructive `clearSelection` last, matching the
+    /// canonical migration pattern (see also `flow`'s identical budget/destructive-last test).
+    #[test]
+    fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
+        let mut app = new_app_with_registry();
+        let request = ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None },
+            surface: None,
+            window_instance_id: None,
+            point: None,
+        };
+        let menu = app.context_menu(&request);
+        assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
+        let last = menu.last().expect("empty-canvas context menu should not be empty");
+        assert_eq!(last.id, "clearSelection", "known destructive clearSelection must be last: {menu:?}");
+        assert_eq!(last.destructive, Some(true), "clearSelection must be marked destructive: {menu:?}");
     }
 }
 //#endregion 🧪️Tests

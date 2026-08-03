@@ -87,6 +87,12 @@ impl LabelText {
     }
 }
 
+impl From<LabelText> for String {
+    fn from(text: LabelText) -> Self {
+        text.0.to_string()
+    }
+}
+
 /// 🗺️ Full locale×terminology matrix for a manifest label, resolved shell-side per active axes —
 /// the multilingual replacement for `AppLabelsOverlay`'s stringly-typed per-id maps. TS mirror is
 /// the hand-generated `LocalizedLabel` type in `framework/⚡️implementation/🟦️typescript/🤖️generated/🟦️ui-axes.ts`
@@ -6291,6 +6297,7 @@ pub mod reconcile {
 //! the always-ready rows once `WidgetState` grows an `open`-like field to gate *showing*/hit-testing
 //! them — no further reconcile-side change should be needed at that point.
 
+use crate::Label;
 use dsl::DslValue;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
@@ -6468,7 +6475,7 @@ fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
     UiNode::Button(UiButtonNode {
         id: None,
         icon_id: action.icon_id.clone(),
-        label: action.label.clone().unwrap_or_default(),
+        label: action.label.clone().unwrap_or_else(|| Label::data("")),
         action: action.action.clone(),
         style: None,
         presence: UiPresence::default(),
@@ -12014,7 +12021,7 @@ fn apply_section_metrics(style: &mut Style, theme: &Theme) {
 
 fn leaf_context(node: &UiNode) -> LeafContext {
     match node {
-        UiNode::Text(text) => LeafContext::Text(text.value.clone()),
+        UiNode::Text(text) => LeafContext::Text(text.value.clone().into_string()),
         _ => LeafContext::None,
     }
 }
@@ -12152,7 +12159,7 @@ impl LayoutEngine {
             if let Ok(layout) = self.taffy.layout(taffy_id) {
                 let (x, y, width, height) = (layout.location.x, layout.location.y, layout.size.width, layout.size.height);
                 let text_value = match tree.node(id).map(|n| &n.spec.0) {
-                    Some(UiNode::Text(text)) => Some(text.value.clone()),
+                    Some(UiNode::Text(text)) => Some(text.value.clone().into_string()),
                     _ => None,
                 };
                 if let Some(node) = tree.node_mut(id) {
@@ -13786,6 +13793,7 @@ use crate::component::ui::{
     UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode,
     UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
+use crate::Label;
 use crate::draw::{DrawList, IconAtlas};
 use crate::IconName;
 use crate::geometry::Rect;
@@ -14143,7 +14151,7 @@ fn paint_text(node: &UiTextNode, bounds: Rect, theme: &Theme, atlas: &mut FontAt
     let emphasize = node.emphasize.unwrap_or(false);
     let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
     let color = if emphasize { theme.text } else { theme.text_muted };
-    let lines = wrap_text(atlas, &node.value, bounds.w.max(1.0), size);
+    let lines = wrap_text(atlas, node.value.as_str(), bounds.w.max(1.0), size);
     let line_h = size * 1.35;
     for (index, line) in lines.iter().enumerate() {
         draw_text_on(draw, atlas, line, bounds.x, bounds.y + line_h * index as f32 + size, size, color);
@@ -14181,7 +14189,7 @@ fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &The
             text_x += ICON_TINY + theme.gap_standard;
         }
     }
-    draw_text_on(draw, atlas, &node.label, text_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, dim(item_text(theme, false, hovered)));
+    draw_text_on(draw, atlas, node.label.as_str(), text_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, dim(item_text(theme, false, hovered)));
 }
 
 /// ↔ Local mirror of `events::selection_bounds` — `anchor..caret` as `(start, end)` regardless of
@@ -14229,7 +14237,7 @@ fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags
         return;
     }
     let (display, muted): (&str, bool) = if node.value.is_empty() {
-        (node.placeholder.as_deref().unwrap_or(""), true)
+        (node.placeholder.as_ref().map(Label::as_str).unwrap_or(""), true)
     } else {
         (node.value.as_str(), false)
     };
@@ -14259,7 +14267,7 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
         .items
         .iter()
         .find(|item| item.value == node.value)
-        .map_or_else(|| node.placeholder.as_deref().unwrap_or("Select…"), |item| item.label.as_str());
+        .map_or_else(|| node.placeholder.as_ref().map(Label::as_str).unwrap_or("Select…"), |item| item.label.as_str());
     draw_text_on(draw, atlas, label, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
     if let Some(icons) = icons {
         push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
@@ -14281,7 +14289,7 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
         if row_hovered || item.value == node.value {
             draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
         }
-        draw_text_on(draw, atlas, &item.label, row.x + 8.0, row.y + 18.0, theme.font_size_body, theme.text);
+        draw_text_on(draw, atlas, item.label.as_str(), row.x + 8.0, row.y + 18.0, theme.font_size_body, theme.text);
     }
 }
 
@@ -14302,7 +14310,7 @@ fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &The
         }
     }
     if let Some(text) = &node.text {
-        draw_text_on(draw, atlas, text, content_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, item_text(theme, pressed, hovered));
+        draw_text_on(draw, atlas, text.as_str(), content_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, item_text(theme, pressed, hovered));
     }
 }
 
@@ -14310,13 +14318,13 @@ fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atlas: &m
     let label_w = node
         .entries
         .iter()
-        .map(|entry| atlas.measure_text(&entry.label, theme.font_size_small).0)
+        .map(|entry| atlas.measure_text(entry.label.as_str(), theme.font_size_small).0)
         .fold(0.0f32, f32::max);
     let value_x = bounds.x + label_w + theme.gap_standard * 2.0;
     let row_h = theme.control_height;
     for (index, entry) in node.entries.iter().enumerate() {
         let y = bounds.y + index as f32 * row_h;
-        draw_text_on(draw, atlas, &entry.label, bounds.x, y + (row_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
+        draw_text_on(draw, atlas, entry.label.as_str(), bounds.x, y + (row_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
         draw_text_on(draw, atlas, &entry.value, value_x, y + (row_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
     }
 }
@@ -14431,10 +14439,10 @@ fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, th
 /// `bounds.y` only; they'll land correctly once that flex gap is fixed.
 fn paint_field(node: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let label_size = theme.font_size_small;
-    draw_text_on(draw, atlas, &node.label, bounds.x, bounds.y + label_size, label_size, theme.text_muted);
+    draw_text_on(draw, atlas, node.label.as_str(), bounds.x, bounds.y + label_size, label_size, theme.text_muted);
     let mut y = bounds.y + label_size;
     if node.required.unwrap_or(false) {
-        let (label_w, _) = atlas.measure_text(&node.label, label_size);
+        let (label_w, _) = atlas.measure_text(node.label.as_str(), label_size);
         draw_text_on(draw, atlas, "*", bounds.x + label_w + 2.0, y, label_size, theme.error);
     }
     if let Some(description) = &node.description {
@@ -14458,7 +14466,7 @@ fn paint_section(node: &UiSectionNode, bounds: Rect, theme: &Theme, atlas: &mut 
     if let Some(icons) = icons {
         push_icon(draw, icons, chevron, bounds.x, bounds.y + (PANEL_HEADER - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
     }
-    draw_text_on(draw, atlas, label, bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, bounds.y + (PANEL_HEADER + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+    draw_text_on(draw, atlas, label.as_str(), bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, bounds.y + (PANEL_HEADER + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
 }
 
 /** @emoji 🌿️ Same header chrome as {@link paint_section} (chevron + label), for a `Group`'s always-
@@ -14470,7 +14478,7 @@ fn paint_group(node: &UiGroupNode, bounds: Rect, theme: &Theme, atlas: &mut Font
     if let Some(icons) = icons {
         push_icon(draw, icons, chevron, bounds.x, bounds.y + (PANEL_HEADER - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
     }
-    draw_text_on(draw, atlas, &node.label, bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, bounds.y + (PANEL_HEADER + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+    draw_text_on(draw, atlas, node.label.as_str(), bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, bounds.y + (PANEL_HEADER + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
 }
 
 fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
@@ -14487,7 +14495,7 @@ fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut
             if let Some(icons) = icons {
                 push_icon(draw, icons, "folder", label_x, y + (PANEL_HEADER - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
             }
-            draw_text_on(draw, atlas, label, label_x + TREE_ICON_SIZE + theme.gap_standard, y + (PANEL_HEADER + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, text_color);
+            draw_text_on(draw, atlas, label.as_str(), label_x + TREE_ICON_SIZE + theme.gap_standard, y + (PANEL_HEADER + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, text_color);
             y += PANEL_HEADER;
         }
         for item in &section.items {
@@ -14562,9 +14570,9 @@ fn paint_tree_item(
         push_icon(draw, icons, icon_id.as_str(), indent, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
     }
     let label_x = indent + if item.icon_id.is_some() { TREE_ICON_SIZE + theme.gap_standard } else { 0.0 };
-    draw_text_on(draw, atlas, &item.label, label_x, row.y + (TREE_ROW_HEIGHT + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, text_color);
+    draw_text_on(draw, atlas, item.label.as_str(), label_x, row.y + (TREE_ROW_HEIGHT + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, text_color);
     if let Some(description) = &item.description {
-        let (label_w, _) = atlas.measure_text(&item.label, theme.font_size_body);
+        let (label_w, _) = atlas.measure_text(item.label.as_str(), theme.font_size_body);
         draw_text_on(draw, atlas, description, label_x + label_w + theme.gap_standard, row.y + (TREE_ROW_HEIGHT + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
     }
     // 🔘️ Only always-visible actions (`reveal_on_hover` unset/false) paint: reveal-on-hover actions
@@ -14648,7 +14656,7 @@ fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atlas: &m
 fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     if node.src.is_empty() {
         if let Some(alt) = &node.alt {
-            draw_text_on(draw, atlas, alt, bounds.x + 4.0, bounds.y + 16.0, theme.font_size_small, theme.text_muted);
+            draw_text_on(draw, atlas, alt.as_str(), bounds.x + 4.0, bounds.y + 16.0, theme.font_size_small, theme.text_muted);
         }
         return;
     }
@@ -17825,6 +17833,7 @@ pub mod shell {
 //! plus click-to-activate-tab is fully implemented.
 
 use crate::arena::NodeId;
+use crate::Label;
 use crate::component::layout::{
     ActionDescriptor, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode,
@@ -18035,7 +18044,7 @@ fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNo
     let spec = UiNode::Button(UiButtonNode {
         id: Some(window_id.clone()),
         icon_id,
-        label,
+        label: Label::data(label),
         action: ActionDescriptor { controller_id: "shell.window".into(), action: "activate".into(), args: None },
         style: None,
         presence: UiPresence::default(),

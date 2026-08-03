@@ -13975,57 +13975,6 @@ pub struct NodeGraphSurface {
     pub bounds: Rect,
     pub controller_id: String,
 }
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct GraphContextMenuItem {
-    id: String,
-    label: String,
-    #[serde(default)]
-    icon: Option<String>,
-    #[serde(default)]
-    destructive: bool,
-    #[serde(default)]
-    separator: bool,
-    #[serde(default)]
-    disabled: bool,
-    #[serde(default)]
-    action: Option<String>,
-    #[serde(default)]
-    args: Option<Value>,
-    #[serde(default)]
-    children: Vec<GraphContextMenuItem>,
- }
-
-fn map_graph_context_menu_item(scene: &UiComponentSceneNode, item: GraphContextMenuItem) -> Option<ContextMenuItem> {
-    if item.separator {
-        return None;
-    }
-    let children = item
-        .children
-        .into_iter()
-        .filter_map(|child| map_graph_context_menu_item(scene, child))
-        .collect::<Vec<_>>();
-    let action = item.action.map(|action| ActionDescriptor {
-        controller_id: scene.controller_id.clone(),
-        action,
-        args: semio_framework_core::optional_json_to_dsl(item.args),
-    });
-    if action.is_none() && children.is_empty() {
-        return None;
-    }
-    Some(ContextMenuItem {
-        id: format!("{}.context.{}", scene.surface_id, item.id),
-        label: item.label,
-        icon: item.icon,
-        destructive: item.destructive,
-        action,
-        children,
-        disabled: item.disabled,
-        ..Default::default()
-     })
-}
-
-
 
 /** @emoji 🕸️ Applies node-hit context to a scene context-menu action. */
 pub fn resolve_graph_context_action(
@@ -16545,10 +16494,50 @@ pub fn take_find_items() -> Vec<ShellFindItem> {
     FIND_ITEM_SINK.with(|cell| std::mem::take(&mut *cell.borrow_mut()))
 }
 
+/// 🖱️ Best-effort `ContextMenuSurfaceTarget.selection` groups from the session's already-tracked (opaque,
+/// app-owned) `ViewState.selectionJson` — tries the common `{selectedIds: [...]}` shape, then a bare id
+/// array, and yields nothing rather than guessing at an unrecognized shape.
+fn context_menu_selection_groups(selection_json: Option<&str>) -> Vec<serde_json::Value> {
+    #[derive(Deserialize, Default)]
+    #[serde(rename_all = "camelCase")]
+    struct SelectedIdsShape {
+        #[serde(default)]
+        selected_ids: Vec<String>,
+    }
+    let Some(json) = selection_json else {
+        return Vec::new();
+    };
+    let ids = serde_json::from_str::<SelectedIdsShape>(json)
+        .map(|shape| shape.selected_ids)
+        .ok()
+        .filter(|ids| !ids.is_empty())
+        .or_else(|| serde_json::from_str::<Vec<String>>(json).ok())
+        .unwrap_or_default();
+    if ids.is_empty() {
+        Vec::new()
+    } else {
+        vec![serde_json::json!({ "domain": "node", "ids": ids })]
+    }
+}
 
+/// 🗂️ `ui_wgpu::ShellMenuAction.kind` wire string for an `ActionDefinition.kind` — host-side styling
+/// parity only, unused by `build_shell_context_menu_specs` itself.
+fn context_menu_action_kind_str(kind: semio_framework_core::ActionKind) -> String {
+    match kind {
+        semio_framework_core::ActionKind::Operation => "operation",
+        semio_framework_core::ActionKind::View => "view",
+        semio_framework_core::ActionKind::History => "history",
+        semio_framework_core::ActionKind::Clipboard => "clipboard",
+        semio_framework_core::ActionKind::Shell => "shell",
+    }
+    .to_string()
+}
 
-/// 🖱️ Maps an on-demand plugin context-menu spec into the wgpu shell menu row.
-fn shell_context_menu_item_from_spec(spec: ui_wgpu::ContextMenuItemSpec, controller_id: &str) -> ContextMenuItem {
+/// 🖱️ Maps an on-demand plugin context-menu spec into the wgpu shell menu row — `menu.group.<category>`
+/// rows (D5's `organize_context_menu` folds, see `ui_wgpu::ContextMenuOrganizer`) resolve their label via
+/// `ribbon_parent_label` (falling back to the spec's own label if the category is unrecognized) and get
+/// a default folder icon when the spec left `icon` unset.
+fn shell_context_menu_item_from_spec(spec: ui_wgpu::ContextMenuItemSpec, controller_id: &str, is_de: bool) -> ContextMenuItem {
     let ui_wgpu::ContextMenuItemSpec {
         id,
         label,
@@ -16563,6 +16552,12 @@ fn shell_context_menu_item_from_spec(spec: ui_wgpu::ContextMenuItemSpec, control
         children,
         ..
     } = spec;
+    let category = id.strip_prefix("menu.group.");
+    let label = category
+        .and_then(|category| ui_wgpu::ribbon_parent_label(category, is_de))
+        .map(str::to_string)
+        .or(label);
+    let icon = icon.or_else(|| category.map(|_| "folder".to_string()));
     ContextMenuItem {
         id,
         label: label.unwrap_or_default(),
@@ -16577,7 +16572,7 @@ fn shell_context_menu_item_from_spec(spec: ui_wgpu::ContextMenuItemSpec, control
         children: children
             .unwrap_or_default()
             .into_iter()
-            .map(|child| shell_context_menu_item_from_spec(child, controller_id))
+            .map(|child| shell_context_menu_item_from_spec(child, controller_id, is_de))
             .collect(),
         disabled: disabled.unwrap_or(false),
         separator: separator.unwrap_or(false),
@@ -16641,6 +16636,9 @@ pub struct ContextMenuState {
     pub items: Vec<ContextMenuItem>,
     pub active: Vec<usize>,
     pub submenu_collapsed_at: Option<Vec<usize>>,
+    /// 📜️ Vertical scroll offset for whichever rendered level currently exceeds the viewport height —
+    /// see `render_context_menu_level`'s clip/scroll handling and `ShellState::handle_pointer_wheel`.
+    pub scroll_offset: f32,
 }
 
 /** @emoji ⌨️ Result of routing a key while the shell context menu is open. */
@@ -19784,6 +19782,15 @@ impl ShellState {
         let Some(id) = &hit.control_id else {
             return false;
         };
+        // 📜️ The open context menu's own scroll offset lives on `ContextMenuState`, not the generic
+        // per-control `scroll_offsets` map — see `render_context_menu_level`'s clip/scroll handling.
+        if id == "shell.context.menu.scroll" {
+            let Some(menu) = self.context_menu.as_mut() else {
+                return false;
+            };
+            menu.scroll_offset = (menu.scroll_offset + delta * 24.0).max(0.0);
+            return true;
+        }
         if Self::scroll_region_is_scene_surface(id) {
             return false;
         }
@@ -20172,15 +20179,34 @@ impl ShellState {
                 }
                 return Ok(true);
             }
-            id if self.context_menu.as_ref().is_some_and(|menu| menu.items.iter().any(|item| item.id == id)) => {
-                if let Some(menu) = &self.context_menu {
-                    if let Some(item) = menu.items.iter().find(|item| item.id == id) {
-                        if let Some(action) = item.action.clone() {
-                            self.dispatch_action(action).await?;
-                        }
+            id if self.context_menu.as_ref().is_some_and(|menu| {
+                let mut prefix = Vec::new();
+                context_menu_path_for_item_id(&menu.items, id, &mut prefix).is_some()
+            }) =>
+            {
+                // 🖱️ Group rows (`menu.group.<category>`, but any row with `children`) open their submenu on
+                // click, not just hover — matched by path (not a flat top-level id scan) so nested rows work.
+                let submenu_path = self.context_menu.as_ref().and_then(|menu| {
+                    let mut prefix = Vec::new();
+                    let path = context_menu_path_for_item_id(&menu.items, id, &mut prefix)?;
+                    (!context_menu_item_at_path(&menu.items, &path)?.children.is_empty()).then_some(path)
+                });
+                if let Some(path) = submenu_path {
+                    if let Some(menu) = self.context_menu.as_mut() {
+                        menu.active = path;
+                        menu.submenu_collapsed_at = None;
                     }
+                    return Ok(true);
                 }
+                let action = self.context_menu.as_ref().and_then(|menu| {
+                    let mut prefix = Vec::new();
+                    let path = context_menu_path_for_item_id(&menu.items, id, &mut prefix)?;
+                    context_menu_item_at_path(&menu.items, &path)?.action.clone()
+                });
                 self.context_menu = None;
+                if let Some(action) = action {
+                    self.dispatch_action(action).await?;
+                }
                 return Ok(true);
             }
             id if id.starts_with("section.chevron.") => {
@@ -20518,6 +20544,7 @@ impl ShellState {
             })
         });
         let (surface_id, kind, hits) = self.resolve_context_menu_surface(x, y, node_id.as_deref(), edge_id.as_deref());
+        let is_de = self.locale_id == "de";
         let mut items = Vec::new();
         if let Some(session) = self.session.clone() {
             let shortcut_by_action: std::collections::HashMap<String, String> = session
@@ -20526,30 +20553,28 @@ impl ShellState {
                 .iter()
                 .map(|binding| (binding.action.action.clone(), binding.keys.clone()))
                 .collect();
-            let hits_len = hits.len();
+            // 🖱️ `viewState` deliberately omitted — `ui_wgpu::ContextMenuRequest` never carries it (see
+            // that type's own doc comment); `selection`/`text` are the typed slices plugins actually need.
+            let selection = context_menu_selection_groups(session.view_state.selection_json.as_deref());
+            let text: Option<serde_json::Value> = None;
             let request = serde_json::json!({
-                "viewState": session.view_state,
                 "menu": { "id": kind.clone() },
                 "surface": {
                     "surfaceId": surface_id,
                     "kind": kind.clone(),
                     "hits": hits,
+                    "selection": selection,
+                    "text": text,
                 },
                 "point": { "x": x as f64, "y": y as f64 },
             });
             if let Some(program) = self.plugins.iter().find(|plugin| plugin.plugin_id == session.plugin_id) {
                 match program.context_menu(session.instance_id, request).await {
                     Ok(specs) => {
-                        eprintln!(
-                            "[DEBUG] wgpu context menu open kind={} hits={} item_ids={:?}",
-                            kind,
-                            hits_len,
-                            specs.iter().map(|spec| spec.id.as_str()).collect::<Vec<_>>()
-                        );
                         items = specs
                             .into_iter()
                             .map(|spec| {
-                                let mut item = shell_context_menu_item_from_spec(spec, &session.app.controller_id);
+                                let mut item = shell_context_menu_item_from_spec(spec, &session.app.controller_id, is_de);
                                 if item.shortcut.is_none() {
                                     if let Some(action) = item.action.as_ref() {
                                         item.shortcut = shortcut_by_action.get(&action.action).cloned();
@@ -20563,26 +20588,39 @@ impl ShellState {
                             .collect();
                     }
                     Err(error) => {
-                        eprintln!("[DEBUG] wgpu context menu failed: {error}");
                         self.error = Some(error);
                     }
                 }
             }
         }
         if items.is_empty() {
-            if let (Some(node_id), Some(session)) = (node_id.as_deref(), &self.session) {
-                items.push(ContextMenuItem {
-                    id: format!("shell.context.node.select.{node_id}"),
-                    label: "Select node".into(),
-                    icon: None,
-                    destructive: false,
-                    action: Some(ActionDescriptor {
-                        controller_id: session.app.controller_id.clone(),
-                        action: "setMediaNodeSelection".into(),
-                        args: crate::action_args_json!({ "nodeIds": [node_id] }),
-                    }),
-                    ..Default::default()
-                });
+            if let Some(session) = &self.session {
+                let window_kind = session
+                    .app
+                    .window_kinds
+                    .iter()
+                    .find(|kind| Some(&kind.id) == self.active_window_id.as_ref())
+                    .or_else(|| session.app.window_kinds.first());
+                let actions: Vec<ui_wgpu::ShellMenuAction> = window_kind
+                    .map(|kind| semio_framework_core::resolve_window_actions(&session.app, kind))
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|action| ui_wgpu::ShellMenuAction {
+                        id: action.id.clone(),
+                        label: action.label.clone(),
+                        icon: Some(action.icon_id.as_str().to_string()),
+                        keys: action.keys.clone(),
+                        kind: context_menu_action_kind_str(action.kind),
+                        category: action.category.clone(),
+                        in_palette: action.in_palette,
+                        arg_carrying: !action.args.is_empty(),
+                    })
+                    .collect();
+                let controller_id = session.app.controller_id.clone();
+                items = ui_wgpu::build_shell_context_menu_specs(&actions, true)
+                    .into_iter()
+                    .map(|spec| shell_context_menu_item_from_spec(spec, &controller_id, is_de))
+                    .collect();
             }
         }
         if let Some(controller_id) = self.host_controller_id() {
@@ -20605,6 +20643,7 @@ impl ShellState {
             items,
             active: Vec::new(),
             submenu_collapsed_at: None,
+            scroll_offset: 0.0,
         });
         self.overlay_state = OverlayState::None;
     }
@@ -26596,7 +26635,7 @@ impl ShellState {
         }
         // render_palette removed
         if let Some(menu) = &self.context_menu {
-            self.render_context_menu(overlay, atlas, icons, input, theme, menu);
+            self.render_context_menu(overlay, atlas, icons, input, theme, menu, width, height);
         }
         self.render_chrome_tooltip(overlay, atlas, input, theme, width, height);
         self.render_chrome_dialog(overlay, atlas, input, theme, width, height);
@@ -28802,8 +28841,24 @@ impl ShellState {
         input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         menu: &ContextMenuState,
+        viewport_w: f32,
+        viewport_h: f32,
     ) {
-        Self::render_context_menu_level(overlay, atlas, icons, input, theme, menu, &menu.items, &[], menu.x, menu.y);
+        Self::render_context_menu_level(
+            overlay, atlas, icons, input, theme, menu, &menu.items, &[], menu.x, menu.y, viewport_w, viewport_h,
+        );
+    }
+
+    /// 📏️ Shared width pass for a menu level — also used to size a submenu BEFORE deciding which side of
+    /// its parent row it opens on (see `render_context_menu_level`'s flip-left check).
+    fn context_menu_level_width(items: &[ContextMenuItem], theme: &Theme) -> f32 {
+        let mut w = 180.0;
+        for item in items.iter().filter(|item| !item.separator || !item.label.is_empty()) {
+            let label_w = item.label.chars().count() as f32 * theme.font_size_body * 0.55;
+            let shortcut_w = item.shortcut.as_ref().map(|s| s.chars().count() as f32 * theme.font_size_small * 0.55 + 16.0).unwrap_or(0.0);
+            w = f32::max(w, 56.0_f32 + label_w + shortcut_w);
+        }
+        w
     }
 
     fn render_context_menu_level(
@@ -28817,25 +28872,63 @@ impl ShellState {
         path_prefix: &[usize],
         origin_x: f32,
         origin_y: f32,
+        viewport_w: f32,
+        viewport_h: f32,
     ) {
         let row_h = theme.control_height;
-        let mut w = 180.0;
-        for item in items.iter().filter(|item| !item.separator) {
-            let label_w = item.label.chars().count() as f32 * theme.font_size_body * 0.55;
-            let shortcut_w = item.shortcut.as_ref().map(|s| s.chars().count() as f32 * theme.font_size_small * 0.55 + 16.0).unwrap_or(0.0);
-            w = f32::max(w, 56.0_f32 + label_w + shortcut_w);
-        }
-        let h = items.len() as f32 * row_h + 8.0;
-        let rect = Rect::new(origin_x, origin_y, w, h);
+        let w = Self::context_menu_level_width(items, theme);
+        let content_h = items.len() as f32 * row_h + 8.0;
+        let available_h = (viewport_h - 8.0).max(row_h + 8.0);
+        let h = content_h.min(available_h);
+        let scrollable = content_h > h + 0.5;
+        let scroll = if scrollable { menu.scroll_offset.clamp(0.0, content_h - h) } else { 0.0 };
+        // 🖥️ Only the top-level menu is clamped on-screen — a submenu instead flips to the parent row's
+        // left edge below when it would overflow the right edge (never repositioned vertically).
+        let (x, y) = if path_prefix.is_empty() {
+            (origin_x.clamp(0.0, (viewport_w - w).max(0.0)), origin_y.clamp(0.0, (viewport_h - h).max(0.0)))
+        } else {
+            (origin_x, origin_y)
+        };
+        let rect = Rect::new(x, y, w, h);
         overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Menu));
+        if scrollable {
+            input.register_hit(HitTarget {
+                rect,
+                event: None,
+                control_id: Some("shell.context.menu.scroll".into()),
+                kind: HitKind::ScrollRegion,
+                drag_axis: None,
+                drag_data: None,
+            });
+        }
         let icon_size = theme.font_size_body;
         let ordinal_gap = theme.font_size_small * 0.85;
+        overlay.push_scissor(rect);
         let mut visual_row = 0usize;
         let mut ordinal = 0usize;
         for (index, item) in items.iter().enumerate() {
+            let row_top = rect.y + 4.0 + visual_row as f32 * row_h - scroll;
+            let row_visible = row_top + row_h > rect.y && row_top < rect.y + rect.h;
             if item.separator {
-                let rule_y = rect.y + 4.0 + visual_row as f32 * row_h + row_h * 0.5;
-                overlay.push_solid([rect.x + 8.0, rule_y, w - 16.0, 1.0], theme.text_muted);
+                // 🏷️ A separator carrying a `label` is a non-interactive header row — kept in place (never
+                // dropped) and rendered as a labeled row instead of a bare rule.
+                if row_visible {
+                    if item.label.is_empty() {
+                        overlay.push_solid([rect.x + 8.0, row_top + row_h * 0.5, w - 16.0, 1.0], theme.text_muted);
+                    } else {
+                        chrome_text(
+                            overlay,
+                            atlas,
+                            input,
+                            theme,
+                            &item.label,
+                            rect.x + 8.0,
+                            row_top + (row_h + theme.font_size_small) * 0.5 - 1.0,
+                            theme.font_size_small,
+                            theme.text_muted,
+                        );
+                    }
+                }
                 visual_row += 1;
                 continue;
             }
@@ -28850,91 +28943,90 @@ impl ShellState {
             let submenu_open = (context_menu_submenu_open(&menu.active, &row_path, is_active, has_children)
                 || (is_active && has_children))
                 && !submenu_collapsed;
-            let row = Rect::new(rect.x + 4.0, rect.y + 4.0 + visual_row as f32 * row_h, w - 8.0, row_h);
+            let row = Rect::new(rect.x + 4.0, row_top, w - 8.0, row_h);
             visual_row += 1;
-            let (bg, fg) = if is_active {
-                (theme.accent, theme.active_foreground)
-            } else {
-                (theme.button, theme.text)
-            };
-            overlay.push_rounded([row.x, row.y, row.w, row.h], bg, theme.border_radius);
-            let mut text_x = row.x + 8.0;
-            if ordinal <= 9 {
-                let badge = format!("{ordinal}");
+            if row_visible {
+                let (bg, fg) = if is_active {
+                    (theme.accent, theme.active_foreground)
+                } else {
+                    (theme.button, theme.text)
+                };
+                overlay.push_rounded([row.x, row.y, row.w, row.h], bg, theme.border_radius);
+                let mut text_x = row.x + 8.0;
+                if ordinal <= 9 {
+                    let badge = format!("{ordinal}");
+                    chrome_text(
+                        overlay,
+                        atlas,
+                        input,
+                        theme,
+                        &badge,
+                        text_x,
+                        row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
+                        theme.font_size_small,
+                        theme.text_muted,
+                    );
+                    text_x += ordinal_gap;
+                }
+                let icon_id = item.icon.as_deref().unwrap_or("circle-dot");
+                chrome_icon(
+                    overlay,
+                    icons,
+                    icon_id,
+                    text_x,
+                    row.y + (row.h - icon_size) * 0.5,
+                    icon_size,
+                    if item.disabled { theme.text_muted } else { fg },
+                );
+                text_x += icon_size + theme.gap_standard;
                 chrome_text(
                     overlay,
                     atlas,
                     input,
                     theme,
-                    &badge,
+                    &item.label,
                     text_x,
                     row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
                     theme.font_size_small,
-                    theme.text_muted,
+                    if item.disabled { theme.text_muted } else { fg },
                 );
-                text_x += ordinal_gap;
-            }
-            let icon_id = item.icon.as_deref().unwrap_or("circle-dot");
-            chrome_icon(
-                overlay,
-                icons,
-                icon_id,
-                text_x,
-                row.y + (row.h - icon_size) * 0.5,
-                icon_size,
-                if item.disabled { theme.text_muted } else { fg },
-            );
-            text_x += icon_size + theme.gap_standard;
-            chrome_text(
-                overlay,
-                atlas,
-                input,
-                theme,
-                &item.label,
-                text_x,
-                row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
-                theme.font_size_small,
-                if item.disabled { theme.text_muted } else { fg },
-            );
-            if let Some(shortcut) = item.shortcut.as_deref() {
-                let shortcut_w = shortcut.chars().count() as f32 * theme.font_size_small * 0.55;
-                chrome_text(
-                    overlay,
-                    atlas,
-                    input,
-                    theme,
-                    shortcut,
-                    row.x + row.w - 8.0 - shortcut_w,
-                    row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
-                    theme.font_size_small,
-                    theme.text_muted,
-                );
-            }
-            if !item.disabled {
-                input.register_hit(HitTarget {
-                    rect: row,
-                    event: item.action.clone(),
-                    control_id: Some(item.id.clone()),
-                    kind: HitKind::ContextMenu,
-                    drag_axis: None,
-                    drag_data: None,
-                });
+                if let Some(shortcut) = item.shortcut.as_deref() {
+                    let shortcut_w = shortcut.chars().count() as f32 * theme.font_size_small * 0.55;
+                    chrome_text(
+                        overlay,
+                        atlas,
+                        input,
+                        theme,
+                        shortcut,
+                        row.x + row.w - 8.0 - shortcut_w,
+                        row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
+                        theme.font_size_small,
+                        theme.text_muted,
+                    );
+                }
+                if !item.disabled {
+                    input.register_hit(HitTarget {
+                        rect: row,
+                        event: item.action.clone(),
+                        control_id: Some(item.id.clone()),
+                        kind: HitKind::ContextMenu,
+                        drag_axis: None,
+                        drag_data: None,
+                    });
+                }
             }
             if submenu_open {
+                let child_w = Self::context_menu_level_width(&item.children, theme);
+                let opens_left = row.x + row.w + 4.0 + child_w > viewport_w;
+                let child_x = if opens_left { (row.x - child_w - 4.0).max(0.0) } else { row.x + row.w + 4.0 };
+                overlay.pop_scissor();
                 Self::render_context_menu_level(
-                    overlay,
-                    atlas,
-                    icons,
-                    input,
-                    theme,
-                    menu,
-                    &item.children,
-                    &row_path,
-                    row.x + row.w + 4.0,
-                    row.y,
+                    overlay, atlas, icons, input, theme, menu, &item.children, &row_path, child_x, row.y, viewport_w, viewport_h,
                 );
+                overlay.push_scissor(rect);
             }
         }
+        overlay.pop_scissor();
     }
 
     fn render_palette(
@@ -30821,6 +30913,117 @@ mod context_menu_keyboard_tests {
         assert!(context_menu_submenu_open(&[0, 0], &[0], false, true));
         assert!(context_menu_submenu_open(&[0], &[0], true, true));
         assert!(!context_menu_submenu_open(&[1], &[0], false, true));
+    }
+
+    #[test]
+    fn context_menu_click_on_group_row_control_id_opens_its_submenu_instead_of_dispatching() {
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        shell.context_menu = Some(ContextMenuState {
+            items: vec![ContextMenuItem {
+                id: "menu.group.view".into(),
+                label: "View".into(),
+                children: vec![ContextMenuItem { id: "menu.group.view.child".into(), label: "Child".into(), ..Default::default() }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+        let hit = HitTarget {
+            rect: Rect::new(0.0, 0.0, 10.0, 10.0),
+            event: None,
+            control_id: Some("menu.group.view".into()),
+            kind: HitKind::ContextMenu,
+            drag_axis: None,
+            drag_data: None,
+        };
+        let consumed = pollster::block_on(shell.handle_shell_hit(&hit)).expect("group-row click never errors");
+        assert!(consumed);
+        let menu = shell.context_menu.as_ref().expect("a group-row click opens its submenu instead of closing the menu");
+        assert_eq!(menu.active, vec![0]);
+    }
+
+    #[test]
+    fn render_context_menu_level_renders_a_labeled_separator_as_a_header_without_a_hit() {
+        let items = vec![
+            ContextMenuItem { id: "header-1".into(), label: "Header".into(), separator: true, ..Default::default() },
+            ContextMenuItem { id: "leaf-1".into(), label: "Leaf".into(), ..Default::default() },
+        ];
+        let menu = ContextMenuState { items: items.clone(), ..Default::default() };
+        let mut draw = ui_wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::FontAtlas::builtin();
+        let icons = ui_wgpu::IconAtlas::default();
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let theme = Theme::default();
+        ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, 600.0);
+        assert!(
+            input.hit_targets.iter().all(|hit| hit.control_id.as_deref() != Some("header-1")),
+            "a labeled separator must stay non-interactive"
+        );
+        assert!(
+            input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("leaf-1")),
+            "the leaf row after the header must still register a hit"
+        );
+    }
+
+    #[test]
+    fn render_context_menu_level_clips_to_viewport_height_and_scrolls_hidden_rows_into_view() {
+        let items: Vec<ContextMenuItem> = (0..20)
+            .map(|index| ContextMenuItem { id: format!("item-{index}"), label: format!("Item {index}"), ..Default::default() })
+            .collect();
+        let theme = Theme::default();
+        let row_h = theme.control_height;
+        let viewport_h = row_h * 4.0;
+        let menu_at = |scroll_offset: f32| ContextMenuState { items: items.clone(), scroll_offset, ..Default::default() };
+        let mut draw = ui_wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::FontAtlas::builtin();
+        let icons = ui_wgpu::IconAtlas::default();
+
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let menu = menu_at(0.0);
+        ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, viewport_h);
+        let visible_ids: Vec<String> = input.hit_targets.iter().filter_map(|hit| hit.control_id.clone()).collect();
+        assert!(
+            visible_ids.len() < items.len(),
+            "expected the viewport clip to hide some rows, got {} of {}",
+            visible_ids.len(),
+            items.len()
+        );
+        assert!(!visible_ids.contains(&"item-19".to_string()), "the last row should be scrolled out of view without scrolling");
+
+        let mut input2 = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let menu2 = menu_at(row_h * 16.0);
+        ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input2, &theme, &menu2, &menu2.items, &[], 0.0, 0.0, 800.0, viewport_h);
+        let scrolled_ids: Vec<String> = input2.hit_targets.iter().filter_map(|hit| hit.control_id.clone()).collect();
+        assert!(scrolled_ids.contains(&"item-19".to_string()), "scrolling down should bring the last row into view");
+    }
+
+    #[test]
+    fn render_context_menu_level_flips_a_submenu_left_when_it_would_overflow_the_right_edge() {
+        let theme = Theme::default();
+        let child_items = vec![ContextMenuItem { id: "child-1".into(), label: "Child one".into(), ..Default::default() }];
+        let parent_items = vec![ContextMenuItem {
+            id: "menu.group.view".into(),
+            label: "View".into(),
+            children: child_items,
+            ..Default::default()
+        }];
+        let menu = ContextMenuState { items: parent_items.clone(), active: vec![0], ..Default::default() };
+        let mut draw = ui_wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::FontAtlas::builtin();
+        let icons = ui_wgpu::IconAtlas::default();
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let viewport_w = 220.0;
+        ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, viewport_w, 600.0);
+        let parent_w = ShellState::context_menu_level_width(&parent_items, &theme);
+        let child_hit = input
+            .hit_targets
+            .iter()
+            .find(|hit| hit.control_id.as_deref() == Some("child-1"))
+            .expect("submenu row registers a hit");
+        assert!(
+            child_hit.rect.x < parent_w,
+            "expected the submenu to flip left of the parent row, got x={}",
+            child_hit.rect.x
+        );
     }
 }
 // #endregion shell

@@ -9,6 +9,7 @@ import {
   bootstrapElementsSurfaceChromeDocument,
   cn,
   Icon,
+  initUiLocaleSync,
   readStoredUiChromeAppearance,
   readStoredUiChromeLayout,
   readStoredUiDriver,
@@ -16,10 +17,13 @@ import {
   type IconName,
 } from "@semio-tech/ui-react";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
-import { ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG } from "./🟦️brand.ts";
+import { DEMONSTRATOR_LOCALE, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG } from "./🟦️brand.ts";
 import "./🎨️globals.css";
 
 bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance());
+// 🇩🇪️ The whole demonstrator is German-locked (see 🟦️brand.ts) — resolve synchronously before the
+// first render so the landing page's own chrome (Skip/Back/Next/Done) never flashes English.
+initUiLocaleSync(DEMONSTRATOR_LOCALE);
 
 //#region 🎪️DemonstratorApps
 type DemonstratorAppPane = {

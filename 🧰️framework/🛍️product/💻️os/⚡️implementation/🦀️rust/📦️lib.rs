@@ -4410,10 +4410,11 @@ pub mod registry {
 
     use crate::instance::OsParameterFieldSpec;
     use semio_framework_core::{AppDefinition, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, PluginManifest, ArtifactKindSpec, WindowKindDefinition};
+    use semio_framework_core::{Locale, Terminology};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::sync::{LazyLock, Mutex};
-    use ui_wgpu::SurfaceKind;
+    use ui_wgpu::{LocalizedLabel, SurfaceKind};
 
     pub type OsArtifactKindId = String;
 
@@ -4556,7 +4557,7 @@ pub mod registry {
     #[serde(rename_all = "camelCase")]
     pub struct OsAppRegistration {
         pub id: String,
-        pub label: String,
+        pub label: LocalizedLabel,
         pub document: Vec<String>,
         pub controller_id: String,
         pub inputs: Vec<semio_framework_core::MediaPortSpec>,
@@ -4629,7 +4630,14 @@ pub mod registry {
         semio_framework_core::AppIo::from_document(
             registration.source_format.clone(),
             document_media_type,
-            semio_framework_core::ArtifactPresentation { id: registration.id.clone(), name: registration.label.clone(), dimension: String::new(), component_kind: registration.component_kind.clone() },
+            semio_framework_core::ArtifactPresentation {
+                id: registration.id.clone(),
+                // 🚧️ No locale context reaches this reconstruction path — resolves native/English
+                // pending a documented follow-up (same gap as Menu::action_with_args in the plugin SDK).
+                name: registration.label.resolve(Terminology::Native, Locale::En).to_string(),
+                dimension: String::new(),
+                component_kind: registration.component_kind.clone(),
+            },
         )
         .with_ports(declared_ports)
     }
@@ -4701,7 +4709,7 @@ pub mod registry {
     pub struct AppPaletteEntry {
         pub plugin_id: String,
         pub app_id: String,
-        pub label: String,
+        pub label: LocalizedLabel,
         pub icon_id: String,
         pub ports: Vec<semio_framework_core::MediaPortSpec>,
     }

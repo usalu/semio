@@ -82,7 +82,7 @@ use semio_framework_core::{
     },
     set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition, record_tutorial_action_definition,
     start_tutorial_action_definition, note_shell_command_action_definition, ActionArgDef, ActionRef, AppDefinition, IconName,
-    AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
+    ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
     ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ToolDefinition, ToolRef, TutorialDefinition,
     UtilityDefinition, UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -93,9 +93,9 @@ use semio_framework_core::{
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor,
     NamedLayout, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPresence,
-    UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    UiSectionNode, UiSelectItem, UiSelectNode, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind, FRAMEWORK_HISTORY_BODY_KEY,
-    ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget,
+    ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, Label, Locale, LocalizedLabel, Terminology,
 };
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
@@ -107,7 +107,7 @@ use store::{build_history_columns, create_config_envelope, create_document_envel
 
 pub struct ModeSpec {
     pub id: String,
-    pub label: String,
+    pub label: LocalizedLabel,
     pub icon_id: IconName,
     pub tools: Vec<ToolRef>,
     pub layout_id: Option<String>,
@@ -116,7 +116,7 @@ pub struct ModeSpec {
 
 pub struct WindowKindSpec {
     pub id: String,
-    pub label: String,
+    pub label: LocalizedLabel,
     pub body_key: String,
     pub surface_kind: SurfaceKind,
     pub icon_id: IconName,
@@ -129,7 +129,7 @@ pub struct WindowKindSpec {
 /// 🌳️ A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it) — exactly one of the two.
 pub struct PanelTabSpec {
     pub kind: PanelTabKind,
-    pub label: String,
+    pub label: LocalizedLabel,
     pub group: PanelGroup,
     pub body_key: Option<String>,
     pub children: Vec<PanelTabSpec>,
@@ -137,18 +137,18 @@ pub struct PanelTabSpec {
 
 impl PanelTabSpec {
     /// 🍃️ An app-declared leaf tab; `group` is only meaningful on the root entry passed to `.panel_tab_tree`.
-    pub fn leaf(id: impl Into<String>, label: impl Into<String>, group: PanelGroup, body_key: impl Into<String>) -> Self {
+    pub fn leaf(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: impl Into<String>) -> Self {
         Self { kind: PanelTabKind::App(id.into()), label: label.into(), group, body_key: Some(body_key.into()), children: Vec::new() }
     }
 
     /// 🌳️ An app-declared branch tab; its `children` render as the tab row below it when active.
-    pub fn group(id: impl Into<String>, label: impl Into<String>, group: PanelGroup, children: Vec<PanelTabSpec>) -> Self {
+    pub fn group(id: impl Into<String>, label: impl Into<LocalizedLabel>, group: PanelGroup, children: Vec<PanelTabSpec>) -> Self {
         Self { kind: PanelTabKind::App(id.into()), label: label.into(), group, body_key: None, children }
     }
 
     /// 🏛️ A framework-predefined tab — only the framework shell itself should ever pass a
     /// non-`App` `PanelTabKind` here; plugins must go through `leaf`/`group`.
-    pub fn framework(kind: PanelTabKind, label: impl Into<String>, group: PanelGroup, body_key: Option<String>, children: Vec<PanelTabSpec>) -> Self {
+    pub fn framework(kind: PanelTabKind, label: impl Into<LocalizedLabel>, group: PanelGroup, body_key: Option<String>, children: Vec<PanelTabSpec>) -> Self {
         Self { kind, label: label.into(), group, body_key, children }
     }
 }
@@ -290,7 +290,7 @@ pub use semio_framework_core::{MediaWireFormat, OsMediaFormat};
 
 pub struct AppBuilder {
     id: String,
-    label: String,
+    label: LocalizedLabel,
     document: Vec<String>,
     icon_id: Option<IconName>,
     controller_id: String,
@@ -319,7 +319,7 @@ pub struct AppBuilder {
 }
 
 impl AppBuilder {
-    pub fn new(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         let id = id.into();
         Self {
             controller_id: id.clone(),
@@ -442,7 +442,7 @@ impl AppBuilder {
         self
     }
 
-    pub fn mode(mut self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
+    pub fn mode(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         self.modes.push(ModeSpec {
             id: id.into(),
             label: label.into(),
@@ -490,7 +490,7 @@ impl AppBuilder {
     pub fn window_kind(
         mut self,
         id: impl Into<String>,
-        label: impl Into<String>,
+        label: impl Into<LocalizedLabel>,
         body_key: impl Into<String>,
         surface_kind: SurfaceKind,
         icon_id: impl Into<IconName>,
@@ -512,7 +512,7 @@ impl AppBuilder {
     pub fn window_kind_with_engagement(
         mut self,
         id: impl Into<String>,
-        label: impl Into<String>,
+        label: impl Into<LocalizedLabel>,
         body_key: impl Into<String>,
         surface_kind: SurfaceKind,
         engagement: WindowEngagement,
@@ -573,7 +573,7 @@ impl AppBuilder {
     pub fn panel_tab(
         mut self,
         id: impl Into<String>,
-        label: impl Into<String>,
+        label: impl Into<LocalizedLabel>,
         group: PanelGroup,
         body_key: impl Into<String>,
     ) -> Self {
@@ -604,17 +604,17 @@ impl AppBuilder {
     }
 
     /// @emoji ✏️ Declares a document-mutating action — dispatched as VCS operations with a true inverse.
-    pub fn operation(self, id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn operation(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Operation))
     }
 
     /// @emoji 👁️ Declares an ephemeral view action (camera, selection, hover, active utility) — not recorded in history.
-    pub fn view_action(self, id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn view_action(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::View))
     }
 
     /// @emoji 🐚️ Declares a shell-only effect action (navigate, export, spawn) — no document mutation.
-    pub fn shell_action(self, id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn shell_action(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Shell))
     }
 
@@ -644,13 +644,13 @@ impl AppBuilder {
     }
 
     /// @emoji 🎛️ Declares an app-scope command (applies whenever this app is focused, in any mode).
-    pub fn app_command(self, id: impl Into<String>, label: impl Into<String>, category: impl Into<String>) -> Self {
+    pub fn app_command(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>) -> Self {
         self.command(CommandDefinition::new_catalog(id, label, CommandScope::App, category))
     }
 
     /// @emoji 🎛️ Declares a mode-scope command definition — still requires `.mode_commands(mode_id, ..)`
     /// to actually scope it to the mode(s) it applies to.
-    pub fn mode_command(self, id: impl Into<String>, label: impl Into<String>, category: impl Into<String>) -> Self {
+    pub fn mode_command(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>) -> Self {
         self.command(CommandDefinition::new_catalog(id, label, CommandScope::Mode, category))
     }
 
@@ -671,7 +671,7 @@ impl AppBuilder {
     }
 
     /// @emoji 🧰️ Declares a utility with default settings (no group/keys/cursor/category, gates actions while active).
-    pub fn utility_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
+    pub fn utility_simple(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         self.utility(UtilityDefinition::new(id, label, icon_id))
     }
 
@@ -684,7 +684,7 @@ impl AppBuilder {
     }
 
     /// @emoji 🛠️ Declares a tool with default settings (no keybinding).
-    pub fn tool_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
+    pub fn tool_simple(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         self.tool(ToolDefinition::new(id, label, icon_id))
     }
 
@@ -747,7 +747,7 @@ impl AppBuilder {
         if panel_tab_ids.insert(ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()) {
             self.panel_tabs.push(PanelTabSpec::framework(
                 PanelTabKind::App(ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
-                ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_LABEL,
+                LocalizedLabel::native(ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_LABEL, "Verlauf"),
                 PanelGroup::Settings,
                 Some(FRAMEWORK_HISTORY_BODY_KEY.to_string()),
                 Vec::new(),
@@ -1270,12 +1270,12 @@ impl AppBuilder {
 // ~15 plugin crates (flow, procedural, layout, gis, puzzle, sequence, trinity, dag, …) into the SDK.
 
 /// 🌳️ A bare tree item — thin wrapper over `UiTreeItemNode::base`.
-pub fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
+pub fn tree_item(id: impl Into<String>, label: impl Into<Label>) -> UiTreeItemNode {
     UiTreeItemNode::base(id, label)
 }
 
 /// 🌳️ A tree item with a description line.
-pub fn tree_item_desc(id: impl Into<String>, label: impl Into<String>, description: Option<String>) -> UiTreeItemNode {
+pub fn tree_item_desc(id: impl Into<String>, label: impl Into<Label>, description: Option<String>) -> UiTreeItemNode {
     UiTreeItemNode { description, menu: None,
     ..UiTreeItemNode::base(id, label) }
 }
@@ -1283,7 +1283,7 @@ pub fn tree_item_desc(id: impl Into<String>, label: impl Into<String>, descripti
 /// 🌳️ A tree item that dispatches `action` on click.
 pub fn tree_item_with_action(
     id: impl Into<String>,
-    label: impl Into<String>,
+    label: impl Into<Label>,
     description: Option<String>,
     action: ActionDescriptor,
 ) -> UiTreeItemNode {
@@ -1298,7 +1298,7 @@ pub fn tree_item_with_action(
 /// constant into this function) — the caller now supplies the key(s) explicitly.
 pub fn tree_item_with_action_draggable(
     id: impl Into<String>,
-    label: impl Into<String>,
+    label: impl Into<Label>,
     description: Option<String>,
     action: ActionDescriptor,
     drag_data: &Value,
@@ -1356,7 +1356,7 @@ impl PanelTreeBuilder {
     }
 
     /// 🌳️ Adds a section verbatim.
-    pub fn section(mut self, id: impl Into<String>, label: Option<String>, default_open: bool, items: Vec<UiTreeItemNode>) -> Self {
+    pub fn section(mut self, id: impl Into<String>, label: Option<Label>, default_open: bool, items: Vec<UiTreeItemNode>) -> Self {
         self.sections.push(UiTreeSectionNode {
             id: id.into(),
             label,
@@ -1372,10 +1372,10 @@ impl PanelTreeBuilder {
     pub fn section_or_placeholder(
         mut self,
         id: impl Into<String>,
-        label: Option<String>,
+        label: Option<Label>,
         default_open: bool,
         items: Vec<UiTreeItemNode>,
-        placeholder_label: impl Into<String>,
+        placeholder_label: impl Into<Label>,
     ) -> Self {
         let id = id.into();
         let items = if items.is_empty() { vec![tree_item(format!("{id}.empty"), placeholder_label)] } else { items };
@@ -1507,7 +1507,7 @@ impl FormPanelBuilder {
     }
 
     /// 📋️ Adds one labeled field row: `control` wraps into a `UiFieldNode` via `ui_control_to_node`.
-    pub fn field(mut self, id: &str, label: &str, description: Option<String>, control: UiControlNode) -> Self {
+    pub fn field(mut self, id: &str, label: impl Into<Label>, description: Option<String>, control: UiControlNode) -> Self {
         let field_id = self.field_id(id);
         self.fields.push(UiNode::Field(UiFieldNode {
             id: field_id,
@@ -1532,7 +1532,8 @@ impl FormPanelBuilder {
         let Some(entries) = dictionary_json.as_array() else { return self };
         for entry in entries {
             let Some(id) = entry.get("id").and_then(Value::as_str) else { continue };
-            let label = entry.get("label").and_then(Value::as_str).unwrap_or(id).to_string();
+            // 📊️ Field labels here come from a runtime `dictionary_json` resource, not a static bundle.
+            let label = Label::data(entry.get("label").and_then(Value::as_str).unwrap_or(id).to_string());
             let description = entry.get("description").and_then(Value::as_str).map(str::to_string);
             let value = entry.get("value").and_then(Value::as_str).unwrap_or_default().to_string();
             let field_id = self.field_id(id);
@@ -1550,13 +1551,13 @@ impl FormPanelBuilder {
                 presence: UiPresence::default(),
                 menu: None,
             });
-            self = self.field(id, &label, description, control);
+            self = self.field(id, label, description, control);
         }
         self
     }
 
     /// 📋️ Sets the trailing submit `Button` row.
-    pub fn submit(mut self, label: &str, action: ActionDescriptor) -> Self {
+    pub fn submit(mut self, label: impl Into<Label>, action: ActionDescriptor) -> Self {
         self.submit = Some(UiButtonNode {
             id: Some(self.field_id("submit")),
             icon_id: IconName::CircleDot,
@@ -1589,7 +1590,7 @@ impl FormPanelBuilder {
 /// 📋️ A read-only entity-detail panel: `title`/`subtitle` header text, a `KeyValue` summary block built
 /// from `entries` (reusing `ui_wgpu`'s existing `UiKeyValueEntry` rather than a duplicate local type),
 /// and trailing action buttons.
-pub fn entity_detail(title: &str, subtitle: Option<&str>, entries: Vec<UiKeyValueEntry>, actions: Vec<UiButtonNode>) -> UiNode {
+pub fn entity_detail(title: impl Into<Label>, subtitle: Option<Label>, entries: Vec<UiKeyValueEntry>, actions: Vec<UiButtonNode>) -> UiNode {
     let mut children = vec![ui_text(title)];
     if let Some(subtitle) = subtitle {
         children.push(ui_text(subtitle));
@@ -1687,40 +1688,33 @@ mod form_kit_tests {
 //#endregion 🔖️FormKit
 
 //#region 🔖️Terminology
-// 🗣️ Shared locale-label resolution — replaces the ~25x hand-rolled `struct XLabels { .. }` +
-// `const X_LABELS_EN/DE` + `fn x_labels(view_state) -> &'static XLabels` pattern duplicated per app,
-// plus the per-app `(id, en, de)` action/utility label-map builder functions.
+// 🗣️ Shared two-axis (locale × terminology) label resolution — replaces the ~25x hand-rolled
+// `struct XLabels { .. }` + `const X_LABELS_EN/DE` + `fn x_labels(view_state) -> &'static XLabels`
+// pattern duplicated per app, AND the 4-crate hand-rolled `NATIVE_EN/NATIVE_DE/REUSE_EN/REUSE_DE` +
+// non-exhaustive `match (terminology, is_de) { ..., (_, true) => ... }` terminology resolvers this
+// SDK never covered. `app_labels!` now declares all four cells per field and resolves them via an
+// exhaustive match on the generated `Locale`/`Terminology` enums — no catch-all arm is possible, so
+// adding a locale or terminology to `🔣️ui-axes.json` breaks every invocation until it supplies that
+// cell. See ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND.
 
-/// 🗣️ A locale label set: a `&'static` accessor per locale. Implement via `app_labels!` rather than by
-/// hand — accessors (not associated consts) because Rust's constant-promotion of `&Self::CONST` to
-/// `&'static Self` only fires for a concrete type, not through a generic type parameter; each concrete
-/// `impl LocaleLabels for XLabels` promotes its own `&Self::EN`/`&Self::DE` internally instead.
-pub trait LocaleLabels: Sized + 'static {
-    fn locale_labels_en() -> &'static Self;
-    fn locale_labels_de() -> &'static Self;
+pub use ui_wgpu::AppLabels;
+
+/// 🗣️ Resolves the active label set for the shell-provided locale/terminology axes.
+pub fn resolve_labels<L: AppLabels>(view_state: &ViewState) -> &'static L {
+    L::labels(view_state.locale, view_state.terminology)
 }
 
-/// 🗣️ True when `view_state.locale` names a German variant ("de", "de-DE", …).
-pub fn is_de_locale(view_state: &ViewState) -> bool {
-    view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))
-}
-
-/// 🗣️ Resolves the active label set for the shell-provided locale; unknown/absent locales fall back
-/// to the English set. Replaces the ~25x hand-rolled `fn x_labels(view_state) -> &'static XLabels { if
-/// is_de { &X_LABELS_DE } else { &X_LABELS_EN } }`.
-pub fn resolve_labels<L: LocaleLabels>(view_state: &ViewState) -> &'static L {
-    if is_de_locale(view_state) { L::locale_labels_de() } else { L::locale_labels_en() }
-}
-
-/// 🗣️ Declares a locale label struct plus its `EN`/`DE` consts and `LocaleLabels` impl in one compact
-/// block — resolve the active set with `resolve_labels::<XLabels>(view_state)`. Replaces the ~25x
-/// hand-rolled `struct XLabels { .. }` + two `const` items + resolver fn.
+/// 🗣️ Declares a two-axis label struct plus its four `NATIVE_EN`/`NATIVE_DE`/`REUSE_EN`/`REUSE_DE`
+/// consts and `AppLabels` impl in one compact block — resolve the active set with
+/// `resolve_labels::<XLabels>(view_state)`. Every field requires all four cells explicitly (no
+/// implicit "reuse falls back to native") so a plugin's terminology coverage is always visible at
+/// the declaration site, not inferred.
 ///
 /// ```ignore
 /// semio_framework_plugin::app_labels! {
-///     struct FlowPlayLabels {
-///         widgets: &'static str = en: "Widgets", de: "Widgets";
-///         synapses: &'static str = en: "Synapses", de: "Synapsen";
+///     struct Puzzle3dLabels {
+///         object: native_en "Object", native_de "Objekt", reuse_en "Component", reuse_de "Bestandskomponente";
+///         lod: native_en "LOD", native_de "LOD", reuse_en "LOD", reuse_de "LOD";
 ///     }
 /// }
 /// ```
@@ -1729,107 +1723,32 @@ macro_rules! app_labels {
     (
         $(#[$meta:meta])*
         $vis:vis struct $Name:ident {
-            $( $field:ident: $ty:ty = en: $en_value:expr, de: $de_value:expr );+ $(;)?
+            $( $field:ident: native_en $nen:expr, native_de $nde:expr, reuse_en $ren:expr, reuse_de $rde:expr );+ $(;)?
         }
     ) => {
         $(#[$meta])*
         $vis struct $Name {
-            $( $vis $field: $ty ),+
+            $( $vis $field: $crate::LabelText ),+
         }
 
         impl $Name {
-            const EN: Self = Self { $( $field: $en_value ),+ };
-            const DE: Self = Self { $( $field: $de_value ),+ };
+            const NATIVE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nen) ),+ };
+            const NATIVE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($nde) ),+ };
+            const REUSE_EN: Self = Self { $( $field: $crate::LabelText::__from_app_labels($ren) ),+ };
+            const REUSE_DE: Self = Self { $( $field: $crate::LabelText::__from_app_labels($rde) ),+ };
         }
 
-        impl $crate::app::LocaleLabels for $Name {
-            fn locale_labels_en() -> &'static Self {
-                &Self::EN
-            }
-            fn locale_labels_de() -> &'static Self {
-                &Self::DE
+        impl $crate::AppLabels for $Name {
+            fn labels(locale: $crate::Locale, terminology: $crate::Terminology) -> &'static Self {
+                match (terminology, locale) {
+                    ($crate::Terminology::Native, $crate::Locale::En) => &Self::NATIVE_EN,
+                    ($crate::Terminology::Native, $crate::Locale::De) => &Self::NATIVE_DE,
+                    ($crate::Terminology::Reuse, $crate::Locale::En) => &Self::REUSE_EN,
+                    ($crate::Terminology::Reuse, $crate::Locale::De) => &Self::REUSE_DE,
+                }
             }
         }
     };
-}
-
-/// 🗣️ Picks `de` or `en` by `is_de` — replaces the ~inline `if is_de { "..." } else { "..." }` pairs
-/// duplicated per app for one-off labels that don't warrant a full `app_labels!` struct or a
-/// `localized_label_map` entry.
-pub fn bilingual(en: &str, de: &str, is_de: bool) -> String {
-    (if is_de { de } else { en }).to_string()
-}
-
-/// 🗣️ Builds an (id -> localized label) map from `(id, en, de)` triples — replaces the per-crate
-/// hand-rolled action/utility label-map builder functions (e.g. `flow_action_labels`,
-/// `playbook_play_action_labels`).
-pub fn localized_label_map(is_de: bool, entries: &[(&str, &str, &str)]) -> HashMap<String, String> {
-    entries.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ Fluent builder extension for `AppLabelsOverlay` — an *extension trait*, not inherent methods:
-/// `AppLabelsOverlay` is defined in `semio-framework-core`, so Rust's orphan rules permit a local trait
-/// impl on it but not inherent methods from this downstream crate. Replaces the large hand-constructed
-/// `AppLabelsOverlay { .. }` struct literals every app's `DocumentApp::app_labels` currently writes.
-pub trait AppLabelsOverlayExt: Sized {
-    fn window_kind_label(self, id: impl Into<String>, label: impl Into<String>) -> Self;
-    fn panel_tab_label(self, id: impl Into<String>, label: impl Into<String>) -> Self;
-    fn mode_label(self, id: impl Into<String>, label: impl Into<String>) -> Self;
-    fn action_labels(self, labels: HashMap<String, String>) -> Self;
-    fn utility_labels(self, labels: HashMap<String, String>) -> Self;
-    fn example_labels(self, labels: HashMap<String, String>) -> Self;
-    fn action_arg_label(self, key: impl Into<String>, label: impl Into<String>) -> Self;
-    fn dialog_labels(self, labels: HashMap<String, String>) -> Self;
-    fn introduction_labels(self, labels: HashMap<String, String>) -> Self;
-    fn group_label(self, id: impl Into<String>, label: impl Into<String>) -> Self;
-    fn group_labels(self, labels: HashMap<String, String>) -> Self;
-}
-
-impl AppLabelsOverlayExt for AppLabelsOverlay {
-    fn window_kind_label(mut self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.window_kind_labels.insert(id.into(), label.into());
-        self
-    }
-    fn panel_tab_label(mut self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.panel_tab_labels.insert(id.into(), label.into());
-        self
-    }
-    fn mode_label(mut self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.mode_labels.insert(id.into(), label.into());
-        self
-    }
-    fn action_labels(mut self, labels: HashMap<String, String>) -> Self {
-        self.action_labels = labels;
-        self
-    }
-    fn utility_labels(mut self, labels: HashMap<String, String>) -> Self {
-        self.utility_labels = labels;
-        self
-    }
-    fn example_labels(mut self, labels: HashMap<String, String>) -> Self {
-        self.example_labels = labels;
-        self
-    }
-    fn action_arg_label(mut self, key: impl Into<String>, label: impl Into<String>) -> Self {
-        self.action_arg_labels.insert(key.into(), label.into());
-        self
-    }
-    fn dialog_labels(mut self, labels: HashMap<String, String>) -> Self {
-        self.dialog_labels = labels;
-        self
-    }
-    fn introduction_labels(mut self, labels: HashMap<String, String>) -> Self {
-        self.introduction_labels = labels;
-        self
-    }
-    fn group_label(mut self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.group_labels.insert(id.into(), label.into());
-        self
-    }
-    fn group_labels(mut self, labels: HashMap<String, String>) -> Self {
-        self.group_labels = labels;
-        self
-    }
 }
 
 #[cfg(test)]
@@ -1838,44 +1757,20 @@ mod terminology_tests {
 
     app_labels! {
         struct SampleLabels {
-            greeting: &'static str = en: "Hello", de: "Hallo";
+            greeting: native_en "Hello", native_de "Hallo", reuse_en "Hi", reuse_de "Servus";
         }
     }
 
     #[test]
-    fn resolve_labels_picks_en_or_de_by_locale() {
-        let en = ViewState { locale: Some("en-US".into()), ..ViewState::default() };
-        let de = ViewState { locale: Some("de-DE".into()), ..ViewState::default() };
-        let none = ViewState::default();
-        assert_eq!(resolve_labels::<SampleLabels>(&en).greeting, "Hello");
-        assert_eq!(resolve_labels::<SampleLabels>(&de).greeting, "Hallo");
-        assert_eq!(resolve_labels::<SampleLabels>(&none).greeting, "Hello");
-    }
-
-    #[test]
-    fn bilingual_picks_en_or_de_by_flag() {
-        assert_eq!(bilingual("Hello", "Hallo", false), "Hello");
-        assert_eq!(bilingual("Hello", "Hallo", true), "Hallo");
-    }
-
-    #[test]
-    fn localized_label_map_selects_by_locale() {
-        let entries: &[(&str, &str, &str)] = &[("addStep", "Add Step", "Schritt hinzufügen")];
-        let en = localized_label_map(false, entries);
-        let de = localized_label_map(true, entries);
-        assert_eq!(en.get("addStep").map(String::as_str), Some("Add Step"));
-        assert_eq!(de.get("addStep").map(String::as_str), Some("Schritt hinzufügen"));
-    }
-
-    #[test]
-    fn app_labels_overlay_ext_builds_fluently() {
-        let overlay = AppLabelsOverlay::default()
-            .window_kind_label("main", "Main")
-            .mode_label("edit", "Edit")
-            .action_labels(localized_label_map(false, &[("addStep", "Add Step", "Schritt hinzufügen")]));
-        assert_eq!(overlay.window_kind_labels.get("main").map(String::as_str), Some("Main"));
-        assert_eq!(overlay.mode_labels.get("edit").map(String::as_str), Some("Edit"));
-        assert_eq!(overlay.action_labels.get("addStep").map(String::as_str), Some("Add Step"));
+    fn resolve_labels_is_exhaustive_over_all_four_cells() {
+        let native_en = ViewState { locale: Locale::En, terminology: Terminology::Native, ..ViewState::default() };
+        let native_de = ViewState { locale: Locale::De, terminology: Terminology::Native, ..ViewState::default() };
+        let reuse_en = ViewState { locale: Locale::En, terminology: Terminology::Reuse, ..ViewState::default() };
+        let reuse_de = ViewState { locale: Locale::De, terminology: Terminology::Reuse, ..ViewState::default() };
+        assert_eq!(resolve_labels::<SampleLabels>(&native_en).greeting.as_str(), "Hello");
+        assert_eq!(resolve_labels::<SampleLabels>(&native_de).greeting.as_str(), "Hallo");
+        assert_eq!(resolve_labels::<SampleLabels>(&reuse_en).greeting.as_str(), "Hi");
+        assert_eq!(resolve_labels::<SampleLabels>(&reuse_de).greeting.as_str(), "Servus");
     }
 }
 //#endregion 🔖️Terminology
@@ -2227,11 +2122,11 @@ mod app_builder_tests {
     #[test]
     fn build_definition_rejects_layout_with_unknown_window_kind() {
         let result = std::panic::catch_unwind(|| {
-            App::builder("bad-app", "Bad")
+            App::builder("bad-app", LocalizedLabel::data("Bad"))
                 .document(["semio", "bad"])
-                .mode("edit", "Edit", "pencil")
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
                 .mode_tools("edit", vec![])
-                .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .default_layout(create_default_layout(&["missing".into()], "row", None, None))
                 .build_definition();
         });
@@ -2240,12 +2135,12 @@ mod app_builder_tests {
 
     #[test]
     fn build_definition_accepts_valid_manifest() {
-        let definition = App::builder("good-app", "Good")
+        let definition = App::builder("good-app", LocalizedLabel::data("Good"))
             .document(["semio", "good"])
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::data("Edit"), "pencil")
             .mode_tools("edit", vec![])
-            .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, "good.document")
+            .window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+            .panel_tab("framework.panel.document", LocalizedLabel::data("Document"), PanelGroup::Workbench, "good.document")
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
             .build_definition();
         assert_eq!(definition.window_kinds.len(), 1);
@@ -2265,11 +2160,11 @@ mod app_builder_tests {
         assert_eq!(IconName::from("menu").as_str(), "list");
         assert_eq!(IconName::from("square-pen").as_str(), "pencil");
         assert_eq!(IconName::from("trees").as_str(), "list-tree");
-        let definition = App::builder("icon-app", "Icon")
+        let definition = App::builder("icon-app", LocalizedLabel::data("Icon"))
             .document(["semio", "icon"])
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::data("Edit"), "pencil")
             .mode_tools("edit", vec![])
-            .window_kind("main", "Main", "icon.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+            .window_kind("main", LocalizedLabel::data("Main"), "icon.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
             .build_definition();
         assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
@@ -2279,11 +2174,11 @@ mod app_builder_tests {
     #[test]
     fn build_definition_rejects_terminology_document_for_undeclared_terminology() {
         let result = std::panic::catch_unwind(|| {
-            App::builder("bad-terminology-app", "Bad")
+            App::builder("bad-terminology-app", LocalizedLabel::data("Bad"))
                 .document(["semio", "bad"])
-                .mode("edit", "Edit", "pencil")
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
                 .mode_tools("edit", vec![])
-                .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .window_kind("main", LocalizedLabel::data("Main"), "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .default_layout(create_default_layout(&["main".into()], "row", None, None))
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
                 .build_definition();
@@ -2293,11 +2188,11 @@ mod app_builder_tests {
 
     #[test]
     fn build_definition_accepts_declared_terminology_document() {
-        let definition = App::builder("good-terminology-app", "Good")
+        let definition = App::builder("good-terminology-app", LocalizedLabel::data("Good"))
             .document(["semio", "good"])
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::data("Edit"), "pencil")
             .mode_tools("edit", vec![])
-            .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+            .window_kind("main", LocalizedLabel::data("Main"), "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
@@ -2309,10 +2204,10 @@ mod app_builder_tests {
     }
 
     fn minimal_app(id: &str) -> AppBuilder {
-        App::builder(id, "App")
+        App::builder(id, LocalizedLabel::data("App"))
             .document(["semio", id])
-            .mode("edit", "Edit", "pencil")
-            .window_kind("main", "Main", format!("{id}.main"), SurfaceKind::Canvas2d, IconName::AppWindow)
+            .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+            .window_kind("main", LocalizedLabel::data("Main"), format!("{id}.main"), SurfaceKind::Canvas2d, IconName::AppWindow)
     }
 
     #[test]
@@ -2388,9 +2283,9 @@ mod app_builder_tests {
     #[test]
     fn operation_view_and_shell_actions_are_declared_with_their_kind() {
         let definition = minimal_app("typed-actions-app")
-            .operation("addLayer", "Add Layer")
-            .view_action("setCamera", "Set Camera")
-            .shell_action("exportPng", "Export PNG")
+            .operation("addLayer", LocalizedLabel::data("Add Layer"))
+            .view_action("setCamera", LocalizedLabel::data("Set Camera"))
+            .shell_action("exportPng", LocalizedLabel::data("Export PNG"))
             .build_definition();
         let by_id = |id: &str| definition.actions.iter().find(|c| c.id == id).expect("declared");
         assert_eq!(by_id("addLayer").kind, ActionKind::Operation);
@@ -2402,8 +2297,8 @@ mod app_builder_tests {
     fn build_definition_rejects_duplicate_action_ids() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("dupe-action-app")
-                .operation("addLayer", "Add Layer")
-                .operation("addLayer", "Add Layer Again")
+                .operation("addLayer", LocalizedLabel::data("Add Layer"))
+                .operation("addLayer", LocalizedLabel::data("Add Layer Again"))
                 .build_definition()
         });
         assert!(result.is_err());
@@ -2413,7 +2308,7 @@ mod app_builder_tests {
     fn build_definition_rejects_keybinding_for_undeclared_action_once_opted_in() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("undeclared-keybinding-app")
-                .operation("addLayer", "Add Layer")
+                .operation("addLayer", LocalizedLabel::data("Add Layer"))
                 .keybinding("mod+l", "removeLayer")
                 .build_definition()
         });
@@ -2424,8 +2319,8 @@ mod app_builder_tests {
     fn declaring_utilities_injects_set_active_utility_action_and_keybinding() {
         use semio_framework_core::{ActionKind, UtilityDefinition, SET_ACTIVE_UTILITY_ACTION_ID};
         let definition = minimal_app("utility-app")
-            .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", "Brush", IconName::Paintbrush) })
-            .utility_simple("eraser", "Eraser", IconName::Eraser)
+            .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush) })
+            .utility_simple("eraser", LocalizedLabel::data("Eraser"), IconName::Eraser)
             .build_definition();
         let set_active_utility = definition
             .actions
@@ -2454,7 +2349,7 @@ mod app_builder_tests {
     fn build_definition_accepts_and_resolves_mode_tools() {
         use semio_framework_core::ToolRef;
         let definition = minimal_app("tool-app")
-            .tool_simple("fill", "Fill", IconName::PaintBucket)
+            .tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket)
             .mode_tools("edit", vec![ToolRef::new("fill")])
             .build_definition();
         assert_eq!(definition.tools.len(), 1);
@@ -2476,7 +2371,7 @@ mod app_builder_tests {
     fn build_definition_rejects_tool_referenced_by_no_mode() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("orphan-tool-app")
-                .tool_simple("fill", "Fill", IconName::PaintBucket)
+                .tool_simple("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket)
                 .build_definition()
         });
         assert!(result.is_err(), "a declared tool must be referenced by mode_tools on at least one mode");
@@ -2486,7 +2381,7 @@ mod app_builder_tests {
     fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
         use semio_framework_core::{ActionKind, ToolDefinition, ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
         let definition = minimal_app("tool-keybinding-app")
-            .tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", "Fill", IconName::PaintBucket) })
+            .tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket) })
             .mode_tools("edit", vec![ToolRef::new("fill")])
             .build_definition();
         let set_active_tool = definition
@@ -2515,8 +2410,8 @@ mod app_builder_tests {
     #[test]
     fn action_args_attaches_declared_arguments() {
         let definition = minimal_app("args-app")
-            .operation("resize", "Resize")
-            .action_args("resize", vec![ActionArgDef::slider("scale", "Scale", 0.0, 4.0).required()])
+            .operation("resize", LocalizedLabel::data("Resize"))
+            .action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()])
             .build_definition();
         let resize = definition.actions.iter().find(|action| action.id == "resize").expect("declared");
         assert_eq!(resize.args.len(), 1);
@@ -2528,7 +2423,7 @@ mod app_builder_tests {
     fn build_definition_rejects_window_kind_utility_referencing_undeclared_utility() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("bad-utility-ref-app")
-                .utility_simple("brush", "Brush", IconName::Paintbrush)
+                .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
                 .window_kind_utilities("main", vec!["missing".into()])
                 .build_definition()
         });
@@ -2539,7 +2434,7 @@ mod app_builder_tests {
     fn build_definition_rejects_window_kind_action_referencing_undeclared_action() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("bad-action-ref-app")
-                .operation("addLayer", "Add Layer")
+                .operation("addLayer", LocalizedLabel::data("Add Layer"))
                 .window_kind_actions("main", vec!["removeLayer".into()])
                 .build_definition()
         });
@@ -2551,10 +2446,10 @@ mod app_builder_tests {
         use semio_framework_core::{ActionArgControl, ActionArgDef};
         let result = std::panic::catch_unwind(|| {
             minimal_app("bad-select-app")
-                .operation("pick", "Pick")
+                .operation("pick", LocalizedLabel::data("Pick"))
                 .action_args("pick", vec![ActionArgDef {
                     control: ActionArgControl::Select { options: vec![] },
-                    ..ActionArgDef::text("choice", "Choice")
+                    ..ActionArgDef::text("choice", LocalizedLabel::data("Choice"))
                 }])
                 .build_definition()
         });
@@ -2721,8 +2616,8 @@ mod app_builder_tests {
     fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
         use semio_framework_core::{window_element_id, IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
         let definition = minimal_app("good-intro-app")
-            .operation("addLayer", "Add Layer")
-            .utility_simple("brush", "Brush", IconName::Paintbrush)
+            .operation("addLayer", LocalizedLabel::data("Add Layer"))
+            .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
             .window_kind_utilities("main", vec!["brush".into()])
             .window_kind_actions("main", vec!["addLayer".into()])
             .introduction(IntroductionDefinition {
@@ -2856,8 +2751,8 @@ mod app_builder_tests {
         tutorial.tracks.gestures =
             vec![TutorialGestureCue { at: 30, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: window_element_id("main"), offset: None } }, cursor: None }];
         let definition = minimal_app("good-tutorial-app")
-            .operation("addLayer", "Add Layer")
-            .utility_simple("brush", "Brush", IconName::Paintbrush)
+            .operation("addLayer", LocalizedLabel::data("Add Layer"))
+            .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
             .tutorial(tutorial)
             .build_definition();
         assert_eq!(definition.tutorials.len(), 1);
@@ -2868,7 +2763,7 @@ mod app_builder_tests {
     fn declaring_dialog_appends_to_definition() {
         use semio_framework_core::{ActionRef, DialogDefinition};
         let definition = minimal_app("dialog-app")
-            .operation("addLayer", "Add Layer")
+            .operation("addLayer", LocalizedLabel::data("Add Layer"))
             .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")))
             .build_definition();
         assert_eq!(definition.dialogs.len(), 1);
@@ -2881,7 +2776,7 @@ mod app_builder_tests {
         use semio_framework_core::{ActionRef, DialogDefinition};
         let result = std::panic::catch_unwind(|| {
             minimal_app("dupe-dialog-app")
-                .operation("addLayer", "Add Layer")
+                .operation("addLayer", LocalizedLabel::data("Add Layer"))
                 .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")))
                 .dialog(DialogDefinition::new("addLayer", "Add Layer Again", ActionRef::new("addLayer")))
                 .build_definition()
@@ -2905,7 +2800,7 @@ mod app_builder_tests {
         use semio_framework_core::{ActionRef, DialogDefinition};
         let result = std::panic::catch_unwind(|| {
             minimal_app("bad-dialog-cancel-app")
-                .operation("addLayer", "Add Layer")
+                .operation("addLayer", LocalizedLabel::data("Add Layer"))
                 .dialog(DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer")).on_cancel(ActionRef::new("missing")))
                 .build_definition()
         });
@@ -2926,10 +2821,10 @@ mod app_builder_tests {
         use semio_framework_core::{ActionArgDef, ActionRef, DialogDefinition};
         let result = std::panic::catch_unwind(|| {
             minimal_app("dupe-dialog-arg-app")
-                .operation("addLayer", "Add Layer")
+                .operation("addLayer", LocalizedLabel::data("Add Layer"))
                 .dialog(
                     DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer"))
-                        .args(vec![ActionArgDef::text("name", "Name"), ActionArgDef::text("name", "Name Again")]),
+                        .args(vec![ActionArgDef::text("name", LocalizedLabel::data("Name")), ActionArgDef::text("name", LocalizedLabel::data("Name Again"))]),
                 )
                 .build_definition()
         });
@@ -2941,10 +2836,10 @@ mod app_builder_tests {
         use semio_framework_core::{ActionArgControl, ActionArgDef, ActionRef, DialogDefinition};
         let result = std::panic::catch_unwind(|| {
             minimal_app("bad-dialog-select-app")
-                .operation("addLayer", "Add Layer")
+                .operation("addLayer", LocalizedLabel::data("Add Layer"))
                 .dialog(
                     DialogDefinition::new("addLayer", "Add Layer", ActionRef::new("addLayer"))
-                        .args(vec![ActionArgDef { control: ActionArgControl::Select { options: vec![] }, ..ActionArgDef::text("kind", "Kind") }]),
+                        .args(vec![ActionArgDef { control: ActionArgControl::Select { options: vec![] }, ..ActionArgDef::text("kind", LocalizedLabel::data("Kind")) }]),
                 )
                 .build_definition()
         });
@@ -3022,7 +2917,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn builder(id: impl Into<String>, label: impl Into<String>) -> AppBuilder {
+    pub fn builder(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> AppBuilder {
         AppBuilder::new(id, label)
     }
 
@@ -3039,7 +2934,7 @@ impl App {
     pub fn example(
         mut self,
         id: impl Into<String>,
-        label: impl Into<String>,
+        label: impl Into<LocalizedLabel>,
         document_json: impl Into<String>,
         icon_id: impl Into<IconName>,
     ) -> Self {
@@ -3274,13 +3169,13 @@ fn history_panel_icon_id(kind: ActionKind) -> IconName {
 pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool) -> UiNode {
     let act = |action: &str, args: Option<DslValue>| ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args };
     let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| {
-        let label = if is_de { label_de } else { label_en };
-        let mut item = UiTreeItemNode::base(id, label);
+        let label = Label::data(if is_de { label_de } else { label_en });
+        let mut item = UiTreeItemNode::base(id, label.clone());
         item.icon_id = Some(icon_id);
         item.control = Some(UiControlNode::Button(UiButtonNode {
             id: Some(format!("{id}.run")),
             icon_id,
-            label: label.into(),
+            label,
             action: act(action, None),
             style: None,
             presence: if enabled { UiPresence::default() } else { UiPresence::state(UiState::Disabled) },
@@ -3297,15 +3192,15 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
         HistoryCommandFilter::WithoutOperations => "withoutOperations",
         HistoryCommandFilter::OnlyOperations => "onlyOperations",
     };
-    let mut filter_item = UiTreeItemNode::base("framework.history.filter", if is_de { "Filter" } else { "Filter" });
+    let mut filter_item = UiTreeItemNode::base("framework.history.filter", Label::data("Filter"));
     filter_item.icon_id = Some(IconName::Filter);
     filter_item.control = Some(UiControlNode::Select(UiSelectNode {
         id: "framework.history.filter.control".into(),
         value: filter_value.into(),
         items: vec![
-            UiSelectItem { value: "all".into(), label: if is_de { "Alle" } else { "All" }.into() },
-            UiSelectItem { value: "withoutOperations".into(), label: if is_de { "Ohne Operationen" } else { "Without Operations" }.into() },
-            UiSelectItem { value: "onlyOperations".into(), label: if is_de { "Nur Operationen" } else { "Only Operations" }.into() },
+            UiSelectItem { value: "all".into(), label: Label::data(if is_de { "Alle" } else { "All" }) },
+            UiSelectItem { value: "withoutOperations".into(), label: Label::data(if is_de { "Ohne Operationen" } else { "Without Operations" }) },
+            UiSelectItem { value: "onlyOperations".into(), label: Label::data(if is_de { "Nur Operationen" } else { "Only Operations" }) },
         ],
         placeholder: None,
         on_change: act(SET_HISTORY_COMMAND_FILTER_ACTION_ID, None),
@@ -3325,14 +3220,14 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
         .map(|entry| {
             // 🔢️ A folded row (`count > 1`) shows "Label xN" instead of the bare label.
             let label = if entry.count > 1 { format!("{} x{}", entry.label, entry.count) } else { entry.label.clone() };
-            let mut item = UiTreeItemNode::base(format!("framework.history.entry.{}", entry.seq), label);
+            let mut item = UiTreeItemNode::base(format!("framework.history.entry.{}", entry.seq), Label::data(label));
             item.description = if entry.op_lines.is_empty() { None } else { Some(entry.op_lines.join(" · ")) };
             item.icon_id = Some(history_panel_icon_id(entry.kind));
             item.dimmed = (entry.edit_id.is_some() && !entry.applied).then_some(true);
             if entry.revertible {
                 item.actions = Some(vec![UiTreeItemAction {
                     icon_id: IconName::RotateCcw,
-                    label: Some(if is_de { "Zurück bis hier" } else { "Backwards" }.into()),
+                    label: Some(Label::data(if is_de { "Zurück bis hier" } else { "Backwards" })),
                     action: act(REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::Object(vec![("entrySeq".into(), DslValue::Number(entry.seq as f64))]))),
                     reveal_on_hover: Some(true),
                 }]);
@@ -3345,7 +3240,7 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
         sections: vec![
             UiTreeSectionNode {
                 id: "framework.history.actions".into(),
-                label: Some(if is_de { "Aktionen" } else { "Actions" }.into()),
+                label: Some(Label::data(if is_de { "Aktionen" } else { "Actions" })),
                 default_open: Some(true),
                 presence: UiPresence::default(),
                 items: vec![
@@ -3358,7 +3253,7 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
             },
             UiTreeSectionNode {
                 id: "framework.history.commands".into(),
-                label: Some(if is_de { "Befehle" } else { "Commands" }.into()),
+                label: Some(Label::data(if is_de { "Befehle" } else { "Commands" })),
                 default_open: Some(true),
                 presence: UiPresence::default(),
                 items: command_items,
@@ -3636,14 +3531,6 @@ pub trait DocumentApp: Send + 'static {
     ) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
     }
-    /// 🗣️ Locale/terminology-aware overlay for this app's window-kind/mode labels — resolved from
-    /// `Self::Config` now (locale/terminology moved off the deleted `ViewState` per B1), not baked in
-    /// statically at manifest-build time. Framework panel-tab labels (Document/Catalogue/Inspection/
-    /// Parameters) are merged in automatically by `plugin_runtime::plugin_app_labels` and do not need to
-    /// be supplied here.
-    fn app_labels(&self, _cfg: &ConfigView<'_, Self::Config>) -> AppLabelsOverlay {
-        AppLabelsOverlay::default()
-    }
     /// 🖱️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
     /// counterpart. Called fresh at right-click time (never cached, never part of `refreshUi`);
     /// `request.menu.id` names the target the host resolved (a `UiMenuRef` a plugin attached to a
@@ -3860,7 +3747,7 @@ pub trait PluginApp: Send {
     fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), String>;
     fn detach_backbone(&mut self);
     /// @emoji 🕰️ `view_state` is kept here ONLY for wrapper-owned framework chrome (the injected
-    /// history panel body's `is_de_locale` — see `VcsDocumentApp::render`); it is never forwarded into
+    /// history panel body's locale — see `VcsDocumentApp::render`); it is never forwarded into
     /// `DocumentApp::render`, which dropped `ViewState` entirely in B1.
     fn render(
         &mut self,
@@ -3881,9 +3768,6 @@ pub trait PluginApp: Send {
     /// ⏱️ Object-safe counterpart to `DocumentApp::pending_effects` — called once per `refreshUi` pass.
     fn pending_effects(&mut self) -> Vec<HostEffect> {
         Vec::new()
-    }
-    fn app_labels(&mut self) -> AppLabelsOverlay {
-        AppLabelsOverlay::default()
     }
     /// 🖱️ Object-safe counterpart to `DocumentApp::context_menu` — the WIT `context-menu` export's
     /// dispatch target.
@@ -4033,7 +3917,11 @@ impl<'a> Menu<'a> {
             Some(definition) => {
                 self.items.push(ContextMenuItemSpec {
                     id: action_id.clone(),
-                    label: Some(definition.label.clone()),
+                    // 🚧️ `DocumentApp::context_menu` carries no `ViewState` (dropped entirely in B1), so
+                    // there is no locale/terminology to resolve against here — hardcoded to
+                    // native/English pending a protocol change to thread the active axes through
+                    // context-menu construction. Flagged as a follow-up, not fixed in this pass.
+                    label: Some(definition.label.resolve(Terminology::Native, Locale::En).to_string()),
                     icon: Some(definition.icon_id.as_str().to_string()),
                     action: Some(action_id),
                     args,
@@ -4053,7 +3941,9 @@ impl<'a> Menu<'a> {
             Some(definition) => {
                 self.items.push(ContextMenuItemSpec {
                     id: command_id.clone(),
-                    label: Some(definition.label.clone()),
+                    // 🚧️ See the identical note in `action_with_args` above — no locale context reaches
+                    // context-menu construction yet.
+                    label: Some(definition.label.resolve(Terminology::Native, Locale::En).to_string()),
                     icon: Some(definition.icon_id.as_str().to_string()),
                     action: Some(command_id),
                     ..Default::default()
@@ -4401,9 +4291,11 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// row keeps its original inverse, since backwards on a folded "×N" row must undo the whole run,
     /// not just the last dispatch that folded into it.
     fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>, config_edit_id: Option<String>, inverse: Option<InverseAction>) {
+        // 🚧️ Same locale-context gap as `Menu::action_with_args` — history log entries are recorded
+        // without a `ViewState`, so a fallback label resolves native/English pending a protocol change.
         let label = label
-            .or_else(|| self.registry.get(action_id).map(|def| def.label.clone()))
-            .or_else(|| self.registry.get_command(action_id).map(|def| def.label.clone()))
+            .or_else(|| self.registry.get(action_id).map(|def| def.label.resolve(Terminology::Native, Locale::En).to_string()))
+            .or_else(|| self.registry.get_command(action_id).map(|def| def.label.resolve(Terminology::Native, Locale::En).to_string()))
             .unwrap_or_else(|| action_id.to_string());
         let folds = edit_id.is_none()
             && matches!(kind, ActionKind::View | ActionKind::Shell)
@@ -5251,7 +5143,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         if body_key == FRAMEWORK_HISTORY_BODY_KEY {
             // 🕰️ Framework-owned, projection-independent — served before any app body-key match.
             let (_, _, _, history) = self.cache.as_ref().expect("cache refreshed above");
-            return Ok(ui_history_panel(history, &self.registry.controller_id, is_de_locale(view_state)));
+            return Ok(ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De));
         }
         if let Some(json) = projection_override_json {
             let projection: A::Projection =
@@ -5345,13 +5237,6 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         app.media_fingerprint(port, &doc)
     }
 
-    fn app_labels(&mut self) -> AppLabelsOverlay {
-        if self.refresh_cache().is_err() {
-            return AppLabelsOverlay::default();
-        }
-        let config = self.cache.as_ref().map(|(_, _, config, _)| config.clone()).unwrap_or_default();
-        self.app.app_labels(&ConfigView { projection: &config })
-    }
 }
 
 pub struct AppInstance {
@@ -5487,7 +5372,7 @@ use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor
 use crate::DocumentApp;
 use semio_framework_core::{kernel::{HostEffect, InvocationResult}, PluginManifest, ViewState};
 use ui_wgpu::{
-    framework_panel_tab_label, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef, UiNode,
+    ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef, UiNode,
 };
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
@@ -6003,18 +5888,9 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
     }
 
     let request: RefreshRequest = serde_json::from_str(request_json).map_err(|error| error.to_string())?;
-    let is_de = request.view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    let manifest = plugin_manifest();
 
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
-        let app_id = instance.app.app_id().to_string();
-        let panel_tab_ids: Vec<String> = manifest
-            .apps
-            .iter()
-            .find(|app| app.id == app_id)
-            .map(|app| app.panel_tabs.iter().map(|tab| tab.id().to_string()).collect())
-            .unwrap_or_default();
 
         let mut response = RefreshResponse::default();
         // ⏱️ Arm/advance background work BEFORE rendering below, not after — e.g. a `flowEvalTick`
@@ -6065,16 +5941,12 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
             let (hash, value) = ui_refresh_section(&tool_measures, requested.hash.as_deref());
             response.tools = Some(SectionResponse { key: "tools".into(), hash, value });
         }
-        if let Some(requested) = &request.labels {
-            let mut overlay = instance.app.app_labels();
-            for id in &panel_tab_ids {
-                if let Some(label) = framework_panel_tab_label(id, is_de) {
-                    overlay.panel_tab_labels.entry(id.clone()).or_insert_with(|| label.into());
-                }
-            }
-            let (hash, value) = ui_refresh_section(&overlay, requested.hash.as_deref());
-            response.labels = Some(SectionResponse { key: "labels".into(), hash, value });
-        }
+        // 🗣️ Labels no longer need a runtime overlay round-trip: the manifest itself now carries a full
+        // `LocalizedLabel` matrix per field, resolved shell-side from the active locale/terminology —
+        // see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND. A
+        // `labels` refresh request now always comes back empty; kept accepting it (rather than erroring)
+        // so an unupdated shell doesn't break.
+        let _ = &request.labels;
 
         Ok(serde_json::to_string(&response).unwrap_or_else(|_| "{}".into()))
     })
@@ -6251,17 +6123,8 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
             }
             protocol::AppCommand::RefreshUi { seq, sections, view_state } => {
                 let view_state = adopt_instance_view_state(instance_id, &view_state);
-                let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-                let manifest = plugin_manifest();
                 let outcome = with_instances_mut(|list| {
                     let instance = find_instance(list, instance_id)?;
-                    let app_id = instance.app.app_id().to_string();
-                    let panel_tab_ids: Vec<String> = manifest
-                        .apps
-                        .iter()
-                        .find(|app| app.id == app_id)
-                        .map(|app| app.panel_tabs.iter().map(|tab| tab.id().to_string()).collect())
-                        .unwrap_or_default();
                     let mut section_frames = Vec::new();
                     for probe in &sections {
                         let (hash, body) = match probe.kind {
@@ -6272,15 +6135,9 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                             SECTION_KIND_ENGAGEMENTS => channel_refresh_section(&instance.app.window_engagements(), probe.hash),
                             SECTION_KIND_MEASURES => channel_refresh_section(&instance.app.window_measures(), probe.hash),
                             SECTION_KIND_TOOLS => channel_refresh_section(&instance.app.tool_measures(), probe.hash),
-                            SECTION_KIND_LABELS => {
-                                let mut overlay = instance.app.app_labels();
-                                for id in &panel_tab_ids {
-                                    if let Some(label) = framework_panel_tab_label(id, is_de) {
-                                        overlay.panel_tab_labels.entry(id.clone()).or_insert_with(|| label.into());
-                                    }
-                                }
-                                channel_refresh_section(&overlay, probe.hash)
-                            }
+                            // 🗣️ Labels no longer need a runtime overlay round-trip — see the JSON
+                            // refresh-ui path's identical note above `let _ = &request.labels;`.
+                            SECTION_KIND_LABELS => (0u64, None),
                             _ => (0u64, None),
                         };
                         section_frames.push(protocol::AppFrame::UiSection {
@@ -6855,10 +6712,10 @@ mod semio_plugin_macro_tests {
 
     fn synthetic_play_app() -> App {
         App::from_builder(
-            App::builder("synthetic-play", "Synthetic")
+            App::builder("synthetic-play", LocalizedLabel::data("Synthetic"))
                 .document(["state"])
-                .mode("edit", "Edit", "pencil")
-                .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow),
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow),
         )
     }
 
@@ -6872,17 +6729,17 @@ mod semio_plugin_macro_tests {
     /// label-resolution test below.
     fn contract_registry() -> AppActionRegistry {
         let app = App::from_builder(
-            App::builder("synthetic-play", "Synthetic")
+            App::builder("synthetic-play", LocalizedLabel::data("Synthetic"))
                 .document(["state"])
-                .mode("edit", "Edit", "pencil")
-                .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .operation("setLabelRequired", "Set Label")
-                .action_args("setLabelRequired", vec![ActionArgDef::text("value", "Value").required()])
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .window_kind("main", LocalizedLabel::data("Main"), "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .operation("setLabelRequired", LocalizedLabel::data("Set Label"))
+                .action_args("setLabelRequired", vec![ActionArgDef::text("value", LocalizedLabel::data("Value")).required()])
                 // 🧪️ `Operation`-kind by declaration, but `TestApp` emits zero operations for it — the
                 // "declared Operation action that happened to produce nothing" fixture.
-                .operation("noopOperation", "Noop Operation")
-                .view_action("badView", "Bad View")
-                .utility_simple("brush", "Brush", IconName::Paintbrush)
+                .operation("noopOperation", LocalizedLabel::data("Noop Operation"))
+                .view_action("badView", LocalizedLabel::data("Bad View"))
+                .utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush)
                 .app_command("incrementViaCommand", "Increment", "counter")
                 .app_command("setLabelViaCommand", "Set Label", "counter"),
         );
@@ -7544,7 +7401,7 @@ mod semio_plugin_macro_tests {
     //#region 🗂️GroupedContextMenu
     #[test]
     fn action_definition_with_category_sets_the_ribbon_taxonomy_field() {
-        let action = ActionDefinition::new_catalog("x", "X", ActionKind::Operation).with_category("view");
+        let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Operation).with_category("view");
         assert_eq!(action.category.as_deref(), Some("view"));
     }
 
@@ -7564,22 +7421,22 @@ mod semio_plugin_macro_tests {
     /// `"flat-menu-test"` branch below.
     fn flat_menu_registry() -> AppActionRegistry {
         let app = App::from_builder(
-            App::builder("flat-menu-test", "FlatMenuTest")
+            App::builder("flat-menu-test", LocalizedLabel::data("FlatMenuTest"))
                 .document(["state"])
-                .mode("edit", "Edit", "pencil")
-                .window_kind("main", "Main", "flat-menu-test.main", SurfaceKind::Canvas2d, IconName::AppWindow)
-                .operation("setLabelRequired", "Set Label")
-                .action_args("setLabelRequired", vec![ActionArgDef::text("value", "Value").required()])
-                .operation("flatLeaf1", "Flat Leaf 1")
-                .operation("flatLeaf2", "Flat Leaf 2")
-                .operation("flatLeaf3", "Flat Leaf 3")
-                .operation("flatLeaf4", "Flat Leaf 4")
-                .action_with(ActionDefinition::new_catalog("flatLeaf5", "Flat Leaf 5", ActionKind::Operation).with_category("view"))
-                .action_with(ActionDefinition::new_catalog("flatLeaf6", "Flat Leaf 6", ActionKind::Operation).with_category("view"))
-                .action_with(ActionDefinition::new_catalog("flatLeaf7", "Flat Leaf 7", ActionKind::Operation).with_category("export"))
-                .action_with(ActionDefinition::new_catalog("flatLeaf8", "Flat Leaf 8", ActionKind::Operation).with_category("export"))
-                .operation("flatLeaf9", "Flat Leaf 9")
-                .operation("flatLeaf10", "Flat Leaf 10"),
+                .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                .window_kind("main", LocalizedLabel::data("Main"), "flat-menu-test.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .operation("setLabelRequired", LocalizedLabel::data("Set Label"))
+                .action_args("setLabelRequired", vec![ActionArgDef::text("value", LocalizedLabel::data("Value")).required()])
+                .operation("flatLeaf1", LocalizedLabel::data("Flat Leaf 1"))
+                .operation("flatLeaf2", LocalizedLabel::data("Flat Leaf 2"))
+                .operation("flatLeaf3", LocalizedLabel::data("Flat Leaf 3"))
+                .operation("flatLeaf4", LocalizedLabel::data("Flat Leaf 4"))
+                .action_with(ActionDefinition::new_catalog("flatLeaf5", LocalizedLabel::data("Flat Leaf 5"), ActionKind::Operation).with_category("view"))
+                .action_with(ActionDefinition::new_catalog("flatLeaf6", LocalizedLabel::data("Flat Leaf 6"), ActionKind::Operation).with_category("view"))
+                .action_with(ActionDefinition::new_catalog("flatLeaf7", LocalizedLabel::data("Flat Leaf 7"), ActionKind::Operation).with_category("export"))
+                .action_with(ActionDefinition::new_catalog("flatLeaf8", LocalizedLabel::data("Flat Leaf 8"), ActionKind::Operation).with_category("export"))
+                .operation("flatLeaf9", LocalizedLabel::data("Flat Leaf 9"))
+                .operation("flatLeaf10", LocalizedLabel::data("Flat Leaf 10")),
         );
         AppActionRegistry::from_definition(&app.definition)
     }
@@ -8778,11 +8635,10 @@ pub use app::{
 };
 pub use semio_framework_core::{MediaForm, MediaPortDirection, MediaPortSpec};
 pub use app::{
-    is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item, tree_item_desc,
-    tree_item_with_action, tree_item_with_action_draggable, AppLabelsOverlayExt, LocaleLabels,
+    resolve_labels, selection_ids, tree_item, tree_item_desc,
+    tree_item_with_action, tree_item_with_action_draggable,
 };
 pub use app::testkit;
-pub use semio_framework_core::AppLabelsOverlay;
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{
     host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms,

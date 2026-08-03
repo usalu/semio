@@ -94,6 +94,8 @@ fn space_workflow_context_menu_items(
     let hit_node = hits.iter().find(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
     let mut menu = Menu::of(registry);
     if hits.is_empty() {
+        // 🗂️ Empty-canvas menu: paste/select-all stay top-level (the two most frequent verbs here),
+        // reorganize is a rarer layout action so it moves into its own taxonomy group.
         menu = menu
             .item(ContextMenuItemSpec {
                 id: "paste-instance".into(),
@@ -110,15 +112,21 @@ fn space_workflow_context_menu_items(
                 args: optional_json_to_dsl(Some(json!({ "selectAll": true }))),
                 ..Default::default()
             })
-            .item(ContextMenuItemSpec {
-                id: "reorganize".into(),
-                label: Some(labels.context_reorganize.into()),
-                icon: Some("layout-grid".into()),
-                action: Some("reorganizeWorkflow".into()),
-                ..Default::default()
+            .group("transform", |m| {
+                m.item(ContextMenuItemSpec {
+                    id: "reorganize".into(),
+                    label: Some(labels.context_reorganize.into()),
+                    icon: Some("layout-grid".into()),
+                    action: Some("reorganizeWorkflow".into()),
+                    ..Default::default()
+                })
             });
     }
     if hit_node.is_some() || !nodes.is_empty() {
+        // 🗂️ Node menu: open/duplicate stay top-level (the two most frequent verbs); copy moves into
+        // "transfer" (clipboard), rename into "settings" (identity/label editing), remove stays a
+        // trailing destructive leaf — `organize_context_menu` (run automatically at the
+        // `VcsDocumentApp::context_menu` funnel) inserts the pre-destructive separator itself.
         menu = menu
             .item(ContextMenuItemSpec {
                 id: "open-instance".into(),
@@ -134,20 +142,36 @@ fn space_workflow_context_menu_items(
                 action: Some("duplicateAppInstance".into()),
                 ..Default::default()
             })
-            .item(ContextMenuItemSpec {
-                id: "copy-instance".into(),
-                label: Some(labels.context_copy.into()),
-                icon: Some("clipboard-copy".into()),
-                action: Some("copyAppInstance".into()),
-                ..Default::default()
+            .group("transfer", |m| {
+                m.item(ContextMenuItemSpec {
+                    id: "copy-instance".into(),
+                    label: Some(labels.context_copy.into()),
+                    icon: Some("clipboard-copy".into()),
+                    action: Some("copyAppInstance".into()),
+                    ..Default::default()
+                })
             })
-            .item(ContextMenuItemSpec {
-                id: "rename-instance".into(),
-                label: Some(labels.context_rename_label.into()),
-                icon: Some("edit-3".into()),
-                action: Some("renameAppInstance".into()),
-                ..Default::default()
+            .group("settings", |m| {
+                m.item(ContextMenuItemSpec {
+                    id: "rename-instance".into(),
+                    label: Some(labels.context_rename_label.into()),
+                    icon: Some("edit-3".into()),
+                    action: Some("renameAppInstance".into()),
+                    ..Default::default()
+                })
             });
+        if !nodes.is_empty() {
+            menu = menu.group("selection", |m| {
+                m.item(ContextMenuItemSpec {
+                    id: "clear-selection".into(),
+                    label: Some(labels.context_clear_selection.into()),
+                    icon: Some("square-dashed".into()),
+                    action: Some("setMediaNodeSelection".into()),
+                    args: optional_json_to_dsl(Some(json!({ "nodeIds": [] }))),
+                    ..Default::default()
+                })
+            });
+        }
         let phrase = selection_count_phrase(
             is_de,
             &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })],
@@ -157,7 +181,9 @@ fn space_workflow_context_menu_items(
         } else {
             format!("{} ({phrase})", labels.context_remove)
         };
-        menu = menu.separator().item(ContextMenuItemSpec {
+        // 🎯️ Destructive tail always comes last — kept unconditionally after the "selection" group so
+        // remove-instance is the final row regardless of whether clear-selection was appended above.
+        menu = menu.item(ContextMenuItemSpec {
             id: "remove-instance".into(),
             label: Some(remove_label),
             icon: Some("trash".into()),
@@ -165,16 +191,6 @@ fn space_workflow_context_menu_items(
             destructive: Some(true),
             ..Default::default()
         });
-        if !nodes.is_empty() {
-            menu = menu.separator().item(ContextMenuItemSpec {
-                id: "clear-selection".into(),
-                label: Some(labels.context_clear_selection.into()),
-                icon: Some("square-dashed".into()),
-                action: Some("setMediaNodeSelection".into()),
-                args: optional_json_to_dsl(Some(json!({ "nodeIds": [] }))),
-                ..Default::default()
-            });
-        }
     }
     menu.build()
 }
@@ -1782,24 +1798,24 @@ pub fn create_space_app() -> App {
         .operation("moveMediaNode", "Move Media Node")
         .operation("connectMediaPorts", "Connect Media Ports")
         .operation("disconnectMediaEdge", "Disconnect Media Edge")
-        .operation("removeAppInstance", "Remove App Instance")
+        .action_with(ActionDefinition::new_catalog("removeAppInstance", "Remove App Instance", ActionKind::Operation).with_category("selection"))
         .operation("deleteSelection", "Delete Selection")
-        .operation("copyAppInstance", "Copy App Instance")
-        .operation("duplicateAppInstance", "Duplicate App Instance")
-        .operation("pasteAppInstance", "Paste App Instance")
-        .operation("renameAppInstance", "Rename App Instance")
+        .action_with(ActionDefinition::new_catalog("copyAppInstance", "Copy App Instance", ActionKind::Operation).with_category("transfer"))
+        .action_with(ActionDefinition::new_catalog("duplicateAppInstance", "Duplicate App Instance", ActionKind::Operation).with_category("create"))
+        .action_with(ActionDefinition::new_catalog("pasteAppInstance", "Paste App Instance", ActionKind::Operation).with_category("transfer"))
+        .action_with(ActionDefinition::new_catalog("renameAppInstance", "Rename App Instance", ActionKind::Operation).with_category("settings"))
         .operation("patchMediaNodes", "Patch Media Nodes")
         .operation("patchAppInstances", "Patch App Instances")
         .operation("bindParameterField", "Bind Parameter Field")
         .operation("unbindParameterField", "Unbind Parameter Field")
-        .operation("reorganizeWorkflow", "Reorganize Workflow")
+        .action_with(ActionDefinition::new_catalog("reorganizeWorkflow", "Reorganize Workflow", ActionKind::Operation).with_category("transform"))
         .operation("workflowEngagementSubmit", "Workflow Engagement Submit")
         .operation("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit")
         .operation("nodeGraphEdit", "Edit Workflow")
         .view_action("setActivePanelTab", "Set Active Panel Tab")
         .view_action("selectInstance", "Select Instance")
         .view_action("nodeGraphSelect", "Select Graph Node")
-        .view_action("setMediaNodeSelection", "Set Media Node Selection")
+        .action_with(ActionDefinition::new_catalog("setMediaNodeSelection", "Set Media Node Selection", ActionKind::View).with_category("selection"))
         .view_action("nodeGraphHover", "Hover Graph Node")
         .view_action("textHover", "Text Hover")
         .view_action("nodeGraphViewport", "Set Graph Viewport")
@@ -1816,7 +1832,7 @@ pub fn create_space_app() -> App {
         .shell_action("importSpacePack", "Import Studio Pack")
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importSpacePackPayload", "Import Studio Pack Payload", ActionKind::Shell) })
         .shell_action("openSpace", "Open Studio")
-        .shell_action("openInstance", "Open Instance")
+        .action_with(ActionDefinition::new_catalog("openInstance", "Open Instance", ActionKind::Shell).with_category("open"))
         .shell_action("closeFocusedInstance", "Close Focused Instance")
         .shell_action("goHome", "Go Home")
         .shell_action("navigateVirtualFileSystemNode", "Navigate File System Node")
@@ -2648,6 +2664,22 @@ mod tests {
         assert!(open.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })), "openSpace must load the created studio");
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));
+    }
+
+    /// 🗂️ Grouped-disclosure context menu: at most 9 top-level rows (leaves+groups combined) and the
+    /// destructive `removeAppInstance` row is always the final top-level entry — the canonical
+    /// migration pattern's "destructive tail" invariant, now unconditional (see the comment above the
+    /// `remove-instance` push in `space_workflow_context_menu_items`).
+    #[test]
+    fn space_workflow_context_menu_stays_within_budget_with_destructive_tail() {
+        let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().definition);
+        let labels = resolve_labels::<SStudioLabels>(&SpaceConfig::default());
+        let selected_node_ids = vec!["node-1".to_string()];
+        let items = space_workflow_context_menu_items(&registry, labels, false, None, &selected_node_ids);
+        assert!(items.len() <= 9, "top-level context menu rows must stay within budget: {} rows", items.len());
+        let last = items.last().expect("non-empty menu");
+        assert_eq!(last.id, "remove-instance");
+        assert_eq!(last.destructive, Some(true), "removeAppInstance must be the last, destructive top-level row");
     }
 }
 //#endregion 🧪️Tests

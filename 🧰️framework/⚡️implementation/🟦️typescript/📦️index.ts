@@ -7,6 +7,9 @@ import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../../�
 import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl } from "../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 import type { IconName } from "@semio-tech/ui-asset";
 export type { IconName };
+import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🟦️ui-axes.ts";
+export { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology };
+export type { ShellLocale, ShellTerminology, LocalizedLabel };
 
 // #region 🧬️GeneratedMirror
 /** 🧬️ Types generated from `framework/core/rs/lib.rs` via ts-rs (`bun nx run @semio-tech/framework-core:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
@@ -1956,17 +1959,10 @@ export type TutorialDefinition = {
 //#endregion 🎬️Tutorial
 
 //#region 🏷️ShellBrand
-/** 🌐️ Locales the shell chrome ships a complete translation bundle for — the single source `UiLocale`
- * (`framework/ui/js/react`), `ShellBrandLocks.locale`, and `resolveShellLocks` all derive from. Adding a locale
- * means adding it here, which the ui-react schema asserts force a matching bundle for. */
-export const SHELL_LOCALES = ["en", "de"] as const;
-export type ShellLocale = (typeof SHELL_LOCALES)[number];
-
-/** 🗣️ Chrome-known terminology ids; declaring a new terminology means adding it here plus its
- * `ui.settings.terminology.*` labels (an app-declared id beyond this set is still accepted at
- * runtime, falling back to its raw id in the settings dropdown — only these two are chrome-known). */
-export const SHELL_TERMINOLOGIES = ["native", "reuse"] as const;
-export type ShellTerminology = (typeof SHELL_TERMINOLOGIES)[number];
+// 🌐️ ShellLocale/ShellTerminology are generated from ui_wgpu's 🔣️ui-axes.json (the same source of
+// truth Rust's Locale/Terminology enums derive from), imported/re-exported above — so a locale
+// added there and here can never drift. The single source `UiLocale` (`framework/ui/js/react`),
+// `ShellBrandLocks.locale`, and `resolveShellLocks` all derive from this.
 
 /** 🔒️ Shell preferences a brand pins at boot: each set axis is fixed and its in-app switcher hidden (validated by the renderer's `resolveShellLocks`). */
 export type ShellBrandLocks = {
@@ -2916,7 +2912,7 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
 //#endregion PluginWorkerClient
 
 export function relayPluginBackboneOutbound(uri: string, message: Uint8Array): void {
-  pluginBackboneOutboundRelay?.(uri, message);
+  pluginBackboneRoutes.get(pluginBackboneDocumentIdFromUri(uri))?.(uri, message);
 }
 
 /** @emoji 🌉️ A direct-import (main-thread, no-worker) plugin's generated `🟨️host-shim.js` runs in this
@@ -2943,26 +2939,87 @@ export function postPluginBackboneInbound(pluginId: string, uri: string, message
   pushMainThreadPluginBackboneInbound(uri, messages);
 }
 
-let pluginBackboneOutboundRelay: ((uri: string, message: Uint8Array) => void) | null = null;
-
-export function setPluginBackboneOutboundRelay(relay: ((uri: string, message: Uint8Array) => void) | null): void {
-  pluginBackboneOutboundRelay = relay;
+//#region 🐚️PluginBackboneRouting
+/** @emoji 🐚️ Extracts the `<documentId>` a plugin's `actor://<documentId>` backbone uri names — the
+ * `framework/sync` `ChannelBackbone::pair` convention (see the react renderer's `openDocument`). Falls
+ * back to the whole uri for any other scheme so an unrecognized realm still gets a routing key instead
+ * of being silently dropped. */
+function pluginBackboneDocumentIdFromUri(uri: string): string {
+  return uri.startsWith("actor://") ? uri.slice("actor://".length) : uri;
 }
 
-const pluginModuleHandleCache = new Map<string, Promise<PluginWasmHandle>>();
+const pluginBackboneRoutes = new Map<string, (uri: string, message: Uint8Array) => void>();
 
-export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  const cached = pluginModuleHandleCache.get(moduleUrl);
-  if (cached) return cached;
-  const pending = loadPluginModuleUncached(pluginId, moduleUrl);
-  pluginModuleHandleCache.set(moduleUrl, pending);
+/**
+ * @emoji 🐚️ Routes a plugin's outbound backbone bytes for one document to whichever shell instance owns
+ * it — replaces the old page-global relay slot (`setPluginBackboneOutboundRelay`), which a second
+ * mounted shell silently overwrote: misrouting the first shell's document sync into the second shell's
+ * backbone worker, then severing it entirely the moment that second shell unmounted (it cleared the
+ * slot to `null`). Register at the same point a shell learns it owns `documentId` (the react renderer's
+ * `openDocument`) and call the returned unregister function at the matching `closeDocument`/unmount.
+ */
+export function registerPluginBackboneRoute(documentId: string, relay: (uri: string, message: Uint8Array) => void): () => void {
+  pluginBackboneRoutes.set(documentId, relay);
+  return () => {
+    if (pluginBackboneRoutes.get(documentId) === relay) pluginBackboneRoutes.delete(documentId);
+  };
+}
+//#endregion 🐚️PluginBackboneRouting
+
+//#region 🐚️PluginModuleLease
+export interface PluginModuleLease {
+  readonly handle: PluginWasmHandle;
+  /** Releases this caller's reference to the shared module — idempotent, a second call is a no-op.
+   * The underlying worker/module disposes once every lease on this `moduleUrl` has released (see
+   * {@link acquirePluginModule}). */
+  release(): void;
+}
+
+type PluginModuleCacheEntry = { readonly promise: Promise<PluginWasmHandle>; refs: number };
+
+const pluginModuleCache = new Map<string, PluginModuleCacheEntry>();
+
+/**
+ * @emoji 🐚️ Refcounted replacement for the old `loadPluginModule` — several shells (or several plugin
+ * instances within one shell) loading the SAME `moduleUrl` share one worker/module, but each caller
+ * gets its own {@link PluginModuleLease} and must `release()` it on unmount/teardown. The shared module
+ * disposes only once every issued lease has released — under the old cache, `dispose()` was only ever
+ * reachable on load *failure* (a success left the promise cached forever with nothing to evict it), so
+ * in practice a loaded plugin module was never disposed at all.
+ */
+export async function acquirePluginModule(pluginId: string, moduleUrl: string): Promise<PluginModuleLease> {
+  let entry = pluginModuleCache.get(moduleUrl);
+  if (!entry) {
+    const promise = loadPluginModuleUncached(pluginId, moduleUrl);
+    entry = { promise, refs: 0 };
+    pluginModuleCache.set(moduleUrl, entry);
+    promise.catch(() => {
+      if (pluginModuleCache.get(moduleUrl) === entry) pluginModuleCache.delete(moduleUrl);
+    });
+  }
+  const active = entry;
+  active.refs += 1;
   try {
-    return await pending;
+    const handle = await active.promise;
+    let released = false;
+    return {
+      handle,
+      release: () => {
+        if (released) return;
+        released = true;
+        active.refs -= 1;
+        if (active.refs <= 0) {
+          if (pluginModuleCache.get(moduleUrl) === active) pluginModuleCache.delete(moduleUrl);
+          handle.dispose();
+        }
+      },
+    };
   } catch (error) {
-    pluginModuleHandleCache.delete(moduleUrl);
+    active.refs -= 1;
     throw error;
   }
 }
+//#endregion 🐚️PluginModuleLease
 
 /**
  * 🌉️ Direct main-thread import fallback for {@link loadPluginModuleViaWorker} (no `Worker` global —
@@ -3006,10 +3063,6 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
     exchange: (instanceId, frames) => api.exchange(instanceId, frames),
     dispose() {},
   });
-}
-
-export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  return loadPluginModule(pluginId, moduleUrl);
 }
 
 /** 🌉️ Adapts a {@link PluginWasmHandle} to a plain-object shape safe to close over across a

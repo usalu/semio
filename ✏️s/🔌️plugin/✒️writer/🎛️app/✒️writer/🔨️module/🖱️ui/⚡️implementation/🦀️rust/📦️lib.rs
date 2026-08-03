@@ -17,7 +17,8 @@ use writer_protocol::WriterCommand;
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
     build_text_editor_scene, engagement_token_matches, localized_label_map, strip_engagement_prefix,
     tree_item, ui_declarative_sections_to_tree, ui_text, App,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, AppIo, AppLabelsOverlay, AppLabelsOverlayExt,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, AppActionRegistry, AppIo, AppLabelsOverlay, AppLabelsOverlayExt,
+    ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, Menu,
     DocumentApp, DocumentView, ConfigView, Emit, IconName, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
     UiTreeItemNode, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
@@ -416,17 +417,22 @@ fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str
 #[derive(Default)]
 pub struct WriterPlayApp;
 
-/// 🖱️ On-demand writer text-editor context menu from caret/selection/completions context.
-fn writer_context_menu_items(
-    text: Option<&semio_framework_plugin::ContextMenuTextContext>,
+/// 🖱️ On-demand writer text-editor context menu from caret/selection/completions context — grouped/
+/// progressively disclosed (GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS): a handful of top-level
+/// verbs plus taxonomy groups for the rest, with the destructive `cut` row kept trailing. `selectToken`/
+/// `selectLine`/`selectAll`/`cut`/`copy`/`paste` are not declared `ActionDefinition`s (no palette/undo
+/// entry makes sense for them), so they stay bespoke `.item(...)` rows per `Menu::of`'s escape hatch;
+/// `requestCompletions`/`lintDocument`/`formatDocument`/`commitRename` are declared actions and resolve
+/// through `.action(...)` against `registry`.
+fn writer_context_menu_items<'a>(
+    registry: &'a AppActionRegistry,
+    text: Option<&ContextMenuTextContext>,
     is_de: bool,
-) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::ContextMenuItemSpec;
-    let text = text;
+) -> Vec<ContextMenuItemSpec> {
     let can_suggest = text.map(|t| t.has_completions).unwrap_or(false);
     let has_selection = text.map(|t| t.has_selection).unwrap_or(false);
     let can_rename = text.map(|t| t.can_rename).unwrap_or(false);
-    let item = |id: &str, label: &str, icon: &str, action: &str, disabled: bool| ContextMenuItemSpec {
+    let bespoke = |id: &str, label: &str, icon: &str, action: &str, disabled: bool| ContextMenuItemSpec {
         id: id.into(),
         label: Some(label.into()),
         icon: Some(icon.into()),
@@ -434,26 +440,27 @@ fn writer_context_menu_items(
         disabled: disabled.then_some(true),
         ..Default::default()
     };
-    let sep = |id: &str| ContextMenuItemSpec { id: id.into(), separator: Some(true), ..Default::default() };
-    let mut items = Vec::new();
-    if can_suggest {
-        items.push(item("writer-suggest", if is_de { "Vervollständigungen vorschlagen" } else { "Suggest completions" }, "sparkles", "requestCompletions", false));
-        items.push(sep("writer-suggest-sep"));
-    }
-    items.push(item("writer-select-token", if is_de { "Token auswählen" } else { "Select token" }, "text-cursor", "selectToken", false));
-    items.push(item("writer-select-line", if is_de { "Zeile auswählen" } else { "Select line" }, "list-ordered", "selectLine", false));
-    items.push(item("writer-select-all", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", false));
-    if can_rename {
-        items.push(item("writer-rename", if is_de { "Umbenennen" } else { "Rename" }, "edit-3", "commitRename", false));
-    }
-    items.push(sep("writer-clip-sep"));
-    items.push(item("writer-cut", if is_de { "Ausschneiden" } else { "Cut" }, "scissors", "cut", !has_selection));
-    items.push(item("writer-copy", if is_de { "Kopieren" } else { "Copy" }, "copy", "copy", !has_selection));
-    items.push(item("writer-paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", false));
-    items.push(sep("writer-format-sep"));
-    items.push(item("writer-format", if is_de { "Dokument formatieren" } else { "Format document" }, "align-left", "formatDocument", false));
-    items.push(item("writer-lint", if is_de { "Dokument prüfen" } else { "Lint document" }, "alert-circle", "lintDocument", false));
-    items
+    Menu::of(registry)
+        .item(bespoke("writer-select-token", if is_de { "Token auswählen" } else { "Select token" }, "text-cursor", "selectToken", false))
+        .item(bespoke("writer-copy", if is_de { "Kopieren" } else { "Copy" }, "copy", "copy", !has_selection))
+        .item(bespoke("writer-paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", false))
+        .group("selection", |m| {
+            m.item(bespoke("writer-select-line", if is_de { "Zeile auswählen" } else { "Select line" }, "list-ordered", "selectLine", false))
+                .item(bespoke("writer-select-all", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", false))
+        })
+        .group("tools", |m| {
+            let m = m.action("lintDocument");
+            if can_suggest { m.action("requestCompletions") } else { m }
+        })
+        .group("transform", |m| {
+            let m = m.action("formatDocument");
+            if can_rename { m.action("commitRename") } else { m }
+        })
+        .item(ContextMenuItemSpec {
+            destructive: Some(true),
+            ..bespoke("writer-cut", if is_de { "Ausschneiden" } else { "Cut" }, "scissors", "cut", !has_selection)
+        })
+        .build()
 }
 
 impl DocumentApp for WriterPlayApp {
@@ -815,14 +822,14 @@ impl DocumentApp for WriterPlayApp {
 
     fn context_menu(
         &self,
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &ContextMenuRequest,
         _doc: &DocumentView<'_, WriterProjection>,
         cfg: &ConfigView<'_, WriterConfig>,
-        _registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
         let is_de = is_de_locale(cfg.projection);
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
-        writer_context_menu_items(text, is_de)
+        writer_context_menu_items(registry, text, is_de)
     }
 }
 //#endregion 🔖️WriterPlayApp
@@ -887,9 +894,10 @@ pub fn create_writer_app() -> App {
                 WRITER_PLAY_BODY_INSPECTION,
             )
             // 🔧️ Panel-visible P0 effects: format rewrites the buffer (Operation), lint re-runs
-            // diagnostics into runtime (View — an effect, not a document operation).
-            .operation("formatDocument", "Format Document")
-            .view_action("lintDocument", "Lint Document")
+            // diagnostics into runtime (View — an effect, not a document operation). Categorized for
+            // `Menu::group`'s ribbon-parent taxonomy (GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS).
+            .action_with(ActionDefinition::new_catalog("formatDocument", "Format Document", ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("lintDocument", "Lint Document", ActionKind::View).with_category("tools"))
             // 🔧️ P1 example switch (whole-document load) with a staged example choice.
             .operation("setActiveExample", "Set Active Example")
             // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
@@ -897,13 +905,13 @@ pub fn create_writer_app() -> App {
             .action_with(writer_hidden_operation("textEdit", "Edit Text"))
             .action_with(writer_hidden_operation("setText", "Set Text"))
             .action_with(writer_hidden_view("setCamera", "Set Camera"))
-            .action_with(writer_hidden_operation("commitRename", "Commit Rename"))
+            .action_with(writer_hidden_operation("commitRename", "Commit Rename").with_category("transform"))
             .action_with(writer_hidden_operation("engagementSubmit", "Engagement Submit"))
             .action_with(writer_hidden_operation("setDocument", "Set Document"))
             .action_with(writer_hidden_operation("setDocumentJson", "Set Document JSON"))
             .action_with(writer_hidden_operation("setFixtureJson", "Set Fixture JSON"))
             // 🙈️ Internal View measures — selection, hover, AST navigation, completions, editor settings.
-            .action_with(writer_hidden_view("requestCompletions", "Request Completions"))
+            .action_with(writer_hidden_view("requestCompletions", "Request Completions").with_category("tools"))
             .action_with(writer_hidden_view("textSelect", "Text Select"))
             .action_with(writer_hidden_view("setEditorSelection", "Set Editor Selection"))
             .action_with(writer_hidden_view("selectAstNode", "Select Ast Node"))
@@ -1302,5 +1310,37 @@ mod tests {
         assert!(matches!(app.export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
     }
     //#endregion 🔖️PortTests
+
+    //#region 🔖️ContextMenuTests
+    /// 🗂️ GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: the writer text-editor context menu stays a
+    /// shallow, disclosed list (top-level verbs + a handful of taxonomy groups) rather than a flat wall
+    /// of rows, and the destructive `cut` row stays the trailing item.
+    #[test]
+    fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
+        let app = WriterPlayApp;
+        let document = jack_example_document();
+        let config = WriterConfig::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+        let cfg = ConfigView { projection: &config };
+        let registry = AppActionRegistry::from_definition(&create_writer_app().definition);
+        let request = ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: WRITER_PLAY_SURFACE_ID.into(), args: None },
+            surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+                surface_id: WRITER_PLAY_SURFACE_ID.into(),
+                kind: "textEditor".into(),
+                hits: Vec::new(),
+                selection: Vec::new(),
+                text: Some(ContextMenuTextContext { caret: 0, has_selection: true, word: None, can_rename: true, has_completions: true }),
+            }),
+            window_instance_id: None,
+            point: None,
+        };
+        let items = app.context_menu(&request, &doc, &cfg, &registry);
+        assert!(items.len() <= 9, "top-level writer context menu should stay progressively disclosed: {items:?}");
+        assert_eq!(items.last().map(|item| item.id.as_str()), Some("writer-cut"), "cut must stay the trailing destructive item: {items:?}");
+        assert_eq!(items.last().and_then(|item| item.destructive), Some(true), "trailing writer-cut must be marked destructive: {items:?}");
+    }
+    //#endregion 🔖️ContextMenuTests
 }
 //#endregion 🧪️Tests

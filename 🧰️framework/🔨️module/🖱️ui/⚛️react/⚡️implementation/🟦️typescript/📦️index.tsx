@@ -1775,9 +1775,9 @@ export const menuListItemClassName = cn(
 const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-tiny";
 const contextMenuOrdinalClassName = "w-small shrink-0 text-center text-xs text-muted-foreground tabular-nums";
 
-/** @emoji 🪟️ Context-menu surface — window-chrome wrapper around menu rows. */
+/** @emoji 🪟️ Context-menu surface — window-chrome wrapper around menu rows; caps height like {@link CommandList} so long/grouped menus scroll instead of overflowing the viewport. */
 function contextMenuContentClassName(...extra: Array<string | false | null | undefined>): string {
-  return cn("z-menu w-auto min-w-[10rem]", ...extra);
+  return cn("z-menu w-auto min-w-[10rem] max-h-layout-command overflow-y-auto", ...extra);
 }
 
 /** @emoji 🪟️ Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark), kept through hover like {@link CanvasPickMenu}. */
@@ -2131,12 +2131,104 @@ function isContextMenuSubmenuOpen(activePath: readonly number[], parentPath: rea
   return parentPath.every((value, index) => activePath[index] === value);
 }
 
+/** @emoji ⏱️ Delay before hovering a parent row opens its submenu, so a pointer merely passing over the row doesn't flash it open. */
+const CONTEXT_MENU_SUBMENU_HOVER_DELAY_MS = 150;
+
+type ContextMenuSubmenuRowProps = {
+  readonly item: ContextMenuItem;
+  readonly rowPath: readonly number[];
+  readonly ordinal: number | undefined;
+  readonly isActive: boolean;
+  readonly submenuOpen: boolean;
+  readonly setActivePath: FixedContextMenuRenderOptions["setActivePath"];
+  readonly children: React.ReactNode;
+};
+
+/** @emoji 📂️ Parent-row button for a submenu: click toggles it open/closed, hover opens it after a short delay, and the panel flips to the opposite side when it would overflow the viewport. */
+function ContextMenuSubmenuRow({ item, rowPath, ordinal, isActive, submenuOpen, setActivePath, children }: ContextMenuSubmenuRowProps): React.ReactElement {
+  const hoverTimerRef = reactHostPort.useRef<number | undefined>(undefined);
+  const panelRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const [flipToEnd, setFlipToEnd] = reactHostPort.useState(false);
+  const clearHoverTimer = reactHostPort.useCallback((): void => {
+    if (hoverTimerRef.current !== undefined) {
+      window.clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = undefined;
+    }
+  }, []);
+  reactHostPort.useEffect(() => clearHoverTimer, [clearHoverTimer]);
+  reactHostPort.useLayoutEffect(() => {
+    if (!submenuOpen) {
+      setFlipToEnd(false);
+      return;
+    }
+    const node = panelRef.current;
+    if (!node) return;
+    setFlipToEnd(node.getBoundingClientRect().right > window.innerWidth);
+  }, [submenuOpen]);
+  const toggleSubmenu = (): void => {
+    if (item.disabled) return;
+    setActivePath([...rowPath], submenuOpen ? [...rowPath] : null);
+  };
+  return (
+    <div
+      className="relative"
+      onPointerEnter={() => {
+        clearHoverTimer();
+        hoverTimerRef.current = window.setTimeout(() => {
+          hoverTimerRef.current = undefined;
+          setActivePath([...rowPath], null);
+        }, CONTEXT_MENU_SUBMENU_HOVER_DELAY_MS);
+      }}
+      onPointerLeave={clearHoverTimer}
+    >
+      <button
+        aria-disabled={item.disabled}
+        aria-expanded={submenuOpen}
+        className={contextMenuItemClassName(item)}
+        data-active={isActive ? "true" : undefined}
+        data-disabled={item.disabled ? "" : undefined}
+        data-selected={item.checked ? "true" : undefined}
+        disabled={item.disabled}
+        onClick={toggleSubmenu}
+        onPointerEnter={() => item.onHover?.()}
+        onPointerLeave={() => item.onHoverEnd?.()}
+        role="menuitem"
+        type="button"
+      >
+        {renderContextMenuOrdinalBadge(ordinal)}
+        {renderContextMenuLeading(item)}
+        <span className="truncate">{item.label ?? item.id}</span>
+        {item.shortcut ? (
+          <span aria-hidden className={contextMenuShortcutClassName}>
+            {item.shortcut}
+          </span>
+        ) : null}
+        <span aria-hidden className={contextMenuShortcutClassName}>
+          ›
+        </span>
+      </button>
+      {submenuOpen ? (
+        <div ref={panelRef} className={cn("absolute top-0 ms-tiny", flipToEnd ? "end-full" : "start-full")}>
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPrefix: readonly number[], options: FixedContextMenuRenderOptions): React.ReactNode {
   const ordinals = contextMenuOrdinals(items);
   const { activePath, submenuCollapsedAt, setActivePath, onClose } = options;
   return items.map((item, index) => {
     const rowPath = [...pathPrefix, index];
     if (item.separator) {
+      if (item.label) {
+        return (
+          <div key={`${item.id}-sep`} className="select-none px-single pb-half pt-single text-xs text-muted-foreground" role="separator" aria-label={item.label}>
+            {item.label}
+          </div>
+        );
+      }
       return <div key={`${item.id}-sep`} className="h-px bg-border my-single" role="separator" />;
     }
     const ordinal = ordinals.get(item.id);
@@ -2149,33 +2241,11 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPref
         isContextMenuSubmenuOpen(activePath, rowPath) ||
         (isActive && !(submenuCollapsedAt && contextMenuPathsEqual(submenuCollapsedAt, rowPath)));
       return (
-        <div key={item.id} className="relative" onPointerEnter={activateRow}>
-          <button
-            aria-disabled={item.disabled}
-            aria-expanded={submenuOpen}
-            className={contextMenuItemClassName(item)}
-            data-active={isActive ? "true" : undefined}
-            data-disabled={item.disabled ? "" : undefined}
-            data-selected={item.checked ? "true" : undefined}
-            disabled={item.disabled}
-            onPointerEnter={() => item.onHover?.()}
-            onPointerLeave={() => item.onHoverEnd?.()}
-            role="menuitem"
-            type="button"
-          >
-            {renderContextMenuOrdinalBadge(ordinal)}
-            {renderContextMenuLeading(item)}
-            <span className="truncate">{item.label ?? item.id}</span>
-            <span aria-hidden className={contextMenuShortcutClassName}>
-              ›
-            </span>
-          </button>
-          {submenuOpen ? (
-            <ContextMenuChrome className="absolute start-full top-0 ms-tiny" title={item.label ?? item.id} icon={(item.icon ?? "folder") as IconSource}>
-              {renderFixedContextMenuItems(item.children, rowPath, options)}
-            </ContextMenuChrome>
-          ) : null}
-        </div>
+        <ContextMenuSubmenuRow key={item.id} item={item} rowPath={rowPath} ordinal={ordinal} isActive={isActive} submenuOpen={submenuOpen} setActivePath={setActivePath}>
+          <ContextMenuChrome title={item.label ?? item.id} icon={(item.icon ?? "folder") as IconSource}>
+            {renderFixedContextMenuItems(item.children, rowPath, options)}
+          </ContextMenuChrome>
+        </ContextMenuSubmenuRow>
       );
     }
     const role = item.checked === undefined ? "menuitem" : "menuitemcheckbox";
@@ -2237,6 +2307,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const chromeRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const itemsRef = reactHostPort.useRef(items);
   itemsRef.current = items;
   const [activePath, setActivePath] = reactHostPort.useState<number[]>([]);
@@ -2358,6 +2429,28 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       bindings.dispose();
     };
   }, [applyActivePath, close, closeOnSelect, items.length, onOpenChange, open, position?.x, position?.y]);
+  // 🖥️ Clamp the rendered menu surface fully on-screen — a right-click near a viewport edge would otherwise open a
+  // menu that spills past it.
+  reactHostPort.useLayoutEffect(() => {
+    if (!open || !position) {
+      return;
+    }
+    const node = chromeRef.current;
+    if (!node) {
+      return;
+    }
+    const rect = node.getBoundingClientRect();
+    const maxLeft = Math.max(0, window.innerWidth - rect.width);
+    const maxTop = Math.max(0, window.innerHeight - rect.height);
+    const clampedLeft = Math.min(Math.max(rect.left, 0), maxLeft);
+    const clampedTop = Math.min(Math.max(rect.top, 0), maxTop);
+    if (clampedLeft !== rect.left) {
+      node.style.left = `${clampedLeft}px`;
+    }
+    if (clampedTop !== rect.top) {
+      node.style.top = `${clampedTop}px`;
+    }
+  }, [open, position?.x, position?.y, items]);
   if (!items.length) {
     return null;
   }
@@ -2372,7 +2465,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     onClose: closeOnSelect ? close : () => undefined,
   };
   return renderPortalInto(
-    <ContextMenuChrome style={{ left: position.x, position: "fixed", top: `calc(${position.y}px - var(--size-medium))` }} title={title} icon={titleIcon}>
+    <ContextMenuChrome ref={chromeRef} style={{ left: position.x, position: "fixed", top: `calc(${position.y}px - var(--size-medium))` }} title={title} icon={titleIcon}>
       <div dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu">
         {renderFixedContextMenuItems(items, [], renderOptions)}
       </div>
@@ -2674,10 +2767,39 @@ export interface ElementsSurfaceChromeInput {
   driver: UiDriver;
 }
 
-function applyDocumentBodyBaseColors(): void {
-  if (typeof document === "undefined") return;
-  document.body.style.backgroundColor = "var(--base)";
-  document.body.style.color = "var(--foreground)";
+/** @emoji 🐚️ Resolves an explicit surface-chrome root (a shell's own root — e.g. its `ShellScope.rootRef`)
+ * or falls back to `document.documentElement` for the page-owning case; every entry point below takes
+ * this same optional-root shape so a single-shell page's existing call sites (which pass none) keep
+ * their exact current behavior unchanged. `undefined` in a non-browser environment (SSR/vitest without
+ * a document) rather than throwing. */
+function resolveElementsSurfaceChromeRoot(root?: HTMLElement): HTMLElement | undefined {
+  return root ?? (typeof document !== "undefined" ? document.documentElement : undefined);
+}
+
+/** @emoji 🐚️ Paints a surface-chrome root's own background/foreground/color-scheme — every root, not
+ * just `documentElement`, so an embedded shell's own `.semio-scope` div is visually correct even before
+ * any descendant renders. When the root IS `documentElement` (the page-owning case), also mirrors onto
+ * `document.body` exactly as before this was made root-scoped — unchanged behavior for that case. */
+function applyElementsSurfaceChromeBaseColors(root: HTMLElement, scheme: "light" | "dark"): void {
+  root.style.backgroundColor = "var(--base)";
+  root.style.color = "var(--foreground)";
+  root.style.colorScheme = scheme;
+  if (typeof document !== "undefined" && root === document.documentElement && document.body) {
+    document.body.style.backgroundColor = "var(--base)";
+    document.body.style.color = "var(--foreground)";
+    document.body.style.colorScheme = scheme;
+  }
+}
+
+function clearElementsSurfaceChromeBaseColors(root: HTMLElement): void {
+  root.style.backgroundColor = "";
+  root.style.color = "";
+  root.style.colorScheme = "";
+  if (typeof document !== "undefined" && root === document.documentElement && document.body) {
+    document.body.style.backgroundColor = "";
+    document.body.style.color = "";
+    document.body.style.colorScheme = "";
+  }
 }
 
 /** @emoji 🌓️ Resolves whether {@link ElementsSurfaceAppearance} is dark for the current system preference. */
@@ -2688,22 +2810,27 @@ export function resolveElementsSurfaceChromeDark(appearance: ElementsSurfaceAppe
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-/** @emoji 🌓️ True when `document.documentElement` currently carries the dark surface chrome class. */
-export function isElementsSurfaceChromeDarkApplied(): boolean {
-  if (typeof document === "undefined") return false;
-  return document.documentElement.classList.contains("dark");
+/** @emoji 🌓️ True when a surface-chrome root (`document.documentElement` by default) currently carries
+ * the dark surface chrome class. */
+export function isElementsSurfaceChromeDarkApplied(rootOverride?: HTMLElement): boolean {
+  const root = resolveElementsSurfaceChromeRoot(rootOverride);
+  return root?.classList.contains("dark") ?? false;
 }
 
 type ElementsSurfaceChromeLease = { readonly id: number; readonly input: ElementsSurfaceChromeInput };
 
 let elementsSurfaceChromeLeaseSeq = 0;
-const elementsSurfaceChromeLeases: ElementsSurfaceChromeLease[] = [];
+/** @emoji 🐚️ One independent lease stack per surface-chrome root — was a single page-global stack, which
+ * meant a second mounted shell's appearance/driver/device lease silently won (last-wins) over the
+ * first's for the WHOLE page instead of just its own subtree. */
+const elementsSurfaceChromeLeasesByRoot = new Map<HTMLElement, ElementsSurfaceChromeLease[]>();
+const elementsSurfaceChromeDeferredClearFrames = new Map<HTMLElement, number>();
 let elementsSurfaceChromeDomBindings: ReturnType<typeof createDOMEventBinding> | null = null;
 let elementsSurfaceChromeSystemListenersInstalled = false;
-let elementsSurfaceChromeDeferredClearFrame = 0;
 
-function activeElementsSurfaceChromeInput(): ElementsSurfaceChromeInput | undefined {
-  return elementsSurfaceChromeLeases[elementsSurfaceChromeLeases.length - 1]?.input;
+function activeElementsSurfaceChromeInput(root: HTMLElement): ElementsSurfaceChromeInput | undefined {
+  const leases = elementsSurfaceChromeLeasesByRoot.get(root);
+  return leases?.[leases.length - 1]?.input;
 }
 
 function syncElementsSurfaceChromeProviders(input: ElementsSurfaceChromeInput | undefined): void {
@@ -2820,85 +2947,76 @@ function syncUiChromeRevealController(chrome: UiDriverReveal): void {
 }
 // #endregion 🫥️ChromeReveal
 
-function clearElementsSurfaceChromeDom(): void {
-  if (typeof document === "undefined") return;
-  const root = document.documentElement;
+function clearElementsSurfaceChromeDom(root: HTMLElement): void {
   root.classList.remove("dark");
   root.classList.remove("touch");
   delete root.dataset.uiDevice;
   clearElementsSurfaceChromeDriverDom(root);
   delete root.dataset.uiAppearance;
-  root.style.colorScheme = "";
-  document.body.style.backgroundColor = "";
-  document.body.style.color = "";
-  document.body.style.colorScheme = "";
+  clearElementsSurfaceChromeBaseColors(root);
 }
 
-function applyElementsSurfaceChromeAppearanceDom(appearance: ElementsSurfaceAppearance): void {
-  if (typeof document === "undefined") return;
-  const root = document.documentElement;
+function applyElementsSurfaceChromeAppearanceDom(root: HTMLElement, appearance: ElementsSurfaceAppearance): void {
   const dark = resolveElementsSurfaceChromeDark(appearance);
   root.classList.toggle("dark", dark);
   root.dataset.uiAppearance = dark ? "dark" : "light";
-  const scheme = dark ? "dark" : "light";
-  root.style.colorScheme = scheme;
-  if (document.body) {
-    document.body.style.colorScheme = scheme;
-    applyDocumentBodyBaseColors();
-  }
+  applyElementsSurfaceChromeBaseColors(root, dark ? "dark" : "light");
 }
 
-/** @emoji 🌓️ Applies `html.dark` and `color-scheme` before React/CSS load (play/static entries); does not register a surface-chrome lease. */
-export function bootstrapElementsSurfaceChromeDocument(appearance: ElementsSurfaceAppearance = "system"): void {
-  if (typeof document === "undefined") return;
-  cancelElementsSurfaceChromeDeferredClear();
-  applyElementsSurfaceChromeAppearanceDom(appearance);
+/** @emoji 🌓️ Applies `.dark`/`color-scheme` to a root (`document.documentElement` by default) before
+ * React/CSS load (play/static entries); does not register a surface-chrome lease. */
+export function bootstrapElementsSurfaceChromeDocument(appearance: ElementsSurfaceAppearance = "system", rootOverride?: HTMLElement): void {
+  const root = resolveElementsSurfaceChromeRoot(rootOverride);
+  if (!root) return;
+  cancelElementsSurfaceChromeDeferredClear(root);
+  applyElementsSurfaceChromeAppearanceDom(root, appearance);
 }
 
-function cancelElementsSurfaceChromeDeferredClear(): void {
-  if (elementsSurfaceChromeDeferredClearFrame === 0 || typeof cancelAnimationFrame === "undefined") {
-    elementsSurfaceChromeDeferredClearFrame = 0;
+function cancelElementsSurfaceChromeDeferredClear(root: HTMLElement): void {
+  const frame = elementsSurfaceChromeDeferredClearFrames.get(root);
+  if (frame === undefined || typeof cancelAnimationFrame === "undefined") {
+    elementsSurfaceChromeDeferredClearFrames.delete(root);
     return;
   }
-  cancelAnimationFrame(elementsSurfaceChromeDeferredClearFrame);
-  elementsSurfaceChromeDeferredClearFrame = 0;
+  cancelAnimationFrame(frame);
+  elementsSurfaceChromeDeferredClearFrames.delete(root);
 }
 
-function scheduleElementsSurfaceChromeDeferredClear(): void {
+function scheduleElementsSurfaceChromeDeferredClear(root: HTMLElement): void {
   if (typeof requestAnimationFrame === "undefined") {
-    if (elementsSurfaceChromeLeases.length === 0) {
-      clearElementsSurfaceChromeDom();
-    }
+    if (!elementsSurfaceChromeLeasesByRoot.has(root)) clearElementsSurfaceChromeDom(root);
     return;
   }
-  cancelElementsSurfaceChromeDeferredClear();
-  elementsSurfaceChromeDeferredClearFrame = requestAnimationFrame(() => {
-    elementsSurfaceChromeDeferredClearFrame = 0;
-    if (elementsSurfaceChromeLeases.length === 0) {
-      clearElementsSurfaceChromeDom();
-    }
+  cancelElementsSurfaceChromeDeferredClear(root);
+  const frame = requestAnimationFrame(() => {
+    elementsSurfaceChromeDeferredClearFrames.delete(root);
+    if (!elementsSurfaceChromeLeasesByRoot.has(root)) clearElementsSurfaceChromeDom(root);
   });
+  elementsSurfaceChromeDeferredClearFrames.set(root, frame);
 }
 
-function applyElementsSurfaceChromeDom(input: ElementsSurfaceChromeInput): void {
-  if (typeof document === "undefined") return;
-  cancelElementsSurfaceChromeDeferredClear();
-  applyElementsSurfaceChromeAppearanceDom(input.appearance);
-  const root = document.documentElement;
+function applyElementsSurfaceChromeDom(root: HTMLElement, input: ElementsSurfaceChromeInput): void {
+  console.log("[DEBUG-PROBE] applyElementsSurfaceChromeDom", root.getAttribute("data-shell-id"), input.appearance);
+  cancelElementsSurfaceChromeDeferredClear(root);
+  applyElementsSurfaceChromeAppearanceDom(root, input.appearance);
   root.dataset.uiDevice = input.device;
   root.classList.toggle("touch", input.device !== "desktop");
   applyElementsSurfaceChromeDriverDom(root, input.driver);
 }
 
-function syncElementsSurfaceChromeDomFromLeaseStack(): void {
-  const input = activeElementsSurfaceChromeInput();
+function syncElementsSurfaceChromeDomFromLeaseStack(root: HTMLElement): void {
+  const input = activeElementsSurfaceChromeInput(root);
   if (!input) {
-    clearElementsSurfaceChromeDom();
+    clearElementsSurfaceChromeDom(root);
     return;
   }
-  applyElementsSurfaceChromeDom(input);
+  applyElementsSurfaceChromeDom(root, input);
 }
 
+/** @emoji 🐚️ One shared `matchMedia` listener re-applies EVERY root with an active `appearance: "system"`
+ * lease when the OS preference flips — the media query itself is genuinely page-global (there is only
+ * one system preference), but each root's lease stack (and therefore whether it even has a "system"
+ * lease) stays independent. */
 function ensureElementsSurfaceChromeSystemListeners(): void {
   if (elementsSurfaceChromeSystemListenersInstalled || typeof window === "undefined" || typeof document === "undefined") {
     return;
@@ -2911,22 +3029,12 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
     return;
   }
   const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  const onSystemAppearanceChange = (event: MediaQueryListEvent): void => {
-    const input = activeElementsSurfaceChromeInput();
-    if (!input || input.appearance !== "system") return;
-    const root = document.documentElement;
-    const dark = event.matches;
-    root.classList.toggle("dark", dark);
-    root.dataset.uiAppearance = dark ? "dark" : "light";
-    const scheme = dark ? "dark" : "light";
-    root.style.colorScheme = scheme;
-    if (document.body) {
-      document.body.style.colorScheme = scheme;
-      applyDocumentBodyBaseColors();
+  const onSystemAppearanceChange = (): void => {
+    for (const [root, leases] of elementsSurfaceChromeLeasesByRoot) {
+      const input = leases[leases.length - 1]?.input;
+      if (!input || input.appearance !== "system") continue;
+      applyElementsSurfaceChromeDom(root, input);
     }
-    root.dataset.uiDevice = input.device;
-    root.classList.toggle("touch", input.device !== "desktop");
-    applyElementsSurfaceChromeDriverDom(root, input.driver);
   };
   bindings.listen(mq, "change", onSystemAppearanceChange);
   installElementsSurfaceBrowserDefaultSuppression(bindings);
@@ -2934,63 +3042,82 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
 }
 
 /**
- * @emoji 🌈️ Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state, browser default input, and the active driver.
+ * @emoji 🌈️ Imperative surface chrome controller for class-based shells; returns a cleanup that reverts
+ * DOM state, browser default input, and the active driver. `rootOverride` scopes this lease to one
+ * shell's own root (e.g. its `ShellScope.rootRef`) — omitted, it falls back to `document.documentElement`
+ * (the single-shell-per-page case, unchanged from before this was made root-scoped).
  */
-export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput): () => void {
+export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput, rootOverride?: HTMLElement): () => void {
+  const root = resolveElementsSurfaceChromeRoot(rootOverride);
+  if (!root) return () => {};
   const lease: ElementsSurfaceChromeLease = { id: ++elementsSurfaceChromeLeaseSeq, input };
-  elementsSurfaceChromeLeases.push(lease);
+  const leases = elementsSurfaceChromeLeasesByRoot.get(root) ?? [];
+  leases.push(lease);
+  elementsSurfaceChromeLeasesByRoot.set(root, leases);
   ensureElementsSurfaceChromeSystemListeners();
   syncElementsSurfaceChromeProviders(input);
-  syncElementsSurfaceChromeDomFromLeaseStack();
+  syncElementsSurfaceChromeDomFromLeaseStack(root);
   return () => {
-    const index = elementsSurfaceChromeLeases.findIndex((entry) => entry.id === lease.id);
-    if (index >= 0) {
-      elementsSurfaceChromeLeases.splice(index, 1);
-    }
-    if (elementsSurfaceChromeLeases.length === 0) {
+    const current = elementsSurfaceChromeLeasesByRoot.get(root);
+    const index = current?.findIndex((entry) => entry.id === lease.id) ?? -1;
+    if (current && index >= 0) current.splice(index, 1);
+    if (!current || current.length === 0) {
+      elementsSurfaceChromeLeasesByRoot.delete(root);
       syncElementsSurfaceChromeProviders(undefined);
-      scheduleElementsSurfaceChromeDeferredClear();
+      scheduleElementsSurfaceChromeDeferredClear(root);
       return;
     }
-    syncElementsSurfaceChromeProviders(activeElementsSurfaceChromeInput());
-    syncElementsSurfaceChromeDomFromLeaseStack();
+    syncElementsSurfaceChromeProviders(activeElementsSurfaceChromeInput(root));
+    syncElementsSurfaceChromeDomFromLeaseStack(root);
   };
 }
 
 /**
- * @emoji 🌓️ Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis attrs), body base colors, and {@link setUiDriverProvider}; returns `mobile` for {@link AppProps.mobile}.
+ * @emoji 🌓️ Syncs a surface-chrome root (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis
+ * attrs), base colors, and {@link setUiDriverProvider}; returns `mobile` for {@link AppProps.mobile}.
+ * `rootRef` scopes this to one shell (e.g. `ShellScope.rootRef`) — omitted, targets
+ * `document.documentElement` as before. Takes the REF itself, not its `.current` value: reading a ref
+ * during render (as resolving to a plain `HTMLElement` here would require) can observe a stale `null`
+ * before the shell root's own ref callback has committed; reading `.current` inside the effect below,
+ * which runs after commit, does not have that race.
  */
-export function useElementsSurfaceChrome({ appearance, device, driver }: ElementsSurfaceChromeInput): { mobile: boolean } {
-  reactHostPort.useLayoutEffect(() => applyElementsSurfaceChrome({ appearance, device, driver }), [appearance, device, driver]);
+export function useElementsSurfaceChrome({ appearance, device, driver }: ElementsSurfaceChromeInput, rootRef?: { readonly current: HTMLElement | null }): { mobile: boolean } {
+  reactHostPort.useLayoutEffect(() => applyElementsSurfaceChrome({ appearance, device, driver }, rootRef?.current ?? undefined), [appearance, device, driver, rootRef]);
 
   return { mobile: device === "mobile" };
 }
 
 /**
- * @emoji 🌓️ Observes document appearance attributes and runs `sync` on mount and whenever the root appearance changes.
- * Holds `sync` in a ref so callers can pass an inline arrow without retriggering the effect every render
- * (React 19: unstable `sync` identity → effect → `paintOverlays`/`setState` → re-render → Maximum update depth).
+ * @emoji 🌓️ Observes a surface-chrome root's appearance attributes and runs `sync` on mount and whenever
+ * they change. Holds `sync` in a ref so callers can pass an inline arrow without retriggering the effect
+ * every render (React 19: unstable `sync` identity → effect → `paintOverlays`/`setState` → re-render →
+ * Maximum update depth). `rootRef` scopes the observed element (e.g. `ShellScope.rootRef`) — omitted,
+ * observes `document.documentElement`; see {@link useElementsSurfaceChrome}'s doc for why this takes the
+ * ref itself rather than a resolved element.
  */
-export function useCanvasAppearanceSync(sync: () => void, enabled = true): void {
+export function useCanvasAppearanceSync(sync: () => void, enabled = true, rootRef?: { readonly current: HTMLElement | null }): void {
   const syncRef = reactHostPort.useRef(sync);
   syncRef.current = sync;
   reactHostPort.useEffect(() => {
-    if (!enabled || typeof document === "undefined" || typeof MutationObserver === "undefined") return;
+    const observedRoot = resolveElementsSurfaceChromeRoot(rootRef?.current ?? undefined);
+    if (!enabled || !observedRoot || typeof MutationObserver === "undefined") return;
     const run = () => syncRef.current();
     run();
-    const root = document.documentElement;
     const observer = new MutationObserver(run);
-    observer.observe(root, { attributes: true, attributeFilter: ["class", "style", "data-ui-appearance", "data-ui-theme"] });
+    observer.observe(observedRoot, { attributes: true, attributeFilter: ["class", "style", "data-ui-appearance", "data-ui-theme"] });
     return () => observer.disconnect();
-  }, [enabled]);
+  }, [enabled, rootRef]);
 }
 
-/** @emoji 🧪️ Clears surface-chrome leases and DOM overrides between vitest cases. */
+/** @emoji 🧪️ Clears every surface-chrome root's leases and DOM overrides between vitest cases (tests only
+ * ever exercise the default `document.documentElement` root, but this clears all of them defensively). */
 export function resetElementsSurfaceChromeForTests(): void {
-  cancelElementsSurfaceChromeDeferredClear();
-  elementsSurfaceChromeLeases.length = 0;
+  for (const root of elementsSurfaceChromeDeferredClearFrames.keys()) cancelElementsSurfaceChromeDeferredClear(root);
+  for (const root of elementsSurfaceChromeLeasesByRoot.keys()) clearElementsSurfaceChromeDom(root);
+  elementsSurfaceChromeLeasesByRoot.clear();
   syncElementsSurfaceChromeProviders(undefined);
-  clearElementsSurfaceChromeDom();
+  const root = resolveElementsSurfaceChromeRoot();
+  if (root) clearElementsSurfaceChromeDom(root);
 }
 
 // #region 🎛️UiChromePrefs
@@ -3404,6 +3531,19 @@ export function ChromeControlHint({ id, text, children }: { readonly id?: string
  * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
 export type UiLocale = ShellLocale;
 
+// #region 🎗️UiLabel
+declare const uiLabelBrand: unique symbol;
+/** @emoji 🎗️ A display-ready, locale-resolved string. Component text props (`label`, `title`,
+ * `placeholder`, …) should require this instead of `string`, so a hardcoded literal
+ * (`label="Close"`) fails to typecheck — only {@link useLabel}/{@link useIdLabel} (chrome/product
+ * translation lookups) or {@link uiDataLabel} (explicit runtime data) can produce one. */
+export type UiLabel = string & { readonly [uiLabelBrand]: true };
+
+/** @emoji 📊️ Genuine runtime data (file names, counts, user content) rendered as a label. Passing a
+ * string literal here is a gate violation — see the chrome-i18n lint's `uiDataLabel` literal check. */
+export const uiDataLabel = (value: string): UiLabel => value as UiLabel;
+// #endregion 🎗️UiLabel
+
 /** @emoji 🪁️ Label pair resolved by the active driver's `labelTier` axis. */
 export type UiLabelPair = { readonly normal: string; readonly beginner: string };
 
@@ -3437,6 +3577,30 @@ export type UiRibbonParentCategory =
   | "tools"
   | "utilities"
   | "sync";
+
+/** @emoji 🪁️ Runtime enumeration of {@link UiRibbonParentCategory} in taxonomy order — for grouping/sorting menu rows by category at runtime. */
+export const UI_RIBBON_PARENT_CATEGORIES: readonly UiRibbonParentCategory[] = [
+  "history",
+  "hand",
+  "selection",
+  "lasso",
+  "filter",
+  "open",
+  "save",
+  "transfer",
+  "transform",
+  "create",
+  "view",
+  "actions",
+  "settings",
+  "methods",
+  "mode",
+  "targets",
+  "export",
+  "tools",
+  "utilities",
+  "sync",
+];
 
 /** @emoji 🪁️ i18n key for a ribbon collection toggle. */
 export type UiRibbonParentKey = `ui.ribbon.parent.${string}`;
@@ -5277,6 +5441,11 @@ function normalizeUiLocale(language?: string): UiTranslationLocaleCode {
   return language?.toLowerCase().startsWith("de") ? "de" : "en";
 }
 
+/** @emoji 🧭️ Maps a BCP47 tag (e.g. `navigator.language`, `"de-AT"`) onto a {@link ShellLocale};
+ * defaults to `"en"`. Same rule the chrome's own locale detector uses — exposed so boot code
+ * (renderer/demonstrator) can resolve a default before any brand lock is known. */
+export const detectShellLocale = normalizeUiLocale as (language?: string) => ShellLocale;
+
 function resolveRequestedUiLocale(): UiTranslationLocaleCode {
   const storedLocale = readStoredUiChromeLocale();
   if (storedLocale) return storedLocale;
@@ -5324,6 +5493,11 @@ function initializeUiI18n(): UiI18nPort {
     lng: requestedLocale,
     showSupportNotice: false,
     returnObjects: true,
+    // 🚀️ Resources are bundled inline above (no backend fetch), so there is nothing to await —
+    // forces synchronous readiness instead of deferring to a microtask, which is what let the
+    // very first paint render with i18next still uninitialized (the English-chrome flash this
+    // ticket fixes; see `initUiLocaleSync`).
+    initImmediate: false,
     interpolation: {
       escapeValue: false,
     },
@@ -5345,9 +5519,26 @@ function initializeUiI18n(): UiI18nPort {
 /** @emoji 🪁️ Shared UI i18n port (domain-neutral bundles; extend via {@link registerUiTranslationBundles}). */
 export const uiI18n = initializeUiI18n();
 
-/** @emoji 🪁️ Sets the active UI locale on the shared i18n port. */
+/** @emoji 🪁️ Sets the active UI locale on the shared i18n port (user-initiated, in-app switch —
+ * for boot-time/brand-locked locale resolution, use {@link initUiLocaleSync} instead, which runs
+ * before the first render rather than in a post-paint effect). */
 export function setUiLocale(locale: UiLocale): Promise<unknown> {
+  if (typeof document !== "undefined") document.documentElement.lang = locale;
   return uiI18n.changeLanguage(locale);
+}
+
+/** @emoji 🚀️ Resolves the shell's locale synchronously, before the first React render — call this
+ * at renderer/demonstrator boot (module scope or before `ReactDOM.createRoot(...).render(...)`),
+ * never from a `useEffect`. A `useEffect`-based call runs after the first paint has already
+ * committed, which is exactly how a German-locked brand could still flash English chrome
+ * ("Skip"/"Back"/"Next"/"Done") on first load. Persists the locale (so a reload's
+ * `resolveRequestedUiLocale` agrees) and sets `documentElement.lang` synchronously; also nudges the
+ * already-initialized i18next instance in case this runs after `uiI18n`'s own module-load default
+ * resolved differently. */
+export function initUiLocaleSync(locale: ShellLocale): void {
+  writeStoredUiChromeLocale(locale);
+  if (typeof document !== "undefined") document.documentElement.lang = locale;
+  if (i18next.language !== locale) void i18next.changeLanguage(locale);
 }
 
 /** @emoji 🪁️ Typed {@link useTranslation} bound to {@link UiTranslationKey} and registered product bundles. */
@@ -5367,32 +5558,32 @@ export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: 
  * `string`. For ids that may or may not be a registered key (e.g. resolved from an arbitrary DOM/control
  * id), use {@link useIdLabel} instead — it is the only place a lookup is allowed to come up empty.
  **/
-export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey, options?: Record<string, unknown>): string;
-export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): string | undefined;
-export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): string | undefined {
+export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey, options?: Record<string, unknown>): UiLabel;
+export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): UiLabel | undefined;
+export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): UiLabel | undefined {
   const { t } = useUiTranslation();
   const labelTier = activeUiDriver().labelTier;
   if (!id) return undefined;
   const value = t(id as UiTranslationKey, options);
 
-  if (typeof value === "string") return value;
+  if (typeof value === "string") return value as UiLabel;
 
   if (value && typeof value === "object" && "label" in value) {
     const label = value.label;
 
     if (typeof label === "string") {
-      return label;
+      return label as UiLabel;
     }
 
     if (label && typeof label === "object") {
       if (labelTier === "beginner" && "beginner" in label && label.beginner !== undefined) {
-        return String(label.beginner);
+        return String(label.beginner) as UiLabel;
       }
       if ("normal" in label && label.normal !== undefined) {
-        return String(label.normal);
+        return String(label.normal) as UiLabel;
       }
       if ("beginner" in label && label.beginner !== undefined) {
-        return String(label.beginner);
+        return String(label.beginner) as UiLabel;
       }
     }
   }
@@ -5407,30 +5598,30 @@ export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | und
  * {@link useLabel} instead. Checks existence first, so it never echoes an unresolved id back as if it
  * were a translation — unlike i18next's default missing-key behavior.
  **/
-export function useIdLabel(id: string | undefined): string | undefined {
+export function useIdLabel(id: string | undefined): UiLabel | undefined {
   const { t, i18n } = useUiTranslation();
   const labelTier = activeUiDriver().labelTier;
   if (!id || !i18n.exists(id)) return undefined;
   const value = t(id as UiTranslationKey);
 
-  if (typeof value === "string") return value;
+  if (typeof value === "string") return value as UiLabel;
 
   if (value && typeof value === "object" && "label" in value) {
     const label = value.label;
 
     if (typeof label === "string") {
-      return label;
+      return label as UiLabel;
     }
 
     if (label && typeof label === "object") {
       if (labelTier === "beginner" && "beginner" in label && label.beginner !== undefined) {
-        return String(label.beginner);
+        return String(label.beginner) as UiLabel;
       }
       if ("normal" in label && label.normal !== undefined) {
-        return String(label.normal);
+        return String(label.normal) as UiLabel;
       }
       if ("beginner" in label && label.beginner !== undefined) {
-        return String(label.beginner);
+        return String(label.beginner) as UiLabel;
       }
     }
   }
@@ -6544,10 +6735,15 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
   const calloutRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const trailPathRef = reactHostPort.useRef<SVGPathElement | null>(null);
   const rippleHostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  // 🐚️ Falls back to `document.documentElement` outside any shell (e.g. the mit-bestand demonstrator's
+  // own standalone onboarding tour) — inside one, scopes the cursor-hide to that shell's own root so one
+  // shell's demonstration never mutes the cursor over another shell (`.semio-scope[...]` in `🎨️ui.css`).
+  const shellScope = useShellScopeOptional();
+  const demonstratingRoot = reactHostPort.useCallback((): Element => shellScope?.rootRef.current ?? document.documentElement, [shellScope]);
   const hide = reactHostPort.useCallback(() => {
-    document.documentElement.removeAttribute("data-introduction-demonstrating");
+    demonstratingRoot().removeAttribute("data-introduction-demonstrating");
     if (overlayRef.current) overlayRef.current.style.visibility = "hidden";
-  }, []);
+  }, [demonstratingRoot]);
   const { idle, lastPositionRef } = useIntroductionPointerIdle(true, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, hide);
   const mouseClipId = reactHostPort.useId().replace(/:/g, "");
   const reducedMotion = reactHostPort.useMemo(() => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true, []);
@@ -6558,7 +6754,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       return;
     }
     if (overlayRef.current) overlayRef.current.style.visibility = "visible";
-    document.documentElement.setAttribute("data-introduction-demonstrating", "true");
+    demonstratingRoot().setAttribute("data-introduction-demonstrating", "true");
     const origin = lastPositionRef.current;
 
     const setGlyph = (glyph: IntroductionCursor) => {
@@ -6780,7 +6976,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       cancelAnimationFrame(rafId);
       hide();
     };
-  }, [demonstrations, hide, idle, reducedMotion]);
+  }, [demonstratingRoot, demonstrations, hide, idle, reducedMotion]);
 
   if (reducedMotion) return null;
 
@@ -10106,26 +10302,30 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
 );
 WindowChrome.displayName = "WindowChrome";
 
-/** @emoji 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. */
-function ContextMenuChrome({ title, icon, children, className, style }: { readonly title: string; readonly icon: IconSource; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }): React.ReactElement {
-  return (
-    <WindowChrome
-      active={false}
-      level="menu"
-      stackSlot="context-menu-content"
-      className={contextMenuContentClassName(className)}
-      style={style}
-      titleChips={
-        <div data-slot="context-menu-title-chip" className={cn(windowChromeTitleChipClass, "flex min-w-0 items-center gap-single")}>
-          <Icon icon={icon} size="small" className="shrink-0" />
-          <span className="truncate">{title}</span>
-        </div>
-      }
-      body={children}
-      bodyClassName="p-single"
-    />
-  );
-}
+/** @emoji 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. Forwards its ref to the outer window-chrome stack so callers (e.g. {@link ContextMenuController}'s on-screen clamp) can measure/adjust the rendered surface. */
+const ContextMenuChrome = reactHostPort.forwardRef<HTMLDivElement, { readonly title: string; readonly icon: IconSource; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }>(
+  ({ title, icon, children, className, style }, ref) => {
+    return (
+      <WindowChrome
+        ref={ref}
+        active={false}
+        level="menu"
+        stackSlot="context-menu-content"
+        className={contextMenuContentClassName(className)}
+        style={style}
+        titleChips={
+          <div data-slot="context-menu-title-chip" className={cn(windowChromeTitleChipClass, "flex min-w-0 items-center gap-single")}>
+            <Icon icon={icon} size="small" className="shrink-0" />
+            <span className="truncate">{title}</span>
+          </div>
+        }
+        body={children}
+        bodyClassName="p-single"
+      />
+    );
+  },
+);
+ContextMenuChrome.displayName = "ContextMenuChrome";
 
 //#endregion 🪟️WindowChrome
 
@@ -31712,6 +31912,66 @@ if (import.meta.vitest) {
       expect(isContextMenuPointerTarget(child)).toBe(true);
       expect(isContextMenuPointerTarget(document.body)).toBe(false);
       menu.remove();
+    });
+
+    it("renders a non-interactive header row for a labeled separator, leaving a bare separator unlabeled", async () => {
+      render(
+        <ContextMenuController
+          open
+          position={{ x: 4, y: 4 }}
+          items={[
+            { id: "recent-header", label: "Recent", separator: true },
+            { id: "a", label: "Alpha" },
+            { id: "sep", label: "", separator: true },
+            { id: "b", label: "Beta" },
+          ]}
+          onOpenChange={vi.fn()}
+        />,
+      );
+      const header = await waitFor(() => screen.getByText("Recent"));
+      expect(header.getAttribute("role")).toBe("separator");
+      expect(header.getAttribute("aria-label")).toBe("Recent");
+      expect(header.tagName).not.toBe("BUTTON");
+      const bareSeparators = document.querySelectorAll('[role="separator"]:not([aria-label])');
+      expect(bareSeparators.length).toBe(1);
+    });
+
+    it("toggles a parent row's submenu open and closed on click", async () => {
+      render(
+        <ContextMenuController
+          open
+          position={{ x: 4, y: 4 }}
+          items={[{ id: "transform", label: "Transform", children: [{ id: "move", label: "Move" }] }]}
+          onOpenChange={vi.fn()}
+        />,
+      );
+      const parent = await waitFor(() => screen.getByRole("menuitem", { name: "Transform" }));
+      expect(screen.queryByRole("menuitem", { name: "Move" })).toBeNull();
+      fireEvent.click(parent);
+      await waitFor(() => expect(screen.getByRole("menuitem", { name: "Move" })).toBeTruthy());
+      fireEvent.click(parent);
+      await waitFor(() => expect(screen.queryByRole("menuitem", { name: "Move" })).toBeNull());
+    });
+
+    it("renders a parent row's shortcut before the submenu chevron", async () => {
+      render(
+        <ContextMenuController
+          open
+          position={{ x: 4, y: 4 }}
+          items={[{ id: "transform", label: "Transform", shortcut: "⌘️T", children: [{ id: "move", label: "Move" }] }]}
+          onOpenChange={vi.fn()}
+        />,
+      );
+      const parent = await waitFor(() => screen.getByRole("menuitem", { name: "Transform" }));
+      expect(parent.textContent).toContain("⌘️T");
+    });
+
+    it("caps the menu surface height with a scrolling overflow class", async () => {
+      render(<ContextMenuController open position={{ x: 4, y: 4 }} items={[{ id: "a", label: "Alpha" }]} onOpenChange={vi.fn()} />);
+      const menu = await waitFor(() => screen.getByRole("menu"));
+      const chrome = menu.closest<HTMLElement>('[data-slot="context-menu-content"]');
+      expect(chrome?.className).toContain("max-h-layout-command");
+      expect(chrome?.className).toContain("overflow-y-auto");
     });
   });
 

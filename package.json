@@ -142,6 +142,7 @@
     "dev:draw": "bun ./📜️script.ts dev draw",
     "dev:note": "bun ./📜️script.ts dev note",
     "dev:s": "bun ./📜️script.ts dev s",
+    "dev:os:multi": "bun ./📜️script.ts dev multi",
     "dev:vcs": "bun ./📜️script.ts dev vcs",
     "dev:writer": "bun ./📜️script.ts dev writer",
     "dev:print": "bun nx run @semio-tech/print:watch",

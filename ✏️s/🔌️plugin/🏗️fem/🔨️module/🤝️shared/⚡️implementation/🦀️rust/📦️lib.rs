@@ -4,7 +4,7 @@
 //! normalization, and the `setResultDisplay` ephemeral view-state plumbing.
 
 use fem_core::Dof;
-use semio_framework_plugin::{ActionArgDef, ActionArgOption};
+use semio_framework_plugin::{ActionArgDef, ActionArgOption, LocalizedLabel};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -107,17 +107,17 @@ pub fn parse_result_display(args: Option<&Value>) -> ResultDisplay {
 /// modal/buckling).
 pub fn result_display_action_args() -> Vec<ActionArgDef> {
     vec![
-        ActionArgDef::text("sourceId", "Source"),
+        ActionArgDef::text("sourceId", LocalizedLabel::data("Source")),
         ActionArgDef::select(
             "mode",
-            "Mode",
+            LocalizedLabel::data("Mode"),
             vec![
-                ActionArgOption::new("static", "Static"),
-                ActionArgOption::new("modal", "Modal"),
-                ActionArgOption::new("buckling", "Buckling"),
+                ActionArgOption::new("static", LocalizedLabel::data("Static")),
+                ActionArgOption::new("modal", LocalizedLabel::data("Modal")),
+                ActionArgOption::new("buckling", LocalizedLabel::data("Buckling")),
             ],
         ),
-        ActionArgDef::number("modeIndex", "Mode Index"),
+        ActionArgDef::number("modeIndex", LocalizedLabel::data("Mode Index")),
     ]
 }
 //#endregion 🔖️ResultDisplay

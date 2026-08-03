@@ -52,6 +52,50 @@ export const Default: Story = {
   },
 };
 
+const groupedItems: ContextMenuItem[] = [
+  { id: "rename", label: "Rename", icon: "pencil", shortcut: "F2" },
+  { id: "duplicate", label: "Duplicate", icon: "copy", shortcut: "⌘️D" },
+  { id: "sep-header", label: "Transform", separator: true },
+  {
+    id: "menu.group.transform",
+    label: "Transform",
+    icon: "move",
+    children: [
+      { id: "transform.move", label: "Move", icon: "move", shortcut: "V" },
+      { id: "transform.rotate", label: "Rotate", icon: "rotate-cw" },
+      { id: "transform.scale", label: "Scale", icon: "maximize-2", disabled: true },
+    ],
+  },
+  {
+    id: "menu.group.view",
+    label: "View",
+    icon: "eye",
+    children: [
+      { id: "view.fit", label: "Fit to Screen", icon: "scan" },
+      { id: "view.reset", label: "Reset Camera", icon: "refresh-ccw" },
+    ],
+  },
+  {
+    id: "menu.group.export",
+    label: "Export",
+    icon: "download",
+    children: [
+      { id: "export.png", label: "Export as PNG", icon: "image" },
+      { id: "export.svg", label: "Export as SVG", icon: "file-code" },
+    ],
+  },
+  { id: "sep-3", label: "", separator: true },
+  { id: "delete", label: "Delete", icon: "trash-2", destructive: true, shortcut: "⌫️" },
+];
+
+export const Grouped: Story = {
+  name: "Grouped (Header + Submenus + Destructive)",
+  args: {
+    items: groupedItems,
+    children: <div className="flex size-40 items-center justify-center border text-sm text-muted-foreground">Right-click me</div>,
+  },
+};
+
 export const NoItems: Story = {
   name: "No Items (Native Menu Suppressed)",
   args: {

@@ -10,9 +10,9 @@ use block_5d_engine::Block5dConfig;
 use block_5d_op::{Block5dConfigOperation, Block5dOperation};
 use block_5d_protocol::Block5dCommand;
 use semio_framework_plugin::{
-    create_default_layout, localized_label_map, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor,
-    App, AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
-    SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiInputNode, UiNode, UiPresence, UiTreeItemNode,
+    create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor,
+    App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
+    SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiInputNode, UiNode, UiPresence, UiTreeItemNode,
 };
 use serde_json::{json, Value};
 
@@ -32,45 +32,35 @@ const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
-fn is_de_locale(cfg: &Block5dConfig) -> bool {
-    cfg.locale.starts_with("de")
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
+/// `semio_framework_plugin::resolve_labels` — `Block5dConfig` carries no terminology axis, so this
+/// app is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag, lenient-parsed the same way
+/// `detectShellLocale` does on the TS side — see `home_ui`'s identical pair.
+fn block5d_locale(cfg: &Block5dConfig) -> Locale {
+    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &Block5dConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn resolve_labels<L: AppLabels>(cfg: &Block5dConfig) -> &'static L {
+    L::labels(block5d_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
 //#region 🔖️Terminology
 semio_framework_plugin::app_labels! {
+    /// 🗣️ Complete UI label set for the block-5d app; one field per label makes every locale×terminology combination compile-checked.
     struct Block5dLabels {
-        window_board: &'static str = en: "Board", de: "Board";
-        window_world: &'static str = en: "World", de: "Welt";
-        name: &'static str = en: "Name", de: "Name";
-        label: &'static str = en: "Label", de: "Bezeichnung";
-        grip_kinds: &'static str = en: "Grip Kinds", de: "Griffarten";
-        grips: &'static str = en: "Grips", de: "Griffe";
-        no_grip_kinds: &'static str = en: "(no grip kinds)", de: "(keine Griffarten)";
-        no_grips: &'static str = en: "(no grips)", de: "(keine Griffe)";
-        summary: &'static str = en: "Part kind", de: "Teilart";
+        window_board: native_en "Board", native_de "Board", reuse_en "Board", reuse_de "Board";
+        window_world: native_en "World", native_de "Welt", reuse_en "World", reuse_de "Welt";
+        name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        grip_kinds: native_en "Grip Kinds", native_de "Griffarten", reuse_en "Grip Kinds", reuse_de "Griffarten";
+        grips: native_en "Grips", native_de "Griffe", reuse_en "Grips", reuse_de "Griffe";
+        no_grip_kinds: native_en "(no grip kinds)", native_de "(keine Griffarten)", reuse_en "(no grip kinds)", reuse_de "(keine Griffarten)";
+        no_grips: native_en "(no grips)", native_de "(keine Griffe)", reuse_en "(no grips)", reuse_de "(keine Griffe)";
+        summary: native_en "Part kind", native_de "Teilart", reuse_en "Part kind", reuse_de "Teilart";
     }
 }
 //#endregion 🔖️Terminology
-
-fn block5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("patchPartKind", "Patch Part Kind", "Teilart bearbeiten"),
-        ("addGripKind", "Add Grip Kind", "Griffart hinzufügen"),
-        ("removeGripKind", "Remove Grip Kind", "Griffart entfernen"),
-        ("addGrip", "Add Grip", "Griff hinzufügen"),
-        ("removeGrip", "Remove Grip", "Griff entfernen"),
-        ("edit", "Edit", "Bearbeiten"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
 
 fn block5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: BLOCK5D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
@@ -83,14 +73,14 @@ fn build_document_tree(definition: &Block5dDefinition, selected: &[String], labe
         .grip_kinds
         .iter()
         .map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), menu: None,
-            ..tree_item_with_action(builder.item_id("grip-kind", &kind.id), kind.label.clone(), Some(kind.color.clone()), block5d_action("setSelection", None))
+            ..tree_item_with_action(builder.item_id("grip-kind", &kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()), block5d_action("setSelection", None))
         })
         .collect();
     let grip_items: Vec<UiTreeItemNode> = definition
         .grips
         .iter()
         .map(|grip| UiTreeItemNode { icon_id: Some("circle-dot".into()), menu: None,
-            ..tree_item_with_action(builder.item_id("grip", &grip.id), grip.grip_kind.clone(), Some(format!("{:.2}", grip.angle)), block5d_action("setSelection", None))
+            ..tree_item_with_action(builder.item_id("grip", &grip.id), Label::data(grip.grip_kind.clone()), Some(format!("{:.2}", grip.angle)), block5d_action("setSelection", None))
         })
         .collect();
     builder
@@ -101,7 +91,7 @@ fn build_document_tree(definition: &Block5dDefinition, selected: &[String], labe
         .build()
 }
 
-fn text_field(id: &str, label: &str, value: &str, field: &str) -> UiNode {
+fn text_field(id: &str, label: impl Into<Label>, value: &str, field: &str) -> UiNode {
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
         id: id.into(),
@@ -143,14 +133,14 @@ fn build_inspection_tree(definition: &Block5dDefinition, labels: &Block5dLabels)
 
 fn render_board(definition: &Block5dDefinition, labels: &Block5dLabels) -> UiNode {
     ui_stack_vertical(vec![
-        ui_text(format!("{}: {}", labels.summary, if definition.part_kind.label.is_empty() { "—" } else { &definition.part_kind.label })),
-        ui_text(format!("2d grips: {}", definition.grips.len())),
+        ui_text(Label::data(format!("{}: {}", labels.summary.as_str(), if definition.part_kind.label.is_empty() { "—" } else { &definition.part_kind.label }))),
+        ui_text(Label::data(format!("2d grips: {}", definition.grips.len()))),
     ])
 }
 
 fn render_world(definition: &Block5dDefinition, labels: &Block5dLabels) -> UiNode {
     let mesh_url = definition.representations.first().and_then(|representation| representation.mesh_url.as_deref()).unwrap_or("—");
-    ui_stack_vertical(vec![ui_text(format!("{}: {}", labels.summary, if definition.part_kind.label.is_empty() { "—" } else { &definition.part_kind.label })), ui_text(format!("mesh: {mesh_url}"))])
+    ui_stack_vertical(vec![ui_text(Label::data(format!("{}: {}", labels.summary.as_str(), if definition.part_kind.label.is_empty() { "—" } else { &definition.part_kind.label }))), ui_text(Label::data(format!("mesh: {mesh_url}")))])
 }
 //#endregion 🔖️Panels
 
@@ -257,17 +247,8 @@ impl DocumentApp for Block5dPlayApp {
             BLOCK5D_BODY_WORLD => render_world(doc.projection, labels),
             BLOCK5D_BODY_DOCUMENT => build_document_tree(doc.projection, &cfg.projection.selected_ids, labels),
             BLOCK5D_BODY_INSPECTOR => build_inspection_tree(doc.projection, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, Block5dConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<Block5dLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(BLOCK5D_WINDOW_BOARD, labels.window_board)
-            .window_kind_label(BLOCK5D_WINDOW_WORLD, labels.window_world)
-            .action_labels(block5d_action_labels(is_de))
     }
 
     /// 🌉️ `puzzle5d_catalog_fragment`'s first real caller — wraps the block-5d document's
@@ -300,7 +281,7 @@ impl DocumentApp for Block5dPlayApp {
 //#region 🔖️Manifest
 pub fn create_block5d_app() -> App {
     App::from_builder(
-        App::builder(BLOCK5D_PLAY_APP_ID, "Block 5D")
+        App::builder(BLOCK5D_PLAY_APP_ID, LocalizedLabel::native("Block 5D", "Block 5D"))
             .document(["semio", "block", "5d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "5d.block".into(),
@@ -329,25 +310,25 @@ pub fn create_block5d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("layers")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(BLOCK5D_WINDOW_BOARD, "Board", BLOCK5D_BODY_BOARD, SurfaceKind::Board2d, "layout-grid")
-            .window_kind(BLOCK5D_WINDOW_WORLD, "World", BLOCK5D_BODY_WORLD, SurfaceKind::World3d, "box")
-            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, BLOCK5D_BODY_DOCUMENT)
-            .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, BLOCK5D_BODY_INSPECTOR)
-            .operation("patchPartKind", "Patch Part Kind")
-            .operation("addGripKind", "Add Grip Kind")
-            .operation("removeGripKind", "Remove Grip Kind")
-            .operation("addGrip", "Add Grip")
-            .operation("removeGrip", "Remove Grip")
-            .operation("setActiveExample", "Set Active Example")
-            .operation("edit", "Edit")
-            .view_action("setSelection", "Set Selection")
+            .window_kind(BLOCK5D_WINDOW_BOARD, LocalizedLabel::native("Board", "Board"), BLOCK5D_BODY_BOARD, SurfaceKind::Board2d, "layout-grid")
+            .window_kind(BLOCK5D_WINDOW_WORLD, LocalizedLabel::native("World", "Welt"), BLOCK5D_BODY_WORLD, SurfaceKind::World3d, "box")
+            .panel_tab("framework.panel.document", LocalizedLabel::native("Document", "Dokument"), PanelGroup::Workbench, BLOCK5D_BODY_DOCUMENT)
+            .panel_tab("framework.panel.inspection", LocalizedLabel::native("Inspection", "Inspektion"), PanelGroup::Details, BLOCK5D_BODY_INSPECTOR)
+            .operation("patchPartKind", LocalizedLabel::native("Patch Part Kind", "Teilart bearbeiten"))
+            .operation("addGripKind", LocalizedLabel::native("Add Grip Kind", "Griffart hinzufügen"))
+            .operation("removeGripKind", LocalizedLabel::native("Remove Grip Kind", "Griffart entfernen"))
+            .operation("addGrip", LocalizedLabel::native("Add Grip", "Griff hinzufügen"))
+            .operation("removeGrip", LocalizedLabel::native("Remove Grip", "Griff entfernen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .default_layout(create_default_layout(&[BLOCK5D_WINDOW_BOARD.into(), BLOCK5D_WINDOW_WORLD.into()], "row", Some(&[50.0, 50.0]), Some(&["Board".into(), "World".into()])))
             .io(block_5d_engine::block5d_io()),
     )
-    .example(BLOCK5D_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
-    .example(BLOCK5D_EXAMPLE_CAPSULE, "Nakagin Capsule", serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "building")
+    .example(BLOCK5D_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"), serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
+    .example(BLOCK5D_EXAMPLE_CAPSULE, LocalizedLabel::native("Nakagin Capsule", "Nakagin Capsule"), serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "building")
     .workflow("block5d", "Block 5D", "model")
 }
 //#endregion 🔖️Manifest

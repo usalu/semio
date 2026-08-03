@@ -1396,7 +1396,11 @@
 /* 🎬️ Real cursor mutes only while a demonstration ghost cursor is actually playing — a separate,
    playback-scoped attribute from data-introduction-active (which spans the whole tour) so the real
    cursor never disappears merely because the current step declares a demonstration. */
-:root[data-introduction-demonstrating] * {
+/* 🐚️ Two forms: `:root[...]` for standalone `UIIntroduction` usage outside any shell (falls back to
+   `document.documentElement`, e.g. the mit-bestand demonstrator's own onboarding tour), `.semio-scope[...]`
+   for one embedded shell's own root — see `IntroductionDemonstrationOverlay`'s `useShellScopeOptional()`. */
+:root[data-introduction-demonstrating] *,
+.semio-scope[data-introduction-demonstrating] * {
   cursor: none !important;
 }
 

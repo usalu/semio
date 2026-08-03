@@ -948,22 +948,23 @@ describe("framework plugin runtime", () => {
       },
       dispose: () => {},
     };
-    const handle = await adaptPluginHandle("mock-refresh", fakeHandle as unknown as Parameters<typeof adaptPluginHandle>[1]);
+    const handle = await adaptPluginHandle("mock-refresh", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
     const instanceId = await handle.createApp("main");
     await expect(handle.refreshUi(instanceId, { viewState: {}, windows: [{ key: "overview", bodyKey: "overview" }] })).resolves.toEqual({
       windows: [{ key: "overview", hash: "1", value: { instanceId: 7, probeKey: "overview" } }],
     });
   });
 
-  it("loads plugin modules through framework-core", async () => {
-    const { loadPluginModule } = await import("@semio-tech/framework-core");
+  it("loads plugin modules through framework-core, refcounted", async () => {
+    const { acquirePluginModule } = await import("@semio-tech/framework-core");
     const { encodePackValue, decodePackValue } = await import("@semio-tech/framework-os-core");
     const manifestBytes = Array.from(encodePackValue({ pluginId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] }));
     const moduleUrl = `data:application/javascript,${encodeURIComponent(
       `export async function createPluginApi(){return {manifest: async()=>new Uint8Array(${JSON.stringify(manifestBytes)}), createApp: async()=>1, destroyApp: async()=>{}, exchange: async()=>[]};}`,
     )}`;
-    const handle = await loadPluginModule("mock", moduleUrl);
-    expect((decodePackValue(await handle.manifest()) as { pluginId: string }).pluginId).toBe("mock");
+    const lease = await acquirePluginModule("mock", moduleUrl);
+    expect((decodePackValue(await lease.handle.manifest()) as { pluginId: string }).pluginId).toBe("mock");
+    lease.release();
   });
 
   it("parses a typed InvocationResponse, including requestedEffects, from a plugin handle-action response", async () => {
@@ -1024,7 +1025,7 @@ describe("framework plugin runtime", () => {
       },
       dispose: () => {},
     };
-    const handle = await adaptPluginHandle("mock-action", fakeHandle as unknown as Parameters<typeof adaptPluginHandle>[1]);
+    const handle = await adaptPluginHandle("mock-action", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
     const instanceId = await handle.createApp("main");
     const response = await handle.handleAction(instanceId, encodeActionWire({ controllerId: "c1", action: "addShot", args: { format: "png" } }), {});
     expect(response.output).toEqual({ echo: { kind: "action", name: "addShot", args: { format: "png" } } });
@@ -2320,7 +2321,10 @@ describe("framework renderer hosts", () => {
         brushPreviewJson: undefined,
         interactionJson: '{"activeUtility":"select"}',
         engagementPreviewJson: '[{"kind":"point","role":"origin","position":[0,0,0]},{"kind":"box-preview","role":"preview","cornerA":[0,0,0],"cornerB":[2,2,0]}]',
-        contextMenuJson: "[]",
+        // 🖱️ Context menus are no longer pushed as scene JSON — a right-click round-trips through
+        // `requestContextMenu`/`ContextMenuItemSpec` on demand instead (see `openSurfaceContextMenu`,
+        // renderer `📦️index.tsx`), so `World3dScene` has no `contextMenuJson` field to cover here.
+        statusJson: '{"computing":true,"label":"Evaluating"}',
         terrainJson: '{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png","projectOriginLon":9.7382,"projectOriginLat":52.3759,"exaggeration":1.5,"colorRamp":"hypsometric","minZoom":6,"maxZoom":14}',
       },
     };
@@ -2328,7 +2332,7 @@ describe("framework renderer hosts", () => {
     expect(node.world3d?.vorticesJson).toBe("[]");
     expect(node.world3d?.interactionJson).toContain("select");
     expect(node.world3d?.engagementPreviewJson).toContain("box-preview");
-    expect(node.world3d?.contextMenuJson).toBe("[]");
+    expect(node.world3d?.statusJson).toContain("computing");
     expect(node.world3d?.terrainJson).toContain("hypsometric");
   });
 

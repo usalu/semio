@@ -1,0 +1,422 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-dev:dev -- cad
+
+> nx run @semio-tech/framework-os-dev:dev cad
+
+> bun ./📜️script.ts dev cad
+
+plugin registry catalog refreshed (34 plugin crates, 58 playgrounds) -> /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated
+[DEBUG] program build scope: cad
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+warning: unused import: `Label`
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:3433:33
+     |
+3433 | use ui_wgpu::{ActionDescriptor, Label, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
+     |                                 ^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-framework-os-kernel-3d-brep v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust)
+warning: `semio-framework-core` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-core` to apply 1 suggestion)
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-cad v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-workflow v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust)
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust/📦️lib.rs:484:16
+    |
+484 |         label: app.label.clone(),
+    |                ^^^^^^^^^^^^^^^^^ expected `String`, found `LocalizedLabel`
+
+error[E0425]: cannot find type `AppLabelsOverlay` in this scope
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3539:66
+     |
+3539 |     fn app_labels(&self, _cfg: &ConfigView<'_, Self::Config>) -> AppLabelsOverlay {
+     |                                                                  ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `AppLabelsOverlay` in this scope
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3780:33
+     |
+3780 |     fn app_labels(&mut self) -> AppLabelsOverlay {
+     |                                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `AppLabelsOverlay` in this scope
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5243:33
+     |
+5243 |     fn app_labels(&mut self) -> AppLabelsOverlay {
+     |                                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+warning: unused imports: `LabelText`, `Terminology`, and `UiStackNode`
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:96:48
+   |
+96 |     UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+   |                                                ^^^^^^^^^^^
+97 |     WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind, FRAMEWORK_HISTORY_BODY_KEY,
+98 |     ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, Label, LabelText, Locale, LocalizedLabel, Terminology,
+   |                                                                               ^^^^^^^^^                          ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3466:64
+     |
+3466 |     fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+     |                                                                ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3466 -     fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+3466 +     fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, String> {
+     |
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `semio-framework-os-kernel-workflow` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error[E0433]: cannot find type `AppLabelsOverlay` in this scope
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5245:20
+     |
+5245 |             return AppLabelsOverlay::default();
+     |                    ^^^^^^^^^^^^^^^^ use of undeclared type `AppLabelsOverlay`
+
+error[E0599]: no method named `as_deref` found for enum `Locale` in the current scope
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:6149:47
+     |
+6149 |                 let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+     |                                               ^^^^^^^^ method not found in `Locale`
+
+error[E0599]: no method named `as_deref` found for enum `Locale` in the current scope
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5901:43
+     |
+5901 |     let is_de = request.view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+     |                                           ^^^^^^^^ method not found in `Locale`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4300:25
+     |
+4300 |             .or_else(|| self.registry.get(action_id).map(|def| def.label.clone()))
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<LocalizedLabel>`
+     |
+     = note: expected enum `std::option::Option<std::string::String>`
+                found enum `std::option::Option<LocalizedLabel>`
+
+error[E0433]: cannot find type `AppLabelsOverlay` in this scope
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3781:9
+     |
+3781 |         AppLabelsOverlay::default()
+     |         ^^^^^^^^^^^^^^^^ use of undeclared type `AppLabelsOverlay`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4301:25
+     |
+4301 |             .or_else(|| self.registry.get_command(action_id).map(|def| def.label.clone()))
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<LocalizedLabel>`
+     |
+     = note: expected enum `std::option::Option<std::string::String>`
+                found enum `std::option::Option<LocalizedLabel>`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3931:33
+     |
+3931 |                     label: Some(definition.label.clone()),
+     |                            ---- ^^^^^^^^^^^^^^^^^^^^^^^^ expected `String`, found `LocalizedLabel`
+     |                            |
+     |                            arguments to this enum variant are incorrect
+     |
+help: the type constructed contains `LocalizedLabel` due to the type of the argument passed
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3931:28
+     |
+3931 |                     label: Some(definition.label.clone()),
+     |                            ^^^^^------------------------^
+     |                                 |
+     |                                 this argument influences the type of `Some`
+note: tuple variant defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+     |
+ 606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+     |     ^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3951:33
+     |
+3951 |                     label: Some(definition.label.clone()),
+     |                            ---- ^^^^^^^^^^^^^^^^^^^^^^^^ expected `String`, found `LocalizedLabel`
+     |                            |
+     |                            arguments to this enum variant are incorrect
+     |
+help: the type constructed contains `LocalizedLabel` due to the type of the argument passed
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3951:28
+     |
+3951 |                     label: Some(definition.label.clone()),
+     |                            ^^^^^------------------------^
+     |                                 |
+     |                                 this argument influences the type of `Some`
+note: tuple variant defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+     |
+ 606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+     |     ^^^^
+
+error[E0433]: cannot find type `AppLabelsOverlay` in this scope
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3540:9
+     |
+3540 |         AppLabelsOverlay::default()
+     |         ^^^^^^^^^^^^^^^^ use of undeclared type `AppLabelsOverlay`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3173:49
+     |
+3173 |         let mut item = UiTreeItemNode::base(id, label);
+     |                        --------------------     ^^^^^ the trait `From<&str>` is not implemented for `Label`
+     |                        |
+     |                        required by a bound introduced by this call
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+note: required by a bound in `UiTreeItemNode::base`
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2617:52
+     |
+2617 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+     |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3178:26
+     |
+3178 |             label: label.into(),
+     |                          ^^^^ the trait `From<&str>` is not implemented for `Label`
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3195:76
+     |
+3195 |     let mut filter_item = UiTreeItemNode::base("framework.history.filter", if is_de { "Filter" } else { "Filter" });
+     |                           --------------------                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `From<&str>` is not implemented for `Label`
+     |                           |
+     |                           required by a bound introduced by this call
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+note: required by a bound in `UiTreeItemNode::base`
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2617:52
+     |
+2617 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+     |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3201:91
+     |
+3201 |             UiSelectItem { value: "all".into(), label: if is_de { "Alle" } else { "All" }.into() },
+     |                                                                                           ^^^^ the trait `From<&str>` is not implemented for `Label`
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3202:132
+     |
+3202 | ..." } else { "Without Operations" }.into() },
+     |                                      ^^^^ the trait `From<&str>` is not implemented for `Label`
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3203:125
+     |
+3203 |             UiSelectItem { value: "onlyOperations".into(), label: if is_de { "Nur Operationen" } else { "Only Operations" }.into() },
+     |                                                                                                                             ^^^^ the trait `From<&str>` is not implemented for `Label`
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<std::string::String>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3223:99
+     |
+3223 |             let mut item = UiTreeItemNode::base(format!("framework.history.entry.{}", entry.seq), label);
+     |                            -------------------- required by a bound introduced by this call       ^^^^^ the trait `From<std::string::String>` is not implemented for `Label`
+     |
+help: the trait `From<std::string::String>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `std::string::String`
+     = note: required for `std::string::String` to implement `Into<Label>`
+note: required by a bound in `UiTreeItemNode::base`
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2617:52
+     |
+2617 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+     |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3230:85
+     |
+3230 |                     label: Some(if is_de { "Zurück bis hier" } else { "Backwards" }.into()),
+     |                                                                                     ^^^^ the trait `From<&str>` is not implemented for `Label`
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3243:72
+     |
+3243 |                 label: Some(if is_de { "Aktionen" } else { "Actions" }.into()),
+     |                                                                        ^^^^ the trait `From<&str>` is not implemented for `Label`
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3256:72
+     |
+3256 |                 label: Some(if is_de { "Befehle" } else { "Commands" }.into()),
+     |                                                                        ^^^^ the trait `From<&str>` is not implemented for `Label`
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+Some errors have detailed explanations: E0277, E0308, E0425, E0433, E0599.
+For more information about an error, try `rustc --explain E0277`.
+warning: `semio-framework-plugin` (lib) generated 2 warnings
+error: could not compile `semio-framework-plugin` (lib) due to 22 previous errors; 2 warnings emitted
+error: linking with `wasm-component-ld` failed: exit status: 1
+  |
+  = note:  "wasm-component-ld" "-flavor" "wasm" "--export" "cabi_realloc" "-z" "stack-size=1048576" "--stack-first" "--no-demangle" "<45 object files omitted>" "/Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libstore.rlib" "<sysroot>/lib/rustlib/wasm32-wasip2/lib/libpanic_abort-*.rlib" "/Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/{libbase64-a6263ac25a6692c4,libvcs-882f0e868b37a600,libsemio_framework_core-20ea73f650919f34,libsemio_framework_hash-89f7893256403379,libgltf-dbcce66b00bf835c,libbyteorder-edccc9dd850d3504,libgltf_json-c45afea2fb0acb2e,liblazy_static-94e9a587803a69c3,libsemio_framework_ui_wgpu-6b65df1250272fd0,libsemio_framework_ui_styling-02d461a750d1c998,libdsl-6863f79b20163460,libpack-0dcaa28907d26f74,libpack_index-b33753f0e0f6aae6,libpack_http-164244a97e93ef18,libpack_async-574e016cb487a3de,libfutures_lite-b386253c6c97bfb3,libfutures_io-d04387b021d987b0,libfutures_core-b09438136777ea44,libparking-e0ceef9dc632d03a,libpin_project_lite-c37268a731486913,libfastrand-647f3aaaf8c8055a,libpack_value-b83da246f6733269,libprotocol-87ed51be91a70a18,libprotocol_channel-1b77fcfd9b327519,libprotocol_wire-6e667d9b26b7e238,libprotocol_crdt-697cdff35de56f9c,libprotocol_causal-4a357f134d84adeb,libprotocol_command-107fd77c07aac6a5,libprotocol_materialize-1b9b207baa181573,libprotocol_history-4d24eadf74c0e6b2,libprotocol_format-7a10134bb2275bcd,libpack_format-6c257c4de8f24275,libminiz_oxide-b638527923d632b5,libsimd_adler32-ab93c56590202e82,libblake3-8ea5a91880b7c0ea,libconstant_time_eq-5746907e1253bd56,libcfg_if-779b5fff43b4355d,libarrayvec-978ec62d43278e0d,libarrayref-a811bbc2b332dfd4,libprotocol_core-b5f977c3048fba31,libpack_core-fed3ed92a8611a40,libdsl_schema-9fd3da7c28eab425,libdsl_core-8a536cda48f0c6b9,libthiserror-513625276d7f75d1,libserde_json-3f25a27ea5e98516,libmemchr-1b41aa2f22afb1bc,libitoa-c28555136d6670b1,libzmij-707865356e517a8d,libserde-fe127f784a3085e5,libserde_core-e2498bd3767c2fe7}.rlib" "<sysroot>/lib/rustlib/wasm32-wasip2/lib/{libstd-*,libwasip2-*,libwit_bindgen-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*}.rlib" "-l" "c" "<sysroot>/lib/rustlib/wasm32-wasip2/lib/{librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-L" "<sysroot>/lib/rustlib/wasm32-wasip2/lib/self-contained" "-o" "/Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.wasm" "--gc-sections" "--no-entry" "-O3" "--strip-debug"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: PLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace and instructions to reproduce the bug.
+          Stack dump:
+          0.	Program arguments: rust-lld -flavor wasm --export=cabi_realloc -z stack-size=1048576 --stack-first --no-demangle /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.02wum2mj6p78wzxu1bp16kj60.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.06f6hwu1y67ylffsskxg7zqlp.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.1l5bxafxc3n8rtid8pyuxs56s.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.1lohe4j6p3a9dq10c03t9yq3z.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.1o48j4cywmk2otqlf7d9ejq47.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.24whozx7ei639z8f0g4nf8mrf.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.26tx8udribunyiczbw5ielemh.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.28vpkhg1ew3et4dr56fuef1fk.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.2b2tqcrl2vtn44mlmewhx1uo3.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.2uj9eb1eqca0ols77ixzb8gir.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.2ukpuld3e7fggxtcw7nib7jtt.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.3bl5mcd3cbirgmqieebdvjsmb.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.47ah8dwvm2bg300vh3r724erm.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.48qawqaxqn33vlj5v95c84bjh.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.4b6abx51150fbpkx9f0xziqfo.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.4h85if2d6oujz80i8ufdyofoz.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.4ki6qmyfb7yd42bnl1kpdwowg.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.5i3xk5icyxb7485rpi5uuwuw6.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.5v5ddfq5zpf9c22g72km1f99t.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.6dpethb01mmgg1bna3u22k0oo.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.6lnb48lv3nbzds8cmodqq37br.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.6qq2hvtyr7enddb3qohhpwk6c.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.6rp6yrylzjwmblx15pm8sxwje.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.7o6rmekw68p0eq51jgk7tqnni.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.7p1z21ebe75znahruxgt1wnau.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.7xh4wxcjgj4umhaz58uh54tgx.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.945d5hd9tvarlq65tf9w87qak.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.97yieuv5apgjaj9hvtsei4z3x.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.9ie87vspkj2tkrtn7454qxiti.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.9lxm7szl28lkg1drzvdk90xob.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.9tjoc9ufuvjvz5c96gaiqx1pg.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.a9bhoiy8gvb3ggbqhi2fl9eie.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.b2rlc1rtjnireuutndngmd1fi.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.b3za4jsdgpdwpyg9xry25wc11.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.bnn9thpdu8hbs3llc5nebz2mp.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.bw3johmymmnyqzkuzx6asr33f.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.ckj069f1rn9tdmz743c7ijcvl.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.cnla2jjxrzl9fco0kr36u67gm.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.cow97889igjn2ah8jbxem0op2.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.d0odti3attodf4z1l12d3dzg7.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.d3dcdrurp2giky622syna3v36.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.dgf4cabneinse3c6dppyq9wfe.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.dnzgy6tgwwt1fk018ojtezjy1.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.dr6k0107b3k8mxt0rzu5jm19g.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/semio_s_app_cad.12de1dy6s76vpqqd8cy0agioe.1x07biz.rcgu.o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libstore.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libpanic_abort-0d048dca516a3f54.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libbase64-a6263ac25a6692c4.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libvcs-882f0e868b37a600.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libsemio_framework_core-20ea73f650919f34.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libsemio_framework_hash-89f7893256403379.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libgltf-dbcce66b00bf835c.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libbyteorder-edccc9dd850d3504.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libgltf_json-c45afea2fb0acb2e.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/liblazy_static-94e9a587803a69c3.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libsemio_framework_ui_wgpu-6b65df1250272fd0.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libsemio_framework_ui_styling-02d461a750d1c998.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libdsl-6863f79b20163460.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libpack-0dcaa28907d26f74.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libpack_index-b33753f0e0f6aae6.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libpack_http-164244a97e93ef18.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libpack_async-574e016cb487a3de.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libfutures_lite-b386253c6c97bfb3.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libfutures_io-d04387b021d987b0.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libfutures_core-b09438136777ea44.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libparking-e0ceef9dc632d03a.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libpin_project_lite-c37268a731486913.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libfastrand-647f3aaaf8c8055a.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libpack_value-b83da246f6733269.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol-87ed51be91a70a18.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol_channel-1b77fcfd9b327519.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol_wire-6e667d9b26b7e238.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol_crdt-697cdff35de56f9c.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol_causal-4a357f134d84adeb.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol_command-107fd77c07aac6a5.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol_materialize-1b9b207baa181573.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol_history-4d24eadf74c0e6b2.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol_format-7a10134bb2275bcd.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libpack_format-6c257c4de8f24275.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libminiz_oxide-b638527923d632b5.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libsimd_adler32-ab93c56590202e82.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libblake3-8ea5a91880b7c0ea.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libconstant_time_eq-5746907e1253bd56.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libcfg_if-779b5fff43b4355d.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libarrayvec-978ec62d43278e0d.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libarrayref-a811bbc2b332dfd4.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libprotocol_core-b5f977c3048fba31.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libpack_core-fed3ed92a8611a40.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libdsl_schema-9fd3da7c28eab425.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libdsl_core-8a536cda48f0c6b9.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libthiserror-513625276d7f75d1.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libserde_json-3f25a27ea5e98516.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libmemchr-1b41aa2f22afb1bc.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libitoa-c28555136d6670b1.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libzmij-707865356e517a8d.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libserde-fe127f784a3085e5.rlib /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/libserde_core-e2498bd3767c2fe7.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libstd-cbddf81a39772c61.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libwasip2-b7ec5890efe132d9.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libwit_bindgen-f752806d0afa26cb.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libcfg_if-192d452de344d03c.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/librustc_demangle-b068c4a57ea33348.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libstd_detect-ddcdaf72106a350b.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libhashbrown-467b0e1ddea00d5a.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/librustc_std_workspace_alloc-2f3b1c6222d1d704.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libminiz_oxide-d052765015938097.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libadler2-f44e029adb631845.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libunwind-df56f3061e747f87.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/liblibc-833f6628b9f163a3.rlib -l c /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/librustc_std_workspace_core-e770e063681f52dc.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/liballoc-28f1513401e3d33a.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libcore-f9be7ff82408cd93.rlib /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/libcompiler_builtins-77b67ce331feb6f1.rlib -L /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/wasm32-wasip2/lib/self-contained --gc-sections --no-entry -O 3 --strip-debug -o /Users/ueli/Documents/semio/target/wasm32-wasip2/release/deps/.tmpnqr1c6/semio_s_app_cad.wasm
+          Stack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):
+          0  libLLVM.dylib            0x000000010d3cd484 llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) + 56
+          1  libLLVM.dylib            0x000000010d3cb1a4 llvm::sys::RunSignalHandlers() + 172
+          2  libLLVM.dylib            0x000000010d3cdf34 SignalHandler(int, __siginfo*, void*) + 344
+          3  libsystem_platform.dylib 0x0000000182f03744 _sigtramp + 56
+          4  rust-lld                 0x00000001049adebc lld::wasm::ElemSection::writeBody() + 80
+          5  rust-lld                 0x00000001049b0ea0 lld::wasm::SyntheticSection::finalizeContents() + 28
+          6  rust-lld                 0x00000001049bed18 lld::wasm::(anonymous namespace)::Writer::run() + 28432
+          7  rust-lld                 0x00000001049b7c94 lld::wasm::writeResult() + 160
+          8  rust-lld                 0x000000010498d110 lld::wasm::(anonymous namespace)::LinkerDriver::linkerMain(llvm::ArrayRef<char const*>) + 16016
+          9  rust-lld                 0x0000000104989218 lld::wasm::link(llvm::ArrayRef<char const*>, llvm::raw_ostream&, llvm::raw_ostream&, bool, bool) + 404
+          10 rust-lld                 0x000000010464362c lld::unsafeLldMain(llvm::ArrayRef<char const*>, llvm::raw_ostream&, llvm::raw_ostream&, llvm::ArrayRef<lld::DriverDef>, bool) + 1852
+          11 rust-lld                 0x0000000104641a80 lld_main(int, char**, llvm::ToolContext const&) + 272
+          12 rust-lld                 0x0000000104642094 main + 88
+          13 dyld                     0x0000000182b3be00 start + 6992
+          error: failed to invoke LLD: signal: 11 (SIGSEGV)
+          
+
+error: could not compile `semio-s-app-cad` (lib) due to 1 previous error
+[0m[1m860 |[0m }
+[0m[1m861 |[0m 
+[0m[1m862 |[0m [0m[35masync[0m [0m[35mfunction[0m buildPlugin(target: PluginRegistryEntry): Promise[0m<[0m[0m[35mvoid[0m> {
+[0m[1m863 |[0m   [0m[35mconst[0m packageName = [0m[35mawait[0m readPackageName(target.cratePath)[0m[2m;[0m
+[0m[1m864 |[0m   [0m[35mif[0m (runCmdStatus([0m[32m"cargo"[0m, [[0m[32m"build"[0m, [0m[32m"-p"[0m, packageName, [0m[32m"--target"[0m, PLUGIN_WASM_TARGET, [0m[32m"--release"[0m], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== [0m[33m0[0m) {
+[0m[1m865 |[0m     [0m[35mthrow[0m [0m[35mnew[0m [0m[1mError[0m([0m[32m`plugin build failed: [0m${target.pluginId}[0m[32m`[0m)[0m[2m;[0m
+                    [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mplugin build failed: cad[0m
+[0m      [2mat [0m[0m[1m[3mbuildPlugin[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/[0m[36m📜️script.ts[0m[2m:[0m[33m865[0m[2m:[33m15[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync buildPlugins[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/[0m[36m📜️script.ts[0m[2m:[0m[33m918[0m[2m:[33m11[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync run[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/[0m[36m📜️script.ts[0m[2m:[0m[33m1031[0m[2m:[33m13[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync run[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts[0m[2m:[0m[33m814[0m[2m:[33m19[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3masync runBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts[0m[2m:[0m[33m844[0m[2m:[33m16[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts dev cad" exited with non-zero status code
+
+
+ NX   Running target dev for project @semio-tech/framework-os-dev failed
+
+Failed tasks:
+
+- @semio-tech/framework-os-dev:dev
+
+Hint: run the command with --verbose for more details.
+
+1361 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1362 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1363 |  */
+1364 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1365 |   const status = runCmdInternal(cmd, args, opts);
+1366 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-os-dev:dev -- cad exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:575:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:814:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:849:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:2915:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1
+1361 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1362 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1363 |  */
+1364 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1365 |   const status = runCmdInternal(cmd, args, opts);
+1366 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: bun nx run @semio-tech/framework-os-dev:dev -- cad exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
+      at runFrameworkOsPlaygroundDev (/Users/ueli/Documents/semio/📜️script.ts:80:3)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:403:7)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:814:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:849:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:2915:11
+
+Bun v1.3.14 (macOS arm64)

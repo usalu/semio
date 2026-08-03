@@ -8,7 +8,7 @@
 use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use semio_framework_plugin::{
     app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, localized_label_map, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, AppIo, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppActionRegistry, AppLabelsOverlay, AppLabelsOverlayExt, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, AppIo, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabelsOverlay, AppLabelsOverlayExt, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
     ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, DslValue, Emit, LocaleLabels, Media, MediaError, MediaPayload, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup,
     PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -584,13 +584,39 @@ impl DocumentApp for SequencePlayApp {
             .utility_labels(sequence_utility_labels(is_de))
     }
 
+    /// 🗂️ Grouped disclosure: `run`/`stop`/`addStep` stay top-level (the most frequent verbs);
+    /// `reorganize` folds into the `transform` group and a single-node hit's `setStepCollapsed` folds
+    /// into the `selection` group; `deleteSelection` stays a direct destructive item last —
+    /// `organize_context_menu` (applied automatically at the `VcsDocumentApp::context_menu` funnel)
+    /// sorts the groups into `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive
+    /// separator itself.
     fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = is_de_locale(cfg.projection);
         let selected = cfg.projection.selected_step_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
-        let mut menu = Menu::of(registry);
+
+        let mut menu = Menu::of(registry)
+            .action("run")
+            .action("stop")
+            .action("addStep")
+            .group("transform", |m| m.action("reorganize"));
+
+        if nodes.len() == 1 {
+            let id = nodes[0].clone();
+            menu = menu.group("selection", |m| {
+                m.item(ContextMenuItemSpec {
+                    id: "setStepCollapsed".into(),
+                    label: Some(if is_de { "Schritt einklappen".into() } else { "Toggle Collapsed".into() }),
+                    icon: Some("chevrons-up-down".into()),
+                    action: Some("setStepCollapsed".into()),
+                    args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": id }))),
+                    ..Default::default()
+                })
+            });
+        }
+
         if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::Direct) {
             menu = menu.item(spec);
         }
@@ -650,24 +676,24 @@ pub fn create_sequence_app() -> App {
                 SEQUENCE_PLAY_BODY_INSPECTOR,
             )
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .operation("addStep", "Add Step")
+            .action_with(ActionDefinition::new_catalog("addStep", "Add Step", ActionKind::Operation).with_category("create"))
             .operation("addStepToSlot", "Add Step To Slot")
             .operation("addStepDropped", "Add Step Dropped")
             .operation("removeStep", "Remove Step")
-            .operation("deleteSelection", "Delete Selection")
+            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
             .operation("moveStep", "Move Step")
             .operation("connectSteps", "Connect Steps")
             .operation("disconnectSteps", "Disconnect Steps")
             .operation("setStepParams", "Set Step Params")
-            .operation("setStepCollapsed", "Set Step Collapsed")
-            .operation("reorganize", "Reorganize")
+            .action_with(ActionDefinition::new_catalog("setStepCollapsed", "Set Step Collapsed", ActionKind::Operation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
             .operation("nodeGraphEdit", "Node Graph Edit")
             .view_action("setViewport", "Node Graph Viewport")
             // 👁️ Ephemeral view state — selection, run output, layout orientation, locale.
             .view_action("setSelection", "Set Selection")
             .view_action("setOrientation", "Set Orientation")
-            .view_action("run", "Run")
-            .view_action("stop", "Stop")
+            .action_with(ActionDefinition::new_catalog("run", "Run", ActionKind::View).with_category("actions"))
+            .action_with(ActionDefinition::new_catalog("stop", "Stop", ActionKind::View).with_category("actions"))
             .view_action("setLocale", "Set Locale")
             // 📝️ Staged argument forms for the panel-visible create + layout actions.
             .action_args("addStep", vec![
@@ -842,6 +868,25 @@ mod tests {
             assert_eq!(action_labels.get(id).map(String::as_str), Some(label), "{id} action label");
         }
     }
+
+    //#region 🔖️ContextMenuTests
+    #[test]
+    fn context_menu_stays_within_nine_rows_and_ends_with_destructive_delete() {
+        let mut app = new_app_with_registry();
+        app.dispatch_typed(SequenceCommand::SetSelection { step_ids: vec!["step-1".into()] }, &testkit::meta("local")).expect("select");
+        let request = ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+            surface: None,
+            window_instance_id: None,
+            point: None,
+        };
+        let items = app.context_menu(&request);
+        assert!(items.len() <= 9, "expected <= 9 top-level rows, got {} ({items:?})", items.len());
+        let last = items.last().expect("at least one row");
+        assert_eq!(last.id, "delete-selection");
+        assert_eq!(last.destructive, Some(true));
+    }
+    //#endregion 🔖️ContextMenuTests
 
     //#region 🔖️PortTests
     #[test]

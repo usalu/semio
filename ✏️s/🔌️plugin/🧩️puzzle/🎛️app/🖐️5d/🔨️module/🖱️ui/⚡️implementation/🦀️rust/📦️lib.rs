@@ -1563,8 +1563,14 @@ fn world_interaction_json(runtime: &Puzzle5dRuntime, active_utility: &str) -> St
     .to_string()
 }
 
-fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, is_de: bool) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec};
+/// 🗂️ GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: `duplicateSelection`/`selectSameKindSelection`/
+/// `zoomToSelection` stay top-level verbs; the hide/lock toggles (bespoke rows — their label/icon flip
+/// on selection state, so they can't resolve from a single static `ActionDefinition`) fold into a
+/// `settings` group; `deleteSelection` (bespoke label carrying the selection-count phrase) stays the
+/// trailing destructive row. `organize_context_menu`, run automatically at the `VcsDocumentApp::context_menu`
+/// funnel, handles taxonomy ordering/separator placement — this function only needs to emit the rows.
+fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, is_de: bool, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
     if envelope.runtime.selection.part_ids.is_empty() {
         return Vec::new();
     }
@@ -1572,27 +1578,39 @@ fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels
     let all_hidden = !selected.is_empty() && selected.iter().all(|part| part.part_2d.hidden.unwrap_or(false));
     let all_locked = !selected.is_empty() && selected.iter().all(|part| part.part_2d.locked.unwrap_or(false));
     let phrase = selection_count_phrase(is_de, &[(envelope.runtime.selection.part_ids.len(), if is_de { "Teil" } else { "part" }, if is_de { "Teile" } else { "parts" })]);
-    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool, separator: bool| ContextMenuItemSpec {
+    let bespoke = |id: &str, label: String, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool| ContextMenuItemSpec {
         id: id.into(),
-        label: if separator { None } else { Some(label.into()) },
-        icon: if separator { None } else { Some(icon.into()) },
-        action: if separator { None } else { Some(action.into()) },
+        label: Some(label),
+        icon: Some(icon.into()),
+        action: Some(action.into()),
         args: semio_framework_plugin::optional_json_to_dsl(args),
         destructive: destructive.then_some(true),
-        separator: separator.then_some(true),
         ..Default::default()
     };
-    vec![
-        item("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false, false),
-        item("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false, false),
-        item("sep-flags", "", "", "", None, false, true),
-        item("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false, false),
-        item("lock-unlock", if all_locked { labels.unlock } else { labels.lock }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": !all_locked })), false, false),
-        item("sep-zoom", "", "", "", None, false, true),
-        item("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false, false),
-        item("sep-delete", "", "", "", None, false, true),
-        item("delete", &format!("{} ({phrase})", labels.delete), "trash", "deleteSelection", None, true, false),
-    ]
+    Menu::of(registry)
+        .action("duplicateSelection")
+        .action("selectSameKindSelection")
+        .action("zoomToSelection")
+        .group("settings", |m| {
+            m.item(bespoke(
+                "hide-show",
+                if all_hidden { labels.show.into() } else { labels.hide.into() },
+                if all_hidden { "eye" } else { "eye-off" },
+                "setSelectionFlag",
+                Some(json!({ "flag": "hidden", "value": !all_hidden })),
+                false,
+            ))
+            .item(bespoke(
+                "lock-unlock",
+                if all_locked { labels.unlock.into() } else { labels.lock.into() },
+                if all_locked { "lock-open" } else { "lock" },
+                "setSelectionFlag",
+                Some(json!({ "flag": "locked", "value": !all_locked })),
+                false,
+            ))
+        })
+        .item(bespoke("delete", format!("{} ({phrase})", labels.delete), "trash", "deleteSelection", None, true))
+        .build()
 }
 
 
@@ -2855,7 +2873,7 @@ impl DocumentApp for Puzzle5dPlayApp {
         request: &semio_framework_plugin::ContextMenuRequest,
         doc: &DocumentView<'_, Puzzle5dPlayProjection>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
-        _registry: &semio_framework_plugin::AppActionRegistry,
+        registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let config = cfg.projection;
         let labels = puzzle5d_labels(config);
@@ -2868,7 +2886,7 @@ impl DocumentApp for Puzzle5dPlayApp {
                 envelope.runtime.selection.part_ids = part_ids.into();
             }
         }
-        puzzle5d_context_menu_items(&envelope, labels, is_de)
+        puzzle5d_context_menu_items(&envelope, labels, is_de, registry)
     }
 }
 
@@ -3720,10 +3738,10 @@ pub fn create_puzzle5d_app() -> App {
             .operation("addPartKind", "Add Part")
             .operation("addBrushPart", "Add Brush Part")
             .operation("addBrushObject", "Add Brush Object")
-            .operation("deleteSelection", "Delete Selection")
-            .operation("duplicateSelection", "Duplicate Selection")
-            .operation("setSelectionFlag", "Set Selection Flag")
-            .operation("zoomToSelection", "Zoom To Selection")
+            .action_with(ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
+            .action_with(ActionDefinition::new_catalog("duplicateSelection", "Duplicate Selection", ActionKind::Operation).with_category("create"))
+            .action_with(ActionDefinition::new_catalog("setSelectionFlag", "Set Selection Flag", ActionKind::Operation).with_category("settings"))
+            .action_with(ActionDefinition::new_catalog("zoomToSelection", "Zoom To Selection", ActionKind::Operation).with_category("view"))
             .operation("focusSelection", "Focus Selection")
             .operation("engagementSubmit", "Engagement Submit")
             .operation("setFillCount", "Set Fill Count")
@@ -3744,7 +3762,7 @@ pub fn create_puzzle5d_app() -> App {
             .view_action("documentSelect", "Document Select")
             .view_action("clearSelection", "Clear Selection")
             .view_action("selectAll", "Select All")
-            .view_action("selectSameKindSelection", "Select Same Kind")
+            .action_with(ActionDefinition::new_catalog("selectSameKindSelection", "Select Same Kind", ActionKind::View).with_category("selection"))
             .view_action("selectSameKind", "Select Same Kind (alias)")
             .view_action("toggleSun", "Toggle Sun")
             .view_action("setSunAzimuth", "Set Sun Azimuth")
@@ -3902,7 +3920,7 @@ mod wasm_bridge {
 mod tests {
     use super::*;
     use protocol::OperationDiff;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
+    use semio_framework_plugin::{testkit, ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, PluginApp, UiMenuRef, VcsDocumentApp, ViewState};
 
     fn new_app_with_registry() -> VcsDocumentApp<Puzzle5dPlayApp> {
         testkit::new_app_with_registry::<Puzzle5dPlayApp>(create_puzzle5d_app)
@@ -3940,6 +3958,34 @@ mod tests {
         let app = testkit::new_app::<Puzzle5dPlayApp>();
         assert_eq!(app.projection().expect("projection").0.get("schema").and_then(|value| value.as_str()), Some(PUZZLE5D_SCHEMA));
         assert!(part_count(&app) > 0, "the concrete-forest default document ships with parts");
+    }
+
+    /// 🗂️ GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS: the selection context menu stays a shallow,
+    /// disclosed list (top-level verbs + a handful of taxonomy groups) rather than a flat wall of rows,
+    /// and the known destructive `deleteSelection` action stays the trailing group's last item.
+    #[test]
+    fn context_menu_is_grouped_and_keeps_delete_selection_last() {
+        let mut app = new_app_with_registry();
+        let part_id = app.projection().expect("projection").0["parts"][0]["id"].as_str().expect("seeded part").to_string();
+        dispatch_action(&mut app, "setSelection", Some(&json!({ "partIds": [part_id.clone()] })), None, &testkit::meta("local")).expect("select part");
+        let request = ContextMenuRequest {
+            menu: UiMenuRef { id: "world3d".into(), args: None },
+            surface: Some(ContextMenuSurfaceTarget {
+                surface_id: PUZZLE5D_PLAY_WINDOW_3D.into(),
+                kind: "world3d".into(),
+                hits: vec![],
+                selection: vec![ContextMenuSelectionGroup { domain: "part".into(), ids: vec![part_id] }],
+                text: None,
+            }),
+            window_instance_id: None,
+            point: None,
+        };
+        let menu = app.context_menu(&request);
+        assert!(menu.len() <= 9, "top-level context menu should stay progressively disclosed: {menu:?}");
+        let last = menu.last().expect("selection context menu should not be empty");
+        let last_is_destructive_leaf = last.action.as_deref() == Some("deleteSelection") && last.destructive == Some(true);
+        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).map(|child| child.action.as_deref() == Some("deleteSelection") && child.destructive == Some(true)).unwrap_or(false);
+        assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must stay last: {menu:?}");
     }
 
     /// 📦️ `Puzzle5dPlayProjection`'s pack encoding round-trips through the same `(RecordSpec,

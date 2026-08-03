@@ -9,10 +9,16 @@ import {
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   type IntroductionDefinition,
   type ShellBrand,
+  type ShellLocale,
   type TutorialDefinition,
 } from "../../🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts";
 
 //#region 🏷️DemonstratorShared
+/** @emoji 🇩🇪️ The whole demonstrator is German-locked (every brand's `locks.locale` below) — the
+ * single source the landing page's boot-time `initUiLocaleSync` call reads, so it can never drift
+ * from the per-app brands. */
+export const DEMONSTRATOR_LOCALE: ShellLocale = "de";
+
 /** @emoji 🌐️ Production host for the merged demonstrator static site. */
 export const DEMONSTRATOR_HOST = "demonstrator.entwerfen.mit-bestand.de";
 
@@ -341,7 +347,7 @@ export const ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-aggregator",
   windowTitle: "Entwerfen mit Bestand · Aggregator",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: "de", terminology: "reuse", themeId: "semio" },
+  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "concrete-forest" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -500,7 +506,7 @@ export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-generator",
   windowTitle: "Entwerfen mit Bestand · Generator",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: "de", themeId: "semio" },
+  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "hexagonal-mushroom-column" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -550,7 +556,7 @@ export const ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-koordinator",
   windowTitle: "Entwerfen mit Bestand · Koordinator",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: "de", themeId: "semio" },
+  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "hexagonal-cut-concrete-forest-left" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -604,7 +610,7 @@ export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-aussuchen",
   windowTitle: "Entwerfen mit Bestand · Aussuchen",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: "de", themeId: "semio" },
+  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "demo-stock" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -648,7 +654,7 @@ export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-bearbeiten",
   windowTitle: "Entwerfen mit Bestand · Bearbeiten",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: "de", themeId: "semio" },
+  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "timber-beam-joinery" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -698,7 +704,7 @@ export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand-verfolgen",
   windowTitle: "Entwerfen mit Bestand · Verfolgen",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: "de", themeId: "semio" },
+  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "reuse-map" },
   ephemeral: true,
   replayIntroductionOnLoad: true,

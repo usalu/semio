@@ -897,7 +897,12 @@ impl DocumentApp for TrinityJackPlayApp {
         let is_de = is_de_locale(cfg.projection);
         let selected = cfg.projection.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
-        let mut menu = Menu::of(registry);
+        let mut menu = Menu::of(registry)
+            .action("runQuery")
+            .action("reorganize")
+            .action("formatDocument")
+            .group("mode", |m| m.action("setActiveExample"))
+            .group("open", |m| m.action("loadExampleQuery"));
         if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
@@ -993,12 +998,12 @@ pub fn create_trinity_jack_app() -> App {
                 PanelGroup::Details,
                 TRINITY_JACK_PLAY_BODY_INSPECTION,
             )
-            .operation("deleteSelection", "Delete Selection")
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("deleteSelection", "Delete Selection", ActionKind::Operation).with_category("selection"))
             .operation("patchNodes", "Patch Nodes")
-            .operation("reorganize", "Reorganize")
-            .operation("runQuery", "Run Jack Query")
-            .operation("loadExampleQuery", "Load Example Query")
-            .operation("setActiveExample", "Set Active Example")
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("runQuery", "Run Jack Query", ActionKind::Operation).with_category("methods"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("loadExampleQuery", "Load Example Query", ActionKind::Operation).with_category("open"))
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setActiveExample", "Set Active Example", ActionKind::Operation).with_category("mode"))
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
             .view_action("setSelection", "Set Selection")
@@ -1006,7 +1011,7 @@ pub fn create_trinity_jack_app() -> App {
             .view_action("textEdit", "Edit Jack Query")
             .view_action("textSelect", "Select Jack Query Text")
             .view_action("requestCompletions", "Request Completions")
-            .view_action("formatDocument", "Format Jack Query")
+            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("formatDocument", "Format Jack Query", ActionKind::View).with_category("utilities"))
             .view_action("setLodMode", "Set LOD Mode")
             .view_action("editorEngagementInput", "Editor Engagement Input")
             .view_action("graphEngagementInput", "Graph Engagement Input")
@@ -1181,6 +1186,31 @@ mod tests {
         assert!(!result.operations.is_empty());
         let projection = app.projection().expect("projection");
         assert!(!projection.nodes.iter().any(|node| node.id == node_id));
+    }
+
+    #[test]
+    fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
+        let mut app = new_app();
+        let node_id = node_id_at(&app, 0);
+        app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id.clone()] }, &meta("local")).expect("select");
+        let request = ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+            surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+                surface_id: TRINITY_JACK_PLAY_SURFACE_GRAPH.into(),
+                kind: "nodeGraph".into(),
+                hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: node_id.clone(), label: None }],
+                selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec![node_id] }],
+                text: None,
+            }),
+            window_instance_id: None,
+            point: None,
+        };
+        let menu = app.context_menu(&request);
+        assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
+        let last = menu.last().expect("grouped disclosure menu should not be empty");
+        let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");
+        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).map(|child| child.destructive == Some(true)).unwrap_or(false);
+        assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must be last: {menu:?}");
     }
 
     #[test]

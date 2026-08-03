@@ -1,6 +1,7 @@
 //! 🥅️ Render-independent framework kernel: declarative {@link UiNode}, {@link Platform}, {@link ActionBus}.
 
 pub use ui_wgpu::IconName;
+pub use ui_wgpu::{Locale, Terminology};
 
 pub mod action_bus {
 // #region action_bus
@@ -3268,19 +3269,20 @@ impl Platform {
 mod tests {
     use super::*;
     use crate::ui::{ModeDefinition, WindowKindDefinition};
+    use ui_wgpu::LocalizedLabel;
 
     #[test]
     fn adds_first_app_as_active() {
         let mut platform = Platform::new(None);
         platform.add_app(AppDefinition {
             id: "draw-play".into(),
-            label: "Draw".into(),
+            label: LocalizedLabel::data("Draw"),
             document: vec!["semio".into(), "draw".into()],
             icon_id: None,
             controller_id: "draw-play".into(),
             modes: crate::ui::Modes::one(ModeDefinition {
                 id: "edit".into(),
-                label: "Edit".into(),
+                label: LocalizedLabel::data("Edit"),
                 icon_id: "pencil".into(),
                 tools: Vec::new(),
                 layout_id: None,
@@ -3289,7 +3291,7 @@ mod tests {
             default_mode_id: "edit".into(),
             window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
                 id: "composite".into(),
-                label: "Canvas".into(),
+                label: LocalizedLabel::data("Canvas"),
                 body_key: "composite".into(),
                 surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
@@ -3328,13 +3330,13 @@ mod tests {
     fn minimal_app(id: &str) -> AppDefinition {
         AppDefinition {
             id: id.into(),
-            label: id.into(),
+            label: LocalizedLabel::data(id),
             document: vec!["semio".into(), id.into()],
             icon_id: None,
             controller_id: id.into(),
             modes: crate::ui::Modes::one(ModeDefinition {
                 id: "edit".into(),
-                label: "Edit".into(),
+                label: LocalizedLabel::data("Edit"),
                 icon_id: "pencil".into(),
                 tools: Vec::new(),
                 layout_id: None,
@@ -3343,7 +3345,7 @@ mod tests {
             default_mode_id: "edit".into(),
             window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
                 id: "main".into(),
-                label: "Main".into(),
+                label: LocalizedLabel::data("Main"),
                 body_key: "main".into(),
                 surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
@@ -3429,7 +3431,7 @@ pub mod ui {
 
 use serde::{Deserialize, Serialize};
 use dsl::DslValue;
-use ui_wgpu::{ActionDescriptor, Label, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
+use ui_wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
 use crate::mesh::{MediaPortSpec, ArtifactKindSpec, ConfigSpec, CommandGrammar, AppIo};
 use crate::IconName;
 
@@ -3469,11 +3471,14 @@ pub enum ActionKind {
 #[serde(rename_all = "camelCase")]
 pub struct ActionArgOption {
     pub value: String,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel`. Not yet ts-rs-mirrored
+    /// (follow-up: `LocalizedLabel` itself has no `TS` impl).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
 }
 
 impl ActionArgOption {
-    pub fn new(value: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn new(value: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self { value: value.into(), label: label.into() }
     }
 }
@@ -3530,7 +3535,9 @@ pub enum ActionArgControl {
 #[serde(rename_all = "camelCase")]
 pub struct ActionArgDef {
     pub id: String,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub control: ActionArgControl,
     #[serde(default)]
     pub required: bool,
@@ -3543,37 +3550,37 @@ pub struct ActionArgDef {
 }
 
 impl ActionArgDef {
-    fn with_control(id: impl Into<String>, label: impl Into<String>, control: ActionArgControl) -> Self {
+    fn with_control(id: impl Into<String>, label: impl Into<LocalizedLabel>, control: ActionArgControl) -> Self {
         Self { id: id.into(), label: label.into(), control, required: false, default: None, description: None }
     }
 
     /// @emoji 🔤️ A free-text argument.
-    pub fn text(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_control(id, label, ActionArgControl::Text { placeholder: None })
     }
 
     /// @emoji 🔢️ A numeric argument (unbounded stepper by default).
-    pub fn number(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_control(id, label, ActionArgControl::Number { min: None, max: None, step: None })
     }
 
     /// @emoji 🎚️ A bounded slider argument.
-    pub fn slider(id: impl Into<String>, label: impl Into<String>, min: f64, max: f64) -> Self {
+    pub fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
         Self::with_control(id, label, ActionArgControl::Slider { min, max, step: None, unit: None })
     }
 
     /// @emoji 🔘️ A boolean toggle argument.
-    pub fn toggle(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn toggle(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_control(id, label, ActionArgControl::Toggle)
     }
 
     /// @emoji 🔽️ A single-choice select argument.
-    pub fn select(id: impl Into<String>, label: impl Into<String>, options: Vec<ActionArgOption>) -> Self {
+    pub fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
         Self::with_control(id, label, ActionArgControl::Select { options })
     }
 
     /// @emoji 🧭️ A three-component vector argument.
-    pub fn vec3(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_control(id, label, ActionArgControl::Vec3)
     }
 
@@ -3714,7 +3721,9 @@ pub fn catalog_command_icon_id(id: &str) -> IconName {
 #[serde(rename_all = "camelCase")]
 pub struct ActionDefinition {
     pub id: String,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub kind: ActionKind,
     pub icon_id: IconName,
     /// 📝️ Typed argument declarations. Empty (the common case) = a no-argument action.
@@ -3730,7 +3739,7 @@ pub struct ActionDefinition {
 }
 
 impl ActionDefinition {
-    pub fn new(id: impl Into<String>, label: impl Into<String>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
@@ -3744,7 +3753,7 @@ impl ActionDefinition {
     }
 
     /// @emoji 🎯️ Declares an action whose icon is resolved from {@link catalog_action_icon_id}.
-    pub fn new_catalog(id: impl Into<String>, label: impl Into<String>, kind: ActionKind) -> Self {
+    pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
         let id = id.into();
         Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind))
     }
@@ -3791,21 +3800,25 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
         ActionDefinition {
             keys: Some("mod+z".into()),
-            ..ActionDefinition::new_catalog("undo", "Undo", ActionKind::History)
+            ..ActionDefinition::new_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History)
         },
         ActionDefinition {
             keys: Some("mod+shift+z".into()),
-            ..ActionDefinition::new_catalog("redo", "Redo", ActionKind::History)
+            ..ActionDefinition::new_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History)
         },
-        ActionDefinition::new_catalog("commitCheckpoint", "Commit Checkpoint", ActionKind::History),
-        ActionDefinition::new_catalog("createAlternative", "Create Alternative", ActionKind::History),
-        ActionDefinition::new_catalog("switchAlternative", "Switch Alternative", ActionKind::History),
-        ActionDefinition::new_catalog("checkoutCheckpoint", "Checkout Checkpoint", ActionKind::History),
+        ActionDefinition::new_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History),
+        ActionDefinition::new_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History),
+        ActionDefinition::new_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History),
+        ActionDefinition::new_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History),
         ActionDefinition {
             in_palette: false,
-            ..ActionDefinition::new_catalog(REVERT_TO_COMMAND_ACTION_ID, "Revert to Command", ActionKind::History)
+            ..ActionDefinition::new_catalog(
+                REVERT_TO_COMMAND_ACTION_ID,
+                LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"),
+                ActionKind::History,
+            )
         }
-        .with_args([ActionArgDef::number("entrySeq", "Entry").required()]),
+        .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).required()]),
     ]
 }
 
@@ -3820,15 +3833,19 @@ pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter"
 /// `Select` interpreters hardcode that key; see `with_item_value_arg` in ui_wgpu).
 pub fn set_history_command_filter_action_definition() -> ActionDefinition {
     let options = vec![
-        ActionArgOption::new("all", "All"),
-        ActionArgOption::new("withoutOperations", "Without Operations"),
-        ActionArgOption::new("onlyOperations", "Only Operations"),
+        ActionArgOption::new("all", LocalizedLabel::native("All", "Alle")),
+        ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")),
+        ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")),
     ];
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, "Set History Filter", ActionKind::View)
+        ..ActionDefinition::new_catalog(
+            SET_HISTORY_COMMAND_FILTER_ACTION_ID,
+            LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"),
+            ActionKind::View,
+        )
     }
-    .with_args([ActionArgDef::select("value", "Filter", options).default_value(serde_json::json!("all"))])
+    .with_args([ActionArgDef::select("value", LocalizedLabel::native("Filter", "Filter"), options).default_value(serde_json::json!("all"))])
 }
 
 /// @emoji 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
@@ -3843,12 +3860,16 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 pub fn note_shell_command_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(NOTE_SHELL_COMMAND_ACTION_ID, "Note Shell Command", ActionKind::Shell)
+        ..ActionDefinition::new_catalog(
+            NOTE_SHELL_COMMAND_ACTION_ID,
+            LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"),
+            ActionKind::Shell,
+        )
     }
     .with_args([
-        ActionArgDef::text("commandId", "Command").required(),
-        ActionArgDef::text("label", "Label").required(),
-        ActionArgDef::text("detail", "Detail"),
+        ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).required(),
+        ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).required(),
+        ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")),
     ])
 }
 
@@ -3858,30 +3879,31 @@ pub fn note_shell_command_action_definition() -> ActionDefinition {
 /// `original`) plus an optional `position` override, both consumed as a `PastePlacement`.
 pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
     let anchoring_options = vec![
-        ActionArgOption::new("original", "Original"),
-        ActionArgOption::new("middle", "Middle"),
-        ActionArgOption::new("centroid", "Centroid"),
-        ActionArgOption::new("bottomLeft", "Bottom Left"),
-        ActionArgOption::new("bottomRight", "Bottom Right"),
-        ActionArgOption::new("topLeft", "Top Left"),
-        ActionArgOption::new("topRight", "Top Right"),
+        ActionArgOption::new("original", LocalizedLabel::native("Original", "Original")),
+        ActionArgOption::new("middle", LocalizedLabel::native("Middle", "Mitte")),
+        ActionArgOption::new("centroid", LocalizedLabel::native("Centroid", "Schwerpunkt")),
+        ActionArgOption::new("bottomLeft", LocalizedLabel::native("Bottom Left", "Unten links")),
+        ActionArgOption::new("bottomRight", LocalizedLabel::native("Bottom Right", "Unten rechts")),
+        ActionArgOption::new("topLeft", LocalizedLabel::native("Top Left", "Oben links")),
+        ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")),
     ];
     vec![
         ActionDefinition {
             keys: Some("mod+c".into()),
-            ..ActionDefinition::new_catalog("copy", "Copy", ActionKind::Clipboard)
+            ..ActionDefinition::new_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard)
         },
         ActionDefinition {
             keys: Some("mod+x".into()),
-            ..ActionDefinition::new_catalog("cut", "Cut", ActionKind::Clipboard)
+            ..ActionDefinition::new_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard)
         },
         ActionDefinition {
             keys: Some("mod+v".into()),
-            ..ActionDefinition::new_catalog("paste", "Paste", ActionKind::Clipboard)
+            ..ActionDefinition::new_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard)
         }
         .with_args([
-            ActionArgDef::select("anchor", "Anchoring", anchoring_options).default_value(serde_json::json!("original")),
-            ActionArgDef::vec3("position", "Position"),
+            ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options)
+                .default_value(serde_json::json!("original")),
+            ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")),
         ]),
     ]
 }
@@ -3897,11 +3919,15 @@ pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 pub fn set_active_utility_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(SET_ACTIVE_UTILITY_ACTION_ID, "Set Active Utility", ActionKind::View)
+        ..ActionDefinition::new_catalog(
+            SET_ACTIVE_UTILITY_ACTION_ID,
+            LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"),
+            ActionKind::View,
+        )
     }
     .with_args([
-        ActionArgDef::text("utilityId", "Utility").required(),
-        ActionArgDef::text("windowKindId", "Window"),
+        ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).required(),
+        ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster")),
     ])
 }
 
@@ -3915,9 +3941,13 @@ pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 pub fn set_active_tool_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(SET_ACTIVE_TOOL_ACTION_ID, "Set Active Tool", ActionKind::View)
+        ..ActionDefinition::new_catalog(
+            SET_ACTIVE_TOOL_ACTION_ID,
+            LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"),
+            ActionKind::View,
+        )
     }
-    .with_args([ActionArgDef::text("toolId", "Tool").required()])
+    .with_args([ActionArgDef::text("toolId", LocalizedLabel::native("Tool", "Werkzeug")).required()])
 }
 
 /// @emoji 🎓️ The framework-owned action id apps dispatch to (re)start an app's introduction —
@@ -3932,7 +3962,7 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 pub fn start_introduction_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, "Introduce App", ActionKind::View)
+        ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View)
     }
 }
 
@@ -3975,7 +4005,9 @@ impl From<String> for ActionRef {
 #[serde(rename_all = "camelCase")]
 pub struct UtilityDefinition {
     pub id: String,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub icon_id: IconName,
     /// 🧺️ Visual ribbon collection this utility groups into; `None` = a flat top-level ribbon entry.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -4000,7 +4032,7 @@ pub struct UtilityDefinition {
 
 impl UtilityDefinition {
     /// @emoji 🧰️ A utility with sensible defaults (no group/keys/cursor/category, gates actions while active).
-    pub fn new(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
@@ -4066,7 +4098,9 @@ pub enum CommandScope {
 #[serde(rename_all = "camelCase")]
 pub struct CommandDefinition {
     pub id: String,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub scope: CommandScope,
     /// 🗂️ Footer category tab this command groups under (an open id, e.g. "document", "appearance").
     pub category: String,
@@ -4083,7 +4117,7 @@ pub struct CommandDefinition {
 impl CommandDefinition {
     pub fn new(
         id: impl Into<String>,
-        label: impl Into<String>,
+        label: impl Into<LocalizedLabel>,
         scope: CommandScope,
         category: impl Into<String>,
         icon_id: impl Into<IconName>,
@@ -4101,7 +4135,7 @@ impl CommandDefinition {
     }
 
     /// @emoji 🎛️ Declares a command whose icon is resolved from {@link catalog_command_icon_id}.
-    pub fn new_catalog(id: impl Into<String>, label: impl Into<String>, scope: CommandScope, category: impl Into<String>) -> Self {
+    pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, scope: CommandScope, category: impl Into<String>) -> Self {
         let id = id.into();
         Self::new(id.clone(), label, scope, category, catalog_command_icon_id(&id))
     }
@@ -4155,7 +4189,9 @@ impl From<String> for CommandRef {
 #[serde(rename_all = "camelCase")]
 pub struct ToolDefinition {
     pub id: String,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub icon_id: IconName,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -4164,7 +4200,7 @@ pub struct ToolDefinition {
 
 impl ToolDefinition {
     /// @emoji 🛠️ A tool with sensible defaults (no keybinding).
-    pub fn new(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), keys: None }
     }
 }
@@ -4294,7 +4330,9 @@ pub fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IntroductionDefinition {
-    pub title: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub title: LocalizedLabel,
     pub steps: Vec<IntroductionStepDefinition>,
 }
 
@@ -4305,8 +4343,11 @@ pub struct IntroductionDefinition {
 #[serde(rename_all = "camelCase")]
 pub struct IntroductionStepDefinition {
     pub id: String,
-    pub title: String,
-    pub body: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub title: LocalizedLabel,
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub body: LocalizedLabel,
     /// 🎯️ The single element id raised above the glass, pulsing `data-introduced`, that the info box
     /// anchors to. `None` = a screen-style step: full veil, centered info box.
     #[serde(default)]
@@ -4336,7 +4377,7 @@ pub struct IntroductionStepDefinition {
 }
 
 impl IntroductionStepDefinition {
-    pub fn new(id: impl Into<String>, title: impl Into<String>, body: impl Into<String>) -> Self {
+    pub fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, body: impl Into<LocalizedLabel>) -> Self {
         Self {
             id: id.into(),
             title: title.into(),
@@ -4760,10 +4801,12 @@ impl IntroductionDemonstration {
 #[serde(rename_all = "camelCase")]
 pub struct TutorialDefinition {
     pub id: String,
-    pub title: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub title: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub description: Option<String>,
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub description: Option<LocalizedLabel>,
     /// ⏱️ Total timeline length in milliseconds; every track entry's `at` (+ duration) must fit within.
     pub duration_ms: u64,
     /// 📖️ Scrub-bar markers, sorted ascending by `at`.
@@ -4793,10 +4836,12 @@ impl TutorialDefinition {
 pub struct TutorialChapter {
     pub id: String,
     pub at: u64,
-    pub title: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub title: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub body: Option<String>,
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub body: Option<LocalizedLabel>,
 }
 
 /// @emoji 🎬️ What must be true at t=0: the document the tutorial sandboxes and the initial UI/camera
@@ -4883,7 +4928,9 @@ pub struct TutorialNarrationCue {
     /// ⏱️ Audio duration when `audio` is set (recorder-measured); a rough TTS estimate otherwise — used
     /// for scrub-bar layout only, never to gate playback.
     pub duration_ms: u64,
-    pub text: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub text: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub audio: Option<TutorialAssetSrc>,
@@ -4907,7 +4954,9 @@ pub struct TutorialNarrationCue {
 pub struct TutorialCaption {
     pub at: u64,
     pub duration_ms: u64,
-    pub text: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub text: LocalizedLabel,
 }
 
 /// @emoji 🖼️ Normalized 0–1 viewport rect for a `TutorialVideoCue` overlay.
@@ -5229,9 +5278,9 @@ pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> Act
     let options = tutorials.iter().map(|t| ActionArgOption::new(t.id.clone(), t.title.clone())).collect();
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, "Play Tutorial", ActionKind::View)
+        ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View)
     }
-    .with_args([ActionArgDef::select("tutorialId", "Tutorial", options).required()])
+    .with_args([ActionArgDef::select("tutorialId", LocalizedLabel::native("Tutorial", "Tutorial"), options).required()])
 }
 
 /// @emoji ⏺️ The framework-owned action id that opens the tutorial recorder chrome — auto-injected into
@@ -5243,7 +5292,7 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 pub fn record_tutorial_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, "Record Tutorial", ActionKind::View)
+        ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View)
     }
 }
 
@@ -5505,40 +5554,44 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
 #[serde(rename_all = "camelCase")]
 pub struct DialogDefinition {
     pub id: String,
-    pub title: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub title: LocalizedLabel,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub body: Option<String>,
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub body: Option<LocalizedLabel>,
     pub args: Vec<ActionArgDef>,
     /// 📇️ References `AppDefinition.actions` — dispatched with the merged effective args on submit.
     pub submit_action: ActionRef,
-    pub submit_label: String,
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub submit_label: LocalizedLabel,
     /// 📇️ Optional `AppDefinition.actions` reference dispatched on any dismissal (Escape, veil
     /// click, or the Cancel button).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub cancel_action: Option<ActionRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub cancel_label: Option<String>,
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub cancel_label: Option<LocalizedLabel>,
 }
 
 impl DialogDefinition {
-    pub fn new(id: impl Into<String>, title: impl Into<String>, submit_action: ActionRef) -> Self {
+    pub fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, submit_action: ActionRef) -> Self {
         Self {
             id: id.into(),
             title: title.into(),
             body: None,
             args: Vec::new(),
             submit_action,
-            submit_label: "OK".into(),
+            // 🌐️ "OK" is identical in both locales — a real (not placeholder) translation choice.
+            submit_label: LocalizedLabel::native("OK", "OK"),
             cancel_action: None,
             cancel_label: None,
         }
     }
 
     /// @emoji 📝️ Attaches explanatory body text shown below the title.
-    pub fn body(mut self, body: impl Into<String>) -> Self {
+    pub fn body(mut self, body: impl Into<LocalizedLabel>) -> Self {
         self.body = Some(body.into());
         self
     }
@@ -5550,13 +5603,13 @@ impl DialogDefinition {
     }
 
     /// @emoji ✅️ Overrides the submit button label (default "OK").
-    pub fn submit_label(mut self, label: impl Into<String>) -> Self {
+    pub fn submit_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
         self.submit_label = label.into();
         self
     }
 
     /// @emoji ❌️ Overrides the cancel button label (default "Cancel", applied by the renderer).
-    pub fn cancel_label(mut self, label: impl Into<String>) -> Self {
+    pub fn cancel_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
         self.cancel_label = Some(label.into());
         self
     }
@@ -5574,7 +5627,9 @@ impl DialogDefinition {
 #[serde(rename_all = "camelCase")]
 pub struct ModeDefinition {
     pub id: String,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub icon_id: IconName,
     /// 🛠️ Tools available while this mode is active — references `AppDefinition.tools` ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -5682,7 +5737,9 @@ pub type WindowKinds = NonEmptyVec<WindowKindDefinition>;
 #[serde(rename_all = "camelCase")]
 pub struct WindowKindDefinition {
     pub id: String,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub body_key: String,
     pub surface_kind: SurfaceKind,
     #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
@@ -5790,7 +5847,9 @@ impl PanelTabKind {
 #[serde(rename_all = "camelCase")]
 pub struct PanelTabDefinition {
     pub kind: PanelTabKind,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub group: PanelGroup,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -5810,7 +5869,10 @@ impl PanelTabDefinition {
 #[serde(rename_all = "camelCase")]
 pub struct AppDefinition {
     pub id: String,
-    pub label: String,
+    /// 🗣️ The app's own display name (e.g. "Puzzle 3D") — manifest-level, locale×terminology-checked,
+    /// see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub document: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -6015,11 +6077,12 @@ pub fn resolve_app_document<'a>(app: &'a AppDefinition, terminology: &str) -> &'
     app.terminology_documents.get(terminology).map(Vec::as_slice).unwrap_or(&app.document)
 }
 
-/// 🗂️ Formats a window tab within its canonical app document, resolved under the active terminology.
-pub fn app_window_document_label(app: &AppDefinition, terminology: &str, window_label: &str) -> String {
+/// 🗂️ Formats a window tab within its canonical app document, resolved under the active terminology
+/// and `locale` (needed to resolve the now-`LocalizedLabel` `app.label` for the dedup comparison below).
+pub fn app_window_document_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
     let mut document = resolve_app_document(app, terminology).to_vec();
     let normalized_window = window_label.trim().to_lowercase();
-    let normalized_app = app.label.trim().to_lowercase();
+    let normalized_app = app.label.resolve(Terminology::parse(terminology).unwrap_or_default(), locale).trim().to_lowercase();
     if !normalized_window.is_empty()
         && normalized_window != normalized_app
         && document.last().is_none_or(|segment| segment.to_lowercase() != normalized_window)
@@ -6034,7 +6097,9 @@ pub fn app_window_document_label(app: &AppDefinition, terminology: &str, window_
 #[serde(rename_all = "camelCase")]
 pub struct ExampleDefinition {
     pub id: String,
-    pub label: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
+    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    pub label: LocalizedLabel,
     pub icon_id: IconName,
     pub document_json: String,
     pub app_id: String,
@@ -6173,59 +6238,11 @@ pub struct ViewWindowInstance {
     pub window_kind_id: String,
 }
 
-/// 🗣️ Locale/terminology-aware label patch for an already-instantiated app's manifest, resolved fresh per `ViewState`
-/// (unlike `AppDefinition`, which is assembled once at plugin-load time and cannot itself react to locale changes).
-/// The shell merges this over the static `AppDefinition` labels by id; ids absent from a map keep their static English label.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase")]
-pub struct AppLabelsOverlay {
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub window_kind_labels: std::collections::HashMap<String, String>,
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub panel_tab_labels: std::collections::HashMap<String, String>,
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub mode_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for `AppDefinition.actions[].label` (operations/view-actions/shell-actions), keyed by action id — covers the command palette and any other UI surfacing an action's static English label.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub action_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for `AppDefinition.utilities[].label` (utility bar utilities), keyed by utility id.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub utility_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for `AppDefinition.examples[].label` (example/fixture picker), keyed by example id.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub example_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for action-arg labels and their select-option labels, keyed `"{actionId}.{argId}"` and `"{actionId}.{argId}.option.{value}"`.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub action_arg_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for `DialogDefinition` text, keyed `"{dialogId}.title"` / `".body"` / `".submit"`.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub dialog_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for `IntroductionDefinition` text, keyed `"intro.title"` / `"intro.step.{stepId}.title"` / `".body"`.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub introduction_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for `TutorialDefinition` text, keyed `"tutorial.{id}.title"` /
-    /// `".description"` / `".chapter.{chapterId}.title"` / `".body"` / `".cue.{cueId}.text"`.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub tutorial_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for `UtilityDefinition.group` collection labels (ribbon group headers, e.g. "transform"), keyed by group id.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub group_labels: std::collections::HashMap<String, String>,
-}
-
-impl AppLabelsOverlay {
-    /// 🗣️ Starts an overlay pre-populated with the well-known framework panel-tab labels (Document/Catalogue/Inspection/Parameters) for every panel tab id supplied; apps then extend it with their own window-kind/mode labels.
-    pub fn with_framework_panel_tabs(panel_tab_ids: impl IntoIterator<Item = impl Into<String>>, is_de: bool) -> Self {
-        let mut overlay = Self::default();
-        for id in panel_tab_ids {
-            let id = id.into();
-            if let Some(label) = ui_wgpu::framework_panel_tab_label(&id, is_de) {
-                overlay.panel_tab_labels.insert(id, label.into());
-            }
-        }
-        overlay
-    }
-}
+// 🎗️ `AppLabelsOverlay` (the stringly-typed, per-id runtime label-patch map) is deleted — manifest
+// labels are now `LocalizedLabel` fields resolved directly via `.resolve(terminology, locale)`, so a
+// separate locale-aware overlay merged in after the fact is no longer needed. Downstream callers
+// (plugin crates' `DocumentApp::app_labels()`, the OS renderer's overlay-merge call sites) are
+// follow-up work owned by other agents — left broken intentionally, out of scope here.
 
 //#region 🔖️Kernel
 pub mod kernel {
@@ -7087,7 +7104,7 @@ mod app_document_tests {
         resolve_app_document, resolve_layout_for_mode, resolve_mode_tools,
         resolve_window_actions, ActionArgControl, ActionArgDef,
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
-        CommandScope, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture,
+        CommandScope, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture, LocalizedLabel, Locale, Terminology,
         IntroductionInteraction, IntroductionInteractionKind, IntroductionKeyModifier, IntroductionPoint, IntroductionPointerButton, IntroductionStepDefinition,
         Modes, NonEmptyVec, PanelGroup, PanelTabDefinition, PanelTabKind, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
         SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
@@ -7104,7 +7121,7 @@ mod app_document_tests {
 
     #[test]
     fn action_arg_def_builder_chain() {
-        let arg = ActionArgDef::slider("scale", "Scale", 0.0, 4.0)
+        let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0)
             .required()
             .default_value(1.0)
             .describe("scale factor");
@@ -7118,9 +7135,9 @@ mod app_document_tests {
     #[test]
     fn effective_args_prefer_staged_then_default() {
         let defs = vec![
-            ActionArgDef::text("a", "A").default_value("da"),
-            ActionArgDef::text("b", "B").default_value("db"),
-            ActionArgDef::text("c", "C"),
+            ActionArgDef::text("a", LocalizedLabel::data("A")).default_value("da"),
+            ActionArgDef::text("b", LocalizedLabel::data("B")).default_value("db"),
+            ActionArgDef::text("c", LocalizedLabel::data("C")),
         ];
         let staged = dsl::to_dsl_value(&serde_json::json!({ "a": "staged-a" })).unwrap();
         let effective = effective_action_args(&defs, &staged);
@@ -7132,8 +7149,8 @@ mod app_document_tests {
     #[test]
     fn missing_required_args_treats_unset_select_as_missing() {
         let defs = vec![
-            ActionArgDef::select("mode", "Mode", vec![ActionArgOption::new("x", "X")]).required(),
-            ActionArgDef::toggle("flag", "Flag").required(),
+            ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X"))]).required(),
+            ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).required(),
         ];
         // Nothing staged, no defaults: both required ids are missing.
         let empty = DslValue::Object(Vec::new());
@@ -7149,7 +7166,7 @@ mod app_document_tests {
 
     #[test]
     fn utility_definition_and_utility_ref_construction() {
-        let utility = UtilityDefinition::new("brush", "Brush", "paintbrush");
+        let utility = UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush");
         assert_eq!(utility.id, "brush");
         assert!(!utility.allows_actions_while_active, "default gates actions while active");
         assert_eq!(UtilityRef::new("brush").as_str(), "brush");
@@ -7159,13 +7176,13 @@ mod app_document_tests {
     fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
         AppDefinition {
             id: "a".into(),
-            label: "A".into(),
+            label: LocalizedLabel::data("A"),
             document: vec!["semio".into(), "a".into()],
             icon_id: None,
             controller_id: "a".into(),
             modes: Modes::one(crate::ui::ModeDefinition {
                 id: "edit".into(),
-                label: "Edit".into(),
+                label: LocalizedLabel::data("Edit"),
                 icon_id: "pencil".into(),
                 tools: Vec::new(),
                 layout_id: None,
@@ -7174,7 +7191,7 @@ mod app_document_tests {
             default_mode_id: "edit".into(),
             window_kinds: WindowKinds::one(WindowKindDefinition {
                 id: "main".into(),
-                label: "Main".into(),
+                label: LocalizedLabel::data("Main"),
                 body_key: "a.main".into(),
                 surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
@@ -7213,8 +7230,8 @@ mod app_document_tests {
     fn resolve_window_actions_explicit_scoping() {
         let app = app_with(
             vec![
-                ActionDefinition::new_catalog("add", "Add", ActionKind::Operation),
-                ActionDefinition::new_catalog("remove", "Remove", ActionKind::Operation),
+                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Operation),
+                ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Operation),
             ],
             vec![ActionRef::new("add")],
         );
@@ -7228,9 +7245,9 @@ mod app_document_tests {
     fn resolve_window_actions_excludes_history_and_set_active_utility_orphans() {
         let app = app_with(
             vec![
-                ActionDefinition::new_catalog("undo", "Undo", ActionKind::History),
+                ActionDefinition::new_catalog("undo", LocalizedLabel::data("Undo"), ActionKind::History),
                 crate::ui::set_active_utility_action_definition(),
-                ActionDefinition::new_catalog("add", "Add", ActionKind::Operation),
+                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Operation),
             ],
             vec![],
         );
@@ -7253,15 +7270,15 @@ mod app_document_tests {
         let app = app_with_modes_and_tools(
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
-                label: "Edit".into(),
+                label: LocalizedLabel::data("Edit"),
                 icon_id: "pencil".into(),
                 tools: vec![ToolRef::new("fill"), ToolRef::new("brush")],
                 layout_id: None,
                 commands: Vec::new(),
             }],
             vec![
-                crate::ui::ToolDefinition::new("brush", "Brush", "paintbrush"),
-                crate::ui::ToolDefinition::new("fill", "Fill", "paint-bucket"),
+                crate::ui::ToolDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush"),
+                crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket"),
             ],
         );
         let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect();
@@ -7274,7 +7291,7 @@ mod app_document_tests {
             vec![
                 crate::ui::ModeDefinition {
                     id: "edit".into(),
-                    label: "Edit".into(),
+                    label: LocalizedLabel::data("Edit"),
                 icon_id: "pencil".into(),
                     tools: vec![ToolRef::new("fill")],
                     layout_id: None,
@@ -7282,14 +7299,14 @@ mod app_document_tests {
                 },
                 crate::ui::ModeDefinition {
                     id: "view".into(),
-                    label: "View".into(),
+                    label: LocalizedLabel::data("View"),
                 icon_id: "pencil".into(),
                     tools: Vec::new(),
                     layout_id: None,
                     commands: Vec::new(),
                 },
             ],
-            vec![crate::ui::ToolDefinition::new("fill", "Fill", "paint-bucket")],
+            vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket")],
         );
         assert_eq!(resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect::<Vec<_>>(), vec!["fill"]);
         assert!(resolve_mode_tools(&app, "view").is_empty(), "tools are opt-in per mode, no orphan fallback");
@@ -7301,13 +7318,13 @@ mod app_document_tests {
         let app = app_with_modes_and_tools(
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
-                label: "Edit".into(),
+                label: LocalizedLabel::data("Edit"),
                 icon_id: "pencil".into(),
                 tools: vec![ToolRef::new("fill"), ToolRef::new("ghost")],
                 layout_id: None,
                 commands: Vec::new(),
             }],
-            vec![crate::ui::ToolDefinition::new("fill", "Fill", "paint-bucket")],
+            vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket")],
         );
         let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect();
         assert_eq!(resolved, vec!["fill"]);
@@ -7363,12 +7380,16 @@ mod app_document_tests {
     #[test]
     fn app_window_document_label_skips_empty_app_named_and_duplicate_trailing_window_labels() {
         let mut app = app_with(vec![], vec![]);
-        app.label = "Draw".into(); // document (from `app_with`) already ends in "a"
-        assert_eq!(app_window_document_label(&app, "native", "Layers"), "semio · a · layers");
-        assert_eq!(app_window_document_label(&app, "native", ""), "semio · a", "empty window label appends nothing");
-        assert_eq!(app_window_document_label(&app, "native", "Draw"), "semio · a", "window label equal to the app label appends nothing");
+        app.label = LocalizedLabel::data("Draw"); // document (from `app_with`) already ends in "a"
+        assert_eq!(app_window_document_label(&app, "native", Locale::En, "Layers"), "semio · a · layers");
+        assert_eq!(app_window_document_label(&app, "native", Locale::En, ""), "semio · a", "empty window label appends nothing");
         assert_eq!(
-            app_window_document_label(&app, "native", "A"),
+            app_window_document_label(&app, "native", Locale::En, "Draw"),
+            "semio · a",
+            "window label equal to the app label appends nothing"
+        );
+        assert_eq!(
+            app_window_document_label(&app, "native", Locale::En, "A"),
             "semio · a",
             "window label equal to the document's trailing segment appends nothing"
         );
@@ -7410,7 +7431,7 @@ mod app_document_tests {
         assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str(), "puzzle.catalogue");
         let tab = PanelTabDefinition {
             kind: PanelTabKind::App("puzzle.catalogue".into()),
-            label: "Catalogue".into(),
+            label: LocalizedLabel::data("Catalogue"),
             group: PanelGroup::Workbench,
             body_key: Some("puzzle.catalogue".into()),
             children: Vec::new(),
@@ -7420,12 +7441,12 @@ mod app_document_tests {
 
     #[test]
     fn action_definition_requires_and_serializes_args_field() {
-        let action = ActionDefinition::new_catalog("x", "X", ActionKind::Operation);
+        let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Operation);
         let json = serde_json::to_value(&action).unwrap();
         assert_eq!(json["args"], json!([]));
         assert!(serde_json::from_value::<ActionDefinition>(json!({
             "id": "x",
-            "label": "X",
+            "label": {"native": {"en": "X", "de": "X"}, "reuse": {"en": "X", "de": "X"}},
             "kind": "operation",
             "inPalette": true
         }))
@@ -7435,7 +7456,7 @@ mod app_document_tests {
     #[test]
     fn window_kind_deserializes_without_utilities_field() {
         let window: WindowKindDefinition = serde_json::from_str(
-            r#"{"id":"main","label":"Main","bodyKey":"a.main","surfaceKind":"canvas-2d","iconId":"pen-tool"}"#,
+            r#"{"id":"main","label":{"native":{"en":"Main","de":"Main"},"reuse":{"en":"Main","de":"Main"}},"bodyKey":"a.main","surfaceKind":"canvas-2d","iconId":"pen-tool"}"#,
         )
         .unwrap();
         assert!(window.utilities.is_empty());
@@ -7444,7 +7465,7 @@ mod app_document_tests {
 
     #[test]
     fn action_arg_control_serializes_tagged() {
-        let control = ActionArgControl::Select { options: vec![ActionArgOption::new("x", "X")] };
+        let control = ActionArgControl::Select { options: vec![ActionArgOption::new("x", LocalizedLabel::data("X"))] };
         let json = serde_json::to_string(&control).unwrap();
         assert!(json.contains("\"kind\":\"select\""), "tagged with kind: {json}");
         let round: ActionArgControl = serde_json::from_str(&json).unwrap();
@@ -7480,14 +7501,17 @@ mod app_document_tests {
 
     #[test]
     fn introduction_step_serde_defaults() {
-        let step: IntroductionStepDefinition = serde_json::from_str(r#"{"id":"welcome","title":"Welcome","body":"Hi there"}"#).unwrap();
+        let step: IntroductionStepDefinition = serde_json::from_str(
+            r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#,
+        )
+        .unwrap();
         assert_eq!(step.introduce, None);
         assert!(step.show.is_empty());
         let json = serde_json::to_string(&step).unwrap();
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(round, step);
 
-        let with_targets = IntroductionStepDefinition::new("viewport", "The Viewport", "…")
+        let with_targets = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("The Viewport"), LocalizedLabel::data("…"))
             .introduce(window_element_id("puzzle3d-main"))
             .show(vec![window_element_id("puzzle3d-secondary")]);
         let json = serde_json::to_string(&with_targets).unwrap();
@@ -7545,11 +7569,14 @@ mod app_document_tests {
         let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
         assert_eq!(round, with_celebrate);
 
-        let step: IntroductionStepDefinition = serde_json::from_str(r#"{"id":"welcome","title":"Welcome","body":"Hi there"}"#).unwrap();
+        let step: IntroductionStepDefinition = serde_json::from_str(
+            r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#,
+        )
+        .unwrap();
         assert!(step.interactions.is_empty());
         assert!(!step.ordered);
 
-        let with_interactions = IntroductionStepDefinition::new("viewport", "Viewport", "…").interact_ordered(vec![
+        let with_interactions = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).interact_ordered(vec![
             IntroductionInteraction::zoom("puzzle3d-main", "Zoom"),
             IntroductionInteraction::pan("puzzle3d-main", "Pan"),
             IntroductionInteraction::orbit("puzzle3d-main", "Orbit"),
@@ -7682,13 +7709,16 @@ mod app_document_tests {
         let round: IntroductionDemonstration = serde_json::from_str(&json).unwrap();
         assert_eq!(round, with_cursor);
 
-        let step: IntroductionStepDefinition = serde_json::from_str(r#"{"id":"welcome","title":"Welcome","body":"Hi there"}"#).unwrap();
+        let step: IntroductionStepDefinition = serde_json::from_str(
+            r#"{"id":"welcome","title":{"native":{"en":"Welcome","de":"Welcome"},"reuse":{"en":"Welcome","de":"Welcome"}},"body":{"native":{"en":"Hi there","de":"Hi there"},"reuse":{"en":"Hi there","de":"Hi there"}}}"#,
+        )
+        .unwrap();
         assert!(step.demonstrations.is_empty());
         let json = serde_json::to_string(&step).unwrap();
         assert!(json.contains("\"demonstrations\":[]"), "{json}");
 
         // 🎬️ A step can sequence several demonstrations (e.g. zoom, then pan, then orbit).
-        let with_demos = IntroductionStepDefinition::new("viewport", "Viewport", "…").demonstrate(vec![
+        let with_demos = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).demonstrate(vec![
             IntroductionDemonstration::scroll(IntroductionPoint::Screen { x: 400.0, y: 300.0 }, -100.0),
             IntroductionDemonstration::drag(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 400.0, y: 320.0 }),
             IntroductionDemonstration::orbit(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 500.0, y: 300.0 }),
@@ -7703,10 +7733,10 @@ mod app_document_tests {
     fn minimal_tutorial() -> TutorialDefinition {
         TutorialDefinition {
             id: "welcome-tour".into(),
-            title: "Welcome Tour".into(),
+            title: LocalizedLabel::data("Welcome Tour"),
             description: None,
             duration_ms: 10_000,
-            chapters: vec![TutorialChapter { id: "start".into(), at: 0, title: "Start".into(), body: None }],
+            chapters: vec![TutorialChapter { id: "start".into(), at: 0, title: LocalizedLabel::data("Start"), body: None }],
             base: TutorialBase { document_dsl: None, example_id: Some("concrete-forest".into()), ui: TutorialUiSnapshot::default(), cameras: vec![] },
             tracks: TutorialTracks::default(),
             recorded_at: None,
@@ -7715,7 +7745,7 @@ mod app_document_tests {
 
     #[test]
     fn tutorial_definition_serde_defaults() {
-        let json = r#"{"id":"t","title":"T","durationMs":1000,"base":{"ui":{}},"tracks":{}}"#;
+        let json = r#"{"id":"t","title":{"native":{"en":"T","de":"T"},"reuse":{"en":"T","de":"T"}},"durationMs":1000,"base":{"ui":{}},"tracks":{}}"#;
         let def: TutorialDefinition = serde_json::from_str(json).unwrap();
         assert!(def.description.is_none());
         assert!(def.chapters.is_empty());
@@ -7810,18 +7840,44 @@ mod app_document_tests {
     fn validate_tutorial_rejects_unsorted_and_out_of_range_tracks() {
         let mut def = minimal_tutorial();
         def.tracks.narration = vec![
-            TutorialNarrationCue { id: "b".into(), at: 500, duration_ms: 100, text: "b".into(), audio: None, voice: None, rate: 1.0, captions: vec![] },
-            TutorialNarrationCue { id: "a".into(), at: 100, duration_ms: 100, text: "a".into(), audio: None, voice: None, rate: 1.0, captions: vec![] },
+            TutorialNarrationCue {
+                id: "b".into(),
+                at: 500,
+                duration_ms: 100,
+                text: LocalizedLabel::data("b"),
+                audio: None,
+                voice: None,
+                rate: 1.0,
+                captions: vec![],
+            },
+            TutorialNarrationCue {
+                id: "a".into(),
+                at: 100,
+                duration_ms: 100,
+                text: LocalizedLabel::data("a"),
+                audio: None,
+                voice: None,
+                rate: 1.0,
+                captions: vec![],
+            },
         ];
         assert!(validate_tutorial(&def).is_err(), "unsorted narration must be rejected");
 
         let mut def = minimal_tutorial();
-        def.tracks.narration =
-            vec![TutorialNarrationCue { id: "a".into(), at: 999_999, duration_ms: 100, text: "a".into(), audio: None, voice: None, rate: 1.0, captions: vec![] }];
+        def.tracks.narration = vec![TutorialNarrationCue {
+            id: "a".into(),
+            at: 999_999,
+            duration_ms: 100,
+            text: LocalizedLabel::data("a"),
+            audio: None,
+            voice: None,
+            rate: 1.0,
+            captions: vec![],
+        }];
         assert!(validate_tutorial(&def).is_err(), "entry beyond durationMs must be rejected");
 
         let mut def = minimal_tutorial();
-        def.chapters.push(TutorialChapter { id: "start".into(), at: 0, title: "Dup".into(), body: None });
+        def.chapters.push(TutorialChapter { id: "start".into(), at: 0, title: LocalizedLabel::data("Dup"), body: None });
         assert!(validate_tutorial(&def).is_err(), "duplicate chapter id must be rejected");
 
         let mut def = minimal_tutorial();
@@ -8007,11 +8063,11 @@ mod app_document_tests {
 
     #[test]
     fn dialog_definition_round_trips_camel_case_with_defaults() {
-        let dialog = DialogDefinition::new("confirm-delete", "Delete?", ActionRef::new("deleteSelection"));
+        let dialog = DialogDefinition::new("confirm-delete", LocalizedLabel::data("Delete?"), ActionRef::new("deleteSelection"));
         let json = serde_json::to_string(&dialog).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"submitAction\":\"deleteSelection\""), "{json}");
-        assert!(json.contains("\"submitLabel\":\"OK\""), "{json}");
+        assert!(json.contains("\"submitLabel\":{\"native\":{\"de\":\"OK\",\"en\":\"OK\"}"), "{json}");
         assert!(!json.contains("cancelAction"), "omitted when unset: {json}");
         let round: DialogDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(round, dialog);
@@ -8019,22 +8075,22 @@ mod app_document_tests {
 
     #[test]
     fn dialog_definition_builder_chain() {
-        let dialog = DialogDefinition::new("addObject", "Add Object", ActionRef::new("addObjectKind"))
-            .body("Choose a kind")
-            .args(vec![ActionArgDef::text("objectKind", "Kind")])
-            .submit_label("Add")
-            .cancel_label("Nevermind")
+        let dialog = DialogDefinition::new("addObject", LocalizedLabel::data("Add Object"), ActionRef::new("addObjectKind"))
+            .body(LocalizedLabel::data("Choose a kind"))
+            .args(vec![ActionArgDef::text("objectKind", LocalizedLabel::data("Kind"))])
+            .submit_label(LocalizedLabel::data("Add"))
+            .cancel_label(LocalizedLabel::data("Nevermind"))
             .on_cancel(ActionRef::new("closeDialog"));
-        assert_eq!(dialog.body.as_deref(), Some("Choose a kind"));
+        assert_eq!(dialog.body.as_ref().map(|b| b.resolve(Terminology::Native, Locale::En)), Some("Choose a kind"));
         assert_eq!(dialog.args.len(), 1);
-        assert_eq!(dialog.submit_label, "Add");
-        assert_eq!(dialog.cancel_label.as_deref(), Some("Nevermind"));
+        assert_eq!(dialog.submit_label.resolve(Terminology::Native, Locale::En), "Add");
+        assert_eq!(dialog.cancel_label.as_ref().map(|c| c.resolve(Terminology::Native, Locale::En)), Some("Nevermind"));
         assert_eq!(dialog.cancel_action, Some(ActionRef::new("closeDialog")));
     }
 
     #[test]
     fn command_definition_round_trips_camel_case_with_defaults() {
-        let command = CommandDefinition::new_catalog("os.setThemeId", "Set Theme", CommandScope::Os, "appearance");
+        let command = CommandDefinition::new_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), CommandScope::Os, "appearance");
         let json = serde_json::to_string(&command).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"scope\":\"os\""), "{json}");
@@ -8316,7 +8372,7 @@ mod app_document_tests {
         crate::ui::PluginManifest::export().unwrap();
         crate::ui::ViewWindowInstance::export().unwrap();
         crate::ui::ViewState::export().unwrap();
-        crate::ui::AppLabelsOverlay::export().unwrap();
+        // 🎗️ `AppLabelsOverlay` deleted — see the region comment at its former definition site.
         crate::ui::kernel::CapabilityRequirement::export().unwrap();
         crate::ui::kernel::Rights::export().unwrap();
         crate::ui::kernel::ArtifactKind::export().unwrap();

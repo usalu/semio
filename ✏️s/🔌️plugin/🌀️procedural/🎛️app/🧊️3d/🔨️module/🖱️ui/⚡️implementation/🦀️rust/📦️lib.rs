@@ -24,7 +24,7 @@ use procedural_3d_op::{procedural3d_fixture_operations, Procedural3dConfigOperat
 use procedural_3d_protocol::Procedural3dCommand;
 use semio_framework_plugin::{
     apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, world3d_scene, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDescriptor, App,
+    ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, world3d_scene, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
     AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, LocaleLabels, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphHover, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder,
     SelectionSet, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -987,7 +987,18 @@ impl DocumentApp for Procedural3dPlayApp {
         let is_de = is_de_locale(config);
         let selected = config.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
-        let mut menu = Menu::of(registry);
+        let has_selection = !nodes.is_empty() || !edges.is_empty();
+        // 🗂️ Grouped disclosure: `reorganize`/`translateSelection`/`rotateSelection`/`scaleSelection`
+        // stay top-level (the 3-5 most frequent 3D-editing verbs); creation, removal and generation
+        // methods fold into taxonomy groups; `delete-selection` stays a direct destructive item last —
+        // `organize_context_menu` (applied automatically at the `VcsDocumentApp::context_menu` funnel)
+        // sorts the groups into `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive
+        // separator itself.
+        let mut menu = Menu::of(registry).action("reorganize");
+        menu = menu.when(has_selection, |m| m.action("translateSelection").action("rotateSelection").action("scaleSelection"));
+        menu = menu.group("create", |m| m.action("addWidget").action("addGeneration"));
+        menu = menu.when(has_selection, |m| m.group("targets", |m2| m2.action("removeWidget").action("removeGeneration")));
+        menu = menu.group("methods", |m| m.action("renameGeneration").action("updateGenerationValues").action("patchFlowWidgets"));
         if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
@@ -1097,18 +1108,19 @@ pub fn create_procedural3d_app() -> App {
             .operation("setActiveExample", "Set Active Example")
             .operation("nodeGraphEdit", "Edit Graph")
             .operation("deleteSelection", "Delete Selection")
-            .operation("removeWidget", "Remove Widget")
+            // 🗂️ Referenced by Procedural3dPlayApp::context_menu — categorized for grouped-context-menu disclosure.
+            .action_with(ActionDefinition::new_catalog("removeWidget", "Remove Widget", ActionKind::Operation).with_category("targets"))
             .operation("moveMediaNode", "Move Node")
-            .operation("addWidget", "Add Widget")
-            .operation("patchFlowWidgets", "Patch Flow Widgets")
-            .operation("reorganize", "Reorganize")
-            .operation("translateSelection", "Translate Selection")
-            .operation("rotateSelection", "Rotate Selection")
-            .operation("scaleSelection", "Scale Selection")
-            .operation("addGeneration", "Add Generation")
-            .operation("removeGeneration", "Remove Generation")
-            .operation("renameGeneration", "Rename Generation")
-            .operation("updateGenerationValues", "Update Generation Values")
+            .action_with(ActionDefinition::new_catalog("addWidget", "Add Widget", ActionKind::Operation).with_category("create"))
+            .action_with(ActionDefinition::new_catalog("patchFlowWidgets", "Patch Flow Widgets", ActionKind::Operation).with_category("methods"))
+            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("translateSelection", "Translate Selection", ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("rotateSelection", "Rotate Selection", ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("scaleSelection", "Scale Selection", ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("addGeneration", "Add Generation", ActionKind::Operation).with_category("create"))
+            .action_with(ActionDefinition::new_catalog("removeGeneration", "Remove Generation", ActionKind::Operation).with_category("targets"))
+            .action_with(ActionDefinition::new_catalog("renameGeneration", "Rename Generation", ActionKind::Operation).with_category("methods"))
+            .action_with(ActionDefinition::new_catalog("updateGenerationValues", "Update Generation Values", ActionKind::Operation).with_category("methods"))
             // 👁️ Ephemeral view actions — selection, hover, world picking, graph camera, sun/LOD/show-mode display toggles, preview camera (emit no operations).
             .view_action("nodeGraphViewport", "Set Viewport")
             .view_action("setSelection", "Set Selection")
@@ -1645,6 +1657,27 @@ mod tests {
         let inspector = app.render(PROCEDURAL_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
         let inspector_json = serde_json::to_string(&inspector).unwrap();
         assert!(inspector_json.contains("Elemente:"));
+    }
+
+    #[test]
+    fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
+        let _serial = test_serial();
+        let mut app = new_app_with_registry();
+        let widgets: Vec<String> = app.projection().expect("projection").fixture.widgets.iter().map(|widget| widget_id(widget).to_string()).collect();
+        assert!(!widgets.is_empty(), "default fixture needs at least one widget for the test");
+        app.dispatch_typed(Procedural3dCommand::SetSelection { node_ids: widgets.clone() }, &meta("local")).expect("set selection");
+        let request = semio_framework_plugin::ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+            surface: None,
+            window_instance_id: None,
+            point: None,
+        };
+        let menu = app.context_menu(&request);
+        assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
+        let last = menu.last().expect("grouped disclosure menu should not be empty");
+        let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true);
+        let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).map(|child| child.destructive == Some(true)).unwrap_or(false);
+        assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection must be last: {menu:?}");
     }
 }
 //#endregion 🧪️Tests
