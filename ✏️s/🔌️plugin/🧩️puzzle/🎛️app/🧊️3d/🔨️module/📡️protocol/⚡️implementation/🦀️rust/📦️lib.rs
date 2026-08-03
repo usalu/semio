@@ -1,7 +1,7 @@
 //! ⚖️ Puzzle 3d app — binary command protocol surface + laws (constitutional: protocol).
 
-use puzzle_3d_op::Puzzle3dOperation;
 use protocol::OpBinary;
+use puzzle_3d_op::Puzzle3dOperation;
 
 /// 📦️ Encodes a `Puzzle3dOperation` to its binary command form.
 pub fn encode_op(operation: &Puzzle3dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -47,7 +47,10 @@ mod tests {
         let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", puzzle_3d_engine::empty_puzzle3d_projection(), None));
         store
             .dispatch(DocumentCommand::Apply {
-                operations: vec![Puzzle3dOperation::SetObject { index: 0, object: Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false } }],
+                operations: vec![Puzzle3dOperation::SetObject {
+                    index: 0,
+                    object: Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
+                }],
                 description: None,
             })
             .expect("apply");

@@ -394,11 +394,7 @@ pub mod wire {
     pub fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
         let mut lines = Vec::new();
         for node in nodes {
-            let value = dsl_schema::WireValue {
-                from: dsl_schema::WireNode { id: node.id.clone(), kind: Some(node.kind.clone()), port: node.port.clone() },
-                edge: None,
-                properties: properties_to_dsl_object(&node.properties),
-            };
+            let value = dsl_schema::WireValue { from: dsl_schema::WireNode { id: node.id.clone(), kind: Some(node.kind.clone()), port: node.port.clone() }, edge: None, properties: properties_to_dsl_object(&node.properties) };
             lines.push(render_wire_line(&value));
         }
         for edge in edges {
@@ -430,23 +426,11 @@ pub mod wire {
             }
             let value = dsl_schema::parse_wire_text(line)?;
             match value.edge {
-                None => nodes.push(WireNode {
-                    id: value.from.id,
-                    kind: value.from.kind.unwrap_or_else(|| "node".to_string()),
-                    port: value.from.port,
-                    properties: properties_from_dsl_value(&value.properties),
-                }),
+                None => nodes.push(WireNode { id: value.from.id, kind: value.from.kind.unwrap_or_else(|| "node".to_string()), port: value.from.port, properties: properties_from_dsl_value(&value.properties) }),
                 Some((directed, to)) => {
                     let from_port = value.from.port.ok_or(GraphDslError::EdgeTargetMissingPort)?;
                     let to_port = to.port.ok_or(GraphDslError::EdgeTargetMissingPort)?;
-                    edges.push(WireEdge {
-                        from: value.from.id,
-                        from_port,
-                        to: to.id,
-                        to_port,
-                        directed,
-                        properties: properties_from_dsl_value(&value.properties),
-                    });
+                    edges.push(WireEdge { from: value.from.id, from_port, to: to.id, to_port, directed, properties: properties_from_dsl_value(&value.properties) });
                 }
             }
         }
@@ -791,19 +775,7 @@ struct SpannedToken {
 
 fn token_class(token: &Token) -> TokenClass {
     match token {
-        Token::KwMatch
-        | Token::KwWhere
-        | Token::KwReturn
-        | Token::KwCreate
-        | Token::KwDelete
-        | Token::KwSet
-        | Token::KwMerge
-        | Token::KwWith
-        | Token::KwUnwind
-        | Token::KwCall
-        | Token::KwAs
-        | Token::And
-        | Token::Or => TokenClass::Keyword,
+        Token::KwMatch | Token::KwWhere | Token::KwReturn | Token::KwCreate | Token::KwDelete | Token::KwSet | Token::KwMerge | Token::KwWith | Token::KwUnwind | Token::KwCall | Token::KwAs | Token::And | Token::Or => TokenClass::Keyword,
         Token::Ident(_) => TokenClass::Ident,
         Token::Number(_) => TokenClass::Number,
         Token::StringLit(_) => TokenClass::String,
@@ -899,7 +871,16 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
             dsl_core::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
             // `{`/`}` aren't part of Jack's grammar (no map/object literals) — same "stray
             // character" treatment as an outright `dsl_core::TokenKind::Error` below.
-            dsl_core::TokenKind::LBrace | dsl_core::TokenKind::RBrace | dsl_core::TokenKind::Caret | dsl_core::TokenKind::DotDot | dsl_core::TokenKind::Plus | dsl_core::TokenKind::Minus | dsl_core::TokenKind::Star | dsl_core::TokenKind::Slash | dsl_core::TokenKind::Fence | dsl_core::TokenKind::Error => {
+            dsl_core::TokenKind::LBrace
+            | dsl_core::TokenKind::RBrace
+            | dsl_core::TokenKind::Caret
+            | dsl_core::TokenKind::DotDot
+            | dsl_core::TokenKind::Plus
+            | dsl_core::TokenKind::Minus
+            | dsl_core::TokenKind::Star
+            | dsl_core::TokenKind::Slash
+            | dsl_core::TokenKind::Fence
+            | dsl_core::TokenKind::Error => {
                 if forgiving {
                     push_spanned(out, Token::Ident(text), start, end);
                 } else {

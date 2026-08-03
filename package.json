@@ -4,7 +4,6 @@
   "type": "module",
   "description": "🧩️ Design-Information-Modeling for Kit-of-Parts 🏘️",
   "workspaces": [
-    "🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript",
     "🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript",
     "🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript",
     "🧰️framework/⚡️implementation/🟦️typescript",
@@ -195,6 +194,7 @@
     "@types/node": "^22.19.6",
     "@types/react": "^19.2.8",
     "@vitest/coverage-v8": "^4.0.17",
+    "binaryen": "^130.0.0",
     "chevrotain": "^11.0.3",
     "eslint": "^10.0.1",
     "eslint-plugin-react-hooks": "^7.1.1",

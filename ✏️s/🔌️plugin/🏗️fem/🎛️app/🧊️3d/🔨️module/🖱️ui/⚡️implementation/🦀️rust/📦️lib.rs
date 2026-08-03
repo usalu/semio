@@ -23,9 +23,8 @@ use fem3d_protocol::Fem3dCommand;
 use fem_core::{Dof, ElementResult};
 use fem_shared::{hex_to_rgb01, next_id, normalize_mode_shape, result_display_action_args, von_mises_color, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO};
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, ui_stack_vertical, ui_text, world3d_default_camera, world3d_default_selection_json, world3d_meshes_json_from_kinds, world3d_scene,
-    ActionArgDef, ActionArgOption, App, AppIo, ArtifactKindSpec, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError,
-    MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode, WorldSunConfig,
+    build_world_3d_scene, create_default_layout, ui_stack_vertical, ui_text, world3d_default_camera, world3d_default_selection_json, world3d_meshes_json_from_kinds, world3d_scene, ActionArgDef, ActionArgOption, App, AppIo, ArtifactKindSpec,
+    ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode, WorldSunConfig,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -69,9 +68,7 @@ fn fem3d_element_id(element: &fem3d::FemElement) -> &str {
 /// 🔎️ 3D counterpart of `fem2d_resolve_load_case` — see its doc.
 fn fem3d_resolve_load_case(doc: &Fem3dDocument, case_id: Option<&str>) -> (usize, fem3d::FemLoadCase) {
     let named = case_id.and_then(|id| doc.load_cases.iter().find(|lc| lc.id == id).cloned());
-    let load_case = named
-        .or_else(|| doc.load_cases.first().cloned())
-        .unwrap_or_else(|| fem3d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
+    let load_case = named.or_else(|| doc.load_cases.first().cloned()).unwrap_or_else(|| fem3d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
     let index = doc.load_cases.iter().position(|lc| lc.id == load_case.id).unwrap_or(doc.load_cases.len());
     (index, load_case)
 }
@@ -289,11 +286,7 @@ fn with_caption(scene: UiNode, caption: String) -> UiNode {
 
 fn render_fem3d_model(doc: &Fem3dDocument, camera: &FemCamera) -> UiNode {
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
-    build_world_3d_scene(
-        FEM3D_BODY_MODEL,
-        FEM3D_APP_ID,
-        world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
-    )
+    build_world_3d_scene(FEM3D_BODY_MODEL, FEM3D_APP_ID, world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()))
 }
 
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
@@ -314,10 +307,7 @@ fn render_fem3d_results_static(doc: &Fem3dDocument, source_id: Option<&str>, cam
         Ok(results) => results,
         Err(e) => return ui_text(Label::data(format!("Analysis error: {e}"))),
     };
-    let case_id = source_id
-        .filter(|id| results.contains_key(*id))
-        .map(str::to_string)
-        .or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
+    let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
     let Some(case_id) = case_id else {
         return ui_text(Label::data("No load case defined"));
     };
@@ -330,11 +320,7 @@ fn render_fem3d_results_static(doc: &Fem3dDocument, source_id: Option<&str>, cam
     }
     let nodal_stress = fem3d_engine::fem3d_nodal_von_mises(doc, &case_id).ok();
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), doc.analysis.deformation_scale, nodal_stress.as_ref());
-    let scene = build_world_3d_scene(
-        FEM3D_BODY_RESULTS,
-        FEM3D_APP_ID,
-        world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
-    );
+    let scene = build_world_3d_scene(FEM3D_BODY_RESULTS, FEM3D_APP_ID, world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()));
     with_caption(scene, format!("Case: {case_id}"))
 }
 
@@ -348,11 +334,7 @@ fn render_fem3d_results_modal(doc: &Fem3dDocument, mode_index: usize, camera: &F
     };
     normalize_mode_shape(&mut disp_map);
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), fem3d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO, None);
-    let scene = build_world_3d_scene(
-        FEM3D_BODY_RESULTS,
-        FEM3D_APP_ID,
-        world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
-    );
+    let scene = build_world_3d_scene(FEM3D_BODY_RESULTS, FEM3D_APP_ID, world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()));
     with_caption(scene, format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1))
 }
 
@@ -370,11 +352,7 @@ fn render_fem3d_results_buckling(doc: &Fem3dDocument, source_id: Option<&str>, m
     };
     normalize_mode_shape(&mut disp_map);
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), fem3d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO, None);
-    let scene = build_world_3d_scene(
-        FEM3D_BODY_RESULTS,
-        FEM3D_APP_ID,
-        world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
-    );
+    let scene = build_world_3d_scene(FEM3D_BODY_RESULTS, FEM3D_APP_ID, world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()));
     with_caption(scene, format!("Buckling mode {}: factor {factor:.3}", mode_index + 1))
 }
 //#endregion 🔖️Fem3dRender
@@ -526,8 +504,7 @@ impl DocumentApp for Fem3dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured JSON payload".into()));
                 };
                 let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let outline: Vec<[f64; 2]> = serde_json::from_value(value.get("outline").cloned().unwrap_or(Value::Null))
-                    .map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
+                let outline: Vec<[f64; 2]> = serde_json::from_value(value.get("outline").cloned().unwrap_or(Value::Null)).map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
                 let holes: Vec<Vec<[f64; 2]>> = match value.get("holes").cloned() {
                     Some(holes_value) => serde_json::from_value(holes_value).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
                     None => Vec::new(),
@@ -703,26 +680,20 @@ impl DocumentApp for Fem3dPlayApp {
                         operations.push(Fem3dOperation::RemoveCombination { id: id.clone() });
                     }
                 }
-                if operations.is_empty() { Emit::default() } else { Emit::operations(operations) }
+                if operations.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit::operations(operations)
+                }
             }
             Fem3dCommand::SetActiveExample { example_id } => {
-                let document = if example_id == "default" {
-                    Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap_or_else(|_| fem3d_engine::empty_fem3d_projection())
-                } else {
-                    fem3d_engine::empty_fem3d_projection()
-                };
-                Emit {
-                    document_operations: vec![Fem3dOperation::SetDocument { document }],
-                    config_operations: vec![Fem3dConfigOperation::Snapshot { config: Fem3dConfig::default() }],
-                    ..Default::default()
-                }
+                let document = if example_id == "default" { Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap_or_else(|_| fem3d_engine::empty_fem3d_projection()) } else { fem3d_engine::empty_fem3d_projection() };
+                Emit { document_operations: vec![Fem3dOperation::SetDocument { document }], config_operations: vec![Fem3dConfigOperation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() }
             }
             // 🎥️ Config-only: the world-3d camera never touches the document.
             Fem3dCommand::SetCamera { json } => Emit::config(vec![Fem3dConfigOperation::SetCamera { camera: FemCamera { json: json.clone() } }]),
             // 👁️ Config-only: which case/mode the results window shows never touches the document.
-            Fem3dCommand::SetResultDisplay { source_id, mode, mode_index } => {
-                Emit::config(vec![Fem3dConfigOperation::SetResultDisplay { source_id: source_id.clone(), mode: mode.clone(), mode_index: *mode_index }])
-            }
+            Fem3dCommand::SetResultDisplay { source_id, mode, mode_index } => Emit::config(vec![Fem3dConfigOperation::SetResultDisplay { source_id: source_id.clone(), mode: mode.clone(), mode_index: *mode_index }]),
         }
     }
 
@@ -1129,7 +1100,17 @@ mod tests {
     fn remove_selection_covers_solids_3d() {
         let app = Fem3dPlayApp::default();
         let mut projection = fem3d_engine::empty_fem3d_projection();
-        projection.solids.push(fem3d::FemSolid { id: "sol1".into(), name: "S".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 1.0, layers: 1, mesh_size: 0.5, material_id: "concrete".into() });
+        projection.solids.push(fem3d::FemSolid {
+            id: "sol1".into(),
+            name: "S".into(),
+            outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]],
+            holes: vec![],
+            base_z: 0.0,
+            height: 1.0,
+            layers: 1,
+            mesh_size: 0.5,
+            material_id: "concrete".into(),
+        });
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let config = default_config();
@@ -1328,10 +1309,7 @@ mod tests {
             "layers": 2,
         })
         .to_string();
-        let media = Media {
-            media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
-            payload: MediaPayload::Structured { schema: "geometry".into(), json },
-        };
+        let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any }, payload: MediaPayload::Structured { schema: "geometry".into(), json } };
         let emit = app.import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         assert_eq!(emit.document_operations.len(), 1);
         match &emit.document_operations[0] {

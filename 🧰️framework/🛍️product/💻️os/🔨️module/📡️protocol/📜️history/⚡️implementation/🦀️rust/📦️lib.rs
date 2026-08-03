@@ -11,7 +11,7 @@
 use dsl_schema::{FieldSpec, FieldValue, JoinMode, ParseOptions, RecordLayout, RecordSpec, RecordValue, Shape};
 use pack_core::{ByteReader, ByteWriter, CodecId, PackSink};
 use protocol_core::{DictBuilder, DictReader, ProtocolError, ProtocolLimits, RecordHasher};
-use protocol_format::{Blake3Hasher, FrameCursor, HEADER_SIZE, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions};
+use protocol_format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
 use std::collections::HashMap;
 
 //#region 🔖️Model
@@ -213,11 +213,7 @@ fn alternative_spec() -> RecordSpec {
     RecordSpec::new(
         Some("alternative"),
         RecordLayout::Inline,
-        vec![
-            FieldSpec::new(F_ALTERNATIVE_ID, "", Shape::Text).positional(0),
-            FieldSpec::new(F_ALTERNATIVE_NAME, "name", Shape::Text),
-            FieldSpec::new(F_ALTERNATIVE_CHECKPOINTS, "checkpoints", Shape::List(Box::new(Shape::Text))),
-        ],
+        vec![FieldSpec::new(F_ALTERNATIVE_ID, "", Shape::Text).positional(0), FieldSpec::new(F_ALTERNATIVE_NAME, "name", Shape::Text), FieldSpec::new(F_ALTERNATIVE_CHECKPOINTS, "checkpoints", Shape::List(Box::new(Shape::Text)))],
     )
 }
 
@@ -231,11 +227,7 @@ fn cursor_spec() -> RecordSpec {
     RecordSpec::new(
         Some("cursor"),
         RecordLayout::Inline,
-        vec![
-            FieldSpec::new(F_CURSOR_APPLIED, "applied", Shape::List(Box::new(Shape::Text))),
-            FieldSpec::new(F_CURSOR_REDO, "redo", Shape::List(Box::new(Shape::Text))),
-            FieldSpec::new(F_CURSOR_CHECKPOINT, "checkpoint", Shape::Text).optional(),
-        ],
+        vec![FieldSpec::new(F_CURSOR_APPLIED, "applied", Shape::List(Box::new(Shape::Text))), FieldSpec::new(F_CURSOR_REDO, "redo", Shape::List(Box::new(Shape::Text))), FieldSpec::new(F_CURSOR_CHECKPOINT, "checkpoint", Shape::Text).optional()],
     )
 }
 
@@ -377,11 +369,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
             }
             "cursor" => {
                 let record = dsl_schema::parse(trimmed, &cursor_spec(), &opts).map_err(text_error_to_protocol)?;
-                log.cursor = Some(HistoryCursor {
-                    applied_edit_ids: field_text_list(&record, F_CURSOR_APPLIED),
-                    redo_edit_ids: field_text_list(&record, F_CURSOR_REDO),
-                    checkpoint_id: field_text(&record, F_CURSOR_CHECKPOINT),
-                });
+                log.cursor = Some(HistoryCursor { applied_edit_ids: field_text_list(&record, F_CURSOR_APPLIED), redo_edit_ids: field_text_list(&record, F_CURSOR_REDO), checkpoint_id: field_text(&record, F_CURSOR_CHECKPOINT) });
             }
             other => return Err(ProtocolError::Malformed { what: "ops text line", offset: 0, detail: format!("unknown line keyword '{other}'") }),
         }
@@ -430,11 +418,7 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     }
 
     for change in &log.changes {
-        let mut fields = vec![
-            (F_CHANGE_ID, FieldValue::Text(change.id.clone())),
-            (F_CHANGE_SAVED, FieldValue::Text(change.saved_at.clone())),
-            (F_CHANGE_EDITS, FieldValue::List(change.edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())),
-        ];
+        let mut fields = vec![(F_CHANGE_ID, FieldValue::Text(change.id.clone())), (F_CHANGE_SAVED, FieldValue::Text(change.saved_at.clone())), (F_CHANGE_EDITS, FieldValue::List(change.edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect()))];
         if let Some(description) = &change.description {
             fields.push((F_CHANGE_DESCRIPTION, FieldValue::Text(description.clone())));
         }
@@ -451,16 +435,7 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         if let Some(parent) = &checkpoint.parent_id {
             fields.push((F_CHECKPOINT_PARENT, FieldValue::Text(parent.clone())));
         }
-        fields.push((
-            F_CHECKPOINT_BY,
-            FieldValue::List(
-                checkpoint
-                    .authors
-                    .iter()
-                    .map(|a| FieldValue::Record(record_with(vec![(F_AUTHOR_ID, FieldValue::Text(a.id.clone())), (F_AUTHOR_NAME, FieldValue::Text(a.name.clone()))])))
-                    .collect(),
-            ),
-        ));
+        fields.push((F_CHECKPOINT_BY, FieldValue::List(checkpoint.authors.iter().map(|a| FieldValue::Record(record_with(vec![(F_AUTHOR_ID, FieldValue::Text(a.id.clone())), (F_AUTHOR_NAME, FieldValue::Text(a.name.clone()))]))).collect())));
         if let Some(message) = &checkpoint.message {
             fields.push((F_CHECKPOINT_MESSAGE, FieldValue::Text(message.clone())));
         }
@@ -484,10 +459,8 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     }
 
     if let Some(cursor) = &log.cursor {
-        let mut fields = vec![
-            (F_CURSOR_APPLIED, FieldValue::List(cursor.applied_edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())),
-            (F_CURSOR_REDO, FieldValue::List(cursor.redo_edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())),
-        ];
+        let mut fields =
+            vec![(F_CURSOR_APPLIED, FieldValue::List(cursor.applied_edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())), (F_CURSOR_REDO, FieldValue::List(cursor.redo_edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect()))];
         if let Some(checkpoint_id) = &cursor.checkpoint_id {
             fields.push((F_CURSOR_CHECKPOINT, FieldValue::Text(checkpoint_id.clone())));
         }
@@ -952,7 +925,11 @@ pub fn decode_active(payload: &[u8], dict: &DictReader) -> Result<Option<String>
         return Err(malformed_fmt("active", format));
     }
     let presence = input.read_u8()?;
-    if presence & 1 != 0 { Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?)) } else { Ok(None) }
+    if presence & 1 != 0 {
+        Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?))
+    } else {
+        Ok(None)
+    }
 }
 //#endregion 🔖️Active
 
@@ -1312,9 +1289,7 @@ impl<'a> HistoryReader<'a> {
 
     pub fn edits_rev(&self, limit: usize) -> RevEditIter<'a> {
         match prescan_full(self.trusted) {
-            Ok((dict, edit_ids)) => {
-                RevEditIter { state: Ok(RevEditIterReady { cursor: ReverseFrameCursor::at_end(&self.trusted[HEADER_SIZE..]), dict, edit_ids, remaining: limit }) }
-            }
+            Ok((dict, edit_ids)) => RevEditIter { state: Ok(RevEditIterReady { cursor: ReverseFrameCursor::at_end(&self.trusted[HEADER_SIZE..]), dict, edit_ids, remaining: limit }) },
             Err(e) => RevEditIter { state: Err(Some(e)) },
         }
     }
@@ -1779,17 +1754,7 @@ mod tests {
 
     #[test]
     fn edit_payload_round_trips_minimal_edit() {
-        let edit = HistoryEdit {
-            id: "edit-x".to_string(),
-            actor: None,
-            started_at: "2024-01-01T00:00:00Z".to_string(),
-            finished_at: None,
-            coalesce_key: None,
-            description: None,
-            ops: Vec::new(),
-            backwards: Vec::new(),
-            meta: None,
-        };
+        let edit = HistoryEdit { id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, coalesce_key: None, description: None, ops: Vec::new(), backwards: Vec::new(), meta: None };
         let mut dict = DictBuilder::new();
         let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
         let mut reader = DictReader::new();

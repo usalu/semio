@@ -45,7 +45,7 @@ pub enum PresentOperation {
     Tiles(CollectionOperation<String, FigureTileDraft, FigureTileDraftPatch>),
     SetSource { source: FigureTileSource },
     SetTiles { tiles: Vec<FigureTileDraft> },
-    SetDeck { deck: PresentDeck }
+    SetDeck { deck: PresentDeck },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -128,8 +128,13 @@ enum PresentOperationDsl {
         #[dsl(block)]
         item: FigureTileDraft,
     },
-    TilesRemove { id: String },
-    TilesMove { id: String, to_index: usize },
+    TilesRemove {
+        id: String,
+    },
+    TilesMove {
+        id: String,
+        to_index: usize,
+    },
     TilesPatch {
         id: String,
         #[dsl(block)]
@@ -146,7 +151,7 @@ enum PresentOperationDsl {
     SetDeck {
         #[dsl(block)]
         deck: PresentDeck,
-    }
+    },
 }
 
 impl From<&PresentOperation> for PresentOperationDsl {

@@ -32,8 +32,18 @@ pub enum MeasureKind {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CapabilityRule {
-    Min { quantity: StockQuantity, parameter: String, #[dsl(unit = "m")] margin: f64 },
-    Max { quantity: StockQuantity, parameter: String, #[dsl(unit = "m")] margin: f64 },
+    Min {
+        quantity: StockQuantity,
+        parameter: String,
+        #[dsl(unit = "m")]
+        margin: f64,
+    },
+    Max {
+        quantity: StockQuantity,
+        parameter: String,
+        #[dsl(unit = "m")]
+        margin: f64,
+    },
 }
 
 /// 🔧️ One named numeric parameter of a capability (e.g. blade diameter) — workshop-editable, and
@@ -298,14 +308,10 @@ pub enum SolidSpec {
     },
     /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology
     /// (mirrors `cad`'s `meshUrl` pattern); cannot serve as a Cut/Drill/Attach tool.
-    ImportedMesh {
-        mesh_url: String,
-    },
+    ImportedMesh { mesh_url: String },
     /// 🧊️ STEP/OBJ/STL-imported solid with real B-Rep topology, resolved through the app's kernel
     /// session by handle id (mirrors `cad`'s `solidHandle` pattern); ephemeral to that session.
-    ImportedSolid {
-        solid_handle: String,
-    }
+    ImportedSolid { solid_handle: String },
 }
 
 /// 🌉️ `#[derive(dsl::DslEnum)]` only gives `SolidSpec` a `dsl::DslVariants` binding (a tagged-record
@@ -355,11 +361,26 @@ impl Default for Stock {
 #[serde(tag = "measure", rename_all = "camelCase")]
 pub enum ProcessMeasure {
     /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
-    Cut { tool: SolidSpec, #[dsl(block)] pose: Pose },
+    Cut {
+        tool: SolidSpec,
+        #[dsl(block)]
+        pose: Pose,
+    },
     /// 🕳️ Subtractive: a cylinder of `radius`×`depth` subtracted at `pose` (axis = drill direction).
-    Drill { #[dsl(unit = "m")] radius: f64, #[dsl(unit = "m")] depth: f64, #[dsl(block)] pose: Pose },
+    Drill {
+        #[dsl(unit = "m")]
+        radius: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+        #[dsl(block)]
+        pose: Pose,
+    },
     /// 🔩️ Additive: fuses another component solid at `pose`.
-    Attach { component: SolidSpec, #[dsl(block)] pose: Pose },
+    Attach {
+        component: SolidSpec,
+        #[dsl(block)]
+        pose: Pose,
+    },
 }
 
 /// 🌉️ Same reasoning/idiom as `SolidSpec`'s hand `dsl::DslField` impl — `ProcessMeasure` is a
@@ -523,10 +544,7 @@ mod tests {
             icon_id: "scissors".into(),
             recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
             parameters: vec![CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.184 }, CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.002 }],
-            rules: vec![
-                CapabilityRule::Min { quantity: StockQuantity::Width, parameter: "bladeDiameter".into(), margin: 0.0 },
-                CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "bladeDiameter".into(), margin: 0.05 },
-            ],
+            rules: vec![CapabilityRule::Min { quantity: StockQuantity::Width, parameter: "bladeDiameter".into(), margin: 0.0 }, CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "bladeDiameter".into(), margin: 0.05 }],
         }
     }
 

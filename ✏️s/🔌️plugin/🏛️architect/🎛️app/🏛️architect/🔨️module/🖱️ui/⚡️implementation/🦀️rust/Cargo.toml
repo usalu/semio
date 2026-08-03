@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-architect-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Architect app UI surface (constitutional: ui)"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️lib.rs"
+
+[dependencies]
+architect = { path = "../../../../⚡️implementation/🦀️rust", package = "semio-s-app-architect" }
+architect_engine = { path = "../../../⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-architect-engine" }
+architect_op = { path = "../../../🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-architect-op" }
+architect_protocol = { path = "../../../📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-architect-protocol" }

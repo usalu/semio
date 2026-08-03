@@ -169,14 +169,7 @@ fn plane_from_depth_normal(intr: &remodel_camera::Intrinsics, center: (u32, u32)
 /// via an explicit ray/plane intersection instead of a precomputed 3x3 matrix — simpler to semio_compose_rs
 /// from `remodel_camera`'s existing `project`/`unproject_ray`/`act` primitives, at the cost of
 /// redoing the intersection for every neighbor pixel instead of amortizing it into one matrix.
-fn warp_point_to_src(
-    ref_ctx: &RefContext<'_>,
-    src_pose: &remodel_camera::CameraPose,
-    src_intr: &remodel_camera::Intrinsics,
-    plane: &Plane,
-    px: f64,
-    py: f64,
-) -> Option<[f64; 2]> {
+fn warp_point_to_src(ref_ctx: &RefContext<'_>, src_pose: &remodel_camera::CameraPose, src_intr: &remodel_camera::Intrinsics, plane: &Plane, px: f64, py: f64) -> Option<[f64; 2]> {
     let ray = ref_ctx.intr.unproject_ray([px, py]);
     let denom = dot3(plane.normal, ray);
     if denom.abs() < 1e-9 {
@@ -195,13 +188,7 @@ fn warp_point_to_src(
 /// 🧩️ Warps the reference patch centered at `center` into one source view under `plane`, sampling
 /// bilinearly; `None` as soon as any offset fails to warp (behind the camera, parallel to the ray,
 /// or projects behind the source camera).
-fn warp_patch_to_src(
-    ref_ctx: &RefContext<'_>,
-    src_view: &(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics),
-    center: (u32, u32),
-    radius: i32,
-    plane: &Plane,
-) -> Option<remodel_image::Patch> {
+fn warp_patch_to_src(ref_ctx: &RefContext<'_>, src_view: &(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics), center: (u32, u32), radius: i32, plane: &Plane) -> Option<remodel_image::Patch> {
     let (src_img, src_pose, src_intr) = src_view;
     let side = (2 * radius + 1) as usize;
     let mut data = Vec::with_capacity(side * side);
@@ -223,14 +210,7 @@ fn warp_patch_to_src(
 /// only the strongest-agreeing subset per pixel rather than averaging in occluded/low-texture source
 /// views that would otherwise drag the score down. `-1.0` (the worst possible ZNCC) when no source
 /// view produced a valid warp.
-fn patch_zncc_cost(
-    ref_ctx: &RefContext<'_>,
-    src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)],
-    center: (u32, u32),
-    radius: i32,
-    plane: &Plane,
-    best_k: usize,
-) -> f32 {
+fn patch_zncc_cost(ref_ctx: &RefContext<'_>, src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)], center: (u32, u32), radius: i32, plane: &Plane, best_k: usize) -> f32 {
     let ref_patch = remodel_image::extract_patch(ref_ctx.img, center.0 as f32, center.1 as f32, radius as u32, 0.0);
     let mut scores: Vec<f32> = src_views.iter().filter_map(|src_view| warp_patch_to_src(ref_ctx, src_view, center, radius, plane).map(|src_patch| remodel_image::zncc(&ref_patch, &src_patch))).collect();
     if scores.is_empty() {
@@ -242,15 +222,7 @@ fn patch_zncc_cost(
 }
 
 /// 🎯️ [`patch_zncc_cost`] for a per-pixel depth/normal hypothesis, via [`plane_from_depth_normal`].
-fn multi_view_cost(
-    ref_ctx: &RefContext<'_>,
-    src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)],
-    center: (u32, u32),
-    radius: i32,
-    depth: f32,
-    normal: [f32; 3],
-    best_k: usize,
-) -> f32 {
+fn multi_view_cost(ref_ctx: &RefContext<'_>, src_views: &[(remodel_image::ImageGray, remodel_camera::CameraPose, remodel_camera::Intrinsics)], center: (u32, u32), radius: i32, depth: f32, normal: [f32; 3], best_k: usize) -> f32 {
     let plane = plane_from_depth_normal(ref_ctx.intr, center, depth, normal);
     patch_zncc_cost(ref_ctx, src_views, center, radius, &plane, best_k)
 }
@@ -465,13 +437,7 @@ pub fn plane_sweep_depth(
 /// unprojects each valid `depth_ref` pixel to world space, reprojects into the other view, and
 /// invalidates whenever the two camera-frame depths differ by more than `max_diff` (nearest-pixel
 /// lookup into `depth_other`, no subpixel interpolation).
-pub fn left_right_check(
-    depth_ref: &DepthMap,
-    depth_other: &DepthMap,
-    ref_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics),
-    other_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics),
-    max_diff: f32,
-) -> DepthMap {
+pub fn left_right_check(depth_ref: &DepthMap, depth_other: &DepthMap, ref_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics), other_cam: &(remodel_camera::CameraPose, remodel_camera::Intrinsics), max_diff: f32) -> DepthMap {
     let mut out = depth_ref.clone();
     let ref_to_world = ref_cam.0 .0.inverse();
     for y in 0..depth_ref.height {
@@ -877,7 +843,11 @@ impl TsdfVolume {
 /// ✂️ Builds a new [[`PointCloud`]] keeping only the given (order-preserved) indices, across every
 /// present optional attribute.
 fn pick_indexed<T: Copy>(v: &[T], indices: &[usize]) -> Vec<T> {
-    if v.is_empty() { Vec::new() } else { indices.iter().map(|&i| v[i]).collect() }
+    if v.is_empty() {
+        Vec::new()
+    } else {
+        indices.iter().map(|&i| v[i]).collect()
+    }
 }
 
 fn keep_indices(cloud: &PointCloud, indices: &[usize]) -> PointCloud {
@@ -1042,7 +1012,11 @@ pub fn statistical_outlier_removal(cloud: &PointCloud, k: usize, std_ratio: f64)
         .map(|p| {
             let neighbors = tree.k_nearest(p, k + 1);
             let others: Vec<f64> = neighbors.iter().filter(|&&(_, d2)| d2 > 1e-15).map(|&(_, d2)| d2.sqrt()).collect();
-            if others.is_empty() { 0.0 } else { others.iter().sum::<f64>() / others.len() as f64 }
+            if others.is_empty() {
+                0.0
+            } else {
+                others.iter().sum::<f64>() / others.len() as f64
+            }
         })
         .collect();
     let global_mean = mean_dists.iter().sum::<f64>() / n as f64;
@@ -1318,7 +1292,11 @@ pub fn m3c2_distance(a: &PointCloud, b: &PointCloud, normal_scale: f64, cyl_radi
                     return None;
                 }
                 let r2 = d[0] * d[0] + d[1] * d[1] + d[2] * d[2] - t * t;
-                if r2 > cyl_radius * cyl_radius { None } else { Some(t) }
+                if r2 > cyl_radius * cyl_radius {
+                    None
+                } else {
+                    Some(t)
+                }
             })
             .collect()
     };

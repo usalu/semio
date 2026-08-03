@@ -908,7 +908,15 @@ mod tests {
     //#region 🔖️GraphHostSync
     fn payload_with_node(id: &str) -> NodeGraphScenePayload {
         NodeGraphScenePayload {
-            nodes: vec![GraphNodeRecord { id: id.into(), label: Some("A".into()), x: Some(0.0), y: Some(0.0), outputs: Some(vec![GraphPortRecord { id: "out".into(), ..Default::default() }]), inputs: Some(vec![GraphPortRecord { id: "in".into(), ..Default::default() }]), ..Default::default() }],
+            nodes: vec![GraphNodeRecord {
+                id: id.into(),
+                label: Some("A".into()),
+                x: Some(0.0),
+                y: Some(0.0),
+                outputs: Some(vec![GraphPortRecord { id: "out".into(), ..Default::default() }]),
+                inputs: Some(vec![GraphPortRecord { id: "in".into(), ..Default::default() }]),
+                ..Default::default()
+            }],
             edges: Vec::new(),
             viewport: Some(GraphViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
             ..Default::default()

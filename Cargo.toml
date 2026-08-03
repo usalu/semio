@@ -1,3 +1,5 @@
+cargo-features = ["trim-paths"]
+
 [workspace]
 members = [
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🫀️core/⚡️implementation/🦀️rust",
@@ -587,6 +589,13 @@ members = [
     "✏️s/🔌️plugin/🔋️energy/🔨️module/⚙️engine/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/🏛️architect/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/🏛️architect/🔨️module/🦴️spine/⚡️implementation/🦀️rust",
+    "✏️s/🔌️plugin/🏛️architect/🎛️app/🏛️architect/⚡️implementation/🦀️rust",
+    "✏️s/🔌️plugin/🏛️architect/🎛️app/🏛️architect/🔨️module/⚙️engine/⚡️implementation/🦀️rust",
+    "✏️s/🔌️plugin/🏛️architect/🎛️app/🏛️architect/🔨️module/🗣️dsl/⚡️implementation/🦀️rust",
+    "✏️s/🔌️plugin/🏛️architect/🎛️app/🏛️architect/🔨️module/🔧️op/⚡️implementation/🦀️rust",
+    "✏️s/🔌️plugin/🏛️architect/🎛️app/🏛️architect/🔨️module/🎒️pack/⚡️implementation/🦀️rust",
+    "✏️s/🔌️plugin/🏛️architect/🎛️app/🏛️architect/🔨️module/📡️protocol/⚡️implementation/🦀️rust",
+    "✏️s/🔌️plugin/🏛️architect/🎛️app/🏛️architect/🔨️module/🖱️ui/⚡️implementation/🦀️rust",
 ]
 
 resolver = "2"
@@ -611,6 +620,39 @@ lto = "off"
 # so only `store` needs this override today.
 [profile.release.package.semio-framework-os-kernel-store]
 codegen-units = 16
+
+# 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. wasm32-wasip2 plugin components only — os-dev's
+# 📜️script.ts passes `--profile wasm-release` when building plugin crates. Native `[profile.release]`
+# above is untouched, so concurrent native builds never rebuild because of this profile.
+#
+# - opt-level "s" (not "z"): "z" measurably slows hot numeric loops in geometry/FEM solvers for a
+#   few extra percent of size; the wasm-opt -Oz post-pass (see buildPlugin/transpilePluginComponent)
+#   gets the "z"-class shrink without paying that runtime cost in every plugin.
+# - lto "thin" (not "fat"): fat LTO re-links ~25 plugin cdylibs individually — 2-4x slower per plugin
+#   for a low single-digit percent size gain over thin. Thin still gets full cross-crate inlining.
+# - codegen-units = 1: maximizes cross-crate dedup/inlining and also sidesteps the LLVM-22
+#   ElemSection::writeBody crash noted above (a stable low CGU count, same fix as `store`'s override).
+# - strip = "symbols": drops the wasm `name` custom section, which is pure debug/dev-tooling weight
+#   (measured ~14MB on the largest single plugin, ~87MB across the built fleet) never used at runtime.
+# - incremental = false: deterministic output; also makes these units cacheable by `sccache`, which
+#   never caches incremental builds (today's plugin builds pay full non-incremental cost anyway).
+# - trim-paths = "object": strips absolute build-host cargo-registry paths retained in panic
+#   `Location` strings (panic = "unwind" is intentionally NOT overridden here — wasm32-wasip2's
+#   target spec already defaults to panic-strategy "abort", so plugins already abort-on-panic and
+#   `catch_unwind` already never catches on this target; setting it explicitly would be a no-op).
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+# Explicit: profile inheritance does NOT inherit package-specific overrides from the parent
+# profile, so without this `store` would fall back to codegen-units=256 under `wasm-release`.
+[profile.wasm-release.package.semio-framework-os-kernel-store]
+codegen-units = 1
 
 # 🧹️ RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
 # the manifest so live concurrent edits never hard-break; zero-warning is enforced

@@ -7811,10 +7811,10 @@ pub mod vcs {
         use crate::external_adapters::futures_lite::future::block_on;
         use crate::external_adapters::serde::{Deserialize, Serialize};
         use crate::external_adapters::serde_json::Value;
+        use protocol::{Operation as VcsOperation, OperationDiff};
         #[cfg(test)]
         use store::DocumentCommand;
         use store::{create_document_envelope, materialize_document_projection, DocumentEnvelope, DocumentStore};
-        use protocol::{Operation as VcsOperation, OperationDiff};
 
         pub const KIT_SNAPSHOT_SCHEMA: &str = "semio_compose_rs.kit";
 
@@ -7970,7 +7970,13 @@ pub mod vcs {
                     let operation = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
                         .await
                         .expect("VCS trait methods return bare values, not Result: a stored kind/input pair that fails to resolve back to an Operation has no propagation path");
-                    operation.to_backwards(&kit).await.expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved operation that fails to invert has no propagation path").into_iter().map(|row| ComposeWireOperation::from_operation(&row)).collect()
+                    operation
+                        .to_backwards(&kit)
+                        .await
+                        .expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved operation that fails to invert has no propagation path")
+                        .into_iter()
+                        .map(|row| ComposeWireOperation::from_operation(&row))
+                        .collect()
                 })
             }
         }
@@ -8340,11 +8346,7 @@ pub mod vcs {
             }
             if ws == self.id {
                 self.the_kit_workspace_seq.fetch_add(1, Ordering::Relaxed);
-                self.the_kit_snapshot_store
-                    .lock()
-                    .unwrap_or_else(|poisoned| poisoned.into_inner())
-                    .dispatch(store::DocumentCommand::Apply { operations: vec![wire], description: None })
-                    .map_err(|e| ComposeError::invalid(e.to_string()))?;
+                self.the_kit_snapshot_store.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).dispatch(store::DocumentCommand::Apply { operations: vec![wire], description: None }).map_err(|e| ComposeError::invalid(e.to_string()))?;
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 alt.change_seq.fetch_add(1, Ordering::Relaxed);
             }
@@ -10816,7 +10818,15 @@ pub mod operation {
             Operation::CreateFixedPiece { scope, input } => {
                 let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } = scope else { unreachable!("CreateFixedPiece must carry Scope::CreateFixedPiece") };
                 let Input::FixedPiece { position, name, description } = input else { unreachable!("CreateFixedPiece must carry Input::FixedPiece") };
-                ComposeOperationDsl::CreateFixedPiece { design_id: design_id.clone(), piece_id: piece_id.clone(), blueprint_id: blueprint_id.clone(), attribute_ids: attribute_ids.clone(), position: *position, name: name.clone(), description: description.clone() }
+                ComposeOperationDsl::CreateFixedPiece {
+                    design_id: design_id.clone(),
+                    piece_id: piece_id.clone(),
+                    blueprint_id: blueprint_id.clone(),
+                    attribute_ids: attribute_ids.clone(),
+                    position: *position,
+                    name: name.clone(),
+                    description: description.clone(),
+                }
             }
             Operation::DeletePieceInDesign { scope, .. } => {
                 let Scope::PieceInDesign { design_id, piece_id } = scope else { unreachable!("DeletePieceInDesign must carry Scope::PieceInDesign") };
@@ -10875,9 +10885,7 @@ pub mod operation {
             ComposeOperationDsl::CreateDesign { owner_id, design_id, name, description, icon, image, unit } => {
                 Operation::CreateDesign { scope: Scope::CreateDesign { owner_id, design_id }, input: Input::EntityScalars { name, description, icon, image, unit } }
             }
-            ComposeOperationDsl::CreateType { owner_id, type_id, name, description, icon, image, unit } => {
-                Operation::CreateType { scope: Scope::CreateType { owner_id, type_id }, input: Input::EntityScalars { name, description, icon, image, unit } }
-            }
+            ComposeOperationDsl::CreateType { owner_id, type_id, name, description, icon, image, unit } => Operation::CreateType { scope: Scope::CreateType { owner_id, type_id }, input: Input::EntityScalars { name, description, icon, image, unit } },
             ComposeOperationDsl::DeleteDesign { design_id } => Operation::DeleteDesign { scope: Scope::Design { design_id }, input: Input::None },
             ComposeOperationDsl::DeleteType { type_id } => Operation::DeleteType { scope: Scope::Type { type_id }, input: Input::None },
             ComposeOperationDsl::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids, position, name, description } => {
@@ -19569,9 +19577,9 @@ mod tests {
     /// @emoji 🗄️ `vcs` integration — semio_compose_rs shares generic typed document VCS primitives with s technologies.
     #[test]
     fn vcs_typed_ops_materialize_projection() {
+        use protocol::{Operation, OperationDiff};
         use serde::{Deserialize, Serialize};
         use store::{create_document_envelope, materialize_document_projection, DocumentCommand, DocumentStore};
-        use protocol::{Operation, OperationDiff};
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
         #[dsl(extension = "kit-test")]
@@ -19643,11 +19651,15 @@ mod tests {
             Operation::ChangeDescription { scope: Scope::Entity { entity_id: Id::from("entity-2") }, input: Input::Description { description: None } },
             Operation::CreateTag {
                 scope: Scope::CreateTag { owner_id: Id::from("owner-1"), tag_id: Id::from("tag-1"), attribute_ids: vec![Id::from("attr-1")] },
-                input: Input::Tag { tag: TagInput { name: "structural".into(), description: Some("load-bearing".into()), icon: None, order: Some(1), attributes: Some(vec![AttributeInput { key: "k".into(), value: Some("v".into()), definition: None }]) } },
+                input: Input::Tag {
+                    tag: TagInput { name: "structural".into(), description: Some("load-bearing".into()), icon: None, order: Some(1), attributes: Some(vec![AttributeInput { key: "k".into(), value: Some("v".into()), definition: None }]) },
+                },
             },
             Operation::CreateTags {
                 scope: Scope::CreateTags { owner_id: Id::from("owner-2"), tag_ids: vec![Id::from("tag-2"), Id::from("tag-3")], attribute_ids: vec![vec![], vec![Id::from("attr-2")]] },
-                input: Input::Tags { tags: vec![TagInput { name: "a".into(), description: None, icon: None, order: None, attributes: None }, TagInput { name: "b".into(), description: None, icon: Some("icon".into()), order: None, attributes: None }] },
+                input: Input::Tags {
+                    tags: vec![TagInput { name: "a".into(), description: None, icon: None, order: None, attributes: None }, TagInput { name: "b".into(), description: None, icon: Some("icon".into()), order: None, attributes: None }],
+                },
             },
             Operation::CreateDesign {
                 scope: Scope::CreateDesign { owner_id: Id::from("owner-3"), design_id: Id::from("design-1") },
@@ -19655,16 +19667,9 @@ mod tests {
             },
             Operation::CreateFixedPiece {
                 scope: Scope::CreateFixedPiece { design_id: Id::from("design-2"), piece_id: Id::from("piece-1"), blueprint_id: Id::from("blueprint-1"), attribute_ids: vec![] },
-                input: Input::FixedPiece {
-                    position: crate::geom::PositionInput { center: crate::geom::CoordinateInput { u: 1.0, v: 2.0 }, plane: crate::geom::PlaneInput::default() },
-                    name: Some("Piece".into()),
-                    description: None,
-                },
+                input: Input::FixedPiece { position: crate::geom::PositionInput { center: crate::geom::CoordinateInput { u: 1.0, v: 2.0 }, plane: crate::geom::PlaneInput::default() }, name: Some("Piece".into()), description: None },
             },
-            Operation::DragPiecesInDesign {
-                scope: Scope::PiecesInDesign { design_id: Id::from("design-3"), piece_ids: vec![Id::from("piece-2"), Id::from("piece-3")] },
-                input: Input::Offset { offset: crate::geom::OffsetInput { u: 0.5, v: -0.5 } },
-            },
+            Operation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: Id::from("design-3"), piece_ids: vec![Id::from("piece-2"), Id::from("piece-3")] }, input: Input::Offset { offset: crate::geom::OffsetInput { u: 0.5, v: -0.5 } } },
             Operation::CreateFolder {
                 scope: Scope::CreateFolder { owner_id: Id::from("owner-4"), folder_id: Id::from("folder-1") },
                 input: Input::CreateFolder { name: "Docs".into(), path: "/docs".into(), description: None, icon: None, parent_folder_id: Some(Id::from("folder-0")) },

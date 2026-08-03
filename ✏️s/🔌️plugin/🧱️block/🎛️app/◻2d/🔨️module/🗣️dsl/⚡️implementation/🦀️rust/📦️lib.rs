@@ -33,7 +33,9 @@ mod tests {
             camera2d: BlockCamera2d { x: 230.7, y: 93.5, zoom: 2.0 },
             ..Block2dDefinition::default()
         };
-        for (id, name, color) in [("b-l", "b-l", "hsl(206 52% 48%)"), ("b-l-m", "b-l-m", "hsl(290 52% 48%)"), ("b-s", "b-s", "hsl(55 52% 48%)"), ("b-s-m", "b-s-m", "hsl(124 52% 48%)"), ("c-b", "c-b", "hsl(37 52% 48%)"), ("c-t", "c-t", "hsl(169 52% 48%)")] {
+        for (id, name, color) in
+            [("b-l", "b-l", "hsl(206 52% 48%)"), ("b-l-m", "b-l-m", "hsl(290 52% 48%)"), ("b-s", "b-s", "hsl(55 52% 48%)"), ("b-s-m", "b-s-m", "hsl(124 52% 48%)"), ("c-b", "c-b", "hsl(37 52% 48%)"), ("c-t", "c-t", "hsl(169 52% 48%)")]
+        {
             definition.handle_kinds.push(Block2dHandleKind { id: id.into(), name: name.into(), label: name.into(), color: color.into(), default_wire_kind: "cable.link".into() });
         }
         let angles: [(&str, f64); 11] = [

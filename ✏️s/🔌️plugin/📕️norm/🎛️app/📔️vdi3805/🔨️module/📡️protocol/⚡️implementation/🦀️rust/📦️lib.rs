@@ -32,9 +32,7 @@ mod tests {
         let mut store = Vdi3805Store::new(envelope);
         let mut mutated = vdi3805::reference_fixture();
         mutated.strict_mode = true;
-        store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
     }
 
@@ -44,9 +42,7 @@ mod tests {
         let mut store = Vdi3805Store::new(envelope);
         let mut mutated = vdi3805::reference_fixture();
         mutated.strict_mode = true;
-        store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None }).expect("apply");
         store::test_support::assert_document_pack_round_trip(&store);
     }
 }

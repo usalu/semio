@@ -14,10 +14,12 @@ package = "semio:cad"
 
 [[package.metadata.semio.playground]]
 variant = "cad"
+app = "cad-play"
 ports = { react = 6020, wgpu = 6120 }
 
 [[package.metadata.semio.playground]]
 variant = "koordinator"
+app = "cad-play"
 brand = "entwerfen-mit-bestand-koordinator"
 aliases = ["entwerfen-mit-bestand-koordinator"]
 ports = { react = 6028, wgpu = 6128 }

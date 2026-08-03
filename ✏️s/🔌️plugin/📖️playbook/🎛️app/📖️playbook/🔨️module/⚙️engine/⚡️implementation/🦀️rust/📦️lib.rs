@@ -59,12 +59,7 @@ pub fn playbook_io() -> semio_framework_plugin::AppIo {
         }],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "text.playbook".into(),
-            name: "Playbook".into(),
-            dimension: "text".into(),
-            component_kind: "playbook".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "text.playbook".into(), name: "Playbook".into(), dimension: "text".into(), component_kind: "playbook".into() },
     }
 }
 

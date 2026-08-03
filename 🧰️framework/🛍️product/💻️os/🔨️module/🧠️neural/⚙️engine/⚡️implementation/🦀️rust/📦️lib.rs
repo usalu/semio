@@ -2322,14 +2322,8 @@ mod tests {
     fn evaluate_channels_budgeted_remaining_excludes_clean_branches() {
         use std::sync::atomic::{AtomicUsize, Ordering};
         let tree = Tree {
-            neurons: vec![
-                Neuron::with_kind("a", "echo", number_dictionary(2.0)),
-                Neuron::with_kind("b", "double", Dictionary::new()),
-                Neuron::with_kind("c", "echo", number_dictionary(9.0)),
-            ],
-            synapses: vec![
-                Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() },
-            ],
+            neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(2.0)), Neuron::with_kind("b", "double", Dictionary::new()), Neuron::with_kind("c", "echo", number_dictionary(9.0))],
+            synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() }],
         };
         let mut reg = Registry::new();
         reg.register_schema(number_schema());

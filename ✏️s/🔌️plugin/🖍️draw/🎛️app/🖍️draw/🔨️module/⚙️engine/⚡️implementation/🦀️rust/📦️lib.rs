@@ -2,9 +2,8 @@
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use draw::{
-    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawCircle, DrawDocument,
-    DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine, DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody,
-    DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
+    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawCircle, DrawDocument, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine,
+    DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -167,14 +166,7 @@ pub fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNode {
 }
 
 pub fn default_draw_document(id: &str, title: Option<&str>) -> DrawDocument {
-    DrawDocument {
-        schema: DRAW_DOCUMENT_SCHEMA.into(),
-        id: id.into(),
-        title: title.map(str::to_string),
-        layers: vec![create_draw_path_layer("Layer 1", Vec::new())],
-        assets: None,
-        artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }),
-    }
+    DrawDocument { schema: DRAW_DOCUMENT_SCHEMA.into(), id: id.into(), title: title.map(str::to_string), layers: vec![create_draw_path_layer("Layer 1", Vec::new())], assets: None, artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }) }
 }
 
 pub fn empty_draw_projection() -> DrawDocument {
@@ -1278,14 +1270,7 @@ pub struct DrawConfig {
 
 impl Default for DrawConfig {
     fn default() -> Self {
-        Self {
-            selected_ids: Vec::new(),
-            hovered_id: None,
-            engagement_input: String::new(),
-            camera: draw::DrawCamera::default(),
-            active_utility_id: "selectDirect".into(),
-            locale: "en-US".into(),
-        }
+        Self { selected_ids: Vec::new(), hovered_id: None, engagement_input: String::new(), camera: draw::DrawCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
     }
 }
 
@@ -1313,19 +1298,11 @@ impl protocol::OperationDiff<DrawConfig> for DrawConfig {
 pub fn draw_io() -> semio_framework_core::AppIo {
     semio_framework_core::AppIo {
         document_schema: DRAW_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_core::MediaType {
-            class: semio_framework_core::MediaClass::TwoD,
-            form: semio_framework_core::MediaForm::Vector,
-        },
+        document_media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Vector },
         ports: vec![draw_vector_out_port()],
         export_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
         import_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
-        artifact: semio_framework_core::ArtifactPresentation {
-            id: "2d.drawing".into(),
-            name: "2D Drawing".into(),
-            dimension: "2d".into(),
-            component_kind: "draw".into(),
-        },
+        artifact: semio_framework_core::ArtifactPresentation { id: "2d.drawing".into(), name: "2D Drawing".into(), dimension: "2d".into(), component_kind: "draw".into() },
     }
 }
 
@@ -1340,10 +1317,7 @@ pub fn draw_vector_out_port() -> semio_framework_core::MediaPortSpec {
         id: "vector:out".into(),
         label: "Vector".into(),
         direction: semio_framework_core::MediaPortDirection::Out,
-        media_type: semio_framework_core::MediaType {
-            class: semio_framework_core::MediaClass::TwoD,
-            form: semio_framework_core::MediaForm::Vector,
-        },
+        media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Vector },
         kind_id: Some("2d.drawing".into()),
         required: false,
         multiplicity: semio_framework_core::PortMultiplicity::Many,
@@ -1598,7 +1572,8 @@ mod tests {
         let empty_polygon = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Poly"), shape_kind: "polygon".into(), rect: None, ellipse: None, circle: None, line: None, polygon: Some(DrawPolygon { points: Vec::new() }) });
         assert!(layer_to_path_segments(&empty_polygon).is_empty());
 
-        let polygon = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Poly"), shape_kind: "polygon".into(), rect: None, ellipse: None, circle: None, line: None, polygon: Some(DrawPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]] }) });
+        let polygon =
+            DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Poly"), shape_kind: "polygon".into(), rect: None, ellipse: None, circle: None, line: None, polygon: Some(DrawPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]] }) });
         assert_eq!(layer_to_path_segments(&polygon).len(), 4);
 
         let ellipse = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawEllipse { cx: 0.0, cy: 0.0, rx: 1.0, ry: 1.0 }), circle: None, line: None, polygon: None });

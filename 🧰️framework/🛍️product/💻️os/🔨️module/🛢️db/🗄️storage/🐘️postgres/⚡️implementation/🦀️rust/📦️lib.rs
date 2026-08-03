@@ -73,7 +73,7 @@ async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
 //#endregion 🔖️Schema
 
 //#region 🔖️Runtime
-use db_core::{DbError, DocumentId, DurabilityClass, EpochFence, check_len};
+use db_core::{check_len, DbError, DocumentId, DurabilityClass, EpochFence};
 use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
 use pack::{ByteRange, ContentHash};
 use sqlx::postgres::{PgPool, PgPoolOptions};
@@ -97,11 +97,7 @@ impl PostgresStorage {
     /// `PostgresStorage`. Builds its own dedicated multi-thread runtime to drive the pool and every
     /// subsequent synchronous trait call.
     pub fn connect(database_url: &str) -> Result<Self, DbError> {
-        let runtime = tokio::runtime::Builder::new_multi_thread()
-            .worker_threads(2)
-            .enable_all()
-            .build()
-            .map_err(|err| DbError::Io(err.to_string()))?;
+        let runtime = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().map_err(|err| DbError::Io(err.to_string()))?;
         let pool = runtime.block_on(async {
             let pool = PgPoolOptions::new().max_connections(16).connect(database_url).await.map_err(map_sqlx_error)?;
             bootstrap_schema(&pool).await?;
@@ -221,25 +217,13 @@ impl WalStorage for PostgresStorage {
         self.block_on(async {
             let doc = document.0.as_str();
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
-            let row: Option<(bool,)> =
-                sqlx::query_as("SELECT sealed FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2 FOR UPDATE")
-                    .bind(doc)
-                    .bind(idx)
-                    .fetch_optional(&mut *tx)
-                    .await
-                    .map_err(map_sqlx_error)?;
+            let row: Option<(bool,)> = sqlx::query_as("SELECT sealed FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2 FOR UPDATE").bind(doc).bind(idx).fetch_optional(&mut *tx).await.map_err(map_sqlx_error)?;
             let sealed = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?.0;
             if sealed {
                 return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
             }
             let (new_len,): (i64,) =
-                sqlx::query_as("UPDATE db_wal_segment SET bytes = bytes || $1 WHERE document_id = $2 AND segment_index = $3 RETURNING octet_length(bytes)")
-                    .bind(bytes)
-                    .bind(doc)
-                    .bind(idx)
-                    .fetch_one(&mut *tx)
-                    .await
-                    .map_err(map_sqlx_error)?;
+                sqlx::query_as("UPDATE db_wal_segment SET bytes = bytes || $1 WHERE document_id = $2 AND segment_index = $3 RETURNING octet_length(bytes)").bind(bytes).bind(doc).bind(idx).fetch_one(&mut *tx).await.map_err(map_sqlx_error)?;
             tx.commit().await.map_err(map_sqlx_error)?;
             Ok(new_len as u64)
         })
@@ -260,12 +244,8 @@ impl WalStorage for PostgresStorage {
     fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
         self.block_on(async {
-            let result: Option<(bool,)> = sqlx::query_as("UPDATE db_wal_segment SET sealed = TRUE WHERE document_id = $1 AND segment_index = $2 RETURNING sealed")
-                .bind(document.0.as_str())
-                .bind(idx)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let result: Option<(bool,)> =
+                sqlx::query_as("UPDATE db_wal_segment SET sealed = TRUE WHERE document_id = $1 AND segment_index = $2 RETURNING sealed").bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             result.map(|_| ()).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
         })
     }
@@ -275,22 +255,11 @@ impl WalStorage for PostgresStorage {
         let idx = to_i64(index)?;
         self.block_on(async {
             let doc = document.0.as_str();
-            let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2")
-                .bind(doc)
-                .bind(idx)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(doc).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             let current_len = len_row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?.0 as u64;
             let (offset, len) = validate_read_range(current_len, range)?;
-            let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT substring(bytes FROM $1 FOR $2) FROM db_wal_segment WHERE document_id = $3 AND segment_index = $4")
-                .bind(offset + 1)
-                .bind(len)
-                .bind(doc)
-                .bind(idx)
-                .fetch_one(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let (bytes,): (Vec<u8>,) =
+                sqlx::query_as("SELECT substring(bytes FROM $1 FOR $2) FROM db_wal_segment WHERE document_id = $3 AND segment_index = $4").bind(offset + 1).bind(len).bind(doc).bind(idx).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(bytes)
         })
     }
@@ -298,23 +267,14 @@ impl WalStorage for PostgresStorage {
     fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
         let idx = to_i64(index)?;
         self.block_on(async {
-            let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2")
-                .bind(document.0.as_str())
-                .bind(idx)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             row.map(|(len,)| len as u64).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))
         })
     }
 
     fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
         self.block_on(async {
-            let rows: Vec<(i64,)> = sqlx::query_as("SELECT segment_index FROM db_wal_segment WHERE document_id = $1 ORDER BY segment_index ASC")
-                .bind(document.0.as_str())
-                .fetch_all(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let rows: Vec<(i64,)> = sqlx::query_as("SELECT segment_index FROM db_wal_segment WHERE document_id = $1 ORDER BY segment_index ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(rows.into_iter().map(|(index,)| index as u64).collect())
         })
     }
@@ -325,21 +285,10 @@ impl WalStorage for PostgresStorage {
             let doc = document.0.as_str();
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
             let row: Option<(bool, i64)> =
-                sqlx::query_as("SELECT sealed, octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2 FOR UPDATE")
-                    .bind(doc)
-                    .bind(idx)
-                    .fetch_optional(&mut *tx)
-                    .await
-                    .map_err(map_sqlx_error)?;
+                sqlx::query_as("SELECT sealed, octet_length(bytes) FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2 FOR UPDATE").bind(doc).bind(idx).fetch_optional(&mut *tx).await.map_err(map_sqlx_error)?;
             let (sealed, current_len) = row.ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
             validate_truncate(sealed, current_len as u64, new_len)?;
-            sqlx::query("UPDATE db_wal_segment SET bytes = substring(bytes FROM 1 FOR $1) WHERE document_id = $2 AND segment_index = $3")
-                .bind(to_i64(new_len)?)
-                .bind(doc)
-                .bind(idx)
-                .execute(&mut *tx)
-                .await
-                .map_err(map_sqlx_error)?;
+            sqlx::query("UPDATE db_wal_segment SET bytes = substring(bytes FROM 1 FOR $1) WHERE document_id = $2 AND segment_index = $3").bind(to_i64(new_len)?).bind(doc).bind(idx).execute(&mut *tx).await.map_err(map_sqlx_error)?;
             tx.commit().await.map_err(map_sqlx_error)?;
             Ok(())
         })
@@ -348,12 +297,7 @@ impl WalStorage for PostgresStorage {
     fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
         let idx = to_i64(index)?;
         self.block_on(async {
-            sqlx::query("DELETE FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2")
-                .bind(document.0.as_str())
-                .bind(idx)
-                .execute(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            sqlx::query("DELETE FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2").bind(document.0.as_str()).bind(idx).execute(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(())
         })
     }
@@ -383,42 +327,24 @@ impl SnapshotStorage for PostgresStorage {
         let gen = to_i64(generation)?;
         self.block_on(async {
             let doc = document.0.as_str();
-            let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2")
-                .bind(doc)
-                .bind(gen)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(doc).bind(gen).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             let len = len_row.ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))?.0;
             check_len(len as u64, MAX_READ_BYTES, "snapshot_storage::read_generation")?;
-            let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2")
-                .bind(doc)
-                .bind(gen)
-                .fetch_one(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(doc).bind(gen).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(bytes)
         })
     }
 
     fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
         self.block_on(async {
-            let row: (Option<i64>,) = sqlx::query_as("SELECT MAX(generation) FROM db_snapshot_generation WHERE document_id = $1")
-                .bind(document.0.as_str())
-                .fetch_one(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let row: (Option<i64>,) = sqlx::query_as("SELECT MAX(generation) FROM db_snapshot_generation WHERE document_id = $1").bind(document.0.as_str()).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(row.0.map(|generation| generation as u64))
         })
     }
 
     fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
         self.block_on(async {
-            let rows: Vec<(i64,)> = sqlx::query_as("SELECT generation FROM db_snapshot_generation WHERE document_id = $1 ORDER BY generation ASC")
-                .bind(document.0.as_str())
-                .fetch_all(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let rows: Vec<(i64,)> = sqlx::query_as("SELECT generation FROM db_snapshot_generation WHERE document_id = $1 ORDER BY generation ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(rows.into_iter().map(|(generation,)| generation as u64).collect())
         })
     }
@@ -426,12 +352,7 @@ impl SnapshotStorage for PostgresStorage {
     fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError> {
         let gen = to_i64(generation)?;
         self.block_on(async {
-            sqlx::query("DELETE FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2")
-                .bind(document.0.as_str())
-                .bind(gen)
-                .execute(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            sqlx::query("DELETE FROM db_snapshot_generation WHERE document_id = $1 AND generation = $2").bind(document.0.as_str()).bind(gen).execute(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(())
         })
     }
@@ -444,32 +365,24 @@ impl PayloadStorage for PostgresStorage {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put")?;
         let hash = ContentHash(*blake3::hash(bytes).as_bytes());
         self.block_on(async {
-            sqlx::query("INSERT INTO db_payload (hash, bytes) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING")
-                .bind(&hash.0[..])
-                .bind(bytes)
-                .execute(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            sqlx::query("INSERT INTO db_payload (hash, bytes) VALUES ($1, $2) ON CONFLICT (hash) DO NOTHING").bind(&hash.0[..]).bind(bytes).execute(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(hash)
         })
     }
 
     fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
         self.block_on(async {
-            let len_row: Option<(i64,)> =
-                sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+            let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             let len = len_row.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?.0;
             check_len(len as u64, MAX_READ_BYTES, "payload_storage::get")?;
-            let (bytes,): (Vec<u8>,) =
-                sqlx::query_as("SELECT bytes FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
+            let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(bytes)
         })
     }
 
     fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
         self.block_on(async {
-            let row: (i64,) =
-                sqlx::query_as("SELECT COUNT(*) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
+            let row: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(row.0 > 0)
         })
     }
@@ -483,8 +396,7 @@ impl PayloadStorage for PostgresStorage {
 
     fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
         self.block_on(async {
-            let row: Option<(i64,)> =
-                sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
+            let row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_payload WHERE hash = $1").bind(&hash.0[..]).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             row.map(|(len,)| len as u64).ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
         })
     }
@@ -495,8 +407,7 @@ impl PayloadStorage for PostgresStorage {
 impl CatalogStorage for PostgresStorage {
     fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
         self.block_on(async {
-            let (epoch, bytes): (i64, Option<Vec<u8>>) =
-                sqlx::query_as("SELECT epoch, bytes FROM db_catalog_root WHERE id = 1").fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
+            let (epoch, bytes): (i64, Option<Vec<u8>>) = sqlx::query_as("SELECT epoch, bytes FROM db_catalog_root WHERE id = 1").fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(bytes.map(|bytes| (bytes, EpochFence { epoch: epoch as u64 })))
         })
     }
@@ -513,12 +424,7 @@ impl CatalogStorage for PostgresStorage {
             let current_fence = EpochFence { epoch: current_epoch as u64 };
             expected.check(current_fence)?;
             let new_fence = expected.next();
-            sqlx::query("UPDATE db_catalog_root SET epoch = $1, bytes = $2 WHERE id = 1")
-                .bind(to_i64(new_fence.epoch)?)
-                .bind(new_bytes)
-                .execute(&mut *tx)
-                .await
-                .map_err(map_sqlx_error)?;
+            sqlx::query("UPDATE db_catalog_root SET epoch = $1, bytes = $2 WHERE id = 1").bind(to_i64(new_fence.epoch)?).bind(new_bytes).execute(&mut *tx).await.map_err(map_sqlx_error)?;
             tx.commit().await.map_err(map_sqlx_error)?;
             Ok(new_fence)
         })
@@ -549,31 +455,17 @@ impl IndexStorage for PostgresStorage {
         let run = to_i64(run_id)?;
         self.block_on(async {
             let doc = document.0.as_str();
-            let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_index_run WHERE document_id = $1 AND run_id = $2")
-                .bind(doc)
-                .bind(run)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let len_row: Option<(i64,)> = sqlx::query_as("SELECT octet_length(bytes) FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(doc).bind(run).fetch_optional(&self.pool).await.map_err(map_sqlx_error)?;
             let len = len_row.ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))?.0;
             check_len(len as u64, MAX_READ_BYTES, "index_storage::read_run")?;
-            let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_index_run WHERE document_id = $1 AND run_id = $2")
-                .bind(doc)
-                .bind(run)
-                .fetch_one(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let (bytes,): (Vec<u8>,) = sqlx::query_as("SELECT bytes FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(doc).bind(run).fetch_one(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(bytes)
         })
     }
 
     fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
         self.block_on(async {
-            let rows: Vec<(i64,)> = sqlx::query_as("SELECT run_id FROM db_index_run WHERE document_id = $1 ORDER BY run_id ASC")
-                .bind(document.0.as_str())
-                .fetch_all(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            let rows: Vec<(i64,)> = sqlx::query_as("SELECT run_id FROM db_index_run WHERE document_id = $1 ORDER BY run_id ASC").bind(document.0.as_str()).fetch_all(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(rows.into_iter().map(|(run_id,)| run_id as u64).collect())
         })
     }
@@ -581,12 +473,7 @@ impl IndexStorage for PostgresStorage {
     fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError> {
         let run = to_i64(run_id)?;
         self.block_on(async {
-            sqlx::query("DELETE FROM db_index_run WHERE document_id = $1 AND run_id = $2")
-                .bind(document.0.as_str())
-                .bind(run)
-                .execute(&self.pool)
-                .await
-                .map_err(map_sqlx_error)?;
+            sqlx::query("DELETE FROM db_index_run WHERE document_id = $1 AND run_id = $2").bind(document.0.as_str()).bind(run).execute(&self.pool).await.map_err(map_sqlx_error)?;
             Ok(())
         })
     }
@@ -650,8 +537,7 @@ async fn read_existing_lease_for_update<'e, E>(executor: E, resource: &str) -> R
 where
     E: sqlx::Executor<'e, Database = sqlx::Postgres>,
 {
-    let row: Option<(String, i64, i64)> =
-        sqlx::query_as("SELECT holder, epoch, expires_at_ms FROM db_lease WHERE resource = $1 FOR UPDATE").bind(resource).fetch_optional(executor).await.map_err(map_sqlx_error)?;
+    let row: Option<(String, i64, i64)> = sqlx::query_as("SELECT holder, epoch, expires_at_ms FROM db_lease WHERE resource = $1 FOR UPDATE").bind(resource).fetch_optional(executor).await.map_err(map_sqlx_error)?;
     Ok(row.map(|(holder, epoch, expires_at_ms)| ExistingLease { holder, fence: EpochFence { epoch: epoch as u64 }, expires_at_ms: expires_at_ms as u64 }))
 }
 
@@ -691,12 +577,7 @@ impl LeaseStorage for PostgresStorage {
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
             let existing = read_existing_lease_for_update(&mut *tx, resource).await?;
             lease_renew_check(existing.as_ref(), holder, fence, now_ms)?;
-            sqlx::query("UPDATE db_lease SET expires_at_ms = $1 WHERE resource = $2")
-                .bind(to_i64(now_ms.saturating_add(ttl_ms))?)
-                .bind(resource)
-                .execute(&mut *tx)
-                .await
-                .map_err(map_sqlx_error)?;
+            sqlx::query("UPDATE db_lease SET expires_at_ms = $1 WHERE resource = $2").bind(to_i64(now_ms.saturating_add(ttl_ms))?).bind(resource).execute(&mut *tx).await.map_err(map_sqlx_error)?;
             tx.commit().await.map_err(map_sqlx_error)?;
             Ok(())
         })
@@ -716,13 +597,7 @@ impl LeaseStorage for PostgresStorage {
     fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
         self.block_on(async {
             let existing = read_existing_lease(&self.pool, resource).await?;
-            Ok(existing.and_then(|info| {
-                if now_ms < info.expires_at_ms {
-                    Some(LeaseInfo { resource: resource.to_string(), holder: info.holder, fence: info.fence, expires_at_ms: info.expires_at_ms })
-                } else {
-                    None
-                }
-            }))
+            Ok(existing.and_then(|info| if now_ms < info.expires_at_ms { Some(LeaseInfo { resource: resource.to_string(), holder: info.holder, fence: info.fence, expires_at_ms: info.expires_at_ms }) } else { None }))
         })
     }
 }

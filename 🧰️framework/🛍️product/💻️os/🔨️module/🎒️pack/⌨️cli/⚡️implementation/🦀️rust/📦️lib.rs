@@ -19,11 +19,7 @@ fn sample_spec() -> dsl_schema::RecordSpec {
     dsl_schema::RecordSpec::new(
         None,
         dsl_schema::RecordLayout::Lines,
-        vec![
-            dsl_schema::FieldSpec::new(1, "name", dsl_schema::Shape::Text),
-            dsl_schema::FieldSpec::new(2, "age", dsl_schema::Shape::UInt),
-            dsl_schema::FieldSpec::new(3, "active", dsl_schema::Shape::Bool),
-        ],
+        vec![dsl_schema::FieldSpec::new(1, "name", dsl_schema::Shape::Text), dsl_schema::FieldSpec::new(2, "age", dsl_schema::Shape::UInt), dsl_schema::FieldSpec::new(3, "active", dsl_schema::Shape::Bool)],
     )
 }
 
@@ -629,17 +625,7 @@ mod tests {
 
         let out_path = temp_path("fromdsl.spk");
         let out_path_str = out_path.to_string_lossy().to_string();
-        assert_eq!(
-            main_impl(&[
-                String::from("from-dsl"),
-                dsl_path_str,
-                String::from("--schema"),
-                String::from("sample"),
-                String::from("--out"),
-                out_path_str.clone(),
-            ]),
-            0
-        );
+        assert_eq!(main_impl(&[String::from("from-dsl"), dsl_path_str, String::from("--schema"), String::from("sample"), String::from("--out"), out_path_str.clone(),]), 0);
         assert!(out_path.exists());
         assert_eq!(main_impl(&[String::from("verify"), out_path_str.clone()]), 0);
         assert_eq!(main_impl(&[String::from("diff"), path_str.clone(), out_path_str.clone(), String::from("--schema"), String::from("sample")]), 1);
@@ -654,17 +640,7 @@ mod tests {
         let bad_dsl_path = temp_path("bad.dsl");
         std::fs::write(&bad_dsl_path, "name=").unwrap();
         let out_path = temp_path("bad-out.spk");
-        assert_eq!(
-            main_impl(&[
-                String::from("from-dsl"),
-                bad_dsl_path.to_string_lossy().to_string(),
-                String::from("--schema"),
-                String::from("sample"),
-                String::from("--out"),
-                out_path.to_string_lossy().to_string(),
-            ]),
-            1
-        );
+        assert_eq!(main_impl(&[String::from("from-dsl"), bad_dsl_path.to_string_lossy().to_string(), String::from("--schema"), String::from("sample"), String::from("--out"), out_path.to_string_lossy().to_string(),]), 1);
         assert!(!out_path.exists());
 
         std::fs::remove_file(&bad_dsl_path).ok();

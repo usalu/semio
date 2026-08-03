@@ -177,11 +177,33 @@ fn apply_step(layers: &mut Vec<RasterLayerNode>, step: &RasterStep) {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum RasterOperation {
-    AddLayer { parent_id: Option<String>, index: usize, #[dsl(statements)] layer: Box<RasterLayerNode> },
-    RemoveLayer { #[dsl(key = "id")] layer_id: String },
-    PatchLayer { #[dsl(key = "id")] layer_id: String, #[dsl(block)] patch: RasterLayerPatch },
-    MoveLayer { #[dsl(key = "id")] layer_id: String, #[dsl(key = "parent")] parent_id: Option<String>, index: usize },
-    ReplaceDocument { #[dsl(block)] document: RasterProjection },
+    AddLayer {
+        parent_id: Option<String>,
+        index: usize,
+        #[dsl(statements)]
+        layer: Box<RasterLayerNode>,
+    },
+    RemoveLayer {
+        #[dsl(key = "id")]
+        layer_id: String,
+    },
+    PatchLayer {
+        #[dsl(key = "id")]
+        layer_id: String,
+        #[dsl(block)]
+        patch: RasterLayerPatch,
+    },
+    MoveLayer {
+        #[dsl(key = "id")]
+        layer_id: String,
+        #[dsl(key = "parent")]
+        parent_id: Option<String>,
+        index: usize,
+    },
+    ReplaceDocument {
+        #[dsl(block)]
+        document: RasterProjection,
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -218,16 +240,10 @@ impl Operation<RasterProjection> for RasterOperation {
 
     fn diff(&self, _projection: &RasterProjection) -> RasterDiff {
         match self {
-            RasterOperation::AddLayer { parent_id, index, layer } => {
-                step_diff(RasterStep::AddLayer { parent_id: parent_id.clone(), index: *index, layer: (**layer).clone() })
-            }
+            RasterOperation::AddLayer { parent_id, index, layer } => step_diff(RasterStep::AddLayer { parent_id: parent_id.clone(), index: *index, layer: (**layer).clone() }),
             RasterOperation::RemoveLayer { layer_id } => step_diff(RasterStep::RemoveLayer { layer_id: layer_id.clone() }),
-            RasterOperation::PatchLayer { layer_id, patch } => {
-                step_diff(RasterStep::PatchLayer { layer_id: layer_id.clone(), patch: patch.clone() })
-            }
-            RasterOperation::MoveLayer { layer_id, parent_id, index } => {
-                step_diff(RasterStep::MoveLayer { layer_id: layer_id.clone(), parent_id: parent_id.clone(), index: *index })
-            }
+            RasterOperation::PatchLayer { layer_id, patch } => step_diff(RasterStep::PatchLayer { layer_id: layer_id.clone(), patch: patch.clone() }),
+            RasterOperation::MoveLayer { layer_id, parent_id, index } => step_diff(RasterStep::MoveLayer { layer_id: layer_id.clone(), parent_id: parent_id.clone(), index: *index }),
             RasterOperation::ReplaceDocument { document } => RasterDiff { replace: Some(Box::new(document.clone())), ..Default::default() },
         }
     }
@@ -330,18 +346,7 @@ mod tests {
     use vcs::apply_operation;
 
     fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
-        RasterLayerNode::Pixel {
-            id: id.into(),
-            name: name.into(),
-            visible: true,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: RasterTransform::default(),
-            mask: None,
-            width: Some(512),
-            height: Some(512),
-            image_key: None,
-        }
+        RasterLayerNode::Pixel { id: id.into(), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(512), height: Some(512), image_key: None }
     }
 
     fn round_trip(projection: &RasterProjection, operation: &RasterOperation) -> RasterProjection {
@@ -359,10 +364,7 @@ mod tests {
         let projection = empty_raster_projection();
         let added = round_trip(&projection, &RasterOperation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
         assert_eq!(added.layers.len(), 1);
-        let patched = round_trip(
-            &added,
-            &RasterOperation::PatchLayer { layer_id: "l1".into(), patch: RasterLayerPatch { name: Some("Renamed".into()), visible: Some(false), ..Default::default() } },
-        );
+        let patched = round_trip(&added, &RasterOperation::PatchLayer { layer_id: "l1".into(), patch: RasterLayerPatch { name: Some("Renamed".into()), visible: Some(false), ..Default::default() } });
         assert_eq!(raster_engine::layer_name(&patched.layers[0]), "Renamed");
         assert!(!raster_engine::layer_visible(&patched.layers[0]));
         let removed = round_trip(&patched, &RasterOperation::RemoveLayer { layer_id: "l1".into() });
@@ -372,16 +374,7 @@ mod tests {
     #[test]
     fn move_layer_into_group_round_trip() {
         let mut projection = empty_raster_projection();
-        projection.layers.push(RasterLayerNode::Group {
-            id: "g1".into(),
-            name: "Group".into(),
-            visible: true,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: RasterTransform::default(),
-            mask: None,
-            children: Vec::new(),
-        });
+        projection.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
         projection.layers.push(pixel_layer("l1", "Base"));
         let moved = round_trip(&projection, &RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 });
         let RasterLayerNode::Group { children, .. } = &moved.layers[0] else { panic!("expected group") };
@@ -400,18 +393,8 @@ mod tests {
 
     #[test]
     fn store_applies_layer_add() {
-        let mut store = RasterStore::new(create_document_envelope(
-            RASTER_DOCUMENT_SCHEMA,
-            "raster",
-            empty_raster_projection(),
-            None,
-        ));
-        store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![RasterOperation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }],
-                description: None,
-            })
-            .expect("apply");
+        let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_projection(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![RasterOperation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").layers.len(), 1);
     }
 
@@ -420,10 +403,7 @@ mod tests {
     /// boundaries prevent reuse of the `dsl`/`pack` crates' own `#[cfg(test)]`-only copies).
     fn representative_raster_document() -> RasterProjection {
         let mut assets = BTreeMap::new();
-        assets.insert(
-            "asset-1".into(),
-            RasterImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into() },
-        );
+        assets.insert("asset-1".into(), RasterImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into() });
         let mut params = BTreeMap::new();
         params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
         params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));
@@ -470,28 +450,10 @@ mod tests {
                             height: None,
                             image_key: None,
                         },
-                        RasterLayerNode::Group {
-                            id: "group-2".into(),
-                            name: "Nested Group".into(),
-                            visible: true,
-                            opacity: 1.0,
-                            blend_mode: "normal".into(),
-                            transform: RasterTransform::default(),
-                            mask: None,
-                            children: Vec::new(),
-                        },
+                        RasterLayerNode::Group { id: "group-2".into(), name: "Nested Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() },
                     ],
                 },
-                RasterLayerNode::Adjustment {
-                    id: "adjust-1".into(),
-                    name: "Curves & Co".into(),
-                    visible: true,
-                    opacity: 1.0,
-                    blend_mode: "normal".into(),
-                    transform: RasterTransform::default(),
-                    adjustment_kind: "curves".into(),
-                    params,
-                },
+                RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
             ],
         }
     }
@@ -529,14 +491,8 @@ mod tests {
             }),
         });
         store::test_support::assert_op_line_round_trip(&RasterOperation::RemoveLayer { layer_id: "l1".into() });
-        store::test_support::assert_op_line_round_trip(&RasterOperation::PatchLayer {
-            layer_id: "l1".into(),
-            patch: RasterLayerPatch { name: Some("Renamed".into()), visible: Some(false), ..Default::default() },
-        });
-        store::test_support::assert_op_line_round_trip(&RasterOperation::PatchLayer {
-            layer_id: "adjust-1".into(),
-            patch: RasterLayerPatch::default(),
-        });
+        store::test_support::assert_op_line_round_trip(&RasterOperation::PatchLayer { layer_id: "l1".into(), patch: RasterLayerPatch { name: Some("Renamed".into()), visible: Some(false), ..Default::default() } });
+        store::test_support::assert_op_line_round_trip(&RasterOperation::PatchLayer { layer_id: "adjust-1".into(), patch: RasterLayerPatch::default() });
         store::test_support::assert_op_line_round_trip(&RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: Some("g2".into()), index: 1 });
         store::test_support::assert_op_line_round_trip(&RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: None, index: 0 });
         store::test_support::assert_op_line_round_trip(&RasterOperation::ReplaceDocument { document: representative_raster_document() });

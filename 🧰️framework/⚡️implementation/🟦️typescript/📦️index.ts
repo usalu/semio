@@ -5,7 +5,7 @@
 
 import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl } from "../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
-import type { IconName } from "@semio-tech/ui-asset";
+import type { IconName } from "@semio-tech/asset";
 export type { IconName };
 import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "./🤖️generated/🟦️ui-axes.ts";
 export { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology };
@@ -1832,7 +1832,7 @@ export const TUTORIAL_CONVERGE_MS = 600;
 // Once that lands, run `bun nx run @semio-tech/framework-core:generate`, delete this hand-written block,
 // and re-add `Tutorial* as GeneratedTutorial*` imports above — names/shapes here were written to match the
 // eventual generated output exactly, so every other file importing from this module is unaffected.
-export type TutorialChapter = { readonly id: string; readonly at: number; readonly title: string; readonly body?: string };
+export type TutorialChapter = { readonly id: string; readonly at: number; readonly title: LocalizedLabel | string; readonly body?: LocalizedLabel | string };
 
 export type TutorialAssetSrc =
   | { readonly kind: "url"; readonly url: string }
@@ -1950,8 +1950,8 @@ export type TutorialBase = {
  * *recording* IS a `TutorialDefinition`; the recorder simply produces a densely-sampled one. */
 export type TutorialDefinition = {
   readonly id: string;
-  readonly title: string;
-  readonly description?: string;
+  readonly title: LocalizedLabel | string;
+  readonly description?: LocalizedLabel | string;
   readonly durationMs: number;
   readonly chapters: readonly TutorialChapter[];
   readonly base: TutorialBase;
@@ -2261,7 +2261,6 @@ export type PluginContextMenuPoint = { readonly x: number; readonly y: number };
  * `menu` is the {@link UiMenuRef} the host resolved from `data-menu-id`/a scene surface convention id
  * (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...). */
 export type PluginContextMenuRequest = {
-  readonly viewState: PluginViewState;
   readonly menu: UiMenuRef;
   readonly surface?: PluginContextMenuSurfaceTarget;
   readonly windowInstanceId?: string;
@@ -2900,6 +2899,7 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
   pluginWorkerClients.set(pluginId, client);
   client.onBackboneOutbound = (uri, message) => relayPluginBackboneOutbound(uri, message);
   await client.start();
+  console.log(`[DEBUG] plugin worker + ${pluginId} (${pluginWorkerClients.size} live)`);
   return withSerializedPluginWasmHandle({
     manifest: () => client.manifest(),
     createApp: (appId) => client.createApp(appId),
@@ -2908,6 +2908,7 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
     dispose: () => {
       pluginWorkerClients.delete(pluginId);
       client.dispose();
+      console.log(`[DEBUG] plugin worker - ${pluginId} (${pluginWorkerClients.size} live)`);
     },
   });
 }
@@ -2968,59 +2969,169 @@ export function registerPluginBackboneRoute(documentId: string, relay: (uri: str
 }
 //#endregion 🐚️PluginBackboneRouting
 
+//#region 🪶️LeasePool
+/** @emoji 🪶️ One caller's reference to a {@link LeasePool}-managed resource. `release()` is idempotent —
+ * a second call is a no-op — and drops this caller's refcount; the pool only disposes the underlying
+ * resource once every issued lease on that key has released (and, unless `lingerMs` is 0, only after
+ * the linger window below elapses with no re-acquire). */
+export interface Lease<T> {
+  readonly value: T;
+  release(): void;
+}
+
+export interface LeasePoolStats {
+  readonly key: string;
+  readonly refs: number;
+  readonly state: "loading" | "resident" | "lingering";
+}
+
+export interface LeasePool<T> {
+  acquire(key: string): Promise<Lease<T>>;
+  /** Forces disposal of `key` (or every entry when omitted) right now, bypassing any linger timer.
+   * A no-op (logged, not thrown) for a key with active leases — evicting a resource a caller still
+   * holds would leave that caller's `Lease.value` silently dead underneath it. */
+  evictNow(key?: string): void;
+  stats(): readonly LeasePoolStats[];
+}
+
+type LeasePoolEntry<T> = {
+  readonly promise: Promise<T>;
+  refs: number;
+  lingerTimer: ReturnType<typeof setTimeout> | null;
+  settled: T | undefined;
+};
+
+/**
+ * @emoji 🪶️ Generic refcounted resource pool with linger-based eviction — the shared mechanism both
+ * {@link acquirePluginModule} (plugin worker modules) and the renderer's engine-session cache build on
+ * top of, instead of each hand-rolling its own refcounting. A resource loads once per `key` and is
+ * shared by every caller; when the last lease on a key releases, the resource isn't disposed
+ * immediately — it lingers for `lingerMs` (default 30s) so a caller that re-acquires the same key
+ * shortly after (e.g. reopening a just-closed window) reuses the still-live resource instead of paying
+ * full reload cost. `lingerMs: 0` disposes the instant refs hit zero, matching the pre-`LeasePool`
+ * `acquirePluginModule` behavior exactly.
+ */
+export function createLeasePool<T>(load: (key: string) => Promise<T>, dispose: (value: T) => void, options?: { readonly lingerMs?: number; readonly label?: string }): LeasePool<T> {
+  const lingerMs = options?.lingerMs ?? 30_000;
+  const label = options?.label ?? "resource";
+  const entries = new Map<string, LeasePoolEntry<T>>();
+
+  function disposeEntry(key: string, entry: LeasePoolEntry<T>): void {
+    if (entries.get(key) !== entry) return;
+    entries.delete(key);
+    if (entry.settled !== undefined) {
+      console.log(`[DEBUG] ${label} evicted ${key}`);
+      dispose(entry.settled);
+    }
+  }
+
+  return {
+    async acquire(key: string): Promise<Lease<T>> {
+      let entry = entries.get(key);
+      if (!entry) {
+        const created: LeasePoolEntry<T> = { promise: load(key), refs: 0, lingerTimer: null, settled: undefined };
+        created.promise.then(
+          (value) => {
+            created.settled = value;
+          },
+          () => {
+            if (entries.get(key) === created) entries.delete(key);
+          },
+        );
+        entries.set(key, created);
+        entry = created;
+      }
+      const active = entry;
+      if (active.lingerTimer !== null) {
+        clearTimeout(active.lingerTimer);
+        active.lingerTimer = null;
+      }
+      active.refs += 1;
+      try {
+        const value = await active.promise;
+        let released = false;
+        return {
+          value,
+          release: () => {
+            if (released) return;
+            released = true;
+            active.refs -= 1;
+            if (active.refs > 0) return;
+            if (lingerMs <= 0) {
+              disposeEntry(key, active);
+              return;
+            }
+            active.lingerTimer = setTimeout(() => disposeEntry(key, active), lingerMs);
+          },
+        };
+      } catch (error) {
+        active.refs -= 1;
+        throw error;
+      }
+    },
+    evictNow(key?: string): void {
+      for (const [entryKey, entry] of key ? ([[key, entries.get(key)]] as const) : entries) {
+        if (!entry) continue;
+        if (entry.refs > 0) {
+          console.warn(`[DEBUG] ${label} evictNow(${entryKey}) skipped — ${entry.refs} active lease(s)`);
+          continue;
+        }
+        if (entry.lingerTimer !== null) clearTimeout(entry.lingerTimer);
+        disposeEntry(entryKey, entry);
+      }
+    },
+    stats(): readonly LeasePoolStats[] {
+      return Array.from(entries.entries()).map(([key, entry]) => ({
+        key,
+        refs: entry.refs,
+        state: entry.settled === undefined ? "loading" : entry.lingerTimer !== null ? "lingering" : "resident",
+      }));
+    },
+  };
+}
+//#endregion 🪶️LeasePool
+
 //#region 🐚️PluginModuleLease
 export interface PluginModuleLease {
   readonly handle: PluginWasmHandle;
   /** Releases this caller's reference to the shared module — idempotent, a second call is a no-op.
-   * The underlying worker/module disposes once every lease on this `moduleUrl` has released (see
-   * {@link acquirePluginModule}). */
+   * The underlying worker/module disposes once every lease on this `moduleUrl` has released and the
+   * pool's linger window (see {@link createLeasePool}) elapses with no re-acquire. */
   release(): void;
 }
 
-type PluginModuleCacheEntry = { readonly promise: Promise<PluginWasmHandle>; refs: number };
-
-const pluginModuleCache = new Map<string, PluginModuleCacheEntry>();
+// 🐚️ The pool's `load` callback only receives the key (`moduleUrl` — already globally unique per
+// plugin, matching the pre-pool cache's key exactly), but `loadPluginModuleUncached` also wants a
+// human-readable `pluginId` for its worker/log labels. `acquirePluginModule` records that association
+// here just before acquiring; safe as a plain overwrite since a given `moduleUrl` only ever maps to
+// one `pluginId` in practice.
+const pluginModuleIdByUrl = new Map<string, string>();
+const pluginModulePool = createLeasePool<PluginWasmHandle>((moduleUrl) => loadPluginModuleUncached(pluginModuleIdByUrl.get(moduleUrl) ?? moduleUrl, moduleUrl), (handle) => handle.dispose(), { label: "plugin module" });
 
 /**
  * @emoji 🐚️ Refcounted replacement for the old `loadPluginModule` — several shells (or several plugin
  * instances within one shell) loading the SAME `moduleUrl` share one worker/module, but each caller
- * gets its own {@link PluginModuleLease} and must `release()` it on unmount/teardown. The shared module
- * disposes only once every issued lease has released — under the old cache, `dispose()` was only ever
- * reachable on load *failure* (a success left the promise cached forever with nothing to evict it), so
- * in practice a loaded plugin module was never disposed at all.
+ * gets its own {@link PluginModuleLease} and must `release()` it on unmount/teardown. Built on
+ * {@link createLeasePool}: the shared module lingers briefly after the last lease releases (a shell
+ * closed and immediately reopened reuses it) rather than disposing that instant — under the pre-pool
+ * cache, a loaded module was in practice *never* disposed at all (its promise was cached forever with
+ * nothing to evict it; `dispose()` was only ever reachable on load *failure*), so this is strictly a
+ * bugfix on top of a lifecycle improvement.
  */
 export async function acquirePluginModule(pluginId: string, moduleUrl: string): Promise<PluginModuleLease> {
-  let entry = pluginModuleCache.get(moduleUrl);
-  if (!entry) {
-    const promise = loadPluginModuleUncached(pluginId, moduleUrl);
-    entry = { promise, refs: 0 };
-    pluginModuleCache.set(moduleUrl, entry);
-    promise.catch(() => {
-      if (pluginModuleCache.get(moduleUrl) === entry) pluginModuleCache.delete(moduleUrl);
-    });
-  }
-  const active = entry;
-  active.refs += 1;
-  try {
-    const handle = await active.promise;
-    let released = false;
-    return {
-      handle,
-      release: () => {
-        if (released) return;
-        released = true;
-        active.refs -= 1;
-        if (active.refs <= 0) {
-          if (pluginModuleCache.get(moduleUrl) === active) pluginModuleCache.delete(moduleUrl);
-          handle.dispose();
-        }
-      },
-    };
-  } catch (error) {
-    active.refs -= 1;
-    throw error;
-  }
+  pluginModuleIdByUrl.set(moduleUrl, pluginId);
+  const lease = await pluginModulePool.acquire(moduleUrl);
+  return { handle: lease.value, release: lease.release };
 }
+
+/** @emoji 🔭️ Debug-only runtime snapshot — live plugin worker ids and the plugin module pool's lease
+ * states — for verifying eager-boot-vs-lazy-residency changes from devtools without instrumenting call
+ * sites by hand. Intentionally global rather than exported: this is a console/devtools aid, not API. */
+(globalThis as unknown as { __semioPluginRuntimeStats?: () => unknown }).__semioPluginRuntimeStats = () => ({
+  workerIds: Array.from(pluginWorkerClients.keys()),
+  workerCount: pluginWorkerClients.size,
+  modulePool: pluginModulePool.stats(),
+});
 //#endregion 🐚️PluginModuleLease
 
 /**

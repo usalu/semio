@@ -60,10 +60,7 @@ mod tests {
 
         let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", block_3d_engine::empty_block3d_definition(), None));
         store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![Block3dOperation::SetObjectKind { object_kind: BlockKindIdentity { id: "o1".into(), name: "o1".into(), label: "O1".into(), ..Default::default() } }],
-                description: None,
-            })
+            .dispatch(DocumentCommand::Apply { operations: vec![Block3dOperation::SetObjectKind { object_kind: BlockKindIdentity { id: "o1".into(), name: "o1".into(), label: "O1".into(), ..Default::default() } }], description: None })
             .expect("apply");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.object_kind.id, "o1");

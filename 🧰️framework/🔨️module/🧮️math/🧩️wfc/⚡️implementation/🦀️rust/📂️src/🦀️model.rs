@@ -158,22 +158,10 @@ impl ModelBuilder {
         }
         let base_support: Vec<u32> = supporters.iter().map(|s| s.count_ones()).collect();
 
-        let patterns: Vec<PatternInfo> = (0..pattern_count)
-            .map(|i| PatternInfo { weight: self.weights[i], tags: self.tags[i].clone(), tile: self.tiles[i], orbit_canonical: self.orbit_canonical[i] })
-            .collect();
+        let patterns: Vec<PatternInfo> = (0..pattern_count).map(|i| PatternInfo { weight: self.weights[i], tags: self.tags[i].clone(), tile: self.tiles[i], orbit_canonical: self.orbit_canonical[i] }).collect();
         let relations: Vec<RelationInfo> = (0..relation_count).map(|i| RelationInfo { name: self.relation_names[i].clone(), inverse: self.relation_inverse[i] }).collect();
 
-        let mut model = CompiledModel {
-            patterns,
-            relations,
-            allowed,
-            supporters,
-            base_support,
-            weights,
-            tag_names: self.tag_names,
-            tag_ids: self.tag_ids,
-            fingerprint: 0,
-        };
+        let mut model = CompiledModel { patterns, relations, allowed, supporters, base_support, weights, tag_names: self.tag_names, tag_ids: self.tag_ids, fingerprint: 0 };
         model.fingerprint = model.compute_fingerprint();
         Ok(model)
     }
@@ -352,16 +340,7 @@ impl CompiledModel {
         let avg_support = if self.base_support.is_empty() { 0.0 } else { self.base_support.iter().sum::<u32>() as f64 / self.base_support.len() as f64 };
         let weight_min = self.patterns.iter().map(|p| p.weight).fold(f64::INFINITY, f64::min);
         let weight_max = self.patterns.iter().map(|p| p.weight).fold(f64::NEG_INFINITY, f64::max);
-        ModelStats {
-            pattern_count: p,
-            relation_count: r,
-            allowed_pair_count,
-            density: allowed_pair_count as f64 / total_pairs as f64,
-            min_support,
-            avg_support,
-            weight_min,
-            weight_max,
-        }
+        ModelStats { pattern_count: p, relation_count: r, allowed_pair_count, density: allowed_pair_count as f64 / total_pairs as f64, min_support, avg_support, weight_min, weight_max }
     }
 }
 // #endregion 🔖️Compiled

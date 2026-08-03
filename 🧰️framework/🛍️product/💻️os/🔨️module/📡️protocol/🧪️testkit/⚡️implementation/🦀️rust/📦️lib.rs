@@ -37,7 +37,11 @@ impl SplitMix64 {
     }
 
     fn next_range(&mut self, bound: u64) -> u64 {
-        if bound == 0 { 0 } else { self.next_u64() % bound }
+        if bound == 0 {
+            0
+        } else {
+            self.next_u64() % bound
+        }
     }
 }
 
@@ -164,12 +168,7 @@ impl HistoryLogGen {
                 let end = (boundary + profile.checkpoint_every).min(edits.len());
                 let change_id = next_ident(&mut rng, "change", index, profile.adversarial);
                 let edit_ids: Vec<String> = edits[boundary..end].iter().map(|edit| edit.id.clone()).collect();
-                changes.push(protocol::HistoryChange {
-                    id: change_id.clone(),
-                    saved_at: next_timestamp(&mut rng, profile.adversarial),
-                    edit_ids,
-                    description: if rng.next_bool() { Some(next_text(&mut rng, profile.adversarial)) } else { None },
-                });
+                changes.push(protocol::HistoryChange { id: change_id.clone(), saved_at: next_timestamp(&mut rng, profile.adversarial), edit_ids, description: if rng.next_bool() { Some(next_text(&mut rng, profile.adversarial)) } else { None } });
 
                 let checkpoint_id = next_ident(&mut rng, "checkpoint", index, profile.adversarial);
                 let author_count = rng.next_range(3) as usize;
@@ -279,8 +278,7 @@ fn write_history_log(log: &protocol::HistoryLog, commit_after_every_record: bool
         return protocol_history::encode_history(log, &protocol_history::EncodeOptions::default()).expect("encode_history must succeed for a testkit-generated log");
     }
     let options = protocol::WriteOptions { required_flags: 0, optional_flags: 0 };
-    let mut appender =
-        protocol::HistoryAppender::begin(Vec::new(), &log.doc_id, &log.schema, &options).expect("HistoryAppender::begin must succeed for a well-formed doc_id/schema");
+    let mut appender = protocol::HistoryAppender::begin(Vec::new(), &log.doc_id, &log.schema, &options).expect("HistoryAppender::begin must succeed for a well-formed doc_id/schema");
     appender.commit().expect("commit after REC_DOC");
     for edit in &log.edits {
         appender.append_edit(edit).expect("append_edit must succeed for a testkit-generated edit");
@@ -354,11 +352,7 @@ pub fn assert_zero_copy(bytes: &[u8]) {
     let mut cursor = protocol::FrameCursor::new(bytes, protocol_format::HEADER_SIZE as u64);
     while let Some(frame) = cursor.next_frame().expect("assert_zero_copy requires an already-structurally-valid record stream") {
         let payload_bounds = frame.payload().as_ptr_range();
-        assert!(
-            payload_bounds.start >= bounds.start && payload_bounds.end <= bounds.end,
-            "RecordFrame::payload() at offset {} must borrow zero-copy from the input slice",
-            frame.offset
-        );
+        assert!(payload_bounds.start >= bounds.start && payload_bounds.end <= bounds.end, "RecordFrame::payload() at offset {} must borrow zero-copy from the input slice", frame.offset);
     }
 }
 
@@ -375,8 +369,7 @@ pub fn assert_zero_copy(bytes: &[u8]) {
 /// exhaustive-if-requested sweep of the structurally-analogous truncation case).
 pub fn assert_chain_detects_tamper(bytes: &[u8]) {
     let options = protocol::DecodeOptions { verification: protocol::VerificationLevel::Full, limits: protocol::ProtocolLimits::default() };
-    let original =
-        protocol::HistoryReader::open(bytes, &options).and_then(|reader| reader.log()).expect("assert_chain_detects_tamper requires an already-decodable, untampered input");
+    let original = protocol::HistoryReader::open(bytes, &options).and_then(|reader| reader.log()).expect("assert_chain_detects_tamper requires an already-decodable, untampered input");
 
     for position in sampled_positions(bytes.len(), protocol_format::HEADER_SIZE, 24) {
         let mut tampered = bytes.to_vec();
@@ -443,10 +436,7 @@ pub fn assert_recovery_truncates_to_commit(bytes: &[u8], level: CorruptionLevel)
         }
         let trusted = &truncated[..recovery.bytes_recovered as usize];
         let mut cursor = protocol::FrameCursor::new(trusted, recovery.last_commit_offset);
-        let frame = cursor
-            .next_frame()
-            .expect("the recovered trusted prefix must itself re-parse cleanly")
-            .expect("a frame must exist at the reported last_commit_offset");
+        let frame = cursor.next_frame().expect("the recovered trusted prefix must itself re-parse cleanly").expect("a frame must exist at the reported last_commit_offset");
         assert_eq!(frame.kind, protocol_core::REC_COMMIT, "last_commit_offset must point at a REC_COMMIT frame (truncation length {len})");
         assert_eq!(frame.offset + frame.frame_len(), recovery.bytes_recovered, "bytes_recovered must end exactly after the last trusted commit frame (truncation length {len})");
     }
@@ -464,10 +454,7 @@ fn structural_records(bytes: &[u8], limits: &protocol::ProtocolLimits) -> std::c
     let mut counts = std::collections::BTreeMap::new();
     let mut cursor = protocol::FrameCursor::new(trusted, protocol_format::HEADER_SIZE as u64);
     while let Some(frame) = cursor.next_frame().expect("trusted prefix must re-parse cleanly") {
-        if matches!(
-            frame.kind,
-            protocol_core::REC_DOC | protocol_core::REC_EDIT | protocol_core::REC_CHANGE | protocol_core::REC_CHECKPOINT | protocol_core::REC_ALTERNATIVE | protocol_core::REC_ACTIVE
-        ) {
+        if matches!(frame.kind, protocol_core::REC_DOC | protocol_core::REC_EDIT | protocol_core::REC_CHANGE | protocol_core::REC_CHECKPOINT | protocol_core::REC_ALTERNATIVE | protocol_core::REC_ACTIVE) {
             *counts.entry((frame.kind, frame.payload().to_vec())).or_insert(0) += 1;
         }
     }
@@ -613,7 +600,7 @@ pub fn assert_channel_frame_round_trip(sample: &ChannelFrameSample) {
 /// 🛡️ Reused verbatim from `pack_testkit` — closure-generic panic-safety fuzzers plus their level/
 /// report types. LAW (exercised in this crate's own tests against `protocol::HistoryReader::open`
 /// and `protocol_format::recover`): `CorruptionReport::cases_panicked` must always be empty.
-pub use pack_testkit::{CorruptionLevel, CorruptionReport, fuzz_bit_flips, fuzz_truncation};
+pub use pack_testkit::{fuzz_bit_flips, fuzz_truncation, CorruptionLevel, CorruptionReport};
 //#endregion 🔖️Corrupt
 
 //#region 🔖️Golden
@@ -940,13 +927,9 @@ mod tests {
         let b = RegisterDiff { field_a: Some(3), field_b: None };
         let ma = meta_at(1, 10);
         let mb = meta_at(2, 20);
-        for strategy in [
-            protocol::MergeStrategyKind::LwwRegister,
-            protocol::MergeStrategyKind::OrderedSequence,
-            protocol::MergeStrategyKind::TextSequence,
-            protocol::MergeStrategyKind::TombstonedGraphSet,
-            protocol::MergeStrategyKind::ContentAddressedBlob,
-        ] {
+        for strategy in
+            [protocol::MergeStrategyKind::LwwRegister, protocol::MergeStrategyKind::OrderedSequence, protocol::MergeStrategyKind::TextSequence, protocol::MergeStrategyKind::TombstonedGraphSet, protocol::MergeStrategyKind::ContentAddressedBlob]
+        {
             assert_crdt_commutative::<(i64, i64), RegisterDiff>(strategy, a.clone(), b.clone(), &ma, &mb);
             assert_crdt_idempotent::<(i64, i64), RegisterDiff>(strategy, &a, &ma);
         }
@@ -955,32 +938,15 @@ mod tests {
     #[test]
     fn wire_frame_round_trip_holds_for_client_and_server_samples() {
         assert_wire_frame_round_trip(&WireFrameSample::Client(protocol::ClientFrame::Bye, protocol::Lane::Command));
-        assert_wire_frame_round_trip(&WireFrameSample::Client(
-            protocol::ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] },
-            protocol::Lane::Preview,
-        ));
-        let frontier = protocol::RuntimeFrontierSummary {
-            document_id: protocol::DocumentId("doc-1".to_string()),
-            head_edit_ordinal: 5,
-            head_edit_id: "edit-5".to_string(),
-            last_commit_seq: 2,
-            chain_hash: [7u8; 32],
-        };
-        assert_wire_frame_round_trip(&WireFrameSample::Server(
-            protocol::ServerFrame::Welcome { session_id: "s1".to_string(), resume_token: "r1".to_string(), server_frontier: frontier, bootstrap: protocol::Bootstrap::Tail },
-            protocol::Lane::Command,
-        ));
+        assert_wire_frame_round_trip(&WireFrameSample::Client(protocol::ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, protocol::Lane::Preview));
+        let frontier = protocol::RuntimeFrontierSummary { document_id: protocol::DocumentId("doc-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] };
+        assert_wire_frame_round_trip(&WireFrameSample::Server(protocol::ServerFrame::Welcome { session_id: "s1".to_string(), resume_token: "r1".to_string(), server_frontier: frontier, bootstrap: protocol::Bootstrap::Tail }, protocol::Lane::Command));
     }
 
     #[test]
     fn channel_frame_round_trip_holds_for_command_and_frame_samples() {
         assert_channel_frame_round_trip(&ChannelFrameSample::Command(protocol::AppCommand::Bye));
-        assert_channel_frame_round_trip(&ChannelFrameSample::Command(protocol::AppCommand::Hello {
-            channel_version: protocol::CHANNEL_VERSION,
-            app_id: "app-1".to_string(),
-            actor: "actor-1".to_string(),
-            config: vec![1, 2, 3],
-        }));
+        assert_channel_frame_round_trip(&ChannelFrameSample::Command(protocol::AppCommand::Hello { channel_version: protocol::CHANNEL_VERSION, app_id: "app-1".to_string(), actor: "actor-1".to_string(), config: vec![1, 2, 3] }));
         assert_channel_frame_round_trip(&ChannelFrameSample::Frame(protocol::AppFrame::Welcome { channel_version: protocol::CHANNEL_VERSION, instance: 1, manifest: vec![1, 2] }));
         assert_channel_frame_round_trip(&ChannelFrameSample::Frame(protocol::AppFrame::Error { in_reply_to: None, code: "e".to_string(), message: "m".to_string() }));
     }
@@ -991,9 +957,7 @@ mod tests {
     fn fuzz_truncation_never_panics_history_reader_open() {
         let log = HistoryLogGen::new(23).generate(&typical_profile());
         let bytes = write_history_log(&log, true);
-        let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| {
-            protocol::HistoryReader::open(candidate, &protocol::DecodeOptions::default()).and_then(|reader| reader.log()).map(|_| ()).map_err(|error| error.to_string())
-        });
+        let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| protocol::HistoryReader::open(candidate, &protocol::DecodeOptions::default()).and_then(|reader| reader.log()).map(|_| ()).map_err(|error| error.to_string()));
         assert!(report.cases_panicked.is_empty(), "HistoryReader::open must never panic on a truncated buffer: {:?}", report.cases_panicked);
     }
 
@@ -1001,9 +965,7 @@ mod tests {
     fn fuzz_bit_flips_never_panics_history_reader_open() {
         let log = HistoryLogGen::new(24).generate(&typical_profile());
         let bytes = write_history_log(&log, true);
-        let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, |candidate| {
-            protocol::HistoryReader::open(candidate, &protocol::DecodeOptions::default()).and_then(|reader| reader.log()).map(|_| ()).map_err(|error| error.to_string())
-        });
+        let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, |candidate| protocol::HistoryReader::open(candidate, &protocol::DecodeOptions::default()).and_then(|reader| reader.log()).map(|_| ()).map_err(|error| error.to_string()));
         assert!(report.cases_panicked.is_empty(), "HistoryReader::open must never panic on a bit-flipped buffer: {:?}", report.cases_panicked);
     }
 
@@ -1012,9 +974,7 @@ mod tests {
         let log = HistoryLogGen::new(25).generate(&typical_profile());
         let bytes = write_history_log(&log, true);
         let limits = protocol::ProtocolLimits::default();
-        let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| {
-            protocol_format::recover(&candidate, &limits, protocol::RecoveryMode::LastCommit).map(|_| ()).map_err(|error| error.to_string())
-        });
+        let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| protocol_format::recover(&candidate, &limits, protocol::RecoveryMode::LastCommit).map(|_| ()).map_err(|error| error.to_string()));
         assert!(report.cases_panicked.is_empty(), "protocol_format::recover must never panic on a truncated buffer: {:?}", report.cases_panicked);
     }
     //#endregion 🔖️Corrupt

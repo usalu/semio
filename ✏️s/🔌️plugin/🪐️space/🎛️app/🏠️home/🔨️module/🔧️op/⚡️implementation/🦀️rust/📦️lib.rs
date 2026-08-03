@@ -13,16 +13,16 @@ pub enum SHomeOperation {
     /// 🫙️ The identity operation — an `OperationDiff` needs `Default`; never emitted by `handle_action`.
     #[default]
     NoOperation,
-    SetCatalogGeneration { value: u64 },
+    SetCatalogGeneration {
+        value: u64,
+    },
 }
 
 impl protocol::OperationDiff<SHomeDocument> for SHomeOperation {
     fn apply(&self, projection: &SHomeDocument) -> SHomeDocument {
         match self {
             SHomeOperation::NoOperation => projection.clone(),
-            SHomeOperation::SetCatalogGeneration { value } => {
-                SHomeDocument { catalog_generation: *value, ..projection.clone() }
-            }
+            SHomeOperation::SetCatalogGeneration { value } => SHomeDocument { catalog_generation: *value, ..projection.clone() },
         }
     }
 

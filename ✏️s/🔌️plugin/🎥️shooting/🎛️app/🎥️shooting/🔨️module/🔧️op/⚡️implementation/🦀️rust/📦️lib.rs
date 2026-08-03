@@ -1,8 +1,8 @@
 //! ⚡️ Shooting app — operation enum + laws (constitutional: op).
 
-use shooting::{ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingFixture, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShot, ShootingShotPatch};
 use protocol::{collection_diff_from_operation, CollectionDiff, CollectionOperation, Identified, ItemPatch, Operation, OperationDiff, Patchable};
 use serde::{Deserialize, Serialize};
+use shooting::{ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingFixture, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingScenePatch, ShootingShot, ShootingShotPatch};
 
 //#region 🔖️CollectionSupport
 /// ▶️ Applies a `CollectionDiff` (removed → modified → added, matching `apply_collection_operation`'s
@@ -52,17 +52,44 @@ pub enum ShootingOperation {
     Assets(CollectionOperation<String, ShootingAsset, ShootingAssetPatch>),
     Shots(CollectionOperation<String, ShootingShot, ShootingShotPatch>),
     SavedCameras(CollectionOperation<String, ShootingSavedCamera, ShootingSavedCameraPatch>),
-    SetActiveShot { shot_id: Option<String> },
-    SetActiveAsset { asset_id: Option<String> },
+    SetActiveShot {
+        shot_id: Option<String>,
+    },
+    SetActiveAsset {
+        asset_id: Option<String>,
+    },
     /// 🎥️ Patches the saved camera `shot_id` references with `camera` — a no-op (empty diff) when that
     /// shot has no saved camera. The free/live viewport camera is session-only runtime state now (see
     /// `ShootingPlayRuntime::camera` in the ui crate) and never reaches this op enum at all.
-    SetShotCamera { shot_id: String, camera: ShootingCamera },
-    PatchScene { patch: ShootingScenePatch },
-    TranslateAssets { asset_ids: Vec<String>, dx: f64, dy: f64, dz: f64 },
-    RotateAssets { asset_ids: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64 },
-    ScaleAssets { asset_ids: Vec<String>, sx: f64, sy: f64, sz: f64 },
-    SetFixture { fixture: ShootingFixture }
+    SetShotCamera {
+        shot_id: String,
+        camera: ShootingCamera,
+    },
+    PatchScene {
+        patch: ShootingScenePatch,
+    },
+    TranslateAssets {
+        asset_ids: Vec<String>,
+        dx: f64,
+        dy: f64,
+        dz: f64,
+    },
+    RotateAssets {
+        asset_ids: Vec<String>,
+        ax: f64,
+        ay: f64,
+        az: f64,
+        angle: f64,
+    },
+    ScaleAssets {
+        asset_ids: Vec<String>,
+        sx: f64,
+        sy: f64,
+        sz: f64,
+    },
+    SetFixture {
+        fixture: ShootingFixture,
+    },
 }
 
 fn apply_scene_patch(scene: &mut shooting::ShootingSceneLighting, patch: &ShootingScenePatch) {
@@ -227,7 +254,9 @@ impl Operation<ShootingFixture> for ShootingOperation {
             ShootingOperation::SetActiveAsset { asset_id } => ShootingDiff { active_asset_id: Some(asset_id.clone().unwrap_or_default()), ..Default::default() },
             ShootingOperation::SetShotCamera { shot_id, camera } => camera_diff_for_shot(projection, shot_id, camera),
             ShootingOperation::PatchScene { patch } => ShootingDiff { scene: Some(patch.clone()), ..Default::default() },
-            ShootingOperation::TranslateAssets { asset_ids, dx, dy, dz } => transform_assets_diff(projection, asset_ids, |asset| ShootingAssetPatch { origin: Some([asset.origin[0] + dx, asset.origin[1] + dy, asset.origin[2] + dz]), ..Default::default() }),
+            ShootingOperation::TranslateAssets { asset_ids, dx, dy, dz } => {
+                transform_assets_diff(projection, asset_ids, |asset| ShootingAssetPatch { origin: Some([asset.origin[0] + dx, asset.origin[1] + dy, asset.origin[2] + dz]), ..Default::default() })
+            }
             ShootingOperation::RotateAssets { asset_ids, ax, ay, az, angle } => {
                 let delta = shooting::quat_from_axis_angle(*ax, *ay, *az, *angle);
                 transform_assets_diff(projection, asset_ids, |asset| {
@@ -353,7 +382,9 @@ enum ShootingOperationDsl {
         #[dsl(statements)]
         item: Box<ShootingAssetNode>,
     },
-    AssetsRemove { id: String },
+    AssetsRemove {
+        id: String,
+    },
     AssetsMove {
         id: String,
         #[dsl(key = "to")]
@@ -369,7 +400,9 @@ enum ShootingOperationDsl {
         #[dsl(statements)]
         item: Box<ShootingShotNode>,
     },
-    ShotsRemove { id: String },
+    ShotsRemove {
+        id: String,
+    },
     ShotsMove {
         id: String,
         #[dsl(key = "to")]
@@ -385,7 +418,9 @@ enum ShootingOperationDsl {
         #[dsl(statements)]
         item: Box<ShootingSavedCameraNode>,
     },
-    SavedCamerasRemove { id: String },
+    SavedCamerasRemove {
+        id: String,
+    },
     SavedCamerasMove {
         id: String,
         #[dsl(key = "to")]
@@ -397,9 +432,13 @@ enum ShootingOperationDsl {
         patch: ShootingSavedCameraPatch,
     },
     #[dsl(key = "active-shot")]
-    SetActiveShot { shot_id: Option<String> },
+    SetActiveShot {
+        shot_id: Option<String>,
+    },
     #[dsl(key = "active-asset")]
-    SetActiveAsset { asset_id: Option<String> },
+    SetActiveAsset {
+        asset_id: Option<String>,
+    },
     #[dsl(key = "shot-camera")]
     SetShotCamera {
         shot_id: String,
@@ -412,16 +451,32 @@ enum ShootingOperationDsl {
         patch: ShootingScenePatch,
     },
     #[dsl(key = "translate")]
-    TranslateAssets { asset_ids: Vec<String>, dx: f64, dy: f64, dz: f64 },
+    TranslateAssets {
+        asset_ids: Vec<String>,
+        dx: f64,
+        dy: f64,
+        dz: f64,
+    },
     #[dsl(key = "rotate")]
-    RotateAssets { asset_ids: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64 },
+    RotateAssets {
+        asset_ids: Vec<String>,
+        ax: f64,
+        ay: f64,
+        az: f64,
+        angle: f64,
+    },
     #[dsl(key = "scale")]
-    ScaleAssets { asset_ids: Vec<String>, sx: f64, sy: f64, sz: f64 },
+    ScaleAssets {
+        asset_ids: Vec<String>,
+        sx: f64,
+        sy: f64,
+        sz: f64,
+    },
     #[dsl(key = "fixture")]
     SetFixture {
         #[dsl(block)]
         fixture: ShootingFixtureDsl,
-    }
+    },
 }
 
 fn shooting_operation_to_dsl(operation: &ShootingOperation) -> ShootingOperationDsl {
@@ -621,15 +676,7 @@ mod tests {
         ShootingFixture {
             schema: SHOOTING_FIXTURE_SCHEMA.into(),
             assets: vec![
-                ShootingAsset {
-                    id: "a1".into(),
-                    name: "Base \"Mesh\"".into(),
-                    url: "/mesh/a1.glb".into(),
-                    format: "glb".into(),
-                    origin: [1.0, 2.0, 3.0],
-                    orientation: Some([0.0, 0.0, 0.7071, 0.7071]),
-                    scale: Some([2.0, 2.0, 2.0]),
-                },
+                ShootingAsset { id: "a1".into(), name: "Base \"Mesh\"".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [1.0, 2.0, 3.0], orientation: Some([0.0, 0.0, 0.7071, 0.7071]), scale: Some([2.0, 2.0, 2.0]) },
                 ShootingAsset { id: "a2".into(), name: "Plain".into(), url: "/mesh/a2.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None },
             ],
             saved_cameras: vec![ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera { position: [9.0, 9.0, 9.0], ..Default::default() } }],

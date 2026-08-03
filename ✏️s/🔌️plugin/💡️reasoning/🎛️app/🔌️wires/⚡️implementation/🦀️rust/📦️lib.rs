@@ -1,7 +1,7 @@
 //! 🧠️ Reasoning wires app — document entities (constitutional: general).
 
-use serde::{Deserialize, Serialize};
 use dsl::DslValue;
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
 pub const MINDMAP_WIRES_SCHEMA: &str = "reasoning.wires.fixture";
@@ -34,10 +34,7 @@ pub struct MindmapWiresDocument {
 pub fn empty_board_fixture() -> DslValue {
     DslValue::object([
         ("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())),
-        (
-            "camera".into(),
-            DslValue::object([("x".into(), DslValue::Number(0.0)), ("y".into(), DslValue::Number(0.0)), ("zoom".into(), DslValue::Number(1.0))]),
-        ),
+        ("camera".into(), DslValue::object([("x".into(), DslValue::Number(0.0)), ("y".into(), DslValue::Number(0.0)), ("zoom".into(), DslValue::Number(1.0))])),
         ("nodes".into(), DslValue::Array(vec![])),
         ("edges".into(), DslValue::Array(vec![])),
         ("wires".into(), DslValue::Array(vec![])),
@@ -46,12 +43,7 @@ pub fn empty_board_fixture() -> DslValue {
 
 /// 📭️ Empty `reasoning.wires.fixture` blob for tests and fresh documents.
 pub fn empty_wires_fixture() -> DslValue {
-    DslValue::object([
-        ("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())),
-        ("identities".into(), DslValue::Array(vec![])),
-        ("relationships".into(), DslValue::Array(vec![])),
-        ("board".into(), empty_board_fixture()),
-    ])
+    DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(vec![])), ("relationships".into(), DslValue::Array(vec![])), ("board".into(), empty_board_fixture())])
 }
 
 /// 📭️ Fresh mindmap-wires document with empty fixtures.
@@ -259,20 +251,16 @@ struct MindmapWiresDocumentDsl {
 /// than a `Result` (this direction can't return one: `store::DocumentDsl::print_dsl` is infallible).
 fn mindmap_wires_document_to_dsl(document: &MindmapWiresDocument) -> MindmapWiresDocumentDsl {
     MindmapWiresDocumentDsl {
-        wires_fixture: dsl::from_dsl_value(document.wires_fixture.clone())
-            .unwrap_or_else(|error| panic!("wires_fixture does not match the reasoning.wires.fixture schema: {error}")),
-        board_fixture: dsl::from_dsl_value(document.board_fixture.clone())
-            .unwrap_or_else(|error| panic!("board_fixture does not match the reasoning.mindmap.fixture schema: {error}")),
+        wires_fixture: dsl::from_dsl_value(document.wires_fixture.clone()).unwrap_or_else(|error| panic!("wires_fixture does not match the reasoning.wires.fixture schema: {error}")),
+        board_fixture: dsl::from_dsl_value(document.board_fixture.clone()).unwrap_or_else(|error| panic!("board_fixture does not match the reasoning.mindmap.fixture schema: {error}")),
     }
 }
 
 /// 🔀️ DSL mirror (typed) → real document (opaque `DslValue`), for `parse_dsl`/`decode_pack_with`.
 fn mindmap_wires_document_from_dsl(parsed: MindmapWiresDocumentDsl) -> Result<MindmapWiresDocument, store::TextError> {
     Ok(MindmapWiresDocument {
-        wires_fixture: dsl::to_dsl_value(&parsed.wires_fixture)
-            .map_err(|error| store::TextError::new(format!("invalid wires fixture: {error}"), store::TextSpan::at(1, 1)))?,
-        board_fixture: dsl::to_dsl_value(&parsed.board_fixture)
-            .map_err(|error| store::TextError::new(format!("invalid board fixture: {error}"), store::TextSpan::at(1, 1)))?,
+        wires_fixture: dsl::to_dsl_value(&parsed.wires_fixture).map_err(|error| store::TextError::new(format!("invalid wires fixture: {error}"), store::TextSpan::at(1, 1)))?,
+        board_fixture: dsl::to_dsl_value(&parsed.board_fixture).map_err(|error| store::TextError::new(format!("invalid board fixture: {error}"), store::TextSpan::at(1, 1)))?,
     })
 }
 //#endregion 🔖️DslMirror

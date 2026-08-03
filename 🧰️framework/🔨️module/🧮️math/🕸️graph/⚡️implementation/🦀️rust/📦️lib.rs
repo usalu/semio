@@ -736,7 +736,15 @@ impl<'g, G: GraphView> GraphView for EdgeSubgraphView<'g, G> {
     fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         let directed = self.graph.is_directed();
         self.edges()
-            .filter_map(move |e| if e.u == node { Some(e.v) } else if !directed && e.v == node { Some(e.u) } else { None })
+            .filter_map(move |e| {
+                if e.u == node {
+                    Some(e.v)
+                } else if !directed && e.v == node {
+                    Some(e.u)
+                } else {
+                    None
+                }
+            })
             .collect::<BTreeSet<_>>()
             .into_iter()
     }
@@ -2683,11 +2691,7 @@ mod tests {
         let b = g.add_node();
         let e = g.add_edge(b, a);
         let view = UndirectedView::new(&g);
-        assert_eq!(
-            view.edges().collect::<Vec<_>>(),
-            vec![EdgeRef { id: e, u: a, v: b }],
-            "edges() orders endpoints u <= v regardless of storage direction"
-        );
+        assert_eq!(view.edges().collect::<Vec<_>>(), vec![EdgeRef { id: e, u: a, v: b }], "edges() orders endpoints u <= v regardless of storage direction");
     }
 
     #[test]
@@ -2719,8 +2723,7 @@ mod tests {
 
     #[test]
     fn interner_from_labels_is_sorted_and_deduplicated() {
-        let interner: Interner<String> =
-            Interner::from_labels(["c".to_string(), "a".to_string(), "a".to_string(), "b".to_string()]);
+        let interner: Interner<String> = Interner::from_labels(["c".to_string(), "a".to_string(), "a".to_string(), "b".to_string()]);
         assert_eq!(interner.len(), 3);
         assert_eq!(interner.label_of(0), Some(&"a".to_string()));
         assert_eq!(interner.label_of(1), Some(&"b".to_string()));
@@ -2743,10 +2746,7 @@ mod tests {
     fn graph_error_display_reads_clearly() {
         assert_eq!(GraphError::NodeNotFound(7).to_string(), "node 7 not found");
         assert_eq!(GraphError::NoPath { source: 1, target: 2 }.to_string(), "no path from node 1 to node 2");
-        assert_eq!(
-            GraphError::NotImplementedForKind { algorithm: "planarity", kind: "multigraph" }.to_string(),
-            "planarity is not implemented for multigraph"
-        );
+        assert_eq!(GraphError::NotImplementedForKind { algorithm: "planarity", kind: "multigraph" }.to_string(), "planarity is not implemented for multigraph");
     }
 
     #[test]
@@ -2770,10 +2770,7 @@ mod tests {
         assert_eq!(GraphError::NotStronglyConnected.to_string(), "graph is not strongly connected");
         assert_eq!(GraphError::AmbiguousSolution("z".into()).to_string(), "ambiguous solution: z");
         assert_eq!(GraphError::ExceededMaxIterations { iterations: 5 }.to_string(), "exceeded max iterations (5)");
-        assert_eq!(
-            GraphError::PowerIterationFailedConvergence { iterations: 8 }.to_string(),
-            "power iteration failed to converge after 8 iterations"
-        );
+        assert_eq!(GraphError::PowerIterationFailedConvergence { iterations: 8 }.to_string(), "power iteration failed to converge after 8 iterations");
         assert_eq!(GraphError::NegativeCycle.to_string(), "graph has a negative cycle");
         assert_eq!(GraphError::NotGraphical("odd sum".into()).to_string(), "not a graphical degree sequence: odd sum");
         assert_eq!(GraphError::Io("disk full".into()).to_string(), "io error: disk full");
@@ -2914,8 +2911,7 @@ mod tests {
         let reachable: BTreeSet<u32> = net.min_cut(0).into_iter().collect();
         assert!(!reachable.contains(&5), "sink must land on the far side of a valid cut");
         let clrs_edges = [(0u32, 1u32, 16.0), (0, 2, 13.0), (1, 3, 12.0), (2, 1, 4.0), (3, 2, 9.0), (2, 4, 14.0), (4, 3, 7.0), (3, 5, 20.0), (4, 5, 4.0)];
-        let crossing: f64 =
-            clrs_edges.iter().filter(|&&(u, v, _)| reachable.contains(&u) && !reachable.contains(&v)).map(|&(_, _, cap)| cap).sum();
+        let crossing: f64 = clrs_edges.iter().filter(|&&(u, v, _)| reachable.contains(&u) && !reachable.contains(&v)).map(|&(_, _, cap)| cap).sum();
         assert_eq!(crossing, flow, "total capacity crossing the min cut must equal the max flow value");
     }
 

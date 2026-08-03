@@ -191,12 +191,8 @@ pub mod catalog {
         let open = block[start..].find('{')? + start;
         let close = block[open..].find('}')? + open;
         let inner = &block[open + 1..close];
-        let react = inner
-            .split(',')
-            .find_map(|part| part.trim().strip_prefix("react = ").and_then(|v| v.trim().parse().ok()))?;
-        let wgpu = inner
-            .split(',')
-            .find_map(|part| part.trim().strip_prefix("wgpu = ").and_then(|v| v.trim().parse().ok()))?;
+        let react = inner.split(',').find_map(|part| part.trim().strip_prefix("react = ").and_then(|v| v.trim().parse().ok()))?;
+        let wgpu = inner.split(',').find_map(|part| part.trim().strip_prefix("wgpu = ").and_then(|v| v.trim().parse().ok()))?;
         Some(Ports { react, wgpu })
     }
 
@@ -251,20 +247,13 @@ pub mod catalog {
                     let is_plugin = path_str.ends_with("/plugin/rs/Cargo.toml");
                     let is_module = {
                         let segs: Vec<&str> = path_str.split('/').collect();
-                        segs.len() >= 4
-                            && segs[segs.len() - 1] == "Cargo.toml"
-                            && segs[segs.len() - 2] == "rs"
-                            && segs[segs.len() - 4] == "module"
+                        segs.len() >= 4 && segs[segs.len() - 1] == "Cargo.toml" && segs[segs.len() - 2] == "rs" && segs[segs.len() - 4] == "module"
                     };
                     // 🏛️ Post-restructure plugin bundle crate: `s/plugin/<p>/rs/Cargo.toml` absorbs the
                     // former `<tech>/plugin/rs`. Kept alongside the legacy patterns during the migration.
                     let is_plugin_bundle = {
                         let segs: Vec<&str> = path_str.split('/').collect();
-                        segs.len() >= 5
-                            && segs[segs.len() - 1] == "Cargo.toml"
-                            && segs[segs.len() - 2] == "rs"
-                            && segs[segs.len() - 4] == "plugin"
-                            && segs[segs.len() - 5] == "s"
+                        segs.len() >= 5 && segs[segs.len() - 1] == "Cargo.toml" && segs[segs.len() - 2] == "rs" && segs[segs.len() - 4] == "plugin" && segs[segs.len() - 5] == "s"
                     };
                     if is_plugin || is_module || is_plugin_bundle {
                         out.push(path);
@@ -364,11 +353,7 @@ pub mod catalog {
         if let Some(suffix) = variant.strip_prefix(plugin_id).filter(|s| !s.is_empty()) {
             let segs: Vec<&str> = trimmed.split('/').collect();
             // 🏛️ Under `s/plugin/<p>/...` the tech root is the plugin folder (3 segments), not `s` itself.
-            let tech_root = if segs.first() == Some(&"s") && segs.get(1) == Some(&"plugin") && segs.len() >= 3 {
-                Some(segs[..3].join("/"))
-            } else {
-                segs.first().map(|s| s.to_string())
-            };
+            let tech_root = if segs.first() == Some(&"s") && segs.get(1) == Some(&"plugin") && segs.len() >= 3 { Some(segs[..3].join("/")) } else { segs.first().map(|s| s.to_string()) };
             if let Some(tech_root) = tech_root {
                 let dir = root.join(&tech_root).join(suffix).join("example");
                 if dir.is_dir() {
@@ -409,11 +394,7 @@ pub mod catalog {
             let crate_assets = parse_assets_text(&text);
             for mut playground in parse_playgrounds_text(&text, &entry.plugin_id, &entry.crate_path) {
                 playground.examples = discover_examples_for_playground(root, &entry.crate_path, &entry.plugin_id, &playground.variant);
-                playground.assets = crate_assets
-                    .iter()
-                    .filter(|asset| asset.app.as_deref().map(|app| Some(app) == playground.app.as_deref()).unwrap_or(true))
-                    .cloned()
-                    .collect();
+                playground.assets = crate_assets.iter().filter(|asset| asset.app.as_deref().map(|app| Some(app) == playground.app.as_deref()).unwrap_or(true)).cloned().collect();
                 playgrounds.push(playground);
             }
         }
@@ -446,10 +427,7 @@ pub mod catalog {
             }
             let port_key = (entry.ports.react, entry.ports.wgpu);
             if let Some(owner) = port_owners.get(&port_key) {
-                errors.push(format!(
-                    "duplicate playground ports react={}/wgpu={} (variants \"{owner}\" and \"{}\")",
-                    entry.ports.react, entry.ports.wgpu, entry.variant
-                ));
+                errors.push(format!("duplicate playground ports react={}/wgpu={} (variants \"{owner}\" and \"{}\")", entry.ports.react, entry.ports.wgpu, entry.variant));
             } else {
                 port_owners.insert(port_key, &entry.variant);
             }
@@ -631,12 +609,7 @@ pub mod catalog {
         let entries = generate_plugin_registry(root);
         let playgrounds = generate_playground_registry(root);
         let out_dir = generated_dir(root);
-        let expected = [
-            ("🔣️plugins.json", emit_plugins_json(&entries)),
-            ("🟦️plugins.ts", emit_plugins_ts(&entries)),
-            ("🔣️playgrounds.json", emit_playgrounds_json(&playgrounds)),
-            ("🟦️playgrounds.ts", emit_playgrounds_ts(&playgrounds)),
-        ];
+        let expected = [("🔣️plugins.json", emit_plugins_json(&entries)), ("🟦️plugins.ts", emit_plugins_ts(&entries)), ("🔣️playgrounds.json", emit_playgrounds_json(&playgrounds)), ("🟦️playgrounds.ts", emit_playgrounds_ts(&playgrounds))];
         let mut problems: Vec<String> = expected
             .iter()
             .filter(|(name, content)| fs::read_to_string(out_dir.join(name)).map(|actual| &actual != content).unwrap_or(true))
@@ -659,10 +632,7 @@ pub mod catalog {
                     crate_path: v.get("cratePath")?.as_str()?.to_string(),
                     app: v.get("app").and_then(|a| a.as_str()).map(str::to_string),
                     aliases: v.get("aliases")?.as_array()?.iter().filter_map(|a| a.as_str().map(str::to_string)).collect(),
-                    ports: Ports {
-                        react: v.get("ports")?.get("react")?.as_u64()? as u32,
-                        wgpu: v.get("ports")?.get("wgpu")?.as_u64()? as u32,
-                    },
+                    ports: Ports { react: v.get("ports")?.get("react")?.as_u64()? as u32, wgpu: v.get("ports")?.get("wgpu")?.as_u64()? as u32 },
                     examples: v.get("examples").and_then(|e| e.as_array()).map(|a| a.iter().filter_map(|e| e.as_str().map(str::to_string)).collect()).unwrap_or_default(),
                     engines: v.get("engines").and_then(|e| e.as_array()).map(|a| a.iter().filter_map(|e| e.as_str().map(str::to_string)).collect()).unwrap_or_default(),
                     assets: v.get("assets").and_then(|e| e.as_array()).map(|a| a.iter().filter_map(asset_spec_from_json).collect()).unwrap_or_default(),
@@ -897,6 +867,7 @@ pub mod tui_dashboard {
     use std::process::{Child, Command, Stdio};
     use std::sync::mpsc::{channel, Receiver};
     use std::time::Duration;
+    use ui_styling::appearance::AppearanceName;
     use ui_tui::backend::{NativeTerminal, TerminalBackend};
     use ui_tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
     use ui_tui::engine::Tui;
@@ -906,7 +877,6 @@ pub mod tui_dashboard {
     use ui_tui::scene::{Node, NodeContent, NodeId};
     use ui_tui::theme::Theme;
     use ui_tui::widget::{LogState, TableAlign, TableColumn, TableRow, TableState, WidgetSignal, WidgetState};
-    use ui_styling::appearance::AppearanceName;
 
     //#region 🔖️CatalogTable
     /// 🌳️ Groups the catalog by `pluginId` into a two-level table: one parent row per plugin, one
@@ -925,11 +895,7 @@ pub mod tui_dashboard {
                 if entry.plugin_id != plugin_id {
                     continue;
                 }
-                rows.push(TableRow::child(
-                    entry.variant.clone(),
-                    vec![entry.variant.clone(), entry.ports.react.to_string(), entry.ports.wgpu.to_string(), entry.examples.len().to_string()],
-                    1,
-                ));
+                rows.push(TableRow::child(entry.variant.clone(), vec![entry.variant.clone(), entry.ports.react.to_string(), entry.ports.wgpu.to_string(), entry.examples.len().to_string()], 1));
                 mapping.push(Some(i));
             }
         }
@@ -937,12 +903,7 @@ pub mod tui_dashboard {
     }
 
     fn plugin_table_columns() -> Vec<TableColumn> {
-        vec![
-            TableColumn::new("Plugin / App", 0, TableAlign::Left),
-            TableColumn::new("React", 6, TableAlign::Right),
-            TableColumn::new("Wgpu", 6, TableAlign::Right),
-            TableColumn::new("Examples", 9, TableAlign::Right),
-        ]
+        vec![TableColumn::new("Plugin / App", 0, TableAlign::Left), TableColumn::new("React", 6, TableAlign::Right), TableColumn::new("Wgpu", 6, TableAlign::Right), TableColumn::new("Examples", 9, TableAlign::Right)]
     }
     //#endregion 🔖️CatalogTable
 
@@ -957,13 +918,7 @@ pub mod tui_dashboard {
 
     fn spawn_session(root: &Path, verb: &str, variant: &str, row: &PlaygroundEntry) -> std::io::Result<Session> {
         let env = build_dev_env(variant, Some(row), &DevOptions { renderer: "react".into(), ..Default::default() });
-        let mut child = Command::new("bun")
-            .args(["nx", "run", &format!("@semio-tech/framework-os-dev:{verb}")])
-            .current_dir(root)
-            .envs(env)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()?;
+        let mut child = Command::new("bun").args(["nx", "run", &format!("@semio-tech/framework-os-dev:{verb}")]).current_dir(root).envs(env).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
         let (tx, rx) = channel();
         if let Some(stdout) = child.stdout.take() {
             let tx = tx.clone();
@@ -1177,9 +1132,7 @@ pub fn run(argv: Vec<String>) -> i32 {
             }
             0
         }
-        "plugin" if parsed.segments.first().map(String::as_str) == Some("registry") => {
-            plugin_registry_command::run(&root, parsed.segments.get(1).map(String::as_str).unwrap_or("generate"))
-        }
+        "plugin" if parsed.segments.first().map(String::as_str) == Some("registry") => plugin_registry_command::run(&root, parsed.segments.get(1).map(String::as_str).unwrap_or("generate")),
         _ => {
             let mut forward = vec!["./📜️script.ts".to_string(), parsed.verb.clone()];
             forward.extend(parsed.segments.clone());
@@ -1326,10 +1279,7 @@ app = "puzzle3d"
 
     #[test]
     fn resolve_playground_prefers_longest_multi_word_alias() {
-        let catalog = vec![
-            PlaygroundEntry { variant: "puzzle2d".into(), aliases: vec!["puzzle 2d".into(), "2d".into()], ..Default::default() },
-            PlaygroundEntry { variant: "puzzle3d".into(), aliases: vec!["puzzle 3d".into()], ..Default::default() },
-        ];
+        let catalog = vec![PlaygroundEntry { variant: "puzzle2d".into(), aliases: vec!["puzzle 2d".into(), "2d".into()], ..Default::default() }, PlaygroundEntry { variant: "puzzle3d".into(), aliases: vec!["puzzle 3d".into()], ..Default::default() }];
         let segments = ["puzzle".to_string(), "3d".to_string(), "fixture".to_string(), "concrete".to_string()];
         let (row, rest) = resolve_playground(&catalog, &segments).expect("resolves");
         assert_eq!(row.variant, "puzzle3d");
@@ -1406,4 +1356,3 @@ app = "puzzle3d"
     }
 }
 // #endregion 🔖️Tests
-

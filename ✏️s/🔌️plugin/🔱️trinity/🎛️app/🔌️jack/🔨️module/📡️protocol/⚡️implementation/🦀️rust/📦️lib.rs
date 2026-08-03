@@ -80,19 +80,9 @@ mod tests {
 
     #[test]
     fn nakagin_document_text_round_trips_store_with_applied_operation() {
-        let envelope = store::create_document_envelope::<trinity_ram::GraphFixture, Operation>(
-            trinity_ram::TRINITY_GRAPH_SCHEMA,
-            "doc-text-test",
-            trinity_jack_engine::empty_jack_document(),
-            None,
-        );
+        let envelope = store::create_document_envelope::<trinity_ram::GraphFixture, Operation>(trinity_ram::TRINITY_GRAPH_SCHEMA, "doc-text-test", trinity_jack_engine::empty_jack_document(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![Operation::Rename { id: "node-1".into(), name: "Renamed".into() }],
-                description: None,
-            })
-            .ok();
+        doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::Rename { id: "node-1".into(), name: "Renamed".into() }], description: None }).ok();
         store::test_support::assert_document_text_round_trip(&doc_store);
         store::test_support::assert_document_pack_round_trip(&doc_store);
     }

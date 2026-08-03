@@ -1342,10 +1342,8 @@ mod tests {
             // recovered camera centers (correspondence keyed by frame index) before any bbox comparison.
             let recon_cameras = engine.reconstruction.as_ref().expect("Done status must retain the finalized Reconstruction").cameras.clone();
             assert!(recon_cameras.len() >= 3, "need >= 3 registered cameras to fit a Sim3 gauge alignment, got {}", recon_cameras.len());
-            let (recovered_centers, true_centers): (Vec<[f64; 3]>, Vec<[f64; 3]>) =
-                recon_cameras.iter().map(|&(frame_idx, pose)| (pose.0.inverse().t, true_eyes[frame_idx])).unzip();
-            let gauge = mathematical_lie::umeyama(&recovered_centers, &true_centers, true)
-                .expect("Sim3 alignment between recovered and true camera centers must be solvable");
+            let (recovered_centers, true_centers): (Vec<[f64; 3]>, Vec<[f64; 3]>) = recon_cameras.iter().map(|&(frame_idx, pose)| (pose.0.inverse().t, true_eyes[frame_idx])).unzip();
+            let gauge = mathematical_lie::umeyama(&recovered_centers, &true_centers, true).expect("Sim3 alignment between recovered and true camera centers must be solvable");
             println!("[long] gauge-fixing Sim3 from {} registered camera(s): scale={:.4}", recovered_centers.len(), gauge.s);
 
             let mut gauged_lo = [f64::INFINITY; 3];
@@ -1361,25 +1359,15 @@ mod tests {
             let cube_diag = ((bbox_hi[0] - bbox_lo[0]).powi(2) + (bbox_hi[1] - bbox_lo[1]).powi(2) + (bbox_hi[2] - bbox_lo[2]).powi(2)).sqrt();
             let mesh_diag = ((gauged_hi[0] - gauged_lo[0]).powi(2) + (gauged_hi[1] - gauged_lo[1]).powi(2) + (gauged_hi[2] - gauged_lo[2]).powi(2)).sqrt();
             let tolerance = 0.20;
-            assert!(
-                (mesh_diag - cube_diag).abs() <= tolerance * cube_diag,
-                "gauge-aligned mesh bbox diagonal {mesh_diag} should be within {}% of the cube's known bbox diagonal {cube_diag}",
-                tolerance * 100.0
-            );
+            assert!((mesh_diag - cube_diag).abs() <= tolerance * cube_diag, "gauge-aligned mesh bbox diagonal {mesh_diag} should be within {}% of the cube's known bbox diagonal {cube_diag}", tolerance * 100.0);
 
             // 🕳️ `remodel_mesh`'s own `Unwrap`/LSCM stage legitimately duplicates vertex indices at every
             // UV chart seam, which a naive re-`validate_watertight` on the exported positions/indices
             // misreads as index-mismatched boundary edges. Assert on the pipeline's own watertight report
             // instead, captured at `Stage::Validate2` right before `Unwrap` runs and never touched again.
-            let watertight_report = engine
-                .take_quality()
-                .and_then(|quality| quality.watertight)
-                .expect("mesh pipeline should have produced a pre-unwrap watertight report by the time meshing finished");
+            let watertight_report = engine.take_quality().and_then(|quality| quality.watertight).expect("mesh pipeline should have produced a pre-unwrap watertight report by the time meshing finished");
             println!("[long] pre-unwrap watertight report: {watertight_report:?}");
-            assert!(
-                watertight_report.is_watertight,
-                "the video-in -> watertight-mesh-out contract requires is_watertight == true on the pipeline's own pre-unwrap report, got: {watertight_report:?}"
-            );
+            assert!(watertight_report.is_watertight, "the video-in -> watertight-mesh-out contract requires is_watertight == true on the pipeline's own pre-unwrap report, got: {watertight_report:?}");
         }
     }
     // #endregion 🔖️LongContract

@@ -65,7 +65,7 @@ pub enum SequenceOperation {
     EdgesAdd { index: usize, item: SequenceEdge },
     EdgesRemove { id: String },
     EdgesMove { id: String, to_index: usize },
-    EdgesPatch { id: String, patch: SequenceEdgePatch }
+    EdgesPatch { id: String, patch: SequenceEdgePatch },
 }
 
 /// 🔁️ Converts a generic step `CollectionOperation` (as produced by `protocol::invert_collection_operation`)
@@ -119,26 +119,14 @@ impl Operation<SequenceFixture> for SequenceOperation {
 
     fn diff(&self, projection: &SequenceFixture) -> SequenceDiff {
         match self {
-            SequenceOperation::StepsAdd { index, item } => {
-                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })), ..Default::default() }
-            }
+            SequenceOperation::StepsAdd { index, item } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })), ..Default::default() },
             SequenceOperation::StepsRemove { id } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Remove { id: id.clone() })), ..Default::default() },
-            SequenceOperation::StepsMove { id, to_index } => {
-                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to: *to_index })), ..Default::default() }
-            }
-            SequenceOperation::StepsPatch { id, patch } => {
-                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() }
-            }
-            SequenceOperation::EdgesAdd { index, item } => {
-                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })), ..Default::default() }
-            }
+            SequenceOperation::StepsMove { id, to_index } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to: *to_index })), ..Default::default() },
+            SequenceOperation::StepsPatch { id, patch } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() },
+            SequenceOperation::EdgesAdd { index, item } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })), ..Default::default() },
             SequenceOperation::EdgesRemove { id } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Remove { id: id.clone() })), ..Default::default() },
-            SequenceOperation::EdgesMove { id, to_index } => {
-                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to: *to_index })), ..Default::default() }
-            }
-            SequenceOperation::EdgesPatch { id, patch } => {
-                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() }
-            }
+            SequenceOperation::EdgesMove { id, to_index } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to: *to_index })), ..Default::default() },
+            SequenceOperation::EdgesPatch { id, patch } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() },
         }
     }
 
@@ -221,8 +209,13 @@ enum SequenceOperationDsl {
         #[dsl(block)]
         item: SequenceStep,
     },
-    StepsRemove { id: String },
-    StepsMove { id: String, to_index: usize },
+    StepsRemove {
+        id: String,
+    },
+    StepsMove {
+        id: String,
+        to_index: usize,
+    },
     StepsPatch {
         id: String,
         #[dsl(block)]
@@ -233,13 +226,18 @@ enum SequenceOperationDsl {
         #[dsl(block)]
         item: SequenceEdgeDsl,
     },
-    EdgesRemove { id: String },
-    EdgesMove { id: String, to_index: usize },
+    EdgesRemove {
+        id: String,
+    },
+    EdgesMove {
+        id: String,
+        to_index: usize,
+    },
     EdgesPatch {
         id: String,
         #[dsl(block)]
         patch: SequenceEdgePatch,
-    }
+    },
 }
 
 fn sequence_operation_to_dsl(operation: &SequenceOperation) -> SequenceOperationDsl {

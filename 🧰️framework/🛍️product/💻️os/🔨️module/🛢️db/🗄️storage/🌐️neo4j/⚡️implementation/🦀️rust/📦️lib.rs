@@ -36,10 +36,10 @@
 //! (see `db_storage`'s `fs_storage` module doc): full cross-process mutual exclusion beyond
 //! Neo4j's own lock semantics is `db_cluster`'s ownership-lease concern, not this crate's.
 
-use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
-use db_core::{DbError, DocumentId, DurabilityClass, EpochFence, check_len};
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
+use db_core::{check_len, DbError, DocumentId, DurabilityClass, EpochFence};
 use db_storage::{CatalogStorage, DbStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
-use neo4rs::{Graph, Query, Txn, query};
+use neo4rs::{query, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
 
 //#region 🔖️Codec
@@ -423,9 +423,7 @@ impl WalStorage for Neo4jStorage {
             let sealed: bool = row.get("sealed").map_err(map_de_error)?;
             let updated = apply_append(&current, sealed, bytes)?;
             let new_len = updated.len() as u64;
-            txn.run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", encode_bytes(&updated)).param("len", u64_to_i64(new_len, "wal segment length")?))
-                .await
-                .map_err(map_neo4rs_error)?;
+            txn.run(query(CYPHER_WAL_WRITE_BYTES).param("document", document.0.clone()).param("index", idx).param("bytes", encode_bytes(&updated)).param("len", u64_to_i64(new_len, "wal segment length")?)).await.map_err(map_neo4rs_error)?;
             txn.commit().await.map_err(map_neo4rs_error)?;
             Ok(new_len)
         })
@@ -513,9 +511,7 @@ impl SnapshotStorage for Neo4jStorage {
     fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
         check_len(bytes.len() as u64, MAX_READ_BYTES, "snapshot_storage::write_generation")?;
         let generation_param = u64_to_i64(generation, "snapshot generation")?;
-        self.block_on(self.run(
-            query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?),
-        ))
+        self.block_on(self.run(query(CYPHER_SNAPSHOT_WRITE).param("document", document.0.clone()).param("generation", generation_param).param("bytes", encode_bytes(bytes)).param("len", u64_to_i64(bytes.len() as u64, "snapshot generation length")?)))
     }
 
     fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
@@ -702,11 +698,9 @@ impl LeaseStorage for Neo4jStorage {
             let existing = self.lease_row(&mut txn, resource).await?;
             let fence = decide_acquire_fence(resource, existing, holder, now_ms)?;
             let expires_at_ms = now_ms.checked_add(ttl_ms).ok_or_else(|| DbError::InvalidArgument("lease ttl_ms overflows now_ms + ttl_ms".to_string()))?;
-            txn.run(
-                query(CYPHER_LEASE_WRITE).param("resource", resource).param("holder", holder).param("epoch", u64_to_i64(fence.epoch, "lease epoch")?).param("expiresAtMs", u64_to_i64(expires_at_ms, "lease expiry")?),
-            )
-            .await
-            .map_err(map_neo4rs_error)?;
+            txn.run(query(CYPHER_LEASE_WRITE).param("resource", resource).param("holder", holder).param("epoch", u64_to_i64(fence.epoch, "lease epoch")?).param("expiresAtMs", u64_to_i64(expires_at_ms, "lease expiry")?))
+                .await
+                .map_err(map_neo4rs_error)?;
             txn.commit().await.map_err(map_neo4rs_error)?;
             Ok(fence)
         })
@@ -718,11 +712,9 @@ impl LeaseStorage for Neo4jStorage {
             let existing = self.lease_row(&mut txn, resource).await?;
             validate_renew(resource, existing, holder, fence, now_ms)?;
             let expires_at_ms = now_ms.checked_add(ttl_ms).ok_or_else(|| DbError::InvalidArgument("lease ttl_ms overflows now_ms + ttl_ms".to_string()))?;
-            txn.run(
-                query(CYPHER_LEASE_WRITE).param("resource", resource).param("holder", holder).param("epoch", u64_to_i64(fence.epoch, "lease epoch")?).param("expiresAtMs", u64_to_i64(expires_at_ms, "lease expiry")?),
-            )
-            .await
-            .map_err(map_neo4rs_error)?;
+            txn.run(query(CYPHER_LEASE_WRITE).param("resource", resource).param("holder", holder).param("epoch", u64_to_i64(fence.epoch, "lease epoch")?).param("expiresAtMs", u64_to_i64(expires_at_ms, "lease expiry")?))
+                .await
+                .map_err(map_neo4rs_error)?;
             txn.commit().await.map_err(map_neo4rs_error)?;
             Ok(())
         })

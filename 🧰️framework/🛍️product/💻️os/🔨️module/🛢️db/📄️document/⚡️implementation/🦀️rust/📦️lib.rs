@@ -75,7 +75,6 @@ fn dsl_err(err: String) -> DbError {
     DbError::InvalidArgument(format!("db_document dsl error: {err}"))
 }
 
-
 //#region 🔖️Command
 /// @emoji 📦️ One atomically-submitted group of causally-related operations against a single
 /// document — the unit `DocumentEngine::submit` accepts. Every envelope must target the same
@@ -138,13 +137,8 @@ fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
 /// module's generic path-value convention (see module doc). Errors if `value` is not an object —
 /// this crate's own schema-erased documents have no other shape it can interpret.
 fn entries_from_value(value: &DslValue) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
-    let object = value
-        .as_object()
-        .ok_or_else(|| DbError::InvalidArgument("diff/inverse payload must be a pathmap object".to_string()))?;
-    Ok(object
-        .iter()
-        .map(|(path, entry)| (path.clone(), if entry.is_null() { None } else { Some(entry.clone()) }))
-        .collect())
+    let object = value.as_object().ok_or_else(|| DbError::InvalidArgument("diff/inverse payload must be a pathmap object".to_string()))?;
+    Ok(object.iter().map(|(path, entry)| (path.clone(), if entry.is_null() { None } else { Some(entry.clone()) })).collect())
 }
 
 /// @emoji ➡️ Entries for an envelope's forward diff — empty (not an error) for any schema other
@@ -320,12 +314,7 @@ impl DocumentState {
     /// @emoji ✍️ Applies one envelope's flattened path-value entries, returning the new state, the
     /// `TouchedSet` it wrote, and any conflicts (a path whose last writer is neither `operation_id`
     /// itself nor a declared `dependencies` member).
-    fn apply_entries(
-        &self,
-        operation_id: &protocol::OperationId,
-        dependencies: &[protocol::OperationId],
-        entries: &[(String, Option<DslValue>)],
-    ) -> Result<(DocumentState, db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
+    fn apply_entries(&self, operation_id: &protocol::OperationId, dependencies: &[protocol::OperationId], entries: &[(String, Option<DslValue>)]) -> Result<(DocumentState, db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
         let mut values = self.values.clone();
         let mut last_writer = self.last_writer.clone();
         let mut touched = db_state::TouchedSet::new();
@@ -333,11 +322,7 @@ impl DocumentState {
         for (path, value) in entries {
             if let Some(previous_writer) = self.last_writer.get(path) {
                 if previous_writer != operation_id && !dependencies.contains(previous_writer) {
-                    conflicts.push(ConflictRecord {
-                        command_id: operation_id.clone(),
-                        conflicting_with: previous_writer.clone(),
-                        path: path.clone(),
-                    });
+                    conflicts.push(ConflictRecord { command_id: operation_id.clone(), conflicting_with: previous_writer.clone(), path: path.clone() });
                 }
             }
             match value {
@@ -417,12 +402,7 @@ impl Default for DocumentEngineConfig {
             preview_ttl_ms: limits.max_preview_ttl_ms,
             limits,
             authz: Arc::new(AllowAll),
-            security: db_security::SecurityGate::new(
-                policy,
-                db_security::ReplayGuard::new(60_000, 4_096),
-                db_security::BudgetRegistry::new(100_000, 100_000),
-                Arc::new(db_core::NullEmit),
-            ),
+            security: db_security::SecurityGate::new(policy, db_security::ReplayGuard::new(60_000, 4_096), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(db_core::NullEmit)),
             version_graph: Arc::new(db_core::NullVersionGraph),
             emit: Arc::new(db_core::NullEmit),
             projections: Arc::new(Vec::new),
@@ -461,12 +441,7 @@ const MAX_RECENT_TOUCHES: usize = 256;
 impl DocumentEngine {
     /// @emoji 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
-    pub fn create(
-        document: protocol::DocumentId,
-        storage: Arc<dyn db_storage::DbStorage>,
-        config: DocumentEngineConfig,
-        now_ms: u64,
-    ) -> Result<DocumentEngine, DbError> {
+    pub fn create(document: protocol::DocumentId, storage: Arc<dyn db_storage::DbStorage>, config: DocumentEngineConfig, now_ms: u64) -> Result<DocumentEngine, DbError> {
         let core_id = to_core_document_id(&document);
         let wal = db_wal::DocumentWal::create(storage.wal(), core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms)?;
         Ok(DocumentEngine::assemble(document, core_id, storage, wal, None, config))
@@ -478,12 +453,7 @@ impl DocumentEngine {
     /// (per `db_wal::DocumentWal::open`), then replays only the `WAL_COMMAND` records committed
     /// AFTER the snapshot's own `head_seq` (a full-from-genesis replay when there is no snapshot
     /// yet).
-    pub fn open(
-        document: protocol::DocumentId,
-        storage: &Arc<dyn db_storage::DbStorage>,
-        config: DocumentEngineConfig,
-        now_ms: u64,
-    ) -> Result<(DocumentEngine, MaterializeReport), DbError> {
+    pub fn open(document: protocol::DocumentId, storage: &Arc<dyn db_storage::DbStorage>, config: DocumentEngineConfig, now_ms: u64) -> Result<(DocumentEngine, MaterializeReport), DbError> {
         let core_id = to_core_document_id(&document);
         let mut report = MaterializeReport::default();
 
@@ -523,8 +493,7 @@ impl DocumentEngine {
                 db_wal::WalRecord::TxBegin { .. } => batch_ids.clear(),
                 db_wal::WalRecord::Command(bytes) => {
                     let mut pos = 0usize;
-                    let envelope = protocol::decode_envelope(&bytes, &mut pos)
-                        .map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
+                    let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
                     seen += 1;
                     batch_ids.insert(envelope.operation_id.0.clone());
                     if seen <= applied_head_seq {
@@ -552,14 +521,7 @@ impl DocumentEngine {
         Ok((engine, report))
     }
 
-    fn assemble(
-        protocol_document: protocol::DocumentId,
-        core_id: db_core::DocumentId,
-        storage: Arc<dyn db_storage::DbStorage>,
-        wal: db_wal::DocumentWal,
-        vcs_head: Option<String>,
-        config: DocumentEngineConfig,
-    ) -> DocumentEngine {
+    fn assemble(protocol_document: protocol::DocumentId, core_id: db_core::DocumentId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal::DocumentWal, vcs_head: Option<String>, config: DocumentEngineConfig) -> DocumentEngine {
         let preview_budgets = db_preview::PreviewBudgets { default_ttl_ms: config.preview_ttl_ms, max_ttl_ms: config.preview_ttl_ms, ..db_preview::PreviewBudgets::default() };
         DocumentEngine {
             document: core_id.clone(),
@@ -594,10 +556,7 @@ impl DocumentEngine {
         }
         for dependency in &envelope.dependencies {
             if !self.applied.contains_key(&dependency.0) && !batch_ids.contains(&dependency.0) {
-                return Err(DbError::InvalidArgument(format!(
-                    "operation {} depends on unseen operation {}",
-                    envelope.operation_id.0, dependency.0
-                )));
+                return Err(DbError::InvalidArgument(format!("operation {} depends on unseen operation {}", envelope.operation_id.0, dependency.0)));
             }
         }
         let entries = diff_entries(&envelope.diff)?;
@@ -624,10 +583,7 @@ impl DocumentEngine {
         db_core::check_len(batch.envelopes.len() as u64, self.config.limits.max_batch_commands as u64, "db_document::batch_commands")?;
         for envelope in &batch.envelopes {
             if envelope.document_id != self.protocol_document {
-                return Err(DbError::InvalidArgument(format!(
-                    "envelope targets document {:?} but this actor owns {:?}",
-                    envelope.document_id, self.protocol_document
-                )));
+                return Err(DbError::InvalidArgument(format!("envelope targets document {:?} but this actor owns {:?}", envelope.document_id, self.protocol_document)));
             }
         }
         let command_id = batch.envelopes.last().expect("CommandBatch::new guarantees at least one envelope").operation_id.clone();
@@ -652,15 +608,7 @@ impl DocumentEngine {
             // permissive principal synthesized from the envelope's own actor (see
             // `DocumentEngineConfig::security`'s doc) — additive, does not replace `authz` above.
             let principal = db_security::Principal::new(envelope.actor.clone(), db_security::TenantId::from("default"), vec!["member".to_string()]);
-            self.config.security.admit_command(
-                &principal,
-                &db_security::TenantId::from("default"),
-                &envelope.document_id,
-                &envelope.diff.schema.0,
-                &envelope.actor,
-                &envelope.operation_id,
-                now_ms,
-            )?;
+            self.config.security.admit_command(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &envelope.actor, &envelope.operation_id, now_ms)?;
 
             // 🎯️ W5: `WalRecord::Command`'s bytes are `protocol::encode_envelope`'s binary record now
             // (M-C's "storage AND communication both binary") — `db_sync::replay_sync_state` reads
@@ -705,25 +653,14 @@ impl DocumentEngine {
         if newly_applied.is_empty() {
             // Every envelope in this (re-)submitted batch was already durable individually — a
             // full no-op commit, per-envelope half of the dedupe law (see `apply_one`'s doc).
-            let receipt = CommandReceipt {
-                command_id,
-                frontier: self.frontier.clone(),
-                durability: options.durability,
-                conflicts: Vec::new(),
-                state_hash: Some(self.state.content_hash()),
-            };
+            let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash()) };
             self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone());
             return Ok(receipt);
         }
 
         // publish: compute + WAL-append the new frontier in the same transaction as its commands
-        let new_frontier = db_core::Frontier {
-            document: self.document.clone(),
-            head_seq: self.frontier.head_seq + newly_applied.len() as u64,
-            commit_seq: self.frontier.commit_seq + 1,
-            chain_hash: self.state.content_hash().0,
-            epoch: self.frontier.epoch,
-        };
+        let new_frontier =
+            db_core::Frontier { document: self.document.clone(), head_seq: self.frontier.head_seq + newly_applied.len() as u64, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().0, epoch: self.frontier.epoch };
         records.push(db_wal::WalRecord::Frontier(new_frontier.clone()));
 
         // WAL append + durability (DocumentWal::submit wraps `records` in its own TxBegin/TxCommit)
@@ -757,24 +694,14 @@ impl DocumentEngine {
 
         // preview-reconcile
         self.previews.reconcile_with(&db_preview::LandedCommand { frontier: new_frontier.clone(), touched: touched_all.clone() }, &db_preview::DbConflictOracle::default());
-        self.commit_log.push(CommitNotification {
-            frontier: new_frontier.clone(),
-            operation_ids: newly_applied.iter().map(|(envelope, _)| envelope.operation_id.clone()).collect(),
-            touched: touched_all,
-        });
+        self.commit_log.push(CommitNotification { frontier: new_frontier.clone(), operation_ids: newly_applied.iter().map(|(envelope, _)| envelope.operation_id.clone()).collect(), touched: touched_all });
 
         // vcs (best-effort: this crate never blocks a commit on the vcs seam's outcome; a disabled
         // vcs feature supplies `db_core::NullVersionGraph`, whose `Unimplemented` is tolerated here)
         for (envelope, _) in &newly_applied {
             match self.config.version_graph.record_change(
                 &self.document,
-                db_core::ChangeRecord {
-                    parent: None,
-                    content_hash: self.state.content_hash(),
-                    author: to_core_actor_id(&envelope.actor),
-                    message: format!("operation {}", envelope.operation_id.0),
-                    timestamp_ms: now_ms,
-                },
+                db_core::ChangeRecord { parent: None, content_hash: self.state.content_hash(), author: to_core_actor_id(&envelope.actor), message: format!("operation {}", envelope.operation_id.0), timestamp_ms: now_ms },
             ) {
                 Ok(_) | Err(DbError::Unimplemented(_)) => {}
                 Err(other) => return Err(other),
@@ -785,8 +712,7 @@ impl DocumentEngine {
         let _ = self.refresh_live_queries();
 
         // receipt
-        let receipt =
-            CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash()) };
+        let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash()) };
         self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone());
         Ok(receipt)
     }
@@ -836,8 +762,7 @@ impl DocumentEngine {
         let entries: Vec<(String, Option<Vec<u8>>)> = self.state.values.iter().map(|(path, bytes)| (path.clone(), Some(bytes.clone()))).collect();
         let page = db_state::Page::new(encode_state_page(&entries));
         let snapshot_manager = db_snapshot::SnapshotManager::new(self.storage.snapshot());
-        let origin =
-            if snapshot_manager.load_latest(&self.document)?.is_some() { db_snapshot::SnapshotOrigin::Incremental } else { db_snapshot::SnapshotOrigin::FullBaseline };
+        let origin = if snapshot_manager.load_latest(&self.document)?.is_some() { db_snapshot::SnapshotOrigin::Incremental } else { db_snapshot::SnapshotOrigin::FullBaseline };
         let body = db_snapshot::SnapshotBody {
             head_seq: self.frontier.head_seq,
             commit_seq: self.frontier.commit_seq,
@@ -864,10 +789,7 @@ impl DocumentEngine {
     // ownership question onto every caller for no benefit.
     #[allow(clippy::needless_pass_by_value)]
     pub fn query(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
-        let resolver = db_query::IndexConsistencyResolver {
-            commits: db_index::CommitIndex::new(self.storage.index(), self.document.clone()),
-            frontiers: db_index::FrontierIndex::new(self.storage.index(), self.document.clone()),
-        };
+        let resolver = db_query::IndexConsistencyResolver { commits: db_index::CommitIndex::new(self.storage.index(), self.document.clone()), frontiers: db_index::FrontierIndex::new(self.storage.index(), self.document.clone()) };
         // A fresh document has no recorded frontier yet; canonical reads still succeed via the
         // in-memory frontier, so only consult the resolver for modes that truly need the index.
         if !matches!(consistency, db_query::Consistency::Canonical) {
@@ -930,18 +852,7 @@ impl DocumentEngine {
     /// (never touches the WAL), per the contract's preview law. Backed by a real
     /// `db_preview::PreviewStore` this revision (previously a local, minimal stand-in).
     pub fn publish_preview(&mut self, entries: &[(String, Option<serde_json::Value>)], now_ms: u64) -> Result<db_preview::PreviewId, DbError> {
-        let dsl_entries: Vec<(String, Option<DslValue>)> = entries
-            .iter()
-            .map(|(path, value)| {
-                Ok((
-                    path.clone(),
-                    value
-                        .as_ref()
-                        .map(|json| dsl::to_dsl_value(json).map_err(dsl_err))
-                        .transpose()?,
-                ))
-            })
-            .collect::<Result<Vec<_>, DbError>>()?;
+        let dsl_entries: Vec<(String, Option<DslValue>)> = entries.iter().map(|(path, value)| Ok((path.clone(), value.as_ref().map(|json| dsl::to_dsl_value(json).map_err(dsl_err)).transpose()?))).collect::<Result<Vec<_>, DbError>>()?;
         let touched = entries_touched(&dsl_entries);
         let envelope = protocol::OperationEnvelope {
             operation_id: protocol::OperationId(format!("preview-{}", entries.len())),
@@ -1089,14 +1000,33 @@ pub struct MaterializeReport {
 /// @emoji 📨️ A message crossing `DocumentAuthority`'s mailbox — deliberately `Send` (unlike
 /// `DocumentEngine` itself, see `DocumentAuthority`'s doc).
 pub enum DocumentMessage {
-    Submit { batch: CommandBatch, options: SubmitOptions, now_ms: u64, reply: db_actor::ReplySender<Result<CommandReceipt, DbError>> },
-    Query { path: String, reply: db_actor::ReplySender<Option<Vec<u8>>> },
-    Frontier { reply: db_actor::ReplySender<db_core::Frontier> },
+    Submit {
+        batch: CommandBatch,
+        options: SubmitOptions,
+        now_ms: u64,
+        reply: db_actor::ReplySender<Result<CommandReceipt, DbError>>,
+    },
+    Query {
+        path: String,
+        reply: db_actor::ReplySender<Option<Vec<u8>>>,
+    },
+    Frontier {
+        reply: db_actor::ReplySender<db_core::Frontier>,
+    },
     /// @emoji 🔎️ Additive this revision — `db_engine`'s current `DocumentHandle::query` goes
     /// through `Query { path, .. }` above and never constructs this variant, so adding it is safe.
-    RunQuery { query: db_query::Query, consistency: db_query::Consistency, reply: db_actor::ReplySender<Result<db_query::QueryResult, DbError>> },
-    SnapshotNow { now_ms: u64, reply: db_actor::ReplySender<Result<u64, DbError>> },
-    DrainOutbox { reply: db_actor::ReplySender<Vec<OutboxEntry>> },
+    RunQuery {
+        query: db_query::Query,
+        consistency: db_query::Consistency,
+        reply: db_actor::ReplySender<Result<db_query::QueryResult, DbError>>,
+    },
+    SnapshotNow {
+        now_ms: u64,
+        reply: db_actor::ReplySender<Result<u64, DbError>>,
+    },
+    DrainOutbox {
+        reply: db_actor::ReplySender<Vec<OutboxEntry>>,
+    },
 }
 
 /// @emoji 🎭️ A live handle to one document's authority actor, running the `db_actor` mailbox on a
@@ -1212,10 +1142,7 @@ mod tests {
     }
 
     fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_json::Value)]) -> protocol::OperationEnvelope {
-        let object: Vec<(String, DslValue)> = entries
-            .iter()
-            .map(|(path, value)| (path.to_string(), dsl::to_dsl_value(value).expect("test envelope dsl")))
-            .collect();
+        let object: Vec<(String, DslValue)> = entries.iter().map(|(path, value)| (path.to_string(), dsl::to_dsl_value(value).expect("test envelope dsl"))).collect();
         protocol::OperationEnvelope {
             operation_id: protocol::OperationId(id.to_string()),
             document_id: document_id(),
@@ -1274,16 +1201,7 @@ mod tests {
         fn envelope_from_operation_uses_operation_and_diff_traits() {
             let base = Counter(10);
             let op = Add(5);
-            let envelope = envelope_from_operation(
-                document_id(),
-                "counter",
-                &op,
-                &base,
-                protocol::ActorId("alice".to_string()),
-                protocol::OperationId("op-add-1".to_string()),
-                protocol::HybridLogicalTimestamp::new(1, 0),
-            )
-            .unwrap();
+            let envelope = envelope_from_operation(document_id(), "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::OperationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0)).unwrap();
             let entries = diff_entries(&envelope.diff).unwrap();
             assert_eq!(entries.len(), 1);
             let (path, value) = &entries[0];
@@ -1371,13 +1289,9 @@ mod tests {
     fn deletion_via_json_null_tombstones_a_path() {
         let storage = storage();
         let mut engine = DocumentEngine::create(document_id(), storage, DocumentEngineConfig::default(), 0).unwrap();
-        engine
-            .submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0)
-            .unwrap();
+        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0).unwrap();
         assert!(engine.get("x").is_some());
-        engine
-            .submit(CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("x", serde_json::Value::Null)])]).unwrap(), SubmitOptions::default(), 1)
-            .unwrap();
+        engine.submit(CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("x", serde_json::Value::Null)])]).unwrap(), SubmitOptions::default(), 1).unwrap();
         assert!(engine.get("x").is_none());
     }
     //#endregion 🔖️Engine submit + materialize + WAL replay
@@ -1457,22 +1371,14 @@ mod tests {
             document_id: document_id(),
             actor: protocol::ActorId("alice".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff {
-                schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()),
-                payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": 1 })).expect("dsl")),
-            },
-            inverse: protocol::InverseOperation {
-                schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()),
-                payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": null })).expect("dsl")),
-            },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": 1 })).expect("dsl")) },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": null })).expect("dsl")) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         };
         engine.submit(CommandBatch::new(vec![original]).unwrap(), SubmitOptions::default(), 0).unwrap();
         assert!(engine.get("x").is_some());
 
-        let receipt = engine
-            .undo(&protocol::OperationId("op-1".to_string()), protocol::OperationId("op-1-undo".to_string()), protocol::ActorId("alice".to_string()), 1)
-            .unwrap();
+        let receipt = engine.undo(&protocol::OperationId("op-1".to_string()), protocol::OperationId("op-1-undo".to_string()), protocol::ActorId("alice".to_string()), 1).unwrap();
         assert_eq!(receipt.frontier.head_seq, 2);
         assert!(engine.get("x").is_none(), "undo must have applied the recorded inverse (delete x)");
     }
@@ -1524,12 +1430,7 @@ mod tests {
     fn security_gate_rejects_a_principal_denied_by_its_policy() {
         // An empty `RoleBasedPolicy` (no grants at all) denies every action, per its own doc — a
         // default-deny policy, matching `db_engine`'s own equivalent test of the same gate.
-        let security = db_security::SecurityGate::new(
-            db_security::RoleBasedPolicy::new(),
-            db_security::ReplayGuard::new(60_000, 1_024),
-            db_security::BudgetRegistry::new(100_000, 100_000),
-            Arc::new(db_core::NullEmit),
-        );
+        let security = db_security::SecurityGate::new(db_security::RoleBasedPolicy::new(), db_security::ReplayGuard::new(60_000, 1_024), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(db_core::NullEmit));
         let storage = storage();
         let config = DocumentEngineConfig { security, ..DocumentEngineConfig::default() };
         let mut engine = DocumentEngine::create(document_id(), storage, config, 0).unwrap();
@@ -1585,8 +1486,7 @@ mod tests {
     fn document_authority_submits_and_queries_over_the_mailbox_from_a_dedicated_thread() {
         let storage = storage();
         let document = document_id();
-        let authority = DocumentAuthority::spawn(move || DocumentEngine::create(document, storage, DocumentEngineConfig::default(), 0), db_core::MailboxCapacities::uniform(16))
-            .unwrap();
+        let authority = DocumentAuthority::spawn(move || DocumentEngine::create(document, storage, DocumentEngineConfig::default(), 0), db_core::MailboxCapacities::uniform(16)).unwrap();
 
         let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hi"))])]).unwrap();
         let receipt = authority.submit_blocking(batch, SubmitOptions::default(), 0).unwrap();

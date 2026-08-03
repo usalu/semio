@@ -3,9 +3,9 @@
 use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
+use store::DocumentDsl;
 use trinity_jack::{run, QueryResult};
 use trinity_ram::{Graph, GraphFixture, PropertyValue};
-use store::DocumentDsl;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.

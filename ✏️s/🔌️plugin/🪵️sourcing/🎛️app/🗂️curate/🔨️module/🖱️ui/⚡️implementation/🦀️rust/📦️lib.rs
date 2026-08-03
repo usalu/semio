@@ -8,9 +8,10 @@
 
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
-    app_labels, build_table_scene, build_world_3d_scene, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
-    ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, ArtifactKindSpec, SurfaceKind, TableCell, TableScene, Terminology, UiInputNode, UiNode,
-    UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
+    app_labels, build_table_scene, build_world_3d_scene, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
+    AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, TableCell, TableScene,
+    Terminology, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
+    WindowLayoutWindowNode, WorldSunConfig,
 };
 use serde_json::{json, Value};
 use sourcing::{CurateDocument, Filters, ObjectKind, SortDirection, TableSort, SOURCING_CURATE_SCHEMA};
@@ -52,7 +53,11 @@ fn is_de_locale(cfg: &SourcingCurateConfig) -> bool {
 
 /// 🗣️ `cfg.locale` mapped onto the SDK's exhaustive `Locale` enum.
 fn sourcing_locale(cfg: &SourcingCurateConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🗣️ `SourcingCurateConfig` has no terminology axis (curate is never embedded/reused as a building
@@ -78,10 +83,7 @@ struct ModuleCatalogue {
 }
 
 fn available_modules() -> Vec<ModuleCatalogue> {
-    sourcing_modules()
-        .into_iter()
-        .map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() })
-        .collect()
+    sourcing_modules().into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
 }
 //#endregion 🔖️Modules
 
@@ -126,7 +128,8 @@ app_labels! {
 
 //#region 🔖️Panels
 fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: &SourcingLabels) -> UiNode {
-    let mut children = vec![UiNode::Input(UiInputNode { presence: UiPresence::default(),
+    let mut children = vec![UiNode::Input(UiInputNode {
+        presence: UiPresence::default(),
         id: "sourcing-filter-query".into(),
         input_kind: "text".into(),
         value: filters.query.clone(),
@@ -150,18 +153,23 @@ fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: &Sou
             menu: None,
         }));
     }
-    let mut typology_items = vec![UiSelectItem { value: String::new(), label: labels.all_typologies.into(),
-        }];
+    let mut typology_items = vec![UiSelectItem { value: String::new(), label: labels.all_typologies.into() }];
     for module in modules {
         for (path, label) in typology_flatten(&module.typology) {
-            typology_items.push(UiSelectItem { value: path.join("/"), label: Label::data(label),
-        });
+            typology_items.push(UiSelectItem { value: path.join("/"), label: Label::data(label) });
         }
     }
-    children.push(UiNode::Select(UiSelectNode { presence: UiPresence::default(), id: "sourcing-filter-typology".into(), value: filters.typology_path.join("/"), items: typology_items, placeholder: None, on_change: sourcing_action("setFilterTypology", None),
+    children.push(UiNode::Select(UiSelectNode {
+        presence: UiPresence::default(),
+        id: "sourcing-filter-typology".into(),
+        value: filters.typology_path.join("/"),
+        items: typology_items,
+        placeholder: None,
+        on_change: sourcing_action("setFilterTypology", None),
         menu: None,
     }));
-    children.push(UiNode::NumberStepper(UiNumberStepperNode { presence: UiPresence::default(),
+    children.push(UiNode::NumberStepper(UiNumberStepperNode {
+        presence: UiPresence::default(),
         id: "sourcing-filter-min-availability".into(),
         value: filters.min_availability as f64,
         step: 1.0,
@@ -246,8 +254,9 @@ fn build_curated_table(document: &CurateDocument, cfg: &SourcingCurateConfig, la
                     ("count", TableCell::Stepper { value: item.count as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_action("curateSetCount", Some(json!({ "objectId": kind.id }))) }),
                     (
                         "actions",
-                        TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), placement: Some(UiTreeActionPlacement::Menu),
-        }] },
+                        TableCell::Buttons {
+                            buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), placement: Some(UiTreeActionPlacement::Menu) }],
+                        },
                     ),
                 ],
             ))
@@ -347,17 +356,13 @@ impl DocumentApp for SourcingCurateApp {
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(&self, port: &str, doc: &DocumentView<'_, CurateDocument>) -> Result<Media, MediaError> {
         match port {
-            "catalog:out" => Ok(Media {
-                media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: sourcing_engine::sourcing_catalog_fragment(doc.projection).to_string() },
-            }),
+            "catalog:out" => {
+                Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: sourcing_engine::sourcing_catalog_fragment(doc.projection).to_string() } })
+            }
             "document:out" => {
                 let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
                 let bytes = doc.projection.encode_pack();
-                Ok(Media {
-                    media_type,
-                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -487,7 +492,6 @@ impl DocumentApp for SourcingCurateApp {
             _ => ui_text(Label::data("")),
         }
     }
-
 }
 //#endregion 🔖️SourcingCurateApp
 

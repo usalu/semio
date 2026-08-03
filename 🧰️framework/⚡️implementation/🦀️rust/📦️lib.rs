@@ -7805,8 +7805,8 @@ mod app_document_tests {
     #[test]
     fn tutorial_document_event_kind_round_trips_tagged_camel_case() {
         let edit = TutorialDocumentEventKind::Edit {
-            forwards: vec![serde_json::json!({"op": "translate"})],
-            backwards: vec![serde_json::json!({"op": "translate", "inverse": true})],
+            forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "translate"})).expect("tutorial forward operation")],
+            backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "translate", "inverse": true})).expect("tutorial backward operation")],
             description: Some("Move object".into()),
             coalesce_key: Some("camera".into()),
         };
@@ -7992,8 +7992,8 @@ mod app_document_tests {
             TutorialDocumentEvent {
                 at: 100,
                 kind: TutorialDocumentEventKind::Edit {
-                    forwards: vec![serde_json::json!({"op": "add", "id": "a"})],
-                    backwards: vec![serde_json::json!({"op": "remove", "id": "a"})],
+                    forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "add", "id": "a"})).expect("tutorial forward operation")],
+                    backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "remove", "id": "a"})).expect("tutorial backward operation")],
                     description: None,
                     coalesce_key: None,
                 },
@@ -8001,8 +8001,8 @@ mod app_document_tests {
             TutorialDocumentEvent {
                 at: 200,
                 kind: TutorialDocumentEventKind::Edit {
-                    forwards: vec![serde_json::json!({"op": "add", "id": "b"})],
-                    backwards: vec![serde_json::json!({"op": "remove", "id": "b"})],
+                    forwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "add", "id": "b"})).expect("tutorial forward operation")],
+                    backwards: vec![dsl::to_dsl_value(&serde_json::json!({"op": "remove", "id": "b"})).expect("tutorial backward operation")],
                     description: None,
                     coalesce_key: None,
                 },
@@ -8012,13 +8012,13 @@ mod app_document_tests {
         assert!(forward.forward);
         assert_eq!(forward.document.len(), 2);
         let TutorialDocumentEventKind::Edit { forwards, .. } = &forward.document[0].kind else { panic!("expected Edit") };
-        assert_eq!(forwards[0]["id"], "a", "forward order applies oldest-first");
+        assert_eq!(forwards[0].get("id").and_then(dsl::DslValue::as_str), Some("a"), "forward order applies oldest-first");
 
         let backward = tutorial_slice(&def, 250.0, 0.0);
         assert!(!backward.forward);
         assert_eq!(backward.document.len(), 2);
         let TutorialDocumentEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
-        assert_eq!(backwards[0]["id"], "b", "backward order unwinds newest-first");
+        assert_eq!(backwards[0].get("id").and_then(dsl::DslValue::as_str), Some("b"), "backward order unwinds newest-first");
 
         let empty = tutorial_slice(&def, 250.0, 250.0);
         assert!(empty.document.is_empty());

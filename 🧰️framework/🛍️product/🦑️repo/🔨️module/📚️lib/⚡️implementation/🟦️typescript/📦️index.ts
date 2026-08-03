@@ -1994,10 +1994,14 @@ export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[
 }
 //#endregion 🖥️FrameworkOsPlaygroundDev
 
-/** 🧰️Play/vite dev env with optional file-watcher polling defaults. */
+/** 🧰️Play/vite dev env with optional file-watcher polling defaults. Polling only makes sense where
+ * native filesystem events don't reach the watcher (bind-mounted devcontainers) — on native macOS/
+ * Windows/Linux it just burns CPU/RSS across every spawned dev server for no benefit. An explicit
+ * `WATCHPACK_POLLING` always wins as a manual override in either direction. */
 export function playPollingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  const pollingDefault = process.env.WATCHPACK_POLLING !== undefined ? {} : process.env.DEVCONTAINER === "true" ? { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" } : {};
   return devToolingEnv({
-    ...(process.env.WATCHPACK_POLLING !== undefined ? {} : { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" }),
+    ...pollingDefault,
     ...extra,
   });
 }

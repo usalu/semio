@@ -106,9 +106,20 @@ export const UserIcon = createIconComponent("user");
 export const UtilitiesIcon = createIconComponent("wrench");
 export const UtilityBarIcon = createIconComponent("hammer");
 export const WorkbenchIcon = createIconComponent("workbench");
-export type { IconName } from "@semio-tech/ui-asset";
-export { isMetabolismIconName, METABOLISM_ICONS, METABOLISM_ICON_NAMES, type MetabolismIconName } from "../../../../../🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🌱️metabolism/🔣️icon/🤖️generated/🟦️metabolism_icons.ts";
-export { resolveMetabolismIconNameFromTheme, resolveMetabolismIconSvgFromTheme } from "../../../../../🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🟦️icon_resolver.ts";
+export type { IconName } from "./🔣️icon/🤖️generated/🟦️icons.ts";
+export { ICONS, ICON_NAMES, isIconName } from "./🔣️icon/🤖️generated/🟦️icons.ts";
+export { assertUniqueIconConceptAssignments, ICON_CONCEPT_ASSIGNMENTS, type IconConceptId } from "./🟦️icon_concepts.ts";
+export { resolveCatalogIconNameFromTheme, resolveCatalogIconSvgFromTheme } from "./🟦️icon_resolver.ts";
+export {
+  SHORTCODE_CATALOG,
+  SHORTCODE_EMOJI,
+  shortcodeCatalogKey,
+  shortcodeEmoji,
+  type ShortcodeCatalogName,
+  type ShortcodeEmojiName,
+} from "./🔣️icon/🤖️generated/🟦️shortcodes.ts";
+export { isMetabolismIconName, METABOLISM_ICONS, METABOLISM_ICON_NAMES, type MetabolismIconName } from "./🌱️metabolism/🔣️icon/🤖️generated/🟦️metabolism_icons.ts";
+export { resolveMetabolismIconNameFromTheme, resolveMetabolismIconSvgFromTheme } from "./🟦️icon_resolver.ts";
 //#endregion 🔖️Icons
 
 //#region 🔖️KitBootstrapHelpers

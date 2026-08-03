@@ -31,7 +31,7 @@ use futures::{SinkExt, StreamExt};
 use os_hub_directory::model::{NodeRecord, SpaceRole};
 use os_hub_directory::HubDirectory;
 use os_hub_directory_sqlite::SqliteDirectory;
-use protocol::{AckStage, ActorId, ApplyOutcome, ClientFrame, DocumentId as ProtocolDocumentId, Lane, OperationEnvelope, RuntimeFrontierSummary, ServerFrame, decode_client_frame, encode_server_frame};
+use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ClientFrame, DocumentId as ProtocolDocumentId, Lane, OperationEnvelope, RuntimeFrontierSummary, ServerFrame};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -385,11 +385,7 @@ async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id:
     match handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync }).await {
         Ok(Ok(receipt)) => {
             let frontier = engine_frontier_to_wire(&receipt.frontier, receipt.command_id.0.clone());
-            let ack = ServerFrame::Ack {
-                batch_id,
-                stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }],
-                frontier: frontier.clone(),
-            };
+            let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() };
             let commands = ServerFrame::Commands { envelopes, origin: actor.clone(), frontier };
             (ack, Some(commands))
         }
@@ -403,16 +399,7 @@ async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id:
 /// @emoji 📨️ Handles one decoded `ClientFrame` for an already-authenticated, already-`Hello`'d
 /// session. Returns `false` when the session should close (`Bye`, or a send failure).
 #[allow(clippy::too_many_arguments)]
-async fn handle_client_frame(
-    state: &HubState,
-    handle: &db::DocumentHandle,
-    db_id: &ProtocolDocumentId,
-    key: &str,
-    fanout: &broadcast::Sender<ServerFrame>,
-    actor: &ActorId,
-    frame: ClientFrame,
-    sender: &mut SplitSink<WebSocket, Message>,
-) -> bool {
+async fn handle_client_frame(state: &HubState, handle: &db::DocumentHandle, db_id: &ProtocolDocumentId, key: &str, fanout: &broadcast::Sender<ServerFrame>, actor: &ActorId, frame: ClientFrame, sender: &mut SplitSink<WebSocket, Message>) -> bool {
     match frame {
         ClientFrame::Commands { batch_id, envelopes } => {
             let (ack, relay) = submit_commands(handle, actor, batch_id, envelopes).await;
@@ -695,14 +682,8 @@ mod tests {
             document_id: document.clone(),
             actor: ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff {
-                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::json!({ "value": id })).unwrap(),
-            },
-            inverse: protocol::InverseOperation {
-                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::json!({})).unwrap(),
-            },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({ "value": id })).unwrap() },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({})).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -842,7 +823,10 @@ mod tests {
 
         let (mut allowed, _) = connect_async(&url).await.unwrap();
         allowed
-            .send(client_binary(&ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId("holder".to_string()), token: Some(share.0.token), resume_token: None, frontier: None }, Lane::Command))
+            .send(client_binary(
+                &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId("holder".to_string()), token: Some(share.0.token), resume_token: None, frontier: None },
+                Lane::Command,
+            ))
             .await
             .unwrap();
         assert!(matches!(next_server_frame(&mut allowed).await, ServerFrame::Welcome { .. }));

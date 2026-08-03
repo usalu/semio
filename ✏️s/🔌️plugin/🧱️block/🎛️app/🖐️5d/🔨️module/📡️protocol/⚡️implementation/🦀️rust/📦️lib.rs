@@ -53,12 +53,7 @@ mod tests {
         use store::{create_document_envelope, DocumentCommand};
 
         let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", block_5d_engine::empty_block5d_definition(), None));
-        store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![Block5dOperation::SetPartKind { part_kind: BlockKindIdentity { id: "p1".into(), name: "p1".into(), label: "P1".into(), ..Default::default() } }],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Block5dOperation::SetPartKind { part_kind: BlockKindIdentity { id: "p1".into(), name: "p1".into(), label: "P1".into(), ..Default::default() } }], description: None }).expect("apply");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.part_kind.id, "p1");
     }

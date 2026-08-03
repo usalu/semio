@@ -45,17 +45,11 @@ fn json_id_to_string(value: &serde_json::Value) -> Option<String> {
 }
 
 fn dsl_id_to_string(value: &semio_framework_core::DslValue) -> Option<String> {
-    value
-        .as_str()
-        .map(str::to_string)
-        .or_else(|| value.as_f64().map(|n| if n.fract() == 0.0 { format!("{}", n as u64) } else { n.to_string() }))
+    value.as_str().map(str::to_string).or_else(|| value.as_f64().map(|n| if n.fract() == 0.0 { format!("{}", n as u64) } else { n.to_string() }))
 }
 
 fn dsl_string_vec(value: &semio_framework_core::DslValue) -> Vec<String> {
-    value
-        .as_array()
-        .map(|items| items.iter().filter_map(dsl_id_to_string).collect())
-        .unwrap_or_default()
+    value.as_array().map(|items| items.iter().filter_map(dsl_id_to_string).collect()).unwrap_or_default()
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -3090,11 +3084,7 @@ fn vortex_arrow_layout(position: [f64; 3], direction: Option<[f64; 3]>, radius: 
     let point_radius = radius * 0.18;
     let outward = !display_direction.is_some_and(|mode| mode == "inwards");
     let rotation = quat_from_unit_vectors(Vec3::new(0.0, 1.0, 0.0), dir);
-    let (shaft_center, head_base) = if outward {
-        (pos.add(dir.scale(shaft_length * 0.5)), pos.add(dir.scale(shaft_length)))
-    } else {
-        (pos.sub(dir.scale(head_length + shaft_length * 0.5)), pos.sub(dir.scale(head_length)))
-    };
+    let (shaft_center, head_base) = if outward { (pos.add(dir.scale(shaft_length * 0.5)), pos.add(dir.scale(shaft_length))) } else { (pos.sub(dir.scale(head_length + shaft_length * 0.5)), pos.sub(dir.scale(head_length))) };
     VortexArrowLayout { point_radius, shaft_radius, shaft_length, head_length, shaft_center: shaft_center.to_array(), head_base: head_base.to_array(), rotation }
 }
 
@@ -3134,13 +3124,7 @@ fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut GpuContext, ext
             selected: false,
             hovered,
         });
-        head_instances.push(Instance3d {
-            id: format!("{id}:head"),
-            model: Instance3d::model_from_trs(layout.head_base, layout.rotation, [layout.shaft_radius * 3.6, layout.head_length, layout.shaft_radius * 3.6]),
-            color,
-            selected: false,
-            hovered,
-        });
+        head_instances.push(Instance3d { id: format!("{id}:head"), model: Instance3d::model_from_trs(layout.head_base, layout.rotation, [layout.shaft_radius * 3.6, layout.head_length, layout.shaft_radius * 3.6]), color, selected: false, hovered });
     }
     ensure_primitive_mesh(state, "vortex-marker");
     ensure_primitive_mesh(state, VORTEX_ARROW_SHAFT_MESH);
@@ -3630,11 +3614,7 @@ mod tests {
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
         state.selected_ids.clear();
         state.local_hover_id = None;
-        state.draws.push(SceneDraw3d {
-            mesh_key: "mesh-1".into(),
-            mesh_version: 0,
-            instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: true, hovered: true }],
-        });
+        state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: true, hovered: true }] });
         apply_runtime_draw_flags(&mut state);
         assert!(!state.draws[0].instances[0].selected, "empty selection must clear a stale instancesJson selected bit");
         assert!(!state.draws[0].instances[0].hovered, "empty hover must clear a stale instancesJson hovered bit");

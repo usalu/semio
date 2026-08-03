@@ -21,8 +21,8 @@ pub fn decode(bytes: &[u8]) -> Result<PlaybookSpec, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use dsl::DslValue;
     use playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookStep, PlaybookVectorField, PLAYBOOK_DOCUMENT_SCHEMA};
-    use serde_json::json;
 
     #[test]
     fn pack_round_trips_the_empty_projection() {
@@ -77,7 +77,7 @@ mod tests {
                             description: None,
                             required: Some(true),
                             placeholder: None,
-                            default: Some(json!("aluminum")),
+                            default: Some(DslValue::String("aluminum".into())),
                             min: None,
                             max: None,
                             step: None,
@@ -103,7 +103,7 @@ mod tests {
                             description: None,
                             required: None,
                             placeholder: None,
-                            default: Some(json!(false)),
+                            default: Some(DslValue::Bool(false)),
                             min: None,
                             max: None,
                             step: None,
@@ -174,10 +174,10 @@ mod tests {
                         src: None,
                         accept: None,
                         fixture_slug: Some("voronoi-facade".into()),
-                        params: Some(json!({ "algorithm": "voronoi", "seed": 7.0, "density": 0.6 })),
+                        params: Some(DslValue::object([("algorithm".into(), DslValue::String("voronoi".into())), ("density".into(), DslValue::Number(0.6)), ("seed".into(), DslValue::Number(7.0))])),
                         condition: Some(PlaybookExpr::And {
                             items: vec![
-                                PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "material".into() }), right: Box::new(PlaybookExpr::Const { value: json!("aluminum") }) },
+                                PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "material".into() }), right: Box::new(PlaybookExpr::Const { value: DslValue::String("aluminum".into()) }) },
                                 PlaybookExpr::Truthy { expr: Box::new(PlaybookExpr::Var { name: "mirror-layout".into() }) },
                             ],
                         }),

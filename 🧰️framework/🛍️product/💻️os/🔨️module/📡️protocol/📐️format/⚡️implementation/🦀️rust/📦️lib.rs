@@ -15,7 +15,7 @@
 //! implement that policy themselves.
 
 use pack_core::{CompressionCodec, PackError, PackSink, PackSource};
-use protocol_core::{FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL, ProtocolError, ProtocolLimits, RecordHasher, frame_flags};
+use protocol_core::{frame_flags, ProtocolError, ProtocolLimits, RecordHasher, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};
 
 //#region 🔖️Header
 /// @emoji 🧲️ The 8-byte magic every `.spr` file begins with — distinct from pack's `.spk` magic
@@ -402,16 +402,7 @@ impl<S: PackSink> SprWriter<S> {
         let header = build_header_bytes(options.required_flags, options.optional_flags);
         sink.write_all(&header)?;
         let chain_0 = *blake3::hash(&header).as_bytes();
-        Ok(Self {
-            sink,
-            running_chain_hash: chain_0,
-            pending_digests: Vec::new(),
-            pending_records_len: 0,
-            pending_record_count: 0,
-            next_commit_seq: 1,
-            last_commit_offset: None,
-            scratch: Vec::new(),
-        })
+        Ok(Self { sink, running_chain_hash: chain_0, pending_digests: Vec::new(), pending_records_len: 0, pending_record_count: 0, next_commit_seq: 1, last_commit_offset: None, scratch: Vec::new() })
     }
 
     /// @emoji 📍️ Current absolute write position — the offset the next record/commit will start at.
@@ -627,13 +618,7 @@ fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &ProtocolLim
         current = prev_commit;
     }
 
-    Some(RecoveryReport {
-        records_recovered: records_sum + num_commits,
-        bytes_recovered: total_len,
-        last_commit_seq,
-        last_commit_offset,
-        torn_tail_bytes: 0,
-    })
+    Some(RecoveryReport { records_recovered: records_sum + num_commits, bytes_recovered: total_len, last_commit_seq, last_commit_offset, torn_tail_bytes: 0 })
 }
 
 /// @emoji 🚑️ Recovers a `.spr` source: validates the header, then tries the O(commits) fast path
@@ -693,13 +678,7 @@ pub fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: Recover
         RecoveryMode::LastCommit => (last_commit_end, records_at_commit),
         RecoveryMode::LastValidRecord => (last_valid_end, records_valid),
     };
-    Ok(RecoveryReport {
-        records_recovered,
-        bytes_recovered: trusted_end,
-        last_commit_seq,
-        last_commit_offset,
-        torn_tail_bytes: total_len - trusted_end,
-    })
+    Ok(RecoveryReport { records_recovered, bytes_recovered: trusted_end, last_commit_seq, last_commit_offset, torn_tail_bytes: total_len - trusted_end })
 }
 //#endregion 🔖️Recovery
 

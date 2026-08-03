@@ -28,8 +28,8 @@
 /// point: `db::Database::open_at(root, db::Profile::Dev)` is the zero-touch way to stand up a
 /// document database over `FsStorage`.
 pub use db_engine::{
-    CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbCapabilities, DbConfig, DbHealth, DbStorage, DocumentHandle, DocumentSpec, DurabilityClass, Frontier, HistoryEntry,
-    HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Profile, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
+    CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbCapabilities, DbConfig, DbHealth, DbStorage, DocumentHandle, DocumentSpec, DurabilityClass, Frontier, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle,
+    Profile, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
 
 /// 🗄️🌿️ The real `vcs`-backed `db_core::VersionGraph` — the ONLY place in the whole `db` family
@@ -207,14 +207,8 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::OperationId((*dep).to_string())).collect(),
-            diff: protocol::DocumentDiff {
-                schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap(),
-            },
-            inverse: protocol::InverseOperation {
-                schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap(),
-            },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap() },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }

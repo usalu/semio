@@ -21,13 +21,7 @@ pub fn create_raster_id(prefix: &str) -> String {
 }
 
 pub fn empty_raster_projection() -> RasterProjection {
-    RasterProjection {
-        schema: RASTER_DOCUMENT_SCHEMA.into(),
-        id: "raster".into(),
-        title: Some("Untitled".into()),
-        layers: Vec::new(),
-        assets: BTreeMap::new(),
-    }
+    RasterProjection { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "raster".into(), title: Some("Untitled".into()), layers: Vec::new(), assets: BTreeMap::new() }
 }
 
 //#region 🔖️Tree
@@ -103,31 +97,11 @@ pub fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode
 //#endregion 🔖️Tree
 
 fn create_pixel_layer(name: &str, width: u32, height: u32) -> RasterLayerNode {
-    RasterLayerNode::Pixel {
-        id: create_raster_id("layer"),
-        name: name.into(),
-        visible: true,
-        opacity: 1.0,
-        blend_mode: "normal".into(),
-        transform: RasterTransform::default(),
-        mask: None,
-        width: Some(width),
-        height: Some(height),
-        image_key: None,
-    }
+    RasterLayerNode::Pixel { id: create_raster_id("layer"), name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(width), height: Some(height), image_key: None }
 }
 
 fn create_group_layer() -> RasterLayerNode {
-    RasterLayerNode::Group {
-        id: create_raster_id("group"),
-        name: "Group".into(),
-        visible: true,
-        opacity: 1.0,
-        blend_mode: "normal".into(),
-        transform: RasterTransform::default(),
-        mask: None,
-        children: Vec::new(),
-    }
+    RasterLayerNode::Group { id: create_raster_id("group"), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() }
 }
 
 fn create_adjustment_layer() -> RasterLayerNode {
@@ -175,20 +149,18 @@ pub fn semio_example_json() -> String {
 /// 📄️ Duplicates a layer subtree with freshly minted ids (a new document node, not an operation inverse).
 pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
     match layer {
-        RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, mask, width, height, image_key, .. } => {
-            RasterLayerNode::Pixel {
-                id: create_raster_id("layer"),
-                name: format!("{name} copy"),
-                visible: *visible,
-                opacity: *opacity,
-                blend_mode: blend_mode.clone(),
-                transform: transform.clone(),
-                mask: mask.clone(),
-                width: *width,
-                height: *height,
-                image_key: image_key.clone(),
-            }
-        }
+        RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, mask, width, height, image_key, .. } => RasterLayerNode::Pixel {
+            id: create_raster_id("layer"),
+            name: format!("{name} copy"),
+            visible: *visible,
+            opacity: *opacity,
+            blend_mode: blend_mode.clone(),
+            transform: transform.clone(),
+            mask: mask.clone(),
+            width: *width,
+            height: *height,
+            image_key: image_key.clone(),
+        },
         RasterLayerNode::Group { name, visible, opacity, blend_mode, transform, mask, children, .. } => RasterLayerNode::Group {
             id: create_raster_id("group"),
             name: format!("{name} copy"),
@@ -199,18 +171,16 @@ pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
             mask: mask.clone(),
             children: children.iter().map(clone_layer).collect(),
         },
-        RasterLayerNode::Adjustment { name, visible, opacity, blend_mode, transform, adjustment_kind, params, .. } => {
-            RasterLayerNode::Adjustment {
-                id: create_raster_id("adjust"),
-                name: format!("{name} copy"),
-                visible: *visible,
-                opacity: *opacity,
-                blend_mode: blend_mode.clone(),
-                transform: transform.clone(),
-                adjustment_kind: adjustment_kind.clone(),
-                params: params.clone(),
-            }
-        }
+        RasterLayerNode::Adjustment { name, visible, opacity, blend_mode, transform, adjustment_kind, params, .. } => RasterLayerNode::Adjustment {
+            id: create_raster_id("adjust"),
+            name: format!("{name} copy"),
+            visible: *visible,
+            opacity: *opacity,
+            blend_mode: blend_mode.clone(),
+            transform: transform.clone(),
+            adjustment_kind: adjustment_kind.clone(),
+            params: params.clone(),
+        },
     }
 }
 
@@ -252,13 +222,7 @@ pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
     }
     let mut assets = BTreeMap::new();
     assets.insert(asset_key, RasterImageAsset { mime: "image/png".into(), data });
-    let document = RasterProjection {
-        schema: RASTER_DOCUMENT_SCHEMA.into(),
-        id: create_raster_id("dwg-import"),
-        title: Some("DWG Import".into()),
-        layers: vec![layer],
-        assets,
-    };
+    let document = RasterProjection { schema: RASTER_DOCUMENT_SCHEMA.into(), id: create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
     serde_json::to_value(&document).map_err(|error| error.to_string())
 }
 
@@ -327,16 +291,7 @@ pub struct RasterConfigViewportSize {
 
 impl Default for RasterConfig {
     fn default() -> Self {
-        Self {
-            selected_ids: Vec::new(),
-            hovered_id: None,
-            brush_size: 24.0,
-            brush_opacity: 1.0,
-            composite_viewport: None,
-            camera: RasterCamera::default(),
-            active_utility_id: "selectMarquee".into(),
-            locale: "en-US".into(),
-        }
+        Self { selected_ids: Vec::new(), hovered_id: None, brush_size: 24.0, brush_opacity: 1.0, composite_viewport: None, camera: RasterCamera::default(), active_utility_id: "selectMarquee".into(), locale: "en-US".into() }
     }
 }
 
@@ -363,19 +318,11 @@ impl protocol::OperationDiff<RasterConfig> for RasterConfig {
 pub fn raster_io() -> semio_framework_core::AppIo {
     semio_framework_core::AppIo {
         document_schema: RASTER_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_core::MediaType {
-            class: semio_framework_core::MediaClass::TwoD,
-            form: semio_framework_core::MediaForm::Raster,
-        },
+        document_media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Raster },
         ports: vec![raster_image_in_port(), raster_image_out_port()],
         export_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
         import_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
-        artifact: semio_framework_core::ArtifactPresentation {
-            id: "2d.raster".into(),
-            name: "2D Raster".into(),
-            dimension: "2d".into(),
-            component_kind: "raster".into(),
-        },
+        artifact: semio_framework_core::ArtifactPresentation { id: "2d.raster".into(), name: "2D Raster".into(), dimension: "2d".into(), component_kind: "raster".into() },
     }
 }
 
@@ -439,12 +386,7 @@ mod tests {
         drawing.entities.push(semio_framework_os::DwgEntity {
             layer,
             color: semio_framework_os::DwgColor::ByLayer,
-            geometry: semio_framework_os::DwgGeometry::LwPolyline {
-                closed: true,
-                elevation: 0.0,
-                vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]],
-                bulges: vec![0.0, 0.0, 0.0, 0.0],
-            },
+            geometry: semio_framework_os::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
         });
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [10.0, 10.0, 0.0];

@@ -8,29 +8,28 @@
 //! `### protocol (facade) — additional re-exports`).
 
 //#region 🔖️Reexports
-pub use protocol_core::{ProtocolError, ProtocolLimits, RecordHasher, Signer, SignatureVerifier};
+pub use protocol_core::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
 pub use protocol_format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions};
 pub use protocol_history::{
-    AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange, HistoryCheckpoint, HistoryCursor, HistoryEdit,
-    HistoryLog, HistoryOpMeta, HistoryReader, OpPayload, REC_CURSOR, decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text,
+    decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text, AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange,
+    HistoryCheckpoint, HistoryCursor, HistoryEdit, HistoryLog, HistoryOpMeta, HistoryReader, OpPayload, REC_CURSOR,
 };
-pub use protocol_materialize::{BaseBytes, BaseProjection, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, ProjectionBodyKind, ProjectionRecord, materialize_with, resolve_plan};
 #[cfg(not(target_arch = "wasm32"))]
-pub use protocol_io::{CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower, compact, recover_file};
+pub use protocol_io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};
+pub use protocol_materialize::{materialize_with, resolve_plan, BaseBytes, BaseProjection, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, ProjectionBodyKind, ProjectionRecord};
 
-pub use protocol_core::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, OperationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy};
-pub use protocol_command::{
-    CollectionDiff, CollectionOperation, CommandOutcome, Edit, Identified, ItemPatch, OpBinary, Operation, OperationDescriptor, OperationDiff, OperationEvent, OperationUpcaster, OpText, OperationMeta, Patchable,
-    ReconcileReport, ReconcileSeverity, apply_collection_operation, collection_diff_from_operation, invert_collection_operation, operation_descriptor, register_operation_descriptor,
-};
 pub use protocol_causal::{
-    FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseOperation, OpDag, OpDagError, DocumentDiff, OperationEnvelope, OperationTransform,
-    TransformOutcome, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta,
-    operation_envelope_from_edit, operation_ids_for_edit,
+    decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, operation_envelope_from_edit, operation_ids_for_edit, DocumentDiff,
+    FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseOperation, OpDag, OpDagError, OperationEnvelope, OperationTransform, TransformOutcome,
 };
+pub use protocol_channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, SectionProbe, CHANNEL_VERSION};
+pub use protocol_command::{
+    apply_collection_operation, collection_diff_from_operation, invert_collection_operation, operation_descriptor, register_operation_descriptor, CollectionDiff, CollectionOperation, CommandOutcome, Edit, Identified, ItemPatch, OpBinary, OpText,
+    Operation, OperationDescriptor, OperationDiff, OperationEvent, OperationMeta, OperationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
+};
+pub use protocol_core::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, OperationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy};
 pub use protocol_crdt::merge_concurrent_diffs;
-pub use protocol_wire::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, ServerFrame, decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame};
-pub use protocol_channel::{AppCommand, AppFrame, CHANNEL_VERSION, SectionProbe, decode_app_command, decode_app_frame, encode_app_command, encode_app_frame};
+pub use protocol_wire::{decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, ServerFrame};
 //#endregion 🔖️Reexports
 
 //#region 🔖️Compile
@@ -170,14 +169,7 @@ fn build_alternative_head(log: &HistoryLog, alternative: &HistoryAlternative) ->
 /// 🧭️ Highest edit ordinal transitively reachable through `checkpoint.change_ids -> edit_ids`.
 fn checkpoint_head_edit_ordinal(log: &HistoryLog, checkpoint: &HistoryCheckpoint) -> u64 {
     let ordinal_of: std::collections::HashMap<&str, u64> = log.edits.iter().enumerate().map(|(ordinal, edit)| (edit.id.as_str(), ordinal as u64)).collect();
-    checkpoint
-        .change_ids
-        .iter()
-        .filter_map(|change_id| log.changes.iter().find(|change| &change.id == change_id))
-        .flat_map(|change| change.edit_ids.iter())
-        .filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied())
-        .max()
-        .unwrap_or(0)
+    checkpoint.change_ids.iter().filter_map(|change_id| log.changes.iter().find(|change| &change.id == change_id)).flat_map(|change| change.edit_ids.iter()).filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied()).max().unwrap_or(0)
 }
 //#endregion 🔖️Sync
 

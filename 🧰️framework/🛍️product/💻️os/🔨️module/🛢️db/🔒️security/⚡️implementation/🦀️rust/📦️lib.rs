@@ -80,10 +80,7 @@ pub fn check_tenant(principal: &Principal, resource_tenant: &TenantId) -> Result
     if &principal.tenant == resource_tenant {
         Ok(())
     } else {
-        Err(db_core::DbError::Unauthorized(format!(
-            "tenant isolation: principal '{}' (tenant {}) may not act on resource tenant {}",
-            principal.actor.0, principal.tenant.0, resource_tenant.0
-        )))
+        Err(db_core::DbError::Unauthorized(format!("tenant isolation: principal '{}' (tenant {}) may not act on resource tenant {}", principal.actor.0, principal.tenant.0, resource_tenant.0)))
     }
 }
 //#endregion 🔖️Identity
@@ -131,15 +128,7 @@ impl AuthzScope {
             AuthzScope::Object { document, object_id } => {
                 vec!["db".to_string(), "document".to_string(), document.0.clone(), "object".to_string(), object_id.clone()]
             }
-            AuthzScope::Field { document, object_id, field } => vec![
-                "db".to_string(),
-                "document".to_string(),
-                document.0.clone(),
-                "object".to_string(),
-                object_id.clone(),
-                "field".to_string(),
-                field.clone(),
-            ],
+            AuthzScope::Field { document, object_id, field } => vec!["db".to_string(), "document".to_string(), document.0.clone(), "object".to_string(), object_id.clone(), "field".to_string(), field.clone()],
             AuthzScope::Historical { document } => {
                 vec!["db".to_string(), "document".to_string(), document.0.clone(), "historical".to_string()]
             }
@@ -153,12 +142,9 @@ impl AuthzScope {
     pub fn document(&self) -> Option<&protocol::DocumentId> {
         match self {
             AuthzScope::Database => None,
-            AuthzScope::Document { document }
-            | AuthzScope::CommandKind { document, .. }
-            | AuthzScope::Object { document, .. }
-            | AuthzScope::Field { document, .. }
-            | AuthzScope::Historical { document }
-            | AuthzScope::Preview { document } => Some(document),
+            AuthzScope::Document { document } | AuthzScope::CommandKind { document, .. } | AuthzScope::Object { document, .. } | AuthzScope::Field { document, .. } | AuthzScope::Historical { document } | AuthzScope::Preview { document } => {
+                Some(document)
+            }
         }
     }
 }
@@ -267,9 +253,7 @@ impl RoleBasedPolicy {
             }
             match grant.effect {
                 Effect::Deny => {
-                    return Decision::Deny {
-                        reason: format!("denied by role '{}' grant {:?} for {action:?} on {segments:?}", grant.role, grant.pattern),
-                    };
+                    return Decision::Deny { reason: format!("denied by role '{}' grant {:?} for {action:?} on {segments:?}", grant.role, grant.pattern) };
                 }
                 Effect::Allow => allowed_by = allowed_by.or(Some(grant)),
             }
@@ -299,9 +283,7 @@ fn map_protocol_error(err: protocol::ProtocolError) -> db_core::DbError {
     match err {
         protocol::ProtocolError::LimitExceeded(what) => db_core::DbError::LimitExceeded(what),
         protocol::ProtocolError::Io(message) => db_core::DbError::Io(message),
-        protocol::ProtocolError::SignatureInvalid { .. } | protocol::ProtocolError::VerifierRequired => {
-            db_core::DbError::Unauthorized(err.to_string())
-        }
+        protocol::ProtocolError::SignatureInvalid { .. } | protocol::ProtocolError::VerifierRequired => db_core::DbError::Unauthorized(err.to_string()),
         other => db_core::DbError::Internal(other.to_string()),
     }
 }
@@ -368,10 +350,7 @@ impl ReplayGuard {
         }
 
         if set.contains(operation_id) {
-            return Err(db_core::DbError::Conflict(format!(
-                "replayed operation '{}' by actor '{}' within {}ms window",
-                operation_id.0, actor.0, self.window_ms
-            )));
+            return Err(db_core::DbError::Conflict(format!("replayed operation '{}' by actor '{}' within {}ms window", operation_id.0, actor.0, self.window_ms)));
         }
 
         if deque.len() >= self.capacity_per_actor {
@@ -472,15 +451,7 @@ pub fn redact_fields(policy: &RoleBasedPolicy, principal: &Principal, document: 
     redact_fields_at(policy, principal, document, object_id, "", value, 0)
 }
 
-fn redact_fields_at(
-    policy: &RoleBasedPolicy,
-    principal: &Principal,
-    document: &protocol::DocumentId,
-    object_id: &str,
-    path: &str,
-    value: &serde_json::Value,
-    depth: usize,
-) -> serde_json::Value {
+fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, document: &protocol::DocumentId, object_id: &str, path: &str, value: &serde_json::Value, depth: usize) -> serde_json::Value {
     if depth > MAX_REDACT_DEPTH {
         return redacted_marker();
     }
@@ -539,11 +510,7 @@ pub fn audit_replay_rejected(emit: &dyn db_core::Emit, actor: &protocol::ActorId
 /// @emoji 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_command` calls this
 /// when `BudgetRegistry` rejects a submission.
 pub fn audit_budget_exceeded(emit: &dyn db_core::Emit, key: &str, document: &protocol::DocumentId) {
-    emit.emit(
-        db_core::EmitEvent::new("security.budget_exceeded")
-            .with_document(db_core::DocumentId::from(document.0.clone()))
-            .field("key", db_core::EmitField::Text(key.to_string())),
-    );
+    emit.emit(db_core::EmitEvent::new("security.budget_exceeded").with_document(db_core::DocumentId::from(document.0.clone())).field("key", db_core::EmitField::Text(key.to_string())));
 }
 //#endregion 🔖️Audit
 
@@ -656,14 +623,8 @@ mod tests {
     fn scope_segments_nest_under_document() {
         assert_eq!(AuthzScope::Database.segments(), vec!["db"]);
         assert_eq!(AuthzScope::Document { document: doc("doc-1") }.segments(), vec!["db", "document", "doc-1"]);
-        assert_eq!(
-            AuthzScope::CommandKind { document: doc("doc-1"), kind: "edit".to_string() }.segments(),
-            vec!["db", "document", "doc-1", "kind", "edit"]
-        );
-        assert_eq!(
-            AuthzScope::Field { document: doc("doc-1"), object_id: "obj-1".to_string(), field: "name".to_string() }.segments(),
-            vec!["db", "document", "doc-1", "object", "obj-1", "field", "name"]
-        );
+        assert_eq!(AuthzScope::CommandKind { document: doc("doc-1"), kind: "edit".to_string() }.segments(), vec!["db", "document", "doc-1", "kind", "edit"]);
+        assert_eq!(AuthzScope::Field { document: doc("doc-1"), object_id: "obj-1".to_string(), field: "name".to_string() }.segments(), vec!["db", "document", "doc-1", "object", "obj-1", "field", "name"]);
     }
 
     #[test]
@@ -708,17 +669,11 @@ mod tests {
 
     #[test]
     fn evaluate_explicit_deny_always_wins_over_allow() {
-        let policy = RoleBasedPolicy::new()
-            .with_grant(Grant::allow("editor", &["db", "document", "doc-1", "**"], &[Action::Read]))
-            .with_grant(Grant::deny("editor", &["db", "document", "doc-1", "object", "secret", "**"], &[Action::Read]));
+        let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "doc-1", "**"], &[Action::Read])).with_grant(Grant::deny("editor", &["db", "document", "doc-1", "object", "secret", "**"], &[Action::Read]));
         let allowed = policy.evaluate(&principal("editor"), &AuthzScope::Object { document: doc("doc-1"), object_id: "public".to_string() }, Action::Read);
         assert!(allowed.is_allowed());
 
-        let denied = policy.evaluate(
-            &principal("editor"),
-            &AuthzScope::Field { document: doc("doc-1"), object_id: "secret".to_string(), field: "value".to_string() },
-            Action::Read,
-        );
+        let denied = policy.evaluate(&principal("editor"), &AuthzScope::Field { document: doc("doc-1"), object_id: "secret".to_string(), field: "value".to_string() }, Action::Read);
         assert!(!denied.is_allowed());
     }
 
@@ -855,9 +810,11 @@ mod tests {
     //#region 🔖️Redaction
     #[test]
     fn redact_fields_hides_denied_nested_field_and_keeps_allowed_siblings() {
-        let policy = RoleBasedPolicy::new()
-            .with_grant(Grant::allow("viewer", &["db", "document", "doc-1", "object", "obj-1", "field", "**"], &[Action::Read]))
-            .with_grant(Grant::deny("viewer", &["db", "document", "doc-1", "object", "obj-1", "field", "ssn"], &[Action::Read]));
+        let policy = RoleBasedPolicy::new().with_grant(Grant::allow("viewer", &["db", "document", "doc-1", "object", "obj-1", "field", "**"], &[Action::Read])).with_grant(Grant::deny(
+            "viewer",
+            &["db", "document", "doc-1", "object", "obj-1", "field", "ssn"],
+            &[Action::Read],
+        ));
         let value = serde_json::json!({"name": "Ada", "ssn": "123-45-6789", "address": {"city": "Zurich"}});
 
         let redacted = redact_fields(&policy, &principal("viewer"), &doc("doc-1"), "obj-1", &value);
@@ -936,12 +893,7 @@ mod tests {
         let budget_err = gate.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-2"), 0).unwrap_err();
         assert!(matches!(budget_err, db_core::DbError::LimitExceeded(_)));
 
-        let gate2 = SecurityGate::new(
-            RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "*", "**"], &[Action::Write])),
-            ReplayGuard::new(10_000, 16),
-            BudgetRegistry::new(10, 1),
-            sink,
-        );
+        let gate2 = SecurityGate::new(RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "*", "**"], &[Action::Write])), ReplayGuard::new(10_000, 16), BudgetRegistry::new(10, 1), sink);
         assert!(gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 0).is_ok());
         let replay_err = gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 100).unwrap_err();
         assert!(matches!(replay_err, db_core::DbError::Conflict(_)));
@@ -959,9 +911,11 @@ mod tests {
 
     #[test]
     fn security_gate_redact_forwards_to_policy() {
-        let policy = RoleBasedPolicy::new()
-            .with_grant(Grant::allow("editor", &["db", "document", "doc-1", "object", "obj-1", "field", "**"], &[Action::Read]))
-            .with_grant(Grant::deny("editor", &["db", "document", "doc-1", "object", "obj-1", "field", "secret"], &[Action::Read]));
+        let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "doc-1", "object", "obj-1", "field", "**"], &[Action::Read])).with_grant(Grant::deny(
+            "editor",
+            &["db", "document", "doc-1", "object", "obj-1", "field", "secret"],
+            &[Action::Read],
+        ));
         let sink = std::sync::Arc::new(RecordingEmit { events: std::sync::Mutex::new(Vec::new()) });
         let gate = SecurityGate::new(policy, ReplayGuard::new(1_000, 16), BudgetRegistry::new(10, 1), sink);
         let value = serde_json::json!({"secret": "hidden", "open": "visible"});

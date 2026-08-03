@@ -113,14 +113,7 @@ pub struct PackLimits {
 
 impl Default for PackLimits {
     fn default() -> Self {
-        Self {
-            max_file_len: 16 * 1024 * 1024 * 1024,
-            max_segment_len: 256 * 1024 * 1024,
-            max_symbols: 1_000_000,
-            max_depth: 64,
-            max_items: 64_000_000,
-            max_total_alloc: 4 * 1024 * 1024 * 1024,
-        }
+        Self { max_file_len: 16 * 1024 * 1024 * 1024, max_segment_len: 256 * 1024 * 1024, max_symbols: 1_000_000, max_depth: 64, max_items: 64_000_000, max_total_alloc: 4 * 1024 * 1024 * 1024 }
     }
 }
 //#endregion 🔖️Limits
@@ -166,22 +159,14 @@ pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, PackError> 
         let more = byte & 0x80 != 0;
         let payload = (byte & 0x7F) as u64;
         if i == 9 && (more || payload > 1) {
-            return Err(PackError::Malformed {
-                what: "varint",
-                offset: start as u64,
-                detail: "overlong varint (exceeds 10 bytes / 64 bits)".to_string(),
-            });
+            return Err(PackError::Malformed { what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes / 64 bits)".to_string() });
         }
         result |= payload << (i as u32 * 7);
         if !more {
             return Ok(result);
         }
     }
-    Err(PackError::Malformed {
-        what: "varint",
-        offset: start as u64,
-        detail: "overlong varint (exceeds 10 bytes)".to_string(),
-    })
+    Err(PackError::Malformed { what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes)".to_string() })
 }
 
 /// @emoji ✏️ Writes `value` as a zigzag-encoded signed varint.
@@ -481,11 +466,7 @@ impl CompressionCodec for NoCompression {
             return Err(PackError::LimitExceeded("NoCompression::decompress raw_len exceeds limit"));
         }
         if stored.len() as u64 != raw_len {
-            return Err(PackError::Malformed {
-                what: "codec",
-                offset: 0,
-                detail: "identity codec stored length does not match raw_len".to_string(),
-            });
+            return Err(PackError::Malformed { what: "codec", offset: 0, detail: "identity codec stored length does not match raw_len".to_string() });
         }
         Ok(stored.to_vec())
     }
@@ -542,21 +523,7 @@ mod tests {
     //#region 🔖️Varint
     #[test]
     fn varint_u64_round_trips_boundary_values() {
-        let values: &[u64] = &[
-            0,
-            1,
-            0x7F,
-            0x80,
-            0x3FFF,
-            0x4000,
-            0x1F_FFFF,
-            0x20_0000,
-            u32::MAX as u64,
-            u32::MAX as u64 + 1,
-            u64::MAX / 2,
-            u64::MAX - 1,
-            u64::MAX,
-        ];
+        let values: &[u64] = &[0, 1, 0x7F, 0x80, 0x3FFF, 0x4000, 0x1F_FFFF, 0x20_0000, u32::MAX as u64, u32::MAX as u64 + 1, u64::MAX / 2, u64::MAX - 1, u64::MAX];
         for &value in values {
             let mut out = Vec::new();
             write_varint_u64(&mut out, value);

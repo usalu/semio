@@ -20,14 +20,8 @@ fn single_envelope(document: &protocol::DocumentId, index: usize) -> protocol::O
         document_id: document.clone(),
         actor: protocol::ActorId("bench-actor".to_string()),
         dependencies: Vec::new(),
-        diff: protocol::DocumentDiff {
-            schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
-            payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default(),
-        },
-        inverse: protocol::InverseOperation {
-            schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
-            payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap_or_default(),
-        },
+        diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
+        inverse: protocol::InverseOperation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap_or_default() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
     }
 }

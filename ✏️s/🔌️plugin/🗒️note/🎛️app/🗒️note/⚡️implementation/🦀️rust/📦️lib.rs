@@ -139,7 +139,7 @@ pub enum NoteBlockNode {
         locked: bool,
         #[dsl(statements, block)]
         children: Vec<NoteBlockNode>,
-    }
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -240,15 +240,7 @@ mod tests {
             eraser_radius: Some(12.0),
             assets: BTreeMap::new(),
         };
-        document.assets.insert(
-            "asset-1".into(),
-            NoteImageAsset {
-                mime: "image/png".into(),
-                data: "data:image/png;base64,abc".into(),
-                width: Some(10.0),
-                height: Some(20.0),
-            },
-        );
+        document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc".into(), width: Some(10.0), height: Some(20.0) });
         document.grid_subdivisions = Some(6.0);
         document.grid_opacity = Some(0.5);
         let json_text = serde_json::to_string(&document).unwrap();

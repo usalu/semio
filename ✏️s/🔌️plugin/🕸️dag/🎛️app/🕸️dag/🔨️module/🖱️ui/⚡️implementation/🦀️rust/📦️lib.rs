@@ -9,10 +9,11 @@ use infinite_board_port_directed_dag::{
 };
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
-    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, tree_item, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
-    ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, Terminology, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
-    UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, tree_item, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale,
+    LocalizedLabel, MediaClass, MediaForm, MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, SurfaceKind, Terminology, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode,
+    UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde_json::{json, Value};
 
@@ -137,44 +138,19 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
     ];
     let selected_ids: std::collections::HashSet<String> = selected.iter().map(|id| format!("dag-play-document.node.{id}")).collect();
     semio_framework_plugin::ui_tree_stamp_presence(&mut sections, &selected_ids, &std::collections::HashSet::new());
-    UiNode::Tree(UiTreeNode {
-        sections,
-        presence: UiPresence::default(),
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-        menu: None,
-    })
+    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None, menu: None })
 }
 
 fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
-    let kinds = [
-        ("computation", labels.kind_computation),
-        ("slider", labels.kind_slider),
-        ("select", labels.kind_select),
-        ("screen", labels.kind_screen),
-        ("note", labels.kind_note),
-        ("preview", labels.kind_preview),
-    ];
+    let kinds = [("computation", labels.kind_computation), ("slider", labels.kind_slider), ("select", labels.kind_select), ("screen", labels.kind_screen), ("note", labels.kind_note), ("preview", labels.kind_preview)];
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "dag-play-catalogue.node-kinds".into(),
             label: Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
-            items: kinds
-                .iter()
-                .map(|(kind, label)| {
-                    tree_item_with_action(
-                        format!("dag-play-catalogue.kind.{kind}"),
-                        *label,
-                        Some((*kind).into()),
-                        dag_action("addNode", Some(json!({ "kind": kind }))),
-                    )
-                })
-                .collect(),
-            }],
+            items: kinds.iter().map(|(kind, label)| tree_item_with_action(format!("dag-play-catalogue.kind.{kind}"), *label, Some((*kind).into()), dag_action("addNode", Some(json!({ "kind": kind }))))).collect(),
+        }],
         presence: UiPresence::default(),
         selected_ids: None,
         highlighted_ids: None,
@@ -186,10 +162,12 @@ fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
 
 fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
-    UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+    UiNode::Field(UiFieldNode {
+        presence: UiPresence::default(),
         id: field_id.into(),
         label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+        child: Box::new(UiNode::Input(UiInputNode {
+            presence: UiPresence::default(),
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
@@ -211,10 +189,12 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl Into<
 
 fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_text(values);
-    UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+    UiNode::Field(UiFieldNode {
+        presence: UiPresence::default(),
         id: field_id.into(),
         label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+        child: Box::new(UiNode::Input(UiInputNode {
+            presence: UiPresence::default(),
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
@@ -259,7 +239,8 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
     let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
     let mut groups: Vec<UiInspectorFieldGroup> = Vec::new();
     if nodes.iter().all(|node| matches!(node.kind, DagNodeKind::Slider { .. })) {
-        groups.push(UiInspectorFieldGroup { presence: UiPresence::default(),
+        groups.push(UiInspectorFieldGroup {
+            presence: UiPresence::default(),
             id: "dag-play-inspector.kind.slider".into(),
             label: labels.slider_group.into(),
             default_open: None,
@@ -317,10 +298,12 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
     if node_ids.len() == 1 {
         base_fields.insert(
             0,
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "dag-play-inspector.id".into(),
                 label: labels.field_id.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: "dag-play-inspector.id.input".into(),
                     input_kind: "text".into(),
                     value: node_ids[0].clone(),
@@ -491,22 +474,14 @@ impl DocumentApp for DagPlayApp {
                         }
                     })
                     .collect();
-                Emit {
-                    document_operations: vec![DagOperation::SetNodes { nodes }, DagOperation::SetEdges { edges }],
-                    config_operations: vec![DagConfigOperation::SetSelection { node_ids: vec![trimmed.to_string()] }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![DagOperation::SetNodes { nodes }, DagOperation::SetEdges { edges }], config_operations: vec![DagConfigOperation::SetSelection { node_ids: vec![trimmed.to_string()] }], ..Default::default() }
             }
             DagCommand::RemoveNode { node_id } => {
                 let removes = remove_nodes_operations(document, std::slice::from_ref(node_id));
                 if removes.is_empty() {
                     Emit::default()
                 } else {
-                    Emit {
-                        document_operations: removes,
-                        config_operations: vec![DagConfigOperation::SetSelection { node_ids: config.selected_node_ids.iter().filter(|id| *id != node_id).cloned().collect() }],
-                        ..Default::default()
-                    }
+                    Emit { document_operations: removes, config_operations: vec![DagConfigOperation::SetSelection { node_ids: config.selected_node_ids.iter().filter(|id| *id != node_id).cloned().collect() }], ..Default::default() }
                 }
             }
             DagCommand::Disconnect { edge_id } => {
@@ -707,7 +682,7 @@ pub fn create_dag_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app() -> VcsDocumentApp<DagPlayApp> {
         testkit::new_app::<DagPlayApp>()
@@ -882,15 +857,10 @@ mod tests {
     /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        testkit::assert_two_instances_converge::<DagPlayApp, (bool, bool)>(
-            "mem://dag-convergence",
-            DagCommand::AddNode { kind: "note".into(), x: None, y: None },
-            DagCommand::AddNode { kind: "slider".into(), x: None, y: None },
-            |app| {
-                let projection = app.projection().expect("projection");
-                (projection.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Note { .. })), projection.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })))
-            },
-        );
+        testkit::assert_two_instances_converge::<DagPlayApp, (bool, bool)>("mem://dag-convergence", DagCommand::AddNode { kind: "note".into(), x: None, y: None }, DagCommand::AddNode { kind: "slider".into(), x: None, y: None }, |app| {
+            let projection = app.projection().expect("projection");
+            (projection.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Note { .. })), projection.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })))
+        });
     }
 
     #[test]
@@ -947,8 +917,22 @@ mod tests {
     fn every_declared_action_is_registered_and_set_selection_is_a_view_action() {
         let definition = create_dag_app().definition;
         for command in [
-            "addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "reorganize", "patchDagNodes", "setSelection", "selectNode", "nodeGraphSelect", "nodeGraphHover",
-            "nodeGraphViewport", "graphPointerDown",
+            "addNode",
+            "removeNode",
+            "deleteSelection",
+            "nodeGraphEdit",
+            "connectMediaPorts",
+            "disconnect",
+            "moveMediaNode",
+            "renameDagNode",
+            "reorganize",
+            "patchDagNodes",
+            "setSelection",
+            "selectNode",
+            "nodeGraphSelect",
+            "nodeGraphHover",
+            "nodeGraphViewport",
+            "graphPointerDown",
         ] {
             assert!(definition.actions.iter().any(|action| action.id == command), "registry declares {command}");
         }

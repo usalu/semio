@@ -45,15 +45,7 @@ pub struct Procedural2dConfig {
 
 impl Default for Procedural2dConfig {
     fn default() -> Self {
-        Self {
-            selected_ids: Vec::new(),
-            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
-            show_mode: default_show_mode(),
-            eval_driver_json: String::new(),
-            selected_generation_id: None,
-            generation_preview_text: None,
-            locale: "en-US".into(),
-        }
+        Self { selected_ids: Vec::new(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), eval_driver_json: String::new(), selected_generation_id: None, generation_preview_text: None, locale: "en-US".into() }
     }
 }
 
@@ -102,12 +94,7 @@ pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         "procedural.2d",
         semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Flow },
-        semio_framework_plugin::ArtifactPresentation {
-            id: "2d.procedural".into(),
-            name: "2D Procedural".into(),
-            dimension: "2d".into(),
-            component_kind: "procedural2d".into(),
-        },
+        semio_framework_plugin::ArtifactPresentation { id: "2d.procedural".into(), name: "2D Procedural".into(), dimension: "2d".into(), component_kind: "procedural2d".into() },
     )
     .with_ports(vec![
         semio_framework_plugin::MediaPortSpec {
@@ -158,10 +145,7 @@ pub fn host_from_fixture_with_driver(fixture: &FlowFixture, driver: Option<&Flow
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint
-        .split_once('@')
-        .map(|(node, port)| (node.to_string(), port.to_string()))
-        .unwrap_or_else(|| (endpoint.to_string(), "out".into()))
+    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
 }
 
 pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
@@ -175,26 +159,8 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node
-                .inputs()
-                .iter()
-                .filter(|port| port.visible)
-                .map(|port| NodeGraphPortRecord {
-                    id: format!("{}@{}", node.id, port.id),
-                    label: Some(port.label.clone()),
-                    ..Default::default()
-                })
-                .collect(),
-            outputs: node
-                .outputs()
-                .iter()
-                .filter(|port| port.visible)
-                .map(|port| NodeGraphPortRecord {
-                    id: format!("{}@{}", node.id, port.id),
-                    label: Some(port.label.clone()),
-                    ..Default::default()
-                })
-                .collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
             ..Default::default()
         })
         .collect();
@@ -204,14 +170,7 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            NodeGraphEdgeRecord {
-                id: edge.id.clone(),
-                source_node_id,
-                source_port_id,
-                target_node_id,
-                target_port_id,
-                label: None,
-            }
+            NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
     (nodes, edges)

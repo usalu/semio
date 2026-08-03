@@ -72,8 +72,7 @@ impl ProjectionState for u64 {
     }
 
     fn decode(bytes: &[u8]) -> Result<Self, DbError> {
-        let array: [u8; 8] =
-            bytes.try_into().map_err(|_| DbError::Corrupt("expected an 8-byte little-endian u64 projection state".to_string()))?;
+        let array: [u8; 8] = bytes.try_into().map_err(|_| DbError::Corrupt("expected an 8-byte little-endian u64 projection state".to_string()))?;
         Ok(u64::from_le_bytes(array))
     }
 }
@@ -284,13 +283,9 @@ impl ProjectionGraph {
             let id = projection.id().to_string();
             for &dependency in projection.dependencies() {
                 if !graph.contains_node(&dependency.to_string()) {
-                    return Err(DbError::NotFound(format!(
-                        "projection {id:?} depends on unregistered projection {dependency:?}"
-                    )));
+                    return Err(DbError::NotFound(format!("projection {id:?} depends on unregistered projection {dependency:?}")));
                 }
-                graph = graph
-                    .add_edge(dependency.to_string(), id.clone(), ())
-                    .expect("both endpoints were just validated present in the graph");
+                graph = graph.add_edge(dependency.to_string(), id.clone(), ()).expect("both endpoints were just validated present in the graph");
             }
         }
 
@@ -310,8 +305,7 @@ impl ProjectionGraph {
 /// in-degree. `ids.len() > order.len()` at the end means a cycle remains (some node's in-degree
 /// never reached zero) — reported as `DbError::InvalidArgument` rather than silently truncating.
 fn topological_sort(graph: &PGraph<String, (), ()>, ids: &[String]) -> Result<Vec<String>, DbError> {
-    let mut in_degree: std::collections::HashMap<String, usize> =
-        ids.iter().map(|id| (id.clone(), graph.predecessors(id).len())).collect();
+    let mut in_degree: std::collections::HashMap<String, usize> = ids.iter().map(|id| (id.clone(), graph.predecessors(id).len())).collect();
     let mut ready: Vec<String> = in_degree.iter().filter(|(_, &degree)| degree == 0).map(|(id, _)| id.clone()).collect();
     ready.sort();
 
@@ -382,11 +376,7 @@ impl<'a> ProjectionEngine<'a> {
     }
 
     fn projection_by_id(&self, projection_id: &str) -> Result<&dyn ErasedProjection, DbError> {
-        self.projections
-            .iter()
-            .find(|projection| projection.id() == projection_id)
-            .map(|projection| projection.as_ref())
-            .ok_or_else(|| DbError::NotFound(format!("projection {projection_id:?} is not registered on this engine")))
+        self.projections.iter().find(|projection| projection.id() == projection_id).map(|projection| projection.as_ref()).ok_or_else(|| DbError::NotFound(format!("projection {projection_id:?} is not registered on this engine")))
     }
 
     fn index_for(&self, projection_id: &str) -> ProjectionIndex<'a> {
@@ -400,11 +390,7 @@ impl<'a> ProjectionEngine<'a> {
     fn decode_checkpoint(&self, projection: &dyn ErasedProjection, versioned_bytes: &[u8]) -> Result<Vec<u8>, DbError> {
         let (stored_version, state_bytes) = decode_versioned(versioned_bytes)?;
         if stored_version != projection.schema_version() {
-            return Err(DbError::Conflict(format!(
-                "projection {:?} checkpoint schema version {stored_version} does not match registered version {} — rebuild required",
-                projection.id(),
-                projection.schema_version()
-            )));
+            return Err(DbError::Conflict(format!("projection {:?} checkpoint schema version {stored_version} does not match registered version {} — rebuild required", projection.id(), projection.schema_version())));
         }
         Ok(state_bytes.to_vec())
     }
@@ -421,10 +407,7 @@ impl<'a> ProjectionEngine<'a> {
 
     fn require_matching_document(&self, envelope: &OperationEnvelope) -> Result<(), DbError> {
         if envelope.document_id.0 != self.document.0 {
-            return Err(DbError::InvalidArgument(format!(
-                "envelope document {:?} does not match this engine's document {:?}",
-                envelope.document_id.0, self.document.0
-            )));
+            return Err(DbError::InvalidArgument(format!("envelope document {:?} does not match this engine's document {:?}", envelope.document_id.0, self.document.0)));
         }
         Ok(())
     }
@@ -692,28 +675,21 @@ mod tests {
 
     #[test]
     fn build_rejects_duplicate_ids() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![
-            erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }),
-            erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }),
-        ];
+        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }), erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] })];
         let storage = MemoryStorage::new();
         assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections), Err(DbError::AlreadyExists(_))));
     }
 
     #[test]
     fn build_rejects_unknown_dependency() {
-        let projections: Vec<Box<dyn ErasedProjection>> =
-            vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["ghost"], reads: &[] })];
+        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["ghost"], reads: &[] })];
         let storage = MemoryStorage::new();
         assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections), Err(DbError::NotFound(_))));
     }
 
     #[test]
     fn build_rejects_a_dependency_cycle() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![
-            erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["b"], reads: &[] }),
-            erase(CounterProjection { id: "b", schema_version: 1, dependencies: &["a"], reads: &[] }),
-        ];
+        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["b"], reads: &[] }), erase(CounterProjection { id: "b", schema_version: 1, dependencies: &["a"], reads: &[] })];
         let storage = MemoryStorage::new();
         assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections), Err(DbError::InvalidArgument(_))));
     }
@@ -722,8 +698,7 @@ mod tests {
     //#region 🔖️Engine
     #[test]
     fn apply_envelope_advances_and_persists_incrementally() {
-        let projections: Vec<Box<dyn ErasedProjection>> =
-            vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
+        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
@@ -740,8 +715,7 @@ mod tests {
 
     #[test]
     fn apply_envelope_rejects_a_mismatched_document() {
-        let projections: Vec<Box<dyn ErasedProjection>> =
-            vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
+        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
         assert!(matches!(engine.apply_envelope(1, &envelope("doc-OTHER", "op-1", 1), &touch(&["doc"])), Err(DbError::InvalidArgument(_))));
@@ -749,10 +723,8 @@ mod tests {
 
     #[test]
     fn dependent_projection_sees_its_dependencys_state_from_the_same_step() {
-        let projections: Vec<Box<dyn ErasedProjection>> = vec![
-            erase(SumWithDependencyProjection { id: "sum", dependency_id: "count", dependencies: &["count"], reads: &[] }),
-            erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }),
-        ];
+        let projections: Vec<Box<dyn ErasedProjection>> =
+            vec![erase(SumWithDependencyProjection { id: "sum", dependency_id: "count", dependencies: &["count"], reads: &[] }), erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
@@ -771,14 +743,12 @@ mod tests {
     fn stale_schema_version_checkpoint_is_reported_as_conflict_not_misread() {
         let storage = MemoryStorage::new();
         {
-            let projections: Vec<Box<dyn ErasedProjection>> =
-                vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
+            let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
             let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
             engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"])).unwrap();
         }
         // A fresh engine registers the SAME projection id at a bumped schema version.
-        let projections: Vec<Box<dyn ErasedProjection>> =
-            vec![erase(CounterProjection { id: "count", schema_version: 2, dependencies: &[], reads: &["doc"] })];
+        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 2, dependencies: &[], reads: &["doc"] })];
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
         assert!(matches!(engine.state_at("count", 1), Err(DbError::Conflict(_))));
         assert!(matches!(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["doc"])), Err(DbError::Conflict(_))));
@@ -791,8 +761,7 @@ mod tests {
 
     #[test]
     fn preview_augmented_never_persists_and_does_not_affect_canonical_state() {
-        let projections: Vec<Box<dyn ErasedProjection>> =
-            vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
+        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
         engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"])).unwrap();
@@ -810,8 +779,7 @@ mod tests {
     //#region 🔖️IncrementalTriggering
     #[test]
     fn apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touched_set() {
-        let projections: Vec<Box<dyn ErasedProjection>> =
-            vec![erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] })];
+        let projections: Vec<Box<dyn ErasedProjection>> = vec![erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] })];
         let storage = MemoryStorage::new();
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
 
@@ -846,11 +814,7 @@ mod tests {
         // is the only path in this step's touched set that "cascade" itself would ever have read.
         engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["counter"])).unwrap();
         assert_eq!(engine.state_at("counter", 2).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
-        assert_eq!(
-            engine.state_at("cascade", 2).unwrap().map(|bytes| u64::decode(&bytes).unwrap()),
-            Some(2),
-            "cascade = prior(0) + 1 + counter's this-step value(1) = 2"
-        );
+        assert_eq!(engine.state_at("cascade", 2).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(2), "cascade = prior(0) + 1 + counter's this-step value(1) = 2");
     }
     //#endregion 🔖️IncrementalTriggering
 
@@ -876,9 +840,7 @@ mod tests {
         // Alternating touched paths so "count"/"sum" run on some steps and are skipped on others —
         // "never" is never touched and has no dependents, so it should stay at its initial state.
         let touched_paths: [&[&str]; 5] = [&["doc"], &["unrelated"], &["doc"], &["doc", "unrelated"], &["unrelated"]];
-        let events: Vec<(u64, OperationEnvelope, TouchedSet)> = (1..=5u64)
-            .map(|seq| (seq, envelope("doc-1", &format!("op-{seq}"), seq), touch(touched_paths[(seq - 1) as usize])))
-            .collect();
+        let events: Vec<(u64, OperationEnvelope, TouchedSet)> = (1..=5u64).map(|seq| (seq, envelope("doc-1", &format!("op-{seq}"), seq), touch(touched_paths[(seq - 1) as usize]))).collect();
 
         // Incremental path: apply seqs 1-3 against one engine instance, drop it, then resume with a
         // FRESH engine instance (forcing seqs 4-5 to load their checkpoint from `storage`, not from
@@ -903,11 +865,7 @@ mod tests {
         let rebuilt_final = rebuild_engine.rebuild_in_memory(&events).unwrap();
 
         for id in ["count", "sum", "never"] {
-            assert_eq!(
-                incremental_final.get(&id.to_string()),
-                rebuilt_final.get(&id.to_string()),
-                "projection {id} diverged between checkpoint-resumed incremental application and full in-memory rebuild"
-            );
+            assert_eq!(incremental_final.get(&id.to_string()), rebuilt_final.get(&id.to_string()), "projection {id} diverged between checkpoint-resumed incremental application and full in-memory rebuild");
         }
         assert_eq!(u64::decode(rebuilt_final.get(&"never".to_string()).unwrap()).unwrap(), 0, "sanity: 'never' truly never ran");
     }

@@ -42,7 +42,7 @@ impl OperationDiff<MathProjection> for MathDiff {
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum MathOperation {
     SetGraph { graph: MathGraph },
-    SetGeometry { geometry: MathGeometry }
+    SetGeometry { geometry: MathGeometry },
 }
 
 impl Operation<MathProjection> for MathOperation {
@@ -81,7 +81,7 @@ enum MathOperationDsl {
     SetGeometry {
         #[dsl(block)]
         geometry: MathGeometry,
-    }
+    },
 }
 
 fn math_operation_to_dsl(operation: &MathOperation) -> MathOperationDsl {

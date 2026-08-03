@@ -6,18 +6,15 @@
 //! not an `apply_X_operation` match on a LOCALLY-owned enum, so it carries no circular-dependency risk
 //! against a local `op` crate (this app has none — see `space_op`'s own doc comment).
 
-use space::SpaceWindowCamera;
-use serde::{Deserialize, Serialize};
+use infinite_board_port_directed_dag::{dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_os::{
-    create_default_os_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration,
-    parameter_id_from_port_id, patch_os_parameter, resolve_os_app_definition, workflow_node_for_app, MediaContract,
-    OsOperation, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection, WorkflowPosition,
+    create_default_os_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, parameter_id_from_port_id, patch_os_parameter, resolve_os_app_definition, workflow_node_for_app, MediaContract, OsOperation,
+    OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection, WorkflowPosition,
 };
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use space::SpaceWindowCamera;
 use std::collections::{BTreeMap, HashMap};
-use infinite_board_port_directed_dag::{
-    dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec,
-};
 
 //#region 🔖️Config
 /// 🧮️ B1: space's real `DocumentApp::Config` — the studio app's config artifact. Absorbs every field
@@ -113,19 +110,13 @@ impl protocol::OperationDiff<SpaceConfig> for SpaceConfig {
 //#region 🔖️Parameters
 pub fn parameter_entity_id(parameter: &OsParameter) -> &str {
     match parameter {
-        OsParameter::Numeric { id, .. }
-        | OsParameter::Categorical { id, .. }
-        | OsParameter::Toggle { id, .. }
-        | OsParameter::Text { id, .. } => id,
+        OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => id,
     }
 }
 
 pub fn parameter_name(parameter: &OsParameter) -> &str {
     match parameter {
-        OsParameter::Numeric { name, .. }
-        | OsParameter::Categorical { name, .. }
-        | OsParameter::Toggle { name, .. }
-        | OsParameter::Text { name, .. } => name,
+        OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => name,
     }
 }
 
@@ -141,22 +132,14 @@ impl OsParameterId for OsParameter {
 
 /// @emoji ➕️ Builds an `AddParameter` operation with a fresh default parameter of the requested type.
 pub fn add_parameter_operation(parameter_type: &OsParameterType, name: &str) -> OsOperation {
-    OsOperation::AddParameter {
-        parameter: create_default_os_parameter(parameter_type, name, None),
-    }
+    OsOperation::AddParameter { parameter: create_default_os_parameter(parameter_type, name, None) }
 }
 
 /// @emoji 🩹️ Builds a `PatchParameter` operation by folding `patch` (a `{field: value}` object) into the
 /// current parameter — the store-free operation-builder used in place of os-core's `OsStore::patch_parameter`.
 pub fn patch_parameter_operation(projection: &OsProjection, parameter_id: &str, patch: &Value) -> Option<OsOperation> {
-    let current = projection
-        .parameters
-        .iter()
-        .find(|parameter| parameter_entity_id(parameter) == parameter_id)?;
-    Some(OsOperation::PatchParameter {
-        parameter_id: parameter_id.into(),
-        parameter: patch_os_parameter(current, patch),
-    })
+    let current = projection.parameters.iter().find(|parameter| parameter_entity_id(parameter) == parameter_id)?;
+    Some(OsOperation::PatchParameter { parameter_id: parameter_id.into(), parameter: patch_os_parameter(current, patch) })
 }
 //#endregion 🔖️Parameters
 
@@ -187,32 +170,16 @@ pub fn add_workflow_node_operation(plugin_id: &str, app_id: &str, label: Option<
 /// directly on `WorkflowNode`/`WorkflowMediaPort` — a node's ports are typed `MediaPortSpec`s now, no
 /// more string `artifact_kind` join through a separate `OsMediaPort`.
 pub fn negotiate_media_connect(projection: &OsProjection, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, String> {
-    let source_port = projection
-        .workflow
-        .nodes
-        .iter()
-        .find(|node| node.id == source_node_id)
-        .and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id))
-        .ok_or_else(|| format!("unknown source port {source_node_id}:{source_port_id}"))?;
-    let target_port = projection
-        .workflow
-        .nodes
-        .iter()
-        .find(|node| node.id == target_node_id)
-        .and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id))
-        .ok_or_else(|| format!("unknown target port {target_node_id}:{target_port_id}"))?;
+    let source_port =
+        projection.workflow.nodes.iter().find(|node| node.id == source_node_id).and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id)).ok_or_else(|| format!("unknown source port {source_node_id}:{source_port_id}"))?;
+    let target_port =
+        projection.workflow.nodes.iter().find(|node| node.id == target_node_id).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)).ok_or_else(|| format!("unknown target port {target_node_id}:{target_port_id}"))?;
     negotiate_media_contract(source_port, target_port)
 }
 //#endregion 🔖️MediaContractConnect
 
 //#region 🔖️MediaVfs
-pub fn flatten_media_vfs_rows(
-    parent_id: &str,
-    graph: &semio_framework_os::Workflow,
-    bindings: &[OsParameterFieldBinding],
-    parameters: &[OsParameter],
-    rows: &mut Vec<Value>,
-) {
+pub fn flatten_media_vfs_rows(parent_id: &str, graph: &semio_framework_os::Workflow, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], rows: &mut Vec<Value>) {
     let children = semio_framework_os::list_os_workflow_vfs_children(parent_id, graph, bindings, parameters);
     for child in &children {
         rows.push(vfs_node_to_row(child));
@@ -235,14 +202,8 @@ pub fn vfs_node_to_row(node: &semio_framework_os::OsWorkflowVfsNodeRecord) -> Va
     })
 }
 
-pub fn media_port_label(
-    port_id: &str,
-    parameter_by_id: &HashMap<String, &OsParameter>,
-) -> String {
-    parameter_id_from_port_id(port_id)
-        .and_then(|id| parameter_by_id.get(&id).map(|row| parameter_name(row).to_string()))
-        .or_else(|| media_port_spec_id(port_id))
-        .unwrap_or_else(|| port_id.to_string())
+pub fn media_port_label(port_id: &str, parameter_by_id: &HashMap<String, &OsParameter>) -> String {
+    parameter_id_from_port_id(port_id).and_then(|id| parameter_by_id.get(&id).map(|row| parameter_name(row).to_string())).or_else(|| media_port_spec_id(port_id)).unwrap_or_else(|| port_id.to_string())
 }
 //#endregion 🔖️MediaVfs
 
@@ -251,31 +212,18 @@ pub fn media_port_label(
 /// renders — every `WorkflowNode` becomes one `DagNodeKind::AppInstance` directly (node IS instance
 /// now; no separate join through `OsAppInstance`).
 pub fn workflow_to_dag_fixture(projection: &OsProjection) -> DagFixture {
-    let parameter_by_id: HashMap<_, _> = projection
-        .parameters
-        .iter()
-        .map(|row| (parameter_entity_id(row).to_string(), row))
-        .collect();
+    let parameter_by_id: HashMap<_, _> = projection.parameters.iter().map(|row| (parameter_entity_id(row).to_string(), row)).collect();
     let nodes = projection
         .workflow
         .nodes
         .iter()
         .map(|node| {
             let registration = os_app_registration(&node.plugin_id, &node.app_id);
-            let icon = format!(
-                "emoji:{}",
-                registration
-                    .map(|row| row.component_kind.clone())
-                    .unwrap_or_else(|| "s".into())
-            );
+            let icon = format!("emoji:{}", registration.map(|row| row.component_kind.clone()).unwrap_or_else(|| "s".into()));
             DagNodeSpec {
                 id: node.id.clone(),
                 name: node.label.clone(),
-                abbreviation: if node.app_id.chars().count() <= 3 {
-                    node.app_id.clone()
-                } else {
-                    node.app_id.chars().take(3).collect()
-                },
+                abbreviation: if node.app_id.chars().count() <= 3 { node.app_id.clone() } else { node.app_id.chars().take(3).collect() },
                 icon: icon.clone(),
                 x: node.x + node.width / 2.0,
                 y: node.y + node.height / 2.0,
@@ -314,23 +262,9 @@ pub fn workflow_to_dag_fixture(projection: &OsProjection) -> DagFixture {
         .workflow
         .edges
         .iter()
-        .map(|edge| DagFixtureEdge {
-            id: edge.id.clone(),
-            source: format!("{}@{}", edge.source_node_id, edge.source_port_id),
-            target: format!("{}@{}", edge.target_node_id, edge.target_port_id),
-            ..Default::default()
-        })
+        .map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}@{}", edge.source_node_id, edge.source_port_id), target: format!("{}@{}", edge.target_node_id, edge.target_port_id), ..Default::default() })
         .collect();
-    DagFixture {
-        schema: "dag.fixture".into(),
-        camera: DagCamera {
-            x: 0.0,
-            y: 0.0,
-            zoom: 1.0,
-        },
-        nodes,
-        edges,
-    }
+    DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges }
 }
 
 pub fn compiled_dag_wire_literal(projection: &OsProjection) -> String {

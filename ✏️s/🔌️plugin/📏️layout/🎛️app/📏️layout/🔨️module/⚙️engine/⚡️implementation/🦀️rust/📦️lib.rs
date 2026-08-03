@@ -8,10 +8,7 @@ use fontique::Blob;
 use image::{ImageBuffer, Rgba};
 use infinite_canvas::camera::{self, Camera, Viewport};
 use infinite_canvas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
-use layout::{
-    Frame, GridSettings, Layer, LayoutBounds, LayoutCamera, LayoutDocument, LayoutRect, Page, PageColumns, PageMargins, ParagraphStyle, Spread, TextStory,
-    LAYOUT_FIXTURE_SCHEMA,
-};
+use layout::{Frame, GridSettings, Layer, LayoutBounds, LayoutCamera, LayoutDocument, LayoutRect, Page, PageColumns, PageMargins, ParagraphStyle, Spread, TextStory, LAYOUT_FIXTURE_SCHEMA};
 use parley::{Alignment, AlignmentOptions, FontContext, FontStack, FontWeight, Layout, LayoutContext, LineHeight, PositionedLayoutItem, StyleProperty};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -108,19 +105,13 @@ impl protocol::OperationDiff<LayoutConfig> for LayoutConfig {
 pub fn layout_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: "layout.fixture".into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Vector,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
                 id: "fields:in".into(),
                 label: "Fields".into(),
                 direction: semio_framework_plugin::MediaPortDirection::In,
-                media_type: semio_framework_plugin::MediaType {
-                    class: semio_framework_plugin::MediaClass::Data,
-                    form: semio_framework_plugin::MediaForm::Value,
-                },
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
                 kind_id: Some("form.dictionary".into()),
                 required: false,
                 multiplicity: semio_framework_core::PortMultiplicity::One,
@@ -129,10 +120,7 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
                 id: "layout:out".into(),
                 label: "Layout".into(),
                 direction: semio_framework_plugin::MediaPortDirection::Out,
-                media_type: semio_framework_plugin::MediaType {
-                    class: semio_framework_plugin::MediaClass::TwoD,
-                    form: semio_framework_plugin::MediaForm::Vector,
-                },
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
                 kind_id: Some("2d.layout".into()),
                 required: false,
                 multiplicity: semio_framework_core::PortMultiplicity::Many,
@@ -140,12 +128,7 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
         ],
         export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
         import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "2d.layout".into(),
-            name: "2D Layout".into(),
-            dimension: "2d".into(),
-            component_kind: "layout".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.layout".into(), name: "2D Layout".into(), dimension: "2d".into(), component_kind: "layout".into() },
     }
 }
 //#endregion 🔖️Io
@@ -762,20 +745,13 @@ fn dwg_rect_pages(drawing: &semio_framework_os::DwgDrawing) -> Vec<(f64, f64, f6
         }
         let (min_x, max_x) = vertices.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), v| (min.min(v[0]), max.max(v[0])));
         let (min_y, max_y) = vertices.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), v| (min.min(v[1]), max.max(v[1])));
-        let is_axis_aligned = vertices
-            .iter()
-            .all(|v| ((v[0] - min_x).abs() < 1e-6 || (v[0] - max_x).abs() < 1e-6) && ((v[1] - min_y).abs() < 1e-6 || (v[1] - max_y).abs() < 1e-6));
+        let is_axis_aligned = vertices.iter().all(|v| ((v[0] - min_x).abs() < 1e-6 || (v[0] - max_x).abs() < 1e-6) && ((v[1] - min_y).abs() < 1e-6 || (v[1] - max_y).abs() < 1e-6));
         if is_axis_aligned && max_x > min_x && max_y > min_y {
             rects.push((min_x, min_y, max_x - min_x, max_y - min_y));
         }
     }
     if rects.is_empty() {
-        rects.push((
-            drawing.extmin[0],
-            drawing.extmin[1],
-            (drawing.extmax[0] - drawing.extmin[0]).max(1.0),
-            (drawing.extmax[1] - drawing.extmin[1]).max(1.0),
-        ));
+        rects.push((drawing.extmin[0], drawing.extmin[1], (drawing.extmax[0] - drawing.extmin[0]).max(1.0), (drawing.extmax[1] - drawing.extmin[1]).max(1.0)));
     }
     rects
 }
@@ -818,7 +794,7 @@ pub fn layout_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
         spreads: vec![Spread { id: "spread-1".into(), name: "Spread 1".into(), page_ids }],
         pages,
         print_target: None,
-            data_fields_json: None,
+        data_fields_json: None,
     };
     serde_json::to_value(document).map_err(|e| e.to_string())
 }
@@ -965,7 +941,15 @@ mod tests {
 
     #[test]
     fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
-        let list = DisplayList { page_id: "page-1".into(), page_width: 100.0, page_height: 100.0, rects: Vec::new(), text_runs: Vec::new(), images: vec![DisplayImage { object_id: "img-1".into(), x: 10.0, y: 10.0, width: 20.0, height: 20.0, placeholder: false }], guides: Vec::new() };
+        let list = DisplayList {
+            page_id: "page-1".into(),
+            page_width: 100.0,
+            page_height: 100.0,
+            rects: Vec::new(),
+            text_runs: Vec::new(),
+            images: vec![DisplayImage { object_id: "img-1".into(), x: 10.0, y: 10.0, width: 20.0, height: 20.0, placeholder: false }],
+            guides: Vec::new(),
+        };
         assert_eq!(list.hit_test(15.0, 15.0).as_deref(), Some("img-1"));
         assert!(list.hit_test(90.0, 90.0).is_none());
     }
@@ -1023,7 +1007,18 @@ mod tests {
             page_width: 200.0,
             page_height: 200.0,
             rects: vec![
-                DisplayRect { object_id: "r-explicit-stroke".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, fill: Some(DisplayColor([1.0, 1.0, 1.0, 1.0])), stroke: Some(DisplayColor([0.0, 0.0, 0.0, 1.0])), inherited: false, selected: true, hovered: false },
+                DisplayRect {
+                    object_id: "r-explicit-stroke".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 10.0,
+                    height: 10.0,
+                    fill: Some(DisplayColor([1.0, 1.0, 1.0, 1.0])),
+                    stroke: Some(DisplayColor([0.0, 0.0, 0.0, 1.0])),
+                    inherited: false,
+                    selected: true,
+                    hovered: false,
+                },
                 DisplayRect { object_id: "r-implicit-hover".into(), x: 20.0, y: 0.0, width: 10.0, height: 10.0, fill: None, stroke: None, inherited: false, selected: false, hovered: true },
                 DisplayRect { object_id: "r-implicit-select".into(), x: 40.0, y: 0.0, width: 10.0, height: 10.0, fill: None, stroke: None, inherited: false, selected: true, hovered: false },
             ],
@@ -1111,12 +1106,7 @@ mod tests {
         drawing.entities.push(semio_framework_os::DwgEntity {
             layer: 0,
             color: semio_framework_os::DwgColor::ByLayer,
-            geometry: semio_framework_os::DwgGeometry::LwPolyline {
-                closed: true,
-                elevation: 0.0,
-                vertices: vec![[10.0, 20.0], [110.0, 20.0], [110.0, 70.0], [10.0, 70.0]],
-                bulges: vec![0.0; 4],
-            },
+            geometry: semio_framework_os::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[10.0, 20.0], [110.0, 20.0], [110.0, 70.0], [10.0, 70.0]], bulges: vec![0.0; 4] },
         });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
         let document: LayoutDocument = serde_json::from_value(value).expect("valid layout document");
@@ -1128,11 +1118,7 @@ mod tests {
     #[test]
     fn dwg_import_without_rectangles_falls_back_to_extents() {
         let mut drawing = semio_framework_os::DwgDrawing::default();
-        drawing.entities.push(semio_framework_os::DwgEntity {
-            layer: 0,
-            color: semio_framework_os::DwgColor::ByLayer,
-            geometry: semio_framework_os::DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [200.0, 150.0, 0.0] },
-        });
+        drawing.entities.push(semio_framework_os::DwgEntity { layer: 0, color: semio_framework_os::DwgColor::ByLayer, geometry: semio_framework_os::DwgGeometry::Line { start: [0.0, 0.0, 0.0], end: [200.0, 150.0, 0.0] } });
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [200.0, 150.0, 0.0];
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");

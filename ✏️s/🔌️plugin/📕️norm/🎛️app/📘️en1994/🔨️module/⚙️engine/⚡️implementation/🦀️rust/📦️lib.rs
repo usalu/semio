@@ -86,11 +86,7 @@ pub mod part_1_1 {
 
     /// 📐️ Minimum degree of shear connection η_min per EN 1994-1-1 §6.6.1.2 (equal-flange rolled/welded sections, f_y ≤ 355 MPa).
     pub fn min_shear_connection_degree(span_m: f64, f_y_mpa: f64) -> f64 {
-        let eta_min = if span_m <= 25.0 {
-            1.0 - (355.0 / f_y_mpa) * (0.75 - 0.03 * span_m)
-        } else {
-            1.0 - (355.0 / f_y_mpa) * 0.30
-        };
+        let eta_min = if span_m <= 25.0 { 1.0 - (355.0 / f_y_mpa) * (0.75 - 0.03 * span_m) } else { 1.0 - (355.0 / f_y_mpa) * 0.30 };
         eta_min.max(0.4)
     }
 
@@ -243,13 +239,7 @@ pub fn check_full_composite(
     report.push(part_1_1::check_shear_connection_degree(eta, span_m, f_y_mpa, annex));
     report.push(part_1_2::check_fire_composite(insulation_thickness_mm, parse_fire_rating(fire_rating), deck_type));
     let category = part_2::bridge_fatigue_category(fatigue_detail);
-    report.push(CheckResult::from_utilization(
-        ClauseId::new("EN 1994-2", "§8", "8.1"),
-        Quantity::stress_mpa(delta_sigma_mpa),
-        Quantity::stress_mpa(category as f64),
-        "bridge composite fatigue",
-        AnnexChoice::En,
-    ));
+    report.push(CheckResult::from_utilization(ClauseId::new("EN 1994-2", "§8", "8.1"), Quantity::stress_mpa(delta_sigma_mpa), Quantity::stress_mpa(category as f64), "bridge composite fatigue", AnnexChoice::En));
     report.push(part_2::check_stud_fatigue(delta_tau_stud_mpa, n_cycles_stud));
     report
 }
@@ -391,9 +381,7 @@ mod tests {
 
     #[test]
     fn full_composite_worked_example() {
-        let report = check_full_composite(
-            180.0, 110.0, 80.0, 250.0, 0.75, 150.0, 20.0, "r60", "trapezoidal", 55.0, "stud_welded", AnnexChoice::De, 19.0, 95.0, 30.0, 450.0, 33_000.0, 40.0, 8.0, 355.0, 2_000_000.0, 40.0,
-        );
+        let report = check_full_composite(180.0, 110.0, 80.0, 250.0, 0.75, 150.0, 20.0, "r60", "trapezoidal", 55.0, "stud_welded", AnnexChoice::De, 19.0, 95.0, 30.0, 450.0, 33_000.0, 40.0, 8.0, 355.0, 2_000_000.0, 40.0);
         assert_eq!(report.checks.len(), 7);
         let m_rd = part_1_1::plastic_moment_partial_knm(80.0, 250.0, 0.75);
         assert!((m_rd - 207.5).abs() < 0.1);

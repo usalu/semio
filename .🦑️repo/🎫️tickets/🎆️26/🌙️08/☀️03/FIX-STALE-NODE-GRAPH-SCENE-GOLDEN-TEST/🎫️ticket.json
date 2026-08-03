@@ -1,0 +1,11 @@
+{
+  "title": "Fix Stale Node Graph Scene Golden Test",
+  "emoji": "🧪️",
+  "status": "closed",
+  "description": "Fix NodeGraphScene golden test compilation error and update golden json constant.",
+  "summary": "Fixed NodeGraphScene golden test compilation error in semio-framework-ui-wgpu lib.rs by passing typed fields (vec![], vec![], NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 }) to NodeGraphScene::base. Updated GOLDEN_SCENES_JSON and GOLDEN_ACTION_DESCRIPTOR_JSON constants to match current struct field serialization. Verified all 34 library tests pass cleanly.",
+  "goal": "",
+  "sessions": [
+    "ed934e5f-6f06-4d65-96b1-887b00111942"
+  ]
+}

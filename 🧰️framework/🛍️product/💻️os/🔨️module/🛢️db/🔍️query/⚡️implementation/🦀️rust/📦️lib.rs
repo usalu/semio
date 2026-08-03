@@ -281,32 +281,20 @@ pub fn resolve_consistency(consistency: &Consistency, resolver: &dyn Consistency
         Consistency::AtLeast(target) => {
             let current = resolver.current_frontier()?;
             if !current.dominates(target)? {
-                return Err(DbError::Unavailable(format!(
-                    "current frontier (head_seq {}) has not yet reached requested AtLeast frontier (head_seq {})",
-                    current.head_seq, target.head_seq
-                )));
+                return Err(DbError::Unavailable(format!("current frontier (head_seq {}) has not yet reached requested AtLeast frontier (head_seq {})", current.head_seq, target.head_seq)));
             }
             Ok(ResolvedConsistency { frontier: current, preview_id: None, historical: false })
         }
         Consistency::Exact(target) => {
             let current = resolver.current_frontier()?;
             if current != *target {
-                return Err(DbError::NotFound(format!(
-                    "no frontier exactly matching requested Exact frontier (head_seq {}, commit_seq {})",
-                    target.head_seq, target.commit_seq
-                )));
+                return Err(DbError::NotFound(format!("no frontier exactly matching requested Exact frontier (head_seq {}, commit_seq {})", target.head_seq, target.commit_seq)));
             }
             Ok(ResolvedConsistency { frontier: current, preview_id: None, historical: false })
         }
-        Consistency::Historical(commit_id) => {
-            Ok(ResolvedConsistency { frontier: resolver.frontier_for_commit(commit_id)?, preview_id: None, historical: true })
-        }
-        Consistency::Speculative(preview_id) => {
-            Ok(ResolvedConsistency { frontier: resolver.current_frontier()?, preview_id: Some(preview_id.clone()), historical: false })
-        }
-        Consistency::PreviewAugmented(preview_id) => {
-            Ok(ResolvedConsistency { frontier: resolver.current_frontier()?, preview_id: Some(preview_id.clone()), historical: false })
-        }
+        Consistency::Historical(commit_id) => Ok(ResolvedConsistency { frontier: resolver.frontier_for_commit(commit_id)?, preview_id: None, historical: true }),
+        Consistency::Speculative(preview_id) => Ok(ResolvedConsistency { frontier: resolver.current_frontier()?, preview_id: Some(preview_id.clone()), historical: false }),
+        Consistency::PreviewAugmented(preview_id) => Ok(ResolvedConsistency { frontier: resolver.current_frontier()?, preview_id: Some(preview_id.clone()), historical: false }),
     }
 }
 
@@ -327,13 +315,8 @@ impl<'a> ConsistencyResolver for IndexConsistencyResolver<'a> {
     }
 
     fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError> {
-        let command_seq = self
-            .commits
-            .lookup(commit_id)?
-            .ok_or_else(|| DbError::NotFound(format!("unknown commit id {commit_id:?}")))?;
-        self.frontiers
-            .lookup(command_seq)?
-            .ok_or_else(|| DbError::NotFound(format!("no frontier recorded at command_seq {command_seq}")))
+        let command_seq = self.commits.lookup(commit_id)?.ok_or_else(|| DbError::NotFound(format!("unknown commit id {commit_id:?}")))?;
+        self.frontiers.lookup(command_seq)?.ok_or_else(|| DbError::NotFound(format!("no frontier recorded at command_seq {command_seq}")))
     }
 }
 //#endregion 🔖️Consistency
@@ -514,11 +497,7 @@ pub struct QueryLimits {
 
 impl Default for QueryLimits {
     fn default() -> Self {
-        QueryLimits {
-            max_scan_rows: 1_000_000,
-            max_result_rows: 10_000,
-            max_result_bytes: db_core::DbLimits::default().max_query_bytes,
-        }
+        QueryLimits { max_scan_rows: 1_000_000, max_result_rows: 10_000, max_result_bytes: db_core::DbLimits::default().max_query_bytes }
     }
 }
 
@@ -705,8 +684,7 @@ fn decode_value(cursor: &mut ValueCursor<'_>) -> Result<Value, DbError> {
             for _ in 0..count {
                 let key_len = cursor.take_u32()? as usize;
                 let key_bytes = cursor.take(key_len)?;
-                let key = String::from_utf8(key_bytes.to_vec())
-                    .map_err(|_| DbError::Corrupt("projection value map key is not valid utf-8".to_string()))?;
+                let key = String::from_utf8(key_bytes.to_vec()).map_err(|_| DbError::Corrupt("projection value map key is not valid utf-8".to_string()))?;
                 map.insert(key, decode_value(cursor)?);
             }
             Ok(Value::Map(map))
@@ -747,12 +725,8 @@ pub struct ProjectionSource(Vec<(RowId, Value)>);
 impl ProjectionSource {
     pub fn from_value(value: Value) -> ProjectionSource {
         match value {
-            Value::List(items) => {
-                ProjectionSource(items.into_iter().enumerate().map(|(index, item)| (RowId(index as u64), item)).collect())
-            }
-            Value::Map(map) => {
-                ProjectionSource(map.into_values().enumerate().map(|(index, item)| (RowId(index as u64), item)).collect())
-            }
+            Value::List(items) => ProjectionSource(items.into_iter().enumerate().map(|(index, item)| (RowId(index as u64), item)).collect()),
+            Value::Map(map) => ProjectionSource(map.into_values().enumerate().map(|(index, item)| (RowId(index as u64), item)).collect()),
             other => ProjectionSource(vec![(RowId(0), other)]),
         }
     }
@@ -903,10 +877,7 @@ pub fn execute(query: &Query, source: &dyn QuerySource, fulltext: Option<&dyn Fu
     check_len(estimate_result_bytes(&projected), limits.max_result_bytes, "db_query::result_bytes")?;
 
     let rows_returned = projected.len() as u64;
-    Ok(QueryResult {
-        rows: projected,
-        diagnostics: QueryDiagnostics { plan: chosen_plan.kind(), rows_scanned: scanned, rows_matched, rows_returned },
-    })
+    Ok(QueryResult { rows: projected, diagnostics: QueryDiagnostics { plan: chosen_plan.kind(), rows_scanned: scanned, rows_matched, rows_returned } })
 }
 //#endregion 🔖️Execute
 
@@ -1220,10 +1191,7 @@ mod tests {
         #[test]
         fn full_scan_filters_sorts_and_paginates() {
             let source = sample_source();
-            let query = Query::new()
-                .filter(Predicate::Gte(Path::field("age"), Value::Int(25)))
-                .sort(vec![SortKey::descending(Path::field("age"))])
-                .limit(2);
+            let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(25))).sort(vec![SortKey::descending(Path::field("age"))]).limit(2);
             let result = execute(&query, &source, None, &QueryLimits::default()).expect("query succeeds");
             assert_eq!(result.diagnostics.plan, QueryPlanKind::FullScan);
             assert_eq!(result.diagnostics.rows_matched, 3);
@@ -1286,18 +1254,15 @@ mod tests {
 
     //#region 🔖️Planner
     mod planner {
-        use super::*;
         use super::execute_tests::FakeFullText;
+        use super::*;
 
         #[test]
         fn plan_recognizes_bare_and_conjoined_full_text_predicates() {
             let bare = Query::new().filter(Predicate::FullText(Path::empty(), "x".to_string()));
             assert_eq!(plan(&bare), QueryPlan::FullTextPushdown { term: "x".to_string() });
 
-            let conjoined = Query::new().filter(Predicate::And(vec![
-                Predicate::Eq(Path::field("age"), Value::Int(1)),
-                Predicate::FullText(Path::empty(), "y".to_string()),
-            ]));
+            let conjoined = Query::new().filter(Predicate::And(vec![Predicate::Eq(Path::field("age"), Value::Int(1)), Predicate::FullText(Path::empty(), "y".to_string())]));
             assert_eq!(plan(&conjoined), QueryPlan::FullTextPushdown { term: "y".to_string() });
 
             let disjoined = Query::new().filter(Predicate::Or(vec![Predicate::FullText(Path::empty(), "z".to_string())]));
@@ -1433,11 +1398,7 @@ mod tests {
             assert!(diff.removed.is_empty());
             assert!(diff.updated.is_empty());
 
-            let second = source_with(vec![
-                sample_row("alice", 31, vec!["admin"]),
-                sample_row("bob", 25, vec!["eng"]),
-                sample_row("cara", 40, vec!["admin"]),
-            ]);
+            let second = source_with(vec![sample_row("alice", 31, vec!["admin"]), sample_row("bob", 25, vec!["eng"]), sample_row("cara", 40, vec!["admin"])]);
             let diff = live.refresh(&second, None, &QueryLimits::default()).expect("refresh succeeds");
             assert_eq!(diff.added.len(), 1);
             assert!(diff.removed.is_empty());

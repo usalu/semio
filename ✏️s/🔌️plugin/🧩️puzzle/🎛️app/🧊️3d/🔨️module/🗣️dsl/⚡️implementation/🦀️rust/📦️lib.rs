@@ -61,7 +61,14 @@ mod tests {
         });
         projection.attractions.push(Puzzle3dAttraction { id: "a1".into(), attracting: "seed-left-001:v0".into(), attracted: "seed-right-001:v0".into(), gap: 0.02, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
         projection.target_volumes.push(Puzzle3dTargetVolume { id: "tv1".into(), origin: [1.0, 2.0, 3.0], orientation: None, scale: Some(Puzzle3dScale::Vec3([2.0, 3.0, 4.0])), hidden: false, locked: false });
-        projection.references.push(Puzzle3dReference { id: "r1".into(), source: Puzzle3dReferenceSource { url: "https://example.com/plan.png".into(), media_kind: Some("image".into()) }, origin: [0.0, 0.0, 0.0], width_world: 12.0, locked: false, hidden: false });
+        projection.references.push(Puzzle3dReference {
+            id: "r1".into(),
+            source: Puzzle3dReferenceSource { url: "https://example.com/plan.png".into(), media_kind: Some("image".into()) },
+            origin: [0.0, 0.0, 0.0],
+            width_world: 12.0,
+            locked: false,
+            hidden: false,
+        });
         projection.meta = Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Some("vortex".into()) }] };
         store::test_support::assert_dsl_round_trip(&projection);
         store::test_support::assert_dsl_pack_equivalence(&projection);

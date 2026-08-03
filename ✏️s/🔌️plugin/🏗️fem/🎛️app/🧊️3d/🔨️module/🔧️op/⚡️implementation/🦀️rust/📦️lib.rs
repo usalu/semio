@@ -241,8 +241,13 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Fem3dOperation {
-    SetNode { index: usize, node: FemNode },
-    RemoveNode { id: String },
+    SetNode {
+        index: usize,
+        node: FemNode,
+    },
+    RemoveNode {
+        id: String,
+    },
     // `FemElement` is a `DslEnum` (tagged, data-carrying variants), not a `DslRecord`, so it has no
     // `DslField` impl of its own — a bare scalar field can't bind it directly. `#[dsl(statements)]`
     // on a `Box<T>` is the engine's "exactly one required tagged value" shape for that case.
@@ -251,19 +256,51 @@ pub enum Fem3dOperation {
         #[dsl(statements)]
         element: Box<FemElement>,
     },
-    RemoveElement { id: String },
-    SetMaterial { index: usize, material: FemMaterial },
-    RemoveMaterial { id: String },
-    SetSection { index: usize, section: FemSection },
-    RemoveSection { id: String },
-    SetSolid { index: usize, solid: FemSolid },
-    RemoveSolid { id: String },
-    SetSupport { index: usize, support: FemSupport },
-    RemoveSupport { id: String },
-    SetLoadCase { index: usize, load_case: FemLoadCase },
-    RemoveLoadCase { id: String },
-    SetCombination { index: usize, combination: FemCombination },
-    RemoveCombination { id: String },
+    RemoveElement {
+        id: String,
+    },
+    SetMaterial {
+        index: usize,
+        material: FemMaterial,
+    },
+    RemoveMaterial {
+        id: String,
+    },
+    SetSection {
+        index: usize,
+        section: FemSection,
+    },
+    RemoveSection {
+        id: String,
+    },
+    SetSolid {
+        index: usize,
+        solid: FemSolid,
+    },
+    RemoveSolid {
+        id: String,
+    },
+    SetSupport {
+        index: usize,
+        support: FemSupport,
+    },
+    RemoveSupport {
+        id: String,
+    },
+    SetLoadCase {
+        index: usize,
+        load_case: FemLoadCase,
+    },
+    RemoveLoadCase {
+        id: String,
+    },
+    SetCombination {
+        index: usize,
+        combination: FemCombination,
+    },
+    RemoveCombination {
+        id: String,
+    },
     SetAnalysisSettings {
         #[dsl(block)]
         settings: FemAnalysisSettings,
@@ -272,7 +309,7 @@ pub enum Fem3dOperation {
     SetDocument {
         #[dsl(block)]
         document: Fem3dDocument,
-    }
+    },
 }
 
 fn node_index(doc: &Fem3dDocument, id: &str) -> Option<usize> {
@@ -346,9 +383,7 @@ impl Operation<Fem3dDocument> for Fem3dOperation {
                 Some(index) => vec![Fem3dOperation::SetElement { index, element: Box::new(projection.elements[index].clone()) }],
                 None => vec![Fem3dOperation::RemoveElement { id: element_id(element).to_string() }],
             },
-            Fem3dOperation::RemoveElement { id } => {
-                element_index(projection, id).map(|index| vec![Fem3dOperation::SetElement { index, element: Box::new(projection.elements[index].clone()) }]).unwrap_or_default()
-            }
+            Fem3dOperation::RemoveElement { id } => element_index(projection, id).map(|index| vec![Fem3dOperation::SetElement { index, element: Box::new(projection.elements[index].clone()) }]).unwrap_or_default(),
             Fem3dOperation::SetMaterial { material, .. } => match material_index(projection, &material.id) {
                 Some(index) => vec![Fem3dOperation::SetMaterial { index, material: projection.materials[index].clone() }],
                 None => vec![Fem3dOperation::RemoveMaterial { id: material.id.clone() }],
@@ -475,12 +510,7 @@ mod tests {
     /// mirrors `fem_2d`'s `rectangle_region_doc` fixture pattern for `FemSolid`.
     fn solid_slab_doc() -> Fem3dDocument {
         Fem3dDocument {
-            nodes: vec![
-                FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 },
-                FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 },
-                FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 },
-                FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 },
-            ],
+            nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
             elements: vec![],
             materials: vec![FemMaterial { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
             sections: vec![],
@@ -609,10 +639,7 @@ mod tests {
             index: 0,
             element: Box::new(FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 }),
         });
-        store::test_support::assert_op_line_round_trip(&Fem3dOperation::SetElement {
-            index: 0,
-            element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }),
-        });
+        store::test_support::assert_op_line_round_trip(&Fem3dOperation::SetElement { index: 0, element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }) });
         store::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveElement { id: "e1".into() });
         store::test_support::assert_op_line_round_trip(&Fem3dOperation::SetMaterial { index: 0, material: FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 } });
         store::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveMaterial { id: "steel".into() });

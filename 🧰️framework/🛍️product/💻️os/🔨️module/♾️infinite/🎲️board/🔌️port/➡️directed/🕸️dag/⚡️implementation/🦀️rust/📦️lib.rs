@@ -6,9 +6,9 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use dsl::DslValue;
 use serde::{Deserialize, Serialize};
 
-use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
 #[cfg(test)]
 use mathematical_graph_manifest::PropertyValue;
+use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
 
 use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use infinite_board_port_directed::{
@@ -378,7 +378,7 @@ pub enum DagPreviewContent {
     },
     Tree {
         json: DslValue,
-    }
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -679,7 +679,7 @@ pub enum DagNodeKind {
         icon: String,
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
-    }
+    },
 }
 
 /// 🏷️ Serialized `kind` tag for a {@link DagNodeKind} variant.
@@ -2106,17 +2106,8 @@ impl DagHost {
             edges: Vec<String>,
             handles: Vec<String>,
         }
-        let handles: Vec<String> = self
-            .selected_channels()
-            .into_iter()
-            .map(|channel| format!("{}@{}", channel.widget_id, channel.port))
-            .collect();
-        serde_json::to_string(&Domains {
-            nodes: self.selected_node_ids(),
-            edges: self.selected_edge_ids(),
-            handles,
-        })
-        .unwrap_or_else(|_| r#"{"nodes":[],"edges":[],"handles":[]}"#.into())
+        let handles: Vec<String> = self.selected_channels().into_iter().map(|channel| format!("{}@{}", channel.widget_id, channel.port)).collect();
+        serde_json::to_string(&Domains { nodes: self.selected_node_ids(), edges: self.selected_edge_ids(), handles }).unwrap_or_else(|_| r#"{"nodes":[],"edges":[],"handles":[]}"#.into())
     }
 
     fn apply_selection_domains(&mut self, nodes: &[String], edges: &[String], handles: &[String]) {
@@ -2563,10 +2554,21 @@ impl DagHost {
         let bounds_result: Option<(f64, f64, f64, f64)> = match domain {
             "node" => {
                 if id == "*" {
-                    let all: Vec<(f64, f64, f64, f64)> = self.fixture.nodes.iter().map(|node| { let b = Self::dag_node_world_bounds(node); (b.min_x, b.min_y, b.max_x, b.max_y) }).collect();
+                    let all: Vec<(f64, f64, f64, f64)> = self
+                        .fixture
+                        .nodes
+                        .iter()
+                        .map(|node| {
+                            let b = Self::dag_node_world_bounds(node);
+                            (b.min_x, b.min_y, b.max_x, b.max_y)
+                        })
+                        .collect();
                     nearest_center_screen(&all)
                 } else {
-                    self.fixture.nodes.iter().find(|node| node.id == id).map(|node| { let b = Self::dag_node_world_bounds(node); (b.min_x, b.min_y, b.max_x, b.max_y) })
+                    self.fixture.nodes.iter().find(|node| node.id == id).map(|node| {
+                        let b = Self::dag_node_world_bounds(node);
+                        (b.min_x, b.min_y, b.max_x, b.max_y)
+                    })
                 }
             }
             "handle" => {
@@ -2594,14 +2596,7 @@ impl DagHost {
                 let (_, source_center) = world_rect_to_screen(source_bounds.0, source_bounds.1, source_bounds.2, source_bounds.3);
                 let (_, target_center) = world_rect_to_screen(target_bounds.0, target_bounds.1, target_bounds.2, target_bounds.3);
                 let midpoint = ((source_center.0 + target_center.0) * 0.5, (source_center.1 + target_center.1) * 0.5);
-                return serde_json::to_string(&EntityGeometry {
-                    visible: true,
-                    x: Some(midpoint.0),
-                    y: Some(midpoint.1),
-                    rect: None,
-                    polyline: Some(vec![[source_center.0, source_center.1], [target_center.0, target_center.1]]),
-                })
-                .unwrap_or_default();
+                return serde_json::to_string(&EntityGeometry { visible: true, x: Some(midpoint.0), y: Some(midpoint.1), rect: None, polyline: Some(vec![[source_center.0, source_center.1], [target_center.0, target_center.1]]) }).unwrap_or_default();
             }
             _ => None,
         };
@@ -3014,9 +3009,7 @@ impl DagHost {
         let span_h = (max_y - min_y).max(1.0);
         let vw = self.width.max(1) as f64;
         let vh = self.height.max(1) as f64;
-        let zoom = (vw / (span_w * pad))
-            .min(vh / (span_h * pad))
-            .clamp(ui_styling::metrics::camera::ZOOM_MIN, ui_styling::metrics::camera::FLOW_ZOOM_MAX);
+        let zoom = (vw / (span_w * pad)).min(vh / (span_h * pad)).clamp(ui_styling::metrics::camera::ZOOM_MIN, ui_styling::metrics::camera::FLOW_ZOOM_MAX);
         Some(DagCamera { x: cx, y: cy, zoom })
     }
 
@@ -3060,16 +3053,7 @@ impl DagHost {
         (self.snap_world_scalar(x), self.snap_world_scalar(y))
     }
 
-    fn stroke_world_step_grid(
-        &self,
-        scene: &mut canvas::Scene,
-        cam: &canvas::camera::Camera,
-        viewport: &canvas::camera::Viewport,
-        color: canvas::Color,
-        stroke_px: f64,
-        world_step: f64,
-        min_step_screen: f64,
-    ) {
+    fn stroke_world_step_grid(&self, scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, color: canvas::Color, stroke_px: f64, world_step: f64, min_step_screen: f64) {
         use canvas::camera::world_to_screen;
         use canvas::{Affine, Point, Stroke};
         let step = world_step * cam.zoom;
@@ -4627,17 +4611,7 @@ impl DagHost {
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
-    fn paint_node_visual(
-        &self,
-        scene: &mut canvas::Scene,
-        aff: &canvas::Affine,
-        cam: &canvas::camera::Camera,
-        viewport: &canvas::camera::Viewport,
-        lod: DagDrawLod,
-        lod_index: usize,
-        node: &DagNodeSpec,
-        chrome: DagNodePaintChrome,
-    ) {
+    fn paint_node_visual(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, lod: DagDrawLod, lod_index: usize, node: &DagNodeSpec, chrome: DagNodePaintChrome) {
         use canvas::camera::world_to_screen;
         use canvas::text::append_label;
         use canvas::FillRule;
@@ -4970,16 +4944,7 @@ impl DagHost {
                 let (is_selected, is_highlighted, is_hovered) = engine_nid.map(|nid| self.node_interaction_chrome(nid)).unwrap_or((false, false, false));
                 let is_computing = engine_nid.is_some_and(|nid| self.computing_active == Some(nid));
                 let is_stale = engine_nid.is_some_and(|nid| self.computing_stale.contains(&nid));
-                self.paint_node_visual(
-                    scene,
-                    &aff,
-                    &cam,
-                    &viewport,
-                    lod,
-                    lod_index,
-                    node,
-                    DagNodePaintChrome { is_dimmed, is_selected, is_highlighted, is_hovered, is_computing, is_stale, body_fill_alpha: 255, ghost_tint: false },
-                );
+                self.paint_node_visual(scene, &aff, &cam, &viewport, lod, lod_index, node, DagNodePaintChrome { is_dimmed, is_selected, is_highlighted, is_hovered, is_computing, is_stale, body_fill_alpha: 255, ghost_tint: false });
             }
         }
         if let Some(ghost) = self.ghost_node.as_ref() {
@@ -7196,12 +7161,12 @@ mod tests {
 // #endregion 🔖️Tests
 
 // #region 🔖️DocumentVcs
-use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, OpText, Patchable};
-use store::{DocumentEnvelope, DocumentStore};
+use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, OpText, Operation, OperationDiff, Patchable};
 #[cfg(any(test, target_arch = "wasm32"))]
 use store::create_document_envelope;
 #[cfg(test)]
 use store::DocumentCommand;
+use store::{DocumentEnvelope, DocumentStore};
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.fixture";
 
@@ -7378,7 +7343,7 @@ pub enum DagOperation {
     Edges(CollectionOperation<String, DagFixtureEdge, DagEdgePatch>),
     SetNodes { nodes: Vec<DagNodeSpec> },
     SetEdges { edges: Vec<DagFixtureEdge> },
-    SetDocument { document: DagDocument }
+    SetDocument { document: DagDocument },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -7487,19 +7452,45 @@ enum DagNodeKindDsl {
         variadic_inputs: bool,
         variadic_outputs: bool,
     },
-    Slider { min: f64, max: f64, step: f64, value: f64, output: IoPortSpec },
-    Select { options: Vec<String>, selected: usize, output: IoPortSpec },
-    Screen { media: Option<DagMedia>, input: IoPortSpec },
-    Note { text: String, output: IoPortSpec },
-    Image { src: String, output: IoPortSpec },
+    Slider {
+        min: f64,
+        max: f64,
+        step: f64,
+        value: f64,
+        output: IoPortSpec,
+    },
+    Select {
+        options: Vec<String>,
+        selected: usize,
+        output: IoPortSpec,
+    },
+    Screen {
+        media: Option<DagMedia>,
+        input: IoPortSpec,
+    },
+    Note {
+        text: String,
+        output: IoPortSpec,
+    },
+    Image {
+        src: String,
+        output: IoPortSpec,
+    },
     Preview {
         #[dsl(statements)]
         content: Box<DagPreviewContent>,
         expanded: Vec<String>,
         input: IoPortSpec,
     },
-    Action { label: String, input: IoPortSpec },
-    Export { label: String, format: String, input: IoPortSpec },
+    Action {
+        label: String,
+        input: IoPortSpec,
+    },
+    Export {
+        label: String,
+        format: String,
+        input: IoPortSpec,
+    },
     Cluster {
         #[dsl(table)]
         inputs: Vec<IoPortSpec>,
@@ -7515,14 +7506,12 @@ enum DagNodeKindDsl {
         inputs: Vec<IoPortSpec>,
         #[dsl(table)]
         outputs: Vec<IoPortSpec>,
-    }
+    },
 }
 
 fn dag_node_kind_to_dsl(kind: &DagNodeKind) -> DagNodeKindDsl {
     match kind {
-        DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } => {
-            DagNodeKindDsl::Computation { inputs: inputs.clone(), outputs: outputs.clone(), variadic_inputs: *variadic_inputs, variadic_outputs: *variadic_outputs }
-        }
+        DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } => DagNodeKindDsl::Computation { inputs: inputs.clone(), outputs: outputs.clone(), variadic_inputs: *variadic_inputs, variadic_outputs: *variadic_outputs },
         DagNodeKind::Slider { min, max, step, value, output } => DagNodeKindDsl::Slider { min: *min, max: *max, step: *step, value: *value, output: output.clone() },
         DagNodeKind::Select { options, selected, output } => DagNodeKindDsl::Select { options: options.clone(), selected: *selected, output: output.clone() },
         DagNodeKind::Screen { media, input } => DagNodeKindDsl::Screen { media: media.clone(), input: input.clone() },
@@ -7681,28 +7670,48 @@ impl store::DocumentPack for DagDocument {
 /// `dsl::DslField` from their own direct `#[derive(dsl::DslRecord)]` above.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum DagOperationDsl {
-    NodesAdd { index: usize, item: DagNodeSpecDsl },
-    NodesRemove { id: String },
+    NodesAdd {
+        index: usize,
+        item: DagNodeSpecDsl,
+    },
+    NodesRemove {
+        id: String,
+    },
     NodesMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    NodesPatch { id: String, patch: DagNodePatchDsl },
-    EdgesAdd { index: usize, item: DagFixtureEdge },
-    EdgesRemove { id: String },
+    NodesPatch {
+        id: String,
+        patch: DagNodePatchDsl,
+    },
+    EdgesAdd {
+        index: usize,
+        item: DagFixtureEdge,
+    },
+    EdgesRemove {
+        id: String,
+    },
     EdgesMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    EdgesPatch { id: String, patch: DagEdgePatch },
-    SetNodes { nodes: Vec<DagNodeSpecDsl> },
+    EdgesPatch {
+        id: String,
+        patch: DagEdgePatch,
+    },
+    SetNodes {
+        nodes: Vec<DagNodeSpecDsl>,
+    },
     SetEdges {
         #[dsl(table)]
         edges: Vec<DagFixtureEdge>,
     },
-    SetDocument { document: DagDocumentDsl },
+    SetDocument {
+        document: DagDocumentDsl,
+    },
 }
 
 fn dag_operation_to_dsl(operation: &DagOperation) -> DagOperationDsl {
@@ -7873,17 +7882,60 @@ mod dag_vcs_tests {
     fn kitchen_sink_document() -> DagDocument {
         let port = |id: &str, label: &str| IoPortSpec::simple(id, label);
         let nodes = vec![
-            DagNodeSpec { id: "comp".into(), name: "Comp".into(), abbreviation: "Cmp".into(), icon: "emoji:🧮️".into(), x: -120.0, y: -40.0, width: 104.0, height: 14.0, kind: DagNodeKind::Computation { inputs: vec![port("in", "In")], outputs: vec![port("out", "Out")], variadic_inputs: true, variadic_outputs: false }, ..Default::default() },
+            DagNodeSpec {
+                id: "comp".into(),
+                name: "Comp".into(),
+                abbreviation: "Cmp".into(),
+                icon: "emoji:🧮️".into(),
+                x: -120.0,
+                y: -40.0,
+                width: 104.0,
+                height: 14.0,
+                kind: DagNodeKind::Computation { inputs: vec![port("in", "In")], outputs: vec![port("out", "Out")], variadic_inputs: true, variadic_outputs: false },
+                ..Default::default()
+            },
             DagNodeSpec { id: "slider".into(), name: "Amount".into(), x: -400.0, y: -40.0, width: 70.0, height: 14.0, kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 5.0, output: port("out", "value") }, ..Default::default() },
-            DagNodeSpec { id: "mode".into(), name: "Mode".into(), x: -400.0, y: 80.0, width: 56.0, height: 28.0, kind: DagNodeKind::Select { options: vec!["Add".into(), "Multiply".into()], selected: 1, output: port("out", "mode") }, ..Default::default() },
-            DagNodeSpec { id: "screen".into(), name: "Preview".into(), x: 400.0, y: 0.0, width: 200.0, height: 140.0, kind: DagNodeKind::Screen { media: Some(DagMedia { kind: DagMediaKind::Svg, src: "data:image/svg+xml,%3Csvg viewBox='0 0 1 1'%3E%3C/svg%3E".into() }), input: port("in", "result") }, ..Default::default() },
+            DagNodeSpec {
+                id: "mode".into(),
+                name: "Mode".into(),
+                x: -400.0,
+                y: 80.0,
+                width: 56.0,
+                height: 28.0,
+                kind: DagNodeKind::Select { options: vec!["Add".into(), "Multiply".into()], selected: 1, output: port("out", "mode") },
+                ..Default::default()
+            },
+            DagNodeSpec {
+                id: "screen".into(),
+                name: "Preview".into(),
+                x: 400.0,
+                y: 0.0,
+                width: 200.0,
+                height: 140.0,
+                kind: DagNodeKind::Screen { media: Some(DagMedia { kind: DagMediaKind::Svg, src: "data:image/svg+xml,%3Csvg viewBox='0 0 1 1'%3E%3C/svg%3E".into() }), input: port("in", "result") },
+                ..Default::default()
+            },
             DagNodeSpec { id: "note".into(), name: "Note".into(), x: 0.0, y: 200.0, kind: DagNodeKind::Note { text: "line one\nline two — with a ' quote and a % sign".into(), output: port("out", "text") }, ..Default::default() },
             DagNodeSpec { id: "image".into(), name: "Image".into(), x: 0.0, y: 260.0, kind: DagNodeKind::Image { src: "data:image/png;base64,AAA=".into(), output: port("out", "img") }, ..Default::default() },
-            DagNodeSpec { id: "preview".into(), name: "Preview2".into(), x: 0.0, y: 320.0, kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: "42".into() }, expanded: BTreeSet::from(["a.b".to_string()]), input: port("in", "value") }, ..Default::default() },
+            DagNodeSpec {
+                id: "preview".into(),
+                name: "Preview2".into(),
+                x: 0.0,
+                y: 320.0,
+                kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: "42".into() }, expanded: BTreeSet::from(["a.b".to_string()]), input: port("in", "value") },
+                ..Default::default()
+            },
             DagNodeSpec { id: "action".into(), name: "Action".into(), x: 0.0, y: 380.0, kind: DagNodeKind::Action { label: "Run".into(), input: port("in", "trigger") }, ..Default::default() },
             DagNodeSpec { id: "export".into(), name: "Export".into(), x: 0.0, y: 440.0, kind: DagNodeKind::Export { label: "Save".into(), format: "png".into(), input: port("in", "value") }, ..Default::default() },
             DagNodeSpec { id: "cluster".into(), name: "Cluster".into(), x: 0.0, y: 500.0, kind: DagNodeKind::Cluster { inputs: vec![port("in", "In")], outputs: vec![port("out", "Out")] }, ..Default::default() },
-            DagNodeSpec { id: "app".into(), name: "App".into(), x: 0.0, y: 560.0, kind: DagNodeKind::AppInstance { instance_id: "inst-1".into(), plugin_id: "prog-1".into(), app_id: "note".into(), icon: "emoji:📦️".into(), inputs: vec![], outputs: vec![port("out", "Out")] }, ..Default::default() },
+            DagNodeSpec {
+                id: "app".into(),
+                name: "App".into(),
+                x: 0.0,
+                y: 560.0,
+                kind: DagNodeKind::AppInstance { instance_id: "inst-1".into(), plugin_id: "prog-1".into(), app_id: "note".into(), icon: "emoji:📦️".into(), inputs: vec![], outputs: vec![port("out", "Out")] },
+                ..Default::default()
+            },
         ];
         let edges = vec![
             DagFixtureEdge { id: "e1".into(), source: "slider@out".into(), target: "comp@in".into(), ..Default::default() },
@@ -7973,9 +8025,7 @@ mod dag_vcs_tests {
     #[test]
     fn document_text_round_trips_a_store_with_an_applied_operation() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
-        store
-            .dispatch(DocumentCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "extra".into(), item: sample_node("extra"), at: 0 })], description: None })
-            .expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "extra".into(), item: sample_node("extra"), at: 0 })], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

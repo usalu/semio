@@ -5,7 +5,7 @@
 //! `open`), leaf lookups are a binary search. It does not hook into `pack_value::encode_document`
 //! / `decode_document`; a future caller wires a `FieldIndexBuilder` in around those calls.
 
-use pack_core::{ByteRange, PackError, read_varint_u64, write_varint_u64};
+use pack_core::{read_varint_u64, write_varint_u64, ByteRange, PackError};
 
 //#region 🔖️FieldIndex
 /// @emoji 🧭️ A sequence of field ids from the record root down to a leaf value, e.g. `[3, 0, 12]`
@@ -86,11 +86,7 @@ impl<'a> FieldIndexReader<'a> {
             for _ in 0..path_len {
                 let field_id = read_varint_u64(payload, &mut pos)?;
                 if field_id > u16::MAX as u64 {
-                    return Err(PackError::Malformed {
-                        what: "field_index_path_id",
-                        offset: pos as u64,
-                        detail: format!("field id {field_id} exceeds u16 range"),
-                    });
+                    return Err(PackError::Malformed { what: "field_index_path_id", offset: pos as u64, detail: format!("field id {field_id} exceeds u16 range") });
                 }
                 field_ids.push(field_id as u16);
             }

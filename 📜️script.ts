@@ -269,7 +269,6 @@ export class SetupScript extends Script {
     const runNx = (target: string) => runCmd("node", [nx, "run", target], opts);
     runNx("@semio-tech/framework-schema:generate");
     runNx("@semio-tech/ui-styling-tokens:generate");
-    runNx("@semio-tech/ui-asset:build");
     runCmd("bun", ["./📜️script.ts", "build"], {
       cwd: join(this.root, "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript"),
       ...orchestratorBudgetOpts(),
@@ -659,6 +658,10 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    console.log("[verify] framework-core ts-rs binding freshness…");
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-core-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    console.log("[verify] ui-wgpu locale/terminology axes freshness…");
+    runCmd("bun", ["nx", "run", "@semio-tech/ui-wgpu-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] leveled test target coverage…");
     this.checkLeveledTestTargets();
     console.log("[verify] dsl fixture laws…");
@@ -1156,19 +1159,20 @@ export class CommitScript extends Script {
 type OsPluginArtifact = { pluginId: string; wasmOut: string };
 
 /**
- * 🔍️Plugin ids from the generated plugin registry whose `.wasm` isn't built yet under the dev build's
- * `plugin-modules/<pluginId>/` output root. `os run`'s cargo runner (`semio-framework-os-run`) panics
- * with an obscure "file not found" when a program is unregistered, so this runs first and names the
- * gap. Checks every registry entry rather than just the target `.studio` bundle's own app instances —
- * that would need re-decoding the bundle's binary `store` document pack (the `space.os.pack`/`.spr`
- * VCS envelope) in TypeScript, disproportionate for a preflight check.
+ * 🔍️Plugin ids from the generated plugin registry whose `.wasm` isn't built yet under cargo's own
+ * `target/wasm32-wasip2/wasm-release/` output — the exact path `semio-framework-os-run`'s own
+ * `resolve_plugin_paths` reads (see `framework/os/run/rs/bin.rs`). `os run`'s cargo runner panics with
+ * an obscure "file not found" when a program is unregistered, so this runs first and names the gap.
+ * Checks every registry entry rather than just the target `.studio` bundle's own app instances — that
+ * would need re-decoding the bundle's binary `store` document pack (the `space.os.pack`/`.spr` VCS
+ * envelope) in TypeScript, disproportionate for a preflight check.
  */
 function missingPluginWasmArtifacts(repoRoot: string): string[] {
   const registryPath = join(repoRoot, "🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🔣️plugins.json");
   if (!existsSync(registryPath)) return [];
-  const pluginOutRoot = join(repoRoot, "🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules");
+  const pluginWasmProfileRoot = join(repoRoot, "target/wasm32-wasip2/wasm-release");
   const entries = JSON.parse(readFileSync(registryPath, "utf8")) as OsPluginArtifact[];
-  return entries.filter((entry) => !existsSync(join(pluginOutRoot, entry.pluginId, entry.wasmOut))).map((entry) => entry.pluginId);
+  return entries.filter((entry) => !existsSync(join(pluginWasmProfileRoot, entry.wasmOut))).map((entry) => entry.pluginId);
 }
 
 /** 🕸️Headless OS studio commands — computes a workflow without a UI (`os run <bundle>.studio`). */

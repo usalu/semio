@@ -135,13 +135,7 @@ pub fn frontier_delta(from: &db_core::Frontier, to: &db_core::Frontier) -> Resul
 /// consider the frontier's tip identity (`state_frontier_summary` below supplies the natural
 /// choice: the last replayed command's `operation_id`).
 pub fn to_frontier_summary(frontier: &db_core::Frontier, head_edit_id: String) -> protocol::RuntimeFrontierSummary {
-    protocol::RuntimeFrontierSummary {
-        document_id: protocol::DocumentId(frontier.document.0.clone()),
-        head_edit_ordinal: frontier.head_seq,
-        head_edit_id,
-        last_commit_seq: frontier.commit_seq,
-        chain_hash: frontier.chain_hash,
-    }
+    protocol::RuntimeFrontierSummary { document_id: protocol::DocumentId(frontier.document.0.clone()), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
 
 /// @emoji 🌉️ Inverse bridge direction: `protocol::RuntimeFrontierSummary` -> `db_core::Frontier`,
@@ -150,13 +144,7 @@ pub fn to_frontier_summary(frontier: &db_core::Frontier, head_edit_id: String) -
 /// `DocumentSyncState`. `epoch` is always `0` (see `DocumentSyncState`'s doc: `RuntimeFrontierSummary`
 /// carries no cluster-fencing epoch at all).
 pub fn from_frontier_summary(summary: &protocol::RuntimeFrontierSummary) -> db_core::Frontier {
-    db_core::Frontier {
-        document: db_core::DocumentId(summary.document_id.0.clone()),
-        head_seq: summary.head_edit_ordinal,
-        commit_seq: summary.last_commit_seq,
-        chain_hash: summary.chain_hash,
-        epoch: 0,
-    }
+    db_core::Frontier { document: db_core::DocumentId(summary.document_id.0.clone()), head_seq: summary.head_edit_ordinal, commit_seq: summary.last_commit_seq, chain_hash: summary.chain_hash, epoch: 0 }
 }
 
 /// @emoji 🌉️ `state`'s own frontier as a `RuntimeFrontierSummary`, with `head_edit_id` filled from
@@ -183,22 +171,13 @@ pub fn state_frontier_summary(state: &DocumentSyncState) -> protocol::RuntimeFro
 /// the fully-decoded, ordinal-indexed sequence `replay_sync_state` produced.
 pub fn missing_commands(state: &DocumentSyncState, replica: &db_core::Frontier) -> Result<Vec<protocol::OperationEnvelope>, db_core::DbError> {
     if replica.document != state.frontier.document {
-        return Err(db_core::DbError::InvalidArgument(format!(
-            "frontier document mismatch: replica {} vs server {}",
-            replica.document, state.frontier.document
-        )));
+        return Err(db_core::DbError::InvalidArgument(format!("frontier document mismatch: replica {} vs server {}", replica.document, state.frontier.document)));
     }
     if replica.head_seq > state.frontier.head_seq {
-        return Err(db_core::DbError::InvalidArgument(format!(
-            "replica frontier is ahead of the server: replica head_seq {} > server head_seq {}",
-            replica.head_seq, state.frontier.head_seq
-        )));
+        return Err(db_core::DbError::InvalidArgument(format!("replica frontier is ahead of the server: replica head_seq {} > server head_seq {}", replica.head_seq, state.frontier.head_seq)));
     }
     if replica.head_seq < state.floor_head_seq {
-        return Err(db_core::DbError::Unavailable(format!(
-            "replica head_seq {} is behind the retained WAL floor {}; snapshot bootstrap is required",
-            replica.head_seq, state.floor_head_seq
-        )));
+        return Err(db_core::DbError::Unavailable(format!("replica head_seq {} is behind the retained WAL floor {}; snapshot bootstrap is required", replica.head_seq, state.floor_head_seq)));
     }
     Ok(state.commands[replica.head_seq as usize..].to_vec())
 }
@@ -232,11 +211,7 @@ pub enum BootstrapPlan {
 /// @emoji 🧭️ Decides `BootstrapPlan` for `replica` (`None` meaning a totally fresh replica with no
 /// prior frontier at all) against `state`, consulting `snapshots` only when the replica's
 /// `head_seq` has fallen behind `state.floor_head_seq`.
-pub fn decide_bootstrap(
-    state: &DocumentSyncState,
-    snapshots: &dyn db_storage::SnapshotStorage,
-    replica: Option<&db_core::Frontier>,
-) -> Result<BootstrapPlan, db_core::DbError> {
+pub fn decide_bootstrap(state: &DocumentSyncState, snapshots: &dyn db_storage::SnapshotStorage, replica: Option<&db_core::Frontier>) -> Result<BootstrapPlan, db_core::DbError> {
     let replica_head_seq = replica.map_or(0, |frontier| frontier.head_seq);
     if replica_head_seq >= state.floor_head_seq {
         let missing = match replica {
@@ -245,12 +220,9 @@ pub fn decide_bootstrap(
         };
         return Ok(if missing.is_empty() { BootstrapPlan::None } else { BootstrapPlan::Tail { envelopes: missing } });
     }
-    let generation = snapshots.latest_generation(&state.frontier.document)?.ok_or_else(|| {
-        db_core::DbError::Unavailable(format!(
-            "replica head_seq {replica_head_seq} is behind the retained WAL floor {} and no snapshot generation is available",
-            state.floor_head_seq
-        ))
-    })?;
+    let generation = snapshots
+        .latest_generation(&state.frontier.document)?
+        .ok_or_else(|| db_core::DbError::Unavailable(format!("replica head_seq {replica_head_seq} is behind the retained WAL floor {} and no snapshot generation is available", state.floor_head_seq)))?;
     let bytes = snapshots.read_generation(&state.frontier.document, generation)?;
     let pack_hash = *blake3::hash(&bytes).as_bytes();
     Ok(BootstrapPlan::Snapshot { generation, bytes, pack_hash })
@@ -291,11 +263,7 @@ fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &DocumentSyncState, origin:
                 (protocol::Bootstrap::Snapshot { pack_hash: *pack_hash, inline: Some(bytes.clone()) }, Vec::new())
             } else {
                 let chunks: Vec<&[u8]> = bytes.chunks(snapshot_chunk_bytes).collect();
-                let mut follow_up: Vec<protocol::ServerFrame> = chunks
-                    .iter()
-                    .enumerate()
-                    .map(|(seq, chunk)| protocol::ServerFrame::SnapshotChunk { seq: seq as u32, bytes: chunk.to_vec() })
-                    .collect();
+                let mut follow_up: Vec<protocol::ServerFrame> = chunks.iter().enumerate().map(|(seq, chunk)| protocol::ServerFrame::SnapshotChunk { seq: seq as u32, bytes: chunk.to_vec() }).collect();
                 follow_up.push(protocol::ServerFrame::SnapshotDone { seq_count: chunks.len() as u32 });
                 (protocol::Bootstrap::Snapshot { pack_hash: *pack_hash, inline: None }, follow_up)
             }
@@ -338,12 +306,7 @@ pub fn handle_hello(
 /// @emoji 📡️ Mid-session catch-up: a connected replica sends `ClientFrame::FrontierAdvertise`
 /// (e.g. after a period of being caught up passively via broadcast, to confirm its position) and
 /// the semio_hub replies with whatever commands it's still missing, or `None` if it's already current.
-pub fn handle_frontier_advertise(
-    storage: &dyn db_storage::WalStorage,
-    document: db_core::DocumentId,
-    advertised: &protocol::RuntimeFrontierSummary,
-    origin: protocol::ActorId,
-) -> Result<Option<protocol::ServerFrame>, db_core::DbError> {
+pub fn handle_frontier_advertise(storage: &dyn db_storage::WalStorage, document: db_core::DocumentId, advertised: &protocol::RuntimeFrontierSummary, origin: protocol::ActorId) -> Result<Option<protocol::ServerFrame>, db_core::DbError> {
     let state = replay_sync_state(storage, document)?;
     let replica = from_frontier_summary(advertised);
     let missing = missing_commands(&state, &replica)?;

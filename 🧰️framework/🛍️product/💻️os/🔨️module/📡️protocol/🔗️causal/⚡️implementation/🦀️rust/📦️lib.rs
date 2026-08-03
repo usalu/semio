@@ -137,12 +137,7 @@ impl OpDag {
 
     /// @emoji ✅️ Ids of currently-pending envelopes whose dependencies are all applied.
     pub fn ready(&self) -> Vec<protocol_core::OperationId> {
-        self.pending
-            .iter()
-            .filter_map(|id| self.envelopes.get(id))
-            .filter(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.contains(&dependency.0)))
-            .map(|envelope| envelope.operation_id.clone())
-            .collect()
+        self.pending.iter().filter_map(|id| self.envelopes.get(id)).filter(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.contains(&dependency.0))).map(|envelope| envelope.operation_id.clone()).collect()
     }
 
     /// @emoji 🧺️ Drains envelopes applied since the last drain, in causal application order.
@@ -172,12 +167,7 @@ impl OpDag {
 
     fn drain_ready(&mut self) {
         loop {
-            let ready: Vec<String> = self
-                .pending
-                .iter()
-                .filter(|id| self.envelopes.get(*id).is_some_and(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.contains(&dependency.0))))
-                .cloned()
-                .collect();
+            let ready: Vec<String> = self.pending.iter().filter(|id| self.envelopes.get(*id).is_some_and(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.contains(&dependency.0)))).cloned().collect();
             if ready.is_empty() {
                 break;
             }
@@ -285,17 +275,7 @@ pub trait OperationTransform<P>: protocol_command::Operation<P> {
 /// snapshot-vs-operations-message dedup) don't have to pay for `encode_op`/`backwards` work, and so
 /// there is exactly one place this chain is spelled out.
 pub fn operation_ids_for_edit<P, Op: protocol_command::Operation<P>>(edit: &protocol_command::Edit<Op>) -> Vec<protocol_core::OperationId> {
-    edit.forwards
-        .iter()
-        .enumerate()
-        .map(|(index, op)| {
-            edit.operation_meta
-                .get(index)
-                .and_then(|m| m.operation_id.clone())
-                .or_else(|| op.operation_id())
-                .unwrap_or_else(|| protocol_core::OperationId(format!("{}#{index}", edit.id)))
-        })
-        .collect()
+    edit.forwards.iter().enumerate().map(|(index, op)| edit.operation_meta.get(index).and_then(|m| m.operation_id.clone()).or_else(|| op.operation_id()).unwrap_or_else(|| protocol_core::OperationId(format!("{}#{index}", edit.id)))).collect()
 }
 
 pub fn operation_envelope_from_edit<P, Op: protocol_command::Operation<P> + protocol_command::OpBinary>(
@@ -311,10 +291,7 @@ pub fn operation_envelope_from_edit<P, Op: protocol_command::Operation<P> + prot
             let meta = edit.operation_meta.get(index);
             let operation_id = operation_ids[index].clone();
             let dependencies = meta.map_or_else(|| op.dependencies(), |m| m.dependencies.clone());
-            let actor = meta
-                .and_then(|m| m.author_id.clone())
-                .or_else(|| op.author_id())
-                .unwrap_or_else(|| protocol_core::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".to_string())));
+            let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| op.author_id()).unwrap_or_else(|| protocol_core::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".to_string())));
             let timestamp = meta.map(|m| m.timestamp).or_else(|| op.timestamp()).unwrap_or_else(|| protocol_core::HybridLogicalTimestamp::new(0, 0));
             let payload = op.encode_op()?;
             let inverse_payload = edit.backwards.get(index).map(protocol_command::OpBinary::encode_op).transpose()?.unwrap_or_default();
@@ -383,15 +360,7 @@ pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<OperationEnvelop
     let inverse_schema = protocol_core::SchemaId(protocol_core::read_str(bytes, pos)?);
     let inverse_payload = protocol_core::read_bytes(bytes, pos)?;
     let timestamp = decode_hlc(bytes, pos)?;
-    Ok(OperationEnvelope {
-        operation_id,
-        document_id,
-        actor,
-        dependencies,
-        diff: DocumentDiff { schema: diff_schema, payload: diff_payload },
-        inverse: InverseOperation { schema: inverse_schema, payload: inverse_payload },
-        timestamp,
-    })
+    Ok(OperationEnvelope { operation_id, document_id, actor, dependencies, diff: DocumentDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseOperation { schema: inverse_schema, payload: inverse_payload }, timestamp })
 }
 
 /// @emoji 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
@@ -613,12 +582,7 @@ mod tests {
         /// tier. True topological orders never hit the `insert`-classification quirk documented on
         /// `OpDag` above (every dependency is already `applied`, not merely known, by induction).
         fn diamond(id_a: &str, id_b: &str, id_c: &str, id_d: &str) -> [(&'static str, OperationEnvelope); 4] {
-            [
-                ("a", sample_envelope(id_a, vec![])),
-                ("b", sample_envelope(id_b, vec![id_a])),
-                ("c", sample_envelope(id_c, vec![id_a])),
-                ("d", sample_envelope(id_d, vec![id_b, id_c])),
-            ]
+            [("a", sample_envelope(id_a, vec![])), ("b", sample_envelope(id_b, vec![id_a])), ("c", sample_envelope(id_c, vec![id_a])), ("d", sample_envelope(id_d, vec![id_b, id_c]))]
         }
 
         fn assert_converges(order: [&str; 4]) {
@@ -671,13 +635,7 @@ mod tests {
 
     //#region 🔖️Frontier
     fn frontier(document_id: &str, ordinal: u64, head_id: &str, commit_seq: u64, chain_byte: u8) -> FrontierSummary {
-        FrontierSummary {
-            document_id: protocol_core::DocumentId(document_id.into()),
-            head_edit_ordinal: ordinal,
-            head_edit_id: head_id.into(),
-            last_commit_seq: commit_seq,
-            chain_hash: [chain_byte; 32],
-        }
+        FrontierSummary { document_id: protocol_core::DocumentId(document_id.into()), head_edit_ordinal: ordinal, head_edit_id: head_id.into(), last_commit_seq: commit_seq, chain_hash: [chain_byte; 32] }
     }
 
     #[test]

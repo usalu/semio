@@ -53,30 +53,19 @@ impl protocol::OperationDiff<ImperativeConfig> for ImperativeConfig {
 pub fn imperative_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: "imperative.document/v1".into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::Computation,
-            form: semio_framework_plugin::MediaForm::Imperative,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Imperative },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "result:out".into(),
             label: "Result".into(),
             direction: semio_framework_plugin::MediaPortDirection::Out,
-            media_type: semio_framework_plugin::MediaType {
-                class: semio_framework_plugin::MediaClass::Data,
-                form: semio_framework_plugin::MediaForm::Value,
-            },
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
             kind_id: Some("computation.imperative".into()),
             required: false,
             multiplicity: semio_framework_core::PortMultiplicity::Many,
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "computation.imperative".into(),
-            name: "Imperative".into(),
-            dimension: "graph".into(),
-            component_kind: "imperative".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "computation.imperative".into(), name: "Imperative".into(), dimension: "graph".into(), component_kind: "imperative".into() },
     }
 }
 //#endregion 🔖️Io
@@ -104,8 +93,7 @@ pub enum ImperativeCoreError {
 /// instead of a hand-built Rust literal or a JSON fixture — {@link default_document} is the only way it
 /// should be consumed.
 pub fn default_document() -> ImperativeDocument {
-    <ImperativeDocument as store::DocumentDsl>::parse_dsl(imperative_dsl::IMPERATIVE_EXAMPLE_TEXT)
-        .expect("📜️default.imperative is a static, hand-authored fixture that must always parse")
+    <ImperativeDocument as store::DocumentDsl>::parse_dsl(imperative_dsl::IMPERATIVE_EXAMPLE_TEXT).expect("📜️default.imperative is a static, hand-authored fixture that must always parse")
 }
 
 // #region 🔖️Host

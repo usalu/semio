@@ -21,16 +21,16 @@
 use base64::Engine as _;
 use remodel::{
     default_remodel_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseParams, DenseResolution, FeatureDetector, FeatureParams, FrameRef, GcpObservation, GeoParams, GeoProducts, GroundControlPoint, ImageAsset, IngestParams,
-    MatchParams, MatcherKind, MediaKind, MediaStream, MeshParams as DocumentMeshParams, MeshSource, MotionParams, PackedF32, ReconstructionJob, ReconstructionStage, RemodelMesh, RemodelScene,
-    RobustLossKind, SfmParams, SparseCloud, VideoSource, REMODEL_DOCUMENT_SCHEMA,
+    MatchParams, MatcherKind, MediaKind, MediaStream, MeshParams as DocumentMeshParams, MeshSource, MotionParams, PackedF32, ReconstructionJob, ReconstructionStage, RemodelMesh, RemodelScene, RobustLossKind, SfmParams, SparseCloud, VideoSource,
+    REMODEL_DOCUMENT_SCHEMA,
 };
 use remodel_app_engine::{RemodelConfig, RemodelFrameCursor, RemodelLayerVisibility};
 use remodel_op::{RemodelConfigOperation, RemodelOperation};
 use remodel_protocol::RemodelCommand;
 use semio_framework_plugin::{
-    app_labels, build_canvas_2d_scene, build_table_scene, build_world_3d_scene, create_default_layout, create_named_layout, mesh_from_kind, ui_import_drop_zone, ui_stack_vertical, ui_text,
-    world3d_camera_json, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, Canvas2dScene, ConfigView, DocumentApp, DocumentView,
-    Emit, GlbExporter, HostEffect, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaPayload, MediaType, MeshData, MeshExporter, OsMediaCapability, OsMediaFormat, PanelGroup, ArtifactKindSpec, SurfaceKind, TableScene, Terminology, UiNode, UtilityCategory, UtilityDefinition, WorldSunConfig,
+    app_labels, build_canvas_2d_scene, build_table_scene, build_world_3d_scene, create_default_layout, create_named_layout, mesh_from_kind, ui_import_drop_zone, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, GlbExporter, HostEffect, Label, LabelText, Locale,
+    LocalizedLabel, Media, MediaClass, MediaError, MediaPayload, MediaType, MeshData, MeshExporter, OsMediaCapability, OsMediaFormat, PanelGroup, SurfaceKind, TableScene, Terminology, UiNode, UtilityCategory, UtilityDefinition, WorldSunConfig,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde_json::{json, Value};
@@ -272,12 +272,7 @@ fn report_table_json(scene: &RemodelScene, table: &str) -> (String, String) {
             scene.calibration.cameras.iter().map(|camera| json!({ "id": camera.id, "model": camera.model, "fx": camera.fx, "fy": camera.fy, "rms": camera.rms_reprojection_px })).collect(),
         ),
         "tracks" => (
-            vec![
-                json!({ "id": "id", "label": "Id" }),
-                json!({ "id": "length", "label": "Length" }),
-                json!({ "id": "class", "label": "Class" }),
-                json!({ "id": "speed", "label": "Mean Speed (m/s)" }),
-            ],
+            vec![json!({ "id": "id", "label": "Id" }), json!({ "id": "length", "label": "Length" }), json!({ "id": "class", "label": "Class" }), json!({ "id": "speed", "label": "Mean Speed (m/s)" })],
             scene.results.tracks.iter().map(|track| json!({ "id": track.id, "length": track.length, "class": format!("{:?}", track.class), "speed": track.mean_speed_m_s })).collect(),
         ),
         "gcps" => (
@@ -291,26 +286,11 @@ fn report_table_json(scene: &RemodelScene, table: &str) -> (String, String) {
             ],
             scene.gcps.iter().map(|gcp| json!({ "id": gcp.id, "name": gcp.name, "x": gcp.world_position[0], "y": gcp.world_position[1], "z": gcp.world_position[2], "observations": gcp.observations.len() })).collect(),
         ),
-        "qcStages" => (
-            vec![json!({ "id": "stage", "label": "Stage" }), json!({ "id": "status", "label": "Status" })],
-            vec![json!({ "stage": format!("{:?}", scene.job.stage), "status": if scene.job.error.is_some() { "error" } else { "ok" } })],
-        ),
-        "matches" => (
-            vec![json!({ "id": "note", "label": "Note" })],
-            vec![json!({ "note": "Pairwise match data is reconstruction-runtime scratch, never distilled into durable document state." })],
-        ),
+        "qcStages" => (vec![json!({ "id": "stage", "label": "Stage" }), json!({ "id": "status", "label": "Status" })], vec![json!({ "stage": format!("{:?}", scene.job.stage), "status": if scene.job.error.is_some() { "error" } else { "ok" } })]),
+        "matches" => (vec![json!({ "id": "note", "label": "Note" })], vec![json!({ "note": "Pairwise match data is reconstruction-runtime scratch, never distilled into durable document state." })]),
         _ => (
-            vec![
-                json!({ "id": "streamId", "label": "Stream" }),
-                json!({ "id": "index", "label": "Index" }),
-                json!({ "id": "timestampMs", "label": "Timestamp (ms)" }),
-                json!({ "id": "assetId", "label": "Asset" }),
-            ],
-            scene
-                .streams
-                .iter()
-                .flat_map(|stream| stream.frames.iter().map(move |frame| json!({ "streamId": stream.id, "index": frame.index, "timestampMs": frame.timestamp_ms, "assetId": frame.asset_id })))
-                .collect(),
+            vec![json!({ "id": "streamId", "label": "Stream" }), json!({ "id": "index", "label": "Index" }), json!({ "id": "timestampMs", "label": "Timestamp (ms)" }), json!({ "id": "assetId", "label": "Asset" })],
+            scene.streams.iter().flat_map(|stream| stream.frames.iter().map(move |frame| json!({ "streamId": stream.id, "index": frame.index, "timestampMs": frame.timestamp_ms, "assetId": frame.asset_id }))).collect(),
         ),
     };
     (serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()))
@@ -441,7 +421,11 @@ fn is_de_locale(cfg: &RemodelConfig) -> bool {
 }
 
 fn remodel_locale(cfg: &RemodelConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &RemodelConfig) -> &'static L {
@@ -479,13 +463,8 @@ fn build_media_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
 /// "Idle" once a run finishes, which is the documented, accepted trade-off of the B1 conversion.
 fn build_pipeline_panel(scene: &RemodelScene, config: &RemodelConfig, active_utility: &str, labels: &RemodelLabels) -> UiNode {
     let job = &scene.job;
-    let job_label = format!(
-        "{}: {} ({:.0}%){}",
-        labels.reconstruction.as_str(),
-        remodel_app_engine::stage_display(job.stage),
-        job.progress_0_1 * 100.0,
-        job.error.as_ref().map(|error| format!(" - {}: {error}", labels.error.as_str())).unwrap_or_default()
-    );
+    let job_label =
+        format!("{}: {} ({:.0}%){}", labels.reconstruction.as_str(), remodel_app_engine::stage_display(job.stage), job.progress_0_1 * 100.0, job.error.as_ref().map(|error| format!(" - {}: {error}", labels.error.as_str())).unwrap_or_default());
     let running = !matches!(job.stage, ReconstructionStage::Idle | ReconstructionStage::Done | ReconstructionStage::Failed);
     let running_label = format!("{}: {}", labels.status.as_str(), if running { labels.running.as_str() } else { labels.idle.as_str() });
     let utility_label = format!("{}: {} - {}: {} ({})", labels.utility.as_str(), active_utility, labels.selection.as_str(), config.selection.mode, config.selection.ids.len());
@@ -498,10 +477,8 @@ fn build_results_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
     let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh.as_str(), results.mesh.source, results.mesh.mesh.vertex_count(), labels.vertices.as_str(), results.mesh.mesh.triangle_count(), labels.triangles.as_str());
     let sparse_label = results.sparse.as_ref().map_or_else(|| format!("{}: {}", labels.sparse_cloud.as_str(), labels.results_none.as_str()), |sparse| format!("{}: {}", labels.sparse_cloud.as_str(), sparse.points.to_f32_vec().len() / 3));
     let dense_label = results.dense.as_ref().map_or_else(|| format!("{}: {}", labels.dense_cloud.as_str(), labels.results_none.as_str()), |dense| format!("{}: {}", labels.dense_cloud.as_str(), dense.positions.to_f32_vec().len() / 3));
-    let trajectory_label = results.trajectory.as_ref().map_or_else(
-        || format!("{}: {}", labels.trajectory.as_str(), labels.results_none.as_str()),
-        |trajectory| format!("{}: {} {}", labels.trajectory.as_str(), trajectory.poses.len(), labels.poses.as_str()),
-    );
+    let trajectory_label =
+        results.trajectory.as_ref().map_or_else(|| format!("{}: {}", labels.trajectory.as_str(), labels.results_none.as_str()), |trajectory| format!("{}: {} {}", labels.trajectory.as_str(), trajectory.poses.len(), labels.poses.as_str()));
     let geo_label = results.geo.as_ref().map_or_else(|| format!("{}: {}", labels.geo_products.as_str(), labels.results_none.as_str()), |_| format!("{}: {}", labels.geo_products.as_str(), labels.available.as_str()));
     ui_stack_vertical(vec![ui_text(Label::data(mesh_label)), ui_text(Label::data(sparse_label)), ui_text(Label::data(dense_label)), ui_text(Label::data(trajectory_label)), ui_text(Label::data(geo_label))])
 }
@@ -744,7 +721,10 @@ impl RemodelPlayApp {
             }
             let jpeg = remodel_image::encode_jpeg(&extracted.image, 90);
             let asset_key = format!("{stream_id}-frame-{}", extracted.index);
-            operations.push(RemodelOperation::SetAsset { key: asset_key.clone(), value: Some(ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&jpeg), width: extracted.image.width, height: extracted.image.height }) });
+            operations.push(RemodelOperation::SetAsset {
+                key: asset_key.clone(),
+                value: Some(ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&jpeg), width: extracted.image.width, height: extracted.image.height }),
+            });
             frames.push(FrameRef { index: extracted.index, timestamp_ms: extracted.timestamp_ms, asset_id: asset_key });
         }
         let mut streams = scene.streams.clone();
@@ -1048,19 +1028,7 @@ impl DocumentApp for RemodelPlayApp {
 
             //#region 🔖️CalibrationAndGcps
             RemodelCommand::EditCalibration { camera_id, label, model, fx, fy, cx, cy, skew, k1, k2, k3, p1, p2, locked } => {
-                let entry = CameraCalibration {
-                    id: camera_id.clone(),
-                    label: label.clone(),
-                    model: model.clone(),
-                    fx: *fx,
-                    fy: *fy,
-                    cx: *cx,
-                    cy: *cy,
-                    skew: *skew,
-                    distortion: [*k1, *k2, *k3, *p1, *p2],
-                    rms_reprojection_px: None,
-                    locked: *locked,
-                };
+                let entry = CameraCalibration { id: camera_id.clone(), label: label.clone(), model: model.clone(), fx: *fx, fy: *fy, cx: *cx, cy: *cy, skew: *skew, distortion: [*k1, *k2, *k3, *p1, *p2], rms_reprojection_px: None, locked: *locked };
                 let mut calibration = scene.calibration.clone();
                 match calibration.cameras.iter_mut().find(|camera| &camera.id == camera_id) {
                     Some(existing) => *existing = entry,
@@ -1795,8 +1763,7 @@ mod tests {
         let mut app = new_app();
         for index in 0..4u32 {
             let payload = checker_data_url_jpeg(24, 24, 3);
-            app.dispatch_typed(RemodelCommand::ImportVideoFramePayload { payload, name: "clip.mp4".into(), index, frame_index: index, timestamp_ms: f64::from(index) * 100.0 }, &testkit::meta("local"))
-                .expect("import video frame payload");
+            app.dispatch_typed(RemodelCommand::ImportVideoFramePayload { payload, name: "clip.mp4".into(), index, frame_index: index, timestamp_ms: f64::from(index) * 100.0 }, &testkit::meta("local")).expect("import video frame payload");
         }
         app.dispatch_typed(RemodelCommand::ImportVideoDone { name: "clip.mp4".into(), duration_ms: 400.0, frame_count: 4, width: 24, height: 24, codec: "mjpeg".into() }, &testkit::meta("local")).expect("import video done");
         let scene = app.projection().expect("projection");
@@ -1891,7 +1858,10 @@ mod tests {
         let projection = app.projection().expect("projection");
         let doc = DocumentView { projection: &projection, history: &semio_framework_plugin::HistoryView::empty() };
         let inner = RemodelPlayApp;
-        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_png(&remodel_image::ImageRgba8::new(4, 4)).unwrap()) } };
+        let media = Media {
+            media_type: MediaType { class: MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
+            payload: MediaPayload::Structured { schema: "2d.image".into(), json: base64::engine::general_purpose::STANDARD.encode(remodel_image::encode_png(&remodel_image::ImageRgba8::new(4, 4)).unwrap()) },
+        };
         let emit = inner.import_media("photos:in", &media, &doc).expect("photos:in import");
         assert_eq!(emit.document_operations.len(), 2, "one SetAsset + one SetStreams");
         let next = emit.document_operations.iter().fold(projection.clone(), |scene, operation| remodel_op::apply_remodel_operation(&scene, operation));

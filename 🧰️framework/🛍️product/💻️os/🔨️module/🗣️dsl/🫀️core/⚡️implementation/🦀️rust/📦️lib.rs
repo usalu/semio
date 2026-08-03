@@ -366,7 +366,11 @@ pub fn format_f64(value: f64) -> String {
     if value.is_nan() {
         "nan".to_string()
     } else if value.is_infinite() {
-        if value > 0.0 { "inf".to_string() } else { "-inf".to_string() }
+        if value > 0.0 {
+            "inf".to_string()
+        } else {
+            "-inf".to_string()
+        }
     } else {
         format!("{value}")
     }
@@ -376,7 +380,11 @@ pub fn format_f32(value: f32) -> String {
     if value.is_nan() {
         "nan".to_string()
     } else if value.is_infinite() {
-        if value > 0.0 { "inf".to_string() } else { "-inf".to_string() }
+        if value > 0.0 {
+            "inf".to_string()
+        } else {
+            "-inf".to_string()
+        }
     } else {
         format!("{value}")
     }
@@ -537,13 +545,7 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
         ($kind:expr, $start_line:expr, $start_col:expr, $start_byte:expr, $text:expr) => {{
             let text_str: String = $text;
             let len = text_str.chars().count() as u32;
-            tokens.push(SpannedToken {
-                id: TokenId(next_id),
-                kind: $kind,
-                text: Symbol::intern(&text_str),
-                span: TextSpan::with_length($start_line, $start_col, len),
-                byte_range: ($start_byte, byte_offset),
-            });
+            tokens.push(SpannedToken { id: TokenId(next_id), kind: $kind, text: Symbol::intern(&text_str), span: TextSpan::with_length($start_line, $start_col, len), byte_range: ($start_byte, byte_offset) });
             next_id += 1;
         }};
     }
@@ -849,16 +851,14 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
     }
     let eof_line = line;
     let eof_col = column;
-    tokens.push(SpannedToken {
-        id: TokenId(next_id),
-        kind: TokenKind::Eof,
-        text: Symbol::intern(""),
-        span: TextSpan::at(eof_line, eof_col),
-        byte_range: (byte_offset, byte_offset),
-    });
+    tokens.push(SpannedToken { id: TokenId(next_id), kind: TokenKind::Eof, text: Symbol::intern(""), span: TextSpan::at(eof_line, eof_col), byte_range: (byte_offset, byte_offset) });
     // Strict-mode success is exactly the invariant `Sanitized` documents — brand it here so the
     // type isn't just a paper promise, then unwrap since callers still want plain tokens.
-    if forgiving { Ok(tokens) } else { Ok(Sanitized::new_trusted(tokens).into_inner()) }
+    if forgiving {
+        Ok(tokens)
+    } else {
+        Ok(Sanitized::new_trusted(tokens).into_inner())
+    }
 }
 
 /// @emoji 🎨️ Maps lexed tokens to editor highlighting classes. `keywords` is the live set of
@@ -871,12 +871,27 @@ pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenCl
             let class = match t.kind {
                 TokenKind::Ident => {
                     let text = t.text.as_str();
-                    if keywords.contains(&text.as_ref()) { TokenClass::Keyword } else { TokenClass::Ident }
+                    if keywords.contains(&text.as_ref()) {
+                        TokenClass::Keyword
+                    } else {
+                        TokenClass::Ident
+                    }
                 }
                 TokenKind::Int | TokenKind::Float => TokenClass::Number,
                 TokenKind::Text => TokenClass::String,
                 TokenKind::Placeholder => TokenClass::Ident,
-                TokenKind::Equals | TokenKind::Arrow | TokenKind::DashArrow | TokenKind::BackArrow | TokenKind::At | TokenKind::Colon | TokenKind::Caret | TokenKind::DotDot | TokenKind::Plus | TokenKind::Minus | TokenKind::Star | TokenKind::Slash => TokenClass::Operator,
+                TokenKind::Equals
+                | TokenKind::Arrow
+                | TokenKind::DashArrow
+                | TokenKind::BackArrow
+                | TokenKind::At
+                | TokenKind::Colon
+                | TokenKind::Caret
+                | TokenKind::DotDot
+                | TokenKind::Plus
+                | TokenKind::Minus
+                | TokenKind::Star
+                | TokenKind::Slash => TokenClass::Operator,
                 TokenKind::Fence => TokenClass::String,
                 TokenKind::Comma | TokenKind::LBrace | TokenKind::RBrace | TokenKind::LBracket | TokenKind::RBracket | TokenKind::LParen | TokenKind::RParen => TokenClass::Punctuation,
                 TokenKind::Comment => TokenClass::Comment,
@@ -956,13 +971,7 @@ mod tests {
 
     #[test]
     fn escape_round_trips_every_control_case() {
-        let cases = [
-            "plain text",
-            "with \"quotes\" and \\backslash\\",
-            "line1\nline2\ttabbed\r\n",
-            "unicode: 🔖️ café naïve",
-            "\u{0007}bell and \u{001b}escape",
-        ];
+        let cases = ["plain text", "with \"quotes\" and \\backslash\\", "line1\nline2\ttabbed\r\n", "unicode: 🔖️ café naïve", "\u{0007}bell and \u{001b}escape"];
         for case in cases {
             let escaped = escape_text(case);
             assert!(!escaped.contains('\n'), "escaped text must not contain a raw newline: {escaped:?}");
@@ -1003,10 +1012,10 @@ mod tests {
                 TokenKind::Float, // 1.5
                 TokenKind::Ident, // y
                 TokenKind::Equals,
-                TokenKind::Int, // -2
+                TokenKind::Int,   // -2
                 TokenKind::Ident, // zoom
                 TokenKind::Equals,
-                TokenKind::Int, // 1
+                TokenKind::Int,   // 1
                 TokenKind::Ident, // label
                 TokenKind::Equals,
                 TokenKind::Text,
@@ -1030,47 +1039,20 @@ mod tests {
     fn lexer_wire_literal_alphabet_tokenizes() {
         let tokens = lex("a:Kind@out->b:Kind2@in", &Limits::default(), false).expect("lex");
         let kinds: Vec<TokenKind> = tokens.iter().map(|t| t.kind).filter(|k| !k.is_trivia() && *k != TokenKind::Eof).collect();
-        assert_eq!(
-            kinds,
-            vec![
-                TokenKind::Ident,
-                TokenKind::Colon,
-                TokenKind::Ident,
-                TokenKind::At,
-                TokenKind::Ident,
-                TokenKind::Arrow,
-                TokenKind::Ident,
-                TokenKind::Colon,
-                TokenKind::Ident,
-                TokenKind::At,
-                TokenKind::Ident,
-            ]
-        );
+        assert_eq!(kinds, vec![TokenKind::Ident, TokenKind::Colon, TokenKind::Ident, TokenKind::At, TokenKind::Ident, TokenKind::Arrow, TokenKind::Ident, TokenKind::Colon, TokenKind::Ident, TokenKind::At, TokenKind::Ident,]);
     }
 
     #[test]
     fn lexer_kebab_case_ident_and_arrow_coexist() {
         let tokens = lex("hexagonal-mushroom-column->target", &Limits::default(), false).expect("lex");
-        let significant: Vec<(TokenKind, String)> = tokens
-            .iter()
-            .filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof)
-            .map(|t| (t.kind, t.text.as_str().to_string()))
-            .collect();
-        assert_eq!(
-            significant,
-            vec![
-                (TokenKind::Ident, "hexagonal-mushroom-column".to_string()),
-                (TokenKind::Arrow, "->".to_string()),
-                (TokenKind::Ident, "target".to_string()),
-            ]
-        );
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(significant, vec![(TokenKind::Ident, "hexagonal-mushroom-column".to_string()), (TokenKind::Arrow, "->".to_string()), (TokenKind::Ident, "target".to_string()),]);
     }
 
     #[test]
     fn lexer_recognizes_negative_infinity_as_one_float_token() {
         let tokens = lex("x=-inf y=-influence z=5", &Limits::default(), true).expect("lex");
-        let significant: Vec<(TokenKind, String)> =
-            tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
         assert_eq!(
             significant,
             vec![
@@ -1136,8 +1118,7 @@ mod tests {
 
     #[test]
     fn diagnostic_lowers_to_text_error_with_expected_description() {
-        let diagnostic = Diagnostic::error("DSL0001", TextSpan::at(2, 3), "unexpected token")
-            .with_expected(ExpectedSet { tokens: vec![], keywords: vec!["camera".into(), "layer".into()], keys: vec![] });
+        let diagnostic = Diagnostic::error("DSL0001", TextSpan::at(2, 3), "unexpected token").with_expected(ExpectedSet { tokens: vec![], keywords: vec!["camera".into(), "layer".into()], keys: vec![] });
         let error = diagnostic.into_text_error();
         assert_eq!(error.span, TextSpan::at(2, 3));
         assert_eq!(error.expected.as_deref(), Some("camera|layer"));
@@ -1146,8 +1127,7 @@ mod tests {
     #[test]
     fn lexer_back_arrow_tokenizes_distinctly_from_dash_and_arrow() {
         let tokens = lex("a<-b a->b a--b a<-hexagonal-column", &Limits::default(), false).expect("lex");
-        let significant: Vec<(TokenKind, String)> =
-            tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
         assert_eq!(
             significant,
             vec![
@@ -1172,17 +1152,8 @@ mod tests {
     #[test]
     fn lexer_lone_underscore_is_placeholder_but_underscore_words_are_ident() {
         let tokens = lex("_ _foo foo_bar _", &Limits::default(), false).expect("lex");
-        let significant: Vec<(TokenKind, String)> =
-            tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
-        assert_eq!(
-            significant,
-            vec![
-                (TokenKind::Placeholder, "_".to_string()),
-                (TokenKind::Ident, "_foo".to_string()),
-                (TokenKind::Ident, "foo_bar".to_string()),
-                (TokenKind::Placeholder, "_".to_string()),
-            ]
-        );
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(significant, vec![(TokenKind::Placeholder, "_".to_string()), (TokenKind::Ident, "_foo".to_string()), (TokenKind::Ident, "foo_bar".to_string()), (TokenKind::Placeholder, "_".to_string()),]);
     }
 
     #[test]
@@ -1208,8 +1179,7 @@ mod tests {
     #[test]
     fn lexer_caret_and_dotdot_tokenize_distinctly_from_neighbors() {
         let tokens = lex("^0,1,0 (0..10,0.5) 1.5..3 a..b", &Limits::default(), false).expect("lex");
-        let significant: Vec<(TokenKind, String)> =
-            tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
         assert_eq!(
             significant,
             vec![

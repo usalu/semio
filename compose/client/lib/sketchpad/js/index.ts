@@ -73,6 +73,7 @@ import {
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
+  createBrowserStoragePort,
   type ActionDescriptor,
   type NavigationDestination,
   type NavigationLevel,
@@ -91,6 +92,7 @@ import {
   readStoredUiChromeTerminology,
   registerUiTranslationBundles,
   setControlLabelIdResolver,
+  uiI18n,
   type UiLabelValue,
   type UiLocale,
   type UiTerminologyLabelSet,
@@ -247,9 +249,11 @@ const composeVfsLabelsReuse: UiTerminologyLabelSet<ComposeVfsLabelKey> = {
 
 const resolveComposeVfsLabels = createTerminologyLabelResolver<ComposeVfsLabelKey>({ native: composeVfsLabelsNative, reuse: composeVfsLabelsReuse });
 
-/** @emoji 🗣️ Current UI locale for TS-native (non-hook) label resolution, mirroring the shell's stored-locale fallback. */
+/** @emoji 🗣️ Current UI locale for TS-native (non-hook) label resolution, mirroring the shell's
+ * stored-locale fallback. Compose is not yet wrapped in a `ShellScopeProvider` (a page-owning product
+ * today), so a plain browser-backed port is the correct storage here. */
 function composeCurrentUiLocale(): UiLocale {
-  return readStoredUiChromeLocale() ?? "en";
+  return readStoredUiChromeLocale(createBrowserStoragePort()) ?? "en";
 }
 //#endregion 🗣️VfsTerminology
 
@@ -1030,6 +1034,24 @@ const composeSketchpadTranslationBundles = {
             "beginner": "Feedback senden, um compose zu verbessern"
           }
         }
+      },
+      "docs": {
+        "loading": "Dokumentation wird geladen…",
+        "rendering": "Wird gerendert…"
+      },
+      "feedbackForm": {
+        "title": "Feedback",
+        "description": "Teilen Sie Fehler, Ideen oder Fragen zu Compose Sketchpad mit.",
+        "message": "Nachricht",
+        "messagePlaceholder": "Was sollten wir wissen?",
+        "contact": "Kontakt (optional)",
+        "contactPlaceholder": "email@beispiel.de",
+        "submit": "Feedback senden",
+        "missingMessage": "Bitte geben Sie eine Nachricht ein, bevor Sie senden.",
+        "mailOpening": "E-Mail-Programm wird geöffnet…"
+      },
+      "design": {
+        "defaultName": "Neuer Entwurf"
       },
       "app": {
         "label": {
@@ -6087,6 +6109,24 @@ const composeSketchpadTranslationBundles = {
             "beginner": "Send feedback to help improve Compose"
           }
         }
+      },
+      "docs": {
+        "loading": "Loading documentation…",
+        "rendering": "Rendering…"
+      },
+      "feedbackForm": {
+        "title": "Feedback",
+        "description": "Share bugs, ideas, or questions about Compose Sketchpad.",
+        "message": "Message",
+        "messagePlaceholder": "What should we know?",
+        "contact": "Contact (optional)",
+        "contactPlaceholder": "email@example.com",
+        "submit": "Send feedback",
+        "missingMessage": "Enter a message before sending.",
+        "mailOpening": "Opening your mail client…"
+      },
+      "design": {
+        "defaultName": "New design"
       },
       "settings": {
         "label": {
@@ -13143,7 +13183,7 @@ function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixture {
 //#region 📁️SketchpadVfs
 /** @emoji 🗣️ Builds the kit VFS schema model fresh from the active locale + terminology, mirroring a Rust plugin's `*_labels(view_state)` resolver. */
 function sketchpadKitVirtualFileSystemSchemaModel(): VirtualFileSystemSchemaModel {
-  const l = resolveComposeVfsLabels(readStoredUiChromeTerminology(), composeCurrentUiLocale());
+  const l = resolveComposeVfsLabels(readStoredUiChromeTerminology(createBrowserStoragePort()), composeCurrentUiLocale());
   const pathAndNodeKindDescriptors = [
     { id: "path", descriptorKindId: "text", label: l.path },
     { id: "fileNodeKind", descriptorKindId: "text", label: l.nodeKind },
@@ -14097,7 +14137,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
       label: l.openKits,
       children: kitItems.length
         ? kitItems.map((item) => ({ type: "button", id: item.id, label: item.label, action: item.action }))
-        : [{ type: "text", value: `${open.length} kit(s) open` }, sketchpadPanelActionButton("Import kit archive…", "importKitFromFile"), sketchpadPanelActionButton("Create empty kit", "createTemporaryKit", { name: "Untitled Kit" })],
+        : [{ type: "text", value: `${open.length} kit(s) open` }, sketchpadPanelActionButton("Import kit archive…", "importKitFromFile"), sketchpadPanelActionButton("Create empty kit", "createTemporaryKit", { name: (uiI18n.t("compose.sketchpad.kit.defaultName") as string) })],
     });
     return { ...uiDeclarativeSectionsToTree(sections), selectedIds: sketchpadDocumentSelectedIds(selection) };
   }
@@ -14119,7 +14159,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
     type: "section",
     id: "sketchpad.document.kit",
     label: kit.name ?? kitId,
-    children: [{ type: "text", value: `${designItems.length} design(s) · ${typeItems.length} type(s)` }, sketchpadPanelActionButton("Create design", "createDesignInActiveKit", { name: "New design" })],
+    children: [{ type: "text", value: `${designItems.length} design(s) · ${typeItems.length} type(s)` }, sketchpadPanelActionButton("Create design", "createDesignInActiveKit", { name: (uiI18n.t("compose.sketchpad.design.defaultName") as string) })],
   });
   if (designId) {
     const design = findDesignInKit(kit, designId);
@@ -15179,7 +15219,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
       }
       case "createDesignInActiveKit": {
         const kitId = sketchpadActiveKitIdFromPath(shell.navigationPath);
-        const designName = (args as { name?: string }).name?.trim() ?? "New design";
+        const designName = (args as { name?: string }).name?.trim() ?? (uiI18n.t("compose.sketchpad.design.defaultName") as string);
         if (!kitId) break;
         void executeSketchpadJsKitMutation(kitId, (kit) => kit.createDesign(designName))
           .then((result) => {

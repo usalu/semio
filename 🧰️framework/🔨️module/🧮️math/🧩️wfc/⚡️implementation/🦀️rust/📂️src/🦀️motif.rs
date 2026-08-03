@@ -81,8 +81,8 @@ pub(crate) fn canonicalize(colors: &[u64]) -> (Vec<u32>, usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::topology::GraphTopologyBuilder;
     use crate::ids::RelationId;
+    use crate::topology::GraphTopologyBuilder;
 
     #[test]
     fn isomorphic_rooted_neighborhoods_get_identical_signatures() {

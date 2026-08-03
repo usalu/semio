@@ -328,7 +328,11 @@ impl So3 {
             1.0 / 12.0 + t2 / 720.0
         } else {
             let sin_t = theta.sin();
-            if sin_t.abs() < 1e-9 { 1.0 / t2 } else { 1.0 / t2 - (1.0 + theta.cos()) / (2.0 * theta * sin_t) }
+            if sin_t.abs() < 1e-9 {
+                1.0 / t2
+            } else {
+                1.0 / t2 - (1.0 + theta.cos()) / (2.0 * theta * sin_t)
+            }
         };
         mat3_axpy(mat3_axpy(Mat3d::IDENTITY, k, -0.5), k2, d)
     }
@@ -682,12 +686,7 @@ mod tests {
     fn se3_exp_log_round_trips() {
         let axis = vec3d_normalize([-0.2, 0.9, 0.4]);
         let near_pi = vec3_scale(axis, PI - 1e-4);
-        let cases = [
-            [1e-9, -2e-9, 1.5e-9, 2e-9, 1e-9, -1e-9],
-            [0.5, -0.3, 0.8, 0.4, 0.2, -0.6],
-            [-1.2, 0.7, 0.3, 1.1, -0.8, 0.9],
-            [0.6, -0.4, 1.0, near_pi[0], near_pi[1], near_pi[2]],
-        ];
+        let cases = [[1e-9, -2e-9, 1.5e-9, 2e-9, 1e-9, -1e-9], [0.5, -0.3, 0.8, 0.4, 0.2, -0.6], [-1.2, 0.7, 0.3, 1.1, -0.8, 0.9], [0.6, -0.4, 1.0, near_pi[0], near_pi[1], near_pi[2]]];
         for xi in cases {
             assert!(vecn_close(&Se3::exp(xi).log(), &xi, 1e-9), "failed for {xi:?}");
         }
@@ -700,13 +699,7 @@ mod tests {
     fn sim3_exp_log_round_trips() {
         let axis = vec3d_normalize([0.5, -0.1, 0.86]);
         let near_pi = vec3_scale(axis, PI - 1e-4);
-        let cases = [
-            [1e-9, 2e-9, -1e-9, -2e-9, 1e-9, 1e-9, 1e-9],
-            [0.5, -0.3, 0.8, 0.4, 0.2, -0.6, 0.0],
-            [0.5, -0.3, 0.8, 0.4, 0.2, -0.6, 0.3],
-            [-0.9, 0.6, 0.2, 1.2, -0.5, 0.7, -0.4],
-            [0.3, 0.8, -0.5, near_pi[0], near_pi[1], near_pi[2], 0.25],
-        ];
+        let cases = [[1e-9, 2e-9, -1e-9, -2e-9, 1e-9, 1e-9, 1e-9], [0.5, -0.3, 0.8, 0.4, 0.2, -0.6, 0.0], [0.5, -0.3, 0.8, 0.4, 0.2, -0.6, 0.3], [-0.9, 0.6, 0.2, 1.2, -0.5, 0.7, -0.4], [0.3, 0.8, -0.5, near_pi[0], near_pi[1], near_pi[2], 0.25]];
         for xi in cases {
             assert!(vecn_close(&Sim3::exp(xi).log(), &xi, 1e-9), "failed for {xi:?}");
         }

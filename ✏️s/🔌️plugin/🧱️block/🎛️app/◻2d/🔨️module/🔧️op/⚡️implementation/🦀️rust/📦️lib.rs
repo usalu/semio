@@ -155,34 +155,65 @@ impl OperationDiff<Block2dDefinition> for Block2dDiff {
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Block2dOperation {
     #[dsl(key = "setNodeKind")]
-    SetNodeKind { #[dsl(block)] node_kind: BlockKindIdentity },
+    SetNodeKind {
+        #[dsl(block)]
+        node_kind: BlockKindIdentity,
+    },
     #[dsl(key = "setPresentation")]
-    SetPresentation { #[dsl(block)] presentation: Block2dPresentation },
+    SetPresentation {
+        #[dsl(block)]
+        presentation: Block2dPresentation,
+    },
     #[dsl(key = "setHandleKind")]
-    SetHandleKind { index: usize, #[dsl(block)] handle_kind: Block2dHandleKind },
+    SetHandleKind {
+        index: usize,
+        #[dsl(block)]
+        handle_kind: Block2dHandleKind,
+    },
     #[dsl(key = "removeHandleKind")]
     RemoveHandleKind { id: String },
     #[dsl(key = "setHandle")]
-    SetHandle { index: usize, #[dsl(block)] handle: Block2dHandleTemplate },
+    SetHandle {
+        index: usize,
+        #[dsl(block)]
+        handle: Block2dHandleTemplate,
+    },
     #[dsl(key = "removeHandle")]
     RemoveHandle { id: String },
     #[dsl(key = "setCompatibilityRule")]
-    SetCompatibilityRule { index: usize, #[dsl(block)] rule: BlockCompatibilityRule },
+    SetCompatibilityRule {
+        index: usize,
+        #[dsl(block)]
+        rule: BlockCompatibilityRule,
+    },
     #[dsl(key = "removeCompatibilityRule")]
     RemoveCompatibilityRule { id: String },
     #[dsl(key = "setAttribute")]
-    SetAttribute { index: usize, #[dsl(block)] attribute: BlockAttribute },
+    SetAttribute {
+        index: usize,
+        #[dsl(block)]
+        attribute: BlockAttribute,
+    },
     #[dsl(key = "removeAttribute")]
     RemoveAttribute { key: String },
     #[dsl(key = "setAuthors")]
     SetAuthors { authors: Vec<BlockAuthor> },
     #[dsl(key = "setCamera2d")]
-    SetCamera2d { #[dsl(block)] camera2d: BlockCamera2d },
+    SetCamera2d {
+        #[dsl(block)]
+        camera2d: BlockCamera2d,
+    },
     #[dsl(key = "setMeta")]
-    SetMeta { #[dsl(block)] meta: BlockMeta },
+    SetMeta {
+        #[dsl(block)]
+        meta: BlockMeta,
+    },
     /// 🌍️ Replaces the whole document (example import / reset).
     #[dsl(key = "setDocument")]
-    SetDocument { #[dsl(block)] document: Block2dDefinition },
+    SetDocument {
+        #[dsl(block)]
+        document: Block2dDefinition,
+    },
 }
 
 fn block2d_operation_diff(operation: &Block2dOperation) -> Block2dDiff {
@@ -254,7 +285,10 @@ impl Operation<Block2dDefinition> for Block2dOperation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum Block2dConfigOperation {
     #[dsl(key = "snapshot")]
-    Snapshot { #[dsl(block)] config: block_2d_engine::Block2dConfig },
+    Snapshot {
+        #[dsl(block)]
+        config: block_2d_engine::Block2dConfig,
+    },
     #[dsl(key = "selection")]
     SetSelection { ids: Vec<String> },
     #[dsl(key = "locale")]

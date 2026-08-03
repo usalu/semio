@@ -148,7 +148,9 @@ pub fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpe
         "note" => {
             let text = String::new();
             let (width, height) = note_widget_size(&text);
-            DagNodeSpec { id: id.into(), name: "Note".into(), abbreviation: "Note".into(), icon: "emoji:📝️".into(), x, y, width, height, kind: DagNodeKind::Note { text, output: IoPortSpec::named("T", "Txt", "text", "Text") }, ..Default::default() }
+            DagNodeSpec {
+                id: id.into(), name: "Note".into(), abbreviation: "Note".into(), icon: "emoji:📝️".into(), x, y, width, height, kind: DagNodeKind::Note { text, output: IoPortSpec::named("T", "Txt", "text", "Text") }, ..Default::default()
+            }
         }
         "preview" => {
             let (width, height) = preview_widget_size(&DagPreviewContent::Scalar { text: String::new() }, &BTreeSet::new());

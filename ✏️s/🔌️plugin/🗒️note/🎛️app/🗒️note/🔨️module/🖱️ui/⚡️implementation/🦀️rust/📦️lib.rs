@@ -2,25 +2,17 @@
 
 use note::{NoteBlockNode, NoteCamera, NoteDocument, NoteImageAsset, NOTE_DOCUMENT_SCHEMA};
 use note_engine::{
-    block_bounds, block_icon, block_id, block_id_from_tree_row_id, block_kind, block_name, block_visible, clone_block, create_block_by_kind,
-    empty_note_document, find_block, flatten_blocks, insert_after, insert_block, offset_block_tree, patch_block_field, remove_block_from_tree,
-    semio_example_document, semio_example_json, update_block_in_tree, NoteConfig,
+    block_bounds, block_icon, block_id, block_id_from_tree_row_id, block_kind, block_name, block_visible, clone_block, create_block_by_kind, empty_note_document, find_block, flatten_blocks, insert_after, insert_block, offset_block_tree,
+    patch_block_field, remove_block_from_tree, semio_example_document, semio_example_json, update_block_in_tree, NoteConfig,
 };
 use note_op::{NoteConfigOperation, NoteOperation};
 use note_protocol::NoteCommand;
-use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    build_ink_canvas_scene,
-    tree_item, tree_item_with_action,
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App, MediaClass, MediaForm, MediaType, OsMediaCapability, ArtifactKindSpec,
-    InkCanvasScene, ActionDescriptor, AppLabels, DocumentApp, DocumentView, ConfigView, Emit, Label, Locale, LocalizedLabel, Terminology,
-    HostEffect, PanelTreeBuilder, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiToggleNode, UiTreeItemNode,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
-    ActionDefinition, ActionKind, ActionArgDef, ActionArgOption, UtilityDefinition, UtilityCategory, SET_ACTIVE_UTILITY_ACTION_ID,
-    WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowMeasure,
+use semio_framework_plugin::{
+    build_ink_canvas_scene, create_default_layout, tree_item, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical,
+    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, InkCanvasScene, Label, Locale, LocalizedLabel, MediaClass,
+    MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiToggleNode, UiTreeItemNode, UtilityCategory,
+    UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -49,7 +41,11 @@ fn is_de_locale(cfg: &NoteConfig) -> bool {
 }
 
 fn note_locale(cfg: &NoteConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &NoteConfig) -> &'static L {
@@ -126,11 +122,7 @@ fn note_ops_from_canvas_events(document: &NoteDocument, events: &[NoteCanvasEven
 
 //#region 🔖️ActionHelpers
 fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: controller_id.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: controller_id.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🩹️ `NoteCommand::PatchBlocks`'s typed field/value pair, reconstructed into the `serde_json::Value`
@@ -140,12 +132,7 @@ fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> Action
 fn note_patch_json_value(field: &str, value: &str) -> Value {
     match field {
         "visible" | "locked" => Value::Bool(value.parse::<bool>().unwrap_or(false)),
-        "x" | "y" | "width" | "height" | "textSize" | "inkWidth" => value
-            .parse::<f64>()
-            .ok()
-            .and_then(serde_json::Number::from_f64)
-            .map(Value::Number)
-            .unwrap_or(Value::Null),
+        "x" | "y" | "width" | "height" | "textSize" | "inkWidth" => value.parse::<f64>().ok().and_then(serde_json::Number::from_f64).map(Value::Number).unwrap_or(Value::Null),
         _ => Value::String(value.to_string()),
     }
 }
@@ -197,9 +184,7 @@ semio_framework_plugin::app_labels! {
 //#region 🔖️Panels
 fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
     let nested = match block {
-        NoteBlockNode::Group { children, .. } if !children.is_empty() => {
-            Some(children.iter().map(block_tree_item).collect())
-        }
+        NoteBlockNode::Group { children, .. } if !children.is_empty() => Some(children.iter().map(block_tree_item).collect()),
         _ => None,
     };
     UiTreeItemNode {
@@ -209,12 +194,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
         items: nested,
         dimmed: if block_visible(block) { None } else { Some(true) },
         menu: None,
-        ..tree_item_with_action(
-            block_tree_row_id(block),
-            Label::data(block_name(block)),
-            Some(block_kind(block).into()),
-            play_action(NOTE_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [block_id(block)] }))),
-        )
+        ..tree_item_with_action(block_tree_row_id(block), Label::data(block_name(block)), Some(block_kind(block).into()), play_action(NOTE_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [block_id(block)] }))))
     }
 }
 
@@ -223,37 +203,17 @@ fn block_tree_row_id(block: &NoteBlockNode) -> String {
 }
 
 fn render_document_panel(document: &NoteDocument, selected_ids: &[String], labels: &NotePlayLabels) -> UiNode {
-    let action_rows: Vec<UiTreeItemNode> = [
-        ("text", labels.add_text, "type"),
-        ("table", labels.add_table, "table-2"),
-        ("math", labels.add_math, "note-math"),
-        ("image", labels.add_image, "image"),
-        ("group", labels.add_group, "folder-plus"),
-    ]
-    .into_iter()
-    .map(|(kind, label, icon)| UiTreeItemNode {
-        icon_id: Some(icon.into()),
-        menu: None,
-        ..tree_item_with_action(
-            format!("note-play-blocks.add.{kind}"),
-            label,
-            None,
-            play_action(NOTE_PLAY_CONTROLLER_ID, "addBlock", Some(json!({ "kind": kind }))),
-        )
-    })
-    .collect();
-    let block_items: Vec<UiTreeItemNode> = if document.blocks.is_empty() {
-        vec![UiTreeItemNode {
-            icon_id: Some("sticky-note".into()),
-            ..tree_item("note-play-blocks.empty", labels.document_empty)
-        }]
-    } else {
-        document.blocks.iter().map(block_tree_item).collect()
-    };
-    let selected_ids: Vec<String> = selected_ids
-        .iter()
-        .filter_map(|id| find_block(&document.blocks, id).map(block_tree_row_id))
+    let action_rows: Vec<UiTreeItemNode> = [("text", labels.add_text, "type"), ("table", labels.add_table, "table-2"), ("math", labels.add_math, "note-math"), ("image", labels.add_image, "image"), ("group", labels.add_group, "folder-plus")]
+        .into_iter()
+        .map(|(kind, label, icon)| UiTreeItemNode {
+            icon_id: Some(icon.into()),
+            menu: None,
+            ..tree_item_with_action(format!("note-play-blocks.add.{kind}"), label, None, play_action(NOTE_PLAY_CONTROLLER_ID, "addBlock", Some(json!({ "kind": kind }))))
+        })
         .collect();
+    let block_items: Vec<UiTreeItemNode> =
+        if document.blocks.is_empty() { vec![UiTreeItemNode { icon_id: Some("sticky-note".into()), ..tree_item("note-play-blocks.empty", labels.document_empty) }] } else { document.blocks.iter().map(block_tree_item).collect() };
+    let selected_ids: Vec<String> = selected_ids.iter().filter_map(|id| find_block(&document.blocks, id).map(block_tree_row_id)).collect();
     PanelTreeBuilder::new("note-play-blocks")
         .section("note-play-blocks", Some(labels.document.into()), true, [action_rows, block_items].concat())
         .selected(selected_ids)
@@ -267,24 +227,13 @@ fn render_catalogue_panel(labels: &NotePlayLabels) -> UiNode {
         label: Some(labels.catalogue_title.into()),
         default_open: Some(true),
         presence: UiPresence::default(),
-        children: vec![
-            ui_text(labels.catalogue_text),
-            ui_text(labels.catalogue_image),
-            ui_text(labels.catalogue_table),
-            ui_text(labels.catalogue_math),
-            ui_text(labels.catalogue_ink),
-            ui_text(labels.catalogue_group),
-        ],
+        children: vec![ui_text(labels.catalogue_text), ui_text(labels.catalogue_image), ui_text(labels.catalogue_table), ui_text(labels.catalogue_math), ui_text(labels.catalogue_ink), ui_text(labels.catalogue_group)],
         menu: None,
     }])
 }
 
 fn inspector_patch(block_ids: &[String], field: &str) -> ActionDescriptor {
-    play_action(
-        NOTE_PLAY_CONTROLLER_ID,
-        "patchBlocks",
-        Some(json!({ "blockIds": block_ids, "field": field })),
-    )
+    play_action(NOTE_PLAY_CONTROLLER_ID, "patchBlocks", Some(json!({ "blockIds": block_ids, "field": field })))
 }
 
 fn inspector_text_field(block_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
@@ -325,16 +274,8 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: impl Into
         child: Box::new(UiNode::Input(UiInputNode {
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
-            value: if mixed.uniform {
-                mixed.value.to_string()
-            } else {
-                String::new()
-            },
-            placeholder: if mixed.uniform {
-                None
-            } else {
-                Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER))
-            },
+            value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
+            placeholder: if mixed.uniform { None } else { Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER)) },
             commit: None,
             min: None,
             max: None,
@@ -350,23 +291,13 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: impl Into
 }
 
 fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], active_utility_id: &str, labels: &NotePlayLabels) -> UiNode {
-    let blocks: Vec<&NoteBlockNode> = selected_ids
-        .iter()
-        .filter_map(|id| find_block(&document.blocks, id))
-        .collect();
+    let blocks: Vec<&NoteBlockNode> = selected_ids.iter().filter_map(|id| find_block(&document.blocks, id)).collect();
     if blocks.is_empty() {
         return ui_stack_vertical(vec![
             ui_text(Label::data(format!("Schema: {}", document.schema))),
             ui_text(Label::data(format!("Blocks: {}", flatten_blocks(&document.blocks).len()))),
             ui_text(Label::data(format!("Utility: {active_utility_id}"))),
-            ui_text(Label::data(format!(
-                "Snap: {}",
-                if document.snap_enabled.unwrap_or(false) {
-                    format!("{}px", document.snap_grid_spacing.unwrap_or(8.0))
-                } else {
-                    "off".into()
-                }
-            ))),
+            ui_text(Label::data(format!("Snap: {}", if document.snap_enabled.unwrap_or(false) { format!("{}px", document.snap_grid_spacing.unwrap_or(8.0)) } else { "off".into() }))),
         ]);
     }
     let block_ids: Vec<String> = blocks.iter().map(|block| block_id(*block).into()).collect();
@@ -379,12 +310,7 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], act
     let locked: Vec<bool> = blocks
         .iter()
         .map(|block| match block {
-            NoteBlockNode::Text { locked, .. }
-            | NoteBlockNode::Image { locked, .. }
-            | NoteBlockNode::Table { locked, .. }
-            | NoteBlockNode::Math { locked, .. }
-            | NoteBlockNode::Ink { locked, .. }
-            | NoteBlockNode::Group { locked, .. } => *locked,
+            NoteBlockNode::Text { locked, .. } | NoteBlockNode::Image { locked, .. } | NoteBlockNode::Table { locked, .. } | NoteBlockNode::Math { locked, .. } | NoteBlockNode::Ink { locked, .. } | NoteBlockNode::Group { locked, .. } => *locked,
         })
         .collect();
     let visible_mixed = ui_inspector_mixed_toggle(&visibles);
@@ -441,15 +367,7 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], act
 
 //#region 🔖️Render
 //#region 🔖️Scenes
-fn render_canvas_scene(
-    document: &NoteDocument,
-    camera: &NoteCamera,
-    selected_ids: &[String],
-    hovered_id: Option<&str>,
-    active_utility: &str,
-    surface_id: &str,
-    view_mode: &str,
-) -> UiNode {
+fn render_canvas_scene(document: &NoteDocument, camera: &NoteCamera, selected_ids: &[String], hovered_id: Option<&str>, active_utility: &str, surface_id: &str, view_mode: &str) -> UiNode {
     // 📷️ Camera is session-only runtime state, never part of `NoteDocument` — merged into the wire
     // payload here so the ink-canvas host still gets a `camera` key to render/pan/zoom against.
     let mut document_value = serde_json::to_value(document).unwrap_or_else(|_| json!({}));
@@ -461,14 +379,7 @@ fn render_canvas_scene(
     build_ink_canvas_scene(
         surface_id,
         NOTE_PLAY_CONTROLLER_ID,
-        InkCanvasScene {
-            document_json,
-            selection_json,
-            hovered_id: hovered_id.map(str::to_string),
-            active_utility: active_utility.into(),
-            view_mode: view_mode.into(),
-            interactive: view_mode == "composite",
-        },
+        InkCanvasScene { document_json, selection_json, hovered_id: hovered_id.map(str::to_string), active_utility: active_utility.into(), view_mode: view_mode.into(), interactive: view_mode == "composite" },
     )
 }
 //#endregion 🔖️Scenes
@@ -506,7 +417,8 @@ fn note_canvas_measures(document: &NoteDocument, camera: &NoteCamera, labels: &N
                 reveal: None,
                 on_change: note_action("setCameraZoom", None),
 
-                waiting: None,}],
+                waiting: None,
+            }],
         },
         WindowMeasure::Group {
             id: "note-measures.grid".into(),
@@ -543,7 +455,7 @@ fn note_canvas_measures(document: &NoteDocument, camera: &NoteCamera, labels: &N
                     disabled: None,
                     reveal: None,
                     on_change: note_action("setGridSpacing", None),
-                    },
+                },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-subdivisions".into(),
                     label: Some(labels.measure_subdivisions.into()),
@@ -557,7 +469,7 @@ fn note_canvas_measures(document: &NoteDocument, camera: &NoteCamera, labels: &N
                     disabled: None,
                     reveal: None,
                     on_change: note_action("setGridSubdivisions", None),
-                    },
+                },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-opacity".into(),
                     label: Some(labels.measure_opacity.into()),
@@ -571,7 +483,7 @@ fn note_canvas_measures(document: &NoteDocument, camera: &NoteCamera, labels: &N
                     disabled: None,
                     reveal: None,
                     on_change: note_action("setGridOpacity", None),
-                    },
+                },
             ],
         },
         WindowMeasure::Group {
@@ -609,7 +521,7 @@ fn note_canvas_measures(document: &NoteDocument, camera: &NoteCamera, labels: &N
                     disabled: None,
                     reveal: None,
                     on_change: note_action("setSnapGridSpacing", None),
-                    },
+                },
             ],
         },
         note_pencil_utility_options(document, labels),
@@ -645,7 +557,8 @@ fn note_pencil_utility_options(document: &NoteDocument, labels: &NotePlayLabels)
             reveal: None,
             on_change: note_action("setPencilWidth", None),
 
-            waiting: None,}],
+            waiting: None,
+        }],
     }
 }
 
@@ -676,7 +589,8 @@ fn note_eraser_utility_options(document: &NoteDocument, labels: &NotePlayLabels,
             reveal: None,
             on_change: note_action("setEraserRadius", None),
 
-            waiting: None,}],
+            waiting: None,
+        }],
     }
 }
 
@@ -695,7 +609,7 @@ fn note_navigator_measures(document: &NoteDocument, camera: &NoteCamera, labels:
             disabled: None,
             reveal: None,
             on_change: note_action("setCameraZoom", None),
-            },
+        },
         WindowMeasure::Toggle {
             id: "note-navigator-measures.grid-visible".into(),
             icon_id: "layout-grid".into(),
@@ -711,16 +625,8 @@ fn note_canvas_engagement(document: &NoteDocument, camera: &NoteCamera, selected
     let block_count = flatten_blocks(&document.blocks).len();
     let selected_count = selected_ids.len();
     let zoom = camera.zoom;
-    let snap_status = if document.snap_enabled.unwrap_or(false) {
-        format!("snap {}px", document.snap_grid_spacing.unwrap_or(8.0))
-    } else {
-        "snap off".into()
-    };
-    let grid_status = if document.grid_visible.unwrap_or(true) {
-        format!("grid {}px", document.grid_spacing.unwrap_or(32.0))
-    } else {
-        "grid off".into()
-    };
+    let snap_status = if document.snap_enabled.unwrap_or(false) { format!("snap {}px", document.snap_grid_spacing.unwrap_or(8.0)) } else { "snap off".into() };
+    let grid_status = if document.grid_visible.unwrap_or(true) { format!("grid {}px", document.grid_spacing.unwrap_or(32.0)) } else { "grid off".into() };
     WindowEngagement {
         session_active: Some(false),
         options: None,
@@ -802,11 +708,7 @@ fn duplicate_blocks(document: &NoteDocument, ids: &[String]) -> Emit<NoteOperati
     if new_ids.is_empty() {
         return Emit::default();
     }
-    Emit {
-        document_operations: vec![NoteOperation::SetBlocks { blocks }],
-        config_operations: vec![NoteConfigOperation::SetSelection { block_ids: new_ids }],
-        ..Default::default()
-    }
+    Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: new_ids }], ..Default::default() }
 }
 
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — the shared body of `NoteCommand::NudgeSelection`
@@ -835,12 +737,7 @@ fn nudge(document: &NoteDocument, config: &NoteConfig, dx: f64, dy: f64) -> Emit
             let id = block_id(block).to_string();
             let mut updated = block.clone();
             match &mut updated {
-                NoteBlockNode::Text { x, y, .. }
-                | NoteBlockNode::Image { x, y, .. }
-                | NoteBlockNode::Table { x, y, .. }
-                | NoteBlockNode::Math { x, y, .. }
-                | NoteBlockNode::Ink { x, y, .. }
-                | NoteBlockNode::Group { x, y, .. } => {
+                NoteBlockNode::Text { x, y, .. } | NoteBlockNode::Image { x, y, .. } | NoteBlockNode::Table { x, y, .. } | NoteBlockNode::Math { x, y, .. } | NoteBlockNode::Ink { x, y, .. } | NoteBlockNode::Group { x, y, .. } => {
                     *x += dx;
                     *y += dy;
                 }
@@ -931,12 +828,7 @@ impl DocumentApp for NotePlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &NoteCommand,
-        doc: &DocumentView<'_, NoteDocument>,
-        cfg: &ConfigView<'_, NoteConfig>,
-    ) -> Emit<NoteOperation, NoteConfigOperation> {
+    fn handle(&self, command: &NoteCommand, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Emit<NoteOperation, NoteConfigOperation> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
@@ -972,22 +864,14 @@ impl DocumentApp for NotePlayApp {
                 let new_id = block_id(&block).to_string();
                 let mut blocks = document.blocks.clone();
                 blocks.push(block);
-                Emit {
-                    document_operations: vec![NoteOperation::SetBlocks { blocks }],
-                    config_operations: vec![NoteConfigOperation::SetSelection { block_ids: vec![new_id] }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: vec![new_id] }], ..Default::default() }
             }
             NoteCommand::MoveBlock { block_id: block_id_arg, target_row_id, drop_position } => {
                 let Some(block) = find_block(&document.blocks, block_id_arg).cloned() else {
                     return Emit::default();
                 };
                 let target_id = block_id_from_tree_row_id(target_row_id);
-                let parent_id = target_id.as_ref().and_then(|id| {
-                    find_block(&document.blocks, id).and_then(|entry| {
-                        if matches!(entry, NoteBlockNode::Group { .. }) { Some(id.clone()) } else { None }
-                    })
-                });
+                let parent_id = target_id.as_ref().and_then(|id| find_block(&document.blocks, id).and_then(|entry| if matches!(entry, NoteBlockNode::Group { .. }) { Some(id.clone()) } else { None }));
                 let index = if drop_position == "before" {
                     0
                 } else if let Some(ref parent) = parent_id {
@@ -1009,11 +893,7 @@ impl DocumentApp for NotePlayApp {
                 let mut blocks = document.blocks.clone();
                 remove_block_from_tree(&mut blocks, target);
                 let selection: Vec<String> = config.selected_block_ids.iter().filter(|id| *id != target).cloned().collect();
-                Emit {
-                    document_operations: vec![NoteOperation::SetBlocks { blocks }],
-                    config_operations: vec![NoteConfigOperation::SetSelection { block_ids: selection }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: selection }], ..Default::default() }
             }
             NoteCommand::DeleteSelection => {
                 if config.selected_block_ids.is_empty() {
@@ -1023,11 +903,7 @@ impl DocumentApp for NotePlayApp {
                 for id in &config.selected_block_ids {
                     remove_block_from_tree(&mut blocks, id);
                 }
-                Emit {
-                    document_operations: vec![NoteOperation::SetBlocks { blocks }],
-                    config_operations: vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![NoteOperation::SetBlocks { blocks }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }], ..Default::default() }
             }
             NoteCommand::DuplicateBlock { block_id: source } => duplicate_blocks(document, std::slice::from_ref(source)),
             NoteCommand::DuplicateSelection => duplicate_blocks(document, &config.selected_block_ids),
@@ -1067,20 +943,12 @@ impl DocumentApp for NotePlayApp {
                     let next = patch_block_field(document, &target_id, "name", &Value::String(name));
                     document_operations.push(NoteOperation::SetBlocks { blocks: next.blocks });
                 }
-                Emit {
-                    document_operations,
-                    config_operations: vec![NoteConfigOperation::SetEngagementInput { value: String::new() }],
-                    ..Default::default()
-                }
+                Emit { document_operations, config_operations: vec![NoteConfigOperation::SetEngagementInput { value: String::new() }], ..Default::default() }
             }
             NoteCommand::NavigatorEngagementInput => Emit::default(),
             NoteCommand::SetActiveExample { example_id } => {
                 let next_document = if example_id == "semio" { semio_example_document() } else { empty_note_document() };
-                Emit {
-                    document_operations: vec![NoteOperation::SetDocument { document: next_document }],
-                    config_operations: vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![NoteOperation::SetDocument { document: next_document }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }], ..Default::default() }
             }
             NoteCommand::SetFixtureJson { json } => {
                 let next_document = if let Ok(document) = note_dsl::parse_dsl(json) {
@@ -1097,22 +965,13 @@ impl DocumentApp for NotePlayApp {
                     };
                     document
                 };
-                Emit {
-                    document_operations: vec![NoteOperation::SetDocument { document: next_document }],
-                    config_operations: vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![NoteOperation::SetDocument { document: next_document }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }], ..Default::default() }
             }
             NoteCommand::SaveDownload => {
                 let data = note_dsl::print_dsl(document);
                 Emit::effect(HostEffect::DownloadMediaExport { filename: "🗒️semio.note.dsl".into(), mime_type: "text/plain".into(), data, encoding: None })
             }
-            NoteCommand::LoadRequest => Emit::effect(HostEffect::RequestFileOpen {
-                accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(),
-                read_as: None,
-                import_action: "setFixtureJson".into(),
-                multiple: false,
-            }),
+            NoteCommand::LoadRequest => Emit::effect(HostEffect::RequestFileOpen { accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }),
             NoteCommand::InkApplyEvents { events_json, phase, select_ids } => {
                 let events: Vec<NoteCanvasEvent> = serde_json::from_str(events_json).unwrap_or_default();
                 let mut config_operations = Vec::new();
@@ -1151,24 +1010,8 @@ impl DocumentApp for NotePlayApp {
         let config = cfg.projection;
         let labels = resolve_labels::<NotePlayLabels>(config);
         match body_key {
-            NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(
-                document,
-                &config.camera,
-                &config.selected_block_ids,
-                config.hovered_block_id.as_deref(),
-                &config.active_utility_id,
-                NOTE_PLAY_SURFACE_COMPOSITE,
-                "composite",
-            ),
-            NOTE_PLAY_BODY_NAVIGATOR => render_canvas_scene(
-                document,
-                &config.camera,
-                &config.selected_block_ids,
-                config.hovered_block_id.as_deref(),
-                &config.active_utility_id,
-                NOTE_PLAY_SURFACE_NAVIGATOR,
-                "navigator",
-            ),
+            NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(document, &config.camera, &config.selected_block_ids, config.hovered_block_id.as_deref(), &config.active_utility_id, NOTE_PLAY_SURFACE_COMPOSITE, "composite"),
+            NOTE_PLAY_BODY_NAVIGATOR => render_canvas_scene(document, &config.camera, &config.selected_block_ids, config.hovered_block_id.as_deref(), &config.active_utility_id, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator"),
             NOTE_PLAY_BODY_DOCUMENT => render_document_panel(document, &config.selected_block_ids, labels),
             NOTE_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
             NOTE_PLAY_BODY_PROPERTIES => render_properties_panel(document, &config.selected_block_ids, &config.active_utility_id, labels),
@@ -1187,12 +1030,8 @@ impl DocumentApp for NotePlayApp {
     fn window_measures(&self, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let labels = resolve_labels::<NotePlayLabels>(config);
-        HashMap::from([
-            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection, &config.camera, labels)),
-            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(doc.projection, &config.camera, labels)),
-        ])
+        HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(doc.projection, &config.camera, labels))])
     }
-
 }
 //#endregion 🔖️NotePlayApp
 
@@ -1354,8 +1193,7 @@ pub fn create_note_app() -> App {
             window.options.measures = note_navigator_measures(&document, &NoteCamera::default(), &NotePlayLabels::NATIVE_EN);
         }
     }
-    app.example("semio", LocalizedLabel::native("Semio", "Semio"), semio_example_json(), "sparkles")
-        .workflow("note", "Note", "document")
+    app.example("semio", LocalizedLabel::native("Semio", "Semio"), semio_example_json(), "sparkles").workflow("note", "Note", "document")
 }
 //#endregion 🔖️Manifest
 
@@ -1470,13 +1308,7 @@ mod tests {
     #[test]
     fn add_block_then_undo_round_trip() {
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            NoteCommand::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 },
-            |app| app.projection().expect("projection").blocks.len(),
-            0,
-            1,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }, |app| app.projection().expect("projection").blocks.len(), 0, 1);
     }
 
     #[test]
@@ -1492,12 +1324,7 @@ mod tests {
 
     #[test]
     fn nudge_direction_actions_move_selection_without_args() {
-        for (command, expected_dx, expected_dy) in [
-            (NoteCommand::NudgeSelectionUp, 0.0, -1.0),
-            (NoteCommand::NudgeSelectionDown, 0.0, 1.0),
-            (NoteCommand::NudgeSelectionLeft, -1.0, 0.0),
-            (NoteCommand::NudgeSelectionRight, 1.0, 0.0),
-        ] {
+        for (command, expected_dx, expected_dy) in [(NoteCommand::NudgeSelectionUp, 0.0, -1.0), (NoteCommand::NudgeSelectionDown, 0.0, 1.0), (NoteCommand::NudgeSelectionLeft, -1.0, 0.0), (NoteCommand::NudgeSelectionRight, 1.0, 0.0)] {
             let mut app = new_app();
             // `addBlock` selects the freshly added block (see `NoteCommand::AddBlock`'s `handle` arm),
             // so the nudge below has something in `cfg.selected_block_ids` to move.
@@ -1530,11 +1357,7 @@ mod tests {
             { "operation": "addBlock", "block": block.clone(), "parentId": null, "index": null }
         ])
         .to_string();
-        app.dispatch_typed(
-            NoteCommand::InkApplyEvents { events_json: begin_events, phase: "begin".into(), select_ids: Some(vec![new_id.clone()]) },
-            &testkit::meta("local"),
-        )
-        .expect("begin");
+        app.dispatch_typed(NoteCommand::InkApplyEvents { events_json: begin_events, phase: "begin".into(), select_ids: Some(vec![new_id.clone()]) }, &testkit::meta("local")).expect("begin");
         assert_eq!(app.projection().expect("projection").blocks.len(), 1);
 
         for x in [20.0, 30.0, 40.0] {
@@ -1551,18 +1374,13 @@ mod tests {
         assert_eq!(app.projection().expect("projection").blocks.len(), 1);
 
         // Commit with no further change emits no operation — the gesture is already recorded.
-        let commit = app
-            .dispatch_typed(NoteCommand::InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None }, &testkit::meta("local"))
-            .expect("commit");
+        let commit = app.dispatch_typed(NoteCommand::InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None }, &testkit::meta("local")).expect("commit");
         assert!(commit.operations.is_empty(), "a no-operation commit must not create an edit");
         assert_eq!(app.projection().expect("projection").blocks.len(), 1);
 
         // The whole begin+live gesture coalesced into ONE undoable edit.
         app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
-        assert!(
-            app.projection().expect("projection").blocks.is_empty(),
-            "a single undo should erase the whole gesture"
-        );
+        assert!(app.projection().expect("projection").blocks.is_empty(), "a single undo should erase the whole gesture");
     }
 
     #[test]
@@ -1581,9 +1399,7 @@ mod tests {
     fn set_camera_writes_config_and_emits_no_document_operations() {
         let mut app = new_app();
         let before = app.projection().expect("projection");
-        let result = app
-            .dispatch_typed(NoteCommand::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } }, &testkit::meta("local"))
-            .expect("set camera");
+        let result = app.dispatch_typed(NoteCommand::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } }, &testkit::meta("local")).expect("set camera");
         assert!(result.operations.is_empty(), "camera is config-only and emits no document operations");
         assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
         let json = serde_json::to_string(&app.render(NOTE_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
@@ -1619,10 +1435,7 @@ mod tests {
     fn utility_registry_declares_canvas_utilities_scoped_to_composite_window() {
         let definition = create_note_app().definition;
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
-        assert_eq!(
-            utility_ids,
-            ["selectDirect", "selectMarquee", "text", "image", "table", "math", "pencil", "eraserStroke", "eraserPoint", "pan"],
-        );
+        assert_eq!(utility_ids, ["selectDirect", "selectMarquee", "text", "image", "table", "math", "pencil", "eraserStroke", "eraserPoint", "pan"],);
         let selects: Vec<&str> = definition.utilities.iter().filter(|utility| utility.category == Some(UtilityCategory::Selection)).map(|utility| utility.id.as_str()).collect();
         assert_eq!(selects, ["selectDirect", "selectMarquee"]);
         let canvas = definition.window_kinds.iter().find(|window| window.id == NOTE_PLAY_WINDOW_COMPOSITE).expect("canvas window");
@@ -1646,14 +1459,7 @@ mod tests {
         app.dispatch_typed(NoteCommand::AddBlock { kind: "table".into(), x: 0.0, y: 0.0 }, &testkit::meta("local")).expect("add");
         let table_id = block_id(&app.projection().expect("projection").blocks[0]).to_string();
 
-        for (field, expected_rows, expected_columns) in [
-            ("tableAddRow", 3, 3),
-            ("tableAddColumn", 3, 4),
-            ("tableRemoveRow", 2, 4),
-            ("tableRemoveRow", 1, 4),
-            ("tableRemoveRow", 1, 4),
-            ("tableRemoveColumn", 1, 3),
-        ] {
+        for (field, expected_rows, expected_columns) in [("tableAddRow", 3, 3), ("tableAddColumn", 3, 4), ("tableRemoveRow", 2, 4), ("tableRemoveRow", 1, 4), ("tableRemoveRow", 1, 4), ("tableRemoveColumn", 1, 3)] {
             app.dispatch_typed(NoteCommand::PatchBlocks { block_ids: vec![table_id.clone()], field: field.into(), value: String::new() }, &testkit::meta("local")).expect("patch");
             let projection = app.projection().expect("projection");
             let block = find_block(&projection.blocks, &table_id).unwrap();
@@ -1686,18 +1492,10 @@ mod tests {
         let mut app = new_app();
         let save = app.dispatch_typed(NoteCommand::SaveDownload, &testkit::meta("local")).expect("save");
         assert!(save.operations.is_empty());
-        assert!(
-            matches!(save.requested_effects.first(), Some(HostEffect::DownloadMediaExport { filename, .. }) if filename == "🗒️semio.note.dsl"),
-            "saveDownload must request a media export: {:?}",
-            save.requested_effects
-        );
+        assert!(matches!(save.requested_effects.first(), Some(HostEffect::DownloadMediaExport { filename, .. }) if filename == "🗒️semio.note.dsl"), "saveDownload must request a media export: {:?}", save.requested_effects);
 
         let load = app.dispatch_typed(NoteCommand::LoadRequest, &testkit::meta("local")).expect("load");
-        assert!(
-            matches!(load.requested_effects.first(), Some(HostEffect::RequestFileOpen { import_action, .. }) if import_action == "setFixtureJson"),
-            "loadRequest must request a file open: {:?}",
-            load.requested_effects
-        );
+        assert!(matches!(load.requested_effects.first(), Some(HostEffect::RequestFileOpen { import_action, .. }) if import_action == "setFixtureJson"), "loadRequest must request a file open: {:?}", load.requested_effects);
     }
 
     #[test]

@@ -11,10 +11,7 @@
 //! implements the mathematically self-consistent 84-byte footer and exports `FOOTER_SIZE` so
 //! downstream crates never have to hardcode the number themselves.
 
-use pack_core::{
-    ByteRange, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError,
-    PackLimits, PackSink, PackSource, crc32c, read_varint_u64, write_varint_u64,
-};
+use pack_core::{crc32c, read_varint_u64, write_varint_u64, ByteRange, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource};
 
 //#region 🔖️Header
 /// @emoji 🧲️ The 8-byte magic every `.spk` pack file begins with.
@@ -162,16 +159,7 @@ impl Footer {
         if stored_crc != computed_crc {
             return Err(PackError::ChecksumMismatch { segment: "footer", offset: 80 });
         }
-        Ok(Self {
-            version_major,
-            version_minor,
-            required_flags,
-            manifest_offset,
-            manifest_len,
-            file_len,
-            content_hash: ContentHash(hash),
-            prev_footer_offset,
-        })
+        Ok(Self { version_major, version_minor, required_flags, manifest_offset, manifest_len, file_len, content_hash: ContentHash(hash), prev_footer_offset })
     }
 }
 //#endregion 🔖️Footer
@@ -266,12 +254,7 @@ fn read_varint_u64_at<S: PackSource>(source: &S, offset: u64) -> Result<(u64, u6
 /// the frame's CRC-32C and decompresses. Unknown `kind` values are decoded and returned as-is —
 /// callers that only want known kinds are responsible for skipping/rejecting them, this function
 /// never errors on an unrecognized kind.
-fn decode_segment_at<S: PackSource>(
-    source: &S,
-    offset: u64,
-    limits: &PackLimits,
-    verify_crc: bool,
-) -> Result<DecodedSegment, PackError> {
+fn decode_segment_at<S: PackSource>(source: &S, offset: u64, limits: &PackLimits, verify_crc: bool) -> Result<DecodedSegment, PackError> {
     let total_len = source.len();
     if offset >= total_len {
         return Err(PackError::Truncated(offset));
@@ -293,9 +276,7 @@ fn decode_segment_at<S: PackSource>(
         return Err(PackError::LimitExceeded("segment length exceeds max_segment_len"));
     }
     let payload_offset = cursor;
-    let payload_end = payload_offset
-        .checked_add(stored_len)
-        .ok_or(PackError::LimitExceeded("segment payload offset overflow"))?;
+    let payload_end = payload_offset.checked_add(stored_len).ok_or(PackError::LimitExceeded("segment payload offset overflow"))?;
     if payload_end > total_len {
         return Err(PackError::Truncated(payload_offset));
     }
@@ -316,11 +297,7 @@ fn decode_segment_at<S: PackSource>(
         }
     }
     let stored_payload = &frame[header_len..];
-    let payload = if compressed {
-        codec_decompress(codec, stored_payload, raw_len, limits.max_segment_len)?
-    } else {
-        stored_payload.to_vec()
-    };
+    let payload = if compressed { codec_decompress(codec, stored_payload, raw_len, limits.max_segment_len)? } else { stored_payload.to_vec() };
     let consumed = (crc_offset + 4) - offset;
     Ok(DecodedSegment { kind, payload, consumed })
 }
@@ -355,9 +332,7 @@ fn decode_symbols(payload: &[u8], limits: &PackLimits) -> Result<Vec<String>, Pa
         if pos + len > payload.len() {
             return Err(PackError::Truncated(pos as u64));
         }
-        let text = std::str::from_utf8(&payload[pos..pos + len])
-            .map_err(|_| PackError::Malformed { what: "symbol", offset: pos as u64, detail: "invalid utf8".to_string() })?
-            .to_string();
+        let text = std::str::from_utf8(&payload[pos..pos + len]).map_err(|_| PackError::Malformed { what: "symbol", offset: pos as u64, detail: "invalid utf8".to_string() })?.to_string();
         pos += len;
         out.push(text);
     }
@@ -511,30 +486,12 @@ fn parse_raw_manifest(payload: &[u8]) -> Result<RawManifest, PackError> {
     let field_count = read_varint_u64(payload, &mut pos)?;
     let chunk_count = read_varint_u64(payload, &mut pos)?;
     let symbol_count = read_varint_u64(payload, &mut pos)?;
-    Ok(RawManifest {
-        schema_symref,
-        schema_hash,
-        doc_span,
-        doc_frame_count,
-        symbols_span,
-        chunk_table_span,
-        field_index_span,
-        uncompressed_body_len,
-        field_count,
-        chunk_count,
-        symbol_count,
-    })
+    Ok(RawManifest { schema_symref, schema_hash, doc_span, doc_frame_count, symbols_span, chunk_table_span, field_index_span, uncompressed_body_len, field_count, chunk_count, symbol_count })
 }
 
 fn resolve_manifest(raw: &RawManifest, symbols: &[String]) -> Result<Manifest, PackError> {
-    let schema_name = if symbols.is_empty() && raw.schema_symref == 0 {
-        String::new()
-    } else {
-        symbols
-            .get(raw.schema_symref as usize)
-            .cloned()
-            .ok_or(PackError::Malformed { what: "manifest", offset: 0, detail: "schema symref out of range".to_string() })?
-    };
+    let schema_name =
+        if symbols.is_empty() && raw.schema_symref == 0 { String::new() } else { symbols.get(raw.schema_symref as usize).cloned().ok_or(PackError::Malformed { what: "manifest", offset: 0, detail: "schema symref out of range".to_string() })? };
     Ok(Manifest {
         schema_name,
         schema_hash: raw.schema_hash,
@@ -613,21 +570,9 @@ impl<S: PackSink> PackWriter<S> {
         if unknown != 0 {
             return Err(PackError::UnknownRequiredFlags(unknown));
         }
-        let header = Header {
-            version_major: FORMAT_VERSION_MAJOR,
-            version_minor: FORMAT_VERSION_MINOR,
-            required_flags,
-            optional_flags: options.optional_flags,
-        };
+        let header = Header { version_major: FORMAT_VERSION_MAJOR, version_minor: FORMAT_VERSION_MINOR, required_flags, optional_flags: options.optional_flags };
         sink.write_all(&header.write_bytes())?;
-        Ok(Self {
-            sink,
-            options: WriteOptions { required_flags, optional_flags: options.optional_flags, codec: options.codec },
-            chunks: Vec::new(),
-            symbols: Vec::new(),
-            symbols_span: None,
-            document_hasher: blake3::Hasher::new(),
-        })
+        Ok(Self { sink, options: WriteOptions { required_flags, optional_flags: options.optional_flags, codec: options.codec }, chunks: Vec::new(), symbols: Vec::new(), symbols_span: None, document_hasher: blake3::Hasher::new() })
     }
 
     /// @emoji 📍️ Current absolute write position — the offset the next segment/chunk will start
@@ -667,13 +612,7 @@ impl<S: PackSink> PackWriter<S> {
         let raw_hash = blake3::hash(payload);
         self.sink.write_all(&encoded.bytes)?;
         let id = ChunkId(self.chunks.len() as u32);
-        self.chunks.push(ChunkTableEntry {
-            offset: payload_offset,
-            stored_len: encoded.stored_len as u64,
-            raw_len: payload.len() as u64,
-            crc32: stored_crc,
-            blake3: *raw_hash.as_bytes(),
-        });
+        self.chunks.push(ChunkTableEntry { offset: payload_offset, stored_len: encoded.stored_len as u64, raw_len: payload.len() as u64, crc32: stored_crc, blake3: *raw_hash.as_bytes() });
         Ok(id)
     }
 
@@ -691,11 +630,7 @@ impl<S: PackSink> PackWriter<S> {
         let schema_symref = if manifest.schema_name.is_empty() {
             0u64
         } else {
-            self.symbols
-                .iter()
-                .position(|symbol| symbol == &manifest.schema_name)
-                .ok_or_else(|| PackError::Schema(format!("schema_name {:?} not found in written symbols table", manifest.schema_name)))?
-                as u64
+            self.symbols.iter().position(|symbol| symbol == &manifest.schema_name).ok_or_else(|| PackError::Schema(format!("schema_name {:?} not found in written symbols table", manifest.schema_name)))? as u64
         };
         let final_manifest = Manifest {
             schema_name: manifest.schema_name.clone(),
@@ -774,20 +709,9 @@ impl<S: PackSource> PackFile<S> {
         source.read_exact_at(len - FOOTER_SIZE as u64, &mut footer_bytes)?;
         let footer = Footer::parse(&footer_bytes)?;
         if footer.file_len != len {
-            return Err(PackError::Malformed {
-                what: "footer",
-                offset: len - FOOTER_SIZE as u64,
-                detail: "file_len does not match actual source length".to_string(),
-            });
+            return Err(PackError::Malformed { what: "footer", offset: len - FOOTER_SIZE as u64, detail: "file_len does not match actual source length".to_string() });
         }
-        Ok(Self {
-            source,
-            limits: limits.clone(),
-            superblock: Superblock { header, footer },
-            manifest: None,
-            symbols: Vec::new(),
-            chunk_table: Vec::new(),
-        })
+        Ok(Self { source, limits: limits.clone(), superblock: Superblock { header, footer }, manifest: None, symbols: Vec::new(), chunk_table: Vec::new() })
     }
 
     /// @emoji 2⃣ Level 2: `open_superblock` plus decoding the manifest, its symbol table (used
@@ -797,28 +721,16 @@ impl<S: PackSource> PackFile<S> {
         let verify_crc = verification.checks_crc();
         let manifest_seg = decode_segment_at(&this.source, this.superblock.footer.manifest_offset, &this.limits, verify_crc)?;
         if manifest_seg.kind != pack_core::KIND_MANIFEST {
-            return Err(PackError::Malformed {
-                what: "manifest",
-                offset: this.superblock.footer.manifest_offset,
-                detail: "expected KIND_MANIFEST segment".to_string(),
-            });
+            return Err(PackError::Malformed { what: "manifest", offset: this.superblock.footer.manifest_offset, detail: "expected KIND_MANIFEST segment".to_string() });
         }
         if manifest_seg.consumed != this.superblock.footer.manifest_len {
-            return Err(PackError::Malformed {
-                what: "manifest",
-                offset: this.superblock.footer.manifest_offset,
-                detail: "manifest_len mismatch".to_string(),
-            });
+            return Err(PackError::Malformed { what: "manifest", offset: this.superblock.footer.manifest_offset, detail: "manifest_len mismatch".to_string() });
         }
         let raw = parse_raw_manifest(&manifest_seg.payload)?;
         let symbols = if raw.symbols_span.len > 0 {
             let seg = decode_segment_at(&this.source, raw.symbols_span.offset, &this.limits, verify_crc)?;
             if seg.kind != pack_core::KIND_SYMBOLS {
-                return Err(PackError::Malformed {
-                    what: "symbols",
-                    offset: raw.symbols_span.offset,
-                    detail: "expected KIND_SYMBOLS segment".to_string(),
-                });
+                return Err(PackError::Malformed { what: "symbols", offset: raw.symbols_span.offset, detail: "expected KIND_SYMBOLS segment".to_string() });
             }
             decode_symbols(&seg.payload, &this.limits)?
         } else {
@@ -827,11 +739,7 @@ impl<S: PackSource> PackFile<S> {
         let chunk_table = if raw.chunk_table_span.len > 0 {
             let seg = decode_segment_at(&this.source, raw.chunk_table_span.offset, &this.limits, verify_crc)?;
             if seg.kind != pack_core::KIND_CHUNK_TABLE {
-                return Err(PackError::Malformed {
-                    what: "chunk_table",
-                    offset: raw.chunk_table_span.offset,
-                    detail: "expected KIND_CHUNK_TABLE segment".to_string(),
-                });
+                return Err(PackError::Malformed { what: "chunk_table", offset: raw.chunk_table_span.offset, detail: "expected KIND_CHUNK_TABLE segment".to_string() });
             }
             decode_chunk_table(&seg.payload, &this.limits)?
         } else {
@@ -854,10 +762,7 @@ impl<S: PackSource> PackFile<S> {
 
     /// @emoji 🔤️ Resolves a symref (index into the symbol table loaded by `open_manifest`).
     pub fn symbol(&self, symref: u64) -> Result<&str, PackError> {
-        self.symbols
-            .get(symref as usize)
-            .map(String::as_str)
-            .ok_or(PackError::Malformed { what: "symref", offset: symref, detail: "symref out of range".to_string() })
+        self.symbols.get(symref as usize).map(String::as_str).ok_or(PackError::Malformed { what: "symref", offset: symref, detail: "symref out of range".to_string() })
     }
 
     pub fn chunk_count(&self) -> u64 {
@@ -867,27 +772,18 @@ impl<S: PackSource> PackFile<S> {
     /// @emoji 📏️ The `(offset, stored_len)` range of a chunk's on-disk (possibly compressed)
     /// payload bytes — suitable for a range-fetch (see `pack_http`) without decoding.
     pub fn chunk_range(&self, id: ChunkId) -> Result<ByteRange, PackError> {
-        self.chunk_table
-            .get(id.0 as usize)
-            .map(|entry| ByteRange { offset: entry.offset, len: entry.stored_len })
-            .ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })
+        self.chunk_table.get(id.0 as usize).map(|entry| ByteRange { offset: entry.offset, len: entry.stored_len }).ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })
     }
 
     /// @emoji 3⃣ Level 3: reads, optionally CRC-verifies (`Standard`+) and decompresses one
     /// chunk; at `Full` also verifies its blake3 content hash.
     pub fn read_chunk(&self, id: ChunkId, verification: VerificationLevel) -> Result<Vec<u8>, PackError> {
-        let entry = self
-            .chunk_table
-            .get(id.0 as usize)
-            .ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })?;
+        let entry = self.chunk_table.get(id.0 as usize).ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })?;
         if entry.stored_len > self.limits.max_segment_len || entry.raw_len > self.limits.max_segment_len {
             return Err(PackError::LimitExceeded("chunk length exceeds max_segment_len"));
         }
         let total_len = self.source.len();
-        let end = entry
-            .offset
-            .checked_add(entry.stored_len)
-            .ok_or(PackError::LimitExceeded("chunk range overflow"))?;
+        let end = entry.offset.checked_add(entry.stored_len).ok_or(PackError::LimitExceeded("chunk range overflow"))?;
         if end > total_len {
             return Err(PackError::Truncated(entry.offset));
         }
@@ -1004,16 +900,8 @@ pub fn recover<S: PackSource>(source: &S, limits: &PackLimits) -> Result<Recover
         }
     }
 
-    let symbols = found
-        .iter()
-        .find(|(kind, _)| *kind == pack_core::KIND_SYMBOLS)
-        .and_then(|(_, payload)| decode_symbols(payload, limits).ok())
-        .unwrap_or_default();
-    let manifest = found
-        .iter()
-        .find(|(kind, _)| *kind == pack_core::KIND_MANIFEST)
-        .and_then(|(_, payload)| parse_raw_manifest(payload).ok())
-        .and_then(|raw| resolve_manifest(&raw, &symbols).ok());
+    let symbols = found.iter().find(|(kind, _)| *kind == pack_core::KIND_SYMBOLS).and_then(|(_, payload)| decode_symbols(payload, limits).ok()).unwrap_or_default();
+    let manifest = found.iter().find(|(kind, _)| *kind == pack_core::KIND_MANIFEST).and_then(|(_, payload)| parse_raw_manifest(payload).ok()).and_then(|raw| resolve_manifest(&raw, &symbols).ok());
 
     Ok(RecoveryReport { segments_recovered, bytes_recovered, manifest })
 }
@@ -1043,8 +931,7 @@ fn deflate_decompress(stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>
     }
     #[cfg(feature = "deflate")]
     {
-        let out = miniz_oxide::inflate::decompress_to_vec_with_limit(stored, raw_len as usize)
-            .map_err(|_| PackError::Malformed { what: "deflate", offset: 0, detail: "decompression failed".to_string() })?;
+        let out = miniz_oxide::inflate::decompress_to_vec_with_limit(stored, raw_len as usize).map_err(|_| PackError::Malformed { what: "deflate", offset: 0, detail: "decompression failed".to_string() })?;
         if out.len() as u64 != raw_len {
             return Err(PackError::Malformed { what: "deflate", offset: 0, detail: "decompressed length mismatch".to_string() });
         }
@@ -1178,16 +1065,7 @@ mod tests {
 
     #[test]
     fn footer_parse_rejects_bad_crc() {
-        let footer = Footer {
-            version_major: 1,
-            version_minor: 0,
-            required_flags: 0,
-            manifest_offset: 32,
-            manifest_len: 10,
-            file_len: 200,
-            content_hash: ContentHash([1u8; 32]),
-            prev_footer_offset: 0,
-        };
+        let footer = Footer { version_major: 1, version_minor: 0, required_flags: 0, manifest_offset: 32, manifest_len: 10, file_len: 200, content_hash: ContentHash([1u8; 32]), prev_footer_offset: 0 };
         let mut bytes = footer.write_bytes();
         let last = bytes.len() - 1;
         bytes[last] ^= 0xFF;
@@ -1196,16 +1074,7 @@ mod tests {
 
     #[test]
     fn footer_truncated_at_every_byte_boundary_errors_never_panics() {
-        let footer = Footer {
-            version_major: 1,
-            version_minor: 0,
-            required_flags: 0,
-            manifest_offset: 32,
-            manifest_len: 10,
-            file_len: 200,
-            content_hash: ContentHash([2u8; 32]),
-            prev_footer_offset: 0,
-        };
+        let footer = Footer { version_major: 1, version_minor: 0, required_flags: 0, manifest_offset: 32, manifest_len: 10, file_len: 200, content_hash: ContentHash([2u8; 32]), prev_footer_offset: 0 };
         let full = footer.write_bytes();
         for len in 0..FOOTER_SIZE {
             let slice = &full[..len];

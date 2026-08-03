@@ -107,7 +107,13 @@ pub mod part_1_1 {
     /// ✅️ Verify the assumed design dead load covers the material self-weight.
     pub fn check_self_weight(material: &str, thickness_m: f64, assumed_g_k_kn_m2: f64, annex: AnnexChoice) -> CheckResult {
         let g_k = self_weight_kn_m2(material, thickness_m);
-        CheckResult::from_utilization(ClauseId::new("EN 1991-1-1", "Annex A", "A.1"), Quantity::new(norm_core::QuantityKind::Pressure, g_k * 1000.0), Quantity::new(norm_core::QuantityKind::Pressure, assumed_g_k_kn_m2 * 1000.0), "self-weight vs assumed dead load", annex)
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1991-1-1", "Annex A", "A.1"),
+            Quantity::new(norm_core::QuantityKind::Pressure, g_k * 1000.0),
+            Quantity::new(norm_core::QuantityKind::Pressure, assumed_g_k_kn_m2 * 1000.0),
+            "self-weight vs assumed dead load",
+            annex,
+        )
     }
 }
 // #endregion 🔖️Part1_1
@@ -506,13 +512,7 @@ pub fn check_full_actions(document: &Document) -> CheckReport {
     let q_const = part_1_6::construction_load_kn_m2(&document.construction_activity);
     report.push(part_1_6::check_construction_load(q_const, 5.0));
     let impact = part_1_7::impact_force_kn(document.accidental_mass_t, document.accidental_speed_km_h);
-    report.push(CheckResult::from_utilization(
-        ClauseId::new("EN 1991-1-7", "Annex B", "B.2"),
-        Quantity::force_kn(impact),
-        Quantity::force_kn(500.0),
-        "accidental impact",
-        annex.choice(),
-    ));
+    report.push(CheckResult::from_utilization(ClauseId::new("EN 1991-1-7", "Annex B", "B.2"), Quantity::force_kn(impact), Quantity::force_kn(500.0), "accidental impact", annex.choice()));
     report.push(part_2::check_lm1_moment(document.annex, document.bridge_span_m, document.bridge_lane, document.bridge_lane_width_m, document.bridge_moment_resistance_knm));
     let wheel = part_3::design_vertical_wheel_load(&document.crane_class, &document.hoist_class, document.hoisting_speed_m_s);
     report.push(part_3::check_crane_load(wheel, wheel * 1.2));

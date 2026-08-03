@@ -8,6 +8,14 @@ no-embed-metadata = true
 [target.wasm32-unknown-unknown]
 rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
 
+# 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. Plugin components declare no memory `maximum`,
+# so V8 reserves the full 4GiB guard region per module per worker (~20 plugins/workers at boot).
+# 512MiB is uniform across all plugins on purpose — per-plugin rustflags would churn cargo
+# fingerprints across the shared dep graph on every sequential `cargo build -p` in the fleet.
+# Target-scoped rustflags REPLACE (not merge with) [build].rustflags, so `-Z threads=8` is repeated.
+[target.wasm32-wasip2]
+rustflags = ["-Z", "threads=8", "-C", "link-arg=--max-memory=536870912"]
+
 [target.x86_64-unknown-linux-gnu]
 rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 

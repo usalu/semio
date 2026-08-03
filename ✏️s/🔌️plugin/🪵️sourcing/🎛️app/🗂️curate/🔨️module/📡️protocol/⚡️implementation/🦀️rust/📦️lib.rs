@@ -94,9 +94,7 @@ mod tests {
         let mut store = store::DocumentStore::new(envelope);
         let mut next = store.projection().expect("projection").clone();
         sourcing_engine::curate_delta(&mut next, "beam-glulam-gl24h", 3);
-        store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![SourcingOperation::SetDocument { document: next }], description: None })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![SourcingOperation::SetDocument { document: next }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

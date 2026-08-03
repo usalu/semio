@@ -30,12 +30,7 @@ mod tests {
     fn document_text_round_trips_through_store() {
         let envelope = store::create_document_envelope("norm.en1994/v1", "en1994", Document::default(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![Operation::SetDocument { document: Document::default() }],
-                description: None,
-            })
-            .expect("apply");
+        doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: Document::default() }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&doc_store);
         store::test_support::assert_document_pack_round_trip(&doc_store);
     }

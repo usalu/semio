@@ -57,12 +57,7 @@ mod tests {
         use store::{create_document_envelope, DocumentCommand};
 
         let mut store = Block2dStore::new(create_document_envelope(BLOCK_2D_SCHEMA, "block2d", block_2d_engine::empty_block2d_definition(), None));
-        store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![Block2dOperation::SetNodeKind { node_kind: BlockKindIdentity { id: "n1".into(), name: "n1".into(), label: "N1".into(), ..Default::default() } }],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Block2dOperation::SetNodeKind { node_kind: BlockKindIdentity { id: "n1".into(), name: "n1".into(), label: "N1".into(), ..Default::default() } }], description: None }).expect("apply");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.node_kind.id, "n1");
     }

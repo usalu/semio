@@ -19,9 +19,9 @@ import {
   type WindowMeasure,
   type UtilityNode,
   type UiNode,
+  createMemoryStoragePort,
 } from "@semio-tech/framework-core";
 import {
-  ENTWERFEN_MIT_BESTAND_BRAND,
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
   ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND,
@@ -33,7 +33,7 @@ import {
   ENTWERFEN_MIT_BESTAND_BRAND_IDS,
   ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION,
 } from "../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
-import { Footer, navbarFillItem, SelectionMarquee, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
+import { Footer, navbarFillItem, SelectionMarquee, uiDataLabel, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import {
   aProjectOfLuhUdkFooterItem,
   fundedByZukunftBauFooterItem,
@@ -217,12 +217,16 @@ import {
   createFrameworkDisplayPanelTabs,
   type DisplayHostApi,
   resolveFrameworkLayoutSeed,
+  retitleWindowLayoutNode,
   introductionTargetsWindow,
   windowMeasureTreeContainsId,
   renderWindowMeasuresTree,
   buildToolTabs,
   toolIdFromPanelTabId,
   sceneToSyncPack,
+  TutorialRecorder,
+  synthesizeLocalizedLabel,
+  resolveManifestLabel,
 } from "../../../../🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
@@ -446,7 +450,7 @@ describe("coalescing action dispatcher", () => {
 });
 
 describe("shell store reducer", () => {
-  const baseState = () => initialShellState({ plugins: [] });
+  const baseState = () => initialShellState({ plugins: [], storage: createMemoryStoragePort() });
 
   it("starts every panel anchor at the same 300px width", () => {
     const widths = Object.values(baseState().layout.panels).map((panel) => panel.size);
@@ -1970,6 +1974,7 @@ describe("framework renderer hosts", () => {
         vortexFullId: "obj:v0",
       },
       2,
+      { checkingPlacement: uiDataLabel("Checking placement…"), noPlacement: uiDataLabel("No placement") },
     );
     expect(items[0]).toMatchObject({ checked: true });
     expect(items[1]).toMatchObject({ checked: false });
@@ -4264,7 +4269,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("initialShellState applies locked values over stored/default prefs", () => {
-    const state = initialShellState({ plugins: [], locks: { exampleId: "concrete-forest", locale: "de", terminology: "reuse", themeId: "semio", appearance: "dark" } });
+    const state = initialShellState({ plugins: [], locks: { exampleId: "concrete-forest", locale: "de", terminology: "reuse", themeId: "semio", appearance: "dark" }, storage: createMemoryStoragePort() });
     expect(state.layout.activeExampleId).toBe("concrete-forest");
     expect(state.uiPrefs.uiLocale).toBe("de");
     expect(state.uiPrefs.uiTerminology).toBe("reuse");
@@ -4284,9 +4289,9 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(resolveShellDefaults(brand, { exampleId: "nakagin-capsule-tower" })).toEqual({ exampleId: "nakagin-capsule-tower" });
     expect(resolveShellDefaults(brand, undefined)).toEqual({ exampleId: "concrete-forest" });
     expect(resolveShellDefaults(undefined, undefined)).toEqual({ exampleId: undefined });
-    const state = initialShellState({ plugins: [], defaults: { exampleId: "concrete-forest" } });
+    const state = initialShellState({ plugins: [], defaults: { exampleId: "concrete-forest" }, storage: createMemoryStoragePort() });
     expect(state.layout.activeExampleId).toBe("concrete-forest");
-    const locked = initialShellState({ plugins: [], locks: { exampleId: "nakagin-capsule-tower" }, defaults: { exampleId: "concrete-forest" } });
+    const locked = initialShellState({ plugins: [], locks: { exampleId: "nakagin-capsule-tower" }, defaults: { exampleId: "concrete-forest" }, storage: createMemoryStoragePort() });
     expect(locked.layout.activeExampleId).toBe("nakagin-capsule-tower");
   });
 
@@ -4310,21 +4315,23 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(shouldReplayIntroductionOnLoad({ id: "entwerfen-mit-bestand-aggregator", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(true);
     expect(shouldPersistIntroductionSeen({ id: "plain", windowTitle: "Plain" })).toBe(true);
     expect(shouldPersistIntroductionSeen({ id: "entwerfen-mit-bestand-aggregator", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(false);
-    expect(ENTWERFEN_MIT_BESTAND_BRAND.replayIntroductionOnLoad).toBe(true);
+    expect(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND.replayIntroductionOnLoad).toBe(true);
   });
 
   it("isEphemeralShellBrand skips durable shell state so a refresh boots from brand defaults only", () => {
     expect(isEphemeralShellBrand(undefined)).toBe(false);
     expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain" })).toBe(false);
     expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain", ephemeral: true })).toBe(true);
-    expect(isEphemeralShellBrand(ENTWERFEN_MIT_BESTAND_BRAND)).toBe(true);
-    expect(shouldReplayIntroductionOnLoad(ENTWERFEN_MIT_BESTAND_BRAND)).toBe(true);
-    expect(shouldPersistIntroductionSeen(ENTWERFEN_MIT_BESTAND_BRAND)).toBe(false);
+    expect(isEphemeralShellBrand(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND)).toBe(true);
+    expect(shouldReplayIntroductionOnLoad(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND)).toBe(true);
+    expect(shouldPersistIntroductionSeen(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND)).toBe(false);
     const ephemeralState = initialShellState({
       plugins: [],
       locks: { locale: "de", terminology: "reuse", themeId: "semio" },
       defaults: { exampleId: "concrete-forest" },
-      ephemeral: true,
+      // 🐚️ An in-memory storage port is now the direct analogue of the old `ephemeral: true` flag —
+      // nothing persists, so every unlocked pref reads back its own built-in default, same as before.
+      storage: createMemoryStoragePort(),
     });
     expect(ephemeralState.layout.activeExampleId).toBe("concrete-forest");
     expect(ephemeralState.uiPrefs.uiLocale).toBe("de");
@@ -4359,7 +4366,6 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND.id).toBe("entwerfen-mit-bestand-generator");
     expect(ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND.id).toBe("entwerfen-mit-bestand-koordinator");
     expect(ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND.id).toBe("entwerfen-mit-bestand-verfolgen");
-    expect(ENTWERFEN_MIT_BESTAND_BRAND).toBe(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND);
     expect(ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding"]);
   });
 
@@ -4964,6 +4970,59 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     const request = buildUiRefreshRequest({ kind: "full" }, windowInstances, [], {}, new Map());
     expect(request?.windows?.map((window) => window.key)).toEqual(["puzzle3d-main", "puzzle3d-main-top", "puzzle3d-main-perspective"]);
   });
+
+  it("re-derives window titles from localized windowKind labels on locale/terminology switch", () => {
+    const windowKinds = [
+      {
+        id: "main",
+        label: {
+          native: { en: "Main Window", de: "Hauptfenster" },
+          reuse: { en: "Main Component", de: "Hauptkomponente" },
+        },
+      },
+    ];
+    const layout = {
+      kind: "stack" as const,
+      children: [{ kind: "window" as const, id: "main", title: "Main Window" }],
+    };
+
+    const retitledDeNative = retitleWindowLayoutNode(layout, windowKinds, [], "native", "de");
+    expect(retitledDeNative).toEqual({
+      kind: "stack",
+      children: [{ kind: "window", id: "main", title: "Hauptfenster" }],
+    });
+
+    const retitledDeReuse = retitleWindowLayoutNode(layout, windowKinds, [], "reuse", "de");
+    expect(retitledDeReuse).toEqual({
+      kind: "stack",
+      children: [{ kind: "window", id: "main", title: "Hauptkomponente" }],
+    });
+  });
+
+  it("re-derives titles for extra window instances based on their windowKindId", () => {
+    const windowKinds = [
+      {
+        id: "puzzle3d-main",
+        label: {
+          native: { en: "3D Editor", de: "3D-Editor" },
+          reuse: { en: "3D Component", de: "3D-Komponente" },
+        },
+      },
+    ];
+    const extraInstances = [
+      { id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "3D Editor" },
+    ];
+    const layout = {
+      kind: "stack" as const,
+      children: [{ kind: "window" as const, id: "puzzle3d-main-top", title: "3D Editor" }],
+    };
+
+    const retitled = retitleWindowLayoutNode(layout, windowKinds, extraInstances, "reuse", "de");
+    expect(retitled).toEqual({
+      kind: "stack",
+      children: [{ kind: "window", id: "puzzle3d-main-top", title: "3D-Komponente" }],
+    });
+  });
 });
 
 describe("classifyWindowLayoutChange", () => {
@@ -5025,3 +5084,38 @@ describe("noteShellCommand", () => {
     expect(TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS.has("noteShellCommand")).toBe(true);
   });
 });
+
+describe("TutorialRecorder LocalizedLabel synthesis", () => {
+  it("synthesizeLocalizedLabel broadcasts a string across all 4 cells (native/reuse x en/de)", () => {
+    const label = synthesizeLocalizedLabel("Test Chapter");
+    expect(label).toEqual({
+      native: { en: "Test Chapter", de: "Test Chapter" },
+      reuse: { en: "Test Chapter", de: "Test Chapter" },
+    });
+    expect(synthesizeLocalizedLabel(label)).toBe(label);
+  });
+
+  it("TutorialRecorder synthesizes LocalizedLabel for addChapter and build titles", () => {
+    const recorder = new TutorialRecorder({ activeUtilityByWindowId: {}, activePanelTabByGroup: {}, expandedTreeIds: [], commandPanelOpen: false }, null);
+    recorder.addChapter("Introduction");
+    recorder.addChapter();
+    const def = recorder.build("rec-1", "Recorded Tutorial");
+
+    expect(def.title).toEqual({
+      native: { en: "Recorded Tutorial", de: "Recorded Tutorial" },
+      reuse: { en: "Recorded Tutorial", de: "Recorded Tutorial" },
+    });
+    expect(def.chapters[0].title).toEqual({
+      native: { en: "Introduction", de: "Introduction" },
+      reuse: { en: "Introduction", de: "Introduction" },
+    });
+    expect(def.chapters[1].title).toEqual({
+      native: { en: "Chapter 2", de: "Chapter 2" },
+      reuse: { en: "Chapter 2", de: "Chapter 2" },
+    });
+
+    expect(resolveManifestLabel(def.title, "native", "en")).toBe("Recorded Tutorial");
+    expect(resolveManifestLabel(def.chapters[0].title, "reuse", "de")).toBe("Introduction");
+  });
+});
+

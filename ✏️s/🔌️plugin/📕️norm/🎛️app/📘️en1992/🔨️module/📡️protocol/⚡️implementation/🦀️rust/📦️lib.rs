@@ -32,12 +32,7 @@ mod tests {
         next.m_ed_knm = 200.0;
         let envelope = store::create_document_envelope("norm.en1992/v1", "en1992", Document::default(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![Operation::SetDocument { document: next }],
-                description: None,
-            })
-            .expect("apply");
+        doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: next }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&doc_store);
         store::test_support::assert_document_pack_round_trip(&doc_store);
     }

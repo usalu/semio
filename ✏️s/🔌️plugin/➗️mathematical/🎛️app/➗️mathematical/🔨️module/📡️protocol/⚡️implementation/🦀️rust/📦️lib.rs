@@ -67,9 +67,7 @@ mod tests {
         let mut store = store::DocumentStore::new(envelope);
         let mut graph = MathGraph::default();
         graph.algorithm = "components".into();
-        store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![MathOperation::SetGraph { graph }], description: None })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![MathOperation::SetGraph { graph }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

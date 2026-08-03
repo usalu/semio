@@ -31,14 +31,22 @@ pub enum DiagLevel {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Event {
     Solved,
-    Contradiction { node: NodeId },
+    Contradiction {
+        node: NodeId,
+    },
     Restarted,
     BudgetExceeded,
     /// 📊️ `DiagLevel::Decisions` and above: a decision was made — `node` was assigned `chosen`.
-    Observed { node: NodeId, chosen: PatternId },
+    Observed {
+        node: NodeId,
+        chosen: PatternId,
+    },
     /// 📊️ `DiagLevel::Decisions` and above: `candidate` was ruled out at `node` and the decision
     /// undone (chronological backtrack or constraint-rejection repair).
-    Backtracked { node: NodeId, candidate: PatternId },
+    Backtracked {
+        node: NodeId,
+        candidate: PatternId,
+    },
 }
 
 /// 📊️ Level-gated event buffer.
@@ -180,12 +188,7 @@ mod tests {
             metrics: Metrics::default(),
             model_fingerprint: 42,
             seed: 7,
-            events: vec![
-                Event::Observed { node: NodeId(0), chosen: PatternId(1) },
-                Event::Backtracked { node: NodeId(0), candidate: PatternId(1) },
-                Event::Observed { node: NodeId(0), chosen: PatternId(2) },
-                Event::Solved,
-            ],
+            events: vec![Event::Observed { node: NodeId(0), chosen: PatternId(1) }, Event::Backtracked { node: NodeId(0), candidate: PatternId(1) }, Event::Observed { node: NodeId(0), chosen: PatternId(2) }, Event::Solved],
         };
         let trace = TraceReplay::from_report(&report);
         assert_eq!(trace.model_fingerprint, 42);

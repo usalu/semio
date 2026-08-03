@@ -154,14 +154,7 @@ pub trait HubDirectory: Send + Sync + 'static {
     //#endregion
 
     //#region Users
-    async fn create_user(
-        &self,
-        email: &str,
-        display_name: &str,
-        password_hash: Option<&str>,
-        sso_subject: Option<&str>,
-        sso_provider: Option<&str>,
-    ) -> DirectoryResult<UserRecord>;
+    async fn create_user(&self, email: &str, display_name: &str, password_hash: Option<&str>, sso_subject: Option<&str>, sso_provider: Option<&str>) -> DirectoryResult<UserRecord>;
     async fn get_user_by_email(&self, email: &str) -> DirectoryResult<Option<UserRecord>>;
     async fn get_user_by_sso_subject(&self, provider: &str, subject: &str) -> DirectoryResult<Option<UserRecord>>;
     async fn list_users(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<UserRecord>>;
@@ -183,13 +176,7 @@ pub trait HubDirectory: Send + Sync + 'static {
     //#endregion
 
     //#region SyncSessions
-    async fn record_sync_session_open(
-        &self,
-        document_id: &str,
-        user_id: Option<&str>,
-        space_role: Option<SpaceRole>,
-        client_label: &str,
-    ) -> DirectoryResult<SyncSessionRecord>;
+    async fn record_sync_session_open(&self, document_id: &str, user_id: Option<&str>, space_role: Option<SpaceRole>, client_label: &str) -> DirectoryResult<SyncSessionRecord>;
     async fn record_sync_session_close(&self, sync_session_id: &str) -> DirectoryResult<()>;
     async fn list_sync_sessions_for_document(&self, document_id: &str) -> DirectoryResult<Vec<SyncSessionRecord>>;
     //#endregion

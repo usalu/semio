@@ -7,8 +7,8 @@
 //! moved into `s/plugin/reasoning/app/wires/{rs,op}` — see that split's `dsl`/`engine` crates for the
 //! `MindmapWiresDocument`/`MindmapWiresOperation` types this trait no longer bundles.
 
-pub use infinite_canvas as canvas;
 pub use infinite_board_normal_directed as graph;
+pub use infinite_canvas as canvas;
 
 // #region 🔖️MindmapExtension
 /// 🧠️ Mindmap semantics over a property graph canvas.

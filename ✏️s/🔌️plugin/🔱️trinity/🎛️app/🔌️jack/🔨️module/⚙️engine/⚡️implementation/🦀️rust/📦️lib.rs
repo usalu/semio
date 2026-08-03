@@ -98,10 +98,7 @@ impl protocol::OperationDiff<JackConfig> for JackConfig {
 pub fn jack_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: trinity_ram::TRINITY_GRAPH_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::Graph,
-            form: semio_framework_plugin::MediaForm::Trinity,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Graph, form: semio_framework_plugin::MediaForm::Trinity },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "graph:out".into(),
             label: "Graph".into(),
@@ -113,12 +110,7 @@ pub fn jack_io() -> semio_framework_plugin::AppIo {
         }],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "graph.trinity".into(),
-            name: "Trinity Graph".into(),
-            dimension: "graph".into(),
-            component_kind: "trinity".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "graph.trinity".into(), name: "Trinity Graph".into(), dimension: "graph".into(), component_kind: "trinity".into() },
     }
 }
 //#endregion 🔖️Io

@@ -64,7 +64,6 @@ impl canvas::CanvasExtension for Puzzle2dExtension {
 impl GraphExtension for Puzzle2dExtension {}
 // #endregion 🔖️Puzzle2dExtension
 
-
 //#region 🔖️DocumentHelpers
 pub fn empty_puzzle2d_projection() -> Puzzle2dProjection {
     Puzzle2dProjection::default()
@@ -267,12 +266,8 @@ mod host_tests {
     #[test]
     fn puzzle2d_default_manifest_satisfies_board_host_validation() {
         let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/⚡️implementation/🦀️rust/🛂️manifest/🛂️manifest.jsondefault.manifest.json")).unwrap();
-        let handle_kinds: Vec<serde_json::Value> = manifest["portKinds"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .map(|row| json!({ "id": row["id"], "name": row["name"], "color": row["presentation"]["color"], "defaultWireKind": row["presentation"]["defaultWireKind"] }))
-            .collect();
+        let handle_kinds: Vec<serde_json::Value> =
+            manifest["portKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "color": row["presentation"]["color"], "defaultWireKind": row["presentation"]["defaultWireKind"] })).collect();
         let wire_kinds: Vec<serde_json::Value> = manifest["wireKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "defaultEdgeKind": row["presentation"]["defaultEdgeKind"] })).collect();
         let edge_kinds: Vec<serde_json::Value> = manifest["edgeKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"] })).collect();
         let catalogs_json = json!({ "handleKinds": handle_kinds, "wireKinds": wire_kinds, "edgeKinds": edge_kinds }).to_string();
@@ -2820,7 +2815,10 @@ mod host_tests {
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
         use store::DocumentDsl;
-        let fixture: serde_json::Value = serde_json::to_value(<puzzle_2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/⚡️implementation/🦀️rust/📚️example/🧩️nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
+        let fixture: serde_json::Value = serde_json::to_value(
+            <puzzle_2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/⚡️implementation/🦀️rust/📚️example/🧩️nakagin-capsule-tower.puzzle2d")).unwrap(),
+        )
+        .unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture
@@ -2912,7 +2910,10 @@ mod host_tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         use store::DocumentDsl;
-        let fixture: serde_json::Value = serde_json::to_value(<puzzle_2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/⚡️implementation/🦀️rust/📚️example/🧩️nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
+        let fixture: serde_json::Value = serde_json::to_value(
+            <puzzle_2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/⚡️implementation/🦀️rust/📚️example/🧩️nakagin-capsule-tower.puzzle2d")).unwrap(),
+        )
+        .unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture
@@ -3054,7 +3055,6 @@ mod host_tests {
 }
 
 #[cfg(test)]
-
 #[cfg(test)]
 mod force_graph_tests {
     use crate::graph::apply_edge_handle_snap_to_fixture_v1_json;

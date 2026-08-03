@@ -71,7 +71,11 @@ pub enum CadCommand {
     // 👁️ Config-only (was ephemeral `CadPlayRuntime` state) — emit `config_operations`, never document
     // operations.
     #[dsl(key = "camera")]
-    SetCamera { pane: Option<String>, #[dsl(block)] camera: CadCamera },
+    SetCamera {
+        pane: Option<String>,
+        #[dsl(block)]
+        camera: CadCamera,
+    },
     /// 🧮️ `value_str`/`value_num` mirror `semio_framework_plugin::apply_world3d_projection_action`'s
     /// dual-typed JSON `value` key (a select field like `orthographicView` sends a string, a slider
     /// param sends a number) — split into two typed optionals instead of one loose `serde_json::Value`.
@@ -287,6 +291,5 @@ mod tests {
         assert_eq!(store.projection().expect("projection").id, "cad");
         assert!(store.projection().expect("projection").nodes.is_empty());
     }
-
 }
 //#endregion 🧪️Tests

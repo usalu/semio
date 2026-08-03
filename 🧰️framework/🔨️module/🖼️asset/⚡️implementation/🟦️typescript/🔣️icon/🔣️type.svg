@@ -1,1 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><circle cx="256" cy="256" r="256" fill="#001117"/><path d="M5.859-177.539L5.859-208.301L175.488-208.301L175.488-177.539L106.201-177.539L106.201 0L75.146 0L75.146-177.539L5.859-177.539ZM190.137-151.758L222.949-151.758L262.354-46.582L302.637-151.758L336.768-151.758L256.201 57.129L222.363 57.129L245.947-4.980L190.137-151.758Z" fill="#f7f3e3" transform="translate(84.68650150299072, 331.58599853515625)"/></svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <polyline points="4 7 4 4 20 4 20 7" />
+  <line x1="9" x2="15" y1="20" y2="20" />
+  <line x1="12" x2="12" y1="4" y2="20" />
+</svg>

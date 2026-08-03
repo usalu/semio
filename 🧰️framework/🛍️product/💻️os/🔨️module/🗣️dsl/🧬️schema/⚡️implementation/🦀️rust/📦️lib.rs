@@ -464,8 +464,7 @@ fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextEr
             Ok(FieldValue::UInt(value))
         }
         Shape::Float => {
-            let is_float_token = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int)
-                || (cursor.peek().kind == TokenKind::Ident && matches!(cursor.peek().text.as_str().as_ref(), "nan" | "inf" | "-inf"));
+            let is_float_token = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) || (cursor.peek().kind == TokenKind::Ident && matches!(cursor.peek().text.as_str().as_ref(), "nan" | "inf" | "-inf"));
             if !is_float_token {
                 return Err(TextError::new(format!("expected a float, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
             }
@@ -482,11 +481,7 @@ fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextEr
         Shape::Enum(variants) => {
             let token = cursor.expect(TokenKind::Ident)?;
             let text = token.text.as_str();
-            variants
-                .iter()
-                .find(|(tag, _)| tag == text.as_ref())
-                .map(|(_, ordinal)| FieldValue::Enum(*ordinal))
-                .ok_or_else(|| TextError::new(format!("unknown enum tag '{text}'"), token.span))
+            variants.iter().find(|(tag, _)| tag == text.as_ref()).map(|(_, ordinal)| FieldValue::Enum(*ordinal)).ok_or_else(|| TextError::new(format!("unknown enum tag '{text}'"), token.span))
         }
         Shape::Quantity(declared) | Shape::Angle(declared) => parse_quantity(cursor, declared),
         Shape::Ref(_) => parse_scalar_text(cursor),
@@ -685,8 +680,7 @@ fn parse_embed(cursor: &mut Cursor, declared_lang: &'static str) -> Result<Field
 /// `Ident` token begins for input like `210GPa`) unit-symbol ident. No suffix means the number is
 /// already expressed in `declared`'s unit; a suffix converts, erroring if the dimensions differ.
 fn parse_quantity(cursor: &mut Cursor, declared: &'static dsl_core::UnitSpec) -> Result<FieldValue, TextError> {
-    let is_number_token = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int)
-        || (cursor.peek().kind == TokenKind::Ident && matches!(cursor.peek().text.as_str().as_ref(), "nan" | "inf" | "-inf"));
+    let is_number_token = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) || (cursor.peek().kind == TokenKind::Ident && matches!(cursor.peek().text.as_str().as_ref(), "nan" | "inf" | "-inf"));
     if !is_number_token {
         return Err(TextError::new(format!("expected a quantity, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
     }
@@ -697,8 +691,7 @@ fn parse_quantity(cursor: &mut Cursor, declared: &'static dsl_core::UnitSpec) ->
         let suffix_token = cursor.advance();
         let symbol = suffix_token.text.as_str().to_string();
         let suffix_unit = dsl_core::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(format!("unknown unit '{symbol}'"), suffix_token.span))?;
-        let converted = dsl_core::convert(value, suffix_unit, declared)
-            .ok_or_else(|| TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), suffix_token.span))?;
+        let converted = dsl_core::convert(value, suffix_unit, declared).ok_or_else(|| TextError::new(format!("unit '{symbol}' is not compatible with expected unit '{}'", declared.symbol), suffix_token.span))?;
         Ok(FieldValue::Float(converted))
     } else {
         Ok(FieldValue::Float(value))
@@ -1119,10 +1112,7 @@ fn shape_is_self_delimiting(shape: &Shape) -> bool {
 fn validate_table_columns(spec: &RecordSpec) -> Result<(), TextError> {
     for field in &spec.fields {
         if !shape_is_self_delimiting(&field.shape) {
-            return Err(TextError::new(
-                format!("table column '{}' has a non-self-delimiting shape ({}) and cannot be a table column", field.key, shape_type_name(&field.shape)),
-                TextSpan::at(1, 1),
-            ));
+            return Err(TextError::new(format!("table column '{}' has a non-self-delimiting shape ({}) and cannot be a table column", field.key, shape_type_name(&field.shape)), TextSpan::at(1, 1)));
         }
     }
     Ok(())
@@ -1344,7 +1334,10 @@ enum Chunk {
     Glue,
     /// @emoji 📜️ `Shape::Embed`'s payload — the one chunk kind whose Document and Inline renders
     /// genuinely differ in FORM (fenced block vs. escaped quoted string), not just spacing.
-    Verbatim { lang: String, content: String },
+    Verbatim {
+        lang: String,
+        content: String,
+    },
 }
 
 impl Default for Writer {
@@ -1923,13 +1916,7 @@ impl<'g> LanguageService<'g> {
     /// cursor, plus every keyword reachable from the root. A simple, always-available baseline —
     /// full context-sensitive narrowing is a natural follow-up once `Cst` gains node addressing.
     pub fn completions(&self, _text: &str, _offset: usize) -> Vec<CompletionItem> {
-        let mut items: Vec<CompletionItem> = self
-            .spec
-            .fields
-            .iter()
-            .filter(|f| !f.key.is_empty())
-            .map(|f| CompletionItem { label: f.key.clone(), detail: Some(format!("{:?}", f.shape)) })
-            .collect();
+        let mut items: Vec<CompletionItem> = self.spec.fields.iter().filter(|f| !f.key.is_empty()).map(|f| CompletionItem { label: f.key.clone(), detail: Some(format!("{:?}", f.shape)) }).collect();
         for keyword in self.keywords() {
             items.push(CompletionItem { label: keyword, detail: None });
         }
@@ -2001,16 +1988,7 @@ mod tests {
 
     // --- primitive 1: record with typed scalar fields, order-independent key=value ---
     fn camera_spec() -> RecordSpec {
-        RecordSpec::new(
-            Some("camera"),
-            RecordLayout::Inline,
-            vec![
-                FieldSpec::new(0, "x", Shape::Float),
-                FieldSpec::new(1, "y", Shape::Float),
-                FieldSpec::new(2, "zoom", Shape::Float),
-                FieldSpec::new(3, "label", Shape::Text).optional(),
-            ],
-        )
+        RecordSpec::new(Some("camera"), RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])
     }
 
     #[test]
@@ -2094,15 +2072,7 @@ mod tests {
         let spec = formula_spec();
         let value = parse("combine c value=(10-2*3)", &spec, &ParseOptions::default()).expect("parse");
         let FieldValue::Expr(expr) = value.get(1).expect("value field") else { panic!("expected Expr") };
-        assert_eq!(
-            *expr,
-            ExprValue::Binary(
-                ExprOp::Sub,
-                Box::new(ExprValue::Num(10.0)),
-                Box::new(ExprValue::Binary(ExprOp::Mul, Box::new(ExprValue::Num(2.0)), Box::new(ExprValue::Num(3.0)))),
-            ),
-            "10-2*3 must parse as 10-(2*3), not (10-2)*3"
-        );
+        assert_eq!(*expr, ExprValue::Binary(ExprOp::Sub, Box::new(ExprValue::Num(10.0)), Box::new(ExprValue::Binary(ExprOp::Mul, Box::new(ExprValue::Num(2.0)), Box::new(ExprValue::Num(3.0)))),), "10-2*3 must parse as 10-(2*3), not (10-2)*3");
     }
 
     #[test]
@@ -2216,7 +2186,7 @@ mod tests {
         assert!(err3.message.contains("count"), "{err3}");
     }
 
-        #[test]
+    #[test]
     fn quantity_rejects_an_incompatible_unit() {
         let spec = material_spec();
         let error = parse("material e=210kg rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).unwrap_err();
@@ -2229,11 +2199,7 @@ mod tests {
     }
 
     fn document_with_layers_spec() -> RecordSpec {
-        RecordSpec::new(
-            None,
-            RecordLayout::Inline,
-            vec![FieldSpec::new(0, "schema", Shape::Text), FieldSpec::new(1, "layers", Shape::Statements(vec![("layer".to_string(), layer_variant_spec)]))],
-        )
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "schema", Shape::Text), FieldSpec::new(1, "layers", Shape::Statements(vec![("layer".to_string(), layer_variant_spec)]))])
     }
 
     #[test]
@@ -2252,14 +2218,7 @@ mod tests {
     /// just to build the table, only `parse`/`print` calling the stored fn pointer one level at a
     /// time (as deep as real input actually nests) ever evaluates it again.
     fn group_spec() -> RecordSpec {
-        RecordSpec::new(
-            Some("group"),
-            RecordLayout::Inline,
-            vec![
-                FieldSpec::new(0, "id", Shape::Text).positional(0),
-                FieldSpec::new(1, "children", Shape::Block(Box::new(Shape::Statements(vec![("group".to_string(), group_spec)])))).optional(),
-            ],
-        )
+        RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "children", Shape::Block(Box::new(Shape::Statements(vec![("group".to_string(), group_spec)])))).optional()])
     }
 
     #[test]
@@ -2295,11 +2254,7 @@ mod tests {
         RecordSpec::new(
             Some("vertex"),
             RecordLayout::Inline,
-            vec![
-                FieldSpec::new(0, "pos", Shape::Tuple(Box::new(Shape::Float), Some(3))).positional(0),
-                FieldSpec::new(1, "tags", Shape::List(Box::new(Shape::Text))).optional(),
-                FieldSpec::new(2, "blob", Shape::Bytes64).optional(),
-            ],
+            vec![FieldSpec::new(0, "pos", Shape::Tuple(Box::new(Shape::Float), Some(3))).positional(0), FieldSpec::new(1, "tags", Shape::List(Box::new(Shape::Text))).optional(), FieldSpec::new(2, "blob", Shape::Bytes64).optional()],
         )
     }
 
@@ -2448,16 +2403,7 @@ mod tests {
 
     // --- primitive 17: `Shape::Table` — SoA columnar collection ---
     fn table_row_spec() -> RecordSpec {
-        RecordSpec::new(
-            None,
-            RecordLayout::Inline,
-            vec![
-                FieldSpec::new(0, "id", Shape::Text),
-                FieldSpec::new(1, "x", Shape::Float),
-                FieldSpec::new(2, "y", Shape::Float),
-                FieldSpec::new(3, "link", Shape::Wire).optional(),
-            ],
-        )
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "x", Shape::Float), FieldSpec::new(2, "y", Shape::Float), FieldSpec::new(3, "link", Shape::Wire).optional()])
     }
     fn table_doc_spec() -> RecordSpec {
         RecordSpec::new(Some("scene"), RecordLayout::Inline, vec![FieldSpec::new(0, "nodes", Shape::Table(table_row_spec))])
@@ -2556,15 +2502,7 @@ mod tests {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "target", Shape::Float).optional(), FieldSpec::new(1, "actual", Shape::Float).optional()])
     }
     fn duplicate_type_row_spec() -> RecordSpec {
-        RecordSpec::new(
-            None,
-            RecordLayout::Inline,
-            vec![
-                FieldSpec::new(0, "id", Shape::Text),
-                FieldSpec::new(1, "area", Shape::Record(quantity_spec)),
-                FieldSpec::new(2, "volume", Shape::Record(quantity_spec)),
-            ],
-        )
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "area", Shape::Record(quantity_spec)), FieldSpec::new(2, "volume", Shape::Record(quantity_spec))])
     }
     fn duplicate_type_table_doc_spec() -> RecordSpec {
         RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(0, "rows", Shape::Table(duplicate_type_row_spec))])

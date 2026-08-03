@@ -22,51 +22,21 @@ mod grammar {
 
     fn jack_rules() -> Vec<GrammarRule> {
         vec![
-            GrammarRule {
-                pattern: regex::Regex::new(r"(?i)\b(MATCH|WHERE|RETURN|CREATE|DELETE|SET|MERGE|AND|OR)\b").expect("jack keyword"),
-                class: "keyword",
-            },
-            GrammarRule {
-                pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("jack string"),
-                class: "string",
-            },
-            GrammarRule {
-                pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("jack number"),
-                class: "number",
-            },
-            GrammarRule {
-                pattern: regex::Regex::new(r"->|!=|[:=.,\[\]()-]").expect("jack operator"),
-                class: "operator",
-            },
-            GrammarRule {
-                pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_]*\b").expect("jack ident"),
-                class: "ident",
-            },
+            GrammarRule { pattern: regex::Regex::new(r"(?i)\b(MATCH|WHERE|RETURN|CREATE|DELETE|SET|MERGE|AND|OR)\b").expect("jack keyword"), class: "keyword" },
+            GrammarRule { pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("jack string"), class: "string" },
+            GrammarRule { pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("jack number"), class: "number" },
+            GrammarRule { pattern: regex::Regex::new(r"->|!=|[:=.,\[\]()-]").expect("jack operator"), class: "operator" },
+            GrammarRule { pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_]*\b").expect("jack ident"), class: "ident" },
         ]
     }
 
     fn wire_rules() -> Vec<GrammarRule> {
         vec![
-            GrammarRule {
-                pattern: regex::Regex::new(r"->").expect("wire keyword"),
-                class: "keyword",
-            },
-            GrammarRule {
-                pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("wire string"),
-                class: "string",
-            },
-            GrammarRule {
-                pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("wire number"),
-                class: "number",
-            },
-            GrammarRule {
-                pattern: regex::Regex::new(r"[:@{}.,\[\]-]").expect("wire operator"),
-                class: "operator",
-            },
-            GrammarRule {
-                pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_.-]*\b").expect("wire ident"),
-                class: "ident",
-            },
+            GrammarRule { pattern: regex::Regex::new(r"->").expect("wire keyword"), class: "keyword" },
+            GrammarRule { pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("wire string"), class: "string" },
+            GrammarRule { pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("wire number"), class: "number" },
+            GrammarRule { pattern: regex::Regex::new(r"[:@{}.,\[\]-]").expect("wire operator"), class: "operator" },
+            GrammarRule { pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_.-]*\b").expect("wire ident"), class: "ident" },
         ]
     }
 
@@ -89,11 +59,7 @@ mod grammar {
                 for slot in &mut occupied[start..end] {
                     *slot = true;
                 }
-                tokens.push(GrammarToken {
-                    class: rule.class.into(),
-                    start,
-                    end,
-                });
+                tokens.push(GrammarToken { class: rule.class.into(), start, end });
             }
         }
         tokens.sort_by_key(|token| (token.start, std::cmp::Reverse(token.end)));
@@ -224,12 +190,7 @@ pub fn writer_io() -> semio_framework_plugin::AppIo {
         }],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "text.document".into(),
-            name: "Text Document".into(),
-            dimension: "text".into(),
-            component_kind: "writer".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "text.document".into(), name: "Text Document".into(), dimension: "text".into(), component_kind: "writer".into() },
     }
 }
 
@@ -315,14 +276,7 @@ pub fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
 /// 🌉️ Adapts trinity_jack's shared [`trinity_jack::SpannedNode`] tree into writer's own [`JackAstNode`]
 /// (adds the stable tree-item `id` the outline panel needs; `kind`/`label`/spans pass through unchanged).
 fn jack_ast_from_spanned(node: &trinity_jack::SpannedNode) -> JackAstNode {
-    JackAstNode {
-        id: format!("jack-ast-{}-{}-{}", node.kind, node.start, node.end),
-        kind: node.kind.clone(),
-        label: node.label.clone(),
-        start: node.start,
-        end: node.end,
-        children: node.children.iter().map(jack_ast_from_spanned).collect(),
-    }
+    JackAstNode { id: format!("jack-ast-{}-{}-{}", node.kind, node.start, node.end), kind: node.kind.clone(), label: node.label.clone(), start: node.start, end: node.end, children: node.children.iter().map(jack_ast_from_spanned).collect() }
 }
 
 /// 🌳️ Parse jack source into a span-tracked AST for hierarchy panels, via the shared `trinity_jack` parser.
@@ -388,10 +342,7 @@ pub struct SelectableSpan {
 
 /// 🎯️ Builds atomic and composite jack spans for token-wise selection (premigration `selectableSpansForJack`).
 pub fn selectable_spans_for_jack(text: &str, tokens: &[GrammarToken]) -> Vec<SelectableSpan> {
-    let mut spans: Vec<SelectableSpan> = tokens
-        .iter()
-        .map(|token| SelectableSpan { start: token.start, end: token.end, kind: "atomic".into(), head_end: None, tail_start: None })
-        .collect();
+    let mut spans: Vec<SelectableSpan> = tokens.iter().map(|token| SelectableSpan { start: token.start, end: token.end, kind: "atomic".into(), head_end: None, tail_start: None }).collect();
     for i in 0..tokens.len() {
         if i + 2 >= tokens.len() {
             break;
@@ -759,10 +710,7 @@ pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &
 
 pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
     let graph = trinity_jack::example_graph();
-    let items: Vec<Value> = trinity_jack::complete(&graph, text, cursor)
-        .into_iter()
-        .map(|item| json!({ "label": item.label, "detail": item.detail }))
-        .collect();
+    let items: Vec<Value> = trinity_jack::complete(&graph, text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
     serde_json::to_string(&items).ok()
 }
 

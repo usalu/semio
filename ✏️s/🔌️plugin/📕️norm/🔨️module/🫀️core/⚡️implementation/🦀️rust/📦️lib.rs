@@ -1,9 +1,9 @@
 //! 📏️ Norm core: shared quantities, clause identity, compliance results, and national annex selection.
 
+use protocol::{OpBinary, OpText, Operation, OperationDiff, ProtocolError};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use protocol::{Operation, OperationDiff, OpBinary, OpText, ProtocolError};
 use store::{DocumentDsl, DocumentPack, TextError, TextSpan};
 
 // #region 🔖️Quantity
@@ -626,14 +626,8 @@ where
 {
     fn parse_op(line: &str) -> Result<Self, TextError> {
         let trimmed = line.trim();
-        let rest = trimmed
-            .strip_prefix("set-document ")
-            .ok_or_else(|| TextError::new("expected 'set-document \"<document>\"'", TextSpan::at(1, 1)))?
-            .trim();
-        let quoted = rest
-            .strip_prefix('"')
-            .and_then(|value| value.strip_suffix('"'))
-            .ok_or_else(|| TextError::new("expected a double-quoted document text field", TextSpan::at(1, 15)))?;
+        let rest = trimmed.strip_prefix("set-document ").ok_or_else(|| TextError::new("expected 'set-document \"<document>\"'", TextSpan::at(1, 1)))?.trim();
+        let quoted = rest.strip_prefix('"').and_then(|value| value.strip_suffix('"')).ok_or_else(|| TextError::new("expected a double-quoted document text field", TextSpan::at(1, 15)))?;
         let document_text = unescape_op_text_field(quoted);
         let document = D::parse_dsl(&document_text)?;
         Ok(SetDocumentOperation::SetDocument { document })
@@ -760,12 +754,7 @@ mod tests {
     fn document_text_round_trips_for_a_norm_family_document() {
         let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
         let mut store = store::DocumentStore::new(envelope);
-        store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![SetDocumentOperation::SetDocument { document: DemoDocument { value: 3.0 } }],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![SetDocumentOperation::SetDocument { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

@@ -7,16 +7,16 @@ use flow_core::{
     CameraJson, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC,
 };
 use flow_core::{flow_backed_node_graph_extras, flow_fixture_operations};
-use flow_engine::{flow_play_neural_cache, flow_widget_descriptor, flow_widget_drag_json, fixture_to_workflow, seed_host_catalogue, sync_host_selection, sync_host_selection_domains, widget_id, widget_kind_label, widget_tree_label, FlowConfig};
+use flow_engine::{fixture_to_workflow, flow_play_neural_cache, flow_widget_descriptor, flow_widget_drag_json, seed_host_catalogue, sync_host_selection, sync_host_selection_domains, widget_id, widget_kind_label, widget_tree_label, FlowConfig};
 use flow_op::{FlowConfigOperation, FlowOperation};
 use flow_protocol::{FlowCommand, FlowNodeGraphEditOp};
 use playbook::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation};
 use semio_framework_plugin::{
-    build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind,
-    App, AppLabels, AppActionRegistry, ConfigView, ContextMenuRequest, ContextMenuItemSpec, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, Terminology, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,
-    UiTreeItemNode, UiTreeSectionNode, WindowMeasure, MeasureSelectItem, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
+    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabels, ArtifactKindSpec, ConfigView,
+    ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, MeasureSelectItem, MediaClass, MediaForm, MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup,
+    PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -55,7 +55,11 @@ fn is_de_locale(cfg: &FlowConfig) -> bool {
 }
 
 fn flow_locale(cfg: &FlowConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &FlowConfig) -> &'static L {
@@ -263,23 +267,12 @@ fn node_graph_edit_result(fixture: &FlowFixture, config: &FlowConfig, operations
         }
         changed
     });
-    let config_operations = if clear_selection {
-        vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]
-    } else {
-        Vec::new()
-    };
+    let config_operations = if clear_selection { vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }] } else { Vec::new() };
     Emit { document_operations, config_operations, ..Default::default() }
 }
 
 /// 🖱️ On-demand flow node-graph context menu from surface hit-test and selection snapshot.
-fn flow_context_menu_items(
-    registry: &AppActionRegistry,
-    fixture: &FlowFixture,
-    config: &FlowConfig,
-    labels: &FlowPlayLabels,
-    is_de: bool,
-    surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>,
-) -> Vec<ContextMenuItemSpec> {
+fn flow_context_menu_items(registry: &AppActionRegistry, fixture: &FlowFixture, config: &FlowConfig, labels: &FlowPlayLabels, is_de: bool, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Vec<ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
 
     let hits = surface.map(|target| target.hits.as_slice()).unwrap_or(&[]);
@@ -308,13 +301,7 @@ fn flow_context_menu_items(
     let mut menu = Menu::of(registry);
     if hits.is_empty() {
         menu = menu
-            .item(ContextMenuItemSpec {
-                id: "add-node".into(),
-                label: Some(labels.add_node.into()),
-                icon: Some("plus".into()),
-                action: Some("openSpotlight".into()),
-                ..Default::default()
-            })
+            .item(ContextMenuItemSpec { id: "add-node".into(), label: Some(labels.add_node.into()), icon: Some("plus".into()), action: Some("openSpotlight".into()), ..Default::default() })
             .action("selectAll")
             .group("transform", |m| m.action("reorganize"));
     }
@@ -344,13 +331,7 @@ fn flow_context_menu_items(
                 ..Default::default()
             })
         });
-        let phrase = selection_count_phrase(
-            is_de,
-            &[
-                (nodes.len(), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }),
-                (edges.len(), if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" }),
-            ],
-        );
+        let phrase = selection_count_phrase(is_de, &[(nodes.len(), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }), (edges.len(), if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" })]);
         if !phrase.is_empty() {
             menu = menu.item(ContextMenuItemSpec {
                 id: "delete-selection".into(),
@@ -453,7 +434,9 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &Flow
     let widget_items: Vec<UiTreeItemNode> = fixture
         .widgets
         .iter()
-        .map(|widget| tree_item_with_action(format!("flow-play-document.widget.{}", widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()), flow_action("setSelection", Some(json!({ "ids": [widget_id(widget)] })))))
+        .map(|widget| {
+            tree_item_with_action(format!("flow-play-document.widget.{}", widget_id(widget)), Label::data(widget_tree_label(widget)), Some(widget_kind_label(widget).into()), flow_action("setSelection", Some(json!({ "ids": [widget_id(widget)] }))))
+        })
         .collect();
     let synapse_items: Vec<UiTreeItemNode> =
         fixture.synapses.iter().map(|synapse| tree_item_desc(format!("flow-play-document.synapse.{}", synapse.id), Label::data(format!("{} → {}", synapse.from, synapse.to)), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
@@ -488,8 +471,7 @@ fn build_catalogue_tree(fixture: &FlowFixture, config: &FlowConfig, labels: &Flo
                         .collect()
                 })
                 .unwrap_or_default();
-            Some(UiTreeSectionNode { presence: UiPresence::default(), id: format!("flow-play-catalogue.{id}"), label: Some(Label::data(title)), default_open: Some(true), items,
-        })
+            Some(UiTreeSectionNode { presence: UiPresence::default(), id: format!("flow-play-catalogue.{id}"), label: Some(Label::data(title)), default_open: Some(true), items })
         })
         .collect();
     let tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
@@ -522,11 +504,9 @@ fn flow_extensions_tree_sections(config: &FlowConfig, labels: &FlowPlayLabels) -
             tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels), Some((*action_id).into()), flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))))
         })
         .collect();
-    let mut sections = vec![UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed,
-        }];
+    let mut sections = vec![UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed }];
     if !actions.is_empty() {
-        sections.push(UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions,
-        });
+        sections.push(UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions });
     }
     sections
 }
@@ -548,7 +528,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                     tree_item_with_action_draggable(format!("flow-play-catalogue.source.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
                 })
                 .collect(),
-            },
+        },
         UiTreeSectionNode {
             presence: UiPresence::default(),
             id: "flow-play-catalogue.components".into(),
@@ -561,7 +541,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                     tree_item_with_action_draggable(format!("flow-play-catalogue.component.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
                 })
                 .collect(),
-            },
+        },
         UiTreeSectionNode {
             presence: UiPresence::default(),
             id: "flow-play-catalogue.sinks".into(),
@@ -574,7 +554,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                     tree_item_with_action_draggable(format!("flow-play-catalogue.sink.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
                 })
                 .collect(),
-            },
+        },
     ]
 }
 
@@ -586,13 +566,7 @@ fn flow_lod_measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasu
         let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
         Some(MeasureSelectItem { id: id.clone(), value: id, label: name })
     }));
-    WindowMeasure::Select {
-        id: "flow-play-measures.lod".into(),
-        label: Some(labels.lod_mode.into()),
-        value: config.lod_mode.clone(),
-        items,
-        on_change: flow_action("setLodMode", Some(json!({ "value": config.lod_mode }))),
-    }
+    WindowMeasure::Select { id: "flow-play-measures.lod".into(), label: Some(labels.lod_mode.into()), value: config.lod_mode.clone(), items, on_change: flow_action("setLodMode", Some(json!({ "value": config.lod_mode }))) }
 }
 
 fn flow_grid_measures_group(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
@@ -610,22 +584,8 @@ fn flow_grid_measures_group(config: &FlowConfig, labels: &FlowPlayLabels) -> Win
         waiting: None,
         on_change: None,
         children: vec![
-            WindowMeasure::Toggle {
-                id: "flow-play-measures.grid-visible".into(),
-                icon_id: "layout-grid".into(),
-                label: Some(labels.grid_visible.into()),
-                pressed: config.grid_visible,
-                text: None,
-                on_change: flow_action("setGridVisible", None),
-            },
-            WindowMeasure::Toggle {
-                id: "flow-play-measures.grid-snap".into(),
-                icon_id: "magnet".into(),
-                label: Some(labels.grid_snap.into()),
-                pressed: config.grid_snap_enabled,
-                text: None,
-                on_change: flow_action("setGridSnapEnabled", None),
-            },
+            WindowMeasure::Toggle { id: "flow-play-measures.grid-visible".into(), icon_id: "layout-grid".into(), label: Some(labels.grid_visible.into()), pressed: config.grid_visible, text: None, on_change: flow_action("setGridVisible", None) },
+            WindowMeasure::Toggle { id: "flow-play-measures.grid-snap".into(), icon_id: "magnet".into(), label: Some(labels.grid_snap.into()), pressed: config.grid_snap_enabled, text: None, on_change: flow_action("setGridSnapEnabled", None) },
             WindowMeasure::Slider {
                 id: "flow-play-measures.grid-factor".into(),
                 label: Some(format!("{} {:.1}", labels.grid_factor.as_str(), config.grid_factor)),
@@ -655,7 +615,8 @@ fn flow_window_measures(config: &FlowConfig, labels: &FlowPlayLabels) -> Vec<Win
             max: 240.0,
             step: Some(4.0),
             ready: None,
-            loading: None, waiting: None,
+            loading: None,
+            waiting: None,
             disabled: None,
             reveal: None,
             on_change: flow_action("setProximityDistance", None),
@@ -704,10 +665,12 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
             id: "flow-play-inspector.kind.inputSlider".into(),
             label: Label::data("inputSlider"),
             default_open: None,
-            fields: vec![UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            fields: vec![UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "flow-play-inspector.slider-value".into(),
                 label: labels.value.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: "flow-play-inspector.slider-value.input".into(),
                     input_kind: "number".into(),
                     value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
@@ -742,10 +705,12 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
             id: "flow-play-inspector.kind.inputNote".into(),
             label: Label::data("inputNote"),
             default_open: None,
-            fields: vec![UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            fields: vec![UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "flow-play-inspector.note-text".into(),
                 label: labels.text.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: "flow-play-inspector.note-text.input".into(),
                     input_kind: "text".into(),
                     value: mixed.value,
@@ -770,10 +735,12 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], labels: &Flo
     if widget_ids.len() == 1 {
         base_fields.insert(
             0,
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "flow-play-inspector.id".into(),
                 label: labels.id.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: "flow-play-inspector.id.input".into(),
                     input_kind: "text".into(),
                     value: widget_ids[0].clone(),
@@ -807,11 +774,7 @@ fn render_main_graph(fixture: &FlowFixture, config: &FlowConfig) -> UiNode {
     let selection = config.selected_node_ids.clone();
     let driver = config.eval_driver();
     let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(&driver));
-    let preview_off_json = if config.preview_off_node_ids.is_empty() {
-        None
-    } else {
-        serde_json::to_string(&config.preview_off_node_ids).ok()
-    };
+    let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
     build_node_graph_scene(
         FLOW_PLAY_SURFACE_MAIN,
         FLOW_PLAY_APP_ID,
@@ -1316,7 +1279,7 @@ mod tests {
     use flow_engine::FLOW_WIDGET_DRAG_MIME;
     use semio_framework_plugin::{
         testkit::{assert_undo_redo_round_trip, meta, new_app, new_app_with_registry, paired_apps},
-        PluginApp, ViewState, VcsDocumentApp,
+        PluginApp, VcsDocumentApp, ViewState,
     };
 
     fn render(app: &mut VcsDocumentApp<FlowPlayApp>, body_key: &str, view_state: &ViewState) -> String {
@@ -1324,22 +1287,13 @@ mod tests {
     }
 
     fn context_menu_items(app: &mut VcsDocumentApp<FlowPlayApp>, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
-        let request = ContextMenuRequest {
-            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
-            surface,
-            window_instance_id: None,
-            point: None,
-        };
+        let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface, window_instance_id: None, point: None };
         serde_json::to_value(app.context_menu(&request)).unwrap_or(Value::Null)
     }
 
     fn preview_off_ids(app: &mut VcsDocumentApp<FlowPlayApp>, view_state: &ViewState) -> Value {
         let rendered: Value = serde_json::from_str(&render(app, FLOW_PLAY_BODY_MAIN, view_state)).expect("render json");
-        rendered
-            .pointer("/nodeGraph/previewOffJson")
-            .and_then(Value::as_str)
-            .and_then(|raw| serde_json::from_str(raw).ok())
-            .unwrap_or(Value::Null)
+        rendered.pointer("/nodeGraph/previewOffJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
     }
 
     #[test]
@@ -1501,13 +1455,7 @@ mod tests {
     #[test]
     fn context_menu_includes_select_all_when_empty() {
         let mut app = flow_app_with_registry();
-        let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: "main".into(),
-            kind: "nodeGraph".into(),
-            hits: vec![],
-            selection: vec![],
-            text: None,
-        }));
+        let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None }));
         let menu_json = menu.to_string();
         assert!(menu_json.contains("selectAll"), "menu should be {menu_json}");
         assert!(menu_json.contains("Select All") || menu_json.contains("select-all"), "menu should be {menu_json}");
@@ -1525,14 +1473,7 @@ mod tests {
         assert!(menu.contains("Hide preview") || menu.contains("eye-off"), "menu should offer hide preview: {menu}");
         assert!(menu.contains("focusSelection"), "menu should expose zoom to selection: {menu}");
         assert!(menu.contains(r#""checked":true"#), "preview checked when visible: {menu}");
-        assert!(!menu.contains(r#""id":"toggle-preview""#) || !menu
-            .split("\"id\":\"toggle-preview\"")
-            .nth(1)
-            .unwrap_or("")
-            .split("\"id\":")
-            .next()
-            .unwrap_or("")
-            .contains("\"disabled\":true"), "preview must be enabled with selection: {menu}");
+        assert!(!menu.contains(r#""id":"toggle-preview""#) || !menu.split("\"id\":\"toggle-preview\"").nth(1).unwrap_or("").split("\"id\":").next().unwrap_or("").contains("\"disabled\":true"), "preview must be enabled with selection: {menu}");
         app.dispatch_typed(FlowCommand::SetPreviewOff { ids: vec!["slider".into()], value: true }, &meta("local")).expect("setPreviewOff");
         let after_menu = context_menu_items(&mut app, None).to_string();
         let preview_off = preview_off_ids(&mut app, &ViewState::default());
@@ -1549,48 +1490,34 @@ mod tests {
         let after = context_menu_items(&mut app, None).to_string();
         assert!(after.contains("setPreviewOff"), "menu keeps preview: {after}");
         assert!(after.contains(r#""ids":["slider"]"#) || after.contains("slider"), "preview args target the clicked node: {after}");
-        assert!(!after.split("\"id\":\"toggle-preview\"")
-            .nth(1)
-            .unwrap_or("")
-            .contains("\"disabled\":true"), "preview enabled after contextMenuAt: {after}");
+        assert!(!after.split("\"id\":\"toggle-preview\"").nth(1).unwrap_or("").contains("\"disabled\":true"), "preview enabled after contextMenuAt: {after}");
     }
 
     #[test]
     fn context_menu_annotates_mixed_selection_counts_and_omits_delete_without_selection() {
         let mut app = flow_app_with_registry();
-        let empty = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: "main".into(),
-            kind: "nodeGraph".into(),
-            hits: vec![],
-            selection: vec![],
-            text: None,
-        })).to_string();
+        let empty = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "main".into(), kind: "nodeGraph".into(), hits: vec![], selection: vec![], text: None })).to_string();
         assert!(!empty.contains(r#""id":"delete-selection""#), "empty must omit delete: {empty}");
 
         app.dispatch_typed(
-            FlowCommand::SetSelection {
-                ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()],
-                edge_ids: (1..=13).map(|i| format!("e{i}")).collect(),
-                handle_ids: Vec::new(),
-            },
+            FlowCommand::SetSelection { ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()], edge_ids: (1..=13).map(|i| format!("e{i}")).collect(), handle_ids: Vec::new() },
             &meta("local"),
-        ).expect("setSelection");
-        let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: "main".into(),
-            kind: "nodeGraph".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
-            selection: vec![
-                semio_framework_plugin::ContextMenuSelectionGroup {
-                    domain: "node".into(),
-                    ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()],
-                },
-                semio_framework_plugin::ContextMenuSelectionGroup {
-                    domain: "edge".into(),
-                    ids: (1..=13).map(|i| format!("e{i}")).collect(),
-                },
-            ],
-            text: None,
-        })).to_string();
+        )
+        .expect("setSelection");
+        let menu = context_menu_items(
+            &mut app,
+            Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+                surface_id: "main".into(),
+                kind: "nodeGraph".into(),
+                hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
+                selection: vec![
+                    semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()] },
+                    semio_framework_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: (1..=13).map(|i| format!("e{i}")).collect() },
+                ],
+                text: None,
+            }),
+        )
+        .to_string();
         eprintln!("[DEBUG] mixed selection context menu: {menu}");
         assert!(menu.contains(r#""id":"delete-selection""#), "mixed selection must expose delete: {menu}");
         assert!(menu.contains("8 nodes and 13 edges"), "count phrase missing: {menu}");
@@ -1601,13 +1528,17 @@ mod tests {
     fn context_menu_for_edge_hit_uses_config_edge_selection() {
         let mut app = flow_app_with_registry();
         app.dispatch_typed(FlowCommand::SetSelection { ids: Vec::new(), edge_ids: vec!["syn-1".into()], handle_ids: Vec::new() }, &meta("local")).expect("setSelection");
-        let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: "main".into(),
-            kind: "nodeGraph".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "edge".into(), id: "syn-1".into(), label: None }],
-            selection: vec![],
-            text: None,
-        })).to_string();
+        let menu = context_menu_items(
+            &mut app,
+            Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+                surface_id: "main".into(),
+                kind: "nodeGraph".into(),
+                hits: vec![semio_framework_plugin::ContextMenuHit { domain: "edge".into(), id: "syn-1".into(), label: None }],
+                selection: vec![],
+                text: None,
+            }),
+        )
+        .to_string();
         eprintln!("[DEBUG] edge selection context menu: {menu}");
         assert!(menu.contains(r#""id":"delete-selection""#), "edge selection must expose delete: {menu}");
         assert!(menu.contains("1 edge") || menu.contains("1 Kante"), "edge count phrase missing: {menu}");
@@ -1617,13 +1548,10 @@ mod tests {
     fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         let mut app = flow_app_with_registry();
         app.dispatch_typed(
-            FlowCommand::SetSelection {
-                ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()],
-                edge_ids: (1..=13).map(|i| format!("e{i}")).collect(),
-                handle_ids: Vec::new(),
-            },
+            FlowCommand::SetSelection { ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()], edge_ids: (1..=13).map(|i| format!("e{i}")).collect(), handle_ids: Vec::new() },
             &meta("local"),
-        ).expect("setSelection");
+        )
+        .expect("setSelection");
         let request = ContextMenuRequest {
             menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
             surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
@@ -1631,10 +1559,7 @@ mod tests {
                 kind: "nodeGraph".into(),
                 hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
                 selection: vec![
-                    semio_framework_plugin::ContextMenuSelectionGroup {
-                        domain: "node".into(),
-                        ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()],
-                    },
+                    semio_framework_plugin::ContextMenuSelectionGroup { domain: "node".into(), ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()] },
                     semio_framework_plugin::ContextMenuSelectionGroup { domain: "edge".into(), ids: (1..=13).map(|i| format!("e{i}")).collect() },
                 ],
                 text: None,
@@ -1656,18 +1581,11 @@ mod tests {
         let fixture = FlowFixture::default();
         let mut host = host_from_fixture(&fixture, &config);
         sync_host_selection_domains(&mut host, &[], &["s1".into()], &[]);
-        eprintln!(
-            "[DEBUG] host_from_fixture edge selection: has={} edge_ids={:?}",
-            host.has_selection(),
-            host.dag.selected_edge_ids()
-        );
+        eprintln!("[DEBUG] host_from_fixture edge selection: has={} edge_ids={:?}", host.has_selection(), host.dag.selected_edge_ids());
         assert!(host.has_selection(), "s1 must resolve through host_from_fixture edge map");
         host.delete_selection().expect("deleteSelection");
         assert!(!host.fixture.synapses.iter().any(|synapse| synapse.id == "s1"));
-        eprintln!(
-            "[DEBUG] host_from_fixture after delete: synapses={:?}",
-            host.fixture.synapses.iter().map(|synapse| synapse.id.as_str()).collect::<Vec<_>>()
-        );
+        eprintln!("[DEBUG] host_from_fixture after delete: synapses={:?}", host.fixture.synapses.iter().map(|synapse| synapse.id.as_str()).collect::<Vec<_>>());
     }
 
     #[test]
@@ -1678,10 +1596,7 @@ mod tests {
         let result = app.dispatch_typed(FlowCommand::DeleteSelection, &meta("local")).expect("deleteSelection");
         eprintln!("[DEBUG] deleteSelection action ops_len={}", result.operations.len());
         let after = app.projection().expect("projection");
-        eprintln!(
-            "[DEBUG] deleteSelection action remaining={:?}",
-            after.synapses.iter().map(|synapse| synapse.id.as_str()).collect::<Vec<_>>()
-        );
+        eprintln!("[DEBUG] deleteSelection action remaining={:?}", after.synapses.iter().map(|synapse| synapse.id.as_str()).collect::<Vec<_>>());
         assert!(!result.operations.is_empty(), "deleteSelection must emit operations for an edge");
         assert!(!after.synapses.iter().any(|synapse| synapse.id == "s1"), "synapse s1 must be removed");
         assert_eq!(after.synapses.len(), before - 1);

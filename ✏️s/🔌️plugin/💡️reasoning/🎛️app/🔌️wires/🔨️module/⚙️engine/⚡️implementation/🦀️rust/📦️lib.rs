@@ -84,33 +84,15 @@ pub fn entity_id<'a>(entity: &'a DslValue, key: &str) -> Option<&'a str> {
 }
 
 pub fn find_board_node<'a>(document: &'a MindmapWiresDocument, node_id: &str) -> Option<&'a DslValue> {
-    document
-        .board_fixture
-        .get("nodes")
-        .and_then(|value| value.as_array())
-        .into_iter()
-        .flatten()
-        .find(|node| entity_id(node, "id") == Some(node_id))
+    document.board_fixture.get("nodes").and_then(|value| value.as_array()).into_iter().flatten().find(|node| entity_id(node, "id") == Some(node_id))
 }
 
 pub fn find_board_edge<'a>(document: &'a MindmapWiresDocument, edge_id: &str) -> Option<&'a DslValue> {
-    document
-        .board_fixture
-        .get("edges")
-        .and_then(|value| value.as_array())
-        .into_iter()
-        .flatten()
-        .find(|edge| entity_id(edge, "id") == Some(edge_id))
+    document.board_fixture.get("edges").and_then(|value| value.as_array()).into_iter().flatten().find(|edge| entity_id(edge, "id") == Some(edge_id))
 }
 
 pub fn find_relationship<'a>(document: &'a MindmapWiresDocument, edge_id: &str) -> Option<&'a DslValue> {
-    document
-        .wires_fixture
-        .get("relationships")
-        .and_then(|value| value.as_array())
-        .into_iter()
-        .flatten()
-        .find(|relationship| entity_id(relationship, "edgeId") == Some(edge_id))
+    document.wires_fixture.get("relationships").and_then(|value| value.as_array()).into_iter().flatten().find(|relationship| entity_id(relationship, "edgeId") == Some(edge_id))
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -309,13 +291,7 @@ mod tests {
     /// 🔁️ B1 dsl/pack round-trip law for `WiresConfig` — a non-default fixture exercising every field.
     #[test]
     fn wires_config_dsl_pack_round_trip() {
-        let config = WiresConfig {
-            selected_ids: vec!["node-1".into(), "edge-1".into()],
-            drag_node_id: Some("node-1".into()),
-            drag_last_x: 12.5,
-            drag_last_y: -7.25,
-            locale: "de-DE".into(),
-        };
+        let config = WiresConfig { selected_ids: vec!["node-1".into(), "edge-1".into()], drag_node_id: Some("node-1".into()), drag_last_x: 12.5, drag_last_y: -7.25, locale: "de-DE".into() };
         store::test_support::assert_dsl_pack_equivalence(&config);
     }
     //#endregion 🔖️ConfigTests

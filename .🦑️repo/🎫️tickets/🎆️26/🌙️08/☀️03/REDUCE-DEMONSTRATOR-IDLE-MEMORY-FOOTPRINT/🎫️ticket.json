@@ -1,0 +1,13 @@
+{
+  "title": "Reduce Demonstrator Idle Memory Footprint",
+  "emoji": "🪶️",
+  "status": "open",
+  "description": "The mit-bestand demonstrator (♻️mit-bestand/🧺️demonstrator, 2x3 grid, port 6029) idles at ~3.6GB measured browser-side (tab + workers). Root causes verified by deep exploration: unoptimized/unstripped WASM plugin builds (lto=off, codegen-units=256, no wasm-opt, no memory maximum), duplicated typst+vello+fonts statically linked into every canvas-capable plugin, eager all-registry plugin loading with no eviction, engine wasm modules cached forever, six always-live cross-origin iframes each duplicating the full UI framework + workers + caches, seven Vite dev servers with forced polling watchers, and a permanent 60fps idle re-render loop that prevents browser throttling. Implement the approved plan (see /Users/ueli/.claude/plans/the-demonstrator-has-an-transient-sky.md) across six workstreams: WS1 quick wins (idle rAF bail-out, devcontainer-gated watcher polling), WS2 WASM build overhaul (dedicated wasm-release Cargo profile, wasm-opt post-pass, memory maximum, artifact dedup, size-measurement harness), WS3 runtime lifecycle (plugin manifest sidecars so metadata never requires instantiating wasm, generic lease pool with linger eviction, teardown gap fixes, compiled-module cache), WS4 demonstrator single-document composition (finish multi-instance-shell waves 2-4, replace 6 iframes + 7 dev servers with 6 in-page shells on 1 Vite server), WS5 GuestSlim (feature-gate typst/vello/fonts out of plugin guest binaries, host-provided asset service), WS6 before/after browser-memory verification. Reduce idle memory several-fold with zero feature loss.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2422"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪bb20730177774e2a9fb6322683314363"
+  ]
+}

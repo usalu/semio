@@ -208,7 +208,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use process_3d::{empty_process3d_projection, Pose, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin, WorkshopMachine, PROCESS_3D_SCHEMA};
+    use process_3d::{empty_process3d_projection, Pose, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, StepOrigin, Stock, WorkshopMachine, PROCESS_3D_SCHEMA};
     use protocol::CollectionOperation;
     use store::{create_document_envelope, test_support, DocumentCommand};
     use vcs::Author;
@@ -218,7 +218,13 @@ mod tests {
     }
 
     fn drill_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }), measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() } }
+        ProcessStep {
+            id: id.into(),
+            label: "Drill".into(),
+            enabled: true,
+            origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }),
+            measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() },
+        }
     }
 
     fn new_store() -> Process3dStore {
@@ -330,12 +336,7 @@ mod tests {
                 description: Some("build timeline".into()),
             })
             .expect("apply");
-        store
-            .dispatch(DocumentCommand::CommitCheckpoint {
-                message: Some("c1".into()),
-                authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }],
-            })
-            .expect("commit");
+        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).expect("commit");
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);
     }
@@ -350,7 +351,9 @@ mod tests {
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None });
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() });
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::RemoveWorkshopMachine { id: "circularSaw".into() });
-        test_support::assert_op_text_binary_equivalence(&Process3dCommand::UpdateWorkshopMachine { machine: WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![] } });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::UpdateWorkshopMachine {
+            machine: WorkshopMachine { id: "circularSaw".into(), label: "Circular Saw".into(), icon_id: "scissors".into(), catalog_id: Some("wood".into()), capabilities: vec![] },
+        });
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::RemoveStep { id: "cut-1".into() });
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::RemoveSelectedStep);
         test_support::assert_op_text_binary_equivalence(&Process3dCommand::MoveStep { id: "cut-1".into(), index: 2 });

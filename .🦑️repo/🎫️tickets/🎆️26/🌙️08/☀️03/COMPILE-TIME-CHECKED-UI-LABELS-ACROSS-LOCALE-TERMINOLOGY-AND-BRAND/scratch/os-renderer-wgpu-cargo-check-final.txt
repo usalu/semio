@@ -1,0 +1,1945 @@
+warning: unused import: `Level`
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7463:32
+     |
+7463 | use crate::theme::{GlassStyle, Level, Rgba, Theme};
+     |                                ^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::IconName`
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:15424:5
+      |
+15424 | use crate::IconName;
+      |     ^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18254:52
+      |
+18254 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+18254 -     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+18254 +     pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
+      |
+
+warning: `semio-framework-ui-wgpu` (lib) generated 3 warnings (run `cargo fix --lib -p semio-framework-ui-wgpu` to apply 3 suggestions)
+   Compiling semio-s-app-puzzle-2d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+warning: function `tessellate_geometry_json_for_wasm` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs:2223:4
+     |
+2223 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-kernel-flow-module-brep` (lib) generated 1 warning
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:103:39
+    |
+103 | fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:103:74
+    |
+103 | fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+    |                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:148:29
+    |
+148 | fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |                             ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:148:64
+    |
+148 | fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:153:39
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:153:74
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+    |                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:166:32
+    |
+166 | fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:166:67
+    |
+166 | fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:184:57
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:184:92
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:199:46
+    |
+199 |     gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
+199 +     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:202:59
+    |
+202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
+202 + pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:214:54
+    |
+214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
+214 + fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:219:46
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &canvas::camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:219:81
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:243:34
+    |
+243 | fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:243:69
+    |
+243 | fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1081:25
+     |
+1081 | pub trait MapExtension: canvas::CanvasExtension {
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1081 - pub trait MapExtension: canvas::CanvasExtension {
+1081 + pub trait MapExtension: CanvasExtension {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1088:6
+     |
+1088 | impl canvas::CanvasExtension for DefaultMapExtension {
+     |      ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1088 - impl canvas::CanvasExtension for DefaultMapExtension {
+1088 + impl CanvasExtension for DefaultMapExtension {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1354:17
+     |
+1354 |     pub camera: canvas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1354 -     pub camera: canvas::camera::Camera,
+1354 +     pub camera: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1355:19
+     |
+1355 |     pub viewport: canvas::camera::Viewport,
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1355 -     pub viewport: canvas::camera::Viewport,
+1355 +     pub viewport: camera::Viewport,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1359:53
+     |
+1359 |     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+     |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1359 -     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+1359 +     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1382:17
+     |
+1382 |         origin: canvas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1382 -         origin: canvas::camera::Camera,
+1382 +         origin: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1501:24
+     |
+1501 |         let viewport = canvas::camera::Viewport::default();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1501 -         let viewport = canvas::camera::Viewport::default();
+1501 +         let viewport = camera::Viewport::default();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1541:32
+     |
+1541 |     fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1541 -     fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 +     fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1803:59
+     |
+1803 |         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+     |                                                           ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1803 -         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+1803 +         self.tile_images.insert(tiles::tile_key(z, x, y), Arc::new(image));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2496:17
+     |
+2496 |                 canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2496 -                 canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 +                 text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2695:43
+     |
+2695 |         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2695 -         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+2695 +         let mut draw: Vec<(u32, u32, u32, Arc<RasterImage>)> = Vec::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2710:13
+     |
+2710 |             canvas::raster::draw_image_arc(scene, &img, aff);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2710 -             canvas::raster::draw_image_arc(scene, &img, aff);
+2710 +             raster::draw_image_arc(scene, &img, aff);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2820:21
+     |
+2820 |                     canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2820 -                     canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 +                     text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2855:6
+     |
+2855 | impl canvas::canvas_content::CanvasContent for MapHost {
+     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2855 - impl canvas::canvas_content::CanvasContent for MapHost {
+2855 + impl canvas_content::CanvasContent for MapHost {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3466:64
+     |
+3466 |     fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+     |                                                                ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3466 -     fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+3466 +     fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, String> {
+     |
+
+warning: `semio-framework-os-kernel-surface-tiled-map` (lib) generated 31 warnings (run `cargo fix --lib -p semio-framework-os-kernel-surface-tiled-map` to apply 31 suggestions)
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: unused import: `serde_json::Value`
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:485:16
+    |
+485 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+485 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+485 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:486:24
+    |
+486 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+486 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+486 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:496:16
+    |
+496 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+496 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+496 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:497:24
+    |
+497 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+497 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+497 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:557:41
+    |
+557 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+557 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+557 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:739:42
+    |
+739 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+739 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:743:38
+    |
+743 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+743 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+743 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:37
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:100
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1278:37
+     |
+1278 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1278 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1278 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: unused imports: `DagLayoutOptions` and `dag_take_pending_open_instance_id`
+ --> 🧰️framework/🔨️module/🗺️surface/🕸️node-graph/⚡️implementation/🦀️rust/../../../🕸️node-graph/⚡️implementation/🦀️rust/📦️lib.rs:6:32
+  |
+6 | ..._world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNod...
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                                                 ^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+warning: `semio-framework-os-kernel-surface-node-graph` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-surface-node-graph` to apply 1 suggestion)
+    Checking semio-framework-os-renderer-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust)
+warning: unused imports: `Label`, `Locale`, `LocalizedLabel`, `Terminology`, and `UiPresence`
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:25:74
+   |
+25 |     even_window_layout, ActionDescriptor, DrawList, DragAxis, FontAtlas, Label, Level,
+   |                                                                          ^^^^^
+26 |     HitKind, HitTarget, IconAtlas, InputState, Locale, LocalizedLabel, Rect, Rgba, Terminology, Theme, UiPresence, WindowLayout, Win...
+   |                                                ^^^^^^  ^^^^^^^^^^^^^^              ^^^^^^^^^^^         ^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:74:28
+   |
+74 |     pub window_labels: &'a std::collections::HashMap<String, String>,
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+74 -     pub window_labels: &'a std::collections::HashMap<String, String>,
+74 +     pub window_labels: &'a HashMap<String, String>,
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:75:30
+   |
+75 |     pub window_icon_ids: &'a std::collections::HashMap<String, String>,
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+75 -     pub window_icon_ids: &'a std::collections::HashMap<String, String>,
+75 +     pub window_icon_ids: &'a HashMap<String, String>,
+   |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:1871:22
+     |
+1871 |     let mut scroll = std::collections::HashMap::new();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1871 -     let mut scroll = std::collections::HashMap::new();
+1871 +     let mut scroll = HashMap::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:1872:25
+     |
+1872 |     let mut collapsed = std::collections::HashMap::new();
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1872 -     let mut collapsed = std::collections::HashMap::new();
+1872 +     let mut collapsed = HashMap::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:1873:23
+     |
+1873 |     let mut selects = std::collections::HashMap::new();
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1873 -     let mut selects = std::collections::HashMap::new();
+1873 +     let mut selects = HashMap::new();
+     |
+
+warning: unused import: `SurfaceKind`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2714:33
+     |
+2714 | use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
+     |                                 ^^^^^^^^^^^
+
+warning: unused import: `draw_text`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2718:15
+     |
+2718 | use ui_wgpu::{draw_text, draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Th...
+     |               ^^^^^^^^^
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:3238:37
+     |
+3238 | fn note_widget_hit_at_screen(host: &flow_core::FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
+     |                                     ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3238 - fn note_widget_hit_at_screen(host: &flow_core::FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
+3238 + fn note_widget_hit_at_screen(host: &FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:4988:10
+     |
+4988 |     key: ui_wgpu::KeyAction,
+     |          ^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4988 -     key: ui_wgpu::KeyAction,
+4988 +     key: KeyAction,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:4989:17
+     |
+4989 |     modifiers: &ui_wgpu::PointerModifiers,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4989 -     modifiers: &ui_wgpu::PointerModifiers,
+4989 +     modifiers: &PointerModifiers,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5000:13
+     |
+5000 |             ui_wgpu::KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5000 -             ui_wgpu::KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
+5000 +             KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5003:13
+     |
+5003 |             ui_wgpu::KeyAction::Backspace => host.backspace(),
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5003 -             ui_wgpu::KeyAction::Backspace => host.backspace(),
+5003 +             KeyAction::Backspace => host.backspace(),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5004:13
+     |
+5004 |             ui_wgpu::KeyAction::Delete => host.delete_forward(),
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5004 -             ui_wgpu::KeyAction::Delete => host.delete_forward(),
+5004 +             KeyAction::Delete => host.delete_forward(),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5005:13
+     |
+5005 |             ui_wgpu::KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5005 -             ui_wgpu::KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
+5005 +             KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
+     |
+
+warning: unused doc comment
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5601:1
+     |
+5601 | / /** 🧵️ The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::engine::Ui`
+5602 | |  * (retained-mode `apply_tree`/`frame`/`dispatch_event`), not `ui_node_to_widget`+`render_widget`.
+5603 | |  * One process-wide `Ui` façade (its own internal `HashMap<window_id, UiWindow>` already partitions
+5604 | |  * per-window retained state — see `report-w0-engine-facade.md`) lives in a `thread_local!`, mirroring
+...    |
+5626 | |  * `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
+5627 | |  * for the original gap and the follow-up ticket work that closed it. */
+     | |________________________________________________________________________^ rustdoc does not generate documentation for macro invocations
+     |
+     = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+     = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `UiPresence`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5270:84
+     |
+5270 | use ui_wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode, UiPresence, UiState};
+     |                                                                                    ^^^^^^^^^^
+
+warning: unused import: `SelectItem`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5274:5
+     |
+5274 |     SelectItem, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode,
+     |     ^^^^^^^^^^
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7292:9
+     |
+7292 |     id: ui_wgpu::NodeId,
+     |         ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7292 -     id: ui_wgpu::NodeId,
+7292 +     id: NodeId,
+     |
+
+warning: unused import: `UtilityNode`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7524:15
+     |
+7524 | use ui_wgpu::{UtilityNode, UiNode, WindowEngagement, WindowMeasure};
+     |               ^^^^^^^^^^^
+
+warning: unused imports: `ContextMenuItem` and `ShellState`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:8358:36
+     |
+8358 | use crate::shell::{push_find_item, ContextMenuItem, ShellFindItem, ShellState};
+     |                                    ^^^^^^^^^^^^^^^                 ^^^^^^^^^^
+
+warning: unused imports: `UiSelectItem`, `UiSelectNode`, and `UiTextNode`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:8361:80
+     |
+8361 | use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence, UiSelectItem, UiSelectNode, UiTextNode};
+     |                                                                                ^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:11755:13
+      |
+11755 |     theme: &ui_wgpu::Theme,
+      |             ^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11755 -     theme: &ui_wgpu::Theme,
+11755 +     theme: &Theme,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:11794:102
+      |
+11794 | fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &ui_wgpu::Theme) {
+      |                                                                                                      ^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11794 - fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &ui_wgpu::Theme) {
+11794 + fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme) {
+      |
+
+warning: unused import: `dock_from_window_layout`
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16376:29
+      |
+16376 |     compute_dock_drop_zone, dock_from_window_layout, dock_tab_content_width, drop_zone_indicator_rect, parse_path,
+      |                             ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `seed_vfs_expanded`
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16383:61
+      |
+16383 |     clear_graph_node_context, resolve_graph_context_action, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, ...
+      |                                                             ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ModeDefinition`
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16399:15
+      |
+16399 |     IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewState,
+      |               ^^^^^^^^^^^^^^
+
+warning: unused import: `ui_wgpu::component::layout::WindowEngagementPossible`
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16401:5
+      |
+16401 | use ui_wgpu::component::layout::WindowEngagementPossible;
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `WindowEngagementOption`
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16404:83
+      |
+16404 |     UiTextNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
+      |                                                                                   ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16500:71
+      |
+16500 | fn context_menu_selection_groups(selection_json: Option<&str>) -> Vec<serde_json::Value> {
+      |                                                                       ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+16500 - fn context_menu_selection_groups(selection_json: Option<&str>) -> Vec<serde_json::Value> {
+16500 + fn context_menu_selection_groups(selection_json: Option<&str>) -> Vec<Value> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16914:69
+      |
+16914 |     pub staged_action_args: HashMap<String, serde_json::Map<String, serde_json::Value>>,
+      |                                                                     ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+16914 -     pub staged_action_args: HashMap<String, serde_json::Map<String, serde_json::Value>>,
+16914 +     pub staged_action_args: HashMap<String, serde_json::Map<String, Value>>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:17370:46
+      |
+17370 |                 active_utility_by_window_id: std::collections::HashMap::new(),
+      |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+17370 -                 active_utility_by_window_id: std::collections::HashMap::new(),
+17370 +                 active_utility_by_window_id: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:17406:50
+      |
+17406 |                     active_utility_by_window_id: std::collections::HashMap::new(),
+      |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+17406 -                     active_utility_by_window_id: std::collections::HashMap::new(),
+17406 +                     active_utility_by_window_id: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:17665:62
+      |
+17665 | ...                   active_utility_by_window_id: std::collections::HashMap::new(),
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+17665 -                                 active_utility_by_window_id: std::collections::HashMap::new(),
+17665 +                                 active_utility_by_window_id: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18855:28
+      |
+18855 |             let operation: serde_json::Value = serde_json::from_str(&operation_json).unwrap_or(serde_json::Value::Null);
+      |                            ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18855 -             let operation: serde_json::Value = serde_json::from_str(&operation_json).unwrap_or(serde_json::Value::Null);
+18855 +             let operation: Value = serde_json::from_str(&operation_json).unwrap_or(serde_json::Value::Null);
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18855:96
+      |
+18855 |             let operation: serde_json::Value = serde_json::from_str(&operation_json).unwrap_or(serde_json::Value::Null);
+      |                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18855 -             let operation: serde_json::Value = serde_json::from_str(&operation_json).unwrap_or(serde_json::Value::Null);
+18855 +             let operation: serde_json::Value = serde_json::from_str(&operation_json).unwrap_or(Value::Null);
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18896:66
+      |
+18896 | ...                   let payload = serde_json::from_str::<serde_json::Value>(&contents)
+      |                                                            ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18896 -                             let payload = serde_json::from_str::<serde_json::Value>(&contents)
+18896 +                             let payload = serde_json::from_str::<Value>(&contents)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18897:53
+      |
+18897 | ...                   .unwrap_or_else(|_| serde_json::Value::String(contents.clone()));
+      |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18897 -                                 .unwrap_or_else(|_| serde_json::Value::String(contents.clone()));
+18897 +                                 .unwrap_or_else(|_| Value::String(contents.clone()));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18900:59
+      |
+18900 | ...                   obj.insert("json".into(), serde_json::Value::String(contents));
+      |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18900 -                                 obj.insert("json".into(), serde_json::Value::String(contents));
+18900 +                                 obj.insert("json".into(), Value::String(contents));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:19076:42
+      |
+19076 |             active_utility_by_window_id: std::collections::HashMap::new(),
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19076 -             active_utility_by_window_id: std::collections::HashMap::new(),
+19076 +             active_utility_by_window_id: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:19200:46
+      |
+19200 |     static CONTENT_FOCUS: std::cell::RefCell<std::collections::HashMap<String, bool>> =
+      |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19200 -     static CONTENT_FOCUS: std::cell::RefCell<std::collections::HashMap<String, bool>> =
+19200 +     static CONTENT_FOCUS: std::cell::RefCell<HashMap<String, bool>> =
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:19201:33
+      |
+19201 |         std::cell::RefCell::new(std::collections::HashMap::new());
+      |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19201 -         std::cell::RefCell::new(std::collections::HashMap::new());
+19201 +         std::cell::RefCell::new(HashMap::new());
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:19228:70
+      |
+19228 | fn ui_event_from_key_action(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> Option<ui_wgpu::UiEvent> {
+      |                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19228 - fn ui_event_from_key_action(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> Option<ui_wgpu::UiEvent> {
+19228 + fn ui_event_from_key_action(action: &ui_wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ui_wgpu::UiEvent> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:20018:66
+      |
+20018 |                     self.stage_arg(window_id, action_id, arg_id, serde_json::Value::Bool(!current));
+      |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20018 -                     self.stage_arg(window_id, action_id, arg_id, serde_json::Value::Bool(!current));
+20018 +                     self.stage_arg(window_id, action_id, arg_id, Value::Bool(!current));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:20029:25
+      |
+20029 |                         serde_json::Value::String((*value).to_string()),
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20029 -                         serde_json::Value::String((*value).to_string()),
+20029 +                         Value::String((*value).to_string()),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:20564:37
+      |
+20564 |             let shortcut_by_action: std::collections::HashMap<String, String> = session
+      |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20564 -             let shortcut_by_action: std::collections::HashMap<String, String> = session
+20564 +             let shortcut_by_action: HashMap<String, String> = session
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:20573:30
+      |
+20573 |             let text: Option<serde_json::Value> = None;
+      |                              ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20573 -             let text: Option<serde_json::Value> = None;
+20573 +             let text: Option<Value> = None;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:21020:21
+      |
+21020 |         modifiers: &ui_wgpu::PointerModifiers,
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21020 -         modifiers: &ui_wgpu::PointerModifiers,
+21020 +         modifiers: &PointerModifiers,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:21250:21
+      |
+21250 |         modifiers: &ui_wgpu::PointerModifiers,
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21250 -         modifiers: &ui_wgpu::PointerModifiers,
+21250 +         modifiers: &PointerModifiers,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:21332:21
+      |
+21332 |         modifiers: &ui_wgpu::PointerModifiers,
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+21332 -         modifiers: &ui_wgpu::PointerModifiers,
+21332 +         modifiers: &PointerModifiers,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22285:14
+      |
+22285 |     app: &'a semio_framework_core::AppDefinition,
+      |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22285 -     app: &'a semio_framework_core::AppDefinition,
+22285 +     app: &'a AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22314:11
+      |
+22314 |     app: &semio_framework_core::AppDefinition,
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22314 -     app: &semio_framework_core::AppDefinition,
+22314 +     app: &AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22358:80
+      |
+22358 | pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> bool {
+      |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22358 - pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> bool {
+22358 + pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22375:17
+      |
+22375 |     modifiers: &ui_wgpu::PointerModifiers,
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22375 -     modifiers: &ui_wgpu::PointerModifiers,
+22375 +     modifiers: &PointerModifiers,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22515:15
+      |
+22515 |         app: &semio_framework_core::AppDefinition,
+      |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22515 -         app: &semio_framework_core::AppDefinition,
+22515 +         app: &AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22540:16
+      |
+22540 |         value: serde_json::Value,
+      |                ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22540 -         value: serde_json::Value,
+22540 +         value: Value,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22552:34
+      |
+22552 |     ) -> serde_json::Map<String, serde_json::Value> {
+      |                                  ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22552 -     ) -> serde_json::Map<String, serde_json::Value> {
+22552 +     ) -> serde_json::Map<String, Value> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22585:34
+      |
+22585 |             let mut current: Vec<serde_json::Value> = self
+      |                                  ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22585 -             let mut current: Vec<serde_json::Value> = self
+22585 +             let mut current: Vec<Value> = self
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22597:61
+      |
+22597 |             self.stage_arg(&window_id, &action_id, &arg_id, serde_json::Value::Array(current));
+      |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22597 -             self.stage_arg(&window_id, &action_id, &arg_id, serde_json::Value::Array(current));
+22597 +             self.stage_arg(&window_id, &action_id, &arg_id, Value::Array(current));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22610:18
+      |
+22610 |             _ => serde_json::Value::String(buffer.to_string()),
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22610 -             _ => serde_json::Value::String(buffer.to_string()),
+22610 +             _ => Value::String(buffer.to_string()),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22650:18
+      |
+22650 |             Some(serde_json::Value::String(text)) => text,
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22650 -             Some(serde_json::Value::String(text)) => text,
+22650 +             Some(Value::String(text)) => text,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22651:18
+      |
+22651 |             Some(serde_json::Value::Number(num)) => num.to_string(),
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22651 -             Some(serde_json::Value::Number(num)) => num.to_string(),
+22651 +             Some(Value::Number(num)) => num.to_string(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22652:18
+      |
+22652 |             Some(serde_json::Value::Bool(flag)) => flag.to_string(),
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22652 -             Some(serde_json::Value::Bool(flag)) => flag.to_string(),
+22652 +             Some(Value::Bool(flag)) => flag.to_string(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22663:42
+      |
+22663 |         staged: &serde_json::Map<String, serde_json::Value>,
+      |                                          ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22663 -         staged: &serde_json::Map<String, serde_json::Value>,
+22663 +         staged: &serde_json::Map<String, Value>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22664:41
+      |
+22664 |     ) -> Option<serde_json::Map<String, serde_json::Value>> {
+      |                                         ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22664 -     ) -> Option<serde_json::Map<String, serde_json::Value>> {
+22664 +     ) -> Option<serde_json::Map<String, Value>> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22665:62
+      |
+22665 |         let staged_dsl = semio_framework_core::to_dsl_value(&serde_json::Value::Object(staged.clone())).ok()?;
+      |                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22665 -         let staged_dsl = semio_framework_core::to_dsl_value(&serde_json::Value::Object(staged.clone())).ok()?;
+22665 +         let staged_dsl = semio_framework_core::to_dsl_value(&Value::Object(staged.clone())).ok()?;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22668:52
+      |
+22668 |             semio_framework_core::from_dsl_value::<serde_json::Value>(effective)
+      |                                                    ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22668 -             semio_framework_core::from_dsl_value::<serde_json::Value>(effective)
+22668 +             semio_framework_core::from_dsl_value::<Value>(effective)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22696:18
+      |
+22696 |             Some(serde_json::Value::Object(effective))
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22696 -             Some(serde_json::Value::Object(effective))
+22696 +             Some(Value::Object(effective))
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22961:101
+      |
+22961 |     fn note_shell_command_action(controller_id: &str, command_id: &str, label: &str, detail: Option<serde_json::Value>) -> Action...
+      |                                                                                                     ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22961 -     fn note_shell_command_action(controller_id: &str, command_id: &str, label: &str, detail: Option<serde_json::Value>) -> ActionDescriptor {
+22961 +     fn note_shell_command_action(controller_id: &str, command_id: &str, label: &str, detail: Option<Value>) -> ActionDescriptor {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22995:79
+      |
+22995 |     async fn note_control_command(&mut self, control_id: &str, detail: Option<serde_json::Value>) -> Result<(), String> {
+      |                                                                               ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+22995 -     async fn note_control_command(&mut self, control_id: &str, detail: Option<serde_json::Value>) -> Result<(), String> {
+22995 +     async fn note_control_command(&mut self, control_id: &str, detail: Option<Value>) -> Result<(), String> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:23159:11
+      |
+23159 |     app: &semio_framework_core::AppDefinition,
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+23159 -     app: &semio_framework_core::AppDefinition,
+23159 +     app: &AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:24145:53
+      |
+24145 |     HistoryAction { action_id: String, args: Option<serde_json::Value> },
+      |                                                     ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+24145 -     HistoryAction { action_id: String, args: Option<serde_json::Value> },
+24145 +     HistoryAction { action_id: String, args: Option<Value> },
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:27555:22
+      |
+27555 |         engagement: &ui_wgpu::WindowEngagement,
+      |                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+27555 -         engagement: &ui_wgpu::WindowEngagement,
+27555 +         engagement: &WindowEngagement,
+      |
+
+warning: unused import: `ControlNode`
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:27866:47
+      |
+27866 |         use ui_wgpu::widgets::{render_widget, ControlNode, WidgetNode};
+      |                                               ^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:28386:15
+      |
+28386 |         app: &semio_framework_core::AppDefinition,
+      |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+28386 -         app: &semio_framework_core::AppDefinition,
+28386 +         app: &AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:28558:17
+      |
+28558 |     ) -> Option<serde_json::Value> {
+      |                 ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+28558 -     ) -> Option<serde_json::Value> {
+28558 +     ) -> Option<Value> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:28565:68
+      |
+28565 |     fn arg_default(&self, action_id: &str, arg_id: &str) -> Option<serde_json::Value> {
+      |                                                                    ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+28565 -     fn arg_default(&self, action_id: &str, arg_id: &str) -> Option<serde_json::Value> {
+28565 +     fn arg_default(&self, action_id: &str, arg_id: &str) -> Option<Value> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:28796:18
+      |
+28796 |             Some(serde_json::Value::String(text)) => text,
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+28796 -             Some(serde_json::Value::String(text)) => text,
+28796 +             Some(Value::String(text)) => text,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:28797:18
+      |
+28797 |             Some(serde_json::Value::Number(num)) => num.to_string(),
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+28797 -             Some(serde_json::Value::Number(num)) => num.to_string(),
+28797 +             Some(Value::Number(num)) => num.to_string(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:28798:18
+      |
+28798 |             Some(serde_json::Value::Bool(flag)) => flag.to_string(),
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+28798 -             Some(serde_json::Value::Bool(flag)) => flag.to_string(),
+28798 +             Some(Value::Bool(flag)) => flag.to_string(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29344:64
+      |
+29344 |         .and_then(|raw| serde_json::from_str::<HashMap<String, serde_json::Value>>(&raw).ok())
+      |                                                                ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+29344 -         .and_then(|raw| serde_json::from_str::<HashMap<String, serde_json::Value>>(&raw).ok())
+29344 +         .and_then(|raw| serde_json::from_str::<HashMap<String, Value>>(&raw).ok())
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29694:36
+      |
+29694 |     let as_values: HashMap<String, serde_json::Value> = themes
+      |                                    ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+29694 -     let as_values: HashMap<String, serde_json::Value> = themes
+29694 +     let as_values: HashMap<String, Value> = themes
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29696:68
+      |
+29696 |         .map(|(id, raw)| (id, serde_json::from_str(&raw).unwrap_or(serde_json::Value::Null)))
+      |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+29696 -         .map(|(id, raw)| (id, serde_json::from_str(&raw).unwrap_or(serde_json::Value::Null)))
+29696 +         .map(|(id, raw)| (id, serde_json::from_str(&raw).unwrap_or(Value::Null)))
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:30612:113
+      |
+30612 | ...k_action: &str, bytes: &[u8], name: &str, base_args: &serde_json::Value) -> ActionDescriptor {
+      |                                                          ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+30612 - fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes: &[u8], name: &str, base_args: &serde_json::Value) -> ActionDescriptor {
+30612 + fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes: &[u8], name: &str, base_args: &Value) -> ActionDescriptor {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:30618:13
+      |
+30618 | ...   serde_json::Value::String(format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.enco...
+      |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+30618 -             serde_json::Value::String(format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))),
+30618 +             Value::String(format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:30620:35
+      |
+30620 |         obj.insert("name".into(), serde_json::Value::String(name.to_string()));
+      |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+30620 -         obj.insert("name".into(), serde_json::Value::String(name.to_string()));
+30620 +         obj.insert("name".into(), Value::String(name.to_string()));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:30694:18
+      |
+30694 |     args: Option<serde_json::Value>,
+      |                  ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+30694 -     args: Option<serde_json::Value>,
+30694 +     args: Option<Value>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:30761:17
+      |
+30761 | ...   serde_json::Value::String(format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(&jpeg_bytes...
+      |       ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+30761 -                 serde_json::Value::String(format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(&jpeg_bytes))),
+30761 +                 Value::String(format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(&jpeg_bytes))),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:30763:39
+      |
+30763 |             obj.insert("name".into(), serde_json::Value::String(name.clone()));
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+30763 -             obj.insert("name".into(), serde_json::Value::String(name.clone()));
+30763 +             obj.insert("name".into(), Value::String(name.clone()));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:30773:35
+      |
+30773 |         obj.insert("name".into(), serde_json::Value::String(name));
+      |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+30773 -         obj.insert("name".into(), serde_json::Value::String(name));
+30773 +         obj.insert("name".into(), Value::String(name));
+      |
+
+warning: value assigned to `x` is never read
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:25630:13
+      |
+25630 |             x += fixture_rect.w + theme.gap_standard;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = help: maybe it is overwritten before being read?
+      = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: irrefutable `if let` pattern
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:32290:12
+      |
+32290 |         if let HostUserEvent::RuntimeReady { runtime, callbacks } = event {
+      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: this pattern will always match, so the `if let` is useless
+      = help: consider replacing the `if let` with a `let`
+      = note: `#[warn(irrefutable_let_patterns)]` on by default
+
+warning: unused variable: `index`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:1467:10
+     |
+1467 |     for (index, window_id) in windows.iter().enumerate() {
+     |          ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `surface_id`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2924:38
+     |
+2924 | fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value) -> ActionDescriptor {
+     |                                      ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_surface_id`
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:3864:9
+     |
+3864 |     let mut px = target_px.max(4.0).round();
+     |         ----^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:3886:9
+     |
+3886 |     let mut px = target_px.max(8.0).round();
+     |         ----^^
+     |         |
+     |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:31342:9
+      |
+31342 |     let mut response = ureq::get(&resolved).call().ok()?;
+      |         ----^^^^^^^^
+      |         |
+      |         help: remove this `mut`
+
+warning: unused variable: `x`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:9268:5
+     |
+9268 |     x: f32,
+     |     ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: function `stack_content_rect` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:1682:4
+     |
+1682 | fn stack_content_rect(
+     |    ^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `DumpViewport` is never constructed
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7075:8
+     |
+7075 | struct DumpViewport {
+     |        ^^^^^^^^^^^^
+
+warning: struct `DumpNodeState` is never constructed
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7082:8
+     |
+7082 | struct DumpNodeState {
+     |        ^^^^^^^^^^^^^
+
+warning: struct `DumpNode` is never constructed
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7090:8
+     |
+7090 | struct DumpNode {
+     |        ^^^^^^^^
+
+warning: struct `DumpStructure` is never constructed
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7105:8
+     |
+7105 | struct DumpStructure {
+     |        ^^^^^^^^^^^^^
+
+warning: struct `DumpFrameStats` is never constructed
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7113:8
+     |
+7113 | struct DumpFrameStats {
+     |        ^^^^^^^^^^^^^^
+
+warning: function `ui_node_kind_tag` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7127:4
+     |
+7127 | fn ui_node_kind_tag(node: &UiNode) -> &'static str {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: function `ui_node_declared_id` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7155:4
+     |
+7155 | fn ui_node_declared_id(node: &UiNode) -> Option<&str> {
+     |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `ui_node_path_segment` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7178:4
+     |
+7178 | fn ui_node_path_segment(node: &UiNode, sibling_index: usize) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `rgba_array` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7188:4
+     |
+7188 | fn rgba_array(color: ui_wgpu::Rgba) -> [f32; 4] {
+     |    ^^^^^^^^^^
+
+warning: function `dim` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7192:4
+     |
+7192 | fn dim(color: ui_wgpu::Rgba, disabled: bool) -> ui_wgpu::Rgba {
+     |    ^^^
+
+warning: function `dump_visual_fields` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7206:4
+     |
+7206 | fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<String>, Option<[f32; 4]>, Option<[f32; 4]>, Option<...
+     |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `effective_hovered` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7280:4
+     |
+7280 | fn effective_hovered(node: &ui_wgpu::Node, presence_hover: bool, disabled: bool) -> bool {
+     |    ^^^^^^^^^^^^^^^^^
+
+warning: function `walk_dump` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7290:4
+     |
+7290 | fn walk_dump(
+     |    ^^^^^^^^^
+
+warning: function `primary_window_id` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7346:4
+     |
+7346 | fn primary_window_id(engine: &ui_wgpu::Ui) -> Option<String> {
+     |    ^^^^^^^^^^^^^^^^^
+
+warning: function `build_structure_dump` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7356:4
+     |
+7356 | fn build_structure_dump(engine: &ui_wgpu::Ui, dpr: f32) -> DumpStructure {
+     |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `layer_is_nonempty` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7378:4
+     |
+7378 | fn layer_is_nonempty(layer: &ui_wgpu::draw::DrawLayer) -> bool {
+     |    ^^^^^^^^^^^^^^^^^
+
+warning: function `is_glyph_instance` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7386:4
+     |
+7386 | fn is_glyph_instance(instance: &ui_wgpu::draw::UiInstance) -> bool {
+     |    ^^^^^^^^^^^^^^^^^
+
+warning: function `build_frame_stats` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7390:4
+     |
+7390 | fn build_frame_stats(engine: &ui_wgpu::Ui) -> DumpFrameStats {
+     |    ^^^^^^^^^^^^^^^^^
+
+warning: variants `MoveNode`, `ConnectPort`, and `Marquee` are never constructed
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:8421:5
+     |
+8419 | enum SceneDragMode {
+     |      ------------- variants in this enum
+8420 |     PanViewport,
+8421 |     MoveNode { node_id: String, grab_x: f32, grab_y: f32 },
+     |     ^^^^^^^^
+8422 |     ConnectPort {
+     |     ^^^^^^^^^^^
+...
+8427 |     Marquee,
+     |     ^^^^^^^
+     |
+     = note: `SceneDragMode` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `button` is never read
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:8446:5
+     |
+8444 | struct SceneDrag {
+     |        --------- field in this struct
+8445 |     mode: SceneDragMode,
+8446 |     button: i16,
+     |     ^^^^^^
+     |
+     = note: `SceneDrag` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: fields `editor_cursor`, `hover_row_id`, and `raster_digest` are never read
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:8457:5
+     |
+8450 | struct SceneSurfaceState {
+     |        ----------------- fields in this struct
+...
+8457 |     editor_cursor: usize,
+     |     ^^^^^^^^^^^^^
+...
+8460 |     hover_row_id: Option<String>,
+     |     ^^^^^^^^^^^^
+8461 |     raster_digest: Option<u64>,
+     |     ^^^^^^^^^^^^^
+     |
+     = note: `SceneSurfaceState` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: function `surface_args` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:8674:4
+     |
+8674 | fn surface_args(scene: &UiComponentSceneNode) -> Value {
+     |    ^^^^^^^^^^^^
+
+warning: field `description` is never read
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:10150:5
+      |
+10145 | struct BlockListBlockJson {
+      |        ------------------ field in this struct
+...
+10150 |     description: Option<String>,
+      |     ^^^^^^^^^^^
+
+warning: field `id` is never read
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:11217:5
+      |
+11215 | struct HistoryColumnAuthorJson {
+      |        ----------------------- field in this struct
+11216 |     #[serde(default)]
+11217 |     id: String,
+      |     ^^
+      |
+      = note: `HistoryColumnAuthorJson` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: fields `source` and `target` are never read
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:11665:5
+      |
+11641 | struct CanvasLayer {
+      |        ----------- fields in this struct
+...
+11665 |     source: Option<String>,
+      |     ^^^^^^
+11666 |     #[serde(default)]
+11667 |     target: Option<String>,
+      |     ^^^^^^
+
+warning: function `push_bezier` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14034:4
+      |
+14034 | fn push_bezier(
+      |    ^^^^^^^^^^^
+
+warning: function `node_screen_pos` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14098:4
+      |
+14098 | fn node_screen_pos(node: &ui_wgpu::NodeGraphNodeRecord, state: &SceneSurfaceState, viewport: &Viewport, inner: Rect) -> (f32, f32) {
+      |    ^^^^^^^^^^^^^^^
+
+warning: function `optional_json_as_dsl_value` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16433:4
+      |
+16433 | fn optional_json_as_dsl_value(value: Option<Value>) -> Option<DslValue> {
+      |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `synthetic_panel_tab` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:17468:8
+      |
+17139 | impl ShellState {
+      | --------------- associated function in this implementation
+...
+17468 |     fn synthetic_panel_tab(id: &str, label: &str, group: PanelGroup) -> PanelTabDefinition {
+      |        ^^^^^^^^^^^^^^^^^^^
+
+warning: method `execute_search_item` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:20316:14
+      |
+19256 | impl ShellState {
+      | --------------- method in this implementation
+...
+20316 |     async fn execute_search_item(&mut self, item_id: &str) -> Result<(), String> {
+      |              ^^^^^^^^^^^^^^^^^^^
+
+warning: function `app_icon_id` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:22228:4
+      |
+22228 | fn app_icon_id<'a>(app: &'a AppDefinition, icons: &IconAtlas) -> &'a str {
+      |    ^^^^^^^^^^^
+
+warning: associated items `window_engagement_chrome_visible` and `render_palette` are never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:27554:8
+      |
+25258 | impl ShellState {
+      | --------------- associated items in this implementation
+...
+27554 |     fn window_engagement_chrome_visible(
+      |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+29062 |     fn render_palette(
+      |        ^^^^^^^^^^^^^^
+
+warning: field `draft_theme` is never read
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29324:5
+      |
+29320 | struct ChromePrefsState {
+      |        ---------------- field in this struct
+...
+29324 |     draft_theme: Option<String>,
+      |     ^^^^^^^^^^^
+      |
+      = note: `ChromePrefsState` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: function `set_active_ui_layout` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29376:15
+      |
+29376 | pub(crate) fn set_active_ui_layout(layout: &str) {
+      |               ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `set_active_worker_count` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29385:15
+      |
+29385 | pub(crate) fn set_active_worker_count(count: u32) {
+      |               ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `begin_custom_theme_draft` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29394:15
+      |
+29394 | pub(crate) fn begin_custom_theme_draft(base_id: &str, label: &str, slug: &str) -> String {
+      |               ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `set_draft_theme_color` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29410:15
+      |
+29410 | pub(crate) fn set_draft_theme_color(appearance: &str, field: &str, hex: &str) -> bool {
+      |               ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `save_draft_theme` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29431:15
+      |
+29431 | pub(crate) fn save_draft_theme() -> Option<String> {
+      |               ^^^^^^^^^^^^^^^^
+
+warning: function `discard_draft_theme` is never used
+     --> 🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:29442:15
+      |
+29442 | pub(crate) fn discard_draft_theme() {
+      |               ^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-os-renderer-wgpu` (lib) generated 138 warnings (run `cargo fix --lib -p semio-framework-os-renderer-wgpu` to apply 95 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 7.74s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

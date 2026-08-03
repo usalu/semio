@@ -1,7 +1,7 @@
 //! ⚡️ Puzzle 5d app — operation enum + laws (constitutional: op).
 
-use puzzle_5d::{Puzzle5dFastener, Puzzle5dMeta, Puzzle5dPart, Puzzle5dProjection};
 use protocol::{Operation, OperationDiff};
+use puzzle_5d::{Puzzle5dFastener, Puzzle5dMeta, Puzzle5dPart, Puzzle5dProjection};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -109,18 +109,32 @@ impl OperationDiff<Puzzle5dProjection> for Puzzle5dDiff {
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Puzzle5dOperation {
     #[dsl(key = "setPart")]
-    SetPart { index: usize, #[dsl(block)] part: Puzzle5dPart },
+    SetPart {
+        index: usize,
+        #[dsl(block)]
+        part: Puzzle5dPart,
+    },
     #[dsl(key = "removePart")]
     RemovePart { id: String },
     #[dsl(key = "setFastener")]
-    SetFastener { index: usize, #[dsl(block)] fastener: Puzzle5dFastener },
+    SetFastener {
+        index: usize,
+        #[dsl(block)]
+        fastener: Puzzle5dFastener,
+    },
     #[dsl(key = "removeFastener")]
     RemoveFastener { id: String },
     #[dsl(key = "setMeta")]
-    SetMeta { #[dsl(block)] meta: Puzzle5dMeta },
+    SetMeta {
+        #[dsl(block)]
+        meta: Puzzle5dMeta,
+    },
     /// 🌍️ Replaces the whole document (example import / reset / engine fill).
     #[dsl(key = "setDocument")]
-    SetDocument { #[dsl(block)] document: Puzzle5dProjection },
+    SetDocument {
+        #[dsl(block)]
+        document: Puzzle5dProjection,
+    },
 }
 
 fn puzzle5d_operation_diff(operation: &Puzzle5dOperation) -> Puzzle5dDiff {
@@ -268,9 +282,7 @@ impl Operation<Value> for Puzzle5dOperation {
                 Some((index, previous)) => vec![Puzzle5dOperation::SetFastener { index, fastener: previous }],
                 None => vec![Puzzle5dOperation::RemoveFastener { id: fastener.id.clone() }],
             },
-            Puzzle5dOperation::RemoveFastener { id } => {
-                puzzle5d_value_item_index::<Puzzle5dFastener>(projection, "fasteners", id).map(|(index, previous)| vec![Puzzle5dOperation::SetFastener { index, fastener: previous }]).unwrap_or_default()
-            }
+            Puzzle5dOperation::RemoveFastener { id } => puzzle5d_value_item_index::<Puzzle5dFastener>(projection, "fasteners", id).map(|(index, previous)| vec![Puzzle5dOperation::SetFastener { index, fastener: previous }]).unwrap_or_default(),
             Puzzle5dOperation::SetMeta { .. } => {
                 let meta: Puzzle5dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 vec![Puzzle5dOperation::SetMeta { meta }]
@@ -401,16 +413,12 @@ impl store::DocumentDsl for Puzzle5dPlayProjection {
 
 impl store::DocumentPack for Puzzle5dPlayProjection {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::to_dsl_value(&self.0)
-            .map_err(store::PackError::Schema)?
-            .encode_pack_with(options)
+        dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value)
-            .map(Puzzle5dPlayProjection)
-            .map_err(store::PackError::Schema)
+        dsl::from_dsl_value(value).map(Puzzle5dPlayProjection).map_err(store::PackError::Schema)
     }
 }
 

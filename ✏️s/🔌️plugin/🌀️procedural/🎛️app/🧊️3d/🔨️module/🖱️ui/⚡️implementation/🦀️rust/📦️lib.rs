@@ -8,23 +8,25 @@
 
 use flow_core::forms_bridge::flow_fixture_to_form_spec;
 use flow_core::{flow_backed_node_graph_extras, FlowEvalDriver, FlowFixture, FlowHost, Widget};
-use playbook::{
-    apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text, render_generations_tree, select_generation, selected_generation, GenerationOperation,
-    GenerationPlayState,
-};
+use playbook::{apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text, render_generations_tree, select_generation, selected_generation, GenerationOperation, GenerationPlayState};
 use procedural_3d::{widget_id, Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
-use procedural_3d_engine::{
-    ensure_gumball_node, evaluate_generation_preview, fixture_to_workflow, generation_fixture_for, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json,
-    gumball_widget_number_param, gumball_widget_offset, host_from_fixture, host_from_fixture_with_driver, widget_id_from_instance_id, Procedural3dConfig, PROCEDURAL_EXAMPLE_HEX_COLUMN,
-    PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_TORUS, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE,
-    PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_BOX_SHELL,
-};
 use procedural_3d_engine::{default_projection, example_projection};
+use procedural_3d_engine::{
+    ensure_gumball_node, evaluate_generation_preview, fixture_to_workflow, generation_fixture_for, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json, gumball_widget_number_param, gumball_widget_offset,
+    host_from_fixture, host_from_fixture_with_driver, widget_id_from_instance_id, Procedural3dConfig, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN,
+    PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_SPHERE_TORUS,
+};
 use procedural_3d_op::{procedural3d_fixture_operations, Procedural3dConfigOperation, Procedural3dOperation};
 use procedural_3d_protocol::Procedural3dCommand;
-use semio_framework_plugin::{Label, apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, world3d_scene, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphHover, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder, SelectionSet, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, ui_declarative_sections_to_tree, AppLabels, Locale, LocalizedLabel, Terminology};
-use store::DocumentPack;
+use semio_framework_plugin::{
+    apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
+    ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, world3d_scene, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp,
+    DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphHover, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup,
+    PanelTreeBuilder, SelectionSet, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
+};
 use serde_json::{json, Value};
+use store::DocumentPack;
 
 //#region 🔖️Constants
 const PROCEDURAL_3D_PLAY_APP_ID: &str = "procedural3d-play";
@@ -46,12 +48,7 @@ const PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM: &str = "procedural.play.generate-fo
 const PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW: &str = "procedural.play.generate-preview";
 const PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural.play.generate-preview";
 
-const WIDGET_CATALOG: &[(&str, &str)] = &[
-    ("neuron", "cpu"),
-    ("inputSlider", "sliders-horizontal"),
-    ("inputNote", "file-text"),
-    ("outputPreview", "preview"),
-];
+const WIDGET_CATALOG: &[(&str, &str)] = &[("neuron", "cpu"), ("inputSlider", "sliders-horizontal"), ("inputNote", "file-text"), ("outputPreview", "preview")];
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
@@ -62,7 +59,11 @@ fn is_de_locale(cfg: &Procedural3dConfig) -> bool {
 }
 
 fn procedural3d_locale(cfg: &Procedural3dConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &Procedural3dConfig) -> &'static L {
@@ -72,17 +73,17 @@ fn resolve_labels<L: AppLabels>(cfg: &Procedural3dConfig) -> &'static L {
 
 //#region 🔖️DocumentHelpers
 fn procedural_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: PROCEDURAL_3D_PLAY_CONTROLLER_ID.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: PROCEDURAL_3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🎯️ B1: the typed-command counterpart of the pre-B1 `mesh_selection_ids` (JSON-args) — falls back
 /// to the current config selection when the command carries no explicit ids.
 fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
-    if ids.is_empty() { fallback.to_vec() } else { ids.to_vec() }
+    if ids.is_empty() {
+        fallback.to_vec()
+    } else {
+        ids.to_vec()
+    }
 }
 
 /// 🧵️ Recomputes the driver's live "still pending?"/"still computing?" state fresh from the fixture
@@ -237,13 +238,11 @@ fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3dLabels) -
 }
 //#endregion 🔖️Terminology
 
-
 //#region 🔖️Panels
 /// 🌳️ SDK's `tree_item_with_action` plus an icon id — this crate's document/catalogue trees carry
 /// icons per item, which the shared helper doesn't model directly.
 fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: icon_id.map(Into::into), menu: None,
-    ..tree_item_with_action(id, label, None, action) }
+    UiTreeItemNode { icon_id: icon_id.map(Into::into), menu: None, ..tree_item_with_action(id, label, None, action) }
 }
 
 fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
@@ -252,33 +251,18 @@ fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String], labe
         .iter()
         .map(|widget| {
             let id = widget_id(widget).to_string();
-            tree_item_with_icon(format!("procedural-widget:{id}"), Label::data(id.clone()),
-                Some("cpu"),
-                procedural_action("setSelection", Some(json!({ "ids": [id] }))),
-            )
+            tree_item_with_icon(format!("procedural-widget:{id}"), Label::data(id.clone()), Some("cpu"), procedural_action("setSelection", Some(json!({ "ids": [id] }))))
         })
         .collect();
-    PanelTreeBuilder::new("procedural-play-document")
-        .section("procedural-play-document.widgets", Some(labels.widgets.into()), true, items)
-        .selected(selected_node_ids.iter().map(|id| format!("procedural-widget:{id}")).collect())
-        .build()
+    PanelTreeBuilder::new("procedural-play-document").section("procedural-play-document.widgets", Some(labels.widgets.into()), true, items).selected(selected_node_ids.iter().map(|id| format!("procedural-widget:{id}")).collect()).build()
 }
 
 fn build_catalogue_tree(labels: &Procedural3dLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = WIDGET_CATALOG
         .iter()
-        .map(|(kind, icon)| {
-            tree_item_with_icon(
-                format!("procedural-play-catalogue.{kind}"),
-                Label::data(procedural3d_catalog_label(*kind, labels)),
-                Some(icon),
-                procedural_action("addWidget", Some(json!({ "kind": kind }))),
-            )
-        })
+        .map(|(kind, icon)| tree_item_with_icon(format!("procedural-play-catalogue.{kind}"), Label::data(procedural3d_catalog_label(*kind, labels)), Some(icon), procedural_action("addWidget", Some(json!({ "kind": kind })))))
         .collect();
-    PanelTreeBuilder::new("procedural-play-catalogue")
-        .section("procedural-play-catalogue.widgets", Some(labels.widgets.into()), true, items)
-        .build()
+    PanelTreeBuilder::new("procedural-play-catalogue").section("procedural-play-catalogue.widgets", Some(labels.widgets.into()), true, items).build()
 }
 
 fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
@@ -287,10 +271,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], lab
             id: "procedural-play-inspector.empty".into(),
             label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
-            children: vec![
-                ui_text(Label::data(format!("{} {}", labels.schema_prefix.as_str(), fixture.schema))),
-            ui_text(Label::data(format!("{} {}", labels.widgets_prefix.as_str(), fixture.widgets.len()))),
-            ],
+            children: vec![ui_text(Label::data(format!("{} {}", labels.schema_prefix.as_str(), fixture.schema))), ui_text(Label::data(format!("{} {}", labels.widgets_prefix.as_str(), fixture.widgets.len())))],
             presence: UiPresence::default(),
             menu: None,
         }]);
@@ -305,27 +286,21 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], lab
             menu: None,
         }]);
     };
-    let mut fields = vec![ui_inspector_readonly_field(
-        "procedural-play-inspector.id",
-        labels.id_field,
-        widget_id(widget),
-    )];
+    let mut fields = vec![ui_inspector_readonly_field("procedural-play-inspector.id", labels.id_field, widget_id(widget))];
     if let Widget::InputSlider { value, min, max, .. } = widget {
         let mixed = ui_inspector_mixed_number(&[*value]);
         fields.push(UiNode::Field(UiFieldNode {
             presence: UiPresence::default(),
             id: "procedural-play-inspector.value".into(),
             label: labels.value_field.into(),
-            child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode { presence: UiPresence::default(),
+            child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                presence: UiPresence::default(),
                 id: "procedural-play-inspector.value.input".into(),
                 input_kind: "number".into(),
                 value: mixed.value.to_string(),
                 placeholder: None,
                 commit: None,
-                on_change: procedural_action(
-                    "patchFlowWidgets",
-                    Some(json!({ "widgetIds": [selected_id], "field": "value" })),
-                ),
+                on_change: procedural_action("patchFlowWidgets", Some(json!({ "widgetIds": [selected_id], "field": "value" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -337,29 +312,15 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], lab
             error: None,
             menu: None,
         }));
-        fields.push(ui_inspector_readonly_field(
-            "procedural-play-inspector.range",
-            labels.range_field,
-            &format!("{min}..{max}"),
-        ));
+        fields.push(ui_inspector_readonly_field("procedural-play-inspector.range", labels.range_field, &format!("{min}..{max}")));
     }
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
-        id: "procedural-play-inspector.widget".into(),
-        label: labels.widget_group.into(),
-        default_open: None,
-        fields,
-    }])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "procedural-play-inspector.widget".into(), label: labels.widget_group.into(), default_open: None, fields }])
 }
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
 fn render_generate_generations(generation: &GenerationPlayState) -> UiNode {
-    render_generations_tree(
-        PROCEDURAL_3D_PLAY_APP_ID,
-        "procedural3d-play-generate",
-        &generation.generations,
-        generation.selected_generation_id.as_deref(),
-    )
+    render_generations_tree(PROCEDURAL_3D_PLAY_APP_ID, "procedural3d-play-generate", &generation.generations, generation.selected_generation_id.as_deref())
 }
 
 fn render_generate_form(fixture: &FlowFixture, generation: &GenerationPlayState, labels: &Procedural3dLabels) -> UiNode {
@@ -367,13 +328,7 @@ fn render_generate_form(fixture: &FlowFixture, generation: &GenerationPlayState,
     let Some(current) = selected_generation(generation) else {
         return ui_text(labels.generate_hint);
     };
-    render_generation_form_body(
-        &spec,
-        &current.values,
-        PROCEDURAL_3D_PLAY_APP_ID,
-        "updateGenerationValues",
-        &current.id,
-    )
+    render_generation_form_body(&spec, &current.values, PROCEDURAL_3D_PLAY_APP_ID, "updateGenerationValues", &current.id)
 }
 
 fn render_generate_preview(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Procedural3dConfig, labels: &Procedural3dLabels, active_utility: &str) -> UiNode {
@@ -386,28 +341,14 @@ fn render_generate_preview(fixture: &FlowFixture, generation: &GenerationPlaySta
         None => ("[]".into(), "[]".into()),
     };
     if meshes_json == "[]" && instances_json == "[]" {
-        let text = generation
-            .preview_text
-            .as_deref()
-            .filter(|value| !value.is_empty())
-            .unwrap_or(labels.preview_hint.as_str());
-        return render_generation_preview_text(
-            PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW,
-            PROCEDURAL_3D_PLAY_APP_ID,
-            text,
-        );
+        let text = generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or(labels.preview_hint.as_str());
+        return render_generation_preview_text(PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW, PROCEDURAL_3D_PLAY_APP_ID, text);
     }
     let sun = cfg.sun();
     build_world_3d_scene(
         PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW,
         PROCEDURAL_3D_PLAY_APP_ID,
-        world3d_scene(
-            procedural_3d_engine::preview_camera_json(cfg),
-            meshes_json,
-            instances_json,
-            procedural_3d_engine::preview_selection_json(cfg, active_utility),
-            &sun,
-        ),
+        world3d_scene(procedural_3d_engine::preview_camera_json(cfg), meshes_json, instances_json, procedural_3d_engine::preview_selection_json(cfg, active_utility), &sun),
     )
 }
 //#endregion 🔖️Render
@@ -449,18 +390,12 @@ impl DocumentApp for Procedural3dPlayApp {
         match port {
             "geometry:out" => {
                 let mesh = procedural_3d_engine::export_mesh_from_document(doc.projection);
-                Ok(Media {
-                    media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-                    payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: serde_json::to_string(&mesh).unwrap_or_default() },
-                })
+                Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: serde_json::to_string(&mesh).unwrap_or_default() } })
             }
             "document:out" => {
                 let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
                 let bytes = doc.projection.encode_pack();
-                Ok(Media {
-                    media_type,
-                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -537,32 +472,17 @@ impl DocumentApp for Procedural3dPlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &Procedural3dCommand,
-        doc: &DocumentView<'_, Procedural3dDocument>,
-        cfg: &ConfigView<'_, Procedural3dConfig>,
-    ) -> Emit<Procedural3dOperation, Procedural3dConfigOperation> {
+    fn handle(&self, command: &Procedural3dCommand, doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>) -> Emit<Procedural3dOperation, Procedural3dConfigOperation> {
         let fixture = &doc.projection.fixture;
         let config = cfg.projection;
         match command {
             // ✏️ Operations — compute the target fixture via the host, emit fixture operations.
             Procedural3dCommand::SetActiveExample { example_id } => {
                 let target = example_projection(example_id);
-                let mut operations: Vec<Procedural3dOperation> = doc
-                    .projection
-                    .generation
-                    .generations
-                    .iter()
-                    .map(|generation| Procedural3dOperation::Generation(GenerationOperation::Remove { id: generation.id.clone() }))
-                    .collect();
+                let mut operations: Vec<Procedural3dOperation> = doc.projection.generation.generations.iter().map(|generation| Procedural3dOperation::Generation(GenerationOperation::Remove { id: generation.id.clone() })).collect();
                 operations.extend(procedural3d_fixture_operations(fixture, &target.fixture));
                 let camera = target.fixture.camera.clone();
-                Emit {
-                    document_operations: operations,
-                    config_operations: vec![Procedural3dConfigOperation::Snapshot { config: Procedural3dConfig { camera, ..Procedural3dConfig::default() } }],
-                    ..Default::default()
-                }
+                Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::Snapshot { config: Procedural3dConfig { camera, ..Procedural3dConfig::default() } }], ..Default::default() }
             }
             Procedural3dCommand::NodeGraphEdit { operations_json } => {
                 let sub_operations: Vec<Value> = serde_json::from_str(operations_json).unwrap_or_default();
@@ -677,12 +597,9 @@ impl DocumentApp for Procedural3dPlayApp {
                     let next = [current[0] + dx, current[1] + dy, current[2] + dz];
                     host.set_neuron_params(transform_id, &gumball_translate_params_json(next)).is_ok()
                 }) {
-                    Some((operations, new_selection)) => Emit {
-                        document_operations: operations,
-                        config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }],
-                        coalesce_key: Some("gumball-translate".into()),
-                        ..Default::default()
-                    },
+                    Some((operations, new_selection)) => {
+                        Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-translate".into()), ..Default::default() }
+                    }
                     None => Emit::default(),
                 }
             }
@@ -693,12 +610,9 @@ impl DocumentApp for Procedural3dPlayApp {
                     let current_angle = gumball_widget_number_param(host, transform_id, "angle", 0.0);
                     host.set_neuron_params(transform_id, &gumball_rotate_params_json([ax, ay, az], current_angle + angle)).is_ok()
                 }) {
-                    Some((operations, new_selection)) => Emit {
-                        document_operations: operations,
-                        config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }],
-                        coalesce_key: Some("gumball-rotate".into()),
-                        ..Default::default()
-                    },
+                    Some((operations, new_selection)) => {
+                        Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-rotate".into()), ..Default::default() }
+                    }
                     None => Emit::default(),
                 }
             }
@@ -709,12 +623,9 @@ impl DocumentApp for Procedural3dPlayApp {
                     let current_factor = gumball_widget_number_param(host, transform_id, "factor", 1.0);
                     host.set_neuron_params(transform_id, &gumball_scale_params_json(current_factor * uniform_factor)).is_ok()
                 }) {
-                    Some((operations, new_selection)) => Emit {
-                        document_operations: operations,
-                        config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }],
-                        coalesce_key: Some("gumball-scale".into()),
-                        ..Default::default()
-                    },
+                    Some((operations, new_selection)) => {
+                        Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::SetSelection { node_ids: new_selection }], coalesce_key: Some("gumball-scale".into()), ..Default::default() }
+                    }
                     None => Emit::default(),
                 }
             }
@@ -775,10 +686,7 @@ impl DocumentApp for Procedural3dPlayApp {
                 Emit::config(vec![Procedural3dConfigOperation::SetGeneration { selected_generation_id: state.selected_generation_id.clone(), generation_preview_text }])
             }
             // 🧰️ Host-owned active-utility switch — clear in-progress hover scratch, never emit document operations.
-            Procedural3dCommand::SetActiveUtility { utility_id } => Emit::config(vec![
-                Procedural3dConfigOperation::SetActiveUtility { utility_id: utility_id.clone() },
-                Procedural3dConfigOperation::SetHover { node_id: None },
-            ]),
+            Procedural3dCommand::SetActiveUtility { utility_id } => Emit::config(vec![Procedural3dConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, Procedural3dConfigOperation::SetHover { node_id: None }]),
             Procedural3dCommand::SetLocale { value } => Emit::config(vec![Procedural3dConfigOperation::SetLocale { value: value.clone() }]),
 
             // 🧵️ One budgeted evaluation step (see `FlowEvalDriver::tick`), off the main thread —
@@ -853,13 +761,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     PROCEDURAL_3D_PLAY_APP_ID,
                     ui_wgpu::World3dScene {
                         status_json: procedural_3d_engine::preview_scene_status_json(&live_driver, preview_status),
-                        ..world3d_scene(
-                            procedural_3d_engine::preview_camera_json(config),
-                            meshes_json,
-                            instances_json,
-                            procedural_3d_engine::preview_selection_json(config, active_utility),
-                            &sun,
-                        )
+                        ..world3d_scene(procedural_3d_engine::preview_camera_json(config), meshes_json, instances_json, procedural_3d_engine::preview_selection_json(config, active_utility), &sun)
                     },
                 )
             }
@@ -873,11 +775,7 @@ impl DocumentApp for Procedural3dPlayApp {
         }
     }
 
-    fn window_measures(
-        &self,
-        _doc: &DocumentView<'_, Procedural3dDocument>,
-        cfg: &ConfigView<'_, Procedural3dConfig>,
-    ) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, Procedural3dDocument>, cfg: &ConfigView<'_, Procedural3dConfig>) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
         let sun = config.sun();
         let mut measures = vec![procedural3d_show_mode_measure(&config.show_mode)];
@@ -888,7 +786,6 @@ impl DocumentApp for Procedural3dPlayApp {
             (PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), measures),
         ])
     }
-
 
     fn context_menu(
         &self,
@@ -1108,10 +1005,10 @@ pub fn create_procedural3d_app() -> App {
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
     use super::*;
-    use std::cell::RefCell;
-    use store::create_document_envelope;
     use procedural_3d_engine::empty_procedural3d_projection;
     use procedural_3d_protocol::{Procedural3dEnvelope, Procedural3dStore};
+    use std::cell::RefCell;
+    use store::create_document_envelope;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -1306,10 +1203,7 @@ mod tests {
         // 🩹️ `operators` is a nested JSON ARRAY field (`Vec<NodeGraphOperatorRecord>`), not a
         // "operatorsJson" string field — check the catalogue entries' `id`s directly.
         let operators = graph.get("operators").and_then(|value| value.as_array()).expect("operators array");
-        assert!(
-            operators.iter().any(|operator| operator.get("id").and_then(|value| value.as_str()).is_some_and(|id| id.contains("math.add") || id.contains("brep."))),
-            "missing math/brep operator catalogue entries"
-        );
+        assert!(operators.iter().any(|operator| operator.get("id").and_then(|value| value.as_str()).is_some_and(|id| id.contains("math.add") || id.contains("brep."))), "missing math/brep operator catalogue entries");
         let capabilities = graph.get("capabilitiesJson").and_then(|v| v.as_str()).unwrap_or_default();
         assert!(capabilities.contains("flow"), "missing flow engine capability: {capabilities}");
     }
@@ -1390,10 +1284,7 @@ mod tests {
         app.dispatch_typed(Procedural3dCommand::PatchFlowWidgets { widget_ids: vec!["slider_2".into()], field: "value".into(), value: Some(4.5) }, &meta("local")).expect("patch slider");
         assert!(!app.pending_effects().is_empty(), "slider mutation must re-arm evaluation");
         let computing = main_graph(&mut app).computing_json.expect("computing chrome after slider edit");
-        assert!(
-            computing.contains("brep_prim3d_sphere_3") || computing.contains("brep_bool_cut_5"),
-            "downstream sphere/cut branch must be marked computing, got {computing}"
-        );
+        assert!(computing.contains("brep_prim3d_sphere_3") || computing.contains("brep_bool_cut_5"), "downstream sphere/cut branch must be marked computing, got {computing}");
     }
 
     #[test]
@@ -1445,13 +1336,7 @@ mod tests {
     fn add_generation_records_an_undoable_generation_operation() {
         let _serial = test_serial();
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            Procedural3dCommand::AddGeneration,
-            |app| app.projection().expect("projection").generation.generations.len(),
-            0,
-            1,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddGeneration, |app| app.projection().expect("projection").generation.generations.len(), 0, 1);
     }
 
     #[test]
@@ -1502,13 +1387,7 @@ mod tests {
         let _serial = test_serial();
         let mut app = new_app();
         let before = app.projection().expect("projection").fixture.widgets.len();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            Procedural3dCommand::AddWidget { kind: "inputNote".into(), x: None, y: None },
-            |app| app.projection().expect("projection").fixture.widgets.len(),
-            before,
-            before + 1,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, Procedural3dCommand::AddWidget { kind: "inputNote".into(), x: None, y: None }, |app| app.projection().expect("projection").fixture.widgets.len(), before, before + 1);
     }
 
     #[test]
@@ -1516,26 +1395,13 @@ mod tests {
         let _serial = test_serial();
         let mut app = new_app();
         assert!(app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            Procedural3dCommand::RemoveWidget { widget_id: "sides".into() },
-            |app| app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"),
-            true,
-            false,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, Procedural3dCommand::RemoveWidget { widget_id: "sides".into() }, |app| app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"), true, false);
     }
 
     #[test]
     fn two_instances_converge_disjoint_widget_moves() {
         let _serial = test_serial();
-        let widgets: Vec<String> = new_app()
-            .projection()
-            .expect("projection")
-            .fixture
-            .widgets
-            .iter()
-            .map(|widget| widget_id(widget).to_string())
-            .collect();
+        let widgets: Vec<String> = new_app().projection().expect("projection").fixture.widgets.iter().map(|widget| widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
         testkit::assert_two_instances_converge::<Procedural3dPlayApp, (Option<f64>, Option<f64>)>(
@@ -1582,12 +1448,7 @@ mod tests {
         let widgets: Vec<String> = app.projection().expect("projection").fixture.widgets.iter().map(|widget| widget_id(widget).to_string()).collect();
         assert!(!widgets.is_empty(), "default fixture needs at least one widget for the test");
         app.dispatch_typed(Procedural3dCommand::SetSelection { node_ids: widgets.clone() }, &meta("local")).expect("set selection");
-        let request = semio_framework_plugin::ContextMenuRequest {
-            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
-            surface: None,
-            window_instance_id: None,
-            point: None,
-        };
+        let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let menu = app.context_menu(&request);
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");

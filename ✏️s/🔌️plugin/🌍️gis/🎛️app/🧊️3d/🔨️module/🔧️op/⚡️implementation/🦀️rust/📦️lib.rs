@@ -52,9 +52,17 @@ impl OperationDiff<Gis3dTerrainDocument> for Gis3dTerrainDiff {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Gis3dTerrainOperation {
-    SetExaggeration { exaggeration: f64 },
-    SetImportedFeatures { #[dsl(key = "features-json")] features_json: String },
-    SetDocument { #[dsl(block)] document: Gis3dTerrainDocument },
+    SetExaggeration {
+        exaggeration: f64,
+    },
+    SetImportedFeatures {
+        #[dsl(key = "features-json")]
+        features_json: String,
+    },
+    SetDocument {
+        #[dsl(block)]
+        document: Gis3dTerrainDocument,
+    },
 }
 
 impl Operation<Gis3dTerrainDocument> for Gis3dTerrainOperation {

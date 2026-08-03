@@ -56,7 +56,11 @@ impl RecordValueGen {
     /// @emoji 🎯️ Uniform-ish `[0, bound)`; `0` for `bound == 0` (modulo bias is irrelevant for
     /// test-data spread).
     fn next_range(&mut self, bound: u64) -> u64 {
-        if bound == 0 { 0 } else { self.next_u64() % bound }
+        if bound == 0 {
+            0
+        } else {
+            self.next_u64() % bound
+        }
     }
 
     fn next_int(&mut self) -> i64 {
@@ -239,11 +243,7 @@ impl RecordValueGen {
 
     fn generate_wire_node(&mut self) -> WireNode {
         let id = self.next_string(6);
-        WireNode {
-            id: if id.trim().is_empty() { "n".to_string() } else { id },
-            kind: if self.next_bool() { Some(self.next_string(4)) } else { None },
-            port: if self.next_bool() { Some(self.next_string(4)) } else { None },
-        }
+        WireNode { id: if id.trim().is_empty() { "n".to_string() } else { id }, kind: if self.next_bool() { Some(self.next_string(4)) } else { None }, port: if self.next_bool() { Some(self.next_string(4)) } else { None } }
     }
 
     fn generate_wire(&mut self, depth: u16, max_depth: u16) -> WireValue {
@@ -296,8 +296,7 @@ fn normalize_value(value: &FieldValue) -> FieldValue {
 pub fn assert_encode_decode_identity(spec: &RecordSpec, record: &RecordValue) {
     let options = pack::EncodeOptions::default();
     let bytes = pack::encode_document(spec, record, &options).expect("encode_document should succeed for a well-formed record");
-    let (decoded, _report) =
-        pack::decode_document(&bytes, spec, &pack::DecodeOptions::default()).expect("decode_document should succeed for a just-encoded pack file");
+    let (decoded, _report) = pack::decode_document(&bytes, spec, &pack::DecodeOptions::default()).expect("decode_document should succeed for a just-encoded pack file");
     assert_eq!(normalize_record(&decoded), normalize_record(record), "encode/decode round trip diverged (ignoring pure-Absent noise)");
 }
 
@@ -347,11 +346,7 @@ pub fn assert_streamed_equals_buffered(spec: &RecordSpec, record: &RecordValue) 
     let (buffered_decoded, _) = pack::decode_document(&buffered_bytes, spec, &pack::DecodeOptions::default()).expect("decode buffered encoding");
     let (streamed_decoded, _) = pack::decode_document(&streamed_bytes, spec, &pack::DecodeOptions::default()).expect("decode streamed encoding");
 
-    assert_eq!(
-        normalize_record(&buffered_decoded),
-        normalize_record(&streamed_decoded),
-        "single-frame and many-small-frame encodings of the same document must decode identically"
-    );
+    assert_eq!(normalize_record(&buffered_decoded), normalize_record(&streamed_decoded), "single-frame and many-small-frame encodings of the same document must decode identically");
 }
 
 /// @emoji 🔀️ LAW: `decode_pack(encode_pack(sample)) == parse_dsl(print_dsl(sample)) == sample` —
@@ -536,11 +531,7 @@ mod tests {
     /// @emoji 📷️ Simple scalar spec, small enough to print/parse deterministically for
     /// `assert_dsl_pack_bidirectional`.
     fn camera_spec() -> RecordSpec {
-        RecordSpec::new(
-            Some("camera"),
-            RecordLayout::Inline,
-            vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()],
-        )
+        RecordSpec::new(Some("camera"), RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])
     }
 
     fn camera_sample() -> RecordValue {
@@ -585,11 +576,7 @@ mod tests {
         // 🌳️ `group_spec`-style self-referential Statements table: its own single variant's spec
         // points right back at itself. A generator that ignored `max_depth` would stack-overflow.
         fn recursive_spec() -> RecordSpec {
-            RecordSpec::new(
-                Some("group"),
-                RecordLayout::Inline,
-                vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Statements(vec![("group".to_string(), recursive_spec)]))],
-            )
+            RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Statements(vec![("group".to_string(), recursive_spec)]))])
         }
         let spec = recursive_spec();
         let mut gen = RecordValueGen::new(7);

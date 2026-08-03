@@ -21,12 +21,24 @@ pub enum VcsDemoOperation {
 pub enum VcsDemoDiff {
     #[default]
     Empty,
-    SetCounter { counter: i64 },
-    SetTitle { title: String },
-    SetNotes { notes: String },
-    SetStatus { status: String },
-    AddTag { tag: String },
-    RemoveTag { tag: String },
+    SetCounter {
+        counter: i64,
+    },
+    SetTitle {
+        title: String,
+    },
+    SetNotes {
+        notes: String,
+    },
+    SetStatus {
+        status: String,
+    },
+    AddTag {
+        tag: String,
+    },
+    RemoveTag {
+        tag: String,
+    },
 }
 
 impl OperationDiff<VcsDemoProjection> for VcsDemoDiff {
@@ -66,18 +78,10 @@ impl Operation<VcsDemoProjection> for VcsDemoOperation {
 
     fn backwards(&self, projection: &VcsDemoProjection) -> Vec<Self> {
         match self {
-            VcsDemoOperation::SetCounter { .. } => vec![VcsDemoOperation::SetCounter {
-                counter: projection.counter,
-            }],
-            VcsDemoOperation::SetTitle { .. } => vec![VcsDemoOperation::SetTitle {
-                title: projection.title.clone(),
-            }],
-            VcsDemoOperation::SetNotes { .. } => vec![VcsDemoOperation::SetNotes {
-                notes: projection.notes.clone(),
-            }],
-            VcsDemoOperation::SetStatus { .. } => vec![VcsDemoOperation::SetStatus {
-                status: projection.status.clone(),
-            }],
+            VcsDemoOperation::SetCounter { .. } => vec![VcsDemoOperation::SetCounter { counter: projection.counter }],
+            VcsDemoOperation::SetTitle { .. } => vec![VcsDemoOperation::SetTitle { title: projection.title.clone() }],
+            VcsDemoOperation::SetNotes { .. } => vec![VcsDemoOperation::SetNotes { notes: projection.notes.clone() }],
+            VcsDemoOperation::SetStatus { .. } => vec![VcsDemoOperation::SetStatus { status: projection.status.clone() }],
             VcsDemoOperation::AddTag { tag } => vec![VcsDemoOperation::RemoveTag { tag: tag.clone() }],
             VcsDemoOperation::RemoveTag { tag } => vec![VcsDemoOperation::AddTag { tag: tag.clone() }],
         }
@@ -157,9 +161,7 @@ mod tests {
     /// SCHEMA-FLOW-CONFIG-ON-NODE).
     #[test]
     fn vcs_demo_config_operation_op_text_round_trips() {
-        store::test_support::assert_op_line_round_trip(&VcsDemoConfigOperation::Snapshot {
-            config: vcs_engine::VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into()], locale: "de-DE".into() },
-        });
+        store::test_support::assert_op_line_round_trip(&VcsDemoConfigOperation::Snapshot { config: vcs_engine::VcsDemoConfig { selected_checkpoint_ids: vec!["checkpoint-1".into()], locale: "de-DE".into() } });
         store::test_support::assert_op_line_round_trip(&VcsDemoConfigOperation::SetSelection { checkpoint_ids: vec!["checkpoint-1".into(), "checkpoint-2".into()] });
         store::test_support::assert_op_line_round_trip(&VcsDemoConfigOperation::SetLocale { value: "de-DE".into() });
     }

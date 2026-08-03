@@ -21,10 +21,7 @@ fn apply_map_collection_diff(items: &mut Vec<MapFeature>, diff: &CollectionDiff<
     }
 }
 
-fn absorb_map_collection_diff(
-    target: &mut Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
-    incoming: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>,
-) {
+fn absorb_map_collection_diff(target: &mut Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>, incoming: Option<CollectionDiff<String, MapFeaturePatch, MapFeature>>) {
     if let Some(next) = incoming {
         match target {
             Some(existing) => {
@@ -122,19 +119,64 @@ pub type GisMapStore = DocumentStore<GisMapDocument, GisMapOperation>;
 /// itself, and every consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum GisMapOperationDsl {
-    AddPosition { index: usize, #[dsl(block)] item: MapFeature },
-    RemovePosition { id: String },
-    MovePosition { id: String, #[dsl(key = "to")] to_index: usize },
-    PatchPosition { id: String, #[dsl(block)] patch: MapFeaturePatch },
-    AddRoute { index: usize, #[dsl(block)] item: MapFeature },
-    RemoveRoute { id: String },
-    MoveRoute { id: String, #[dsl(key = "to")] to_index: usize },
-    PatchRoute { id: String, #[dsl(block)] patch: MapFeaturePatch },
-    AddRegion { index: usize, #[dsl(block)] item: MapFeature },
-    RemoveRegion { id: String },
-    MoveRegion { id: String, #[dsl(key = "to")] to_index: usize },
-    PatchRegion { id: String, #[dsl(block)] patch: MapFeaturePatch },
-    SetDocument { #[dsl(block)] document: GisMapDocument },
+    AddPosition {
+        index: usize,
+        #[dsl(block)]
+        item: MapFeature,
+    },
+    RemovePosition {
+        id: String,
+    },
+    MovePosition {
+        id: String,
+        #[dsl(key = "to")]
+        to_index: usize,
+    },
+    PatchPosition {
+        id: String,
+        #[dsl(block)]
+        patch: MapFeaturePatch,
+    },
+    AddRoute {
+        index: usize,
+        #[dsl(block)]
+        item: MapFeature,
+    },
+    RemoveRoute {
+        id: String,
+    },
+    MoveRoute {
+        id: String,
+        #[dsl(key = "to")]
+        to_index: usize,
+    },
+    PatchRoute {
+        id: String,
+        #[dsl(block)]
+        patch: MapFeaturePatch,
+    },
+    AddRegion {
+        index: usize,
+        #[dsl(block)]
+        item: MapFeature,
+    },
+    RemoveRegion {
+        id: String,
+    },
+    MoveRegion {
+        id: String,
+        #[dsl(key = "to")]
+        to_index: usize,
+    },
+    PatchRegion {
+        id: String,
+        #[dsl(block)]
+        patch: MapFeaturePatch,
+    },
+    SetDocument {
+        #[dsl(block)]
+        document: GisMapDocument,
+    },
 }
 
 fn gis_map_operation_to_dsl(operation: &GisMapOperation) -> GisMapOperationDsl {
@@ -303,10 +345,7 @@ mod tests {
         let document = GisMapDocument::default();
         let added = round_trip(&document, &GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature("p1"), at: 0 }));
         assert_eq!(added.positions.len(), 1);
-        let patched = round_trip(
-            &added,
-            &GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "id": "p1", "label": "Home" }))) } }),
-        );
+        let patched = round_trip(&added, &GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "id": "p1", "label": "Home" }))) } }));
         assert_eq!(patched.positions[0].data.get("label").and_then(|value| value.as_str()), Some("Home"));
         let removed = round_trip(&patched, &GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
         assert!(removed.positions.is_empty());
@@ -325,12 +364,7 @@ mod tests {
     #[test]
     fn gis_map_document_vcs_replays_operations() {
         let mut store = GisMapStore::new(create_document_envelope(gis2d::GIS_MAP_SCHEMA, "gis", gis2d_engine::empty_gis_map_projection(), None));
-        store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature("p1"), at: 0 })],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature("p1"), at: 0 })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").positions.len(), 1);
     }
 
@@ -343,10 +377,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to: 3 }));
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch {
-            id: "p1".into(),
-            patch: MapFeaturePatch { data: Some(dsl_of(json!({ "label": "Home" }))) },
-        }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "label": "Home" }))) } }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } }));
     }
 
@@ -355,10 +386,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Remove { id: "p1".into() }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 }));
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch {
-            id: "p1".into(),
-            patch: MapFeaturePatch { data: Some(dsl_of(json!({ "kind": "reuse" }))) },
-        }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "kind": "reuse" }))) } }));
     }
 
     #[test]
@@ -366,10 +394,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Remove { id: "p1".into() }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to: 2 }));
-        store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch {
-            id: "p1".into(),
-            patch: MapFeaturePatch { data: Some(dsl_of(json!({ "kind": "boundary" }))) },
-        }));
+        store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "kind": "boundary" }))) } }));
     }
 
     #[test]

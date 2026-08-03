@@ -1254,16 +1254,7 @@ struct Puzzle3dEngine {
 
 impl Puzzle3dEngine {
     fn new() -> Self {
-        Self {
-            scene: None,
-            scene_json: None,
-            meshes: HashMap::new(),
-            mesh_is_fallback: HashMap::new(),
-            brush_cache: HashMap::new(),
-            brush_queue: VecDeque::new(),
-            fill_steps_remaining: 0,
-            fill: None,
-        }
+        Self { scene: None, scene_json: None, meshes: HashMap::new(), mesh_is_fallback: HashMap::new(), brush_cache: HashMap::new(), brush_queue: VecDeque::new(), fill_steps_remaining: 0, fill: None }
     }
 
     fn fill_lane_active(&self) -> bool {
@@ -1455,15 +1446,7 @@ impl Puzzle3dEngine {
         Some(false)
     }
 
-    fn brush_collision_free_until(
-        &self,
-        target_full_id: &str,
-        candidates: &[BrushCompatibleCandidate],
-        overlap_budget: f64,
-        resume_from: usize,
-        mut free: Vec<BrushCompatibleCandidate>,
-        deadline_ms: f64,
-    ) -> BrushCollisionFreeResult {
+    fn brush_collision_free_until(&self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64, resume_from: usize, mut free: Vec<BrushCompatibleCandidate>, deadline_ms: f64) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
         };
@@ -1661,12 +1644,12 @@ impl Puzzle3dEngine {
     }
 
     fn fill_progress_summary(&self) -> FillProgressSummary {
-        self.fill.as_ref().map(|fill| FillProgressSummary {
-            count: fill.sequence.len(),
-            applied_count: fill.applied_count,
-            max_count: fill.max_count,
-            done: fill.stalled || fill.sequence.len() >= fill.max_count,
-        }).unwrap_or(FillProgressSummary { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true })
+        self.fill.as_ref().map(|fill| FillProgressSummary { count: fill.sequence.len(), applied_count: fill.applied_count, max_count: fill.max_count, done: fill.stalled || fill.sequence.len() >= fill.max_count }).unwrap_or(FillProgressSummary {
+            count: 0,
+            applied_count: 0,
+            max_count: FILL_COUNT_MAX,
+            done: true,
+        })
     }
 
     #[cfg(test)]
@@ -1848,7 +1831,16 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
         return fixture.clone();
     }
     next.attractions.push(AttractionProps { id: attraction_id, attracting: payload.target_vortex_full_id.clone(), attracted, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
-    next.objects.push(FixtureObject { id: object_id, object_kind: Some(kind.id.clone()), mesh_url: Some(mesh_url), origin: payload.origin, orientation: Some(payload.orientation), scale: payload.scale.clone().or(kind.scale.clone()), vortices, reveal_index: None });
+    next.objects.push(FixtureObject {
+        id: object_id,
+        object_kind: Some(kind.id.clone()),
+        mesh_url: Some(mesh_url),
+        origin: payload.origin,
+        orientation: Some(payload.orientation),
+        scale: payload.scale.clone().or(kind.scale.clone()),
+        vortices,
+        reveal_index: None,
+    });
     let _ = template;
     next
 }
@@ -2136,8 +2128,16 @@ mod tests {
     /// freezing the UI. A resync with byte-identical scene JSON must be a no-operation.
     #[test]
     fn compose_fill_display_is_read_only_and_matches_apply_prefix() {
-        let object =
-            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
+        let object = |id: &str| FixtureObject {
+            id: id.to_string(),
+            object_kind: Some("Placed".to_string()),
+            mesh_url: Some("/test/placed.glb".to_string()),
+            origin: [0.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            vortices: vec![],
+            reveal_index: None,
+        };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -2163,8 +2163,16 @@ mod tests {
 
     #[test]
     fn fill_options_paths_are_millisecond_scale() {
-        let object =
-            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
+        let object = |id: &str| FixtureObject {
+            id: id.to_string(),
+            object_kind: Some("Placed".to_string()),
+            mesh_url: Some("/test/placed.glb".to_string()),
+            origin: [0.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            vortices: vec![],
+            reveal_index: None,
+        };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -2178,15 +2186,7 @@ mod tests {
         fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
 
         let mut engine = Puzzle3dEngine::new();
-        let base_scene = SceneConfig {
-            fixture: base.clone(),
-            kind_catalogs: Some(catalogs),
-            kind_compatibility: vec![],
-            overlap_budget: 0.0,
-            seed: 7,
-            host_rules: BrushHostRules::default(),
-            weights: BrushKindWeights::default(),
-        };
+        let base_scene = SceneConfig { fixture: base.clone(), kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
         engine.set_scene(&serde_json::to_string(&base_scene).unwrap()).expect("seed");
         engine.fill = Some(fill);
 
@@ -2219,7 +2219,16 @@ mod tests {
         // 🔽️ Moving the count DOWN must never discard the already-planned sequence/appended objects/
         // placed entries or re-enqueue FillSteps — only `applied_count` (and the returned document-prefix
         // fixture) may change. Otherwise a jittery drag forces expensive replanning on every dip.
-        let object = |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
+        let object = |id: &str| FixtureObject {
+            id: id.to_string(),
+            object_kind: Some("Placed".to_string()),
+            mesh_url: Some("/test/placed.glb".to_string()),
+            origin: [0.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            vortices: vec![],
+            reveal_index: None,
+        };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -2311,8 +2320,16 @@ mod tests {
         // 🔽️ Downward moves are prefix-stable (see `apply_fill_count`) — the plan/sequence/appended
         // objects/queue must never be discarded or re-enqueued just because the applied prefix shrank;
         // that used to force expensive replanning on every jittery drag dip.
-        let object =
-            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
+        let object = |id: &str| FixtureObject {
+            id: id.to_string(),
+            object_kind: Some("Placed".to_string()),
+            mesh_url: Some("/test/placed.glb".to_string()),
+            origin: [0.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            vortices: vec![],
+            reveal_index: None,
+        };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -2346,8 +2363,16 @@ mod tests {
 
     #[test]
     fn set_scene_with_applied_fill_projection_preserves_slider_session() {
-        let object =
-            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
+        let object = |id: &str| FixtureObject {
+            id: id.to_string(),
+            object_kind: Some("Placed".to_string()),
+            mesh_url: Some("/test/placed.glb".to_string()),
+            origin: [0.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            vortices: vec![],
+            reveal_index: None,
+        };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -2362,15 +2387,7 @@ mod tests {
         fill.stalled = true;
 
         let mut engine = Puzzle3dEngine::new();
-        let base_scene = SceneConfig {
-            fixture: base.clone(),
-            kind_catalogs: Some(catalogs),
-            kind_compatibility: vec![],
-            overlap_budget: 0.0,
-            seed: 7,
-            host_rules: BrushHostRules::default(),
-            weights: BrushKindWeights::default(),
-        };
+        let base_scene = SceneConfig { fixture: base.clone(), kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
         let base_json = serde_json::to_string(&base_scene).unwrap();
         engine.set_scene(&base_json).expect("seed base scene");
         // 🪣️ Replace the fresh FillBuilder from rebuild_queue with the already-applied session under test.
@@ -2578,10 +2595,7 @@ mod tests {
     #[test]
     fn world_volumes_contain_aabb_empty_and_multi_volume() {
         assert!(world_volumes_contain_aabb(&[], Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "no target volumes means unconstrained");
-        let volumes = vec![
-            WorldVolumeProps { id: "far".into(), origin: [100.0, 0.0, 0.0], orientation: None, scale: None },
-            WorldVolumeProps { id: "near".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(serde_json::json!(4.0)) },
-        ];
+        let volumes = vec![WorldVolumeProps { id: "far".into(), origin: [100.0, 0.0, 0.0], orientation: None, scale: None }, WorldVolumeProps { id: "near".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(serde_json::json!(4.0)) }];
         assert!(world_volumes_contain_aabb(&volumes, Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "any single containing volume is enough");
     }
 
@@ -2824,8 +2838,26 @@ mod tests {
             attractions,
             target_volumes: vec![],
             objects: vec![
-                FixtureObject { id: "host".into(), object_kind: Some("Host".into()), mesh_url: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, vortices: vec![VortexProps { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None }], reveal_index: None },
-                FixtureObject { id: "free".into(), object_kind: Some("Free".into()), mesh_url: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, vortices: vec![VortexProps { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None }], reveal_index: None },
+                FixtureObject {
+                    id: "host".into(),
+                    object_kind: Some("Host".into()),
+                    mesh_url: None,
+                    origin: [0.0, 0.0, 0.0],
+                    orientation: None,
+                    scale: None,
+                    vortices: vec![VortexProps { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None }],
+                    reveal_index: None,
+                },
+                FixtureObject {
+                    id: "free".into(),
+                    object_kind: Some("Free".into()),
+                    mesh_url: None,
+                    origin: [0.0, 0.0, 0.0],
+                    orientation: None,
+                    scale: None,
+                    vortices: vec![VortexProps { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None }],
+                    reveal_index: None,
+                },
             ],
         };
         let targets = enumerate_brush_fill_vortex_targets(&fixture);
@@ -2888,7 +2920,11 @@ mod tests {
 
     #[test]
     fn brush_preview_from_candidate_none_branches() {
-        let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: Some("/mesh.glb".into()), scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }], vortices: vec![], cables: vec![] };
+        let catalogs = KindCatalogBundle {
+            objects: vec![ObjectKind { id: "Kind".into(), mesh_url: Some("/mesh.glb".into()), scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }],
+            vortices: vec![],
+            cables: vec![],
+        };
         let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
         let target_ctx = AttractionVortexContext { object_kind: None, vortex_kind: None };
         let world = TargetVortexWorld { position: [0.0, 0.0, 0.0], direction: [0.0, 0.0, -1.0], reference_orientation: None };
@@ -2899,7 +2935,11 @@ mod tests {
         let bad_index = BrushCompatibleCandidate { object_kind_id: "Kind".into(), source_vortex_index: 5 };
         assert!(brush_preview_from_candidate("t", &bad_index, &target_ctx, world, &catalogs, &fixture).is_none());
 
-        let empty_mesh_catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: None, scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }], vortices: vec![], cables: vec![] };
+        let empty_mesh_catalogs = KindCatalogBundle {
+            objects: vec![ObjectKind { id: "Kind".into(), mesh_url: None, scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }],
+            vortices: vec![],
+            cables: vec![],
+        };
         let ok_candidate = BrushCompatibleCandidate { object_kind_id: "Kind".into(), source_vortex_index: 0 };
         assert!(brush_preview_from_candidate("t", &ok_candidate, &target_ctx, world, &empty_mesh_catalogs, &fixture).is_none(), "a missing mesh url must yield no preview");
 
@@ -2911,7 +2951,11 @@ mod tests {
     #[test]
     fn apply_brush_placement_to_fixture_rejects_missing_kind_template_or_mesh() {
         let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
-        let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: None, scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }], vortices: vec![], cables: vec![] };
+        let catalogs = KindCatalogBundle {
+            objects: vec![ObjectKind { id: "Kind".into(), mesh_url: None, scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }],
+            vortices: vec![],
+            cables: vec![],
+        };
 
         let missing_kind = BrushPlacePayload { target_vortex_full_id: "t:v0".into(), object_kind_id: "Missing".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         assert_eq!(apply_brush_placement_to_fixture(&fixture, &missing_kind, &catalogs).objects.len(), 0);
@@ -2925,9 +2969,14 @@ mod tests {
 
     #[test]
     fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
-        let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: Some("/mesh.glb".into()), scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }], vortices: vec![], cables: vec![] };
+        let catalogs = KindCatalogBundle {
+            objects: vec![ObjectKind { id: "Kind".into(), mesh_url: Some("/mesh.glb".into()), scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }],
+            vortices: vec![],
+            cables: vec![],
+        };
         let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-        let fixture = Fixture { attractions: vec![AttractionProps { id: "a".into(), attracting: "host:v0".into(), attracted: "other:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 }], objects: vec![], target_volumes: vec![] };
+        let fixture =
+            Fixture { attractions: vec![AttractionProps { id: "a".into(), attracting: "host:v0".into(), attracted: "other:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 }], objects: vec![], target_volumes: vec![] };
         let next = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
         assert_eq!(next.objects.len(), 0, "a target vortex that is already attracting must reject the placement");
     }

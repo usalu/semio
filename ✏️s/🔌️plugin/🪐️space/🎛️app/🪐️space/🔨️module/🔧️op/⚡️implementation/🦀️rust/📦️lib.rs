@@ -6,10 +6,10 @@
 //! locally-defined `DocumentApp::ConfigOperation`, the B1 config-artifact pilot's op-crate content —
 //! there is no `OsOperation` twin for config, config is genuinely local to this app.
 
-use space::SpaceWindowCamera;
-use space_engine::SpaceConfig;
 use protocol::Operation;
 use serde::{Deserialize, Serialize};
+use space::SpaceWindowCamera;
+use space_engine::SpaceConfig;
 
 //#region 🔖️ConfigOperations
 /// @emoji 🧮️ B1: `space_engine::SpaceConfig`'s operation enum — one variant per settled interaction

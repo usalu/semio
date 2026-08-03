@@ -5,17 +5,17 @@ pub mod host {
     //! 🔌️ Plugin host, studio document VCS store, backbone, and catalog.
 
     use crate::instance::{create_default_os_parameter, create_os_id, patch_os_parameter, OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterType};
-    use crate::workflow::{sync_workflow_parameter_ports, OS_SPACE_SCHEMA};
     use crate::registry::{os_app_registration, resolve_os_app_definition, PluginRegistry};
+    use crate::workflow::{sync_workflow_parameter_ports, OS_SPACE_SCHEMA};
+    use protocol::{Operation, OperationDiff};
     use semio_framework_core::{AppDefinition, Contribution, PluginManifest, ViewState};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
+    use store::{create_document_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore, SpaceConflict};
     use ui_wgpu::{ui_recovery_panel, UiNode};
-    use protocol::{Operation, OperationDiff};
     use vcs::{DocumentVcs, VcsError};
-use store::{create_document_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore, SpaceConflict};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -610,7 +610,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     projection.workflow.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![OsOperation::PatchWorkflowNode { node_id: node_id.clone(), label: node.label.clone() }]).unwrap_or_default()
                 }
                 OsOperation::AddParameter { parameter } => vec![OsOperation::RemoveParameter { parameter_id: parameter_entity_id(parameter).into() }],
-                OsOperation::RemoveParameter { parameter_id } => projection.parameters.iter().find(|parameter| parameter_entity_id(parameter) == *parameter_id).map(|parameter| vec![OsOperation::AddParameter { parameter: parameter.clone() }]).unwrap_or_default(),
+                OsOperation::RemoveParameter { parameter_id } => {
+                    projection.parameters.iter().find(|parameter| parameter_entity_id(parameter) == *parameter_id).map(|parameter| vec![OsOperation::AddParameter { parameter: parameter.clone() }]).unwrap_or_default()
+                }
                 OsOperation::PatchParameter { parameter_id, parameter } => projection
                     .parameters
                     .iter()
@@ -638,10 +640,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         /// `ReconcileReport` at the boundary.
         fn reconcile(&self, projection: OsProjection) -> (OsProjection, Vec<protocol::ReconcileReport>) {
             let (projection, conflicts) = reconcile_os_workflow(projection);
-            let reports = conflicts
-                .into_iter()
-                .map(|conflict| protocol::ReconcileReport { id: conflict.kind, message: conflict.message, severity: protocol::ReconcileSeverity::Warning })
-                .collect();
+            let reports = conflicts.into_iter().map(|conflict| protocol::ReconcileReport { id: conflict.kind, message: conflict.message, severity: protocol::ReconcileSeverity::Warning }).collect();
             (projection, reports)
         }
     }
@@ -706,7 +705,14 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         let mut smallest_id_for_wire: HashMap<(String, String, String, String), String> = HashMap::new();
         for edge in &edges {
             let wire = (edge.source_node_id.clone(), edge.source_port_id.clone(), edge.target_node_id.clone(), edge.target_port_id.clone());
-            smallest_id_for_wire.entry(wire).and_modify(|smallest| if edge.id < *smallest { *smallest = edge.id.clone() }).or_insert_with(|| edge.id.clone());
+            smallest_id_for_wire
+                .entry(wire)
+                .and_modify(|smallest| {
+                    if edge.id < *smallest {
+                        *smallest = edge.id.clone()
+                    }
+                })
+                .or_insert_with(|| edge.id.clone());
         }
         edges.retain(|edge| {
             let wire = (edge.source_node_id.clone(), edge.source_port_id.clone(), edge.target_node_id.clone(), edge.target_port_id.clone());
@@ -770,11 +776,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             let newest_cycle_edge_index = edges.iter().enumerate().filter(|(_, edge)| cycle_node_ids.contains(&edge.source_node_id) && cycle_node_ids.contains(&edge.target_node_id)).map(|(index, _)| index).max();
             let Some(newest_cycle_edge_index) = newest_cycle_edge_index else { break };
             let dropped = edges.remove(newest_cycle_edge_index);
-            conflicts.push(SpaceConflict {
-                kind: "workflow/edge-cycle".into(),
-                uri: dropped.id.clone(),
-                message: format!("edge {} was dropped to break a cycle in the workflow", dropped.id),
-            });
+            conflicts.push(SpaceConflict { kind: "workflow/edge-cycle".into(), uri: dropped.id.clone(), message: format!("edge {} was dropped to break a cycle in the workflow", dropped.id) });
         }
         edges
     }
@@ -856,12 +858,16 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             #[dsl(key = "id")]
             alternative_id: Option<String>,
         },
-        AddWorkflowNode { node: workflow::WorkflowNode },
+        AddWorkflowNode {
+            node: workflow::WorkflowNode,
+        },
         RemoveWorkflowNode {
             #[dsl(key = "id")]
             node_id: String,
         },
-        ConnectWorkflowPorts { edge: workflow::WorkflowEdge },
+        ConnectWorkflowPorts {
+            edge: workflow::WorkflowEdge,
+        },
         DisconnectWorkflowEdge {
             #[dsl(key = "id")]
             edge_id: String,
@@ -891,8 +897,13 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             #[dsl(statements)]
             parameter: Box<OsParameter>,
         },
-        BindParameterField { binding: OsParameterFieldBinding },
-        UnbindParameterField { node_id: String, field_path: String },
+        BindParameterField {
+            binding: OsParameterFieldBinding,
+        },
+        UnbindParameterField {
+            node_id: String,
+            field_path: String,
+        },
         SyncNodePorts,
     }
 
@@ -1340,8 +1351,8 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         use crate::workflow::{empty_workflow, placeholder_media_contract, validate_workflow, MediaContract, WorkflowEdge, WorkflowPosition};
         use semio_framework_core::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
-        use ui_wgpu::SurfaceKind;
         use store::{MemoryBackbone, MemoryBackbonePort};
+        use ui_wgpu::SurfaceKind;
 
         #[test]
         fn loads_plugin_apps_into_registry() {
@@ -1676,7 +1687,12 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 artifact_kinds: Vec::new(),
                 config: semio_framework_core::ConfigSpec::empty(),
                 command_grammar: semio_framework_core::CommandGrammar::empty(),
-                io: semio_framework_core::AppIo::from_document(document_schema, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, semio_framework_core::ArtifactPresentation { id: id.into(), name: label.into(), dimension: "2d".into(), component_kind: id.into() }).with_ports(ports),
+                io: semio_framework_core::AppIo::from_document(
+                    document_schema,
+                    MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                    semio_framework_core::ArtifactPresentation { id: id.into(), name: label.into(), dimension: "2d".into(), component_kind: id.into() },
+                )
+                .with_ports(ports),
                 tutorials: Vec::new(),
             }
         }
@@ -1999,9 +2015,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         fn document_text_round_trips_store_with_applied_operation() {
             let envelope = create_document_envelope(OS_SPACE_SCHEMA, "space-text-test", default_os_projection(), None);
             let mut store = DocumentStore::new(envelope);
-            store
-                .dispatch(DocumentCommand::Apply { operations: vec![OsOperation::SetActiveProgram { plugin_id: Some("puzzle".into()) }], description: None })
-                .expect("apply");
+            store.dispatch(DocumentCommand::Apply { operations: vec![OsOperation::SetActiveProgram { plugin_id: Some("puzzle".into()) }], description: None }).expect("apply");
             store::test_support::assert_document_text_round_trip(&store);
             store::test_support::assert_document_pack_round_trip(&store);
         }
@@ -2022,10 +2036,10 @@ pub mod backbone {
     use crate::{OsOperation, OsProjection};
     #[cfg(not(target_arch = "wasm32"))]
     use std::sync::Arc;
-    use vcs::VcsError;
     use store::MemoryBackbonePort;
     #[cfg(not(target_arch = "wasm32"))]
     use store_sync::{FolderSqliteStorage, FolderTextStorage};
+    use vcs::VcsError;
 
     /// @emoji 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
     /// folder holds exactly one os document at its root (app documents get their own document ids once
@@ -2596,11 +2610,7 @@ pub mod instance {
     pub fn validate_parameter_config_binding(binding: &OsParameterFieldBinding, parameter_type: &OsParameterType, config_spec: &ConfigSpec) -> Result<(), SpaceConflict> {
         let uri = format!("{}#{}", binding.node_id, binding.field_path);
         let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
-            return Err(SpaceConflict {
-                kind: "workflow/parameter-binding-invalid".into(),
-                uri,
-                message: format!("binding targets config field '{}', which the app's ConfigSpec does not declare", binding.field_path),
-            });
+            return Err(SpaceConflict { kind: "workflow/parameter-binding-invalid".into(), uri, message: format!("binding targets config field '{}', which the app's ConfigSpec does not declare", binding.field_path) });
         };
         let compatible = matches!(
             (parameter_type, &field.shape),
@@ -2609,11 +2619,7 @@ pub mod instance {
         if compatible {
             Ok(())
         } else {
-            Err(SpaceConflict {
-                kind: "workflow/parameter-binding-invalid".into(),
-                uri,
-                message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.shape),
-            })
+            Err(SpaceConflict { kind: "workflow/parameter-binding-invalid".into(), uri, message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.shape) })
         }
     }
 
@@ -2766,7 +2772,13 @@ pub mod instance {
     /// {@link apply_parameter_values_to_projection} already established — a true typed operation into the bound
     /// app's own `Operation` vocabulary requires that app's real (non-opaque) Operation type and is left to each app's
     /// own `DocumentApp` migration (WS-F); until then this snapshot-replace path is the host's only lever.
-    pub fn app_instance_document_patches_for_binding(parameter_id: &str, nodes: &[workflow::WorkflowNode], bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], current_document_json: impl Fn(&str) -> Option<String>) -> Vec<(String, String)> {
+    pub fn app_instance_document_patches_for_binding(
+        parameter_id: &str,
+        nodes: &[workflow::WorkflowNode],
+        bindings: &[OsParameterFieldBinding],
+        parameters: &[OsParameter],
+        current_document_json: impl Fn(&str) -> Option<String>,
+    ) -> Vec<(String, String)> {
         let bound_node_ids: HashSet<String> = bindings.iter().filter(|binding| binding.parameter_id == parameter_id).map(|binding| binding.node_id.clone()).collect();
         nodes
             .iter()
@@ -2827,8 +2839,18 @@ pub mod instance {
         fn sample_config_spec() -> ConfigSpec {
             ConfigSpec {
                 fields: vec![
-                    semio_framework_core::ConfigFieldSpec { key: "zoom".into(), label: "Zoom".into(), shape: ConfigFieldShape::Number { min: None, max: None, step: None }, default: Some(dsl::to_dsl_value(&serde_json::json!(1.0)).expect("dsl value")) },
-                    semio_framework_core::ConfigFieldSpec { key: "mode".into(), label: "Mode".into(), shape: ConfigFieldShape::Select { options: vec!["A".into(), "B".into()] }, default: Some(dsl::to_dsl_value(&serde_json::json!("A")).expect("dsl value")) },
+                    semio_framework_core::ConfigFieldSpec {
+                        key: "zoom".into(),
+                        label: "Zoom".into(),
+                        shape: ConfigFieldShape::Number { min: None, max: None, step: None },
+                        default: Some(dsl::to_dsl_value(&serde_json::json!(1.0)).expect("dsl value")),
+                    },
+                    semio_framework_core::ConfigFieldSpec {
+                        key: "mode".into(),
+                        label: "Mode".into(),
+                        shape: ConfigFieldShape::Select { options: vec!["A".into(), "B".into()] },
+                        default: Some(dsl::to_dsl_value(&serde_json::json!("A")).expect("dsl value")),
+                    },
                     semio_framework_core::ConfigFieldSpec { key: "flag".into(), label: "Flag".into(), shape: ConfigFieldShape::Toggle, default: None },
                     semio_framework_core::ConfigFieldSpec { key: "label".into(), label: "Label".into(), shape: ConfigFieldShape::Text, default: None },
                 ],
@@ -2847,16 +2869,19 @@ pub mod instance {
         #[test]
         fn rejects_mismatched_parameter_config_bindings() {
             let config_spec = sample_config_spec();
-            let mismatch = validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), node_id: "i1".into(), field_path: "zoom".into() }, &OsParameterType::Toggle, &config_spec).expect_err("toggle cannot drive a Number field");
+            let mismatch =
+                validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), node_id: "i1".into(), field_path: "zoom".into() }, &OsParameterType::Toggle, &config_spec).expect_err("toggle cannot drive a Number field");
             assert_eq!(mismatch.kind, "workflow/parameter-binding-invalid");
-            let mismatch = validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p2".into(), node_id: "i1".into(), field_path: "mode".into() }, &OsParameterType::Text, &config_spec).expect_err("text cannot drive a Select field");
+            let mismatch =
+                validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p2".into(), node_id: "i1".into(), field_path: "mode".into() }, &OsParameterType::Text, &config_spec).expect_err("text cannot drive a Select field");
             assert_eq!(mismatch.kind, "workflow/parameter-binding-invalid");
         }
 
         #[test]
         fn rejects_parameter_config_binding_to_unknown_field() {
             let config_spec = sample_config_spec();
-            let error = validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), node_id: "i1".into(), field_path: "nonexistent".into() }, &OsParameterType::Numeric, &config_spec).expect_err("field does not exist on the ConfigSpec");
+            let error = validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), node_id: "i1".into(), field_path: "nonexistent".into() }, &OsParameterType::Numeric, &config_spec)
+                .expect_err("field does not exist on the ConfigSpec");
             assert_eq!(error.kind, "workflow/parameter-binding-invalid");
         }
 
@@ -3262,8 +3287,8 @@ pub mod workflow {
     // wraps it with the contract-renegotiation check that still needs the artifact registry, which only
     // exists at this layer.
     pub use workflow::{
-        empty_workflow, plan_workflow, placeholder_media_contract, validate_workflow as kernel_validate_workflow, workflow_node_for_app, MediaContract, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowMediaPort, WorkflowNode, WorkflowPosition,
-        WorkflowValidation, WORKFLOW_SCHEMA,
+        empty_workflow, placeholder_media_contract, plan_workflow, validate_workflow as kernel_validate_workflow, workflow_node_for_app, MediaContract, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowMediaPort, WorkflowNode,
+        WorkflowPosition, WorkflowValidation, WORKFLOW_SCHEMA,
     };
 
     use crate::host::OsOperation;
@@ -3981,18 +4006,14 @@ pub mod workflow {
             }
             for binding in bindings.iter().filter(|entry| entry.node_id == node_id) {
                 let parameter = parameters.iter().find(|entry| match entry {
-                    OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
-                        id == &binding.parameter_id
-                    }
+                    OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => id == &binding.parameter_id,
                 });
                 rows.push(OsWorkflowVfsNodeRecord {
                     id: os_workflow_vfs_input_port_id(&node_id, &format!("param.{}", binding.parameter_id)),
                     file_node_kind_id: "input".into(),
                     name: parameter
                         .map(|entry| match entry {
-                            OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
-                                name.clone()
-                            }
+                            OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => name.clone(),
                         })
                         .unwrap_or_else(|| binding.field_path.clone()),
                     path: format!("/{}/inputs/param.{}", node.label, binding.parameter_id),
@@ -4004,9 +4025,7 @@ pub mod workflow {
                         "binding".into(),
                         parameter
                             .map(|entry| match entry {
-                                OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
-                                    name.clone()
-                                }
+                                OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => name.clone(),
                             })
                             .unwrap_or_else(|| binding.parameter_id.clone()),
                     )]),
@@ -4219,7 +4238,14 @@ pub mod workflow {
             let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", 40.0, 80.0));
             graph.nodes.push(media_node("node-2", 300.0, 80.0));
-            graph.edges.push(WorkflowEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "node-1:out".into(), target_node_id: "node-2".into(), target_port_id: "node-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-1".into(),
+                source_node_id: "node-1".into(),
+                source_port_id: "node-1:out".into(),
+                target_node_id: "node-2".into(),
+                target_port_id: "node-2:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
             let camera = OsWorkflowCamera { x: 12.0, y: -8.0, zoom: 1.5 };
             let fixture = os_workflow_to_flow_fixture(&graph, &camera);
             assert_eq!(fixture["camera"]["x"], 12.0);
@@ -4237,7 +4263,14 @@ pub mod workflow {
             let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", 200.0, 0.0));
-            graph.edges.push(WorkflowEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "node-1:out".into(), target_node_id: "node-2".into(), target_port_id: "node-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-1".into(),
+                source_node_id: "node-1".into(),
+                source_port_id: "node-1:out".into(),
+                target_node_id: "node-2".into(),
+                target_port_id: "node-2:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
             let mut fixture = os_workflow_to_flow_fixture(&graph, &OsWorkflowCamera::default());
             fixture["synapses"] = json!([
                 { "id": "", "from": "node-2", "fromPort": "node-2:out", "to": "node-1", "toPort": "node-1:in" }
@@ -4266,12 +4299,16 @@ pub mod workflow {
             let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", 200.0, 0.0));
-            graph.edges.push(WorkflowEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "node-1:out".into(), target_node_id: "node-2".into(), target_port_id: "node-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-1".into(),
+                source_node_id: "node-1".into(),
+                source_port_id: "node-1:out".into(),
+                target_node_id: "node-2".into(),
+                target_port_id: "node-2:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
             let deliveries = plan_workflow(&graph, &dirty_set(&["node-1"]));
-            assert_eq!(
-                deliveries,
-                vec![WorkflowDelivery { edge_id: "edge-1".into(), producer_node_id: "node-1".into(), producer_port_id: "node-1:out".into(), consumer_node_id: "node-2".into(), consumer_port_id: "node-2:in".into() }]
-            );
+            assert_eq!(deliveries, vec![WorkflowDelivery { edge_id: "edge-1".into(), producer_node_id: "node-1".into(), producer_port_id: "node-1:out".into(), consumer_node_id: "node-2".into(), consumer_port_id: "node-2:in".into() }]);
         }
 
         #[test]
@@ -4280,8 +4317,22 @@ pub mod workflow {
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", 200.0, 0.0));
             graph.nodes.push(media_node("node-3", 400.0, 0.0));
-            graph.edges.push(WorkflowEdge { id: "edge-ab".into(), source_node_id: "node-1".into(), source_port_id: "node-1:out".into(), target_node_id: "node-2".into(), target_port_id: "node-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            graph.edges.push(WorkflowEdge { id: "edge-bc".into(), source_node_id: "node-2".into(), source_port_id: "node-2:out".into(), target_node_id: "node-3".into(), target_port_id: "node-3:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-ab".into(),
+                source_node_id: "node-1".into(),
+                source_port_id: "node-1:out".into(),
+                target_node_id: "node-2".into(),
+                target_port_id: "node-2:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-bc".into(),
+                source_node_id: "node-2".into(),
+                source_port_id: "node-2:out".into(),
+                target_node_id: "node-3".into(),
+                target_port_id: "node-3:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
             let deliveries = plan_workflow(&graph, &dirty_set(&["node-1"]));
             assert_eq!(deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect::<Vec<_>>(), vec!["edge-ab", "edge-bc"], "A→B must be planned before B→C");
         }
@@ -4295,10 +4346,38 @@ pub mod workflow {
             graph.nodes.push(media_node("node-b", 200.0, -80.0));
             graph.nodes.push(media_node("node-c", 200.0, 80.0));
             graph.nodes.push(media_node("node-d", 400.0, 0.0));
-            graph.edges.push(WorkflowEdge { id: "edge-ab".into(), source_node_id: "node-a".into(), source_port_id: "node-a:out".into(), target_node_id: "node-b".into(), target_port_id: "node-b:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            graph.edges.push(WorkflowEdge { id: "edge-ac".into(), source_node_id: "node-a".into(), source_port_id: "node-a:out".into(), target_node_id: "node-c".into(), target_port_id: "node-c:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            graph.edges.push(WorkflowEdge { id: "edge-bd".into(), source_node_id: "node-b".into(), source_port_id: "node-b:out".into(), target_node_id: "node-d".into(), target_port_id: "node-d:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            graph.edges.push(WorkflowEdge { id: "edge-cd".into(), source_node_id: "node-c".into(), source_port_id: "node-c:out".into(), target_node_id: "node-d".into(), target_port_id: "node-d:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-ab".into(),
+                source_node_id: "node-a".into(),
+                source_port_id: "node-a:out".into(),
+                target_node_id: "node-b".into(),
+                target_port_id: "node-b:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-ac".into(),
+                source_node_id: "node-a".into(),
+                source_port_id: "node-a:out".into(),
+                target_node_id: "node-c".into(),
+                target_port_id: "node-c:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-bd".into(),
+                source_node_id: "node-b".into(),
+                source_port_id: "node-b:out".into(),
+                target_node_id: "node-d".into(),
+                target_port_id: "node-d:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-cd".into(),
+                source_node_id: "node-c".into(),
+                source_port_id: "node-c:out".into(),
+                target_node_id: "node-d".into(),
+                target_port_id: "node-d:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
             let deliveries = plan_workflow(&graph, &dirty_set(&["node-a"]));
             let edge_ids: Vec<&str> = deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect();
             assert_eq!(edge_ids.len(), 4);
@@ -4312,7 +4391,14 @@ pub mod workflow {
             let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", 200.0, 0.0));
-            graph.edges.push(WorkflowEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "node-1:out".into(), target_node_id: "node-2".into(), target_port_id: "node-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(WorkflowEdge {
+                id: "edge-1".into(),
+                source_node_id: "node-1".into(),
+                source_port_id: "node-1:out".into(),
+                target_node_id: "node-2".into(),
+                target_port_id: "node-2:in".into(),
+                contract: placeholder_media_contract("2d.drawing"),
+            });
             assert!(plan_workflow(&graph, &dirty_set(&[])).is_empty());
         }
 
@@ -4330,10 +4416,7 @@ pub mod workflow {
         fn workflow_fixture_dsl_paths() -> Vec<std::path::PathBuf> {
             let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧫️fixtures");
             let entries = std::fs::read_dir(&fixtures_dir).unwrap_or_else(|error| panic!("read fixtures dir {fixtures_dir:?}: {error}"));
-            let mut paths: Vec<std::path::PathBuf> = entries
-                .map(|entry| entry.expect("dir entry").path())
-                .filter(|path| path.extension().and_then(|extension| extension.to_str()) == Some("dsl"))
-                .collect();
+            let mut paths: Vec<std::path::PathBuf> = entries.map(|entry| entry.expect("dir entry").path()).filter(|path| path.extension().and_then(|extension| extension.to_str()) == Some("dsl")).collect();
             paths.sort();
             paths
         }
@@ -4409,7 +4492,7 @@ pub mod registry {
     //! 🗂️ Plugin manifest registry and OS plugin/artifact catalog.
 
     use crate::instance::OsParameterFieldSpec;
-    use semio_framework_core::{AppDefinition, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, PluginManifest, ArtifactKindSpec, WindowKindDefinition};
+    use semio_framework_core::{AppDefinition, ArtifactKindSpec, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, PluginManifest, WindowKindDefinition};
     use semio_framework_core::{Locale, Terminology};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
@@ -4818,7 +4901,11 @@ pub mod registry {
                 artifact_kinds: Vec::new(),
                 config: ConfigSpec::empty(),
                 command_grammar: semio_framework_core::CommandGrammar::empty(),
-                io: semio_framework_core::AppIo::from_document("draw.document", MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, semio_framework_core::ArtifactPresentation { id: "draw".into(), name: "Draw".into(), dimension: "2d".into(), component_kind: "draw".into() }),
+                io: semio_framework_core::AppIo::from_document(
+                    "draw.document",
+                    MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                    semio_framework_core::ArtifactPresentation { id: "draw".into(), name: "Draw".into(), dimension: "2d".into(), component_kind: "draw".into() },
+                ),
                 tutorials: Vec::new(),
             };
             register_app_io("draw", &app);
@@ -4836,37 +4923,35 @@ pub mod registry {
 pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
 pub use host::{
     apply_os_operation, create_empty_os_document, create_ephemeral_os_space, create_os_space, decode_os_space_payload, default_os_projection, delete_os_space, encode_os_space_payload, export_os_space_pack, import_os_space_from_dsl,
-    list_os_space_catalog_entries, load_os_space_document, materialize_os_projection, os_document_from_json,
-    os_document_to_json, seed_os_space_catalog_if_empty, LoadedProgram, OsBackbonePort, OsDiff, OsDocument, OsEnvelope, OsOperation, OsProjection, OsStore, OsSpaceCatalogEntry, OsVcs, PluginHost, ProgramHotSwapEvent, ProgramSupervisorState,
-    OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
+    list_os_space_catalog_entries, load_os_space_document, materialize_os_projection, os_document_from_json, os_document_to_json, seed_os_space_catalog_if_empty, LoadedProgram, OsBackbonePort, OsDiff, OsDocument, OsEnvelope, OsOperation,
+    OsProjection, OsSpaceCatalogEntry, OsStore, OsVcs, PluginHost, ProgramHotSwapEvent, ProgramSupervisorState, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
 pub use instance::{
     apply_parameter_values_to_projection, create_default_os_parameter, create_os_document_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
-    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsDocumentRef,
-    OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
+    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsDocumentRef, OsInstanceState,
+    OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
 };
 pub use media_export_raster::{
     dwg_drawing_to_svg, export_registered_solid, import_registered_solid, rasterize_svg_to_png_base64, register_2d_export_handlers, register_dwg_import_handler, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler,
     register_mesh_exporter, register_mesh_importer, register_solid_exporter, register_solid_importer, solid_exporter_for, svg_to_dwg_bytes,
 };
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
-pub use workflow::{
-    apply_flow_fixture_to_os_workflow, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, empty_workflow, export_os_app_instance_media, import_os_app_instance_media,
-    list_os_workflow_vfs_children, workflow_node_for_app, plan_workflow, negotiate_media_contract, os_media_export_extension_for_format, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, os_workflow_vfs_export_id,
-    os_workflow_vfs_import_id, os_workflow_vfs_instance_folder_id, os_workflow_vfs_instance_id, os_workflow_vfs_schema, os_workflow_vfs_source_id, os_media_neuron_kind_for_node, os_resource_media_capability,
-    placeholder_media_contract, register_os_media_export_handler, register_os_media_import_handler, required_os_media_export_formats, required_os_media_import_formats, sync_workflow_parameter_ports, validate_workflow, MediaContract,
-    WorkflowPosition, WorkflowValidation, OsMediaCapability, OsMediaExportResult, OsWorkflowOperatorInfo, OsMediaFormat, Workflow, OsWorkflowCamera, WorkflowEdge, WorkflowNode, WorkflowMediaPort, OsWorkflowVfsNodeRecord, OsWorkflowVfsSchema,
-    OsWorkflowNodeGraphPayload, WORKFLOW_SCHEMA, OS_MEDIA_FLOW_MODULE_ID, OS_WORKFLOW_VFS_ROOT_ID, OS_SPACE_SCHEMA,
-    WorkflowDelivery, WorkflowFixture,
-};
 pub use registry::{
-    list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, try_os_artifact_descriptor, register_app_io, workflow_palette,
-    register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition, OsAppRegistration, AppPaletteEntry, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,
+    list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, register_app_io, register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition, try_os_artifact_descriptor,
+    workflow_palette, AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,
 };
 pub use semio_framework_core::*;
+pub use store::{document_backbone_ref, set_host_backbone_port, DocumentBackboneRef, DocumentCommand, LocalStorageBackbonePort, MemoryBackbonePort};
 pub use ui_wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
-pub use store::{document_backbone_ref, set_host_backbone_port, DocumentBackboneRef, DocumentCommand, LocalStorageBackbonePort, MemoryBackbonePort};
+pub use workflow::{
+    apply_flow_fixture_to_os_workflow, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, empty_workflow, export_os_app_instance_media, import_os_app_instance_media, list_os_workflow_vfs_children,
+    negotiate_media_contract, os_media_export_extension_for_format, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, os_workflow_vfs_export_id, os_workflow_vfs_import_id,
+    os_workflow_vfs_instance_folder_id, os_workflow_vfs_instance_id, os_workflow_vfs_schema, os_workflow_vfs_source_id, placeholder_media_contract, plan_workflow, register_os_media_export_handler, register_os_media_import_handler,
+    required_os_media_export_formats, required_os_media_import_formats, sync_workflow_parameter_ports, validate_workflow, workflow_node_for_app, MediaContract, OsMediaCapability, OsMediaExportResult, OsMediaFormat, OsWorkflowCamera,
+    OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, OsWorkflowVfsNodeRecord, OsWorkflowVfsSchema, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowMediaPort, WorkflowNode, WorkflowPosition, WorkflowValidation,
+    OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, WORKFLOW_SCHEMA,
+};
 
 #[path = "📦️plugin_bundle_installer_shim.rs"]
 mod plugin_bundle_installer_shim;

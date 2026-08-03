@@ -1,8 +1,8 @@
 //! ⚙️ Shooting app — headless compute (constitutional: engine).
 
-use shooting::{empty_shooting_fixture, ShootingAsset, ShootingFixture, ShootingShot};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use shooting::{empty_shooting_fixture, ShootingAsset, ShootingFixture, ShootingShot};
 use std::sync::atomic::{AtomicU32, Ordering};
 use store::DocumentDsl;
 
@@ -101,19 +101,11 @@ impl protocol::OperationDiff<ShootingConfig> for ShootingConfig {
 pub fn shooting_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: "shooting.scene".into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Raster,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
         ports: vec![shooting_photos_out_port()],
         export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
         import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "2d.shooting".into(),
-            name: "2D Shooting".into(),
-            dimension: "2d".into(),
-            component_kind: "shooting".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.shooting".into(), name: "2D Shooting".into(), dimension: "2d".into(), component_kind: "shooting".into() },
     }
 }
 
@@ -126,10 +118,7 @@ pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
         id: "photos:out".into(),
         label: "Photos".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Raster,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
         kind_id: Some("2d.image".into()),
         required: false,
         multiplicity: semio_framework_core::PortMultiplicity::Many,
@@ -142,13 +131,9 @@ pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// (`register_2d_export_handlers` in the manifest crate), so there is exactly one photo renderer.
 pub fn shooting_photo_media(fixture: &ShootingFixture) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
     let (svg, width, height) = shooting_scene_svg(fixture);
-    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)
-        .map_err(|error| semio_framework_plugin::MediaError::Payload("photos:out".into(), error))?;
+    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| semio_framework_plugin::MediaError::Payload("photos:out".into(), error))?;
     Ok(semio_framework_plugin::Media {
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Raster,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 },
     })
 }
@@ -176,19 +161,11 @@ pub fn default_fixture_json() -> String {
 }
 
 pub fn active_shot(fixture: &ShootingFixture) -> Option<&ShootingShot> {
-    fixture
-        .shots
-        .iter()
-        .find(|shot| shot.id == fixture.active_shot_id)
-        .or_else(|| fixture.shots.first())
+    fixture.shots.iter().find(|shot| shot.id == fixture.active_shot_id).or_else(|| fixture.shots.first())
 }
 
 pub fn active_asset(fixture: &ShootingFixture) -> Option<&ShootingAsset> {
-    fixture
-        .assets
-        .iter()
-        .find(|asset| asset.id == fixture.active_asset_id)
-        .or_else(|| fixture.assets.first())
+    fixture.assets.iter().find(|asset| asset.id == fixture.active_asset_id).or_else(|| fixture.assets.first())
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -206,13 +183,7 @@ pub fn shooting_scene_svg(fixture: &ShootingFixture) -> (String, u32, u32) {
     let shape = shot.map(|entry| entry.shape.as_str()).unwrap_or("rectangle");
     let background = if fixture.scene.background.is_empty() { "#0f172a" } else { fixture.scene.background.as_str() };
     let clip = if shape == "ellipse" {
-        format!(
-            "<ellipse cx=\"{cx}\" cy=\"{cy}\" rx=\"{rx}\" ry=\"{ry}\" fill=\"{background}\"/>",
-            cx = width as f64 / 2.0,
-            cy = height as f64 / 2.0,
-            rx = width as f64 / 2.0,
-            ry = height as f64 / 2.0,
-        )
+        format!("<ellipse cx=\"{cx}\" cy=\"{cy}\" rx=\"{rx}\" ry=\"{ry}\" fill=\"{background}\"/>", cx = width as f64 / 2.0, cy = height as f64 / 2.0, rx = width as f64 / 2.0, ry = height as f64 / 2.0,)
     } else {
         format!("<rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>")
     };
@@ -221,19 +192,11 @@ pub fn shooting_scene_svg(fixture: &ShootingFixture) -> (String, u32, u32) {
         .emblem_base64
         .as_ref()
         .filter(|data| !data.is_empty())
-        .map(|data| {
-            format!(
-                "<image href=\"data:image/png;base64,{data}\" x=\"0\" y=\"0\" width=\"{width}\" height=\"{height}\" preserveAspectRatio=\"xMidYMid meet\"/>"
-            )
-        })
+        .map(|data| format!("<image href=\"data:image/png;base64,{data}\" x=\"0\" y=\"0\" width=\"{width}\" height=\"{height}\" preserveAspectRatio=\"xMidYMid meet\"/>"))
         .unwrap_or_default();
     let label = asset.map(|entry| entry.name.as_str()).unwrap_or("Untitled");
     let font_size = (height as f64 * 0.09).max(10.0);
-    let text = format!(
-        "<text x=\"50%\" y=\"{y}\" font-size=\"{font_size}\" fill=\"white\" text-anchor=\"middle\" font-family=\"sans-serif\">{label}</text>",
-        y = height as f64 * 0.92,
-        label = escape_svg_text(label),
-    );
+    let text = format!("<text x=\"50%\" y=\"{y}\" font-size=\"{font_size}\" fill=\"white\" text-anchor=\"middle\" font-family=\"sans-serif\">{label}</text>", y = height as f64 * 0.92, label = escape_svg_text(label),);
     semio_framework_os::wrap_svg(width, height, &format!("{clip}{emblem}{text}"))
 }
 

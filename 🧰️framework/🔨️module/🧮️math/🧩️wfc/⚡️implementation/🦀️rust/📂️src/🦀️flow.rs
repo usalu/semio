@@ -154,7 +154,11 @@ impl Constraint for FlowConstraint {
 
     fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
         let flow = self.compute_max_flow(assignment, adjacency);
-        if flow < self.min_flow { Err(format!("flow constraint: max flow {flow} is below the required minimum {}", self.min_flow)) } else { Ok(()) }
+        if flow < self.min_flow {
+            Err(format!("flow constraint: max flow {flow} is below the required minimum {}", self.min_flow))
+        } else {
+            Ok(())
+        }
     }
 }
 // #endregion 🔖️Constraint

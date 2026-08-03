@@ -67,19 +67,11 @@ impl protocol::OperationDiff<Fem2dConfig> for Fem2dConfig {
 pub fn fem2d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: fem2d::FEM_2D_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Vector,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         ports: vec![fem2d_geometry_in_port(), fem2d_results_out_port()],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "2d.fem".into(),
-            name: "FEM 2D".into(),
-            dimension: "2d".into(),
-            component_kind: "fem2d".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.fem".into(), name: "FEM 2D".into(), dimension: "2d".into(), component_kind: "fem2d".into() },
     }
 }
 
@@ -90,10 +82,7 @@ pub fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
         id: "geometry:in".into(),
         label: "Geometry".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Vector,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         kind_id: None,
         required: true,
         multiplicity: semio_framework_core::PortMultiplicity::One,
@@ -107,10 +96,7 @@ pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
         id: "results:out".into(),
         label: "Results".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::Data,
-            form: semio_framework_plugin::MediaForm::Value,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
         kind_id: Some("computation.fem2d".into()),
         required: false,
         multiplicity: semio_framework_core::PortMultiplicity::One,
@@ -225,7 +211,15 @@ fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGeometry, Fem
 
         for (tri_index, tri) in tri_mesh.tris.iter().enumerate() {
             let tri_nodes = [node_ids[tri[0] as usize].clone(), node_ids[tri[1] as usize].clone(), node_ids[tri[2] as usize].clone()];
-            elements.push(Box::new(fem_core::elements2d::Tri3Cst { id: format!("{}_t{}", region.id, tri_index), nodes: tri_nodes, e: material.e, nu: material.nu, thickness: region.thickness, kind: fem_core::elements2d::PlaneKind::Stress, density: material.rho }));
+            elements.push(Box::new(fem_core::elements2d::Tri3Cst {
+                id: format!("{}_t{}", region.id, tri_index),
+                nodes: tri_nodes,
+                e: material.e,
+                nu: material.nu,
+                thickness: region.thickness,
+                kind: fem_core::elements2d::PlaneKind::Stress,
+                density: material.rho,
+            }));
         }
 
         meshed_regions.push(MeshedRegion { region_id: region.id.clone(), material_id: region.material_id.clone(), thickness: region.thickness, node_ids, points: tri_mesh.points, tris: tri_mesh.tris });

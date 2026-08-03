@@ -1,8 +1,8 @@
 //! 🔷️ Lowpoly app — document entities (constitutional: general): the mesh + paint document projection
 //! and its patch types.
 
-use serde::{Deserialize, Serialize};
 use protocol::{Identified, Patchable};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Pixels
 pub const LOWPOLY_PAINT_TEXTURE_SIZE: usize = 1024;
@@ -219,12 +219,7 @@ mod tests {
         let mut object = LowpolyObject { id: "obj-1".into(), name: "Original".into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh_json: mesh_json.clone(), paint_layers: vec![LowpolyPaintLayer::new("Base")] };
         let original = object.clone();
         let new_mesh = "{\"changed\":true}".to_string();
-        let patch = LowpolyObjectPatch {
-            name: Some("Renamed".into()),
-            smooth_shading: Some(true),
-            transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }),
-            mesh_json: Some(new_mesh.clone()),
-        };
+        let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh_json: Some(new_mesh.clone()) };
         object.apply_patch(&patch);
         assert_eq!(object.name, "Renamed");
         assert!(object.smooth_shading);

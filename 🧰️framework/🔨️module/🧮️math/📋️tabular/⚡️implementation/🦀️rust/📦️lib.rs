@@ -253,9 +253,7 @@ impl Table {
         for (name, column) in self.names.iter().zip(self.columns.iter()) {
             let gathered = match column {
                 Column::Continuous(values) => Column::Continuous(indices.iter().map(|&row| values[row]).collect()),
-                Column::Categorical(cat) => {
-                    Column::Categorical(CategoricalColumn { levels: cat.levels.clone(), codes: indices.iter().map(|&row| cat.codes[row]).collect() })
-                }
+                Column::Categorical(cat) => Column::Categorical(CategoricalColumn { levels: cat.levels.clone(), codes: indices.iter().map(|&row| cat.codes[row]).collect() }),
             };
             out.push_column(name, gathered)?;
         }
@@ -384,11 +382,7 @@ impl Table {
             return Ok(Table::new());
         };
         let n_cols = first.len();
-        let (names, data_rows): (Vec<String>, Vec<Vec<String>>) = if options.has_header {
-            (first, rows.collect())
-        } else {
-            ((0..n_cols).map(|i| format!("c{i}")).collect(), std::iter::once(first).chain(rows).collect())
-        };
+        let (names, data_rows): (Vec<String>, Vec<Vec<String>>) = if options.has_header { (first, rows.collect()) } else { ((0..n_cols).map(|i| format!("c{i}")).collect(), std::iter::once(first).chain(rows).collect()) };
         for (line, row) in data_rows.iter().enumerate() {
             if row.len() != n_cols {
                 return Err(TabularError::Csv { line: line + 1, message: format!("expected {n_cols} fields, found {}", row.len()) });

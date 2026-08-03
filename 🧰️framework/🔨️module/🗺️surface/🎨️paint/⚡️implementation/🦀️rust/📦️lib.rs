@@ -62,7 +62,7 @@ enum LayerNodeJson {
         adjustment_kind: String,
         #[serde(default)]
         params: AdjustmentParamsJson,
-    }
+    },
 }
 
 fn default_true() -> bool {
@@ -151,7 +151,7 @@ struct DocumentJson {
 enum LayerNode {
     Pixel { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, width: u32, height: u32, image_key: Option<String>, mask: Option<MaskState> },
     Group { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, children: Vec<LayerNode>, mask: Option<MaskState> },
-    Adjustment { id: String, visible: bool, opacity: f32, blend: BlendMode, kind: String, params: AdjustmentParamsJson }
+    Adjustment { id: String, visible: bool, opacity: f32, blend: BlendMode, kind: String, params: AdjustmentParamsJson },
 }
 
 #[derive(Clone)]
@@ -759,7 +759,7 @@ struct ViewportJsonIn {
 /// 🎯️ Flattened pick candidate — mirrors premigration `flattenRasterLayers` (document order, parent pushed before children, no visibility cascade).
 enum PickEntry {
     Pixel { id: String, visible: bool, parent: Affine, transform: Affine, width: u32, height: u32, ancestors: Vec<(String, bool)> },
-    Group { id: String, visible: bool, parent: Affine, children: Vec<LayerNode> }
+    Group { id: String, visible: bool, parent: Affine, children: Vec<LayerNode> },
 }
 
 impl RasterHost {
@@ -798,23 +798,10 @@ impl RasterHost {
             for node in nodes {
                 match node {
                     LayerNode::Pixel { id, visible, transform, width, height, .. } => {
-                        out.push(PickEntry::Pixel {
-                            id: id.clone(),
-                            visible: *visible,
-                            parent,
-                            transform: *transform,
-                            width: *width,
-                            height: *height,
-                            ancestors: ancestors.to_vec(),
-                        });
+                        out.push(PickEntry::Pixel { id: id.clone(), visible: *visible, parent, transform: *transform, width: *width, height: *height, ancestors: ancestors.to_vec() });
                     }
                     LayerNode::Group { id, visible, transform, children, .. } => {
-                        out.push(PickEntry::Group {
-                            id: id.clone(),
-                            visible: *visible,
-                            parent,
-                            children: children.clone(),
-                        });
+                        out.push(PickEntry::Group { id: id.clone(), visible: *visible, parent, children: children.clone() });
                         let mut next_ancestors = ancestors.to_vec();
                         next_ancestors.push((id.clone(), *visible));
                         walk(children, parent * (*transform), &next_ancestors, out);

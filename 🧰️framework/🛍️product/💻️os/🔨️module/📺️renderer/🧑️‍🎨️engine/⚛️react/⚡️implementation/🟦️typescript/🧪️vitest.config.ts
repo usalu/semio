@@ -12,7 +12,7 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx") },
-      { find: "@semio-tech/ui-asset", replacement: resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/asset", replacement: resolve(repoRoot, "./🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/📦️index.ts") },
       { find: "@semio-tech/ui-styling", replacement: resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript") },
       { find: "@semio-tech/framework-core", replacement: resolve(repoRoot, "./🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts") },
       { find: "@semio-tech/framework-os-core", replacement: resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/⚡️implementation/🟦️typescript/📦️index.ts") },

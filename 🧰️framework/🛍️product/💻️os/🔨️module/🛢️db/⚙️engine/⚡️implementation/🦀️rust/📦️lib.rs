@@ -109,13 +109,7 @@ pub struct CommandReceipt {
 }
 
 fn to_engine_receipt(receipt: db_document::CommandReceipt, document: protocol::DocumentId) -> CommandReceipt {
-    CommandReceipt {
-        command_id: receipt.command_id,
-        frontier: to_engine_frontier(&receipt.frontier, document),
-        durability: receipt.durability,
-        conflicts: receipt.conflicts,
-        state_hash: receipt.state_hash,
-    }
+    CommandReceipt { command_id: receipt.command_id, frontier: to_engine_frontier(&receipt.frontier, document), durability: receipt.durability, conflicts: receipt.conflicts, state_hash: receipt.state_hash }
 }
 //#endregion 🔖️Receipt
 
@@ -180,14 +174,12 @@ fn replay_history(storage: &dyn DbStorage, core_document: &db_core::DocumentId, 
             db_wal::WalRecord::TxBegin { .. } => pending_operation_ids.clear(),
             db_wal::WalRecord::Command(bytes) => {
                 let mut pos = 0usize;
-                let envelope = protocol::decode_envelope(&bytes, &mut pos)
-                    .map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
+                let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
                 pending_operation_ids.push(envelope.operation_id);
             }
-            db_wal::WalRecord::Frontier(frontier)
-                if !pending_operation_ids.is_empty() => {
-                    entries.push(HistoryEntry { operation_ids: std::mem::take(&mut pending_operation_ids), frontier: to_engine_frontier(&frontier, protocol_document.clone()) });
-                }
+            db_wal::WalRecord::Frontier(frontier) if !pending_operation_ids.is_empty() => {
+                entries.push(HistoryEntry { operation_ids: std::mem::take(&mut pending_operation_ids), frontier: to_engine_frontier(&frontier, protocol_document.clone()) });
+            }
             _ => {}
         }
     }
@@ -296,8 +288,7 @@ pub mod vcs_integration {
             }
             let mut latest_hash = [0u8; 32];
             for (index, slot) in latest_hash.iter_mut().enumerate() {
-                *slot = u8::from_str_radix(&trimmed[index * 2..index * 2 + 2], 16)
-                    .map_err(|_| store::TextError::new("invalid hex byte", store::TextSpan::at(1, (index * 2 + 1) as u32)))?;
+                *slot = u8::from_str_radix(&trimmed[index * 2..index * 2 + 2], 16).map_err(|_| store::TextError::new("invalid hex byte", store::TextSpan::at(1, (index * 2 + 1) as u32)))?;
             }
             Ok(HashProjection { latest_hash })
         }
@@ -519,11 +510,7 @@ pub mod vcs_integration {
     impl db_core::VersionGraph for VcsVersionGraph {
         fn record_change(&self, document: &db_core::DocumentId, change: db_core::ChangeRecord) -> Result<String, DbError> {
             self.with_store(document, |store| {
-                let operation = HashOperation {
-                    hash: change.content_hash.0,
-                    author: Some(protocol::ActorId(change.author.0.clone())),
-                    timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)),
-                };
+                let operation = HashOperation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)) };
                 store.dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: Some(change.message.clone()) }).map_err(map_vcs_error)?;
                 Ok(store.envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
             })
@@ -721,17 +708,7 @@ impl Database {
 
         emit.emit(db_core::EmitEvent::new("db_engine.database_opened").field("documents", db_core::EmitField::U64(entries.len() as u64)));
 
-        Ok(Database {
-            storage,
-            config,
-            capabilities,
-            authz,
-            version_graph,
-            emit,
-            health,
-            catalog: Mutex::new(CatalogState { epoch, entries }),
-            open_documents: Mutex::new(HashMap::new()),
-        })
+        Ok(Database { storage, config, capabilities, authz, version_graph, emit, health, catalog: Mutex::new(CatalogState { epoch, entries }), open_documents: Mutex::new(HashMap::new()) })
     }
 
     /// @emoji 🚀️ The frozen zero-touch entry point: `FsStorage` rooted at `root`, defaults for
@@ -773,8 +750,7 @@ impl Database {
         let config = self.document_engine_config();
         let opened_at_ms = now_ms();
         let mailbox_capacities = self.config.mailbox_capacities;
-        let authority =
-            db_document::DocumentAuthority::spawn(move || db_document::DocumentEngine::open(document, &storage, config, opened_at_ms).map(|(engine, _report)| engine), mailbox_capacities)?;
+        let authority = db_document::DocumentAuthority::spawn(move || db_document::DocumentEngine::open(document, &storage, config, opened_at_ms).map(|(engine, _report)| engine), mailbox_capacities)?;
         Ok(Arc::new(authority))
     }
 
@@ -883,14 +859,7 @@ impl Database {
     /// wire-v2 handshake (frontier exchange / bootstrap-plan decision). No transport of its own:
     /// wiring this to an actual `protocol_wire` socket is CW5/CW6's job (framework/sync, semio_hub
     /// rebuilds), out of this crate's scope this wave.
-    pub fn hello(
-        &self,
-        document: &protocol::DocumentId,
-        hello_frontier: Option<&protocol::RuntimeFrontierSummary>,
-        session_id: String,
-        origin: &protocol::ActorId,
-        snapshot_chunk_bytes: usize,
-    ) -> Result<db_sync::WelcomeResponse, DbError> {
+    pub fn hello(&self, document: &protocol::DocumentId, hello_frontier: Option<&protocol::RuntimeFrontierSummary>, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<db_sync::WelcomeResponse, DbError> {
         let core_document = to_core_document_id(document);
         db_sync::handle_hello(self.storage.as_ref(), core_document, hello_frontier, session_id, origin, snapshot_chunk_bytes)
     }
@@ -958,9 +927,7 @@ impl DocumentHandle {
                 return Err(DbError::Unimplemented("historical/preview-augmented query consistency is not yet wired at the db_engine layer (db_query/db_projection integration deferred)"));
             }
             Consistency::Speculative(_) => {
-                return Err(DbError::Unimplemented(
-                    "speculative (preview) query consistency is not yet reachable: DocumentAuthority's mailbox only exposes Submit/Query/Frontier messages",
-                ));
+                return Err(DbError::Unimplemented("speculative (preview) query consistency is not yet reachable: DocumentAuthority's mailbox only exposes Submit/Query/Frontier messages"));
             }
             Consistency::Canonical | Consistency::AtLeast(_) | Consistency::Exact(_) => {}
         }
@@ -1017,9 +984,7 @@ impl DocumentHandle {
     /// serialize, and `db_snapshot` is not a direct dependency of this crate).
     pub fn snapshot_now(&self, _kind: SnapshotKind) -> SnapshotFuture {
         let (reply_tx, reply_rx) = db_actor::oneshot();
-        reply_tx.send(Err(DbError::Unimplemented(
-            "db_engine does not yet build real pack snapshots (no db_snapshot dependency this wave, and DocumentState exposes no full-state enumeration to serialize)",
-        )));
+        reply_tx.send(Err(DbError::Unimplemented("db_engine does not yet build real pack snapshots (no db_snapshot dependency this wave, and DocumentState exposes no full-state enumeration to serialize)")));
         reply_rx
     }
 
@@ -1044,11 +1009,7 @@ mod tests {
         assert!(HashOperation::parse_op(&bare.print_op()).unwrap().author.is_none());
         assert_eq!(HashOperation::decode_op(&bare.encode_op().unwrap()).unwrap(), bare);
 
-        let full = HashOperation {
-            hash: [9u8; 32],
-            author: Some(protocol::ActorId("actor-1".into())),
-            timestamp: Some(protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 }),
-        };
+        let full = HashOperation { hash: [9u8; 32], author: Some(protocol::ActorId("actor-1".into())), timestamp: Some(protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 }) };
         let reparsed = HashOperation::parse_op(&full.print_op()).unwrap();
         assert_eq!(reparsed.hash, full.hash);
         assert_eq!(reparsed.author, full.author);
@@ -1082,14 +1043,8 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::OperationId((*dep).to_string())).collect(),
-            diff: protocol::DocumentDiff {
-                schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap(),
-            },
-            inverse: protocol::InverseOperation {
-                schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap(),
-            },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap() },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }

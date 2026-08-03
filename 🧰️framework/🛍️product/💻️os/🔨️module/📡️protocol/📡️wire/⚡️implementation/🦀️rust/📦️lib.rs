@@ -44,34 +44,12 @@ impl Lane {
 /// @emoji 📨️ One frame a client sends to the semio_hub.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ClientFrame {
-    Hello {
-        wire_version: u32,
-        protocol_version: u32,
-        schema: String,
-        pack_schema_hash: [u8; 32],
-        actor: protocol_core::ActorId,
-        token: Option<String>,
-        resume_token: Option<String>,
-        frontier: Option<protocol_causal::FrontierSummary>,
-    },
-    Commands {
-        batch_id: u64,
-        envelopes: Vec<protocol_causal::OperationEnvelope>,
-    },
-    FrontierAdvertise {
-        frontier: protocol_causal::FrontierSummary,
-    },
-    PreviewPublish {
-        key: String,
-        seq: u64,
-        payload: Vec<u8>,
-    },
-    Presence {
-        peer: Vec<u8>,
-    },
-    CreditGrant {
-        n: u32,
-    },
+    Hello { wire_version: u32, protocol_version: u32, schema: String, pack_schema_hash: [u8; 32], actor: protocol_core::ActorId, token: Option<String>, resume_token: Option<String>, frontier: Option<protocol_causal::FrontierSummary> },
+    Commands { batch_id: u64, envelopes: Vec<protocol_causal::OperationEnvelope> },
+    FrontierAdvertise { frontier: protocol_causal::FrontierSummary },
+    PreviewPublish { key: String, seq: u64, payload: Vec<u8> },
+    Presence { peer: Vec<u8> },
+    CreditGrant { n: u32 },
     Bye,
 }
 //#endregion 🔖️ClientFrame
@@ -92,7 +70,7 @@ pub enum ApplyOutcome {
     // 🔒️ Boxed: OperationEnvelope is far larger than the other variants, and clippy's
     // large_enum_variant lint (a real per-instance cost, not just style) applies at -D warnings.
     Transformed { envelope: Box<protocol_causal::OperationEnvelope> },
-    Rejected { reason: String }
+    Rejected { reason: String },
 }
 
 /// @emoji 🪜️ One stage of a submitted batch's lifecycle, from `Received` to `Applied`.
@@ -107,45 +85,15 @@ pub enum AckStage {
 /// @emoji 📬️ One frame the semio_hub sends to a client.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ServerFrame {
-    Welcome {
-        session_id: String,
-        resume_token: String,
-        server_frontier: protocol_causal::FrontierSummary,
-        bootstrap: Bootstrap,
-    },
-    SnapshotChunk {
-        seq: u32,
-        bytes: Vec<u8>,
-    },
-    SnapshotDone {
-        seq_count: u32,
-    },
-    Commands {
-        envelopes: Vec<protocol_causal::OperationEnvelope>,
-        origin: protocol_core::ActorId,
-        frontier: protocol_causal::FrontierSummary,
-    },
-    Ack {
-        batch_id: u64,
-        stages: Vec<AckStage>,
-        frontier: protocol_causal::FrontierSummary,
-    },
-    Preview {
-        actor: protocol_core::ActorId,
-        key: String,
-        seq: u64,
-        payload: Vec<u8>,
-    },
-    Presence {
-        peers: Vec<Vec<u8>>,
-    },
-    CreditGrant {
-        n: u32,
-    },
-    Error {
-        code: String,
-        message: String,
-    }
+    Welcome { session_id: String, resume_token: String, server_frontier: protocol_causal::FrontierSummary, bootstrap: Bootstrap },
+    SnapshotChunk { seq: u32, bytes: Vec<u8> },
+    SnapshotDone { seq_count: u32 },
+    Commands { envelopes: Vec<protocol_causal::OperationEnvelope>, origin: protocol_core::ActorId, frontier: protocol_causal::FrontierSummary },
+    Ack { batch_id: u64, stages: Vec<AckStage>, frontier: protocol_causal::FrontierSummary },
+    Preview { actor: protocol_core::ActorId, key: String, seq: u64, payload: Vec<u8> },
+    Presence { peers: Vec<Vec<u8>> },
+    CreditGrant { n: u32 },
+    Error { code: String, message: String },
 }
 //#endregion 🔖️ServerFrame
 
@@ -167,7 +115,11 @@ fn write_opt_str(out: &mut Vec<u8>, value: &Option<String>) {
 }
 
 fn read_opt_str(bytes: &[u8], pos: &mut usize) -> Result<Option<String>, protocol_core::ProtocolError> {
-    if protocol_core::read_bool(bytes, pos)? { Ok(Some(protocol_core::read_str(bytes, pos)?)) } else { Ok(None) }
+    if protocol_core::read_bool(bytes, pos)? {
+        Ok(Some(protocol_core::read_str(bytes, pos)?))
+    } else {
+        Ok(None)
+    }
 }
 
 fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
@@ -178,7 +130,11 @@ fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
 }
 
 fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, protocol_core::ProtocolError> {
-    if protocol_core::read_bool(bytes, pos)? { Ok(Some(protocol_core::read_bytes(bytes, pos)?)) } else { Ok(None) }
+    if protocol_core::read_bool(bytes, pos)? {
+        Ok(Some(protocol_core::read_bytes(bytes, pos)?))
+    } else {
+        Ok(None)
+    }
 }
 
 fn write_opt_frontier(out: &mut Vec<u8>, value: &Option<protocol_causal::FrontierSummary>) {
@@ -189,7 +145,11 @@ fn write_opt_frontier(out: &mut Vec<u8>, value: &Option<protocol_causal::Frontie
 }
 
 fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<protocol_causal::FrontierSummary>, protocol_core::ProtocolError> {
-    if protocol_core::read_bool(bytes, pos)? { Ok(Some(protocol_causal::decode_frontier(bytes, pos)?)) } else { Ok(None) }
+    if protocol_core::read_bool(bytes, pos)? {
+        Ok(Some(protocol_causal::decode_frontier(bytes, pos)?))
+    } else {
+        Ok(None)
+    }
 }
 
 fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
@@ -453,7 +413,12 @@ pub fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), protocol
         2 => ServerFrame::SnapshotDone { seq_count: protocol_core::read_varint_u64(bytes, &mut pos)? as u32 },
         3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: protocol_core::ActorId(protocol_core::read_str(bytes, &mut pos)?), frontier: protocol_causal::decode_frontier(bytes, &mut pos)? },
         4 => ServerFrame::Ack { batch_id: protocol_core::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos)?, frontier: protocol_causal::decode_frontier(bytes, &mut pos)? },
-        5 => ServerFrame::Preview { actor: protocol_core::ActorId(protocol_core::read_str(bytes, &mut pos)?), key: protocol_core::read_str(bytes, &mut pos)?, seq: protocol_core::read_varint_u64(bytes, &mut pos)?, payload: protocol_core::read_bytes(bytes, &mut pos)? },
+        5 => ServerFrame::Preview {
+            actor: protocol_core::ActorId(protocol_core::read_str(bytes, &mut pos)?),
+            key: protocol_core::read_str(bytes, &mut pos)?,
+            seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
+            payload: protocol_core::read_bytes(bytes, &mut pos)?,
+        },
         6 => ServerFrame::Presence { peers: read_vec_bytes(bytes, &mut pos)? },
         7 => ServerFrame::CreditGrant { n: protocol_core::read_varint_u64(bytes, &mut pos)? as u32 },
         8 => ServerFrame::Error { code: protocol_core::read_str(bytes, &mut pos)?, message: protocol_core::read_str(bytes, &mut pos)? },
@@ -482,13 +447,7 @@ mod tests {
     }
 
     fn sample_frontier() -> protocol_causal::FrontierSummary {
-        protocol_causal::FrontierSummary {
-            document_id: protocol_core::DocumentId("document-1".to_string()),
-            head_edit_ordinal: 5,
-            head_edit_id: "edit-5".to_string(),
-            last_commit_seq: 2,
-            chain_hash: [7u8; 32],
-        }
+        protocol_causal::FrontierSummary { document_id: protocol_core::DocumentId("document-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] }
     }
     //#endregion 🧸️Fixtures
 
@@ -529,16 +488,7 @@ mod tests {
     #[test]
     fn client_frame_hello_with_no_optionals_round_trips() {
         assert_client_round_trips(
-            &ClientFrame::Hello {
-                wire_version: 1,
-                protocol_version: 1,
-                schema: "schema.v1".to_string(),
-                pack_schema_hash: [0u8; 32],
-                actor: protocol_core::ActorId("actor-2".to_string()),
-                token: None,
-                resume_token: None,
-                frontier: None,
-            },
+            &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "schema.v1".to_string(), pack_schema_hash: [0u8; 32], actor: protocol_core::ActorId("actor-2".to_string()), token: None, resume_token: None, frontier: None },
             Lane::Command,
         );
     }
@@ -585,10 +535,7 @@ mod tests {
     #[test]
     fn server_frame_welcome_round_trips_for_every_bootstrap_variant() {
         for bootstrap in [Bootstrap::None, Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9]) }, Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: None }, Bootstrap::Tail] {
-            assert_server_round_trips(
-                &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: sample_frontier(), bootstrap },
-                Lane::Command,
-            );
+            assert_server_round_trips(&ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: sample_frontier(), bootstrap }, Lane::Command);
         }
     }
 
@@ -604,19 +551,13 @@ mod tests {
 
     #[test]
     fn server_frame_commands_round_trips() {
-        assert_server_round_trips(
-            &ServerFrame::Commands { envelopes: vec![sample_envelope("op-1")], origin: protocol_core::ActorId("actor-1".to_string()), frontier: sample_frontier() },
-            Lane::Command,
-        );
+        assert_server_round_trips(&ServerFrame::Commands { envelopes: vec![sample_envelope("op-1")], origin: protocol_core::ActorId("actor-1".to_string()), frontier: sample_frontier() }, Lane::Command);
     }
 
     #[test]
     fn server_frame_ack_round_trips_for_every_stage_and_apply_outcome_variant() {
         for outcome in [ApplyOutcome::Accepted, ApplyOutcome::Transformed { envelope: Box::new(sample_envelope("op-1")) }, ApplyOutcome::Rejected { reason: "conflict".to_string() }] {
-            assert_server_round_trips(
-                &ServerFrame::Ack { batch_id: 7, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(outcome) }], frontier: sample_frontier() },
-                Lane::Command,
-            );
+            assert_server_round_trips(&ServerFrame::Ack { batch_id: 7, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(outcome) }], frontier: sample_frontier() }, Lane::Command);
         }
     }
 

@@ -33,9 +33,7 @@ mod tests {
         let mut store = Iso16757Store::new(envelope);
         let mut mutated = Document::reference_fixture();
         mutated.exchange_process = iso16757::part_5::ExchangeProcess::ProvideCatalogue;
-        store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
     }
 
@@ -45,9 +43,7 @@ mod tests {
         let mut store = Iso16757Store::new(envelope);
         let mut mutated = Document::reference_fixture();
         mutated.exchange_process = iso16757::part_5::ExchangeProcess::ProvideCatalogue;
-        store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None }).expect("apply");
         store::test_support::assert_document_pack_round_trip(&store);
     }
 }

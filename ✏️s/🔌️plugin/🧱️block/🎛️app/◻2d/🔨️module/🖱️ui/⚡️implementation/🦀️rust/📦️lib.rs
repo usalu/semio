@@ -11,9 +11,8 @@ use block_2d_op::{Block2dConfigOperation, Block2dOperation};
 use block_2d_protocol::Block2dCommand;
 use block_shared::BlockCompatibilityRule;
 use semio_framework_plugin::{
-    tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App,
-    AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup,
-    UiInputNode, UiNode, UiPresence, UiTreeItemNode,
+    tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode,
 };
 use serde_json::{json, Value};
 
@@ -37,7 +36,11 @@ const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 /// app is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag, lenient-parsed the same way
 /// `detectShellLocale` does on the TS side — see `home_ui`'s identical pair.
 fn block2d_locale(cfg: &Block2dConfig) -> Locale {
-    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
+    if cfg.locale.starts_with("de") {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &Block2dConfig) -> &'static L {
@@ -75,21 +78,14 @@ fn build_document_tree(definition: &Block2dDefinition, selected: &[String], labe
     let handle_kind_items: Vec<UiTreeItemNode> = definition
         .handle_kinds
         .iter()
-        .map(|kind| {
-            UiTreeItemNode {
-                icon_id: Some("circle".into()),
-                ..tree_item_with_action(builder.item_id("handle-kind", &kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()), block2d_action("setSelection", None))
-            }
-        })
+        .map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), ..tree_item_with_action(builder.item_id("handle-kind", &kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()), block2d_action("setSelection", None)) })
         .collect();
     let handle_items: Vec<UiTreeItemNode> = definition
         .handles
         .iter()
-        .map(|handle| {
-            UiTreeItemNode {
-                icon_id: Some("circle-dot".into()),
-                ..tree_item_with_action(builder.item_id("handle", &handle.id), Label::data(handle.handle_kind.clone()), Some(format!("{:.2}", handle.angle)), block2d_action("setSelection", None))
-            }
+        .map(|handle| UiTreeItemNode {
+            icon_id: Some("circle-dot".into()),
+            ..tree_item_with_action(builder.item_id("handle", &handle.id), Label::data(handle.handle_kind.clone()), Some(format!("{:.2}", handle.angle)), block2d_action("setSelection", None))
         })
         .collect();
     let selected_ids: Vec<String> = selected.to_vec();
@@ -199,12 +195,7 @@ impl DocumentApp for Block2dPlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &Block2dCommand,
-        doc: &DocumentView<'_, Block2dDefinition>,
-        _cfg: &ConfigView<'_, Block2dConfig>,
-    ) -> Emit<Block2dOperation, Block2dConfigOperation> {
+    fn handle(&self, command: &Block2dCommand, doc: &DocumentView<'_, Block2dDefinition>, _cfg: &ConfigView<'_, Block2dConfig>) -> Emit<Block2dOperation, Block2dConfigOperation> {
         match command {
             Block2dCommand::PatchNodeKind { field, value } => {
                 let mut node_kind = doc.projection.node_kind.clone();
@@ -287,10 +278,7 @@ impl DocumentApp for Block2dPlayApp {
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = block_2d_engine::puzzle2d_manifest_fragment(doc.projection);
-        Ok(Media {
-            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-            payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() },
-        })
+        Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
 //#endregion 🔖️Block2dPlayApp
@@ -344,8 +332,18 @@ pub fn create_block2d_app() -> App {
             .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
             .io(block_2d_engine::block2d_io()),
     )
-    .example(BLOCK2D_EXAMPLE_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"), serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
-    .example(BLOCK2D_EXAMPLE_RIGHT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Right", "Hexagonal Cut Concrete Forest Right"), serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
+    .example(
+        BLOCK2D_EXAMPLE_LEFT,
+        LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"),
+        serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
+        "list-tree",
+    )
+    .example(
+        BLOCK2D_EXAMPLE_RIGHT,
+        LocalizedLabel::native("Hexagonal Cut Concrete Forest Right", "Hexagonal Cut Concrete Forest Right"),
+        serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
+        "list-tree",
+    )
     .workflow("block2d", "Block 2D", "model")
 }
 //#endregion 🔖️Manifest

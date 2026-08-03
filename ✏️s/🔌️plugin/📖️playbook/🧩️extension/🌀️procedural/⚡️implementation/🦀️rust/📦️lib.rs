@@ -3,14 +3,14 @@
 use flow_core::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry};
 use playbook::{visible_blocks, PlaybookBlock};
+use protocol::{Operation, OperationDiff};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, Contribution, DocumentApp,
-    DocumentView, PluginBundle, SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewState, WorldSunConfig,
+    app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ConfigView,
+    Contribution, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, PluginBundle, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewState, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
-use protocol::{Operation, OperationDiff};
 
 //#region 🔖️Constants
 const MODULE_PLUGIN_ID: &str = "playbook-module-procedural";
@@ -65,23 +65,21 @@ const HEX_COLUMN_FIXTURE_JSON: &str = r#"{
 //#endregion 🔖️Constants
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the procedural module; one field per label makes every locale combination compile-checked.
-struct ModuleLabels {
-    no_flow_inputs: &'static str,
-    no_procedural_parameters: &'static str,
+app_labels! {
+    /// 🗣️ Complete UI label set for the procedural module; one field per label makes every locale×terminology combination compile-checked.
+    struct ModuleLabels {
+        no_flow_inputs: native_en "No flow inputs.", native_de "Keine Flow-Eingaben.", reuse_en "No flow inputs.", reuse_de "Keine Flow-Eingaben.";
+        no_procedural_parameters: native_en "No procedural parameters.", native_de "Keine prozeduralen Parameter.", reuse_en "No procedural parameters.", reuse_de "Keine prozeduralen Parameter.";
+    }
 }
 
-const MODULE_LABELS_NATIVE_EN: ModuleLabels = ModuleLabels { no_flow_inputs: "No flow inputs.", no_procedural_parameters: "No procedural parameters." };
-const MODULE_LABELS_NATIVE_DE: ModuleLabels = ModuleLabels { no_flow_inputs: "Keine Flow-Eingaben.", no_procedural_parameters: "Keine prozeduralen Parameter." };
-
-/// 🗣️ Resolves the active label set from the shell-provided locale; unknown/missing locale falls back to native English.
-fn module_labels(view_state: &ViewState) -> &'static ModuleLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de {
-        &MODULE_LABELS_NATIVE_DE
-    } else {
-        &MODULE_LABELS_NATIVE_EN
-    }
+/// 🕳️ B1: `render`/`handle` dropped `ViewState` entirely and this module's `Config` is `NoConfig`
+/// (no locale/terminology axis of its own), so there is no locale signal left to resolve against at
+/// this render call site — same native-only-render gap other `NoConfig`-backed slots hit in this
+/// migration. Defaults to the native English cell until this block-kind slot grows its own locale
+/// channel (see `s-home-ui`'s `resolve_labels` for the general two-axis pattern this mirrors).
+fn resolve_labels<L: AppLabels>() -> &'static L {
+    L::labels(Locale::En, Terminology::Native)
 }
 //#endregion 🔖️Terminology
 
@@ -142,7 +140,7 @@ enum ModulePayloadOperation {
     SetPayload {
         #[dsl(block)]
         payload: ModuleRenderPayload,
-    }
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -201,7 +199,7 @@ fn json_string_value(value: &Value) -> String {
 }
 
 fn module_action(payload: &ModuleRenderPayload, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: payload.controller_id.clone(), action: action.into(), args: Some(args) }
+    ActionDescriptor { controller_id: payload.controller_id.clone(), action: action.into(), args: Some(dsl::to_dsl_value(&args).unwrap_or(dsl::DslValue::Null)) }
 }
 //#endregion 🔖️Payload
 
@@ -348,7 +346,7 @@ fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, 
 fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
-        return ui_text(format!("Unknown fixture slug: {slug}"));
+        return ui_text(Label::data(format!("Unknown fixture slug: {slug}")));
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let params = params_as_json(&payload.params);
@@ -381,9 +379,8 @@ fn evaluated_preview_geometry_handles(fixture: &FlowFixture, params: &Value) -> 
     handles
 }
 
-/// 📤️ Handles `ACTION_EXPORT_SOLID`: re-evaluates the active fixture, exports every preview geometry handle through `flow_module_brep`'s STEP/OBJ/STL kernel codecs (GLB bridges through mesh tessellation), and stashes the JSON result on `params.__solidExport` for the host shell to read back.
-fn handle_export_solid(payload: &mut ModuleRenderPayload, args: Option<&Value>) {
-    let format = args.and_then(|value| value.get("format")).and_then(|value| value.as_str()).unwrap_or("obj");
+/// 📤️ Handles `Command::ExportSolid`: re-evaluates the active fixture, exports every preview geometry handle through `flow_module_brep`'s STEP/OBJ/STL kernel codecs (GLB bridges through mesh tessellation), and stashes the JSON result on `params.__solidExport` for the host shell to read back.
+fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return;
@@ -399,10 +396,8 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, args: Option<&Value>) 
     payload.params = dsl::to_dsl_value(&object).expect("params object");
 }
 
-/// 📥️ Handles `ACTION_IMPORT_SOLID`: imports `args.data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `args.format` through `flow_module_brep`'s in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and stashes the resulting geometry handles on `params.__solidImport`.
-fn handle_import_solid(payload: &mut ModuleRenderPayload, args: Option<&Value>) {
-    let format = args.and_then(|value| value.get("format")).and_then(|value| value.as_str()).unwrap_or("obj");
-    let data = args.and_then(|value| value.get("data")).and_then(|value| value.as_str()).unwrap_or("");
+/// 📥️ Handles `Command::ImportSolid`: imports `data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `format` through `flow_module_brep`'s in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and stashes the resulting geometry handles on `params.__solidImport`.
+fn handle_import_solid(payload: &mut ModuleRenderPayload, format: &str, data: &str) {
     let result_json = if data.is_empty() { json!({ "error": "no import data provided" }) } else { serde_json::from_str(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(json!({ "error": "import failed" })) };
     let mut object = params_as_json(&payload.params);
     let Some(map) = object.as_object_mut() else {
@@ -416,7 +411,7 @@ fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
     UiNode::Button(UiButtonNode {
         id: Some(format!("playbook-module.export.{format}")),
         icon_id: "export".into(),
-        label: format!("Export {}", format.to_uppercase()),
+        label: Label::data(format!("Export {}", format.to_uppercase())),
         action: module_action(payload, ACTION_EXPORT_SOLID, json!({ "format": format })),
         style: None,
         presence: UiPresence::default(),
@@ -428,7 +423,7 @@ fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
     UiNode::Button(UiButtonNode {
         id: Some(format!("playbook-module.import.{format}")),
         icon_id: "import".into(),
-        label: format!("Import {}", format.to_uppercase()),
+        label: Label::data(format!("Import {}", format.to_uppercase())),
         action: module_action(payload, ACTION_IMPORT_SOLID, json!({ "format": format })),
         style: None,
         presence: UiPresence::default(),
@@ -466,12 +461,12 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
     match question.kind.as_str() {
         "text" | "longText" => UiNode::Field(UiFieldNode {
             id: format!("playbook-module.{key}"),
-            label: question.label.clone(),
+            label: Label::data(question.label.clone()),
             child: Box::new(UiNode::Input(UiInputNode {
                 id: format!("playbook-module.{key}.input"),
                 input_kind: question.kind.clone(),
                 value: json_string_value(value),
-                placeholder: question.placeholder.clone(),
+                placeholder: question.placeholder.clone().map(Label::data),
                 commit: None,
                 on_change: patch_cmd(key),
                 min: None,
@@ -489,12 +484,12 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
         }),
         "number" => UiNode::Field(UiFieldNode {
             id: format!("playbook-module.{key}"),
-            label: question.label.clone(),
+            label: Label::data(question.label.clone()),
             child: Box::new(UiNode::Input(UiInputNode {
                 id: format!("playbook-module.{key}.input"),
                 input_kind: "number".into(),
                 value: json_string_value(value),
-                placeholder: question.placeholder.clone(),
+                placeholder: question.placeholder.clone().map(Label::data),
                 commit: None,
                 on_change: patch_cmd(key),
                 min: None,
@@ -512,7 +507,7 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
         }),
         "slider" => UiNode::Field(UiFieldNode {
             id: format!("playbook-module.{key}"),
-            label: question.label.clone(),
+            label: Label::data(question.label.clone()),
             child: Box::new(UiNode::Slider(UiSliderNode {
                 id: format!("playbook-module.{key}.slider"),
                 value: json_f64_value(value),
@@ -532,31 +527,29 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
         }),
         "boolean" => UiNode::Field(UiFieldNode {
             id: format!("playbook-module.{key}"),
-            label: question.label.clone(),
-            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("playbook-module.{key}.toggle"), icon_id: "check".into(), text: None, on_change: patch_cmd(key), presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
-        menu: None,
-    })),
+            label: Label::data(question.label.clone()),
+            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("playbook-module.{key}.toggle"), icon_id: "check".into(), text: None, on_change: patch_cmd(key), presence: UiPresence::selected(value.as_bool().unwrap_or(false)), menu: None })),
             description: None,
             required: None,
             error: None,
             presence: UiPresence::default(),
             menu: None,
         }),
-        _ => ui_text(format!("Unsupported param kind: {}", question.kind)),
+        _ => ui_text(Label::data(format!("Unsupported param kind: {}", question.kind))),
     }
 }
 
 fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiNode {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
-        return ui_text(format!("Unknown fixture slug: {slug}"));
+        return ui_text(Label::data(format!("Unknown fixture slug: {slug}")));
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let spec = flow_fixture_to_form_spec(&fixture);
     let values: Map<String, Value> = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
     let step = spec.steps.first();
     let Some(step) = step else {
-        return ui_text(labels.no_flow_inputs.to_string());
+        return ui_text(labels.no_flow_inputs);
     };
     let visible = visible_blocks(step, &values);
     let mut children: Vec<UiNode> = visible
@@ -567,12 +560,24 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
         })
         .collect();
     if children.is_empty() {
-        children.push(ui_text(labels.no_procedural_parameters.to_string()));
+        children.push(ui_text(labels.no_procedural_parameters));
     }
     children.extend(render_media_export_buttons(payload));
     ui_stack_vertical(children)
 }
 //#endregion 🔖️Params
+
+//#region 🔖️Command
+/// 🎯️ B1: this module's `DocumentApp::Command` — the SOLE dispatch surface for the solid
+/// import/export behavior previously routed through the deleted stringly-typed `handle_action`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+enum Command {
+    #[dsl(key = "export-solid")]
+    ExportSolid { format: String },
+    #[dsl(key = "import-solid")]
+    ImportSolid { format: String, data: String },
+}
+//#endregion 🔖️Command
 
 //#region 🔖️App
 #[derive(Default)]
@@ -581,8 +586,9 @@ struct ModuleApp;
 impl DocumentApp for ModuleApp {
     type Projection = ModuleRenderPayload;
     type Operation = ModulePayloadOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = semio_framework_plugin::NoConfig;
+    type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Command = Command;
 
     fn app_id(&self) -> &str {
         MODULE_APP_ID
@@ -596,39 +602,62 @@ impl DocumentApp for ModuleApp {
         default_payload()
     }
 
-    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<ModulePayloadOperation> {
-        match action {
-            ACTION_EXPORT_SOLID => {
-                let mut payload = doc.projection.clone();
-                handle_export_solid(&mut payload, args);
-                ActionEmit::operations(vec![ModulePayloadOperation::SetPayload { payload }])
-            }
-            ACTION_IMPORT_SOLID => {
-                let mut payload = doc.projection.clone();
-                handle_import_solid(&mut payload, args);
-                ActionEmit::operations(vec![ModulePayloadOperation::SetPayload { payload }])
-            }
-            _ => ActionEmit::default(),
+    /// 🏷️ Maps each `Command` variant back to the action id it was declared under in
+    /// `create_module_app` — command-log labeling and the registry's kind-discipline check.
+    fn command_id(&self, command: &Command) -> &str {
+        match command {
+            Command::ExportSolid { .. } => ACTION_EXPORT_SOLID,
+            Command::ImportSolid { .. } => ACTION_IMPORT_SOLID,
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
-        let labels = module_labels(view_state);
+    /// 🎯️ The bridge the React/wgpu shells still speak (`{action,args}`) — parses the two solid
+    /// media actions this module dispatches into `Command`; `format` defaults to `"obj"` (matching
+    /// the handlers' pre-B1 defaults) and `data` (import's file-callback payload) defaults to empty.
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Command, String> {
+        let format = args.and_then(|value| value.get("format")).and_then(Value::as_str).unwrap_or("obj").to_string();
+        match action {
+            ACTION_EXPORT_SOLID => Ok(Command::ExportSolid { format }),
+            ACTION_IMPORT_SOLID => {
+                let data = args.and_then(|value| value.get("data")).and_then(Value::as_str).unwrap_or("").to_string();
+                Ok(Command::ImportSolid { format, data })
+            }
+            other => Err(format!("action '{other}' is not supported by {MODULE_APP_ID}")),
+        }
+    }
+
+    fn handle(&self, command: &Command, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> Emit<ModulePayloadOperation, semio_framework_plugin::NoConfigOperation> {
+        match command {
+            Command::ExportSolid { format } => {
+                let mut payload = doc.projection.clone();
+                handle_export_solid(&mut payload, format);
+                Emit::operations(vec![ModulePayloadOperation::SetPayload { payload }])
+            }
+            Command::ImportSolid { format, data } => {
+                let mut payload = doc.projection.clone();
+                handle_import_solid(&mut payload, format, data);
+                Emit::operations(vec![ModulePayloadOperation::SetPayload { payload }])
+            }
+        }
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> UiNode {
+        let labels = resolve_labels::<ModuleLabels>();
         match body_key {
             BODY_PARAMS => render_params_body(doc.projection, labels),
             BODY_PREVIEW => render_preview_body(doc.projection),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 
 fn create_module_app() -> App {
     App::from_builder(
-        App::builder(MODULE_APP_ID, "Playbook Module Procedural")
+        App::builder(MODULE_APP_ID, LocalizedLabel::native("Playbook Module Procedural", "Playbook-Modul Prozedural"))
             .document(["semio", "forms"])
-            .mode("edit", "Edit", "pencil")
-            .window_kind(MODULE_WINDOW_PARAMS, "Params", BODY_PARAMS, SurfaceKind::NodeGraph, "clipboard-list")
-            .window_kind(MODULE_WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d, "preview")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
+            .window_kind(MODULE_WINDOW_PARAMS, LocalizedLabel::native("Params", "Parameter"), BODY_PARAMS, SurfaceKind::NodeGraph, "clipboard-list")
+            .window_kind(MODULE_WINDOW_PREVIEW, LocalizedLabel::native("Preview", "Vorschau"), BODY_PREVIEW, SurfaceKind::World3d, "preview")
             .default_layout(create_default_layout(
                 &[MODULE_WINDOW_PARAMS.into(), MODULE_WINDOW_PREVIEW.into()],
                 "row",
@@ -637,8 +666,8 @@ fn create_module_app() -> App {
             ))
             // 🔧️ Whole-payload import/export of the block's solid geometry — legitimate coarse-grained
             // operations for this non-collaborative render slot (not the deleted framework `setDocument`).
-            .operation(ACTION_EXPORT_SOLID, "Export Solid")
-            .operation(ACTION_IMPORT_SOLID, "Import Solid")
+            .operation(ACTION_EXPORT_SOLID, LocalizedLabel::native("Export Solid", "Volumenkörper exportieren"))
+            .operation(ACTION_IMPORT_SOLID, LocalizedLabel::native("Import Solid", "Volumenkörper importieren"))
             // 📝️ Only the interchange `format` is a user-facing panel choice; the import `data` payload
             // arrives through the host file-open callback, so it is deliberately not a declared arg.
             .action_args(ACTION_EXPORT_SOLID, vec![solid_format_arg()])
@@ -648,7 +677,7 @@ fn create_module_app() -> App {
 
 /// 🎛️ The shared `format` Select over the solid interchange formats, defaulting to OBJ (the handlers' default).
 fn solid_format_arg() -> ActionArgDef {
-    ActionArgDef::select("format", "Format", SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, format.to_uppercase())).collect()).default_value("obj")
+    ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, LocalizedLabel::data(format.to_uppercase()))).collect()).default_value("obj")
 }
 
 /// 🗂️ Registers `ModuleRenderPayload`'s pack<->dsl codec under its real `document_schema()` string
@@ -758,24 +787,24 @@ mod tests {
         assert!(app.projection().expect("projection").params.get("__solidExport").is_none());
         // The export action emits a whole-payload `SetPayload` operation; the store applies it and the
         // stashed result is read back through the materialized projection.
-        app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &ViewState::default(), &meta()).expect("export");
+        app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).expect("export");
         assert!(app.projection().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
         // The operation carries a true inverse (the pre-operation payload), so undo removes the stashed result.
-        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        app.handle_action("undo", None, &meta()).expect("undo");
         assert!(app.projection().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-operation payload");
     }
 
     #[test]
     fn import_solid_action_stashes_result_on_params() {
         let mut app = new_app();
-        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })), &ViewState::default(), &meta()).expect("import");
+        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })), &meta()).expect("import");
         assert!(app.projection().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
     }
 
     #[test]
     fn import_solid_action_reports_error_when_no_data_given() {
         let mut app = new_app();
-        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj" })), &ViewState::default(), &meta()).expect("import");
+        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj" })), &meta()).expect("import");
         let payload = app.projection().expect("projection");
         let import = payload.params.get("__solidImport").expect("import result present");
         assert!(import.get("error").is_some());

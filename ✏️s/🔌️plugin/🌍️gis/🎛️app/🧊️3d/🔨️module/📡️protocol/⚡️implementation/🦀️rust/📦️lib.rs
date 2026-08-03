@@ -58,12 +58,7 @@ mod tests {
         let initial = Gis3dTerrainDocument { exaggeration: 1.0, imported_features_json: String::new() };
         let envelope = store::create_document_envelope(gis3d::GIS_3D_TERRAIN_SCHEMA, "gis3d-demo", initial, None);
         let mut store = store::DocumentStore::new(envelope);
-        store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![Gis3dTerrainOperation::SetExaggeration { exaggeration: 2.0 }],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![Gis3dTerrainOperation::SetExaggeration { exaggeration: 2.0 }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

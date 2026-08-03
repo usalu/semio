@@ -2982,7 +2982,7 @@ mod exact_tests {
     fn cayley_hamilton_holds_for_3x3() {
         let m = rat_mat(vec![vec![2, 0, 0], vec![0, 3, 4], vec![0, 4, 9]]);
         let poly = m.charpoly(); // low-to-high coefficients, char(A)(x) = poly[0] + poly[1] x + ... + poly[n] x^n
-        // Evaluate poly(M) = sum poly[i] * M^i and check it is the zero matrix.
+                                 // Evaluate poly(M) = sum poly[i] * M^i and check it is the zero matrix.
         let n = m.rows;
         let mut power = MatG::<Rational>::identity(n);
         let mut acc = MatG::<Rational>::zeros(n, n);
@@ -3092,12 +3092,19 @@ mod exact_tests {
         assert!(m.solve(&b).is_none());
     }
 
-
     #[test]
     fn rank_bareiss_hand_cases_full_and_deficient_rank() {
-        let full = MatG::<Integer>::from_rows(vec![vec![Integer::from_i64(2), Integer::from_i64(1), Integer::from_i64(1)], vec![Integer::from_i64(1), Integer::from_i64(3), Integer::from_i64(2)], vec![Integer::from_i64(1), Integer::from_i64(0), Integer::from_i64(0)]]);
+        let full = MatG::<Integer>::from_rows(vec![
+            vec![Integer::from_i64(2), Integer::from_i64(1), Integer::from_i64(1)],
+            vec![Integer::from_i64(1), Integer::from_i64(3), Integer::from_i64(2)],
+            vec![Integer::from_i64(1), Integer::from_i64(0), Integer::from_i64(0)],
+        ]);
         assert_eq!(full.rank_bareiss(), 3);
-        let deficient = MatG::<Integer>::from_rows(vec![vec![Integer::from_i64(1), Integer::from_i64(2), Integer::from_i64(3)], vec![Integer::from_i64(2), Integer::from_i64(4), Integer::from_i64(6)], vec![Integer::from_i64(1), Integer::from_i64(0), Integer::from_i64(1)]]);
+        let deficient = MatG::<Integer>::from_rows(vec![
+            vec![Integer::from_i64(1), Integer::from_i64(2), Integer::from_i64(3)],
+            vec![Integer::from_i64(2), Integer::from_i64(4), Integer::from_i64(6)],
+            vec![Integer::from_i64(1), Integer::from_i64(0), Integer::from_i64(1)],
+        ]);
         assert_eq!(deficient.rank_bareiss(), 2);
     }
 

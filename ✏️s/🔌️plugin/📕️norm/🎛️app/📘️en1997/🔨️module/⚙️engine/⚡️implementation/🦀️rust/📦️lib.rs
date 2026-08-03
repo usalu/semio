@@ -223,7 +223,21 @@ pub mod part_2 {
 // #endregion 🔖️Part2
 
 /// 📋️ Shallow foundation check.
-pub fn check_shallow_foundation(v_ed_kn: f64, h_ed_kn: f64, footing_area_m2: f64, phi_deg: f64, c_kpa: f64, gamma_kn_m3: f64, b_m: f64, d_f_m: f64, e_s_mpa: f64, nu: f64, approach: DesignApproach, annex: AnnexChoice, settlement_limit_mm: f64) -> CheckReport {
+pub fn check_shallow_foundation(
+    v_ed_kn: f64,
+    h_ed_kn: f64,
+    footing_area_m2: f64,
+    phi_deg: f64,
+    c_kpa: f64,
+    gamma_kn_m3: f64,
+    b_m: f64,
+    d_f_m: f64,
+    e_s_mpa: f64,
+    nu: f64,
+    approach: DesignApproach,
+    annex: AnnexChoice,
+    settlement_limit_mm: f64,
+) -> CheckReport {
     let q_d = part_1::design_bearing_capacity_kpa(phi_deg, c_kpa, gamma_kn_m3, b_m, d_f_m, approach, annex);
     let r_d = part_1::bearing_resistance_kn(footing_area_m2, q_d);
     let sigma = v_ed_kn / footing_area_m2;

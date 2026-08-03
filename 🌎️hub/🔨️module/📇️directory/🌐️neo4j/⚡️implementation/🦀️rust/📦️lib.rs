@@ -125,15 +125,7 @@ impl HubDirectory for Neo4jDirectory {
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {
         let token = Uuid::now_v7().to_string();
-        self.graph
-            .run(
-                query("CREATE (t:ShareToken {token: $token, documentId: $document_id, createdAt: $created_at})")
-                    .param("document_id", document_id)
-                    .param("token", token.clone())
-                    .param("created_at", now_ms()),
-            )
-            .await
-            .map_err(backend)?;
+        self.graph.run(query("CREATE (t:ShareToken {token: $token, documentId: $document_id, createdAt: $created_at})").param("document_id", document_id).param("token", token.clone()).param("created_at", now_ms())).await.map_err(backend)?;
         Ok(token)
     }
 
@@ -146,8 +138,7 @@ impl HubDirectory for Neo4jDirectory {
         match token {
             None => Ok(false),
             Some(token) => {
-                let mut valid_result =
-                    self.graph.execute(query("MATCH (t:ShareToken {token: $token, documentId: $document_id}) RETURN count(t) AS c").param("token", token).param("document_id", document_id)).await.map_err(backend)?;
+                let mut valid_result = self.graph.execute(query("MATCH (t:ShareToken {token: $token, documentId: $document_id}) RETURN count(t) AS c").param("token", token).param("document_id", document_id)).await.map_err(backend)?;
                 let valid: i64 = valid_result.next().await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
                 Ok(valid > 0)
             }
@@ -364,14 +355,12 @@ impl HubDirectory for Neo4jDirectory {
             None => {
                 self.graph
                     .run(
-                        query(
-                            "CREATE (s:SyncSession {id: $id, documentId: $document_id, clientLabel: $client_label, spaceRole: $role, connectedAt: $connected_at})",
-                        )
-                        .param("document_id", document_id)
-                        .param("id", id.clone())
-                        .param("client_label", client_label)
-                        .param("role", role_str.clone())
-                        .param("connected_at", connected_at),
+                        query("CREATE (s:SyncSession {id: $id, documentId: $document_id, clientLabel: $client_label, spaceRole: $role, connectedAt: $connected_at})")
+                            .param("document_id", document_id)
+                            .param("id", id.clone())
+                            .param("client_label", client_label)
+                            .param("role", role_str.clone())
+                            .param("connected_at", connected_at),
                     )
                     .await
                     .map_err(backend)?;

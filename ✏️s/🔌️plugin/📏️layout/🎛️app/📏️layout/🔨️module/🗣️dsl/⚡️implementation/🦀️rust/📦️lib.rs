@@ -103,10 +103,7 @@ mod tests {
         assert!(parse_dsl("not a document at all").is_err(), "unrecognized leading token must fail");
         assert!(parse_dsl("schema=\"layout.fixture\" name=\"t\"").is_err(), "quoted schema must fail: schema is a bare ident");
         assert!(parse_dsl("schema=layout.fixture name=unquoted").is_err(), "unquoted name must fail: name is a quoted string");
-        assert!(
-            parse_dsl("schema=layout.fixture name=\"t\" grid { baselineGrid=notanumber baselineOffset=0 snapToBaseline=true }").is_err(),
-            "non-numeric grid field must fail"
-        );
+        assert!(parse_dsl("schema=layout.fixture name=\"t\" grid { baselineGrid=notanumber baselineOffset=0 snapToBaseline=true }").is_err(), "non-numeric grid field must fail");
         let bad_bool = "schema=layout.fixture name=\"t\" grid { baselineGrid=12 baselineOffset=0 snapToBaseline=maybe }";
         assert!(parse_dsl(bad_bool).is_err(), "non-boolean grid flag must fail");
     }

@@ -33,12 +33,7 @@ mod tests {
         let mut store = store::DocumentStore::new(envelope);
         let mut next = Document::default();
         next.airtightness_n50 = 1.2;
-        store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![Operation::SetDocument { document: next }],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: next }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

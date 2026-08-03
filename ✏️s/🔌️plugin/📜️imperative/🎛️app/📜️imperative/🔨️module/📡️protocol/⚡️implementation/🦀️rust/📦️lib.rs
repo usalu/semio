@@ -77,9 +77,7 @@ mod tests {
         let mut store = store::DocumentStore::new(envelope);
         let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
         let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Add { id: "step-x".to_string(), item: step, at: 0 } };
-        store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: None })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

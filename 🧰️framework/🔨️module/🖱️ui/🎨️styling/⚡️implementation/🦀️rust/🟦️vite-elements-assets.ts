@@ -837,8 +837,20 @@ export function statusSurfaceHtml(spec: { readonly kind: "empty" | "error" | "lo
 }
 //#endregion 🔖️StatusSurfaceHtml
 
-/** @emoji 🌐️ Vite: serve and copy `framework/ui/asset` at `/asset/*` for palette fonts and cursors. */
-export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
+/** @emoji 🗂️ Canonical repo-relative root of `@semio-tech/asset`, the only tree served at `/asset/*`. */
+export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript";
+
+/** @emoji 📂 Resolves and validates the merged Semio asset package root (fonts required). */
+export function resolveSemioAssetRoot(repoRoot: string): string {
+  const assetsRoot = resolve(repoRoot, SEMIO_ASSET_ROOT);
+  const fontDir = resolve(assetsRoot, "🔤️font");
+  if (!existsSync(assetsRoot) || !statSync(assetsRoot).isDirectory() || !existsSync(fontDir)) {
+    throw new Error(`Missing Semio asset root at ${assetsRoot} (expected ${SEMIO_ASSET_ROOT} with 🔤️font)`);
+  }
+  return assetsRoot;
+}
+
+function uiAssetsVitePluginsForRoot(assetsRoot: string): Plugin[] {
   let outDir = resolve(process.cwd(), "dist");
   const serveAssets = createUiAssetsMiddleware(assetsRoot);
   return [
@@ -869,6 +881,20 @@ export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
       },
     },
   ];
+}
+
+/** @emoji 🌐️ Vite: serve and copy `@semio-tech/asset` at `/asset/*` for palette fonts and cursors. */
+export function semioAssetsVitePlugin(repoRoot: string): Plugin[] {
+  return uiAssetsVitePluginsForRoot(resolveSemioAssetRoot(repoRoot));
+}
+
+/** @emoji 🌐️ @deprecated Use {@link semioAssetsVitePlugin} — caller-supplied roots caused silent font 404s. */
+export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
+  const fontDir = resolve(assetsRoot, "🔤️font");
+  if (!existsSync(assetsRoot) || !existsSync(fontDir)) {
+    throw new Error(`uiAssetsVitePlugin: invalid asset root ${assetsRoot} (missing 🔤️font); use semioAssetsVitePlugin(repoRoot)`);
+  }
+  return uiAssetsVitePluginsForRoot(assetsRoot);
 }
 
 /** @emoji 🛝️ Playground app kind for Vite play harness config (validated against manifest scan). */
@@ -1580,7 +1606,6 @@ function playgroundSketchpadMdxGlobalStubPlugin(): Plugin {
 /** @emoji 🛝️ `defineConfig` for `@puzzle/*-play` Vite entries with consistent renderer and core aliases. */
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
   const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
-  const uiAssetsRoot = resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/🖼️asset");
   const osHubAliases =
     playEntryKind === "s"
       ? [
@@ -1608,7 +1633,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       playgroundPlayBootHtmlPlugin(),
       playgroundFlowWasmDevStubPlugin(repoRoot),
       playgroundComposeSketchpadStubPlugin(repoRoot),
-      ...uiAssetsVitePlugin(uiAssetsRoot),
+      ...semioAssetsVitePlugin(repoRoot),
       ...semioFaviconVitePlugin(repoRoot),
       ...playgroundAssetVitePlugins(repoRoot, PLAYGROUND_PLAY_STATIC_ASSETS),
       tailwindcss(),
@@ -1767,6 +1792,18 @@ if (import.meta.vitest) {
         const { unlinkSync } = await import("node:fs");
         unlinkSync(filePath);
       }
+    });
+  });
+
+  describe("resolveSemioAssetRoot", () => {
+    it("resolves the merged asset package with fonts", () => {
+      const root = resolveSemioAssetRoot(repoRoot);
+      expect(root.endsWith(SEMIO_ASSET_ROOT.split("/").pop()!)).toBe(true);
+      expect(existsSync(resolve(root, "🔤️font/🔤️anta/🔤️latin.woff2"))).toBe(true);
+    });
+
+    it("throws when fonts are missing", () => {
+      expect(() => resolveSemioAssetRoot(resolve(repoRoot, ".🦑️repo"))).toThrow(/Missing Semio asset root/);
     });
   });
 

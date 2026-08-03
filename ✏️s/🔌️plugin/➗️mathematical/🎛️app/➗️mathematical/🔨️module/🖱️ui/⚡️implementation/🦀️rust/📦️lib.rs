@@ -10,8 +10,8 @@ use mathematical_engine::{algorithm_overlay, geometry_layers_json, mathematical_
 use mathematical_op::{MathConfigOperation, MathOperation};
 use mathematical_protocol::MathCommand;
 use semio_framework_plugin::{
-    create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence,
+    create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    NodeGraphScene, NodeGraphViewport, OsMediaCapability, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence,
 };
 use store::DocumentPack;
 
@@ -183,7 +183,11 @@ impl DocumentApp for MathematicalPlayApp {
                         _ => {}
                     }
                 }
-                if changed { Emit::operations(vec![MathOperation::SetGraph { graph }]) } else { Emit::default() }
+                if changed {
+                    Emit::operations(vec![MathOperation::SetGraph { graph }])
+                } else {
+                    Emit::default()
+                }
             }
             // 👁️ Config-only: the node-graph viewport never touches the document — it's written into
             // `cfg`, session-only, no VCS edit, no undo entry on the document store.
@@ -417,15 +421,10 @@ mod tests {
 
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        testkit::assert_two_instances_converge::<MathematicalPlayApp, _>(
-            "mem://mathematical-convergence",
-            node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 9.0, "y": 9.0 })),
-            MathCommand::SetDirected { directed: false },
-            |app| {
-                let projection = app.projection().expect("projection");
-                (projection.graph.nodes.len(), projection.graph.directed)
-            },
-        );
+        testkit::assert_two_instances_converge::<MathematicalPlayApp, _>("mem://mathematical-convergence", node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 9.0, "y": 9.0 })), MathCommand::SetDirected { directed: false }, |app| {
+            let projection = app.projection().expect("projection");
+            (projection.graph.nodes.len(), projection.graph.directed)
+        });
     }
 
     #[test]

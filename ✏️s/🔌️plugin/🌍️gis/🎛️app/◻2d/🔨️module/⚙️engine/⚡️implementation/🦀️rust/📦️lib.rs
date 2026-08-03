@@ -176,19 +176,11 @@ impl protocol::OperationDiff<Gis2dConfig> for Gis2dConfig {
 pub fn gis2d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: gis2d::GIS_MAP_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Vector,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         ports: vec![gis2d_features_in_port(), gis2d_map_out_port()],
         export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
         import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "2d.map".into(),
-            name: "2D Map".into(),
-            dimension: "2d".into(),
-            component_kind: "gismap".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.map".into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },
     }
 }
 
@@ -200,10 +192,7 @@ pub fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
         id: "features:in".into(),
         label: "Features".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Vector,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         kind_id: None,
         required: false,
         multiplicity: semio_framework_core::PortMultiplicity::Many,
@@ -218,10 +207,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
         id: "map:out".into(),
         label: "Map".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Vector,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         kind_id: Some("2d.map".into()),
         required: false,
         multiplicity: semio_framework_core::PortMultiplicity::Many,
@@ -233,10 +219,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// there is exactly one "gis map as JSON" shape in the whole app.
 pub fn gis2d_map_media(document: &GisMapDocument) -> semio_framework_plugin::Media {
     semio_framework_plugin::Media {
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Vector,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.map".into(), json: gis_map_descriptor_json(document) },
     }
 }

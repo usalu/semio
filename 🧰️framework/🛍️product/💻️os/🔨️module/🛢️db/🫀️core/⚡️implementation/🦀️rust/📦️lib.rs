@@ -150,15 +150,7 @@ pub struct DbLimits {
 
 impl Default for DbLimits {
     fn default() -> Self {
-        Self {
-            max_command_bytes: 8 * 1024 * 1024,
-            max_batch_commands: 4_096,
-            max_payload_bytes: 256 * 1024 * 1024,
-            max_query_bytes: 4 * 1024 * 1024,
-            max_mailbox_depth: 65_536,
-            max_open_documents: 100_000,
-            max_preview_ttl_ms: 5 * 60 * 1_000,
-        }
+        Self { max_command_bytes: 8 * 1024 * 1024, max_batch_commands: 4_096, max_payload_bytes: 256 * 1024 * 1024, max_query_bytes: 4 * 1024 * 1024, max_mailbox_depth: 65_536, max_open_documents: 100_000, max_preview_ttl_ms: 5 * 60 * 1_000 }
     }
 }
 
@@ -250,10 +242,7 @@ impl Frontier {
     /// checks against a document's current frontier.
     pub fn dominates(&self, other: &Frontier) -> Result<bool, DbError> {
         if self.document != other.document {
-            return Err(DbError::InvalidArgument(format!(
-                "frontier document mismatch: {} vs {}",
-                self.document, other.document
-            )));
+            return Err(DbError::InvalidArgument(format!("frontier document mismatch: {} vs {}", self.document, other.document)));
         }
         Ok(self.head_seq >= other.head_seq && self.commit_seq >= other.commit_seq && self.epoch >= other.epoch)
     }
@@ -274,23 +263,12 @@ impl FrontierDelta {
     /// being behind `from` (a delta only ever moves a replica forward).
     pub fn between(from: &Frontier, to: &Frontier) -> Result<FrontierDelta, DbError> {
         if from.document != to.document {
-            return Err(DbError::InvalidArgument(format!(
-                "frontier document mismatch: {} vs {}",
-                from.document, to.document
-            )));
+            return Err(DbError::InvalidArgument(format!("frontier document mismatch: {} vs {}", from.document, to.document)));
         }
         if to.head_seq < from.head_seq {
-            return Err(DbError::InvalidArgument(format!(
-                "to frontier (head_seq {}) is behind from frontier (head_seq {})",
-                to.head_seq, from.head_seq
-            )));
+            return Err(DbError::InvalidArgument(format!("to frontier (head_seq {}) is behind from frontier (head_seq {})", to.head_seq, from.head_seq)));
         }
-        Ok(FrontierDelta {
-            document: from.document.clone(),
-            from_head_seq: from.head_seq,
-            to_head_seq: to.head_seq,
-            commands: to.head_seq - from.head_seq,
-        })
+        Ok(FrontierDelta { document: from.document.clone(), from_head_seq: from.head_seq, to_head_seq: to.head_seq, commands: to.head_seq - from.head_seq })
     }
 
     /// @emoji 🕳️ True iff the two frontiers were already equal (nothing to transfer).
@@ -312,19 +290,14 @@ impl ResumeToken {
     /// Rejects a document id containing `|` (would make the encoding ambiguous to decode).
     pub fn encode(frontier: &Frontier) -> Result<ResumeToken, DbError> {
         if frontier.document.0.contains('|') {
-            return Err(DbError::InvalidArgument(
-                "document id must not contain '|' to be resume-token safe".to_string(),
-            ));
+            return Err(DbError::InvalidArgument("document id must not contain '|' to be resume-token safe".to_string()));
         }
         let mut hex = String::with_capacity(64);
         for byte in frontier.chain_hash {
             use std::fmt::Write;
             let _ = write!(hex, "{byte:02x}");
         }
-        Ok(ResumeToken(format!(
-            "v1|{}|{}|{}|{}|{}",
-            frontier.document, frontier.head_seq, frontier.commit_seq, frontier.epoch, hex
-        )))
+        Ok(ResumeToken(format!("v1|{}|{}|{}|{}|{}", frontier.document, frontier.head_seq, frontier.commit_seq, frontier.epoch, hex)))
     }
 
     /// @emoji 📖️ Inverse of `encode`. Rejects an unknown version tag, a wrong field count, or a
@@ -419,8 +392,7 @@ pub enum Priority {
 
 impl Priority {
     /// @emoji 📋️ Every lane, in priority order — the shape `db_actor`'s mailbox array indexes by.
-    pub const ALL: [Priority; 6] =
-        [Priority::System, Priority::Recovery, Priority::Command, Priority::Query, Priority::Live, Priority::Preview];
+    pub const ALL: [Priority; 6] = [Priority::System, Priority::Recovery, Priority::Command, Priority::Query, Priority::Live, Priority::Preview];
 
     /// @emoji 🔢️ A dense `0..6` index matching declaration order, for array-indexed mailbox storage.
     pub fn rank(self) -> usize {
@@ -539,13 +511,7 @@ impl DbConfig {
             profile,
             limits,
             default_durability,
-            capabilities: DbCapabilities {
-                preview: true,
-                historical_query: true,
-                live_query: true,
-                cluster: matches!(profile, Profile::Prod),
-                max_durability: default_durability,
-            },
+            capabilities: DbCapabilities { preview: true, historical_query: true, live_query: true, cluster: matches!(profile, Profile::Prod), max_durability: default_durability },
             mailbox_capacities: MailboxCapacities::uniform(mailbox_capacity),
         }
     }
@@ -921,13 +887,7 @@ mod tests {
     fn null_version_graph_never_panics_always_reports_unimplemented() {
         let graph = NullVersionGraph;
         let document: DocumentId = "doc-1".into();
-        let change = ChangeRecord {
-            parent: None,
-            content_hash: pack_core::ContentHash([0u8; 32]),
-            author: "actor-1".into(),
-            message: "msg".to_string(),
-            timestamp_ms: 0,
-        };
+        let change = ChangeRecord { parent: None, content_hash: pack_core::ContentHash([0u8; 32]), author: "actor-1".into(), message: "msg".to_string(), timestamp_ms: 0 };
         assert!(matches!(graph.record_change(&document, change), Err(DbError::Unimplemented(_))));
 
         let checkpoint = CheckpointRequest { parent_checkpoint: None, change_ids: vec![], message: "msg".to_string(), authors: vec![], timestamp_ms: 0 };
@@ -959,12 +919,7 @@ mod tests {
     fn emit_trait_object_records_events_with_fields_and_document() {
         let sink = RecordingEmit { events: std::sync::Mutex::new(Vec::new()) };
         let emit: &dyn Emit = &sink;
-        emit.emit(
-            EmitEvent::new("command.applied")
-                .with_document("doc-1".into())
-                .field("bytes", EmitField::U64(128))
-                .field("ok", EmitField::Bool(true)),
-        );
+        emit.emit(EmitEvent::new("command.applied").with_document("doc-1".into()).field("bytes", EmitField::U64(128)).field("ok", EmitField::Bool(true)));
         let events = sink.events.lock().unwrap();
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].name, "command.applied");

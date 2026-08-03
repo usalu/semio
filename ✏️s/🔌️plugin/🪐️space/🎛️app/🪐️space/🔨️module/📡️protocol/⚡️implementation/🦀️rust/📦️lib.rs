@@ -4,8 +4,8 @@
 //! `semio_framework_os::OsOperation` for the document side — see `space_op`'s doc comment for why this
 //! app owns no document/operation type.
 
-use semio_framework_os::OsOperation;
 use protocol::OpBinary;
+use semio_framework_os::OsOperation;
 use serde::{Deserialize, Serialize};
 
 /// 📦️ Encodes an `OsOperation` to its binary command form.

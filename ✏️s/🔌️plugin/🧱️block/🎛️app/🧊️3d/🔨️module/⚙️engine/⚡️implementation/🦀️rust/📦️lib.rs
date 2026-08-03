@@ -40,11 +40,7 @@ pub fn resolve_active_mesh_url<'a>(definition: &'a Block3dDefinition, wanted_tag
 /// through its `Kit×Type` media port. The active representation's mesh (first row, or the first
 /// matching `wanted_tags`) becomes the catalog row's `meshUrl`.
 pub fn puzzle3d_catalog_fragment(definition: &Block3dDefinition, wanted_tags: &[&str]) -> Value {
-    let vortices: Vec<Value> = definition
-        .vortices
-        .iter()
-        .map(|vortex| json!({ "id": vortex.id, "vortexKind": vortex.vortex_kind, "position": vortex.position, "direction": vortex.direction, "radius": vortex.radius }))
-        .collect();
+    let vortices: Vec<Value> = definition.vortices.iter().map(|vortex| json!({ "id": vortex.id, "vortexKind": vortex.vortex_kind, "position": vortex.position, "direction": vortex.direction, "radius": vortex.radius })).collect();
     let object_kind = json!({
         "id": definition.object_kind.id,
         "name": definition.object_kind.name,
@@ -52,11 +48,7 @@ pub fn puzzle3d_catalog_fragment(definition: &Block3dDefinition, wanted_tags: &[
         "meshUrl": resolve_active_mesh_url(definition, wanted_tags),
         "vortices": vortices,
     });
-    let vortex_kinds: Vec<Value> = definition
-        .vortex_kinds
-        .iter()
-        .map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.label, "color": kind.color, "defaultCableKind": kind.default_cable_kind }))
-        .collect();
+    let vortex_kinds: Vec<Value> = definition.vortex_kinds.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.label, "color": kind.color, "defaultCableKind": kind.default_cable_kind })).collect();
     let kind_compatibility: Vec<Value> = definition.compatibility.iter().map(|rule| json!({ "source": rule.source, "target": rule.target, "bidirectional": rule.bidirectional })).collect();
     json!({
         "schema": "manifest",

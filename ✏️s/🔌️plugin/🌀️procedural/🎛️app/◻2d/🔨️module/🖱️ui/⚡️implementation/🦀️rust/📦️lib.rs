@@ -2,17 +2,20 @@
 
 use flow_core::forms_bridge::flow_fixture_to_form_spec;
 use flow_core::{flow_backed_node_graph_extras, CameraJson, FlowFixture, FlowHost, Widget};
-use playbook::{
-    apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text, render_generations_tree, select_generation, selected_generation, GenerationPlayState,
-};
+use playbook::{apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text, render_generations_tree, select_generation, selected_generation, GenerationPlayState};
 use procedural_2d::{widget_id, Procedural2dDocument, PROCEDURAL_2D_SCHEMA};
 use procedural_2d_engine::{
-    collect_drawing_handles_from_eval, default_projection, eval_driver_json_for, evaluate_generation_preview, fixture_to_workflow, generation_preview_layers, host_from_fixture, host_from_fixture_with_driver,
-    procedural2d_io, refresh_generation_preview, scene_layers_from_drawing_handle, Procedural2dConfig,
+    collect_drawing_handles_from_eval, default_projection, eval_driver_json_for, evaluate_generation_preview, fixture_to_workflow, generation_preview_layers, host_from_fixture, host_from_fixture_with_driver, procedural2d_io,
+    refresh_generation_preview, scene_layers_from_drawing_handle, Procedural2dConfig,
 };
 use procedural_2d_op::{procedural2d_fixture_operations, Procedural2dConfigOperation, Procedural2dOperation};
 use procedural_2d_protocol::Procedural2dCommand;
-use semio_framework_plugin::{Label, build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, ui_declarative_sections_to_tree, AppLabels, Locale, LocalizedLabel, Terminology};
+use semio_framework_plugin::{
+    build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
+    ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+};
 
 use serde_json::{json, Value};
 
@@ -59,11 +62,7 @@ fn play_view(projection: &Procedural2dDocument, config: &Procedural2dConfig) -> 
 
 //#region 🔖️DocumentHelpers
 fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: PROCEDURAL2D_PLAY_APP_ID.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: PROCEDURAL2D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn eval_preview_layers(play: &Procedural2dPlayView, preview: bool) -> String {
@@ -88,12 +87,7 @@ fn eval_preview_layers(play: &Procedural2dPlayView, preview: bool) -> String {
         for widget in &play.fixture.widgets {
             let id = widget_id(widget).to_string();
             if play.config.selected_ids.is_empty() || play.config.selected_ids.iter().any(|selected| selected == &id) {
-                let (x, y) = play
-                    .fixture
-                    .layout
-                    .get(&id)
-                    .map(|layout| (layout.x, layout.y))
-                    .unwrap_or((offset + 48.0, 240.0));
+                let (x, y) = play.fixture.layout.get(&id).map(|layout| (layout.x, layout.y)).unwrap_or((offset + 48.0, 240.0));
                 layers.push(json!({
                     "id": format!("widget-{id}"),
                     "kind": "node",
@@ -151,7 +145,11 @@ fn is_de_locale(cfg: &Procedural2dConfig) -> bool {
 }
 
 fn procedural2d_locale(cfg: &Procedural2dConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &Procedural2dConfig) -> &'static L {
@@ -164,7 +162,6 @@ fn procedural2d_labels(cfg: &Procedural2dConfig) -> &'static Procedural2dLabels 
 }
 //#endregion 🔖️Terminology
 
-
 //#region 🔖️Panels
 fn build_document_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = play
@@ -173,22 +170,11 @@ fn build_document_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels)
         .iter()
         .map(|widget| {
             let id = widget_id(widget).to_string();
-            tree_item_with_action(
-                format!("procedural2d-play-document.widget.{id}"),
-                Label::data(id.clone()),
-                None,
-                procedural2d_action("setSelection", Some(json!({ "ids": [id] }))),
-            )
+            tree_item_with_action(format!("procedural2d-play-document.widget.{id}"), Label::data(id.clone()), None, procedural2d_action("setSelection", Some(json!({ "ids": [id] }))))
         })
         .collect();
     PanelTreeBuilder::new("procedural2d-play-document")
-        .section_or_placeholder(
-            "procedural2d-play-document.widgets",
-            Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)),
-            true,
-            widget_items,
-            labels.none,
-        )
+        .section_or_placeholder("procedural2d-play-document.widgets", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, widget_items, labels.none)
         .selected(play.config.selected_ids.iter().map(|id| format!("procedural2d-play-document.widget.{id}")).collect())
         .selection_change(procedural2d_action("setSelection", None))
         .build()
@@ -203,49 +189,19 @@ fn build_catalogue_tree(labels: &Procedural2dLabels) -> UiNode {
             "procedural2d-play-catalogue.sources",
             Some(labels.sources.into()),
             true,
-            sources
-                .iter()
-                .map(|(kind, label)| {
-                    tree_item_with_action(
-                        format!("procedural2d-play-catalogue.source.{kind}"),
-                        *label,
-                        None,
-                        procedural2d_action("addWidget", Some(json!({ "kind": kind }))),
-                    )
-                })
-                .collect(),
+            sources.iter().map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.source.{kind}"), *label, None, procedural2d_action("addWidget", Some(json!({ "kind": kind }))))).collect(),
         )
         .section(
             "procedural2d-play-catalogue.components",
             Some(labels.components.into()),
             true,
-            components
-                .iter()
-                .map(|(kind, label)| {
-                    tree_item_with_action(
-                        format!("procedural2d-play-catalogue.component.{kind}"),
-                        *label,
-                        None,
-                        procedural2d_action("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind }))),
-                    )
-                })
-                .collect(),
+            components.iter().map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.component.{kind}"), *label, None, procedural2d_action("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind }))))).collect(),
         )
         .section(
             "procedural2d-play-catalogue.sinks",
             Some(labels.sinks.into()),
             true,
-            sinks
-                .iter()
-                .map(|(kind, label)| {
-                    tree_item_with_action(
-                        format!("procedural2d-play-catalogue.sink.{kind}"),
-                        *label,
-                        None,
-                        procedural2d_action("addWidget", Some(json!({ "kind": kind }))),
-                    )
-                })
-                .collect(),
+            sinks.iter().map(|(kind, label)| tree_item_with_action(format!("procedural2d-play-catalogue.sink.{kind}"), *label, None, procedural2d_action("addWidget", Some(json!({ "kind": kind }))))).collect(),
         )
         .section(
             "procedural2d-play-catalogue.modes",
@@ -253,14 +209,7 @@ fn build_catalogue_tree(labels: &Procedural2dLabels) -> UiNode {
             false,
             ["preview", "generate", "wire"]
                 .iter()
-                .map(|mode| {
-                    tree_item_with_action(
-                        format!("procedural2d-play-catalogue.mode.{mode}"),
-                        Label::data(format!("{} {mode}", labels.show_prefix.as_str())),
-                        None,
-                        procedural2d_action("setShowMode", Some(json!({ "value": mode }))),
-                    )
-                })
+                .map(|mode| tree_item_with_action(format!("procedural2d-play-catalogue.mode.{mode}"), Label::data(format!("{} {mode}", labels.show_prefix.as_str())), None, procedural2d_action("setShowMode", Some(json!({ "value": mode })))))
                 .collect(),
         )
         .build()
@@ -274,22 +223,19 @@ fn build_inspector_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels
             default_open: Some(true),
             children: vec![
                 ui_text(Label::data(format!("{} flow.fixture", labels.schema_prefix.as_str()))),
-            ui_text(Label::data(format!("{} {}", labels.widgets_prefix.as_str(), play.fixture.widgets.len()))),
-            ui_text(Label::data(format!("{} {}", labels.show_mode_prefix.as_str(), play.config.show_mode))),
+                ui_text(Label::data(format!("{} {}", labels.widgets_prefix.as_str(), play.fixture.widgets.len()))),
+                ui_text(Label::data(format!("{} {}", labels.show_mode_prefix.as_str(), play.config.show_mode))),
             ],
             presence: UiPresence::default(),
             menu: None,
         }]);
     }
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        presence: UiPresence::default(),
         id: "procedural2d-play-inspector.selection".into(),
         label: labels.selection.into(),
         default_open: Some(true),
-        fields: vec![ui_inspector_readonly_field(
-            "procedural2d-play-inspector.ids",
-            labels.ids,
-            play.config.selected_ids.join(", "),
-        )],
+        fields: vec![ui_inspector_readonly_field("procedural2d-play-inspector.ids", labels.ids, play.config.selected_ids.join(", "))],
     }])
 }
 //#endregion 🔖️Panels
@@ -318,25 +264,11 @@ fn render_main_graph(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -
 }
 
 fn render_preview_canvas(play: &Procedural2dPlayView) -> UiNode {
-    build_canvas_2d_scene(
-        PROCEDURAL2D_PLAY_SURFACE_PREVIEW,
-        PROCEDURAL2D_PLAY_APP_ID,
-        Canvas2dScene {
-            camera_x: play.config.camera.x,
-            camera_y: play.config.camera.y,
-            zoom: play.config.camera.zoom,
-            layers_json: eval_preview_layers(play, true),
-        },
-    )
+    build_canvas_2d_scene(PROCEDURAL2D_PLAY_SURFACE_PREVIEW, PROCEDURAL2D_PLAY_APP_ID, Canvas2dScene { camera_x: play.config.camera.x, camera_y: play.config.camera.y, zoom: play.config.camera.zoom, layers_json: eval_preview_layers(play, true) })
 }
 
 fn render_generate_generations(play: &Procedural2dPlayView) -> UiNode {
-    render_generations_tree(
-        PROCEDURAL2D_PLAY_APP_ID,
-        "procedural2d-play-generate",
-        &play.generation.generations,
-        play.generation.selected_generation_id.as_deref(),
-    )
+    render_generations_tree(PROCEDURAL2D_PLAY_APP_ID, "procedural2d-play-generate", &play.generation.generations, play.generation.selected_generation_id.as_deref())
 }
 
 fn render_generate_form(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
@@ -344,43 +276,19 @@ fn render_generate_form(play: &Procedural2dPlayView, labels: &Procedural2dLabels
     let Some(generation) = selected_generation(&play.generation) else {
         return ui_text(labels.generate_hint);
     };
-    render_generation_form_body(
-        &spec,
-        &generation.values,
-        PROCEDURAL2D_PLAY_APP_ID,
-        "updateGenerationValues",
-        &generation.id,
-    )
+    render_generation_form_body(&spec, &generation.values, PROCEDURAL2D_PLAY_APP_ID, "updateGenerationValues", &generation.id)
 }
 
 fn render_generate_preview(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
-    let eval_json = play
-        .generation
-        .preview_text
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("");
+    let eval_json = play.generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or("");
     if eval_json.is_empty() {
         return ui_text(labels.preview_hint);
     }
     let layers = generation_preview_layers(eval_json);
     if layers == "[]" {
-        return render_generation_preview_text(
-            PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW,
-            PROCEDURAL2D_PLAY_APP_ID,
-            eval_json,
-        );
+        return render_generation_preview_text(PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW, PROCEDURAL2D_PLAY_APP_ID, eval_json);
     }
-    build_canvas_2d_scene(
-        PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW,
-        PROCEDURAL2D_PLAY_APP_ID,
-        Canvas2dScene {
-            camera_x: play.config.camera.x,
-            camera_y: play.config.camera.y,
-            zoom: play.config.camera.zoom,
-            layers_json: layers,
-        },
-    )
+    build_canvas_2d_scene(PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW, PROCEDURAL2D_PLAY_APP_ID, Canvas2dScene { camera_x: play.config.camera.x, camera_y: play.config.camera.y, zoom: play.config.camera.zoom, layers_json: layers })
 }
 //#endregion 🔖️Render
 
@@ -396,11 +304,7 @@ impl Procedural2dPlayApp {
     /// Diffs against the host-normalized baseline (not the raw projection) so `FlowHost`'s own
     /// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
     /// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
-    fn ops_from_host_mutation(
-        &self,
-        fixture: &FlowFixture,
-        mutate: impl FnOnce(&mut FlowHost),
-    ) -> Vec<Procedural2dOperation> {
+    fn ops_from_host_mutation(&self, fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<Procedural2dOperation> {
         let mut host = host_from_fixture(fixture);
         let baseline = host.fixture.clone();
         mutate(&mut host);
@@ -410,13 +314,7 @@ impl Procedural2dPlayApp {
     /// 🧬️ Emits generation operations for the generate-mode commands, updating the config's ephemeral
     /// selection and preview from the post-operation state via a whole-config `Snapshot`.
     /// `selectGeneration` is config-only (no document operations).
-    fn handle_generation(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, Procedural2dDocument>,
-        cfg: &ConfigView<'_, Procedural2dConfig>,
-    ) -> Emit<Procedural2dOperation, Procedural2dConfigOperation> {
+    fn handle_generation(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> Emit<Procedural2dOperation, Procedural2dConfigOperation> {
         let projection = doc.projection;
         let spec = flow_fixture_to_form_spec(&projection.fixture);
         let mut state = projection.generation.clone();
@@ -439,12 +337,7 @@ impl Procedural2dPlayApp {
         next_config.selected_generation_id = state.selected_generation_id.clone();
         refresh_generation_preview(&mut next_config, &projection.fixture, &state);
         let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
-        Emit {
-            document_operations: operations.into_iter().map(Procedural2dOperation::Generation).collect(),
-            config_operations: vec![Procedural2dConfigOperation::Snapshot { config: next_config }],
-            coalesce_key,
-            ..Default::default()
-        }
+        Emit { document_operations: operations.into_iter().map(Procedural2dOperation::Generation).collect(), config_operations: vec![Procedural2dConfigOperation::Snapshot { config: next_config }], coalesce_key, ..Default::default() }
     }
 }
 
@@ -504,19 +397,12 @@ impl DocumentApp for Procedural2dPlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &Procedural2dCommand,
-        doc: &DocumentView<'_, Procedural2dDocument>,
-        cfg: &ConfigView<'_, Procedural2dConfig>,
-    ) -> Emit<Procedural2dOperation, Procedural2dConfigOperation> {
+    fn handle(&self, command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> Emit<Procedural2dOperation, Procedural2dConfigOperation> {
         let fixture = &doc.projection.fixture;
         let config = cfg.projection;
         match command {
             // 👁️ Config-only — ephemeral selection/hover/show-mode/eval-scratch, never document operations.
-            Procedural2dCommand::SetSelection { ids } | Procedural2dCommand::SelectNode { ids } | Procedural2dCommand::NodeGraphSelect { ids } => {
-                Emit::config(vec![Procedural2dConfigOperation::SetSelection { ids: ids.clone() }])
-            }
+            Procedural2dCommand::SetSelection { ids } | Procedural2dCommand::SelectNode { ids } | Procedural2dCommand::NodeGraphSelect { ids } => Emit::config(vec![Procedural2dConfigOperation::SetSelection { ids: ids.clone() }]),
             Procedural2dCommand::NodeGraphHover => Emit::default(),
             Procedural2dCommand::SetShowMode { value } => Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: value.clone() }]),
             Procedural2dCommand::Generate => Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: "generate".into() }]),
@@ -550,11 +436,7 @@ impl DocumentApp for Procedural2dPlayApp {
                     for operation in &sub_operations {
                         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                             "setFixture" => {
-                                if let Some(fixture) = operation
-                                    .get("fixtureJson")
-                                    .and_then(|value| value.as_str())
-                                    .and_then(|json| serde_json::from_str::<FlowFixture>(json).ok())
-                                {
+                                if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<FlowFixture>(json).ok()) {
                                     host.replace_fixture(fixture);
                                 }
                             }
@@ -581,11 +463,9 @@ impl DocumentApp for Procedural2dPlayApp {
                 let config_operations = if cleared { vec![Procedural2dConfigOperation::SetSelection { ids: Vec::new() }] } else { Vec::new() };
                 Emit { document_operations: operations, config_operations, ..Default::default() }
             }
-            Procedural2dCommand::MoveMediaNode { node_id, x, y } => {
-                Emit::operations(self.ops_from_host_mutation(fixture, |host| {
-                    let _ = host.move_widget(node_id, *x, *y);
-                }))
-            }
+            Procedural2dCommand::MoveMediaNode { node_id, x, y } => Emit::operations(self.ops_from_host_mutation(fixture, |host| {
+                let _ = host.move_widget(node_id, *x, *y);
+            })),
             Procedural2dCommand::AddWidget { kind, neuron_kind, x, y } => {
                 let descriptor = match kind.as_str() {
                     "neuron" => json!({ "kind": "neuron", "neuronKind": neuron_kind.clone().unwrap_or_else(|| "math.add".into()) }).to_string(),
@@ -594,11 +474,7 @@ impl DocumentApp for Procedural2dPlayApp {
                 let mut host = host_from_fixture(fixture);
                 let baseline = host.fixture.clone();
                 if let Ok(id) = host.add_widget(&descriptor, x.unwrap_or(120.0), y.unwrap_or(120.0)) {
-                    return Emit {
-                        document_operations: procedural2d_fixture_operations(&baseline, &host.fixture),
-                        config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: vec![id] }],
-                        ..Default::default()
-                    };
+                    return Emit { document_operations: procedural2d_fixture_operations(&baseline, &host.fixture), config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: vec![id] }], ..Default::default() };
                 }
                 Emit::default()
             }
@@ -612,11 +488,9 @@ impl DocumentApp for Procedural2dPlayApp {
                 let remaining: Vec<String> = config.selected_ids.iter().filter(|id| *id != widget_id).cloned().collect();
                 Emit { document_operations: operations, config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: remaining }], ..Default::default() }
             }
-            Procedural2dCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => {
-                Emit::operations(self.ops_from_host_mutation(fixture, |host| {
-                    let _ = host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id);
-                }))
-            }
+            Procedural2dCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => Emit::operations(self.ops_from_host_mutation(fixture, |host| {
+                let _ = host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id);
+            })),
             Procedural2dCommand::Reorganize => Emit::operations(self.ops_from_host_mutation(fixture, |host| {
                 let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
             })),
@@ -625,12 +499,7 @@ impl DocumentApp for Procedural2dPlayApp {
             Procedural2dCommand::RenameGeneration { id, name } => self.handle_generation("renameGeneration", Some(&json!({ "id": id, "name": name })), doc, cfg),
             Procedural2dCommand::UpdateGenerationValues { generation_id, question_id, value } => {
                 let value_json = dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null);
-                self.handle_generation(
-                    "updateGenerationValues",
-                    Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })),
-                    doc,
-                    cfg,
-                )
+                self.handle_generation("updateGenerationValues", Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })), doc, cfg)
             }
             Procedural2dCommand::SelectGeneration { id } => self.handle_generation("selectGeneration", Some(&json!({ "id": id })), doc, cfg),
             Procedural2dCommand::SetLocale { value } => Emit::config(vec![Procedural2dConfigOperation::SetLocale { value: value.clone() }]),
@@ -666,7 +535,6 @@ impl DocumentApp for Procedural2dPlayApp {
         }
     }
 
-
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level (the most frequent
     /// verbs on a procedural-2d canvas); the display-mode toggle, generation authoring, and generation
     /// selection each fold into their own taxonomy group; the delete-selection item stays a direct
@@ -687,13 +555,7 @@ impl DocumentApp for Procedural2dPlayApp {
         let is_de = is_de_locale(cfg.projection);
         let selected = cfg.projection.selected_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
-        let mut menu = Menu::of(registry)
-            .action("addWidget")
-            .action("reorganize")
-            .action("generate")
-            .group("mode", |m| m.action("setShowMode"))
-            .group("create", |m| m.action("addGeneration"))
-            .group("methods", |m| m.action("selectGeneration"));
+        let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate").group("mode", |m| m.action("setShowMode")).group("create", |m| m.action("addGeneration")).group("methods", |m| m.action("selectGeneration"));
         if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
@@ -708,17 +570,11 @@ impl DocumentApp for Procedural2dPlayApp {
             "drawing:out" => {
                 let eval_json = evaluate_generation_preview(&doc.projection.fixture, &serde_json::Map::new());
                 let layers_json = generation_preview_layers(&eval_json);
-                Ok(Media {
-                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                    payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json },
-                })
+                Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
             "document:out" => {
                 let bytes = store::DocumentPack::encode_pack(doc.projection);
-                Ok(Media {
-                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
-                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow }, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -882,10 +738,10 @@ pub fn create_procedural2d_app() -> App {
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
     use super::*;
-    use std::cell::RefCell;
-    use store::create_document_envelope;
     use procedural_2d_engine::empty_procedural2d_projection;
     use procedural_2d_op::{Procedural2dEnvelope, Procedural2dStore};
+    use std::cell::RefCell;
+    use store::create_document_envelope;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -1018,13 +874,7 @@ mod tests {
     fn add_widget_undo_redo_round_trip() {
         let mut app = new_app();
         let before = app.projection().expect("projection").fixture.widgets.len();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            Procedural2dCommand::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None },
-            |app| app.projection().expect("projection").fixture.widgets.len(),
-            before,
-            before + 1,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, Procedural2dCommand::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }, |app| app.projection().expect("projection").fixture.widgets.len(), before, before + 1);
     }
 
     #[test]
@@ -1038,13 +888,7 @@ mod tests {
     #[test]
     fn add_generation_records_an_undoable_generation_operation() {
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            Procedural2dCommand::AddGeneration,
-            |app| app.projection().expect("projection").generation.generations.len(),
-            0,
-            1,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, Procedural2dCommand::AddGeneration, |app| app.projection().expect("projection").generation.generations.len(), 0, 1);
     }
 
     #[test]
@@ -1064,14 +908,7 @@ mod tests {
 
     #[test]
     fn two_instances_converge_disjoint_widget_moves() {
-        let widgets: Vec<String> = new_app()
-            .projection()
-            .expect("projection")
-            .fixture
-            .widgets
-            .iter()
-            .map(|widget| widget_id(widget).to_string())
-            .collect();
+        let widgets: Vec<String> = new_app().projection().expect("projection").fixture.widgets.iter().map(|widget| widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
         testkit::assert_two_instances_converge::<Procedural2dPlayApp, (Option<f64>, Option<f64>)>(
@@ -1121,12 +958,7 @@ mod tests {
     fn context_menu_stays_within_disclosure_budget_with_destructive_last() {
         let mut app = new_app_with_registry();
         app.dispatch_typed(Procedural2dCommand::SetSelection { ids: vec!["rect".into()] }, &meta("local")).expect("select");
-        let request = semio_framework_plugin::ContextMenuRequest {
-            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
-            surface: None,
-            window_instance_id: None,
-            point: None,
-        };
+        let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let items = app.context_menu(&request);
         assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
         assert_eq!(items.last().map(|item| item.id.as_str()), Some("delete-selection"), "the destructive delete row must be last");
@@ -1180,10 +1012,7 @@ mod tests {
                 _ => None,
             })
             .expect("just-added input slider");
-        let media = Media {
-            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-            payload: MediaPayload::Structured { schema: "params".into(), json: json!({ slider_id.clone(): 42.0 }).to_string() },
-        };
+        let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "params".into(), json: json!({ slider_id.clone(): 42.0 }).to_string() } };
         app.import_media("params:in", &media, &meta("local")).expect("import params");
         let value = app.projection().expect("projection").fixture.widgets.iter().find_map(|widget| match widget {
             Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
@@ -1196,10 +1025,7 @@ mod tests {
     fn import_params_in_ignores_unmatched_keys() {
         let mut app = new_app();
         let before = app.projection().expect("projection");
-        let media = Media {
-            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-            payload: MediaPayload::Structured { schema: "params".into(), json: json!({ "does-not-exist": 1.0 }).to_string() },
-        };
+        let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "params".into(), json: json!({ "does-not-exist": 1.0 }).to_string() } };
         app.import_media("params:in", &media, &meta("local")).expect("import params is total/lenient");
         assert_eq!(app.projection().expect("projection"), before, "unmatched keys must not mutate the document");
     }

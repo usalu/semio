@@ -263,14 +263,7 @@ fn cmd_inspect(rest: &[String]) -> i32 {
 
     println!("== commit chain ==");
     for (offset, commit) in &commits {
-        println!(
-            "  commit_seq={} offset={offset} prev_commit_offset={} record_count={} records_len={} chain_hash={}",
-            commit.commit_seq,
-            commit.prev_commit_offset,
-            commit.record_count,
-            commit.records_len,
-            hex32(&commit.chain_hash)
-        );
+        println!("  commit_seq={} offset={offset} prev_commit_offset={} record_count={} records_len={} chain_hash={}", commit.commit_seq, commit.prev_commit_offset, commit.record_count, commit.records_len, hex32(&commit.chain_hash));
     }
 
     println!("== dictionaries ==");
@@ -423,13 +416,7 @@ fn cmd_log(rest: &[String]) -> i32 {
     let ordinal_of: HashMap<&str, u64> = log.edits.iter().enumerate().map(|(ordinal, edit)| (edit.id.as_str(), ordinal as u64)).collect();
     let mut checkpoint_lane_at: HashMap<u64, Vec<String>> = HashMap::new();
     for checkpoint in &log.checkpoints {
-        let landing_ordinal = checkpoint
-            .change_ids
-            .iter()
-            .filter_map(|change_id| log.changes.iter().find(|c| &c.id == change_id))
-            .flat_map(|change| change.edit_ids.iter())
-            .filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied())
-            .max();
+        let landing_ordinal = checkpoint.change_ids.iter().filter_map(|change_id| log.changes.iter().find(|c| &c.id == change_id)).flat_map(|change| change.edit_ids.iter()).filter_map(|edit_id| ordinal_of.get(edit_id.as_str()).copied()).max();
         if let Some(ordinal) = landing_ordinal {
             checkpoint_lane_at.entry(ordinal).or_default().push(checkpoint.id.clone());
         }
@@ -850,9 +837,7 @@ mod tests {
         }
         if with_checkpoint_and_alternative && !edit_ids.is_empty() {
             appender.append_change(&protocol::HistoryChange { id: "c0".to_string(), saved_at: "2026-07-27T00:01:00Z".to_string(), edit_ids: edit_ids.clone(), description: None }).unwrap();
-            appender
-                .append_checkpoint(&protocol::HistoryCheckpoint { id: "cp0".to_string(), timestamp: "2026-07-27T00:02:00Z".to_string(), change_ids: vec!["c0".to_string()], parent_id: None, authors: Vec::new(), message: None })
-                .unwrap();
+            appender.append_checkpoint(&protocol::HistoryCheckpoint { id: "cp0".to_string(), timestamp: "2026-07-27T00:02:00Z".to_string(), change_ids: vec!["c0".to_string()], parent_id: None, authors: Vec::new(), message: None }).unwrap();
             appender.append_alternative(&protocol::HistoryAlternative { id: "alt-main".to_string(), name: "main".to_string(), checkpoint_ids: vec!["cp0".to_string()] }).unwrap();
             appender.set_active(Some("alt-main")).unwrap();
             appender.commit().unwrap();

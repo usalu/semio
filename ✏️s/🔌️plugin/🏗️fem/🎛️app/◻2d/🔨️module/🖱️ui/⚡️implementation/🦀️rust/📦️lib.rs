@@ -12,8 +12,8 @@ use fem2d_protocol::Fem2dCommand;
 use fem_core::{Dof, ElementResult};
 use fem_shared::{hex_to_rgb01, next_id, normalize_mode_shape, result_display_action_args, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
 use semio_framework_plugin::{
-    build_canvas_2d_scene, create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ArtifactKindSpec, Canvas2dScene, ConfigSpec, ConfigView, DocumentApp,
-    DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
+    build_canvas_2d_scene, create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ArtifactKindSpec, Canvas2dScene, ConfigSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError,
+    MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -160,9 +160,7 @@ fn fem2d_element_endpoints(element: &fem2d::FemElement) -> (&str, &str) {
 /// alongside an owned clone ready to be mutated and re-emitted via `SetLoadCase`.
 fn fem2d_resolve_load_case(doc: &Fem2dDocument, case_id: Option<&str>) -> (usize, fem2d::FemLoadCase) {
     let named = case_id.and_then(|id| doc.load_cases.iter().find(|lc| lc.id == id).cloned());
-    let load_case = named
-        .or_else(|| doc.load_cases.first().cloned())
-        .unwrap_or_else(|| fem2d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
+    let load_case = named.or_else(|| doc.load_cases.first().cloned()).unwrap_or_else(|| fem2d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
     let index = doc.load_cases.iter().position(|lc| lc.id == load_case.id).unwrap_or(doc.load_cases.len());
     (index, load_case)
 }
@@ -316,10 +314,7 @@ fn render_fem2d_results_static(doc: &Fem2dDocument, source_id: Option<&str>, cam
         Ok(results) => results,
         Err(e) => return ui_text(Label::data(format!("Analysis error: {e}"))),
     };
-    let case_id = source_id
-        .filter(|id| results.contains_key(*id))
-        .map(str::to_string)
-        .or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
+    let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
     let Some(case_id) = case_id else {
         return ui_text(Label::data("No load case defined"));
     };
@@ -603,8 +598,7 @@ impl DocumentApp for Fem2dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured JSON payload".into()));
                 };
                 let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let outline: Vec<[f64; 2]> = serde_json::from_value(value.get("outline").cloned().unwrap_or(Value::Null))
-                    .map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
+                let outline: Vec<[f64; 2]> = serde_json::from_value(value.get("outline").cloned().unwrap_or(Value::Null)).map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
                 let holes: Vec<Vec<[f64; 2]>> = match value.get("holes").cloned() {
                     Some(holes_value) => serde_json::from_value(holes_value).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
                     None => Vec::new(),
@@ -706,8 +700,7 @@ impl DocumentApp for Fem2dPlayApp {
                 let id = next_id(projection.regions.iter().map(|r| r.id.clone()), "r");
                 let index = projection.regions.len();
                 let outline = vec![[*x, *y], [x + width, *y], [x + width, y + height], [*x, y + height]];
-                let region =
-                    fem2d::FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: thickness.unwrap_or(0.02), material_id: material_id.clone(), mesh_size: mesh_size.unwrap_or(0.25) };
+                let region = fem2d::FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: thickness.unwrap_or(0.02), material_id: material_id.clone(), mesh_size: mesh_size.unwrap_or(0.25) };
                 Emit::operations(vec![Fem2dOperation::SetRegion { index, region }])
             }
             Fem2dCommand::AddLoadCase { name, self_weight } => {
@@ -758,26 +751,20 @@ impl DocumentApp for Fem2dPlayApp {
                         operations.push(Fem2dOperation::RemoveCombination { id: id.clone() });
                     }
                 }
-                if operations.is_empty() { Emit::default() } else { Emit::operations(operations) }
+                if operations.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit::operations(operations)
+                }
             }
             Fem2dCommand::SetActiveExample { example_id } => {
-                let document = if example_id == "default" {
-                    Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| fem2d_engine::empty_fem2d_projection())
-                } else {
-                    fem2d_engine::empty_fem2d_projection()
-                };
-                Emit {
-                    document_operations: vec![Fem2dOperation::SetDocument { document }],
-                    config_operations: vec![Fem2dConfigOperation::Snapshot { config: Fem2dConfig::default() }],
-                    ..Default::default()
-                }
+                let document = if example_id == "default" { Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| fem2d_engine::empty_fem2d_projection()) } else { fem2d_engine::empty_fem2d_projection() };
+                Emit { document_operations: vec![Fem2dOperation::SetDocument { document }], config_operations: vec![Fem2dConfigOperation::Snapshot { config: Fem2dConfig::default() }], ..Default::default() }
             }
             // 🎥️ Config-only: the canvas camera never touches the document.
             Fem2dCommand::SetCamera { x, y, zoom } => Emit::config(vec![Fem2dConfigOperation::SetCamera { camera: FemCamera { x: *x, y: *y, zoom: *zoom } }]),
             // 👁️ Config-only: which case/mode the results window shows never touches the document.
-            Fem2dCommand::SetResultDisplay { source_id, mode, mode_index } => {
-                Emit::config(vec![Fem2dConfigOperation::SetResultDisplay { source_id: source_id.clone(), mode: mode.clone(), mode_index: *mode_index }])
-            }
+            Fem2dCommand::SetResultDisplay { source_id, mode, mode_index } => Emit::config(vec![Fem2dConfigOperation::SetResultDisplay { source_id: source_id.clone(), mode: mode.clone(), mode_index: *mode_index }]),
             Fem2dCommand::SetLocale { value } => Emit::config(vec![Fem2dConfigOperation::SetLocale { value: value.clone() }]),
         }
     }

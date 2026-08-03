@@ -313,9 +313,7 @@ pub fn tensor_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Norma
 /// ⊠ NetworkX `strong_product`: union of the cartesian and tensor edge sets.
 pub fn strong_product<D: Directedness>(g: &Storage<Normal, D>, h: &Storage<Normal, D>) -> (Storage<Normal, D>, BTreeMap<(NodeId, NodeId), NodeId>) {
     let (mut dst, map) = product_skeleton(g, h);
-    build_product_edges(g, h, &mut dst, &map, |u1, v1, u2, v2| {
-        (u1 == u2 && adjacent(h, v1, v2)) || (v1 == v2 && adjacent(g, u1, u2)) || (adjacent(g, u1, u2) && adjacent(h, v1, v2))
-    });
+    build_product_edges(g, h, &mut dst, &map, |u1, v1, u2, v2| (u1 == u2 && adjacent(h, v1, v2)) || (v1 == v2 && adjacent(g, u1, u2)) || (adjacent(g, u1, u2) && adjacent(h, v1, v2)));
     (dst, map)
 }
 

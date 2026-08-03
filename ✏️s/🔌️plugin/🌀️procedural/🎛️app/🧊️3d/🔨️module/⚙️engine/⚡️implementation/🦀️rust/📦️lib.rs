@@ -52,11 +52,7 @@ pub struct Procedural3dPreviewCamera {
 
 impl Default for Procedural3dPreviewCamera {
     fn default() -> Self {
-        Self {
-            position: default_preview_cam_pos(),
-            target: default_preview_cam_target(),
-            fov: default_preview_fov(),
-        }
+        Self { position: default_preview_cam_pos(), target: default_preview_cam_target(), fov: default_preview_fov() }
     }
 }
 
@@ -265,10 +261,7 @@ pub fn example_document_json(example_id: &str) -> String {
 
 pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
     if let Some(selected) = selected_generation(generation) {
-        let patched = apply_generation_values_to_fixture(
-            &serde_json::to_string(fixture).unwrap_or_default(),
-            &selected.values,
-        );
+        let patched = apply_generation_values_to_fixture(&serde_json::to_string(fixture).unwrap_or_default(), &selected.values);
         FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone())
     } else {
         fixture.clone()
@@ -284,22 +277,13 @@ pub fn preview_tolerance(lod_mode: &str) -> f64 {
 }
 
 pub fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
-    ui_wgpu::world3d_camera_json(
-        cfg.preview_camera.position,
-        cfg.preview_camera.target,
-        cfg.preview_camera.fov,
-    )
+    ui_wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
 }
 
 /// 🧭️ World-3d selection payload with the host-owned gumball utility spliced in, so the transform
 /// handles follow `cfg.active_utility_id` instead of any document-stored utility.
 pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) -> String {
-    let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json(
-        &cfg.selection_method,
-        &cfg.selected_node_ids,
-        cfg.hovered_node_id.as_deref(),
-    ))
-    .unwrap_or_else(|_| json!({}));
+    let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json(&cfg.selection_method, &cfg.selected_node_ids, cfg.hovered_node_id.as_deref())).unwrap_or_else(|_| json!({}));
     let show_mode = if cfg.show_mode.is_empty() { "shaded" } else { cfg.show_mode.as_str() };
     let (show_edges, selection_mode, targets) = match show_mode {
         "wireframe" => (true, "mesh", json!({ "mesh": false, "vertex": false, "edge": true, "face": false })),
@@ -358,10 +342,7 @@ pub fn host_from_fixture_with_driver(fixture: &FlowFixture, driver: Option<&Flow
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint
-        .split_once('@')
-        .map(|(node, port)| (node.to_string(), port.to_string()))
-        .unwrap_or_else(|| (endpoint.to_string(), "out".into()))
+    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
 }
 
 pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::NodeGraphNodeRecord>, Vec<ui_wgpu::NodeGraphEdgeRecord>) {
@@ -519,16 +500,8 @@ pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, cfg: &P
         let selected = cfg.selected_node_ids.iter().any(|entry| entry == &id);
         let hovered = cfg.hovered_node_id.as_deref() == Some(id.as_str());
         for (index, handle) in handles.iter().enumerate() {
-            let mesh_id = if handles.len() == 1 {
-                format!("eval-{id}")
-            } else {
-                format!("eval-{id}#{index}")
-            };
-            let instance_id = if handles.len() == 1 {
-                id.clone()
-            } else {
-                format!("{id}#{index}")
-            };
+            let mesh_id = if handles.len() == 1 { format!("eval-{id}") } else { format!("eval-{id}#{index}") };
+            let instance_id = if handles.len() == 1 { id.clone() } else { format!("{id}#{index}") };
             if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
                 if let Ok(data) = tessellate_geometry(handle, tolerance) {
                     let data = apply_show_mode_mesh(data, show_mode);
@@ -551,10 +524,7 @@ pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, cfg: &P
             }
         }
     }
-    (
-        serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()),
-        serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()),
-    )
+    (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
 }
 
 pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::Map<String, Value>) -> String {
@@ -588,11 +558,7 @@ pub fn export_mesh_from_document(projection: &Procedural3dDocument) -> semio_fra
     let mut host = host_from_fixture(&projection.fixture);
     let eval_json = host.evaluate().unwrap_or_default();
     let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.fixture, &config);
-    let meshes: Vec<semio_framework_plugin::MeshData> = serde_json::from_str::<Vec<Value>>(&meshes_json)
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|entry| serde_json::from_value(entry.get("data").cloned().unwrap_or(Value::Null)).ok())
-        .collect();
+    let meshes: Vec<semio_framework_plugin::MeshData> = serde_json::from_str::<Vec<Value>>(&meshes_json).unwrap_or_default().into_iter().filter_map(|entry| serde_json::from_value(entry.get("data").cloned().unwrap_or(Value::Null)).ok()).collect();
     merge_preview_meshes(&meshes)
 }
 
@@ -621,11 +587,7 @@ pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
 }
 
 pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<Value> {
-    host.fixture
-        .widgets
-        .iter()
-        .find(|widget| widget_id(widget) == widget_id_str)
-        .and_then(|widget| serde_json::to_value(widget).ok())
+    host.fixture.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).and_then(|widget| serde_json::to_value(widget).ok())
 }
 
 pub fn gumball_widget_offset(host: &FlowHost, widget_id_str: &str) -> [f64; 3] {
@@ -638,9 +600,7 @@ pub fn gumball_widget_offset(host: &FlowHost, widget_id_str: &str) -> [f64; 3] {
 }
 
 pub fn gumball_widget_number_param(host: &FlowHost, widget_id_str: &str, key: &str, default: f64) -> f64 {
-    gumball_widget_json(host, widget_id_str)
-        .and_then(|widget_json| widget_json.get("params").and_then(|params| params.get(key)).and_then(|entry| entry.get("value")).and_then(Value::as_f64))
-        .unwrap_or(default)
+    gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get(key)).and_then(|entry| entry.get("value")).and_then(Value::as_f64)).unwrap_or(default)
 }
 
 pub fn gumball_translate_params_json(offset: [f64; 3]) -> String {
@@ -673,12 +633,7 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
     if host.fixture.widgets.iter().any(|widget| widget_id(widget) == transform_id) {
         return Ok(transform_id);
     }
-    let (source_x, source_y) = host
-        .fixture
-        .layout
-        .get(selected_id)
-        .map(|layout| (layout.x, layout.y))
-        .unwrap_or((0.0, 0.0));
+    let (source_x, source_y) = host.fixture.layout.get(selected_id).map(|layout| (layout.x, layout.y)).unwrap_or((0.0, 0.0));
     let descriptor = json!({ "kind": "neuron", "id": transform_id, "neuronKind": gumball_xform_kind(operation) }).to_string();
     host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| err.to_string())?;
     let outgoing_port = host.fixture.synapses.iter().find(|synapse| synapse.from == selected_id).map(|synapse| synapse.from_port.clone());
@@ -730,23 +685,14 @@ mod tests {
         for mesh in &meshes {
             let id = mesh.get("id").and_then(|value| value.as_str()).unwrap_or("");
             assert!(id.starts_with("eval-"), "mesh id must be tessellated eval handle, got {id}");
-            let data: semio_framework_core::MeshData =
-                serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
+            let data: semio_framework_core::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
             assert!(data.positions.len() >= 9, "mesh has too few positions");
             assert!(data.indices.len() >= 3, "mesh has too few indices");
             assert!(!data.edge_positions.is_empty(), "brep preview should include edge geometry");
         }
         let camera = Camera3d {
-            position: Vec3::from_array([
-                config.preview_camera.position[0] as f32,
-                config.preview_camera.position[1] as f32,
-                config.preview_camera.position[2] as f32,
-            ]),
-            target: Vec3::from_array([
-                config.preview_camera.target[0] as f32,
-                config.preview_camera.target[1] as f32,
-                config.preview_camera.target[2] as f32,
-            ]),
+            position: Vec3::from_array([config.preview_camera.position[0] as f32, config.preview_camera.position[1] as f32, config.preview_camera.position[2] as f32]),
+            target: Vec3::from_array([config.preview_camera.target[0] as f32, config.preview_camera.target[1] as f32, config.preview_camera.target[2] as f32]),
             up: Vec3::new(0.0, 0.0, 1.0),
             fov_y: config.preview_camera.fov as f32 * std::f32::consts::PI / 180.0,
             near: 0.1,
@@ -756,29 +702,12 @@ mod tests {
         let planes = frustum_planes(view_proj);
         let mut visible = 0usize;
         for instance in instances {
-            let mesh_id = instance
-                .get("meshId")
-                .or_else(|| instance.get("mesh_id"))
-                .and_then(|value| value.as_str())
-                .unwrap_or("eval-missing");
-            let mesh = meshes
-                .iter()
-                .find(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id))
-                .expect("mesh record");
-            let data: semio_framework_core::MeshData =
-                serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
+            let mesh_id = instance.get("meshId").or_else(|| instance.get("mesh_id")).and_then(|value| value.as_str()).unwrap_or("eval-missing");
+            let mesh = meshes.iter().find(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id)).expect("mesh record");
+            let data: semio_framework_core::MeshData = serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
             let mesh3d = Mesh3d::from_buffers(data.positions, data.normals, data.indices);
-            let position = instance
-                .get("position")
-                .and_then(|value| value.as_array())
-                .map(|items| {
-                    [
-                        items[0].as_f64().unwrap_or(0.0) as f32,
-                        items[1].as_f64().unwrap_or(0.0) as f32,
-                        items[2].as_f64().unwrap_or(0.0) as f32,
-                    ]
-                })
-                .unwrap_or([0.0, 0.0, 0.0]);
+            let position =
+                instance.get("position").and_then(|value| value.as_array()).map(|items| [items[0].as_f64().unwrap_or(0.0) as f32, items[1].as_f64().unwrap_or(0.0) as f32, items[2].as_f64().unwrap_or(0.0) as f32]).unwrap_or([0.0, 0.0, 0.0]);
             assert_eq!(position, [0.0, 0.0, 0.0], "preview instances stay in world space");
             let model = Instance3d::model_from_trs(position, [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]);
             let (min, max) = transform_aabb(model, mesh3d.aabb_min, mesh3d.aabb_max);
@@ -801,9 +730,7 @@ mod tests {
     #[test]
     fn procedural3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
         let _serial = test_serial();
-        use semio_framework_plugin::{
-            GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter,
-        };
+        use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
         let document_json = serde_json::to_value(default_projection()).expect("projection json");
         let mesh = procedural3d_mesh_from_document(&document_json).expect("mesh from document");
         assert!(!mesh.positions.is_empty());
@@ -832,8 +759,7 @@ mod tests {
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty(), "rectangle wire preview should tessellate curve edges");
-        let data: semio_framework_core::MeshData =
-            serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
+        let data: semio_framework_core::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
         assert!(data.indices.is_empty(), "wire preview has no shaded triangles");
         assert!(data.edge_positions.len() >= 6, "curve preview should include edge polylines");
         assert!(!instances_json.is_empty());
@@ -855,8 +781,7 @@ mod tests {
         let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty());
-        let data: semio_framework_core::MeshData =
-            serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
+        let data: semio_framework_core::MeshData = serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
         assert!(data.indices.is_empty());
         assert!(!data.edge_positions.is_empty());
     }

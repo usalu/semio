@@ -49,8 +49,8 @@ mod tests {
     /// `📚️example/📖️facade-generator.playbook` exactly; used to pin the fixture's canonical
     /// DSL formatting against a hand-built struct literal.
     fn sample_facade_generator_spec() -> PlaybookSpec {
+        use dsl::DslValue;
         use playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookStep, PlaybookVectorField, PLAYBOOK_DOCUMENT_SCHEMA};
-        use serde_json::json;
 
         PlaybookSpec {
             schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
@@ -92,7 +92,7 @@ mod tests {
                             description: Some("Shown on the cover page.".into()),
                             required: Some(false),
                             placeholder: Some("One paragraph project summary".into()),
-                            default: Some(json!("A mixed-use tower with a responsive facade.")),
+                            default: Some(DslValue::String("A mixed-use tower with a responsive facade.".into())),
                             min: None,
                             max: None,
                             step: None,
@@ -114,7 +114,7 @@ mod tests {
                             description: None,
                             required: Some(true),
                             placeholder: None,
-                            default: Some(json!(12.0)),
+                            default: Some(DslValue::Number(12.0)),
                             min: Some(4.0),
                             max: Some(64.0),
                             step: Some(1.0),
@@ -136,7 +136,7 @@ mod tests {
                             description: None,
                             required: None,
                             placeholder: None,
-                            default: Some(json!(1.2)),
+                            default: Some(DslValue::Number(1.2)),
                             min: Some(0.4),
                             max: Some(2.4),
                             step: Some(0.1),
@@ -158,7 +158,7 @@ mod tests {
                             description: None,
                             required: None,
                             placeholder: None,
-                            default: Some(json!(false)),
+                            default: Some(DslValue::Bool(false)),
                             min: None,
                             max: None,
                             step: None,
@@ -180,7 +180,7 @@ mod tests {
                             description: None,
                             required: Some(true),
                             placeholder: None,
-                            default: Some(json!("aluminum")),
+                            default: Some(DslValue::String("aluminum".into())),
                             min: None,
                             max: None,
                             step: None,
@@ -206,7 +206,7 @@ mod tests {
                             description: None,
                             required: None,
                             placeholder: None,
-                            default: Some(json!(["anodized"])),
+                            default: Some(DslValue::Array(vec![DslValue::String("anodized".into())])),
                             min: None,
                             max: None,
                             step: None,
@@ -239,7 +239,7 @@ mod tests {
                             description: None,
                             required: None,
                             placeholder: None,
-                            default: Some(json!("2027-03-01")),
+                            default: Some(DslValue::String("2027-03-01".into())),
                             min: None,
                             max: None,
                             step: None,
@@ -261,7 +261,7 @@ mod tests {
                             description: None,
                             required: None,
                             placeholder: None,
-                            default: Some(json!("#2f6fed")),
+                            default: Some(DslValue::String("#2f6fed".into())),
                             min: None,
                             max: None,
                             step: None,
@@ -394,10 +394,10 @@ mod tests {
                             src: None,
                             accept: None,
                             fixture_slug: Some("voronoi-facade".into()),
-                            params: Some(json!({ "algorithm": "voronoi", "seed": 7.0, "density": 0.6 })),
+                            params: Some(DslValue::object([("algorithm".into(), DslValue::String("voronoi".into())), ("density".into(), DslValue::Number(0.6)), ("seed".into(), DslValue::Number(7.0))])),
                             condition: Some(PlaybookExpr::And {
                                 items: vec![
-                                    PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "material".into() }), right: Box::new(PlaybookExpr::Const { value: json!("aluminum") }) },
+                                    PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "material".into() }), right: Box::new(PlaybookExpr::Const { value: DslValue::String("aluminum".into()) }) },
                                     PlaybookExpr::Truthy { expr: Box::new(PlaybookExpr::Var { name: "mirror-layout".into() }) },
                                 ],
                             }),
@@ -424,8 +424,8 @@ mod tests {
                             params: None,
                             condition: Some(PlaybookExpr::Or {
                                 items: vec![
-                                    PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "material".into() }), right: Box::new(PlaybookExpr::Const { value: json!("timber") }) },
-                                    PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "material".into() }), right: Box::new(PlaybookExpr::Const { value: json!("terracotta") }) },
+                                    PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "material".into() }), right: Box::new(PlaybookExpr::Const { value: DslValue::String("timber".into()) }) },
+                                    PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "material".into() }), right: Box::new(PlaybookExpr::Const { value: DslValue::String("terracotta".into()) }) },
                                 ],
                             }),
                         },

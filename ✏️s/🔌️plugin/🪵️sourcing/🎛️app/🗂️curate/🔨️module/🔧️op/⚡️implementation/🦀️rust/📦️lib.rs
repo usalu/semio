@@ -13,7 +13,7 @@ pub enum SourcingOperation {
     SetDocument {
         #[dsl(block)]
         document: CurateDocument,
-    }
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -133,7 +133,13 @@ mod tests {
 
     fn sample_config() -> sourcing_engine::SourcingCurateConfig {
         sourcing_engine::SourcingCurateConfig {
-            filters: sourcing::Filters { query: "glulam".into(), module_ids: vec!["beams".into()], typology_path: vec!["beams".into(), "steel".into()], min_availability: 5, sort: Some(sourcing::TableSort { column_id: "availability".into(), direction: sourcing::SortDirection::Desc }) },
+            filters: sourcing::Filters {
+                query: "glulam".into(),
+                module_ids: vec!["beams".into()],
+                typology_path: vec!["beams".into(), "steel".into()],
+                min_availability: 5,
+                sort: Some(sourcing::TableSort { column_id: "availability".into(), direction: sourcing::SortDirection::Desc }),
+            },
             selected_object_id: Some("beam-glulam-gl24h".into()),
             locale: "de-DE".into(),
         }

@@ -59,9 +59,7 @@ mod tests {
         let projection = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
         let envelope = store::create_document_envelope::<SHomeDocument, SHomeOperation>("s.home", "home", projection, None);
         let mut store: store::DocumentStore<SHomeDocument, SHomeOperation> = store::DocumentStore::new(envelope);
-        store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![SHomeOperation::SetCatalogGeneration { value: 3 }], description: None })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![SHomeOperation::SetCatalogGeneration { value: 3 }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

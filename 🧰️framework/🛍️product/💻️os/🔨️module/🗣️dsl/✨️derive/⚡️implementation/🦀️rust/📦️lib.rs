@@ -292,7 +292,23 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
             None
         };
         let block = attrs.block && !matches!(kind, FieldKind::VecBlockStatements(_));
-        out.push(FieldPlan { ident, id: index as u16, key, positional, optional, kind, elem_ty, block, unit: attrs.unit.clone(), angle: attrs.angle.clone(), refs: attrs.refs.clone(), defines: attrs.defines.clone(), lang: attrs.lang.clone(), coord: attrs.coord, dir: attrs.dir });
+        out.push(FieldPlan {
+            ident,
+            id: index as u16,
+            key,
+            positional,
+            optional,
+            kind,
+            elem_ty,
+            block,
+            unit: attrs.unit.clone(),
+            angle: attrs.angle.clone(),
+            refs: attrs.refs.clone(),
+            defines: attrs.defines.clone(),
+            lang: attrs.lang.clone(),
+            coord: attrs.coord,
+            dir: attrs.dir,
+        });
     }
     out
 }
@@ -338,7 +354,11 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
             Some(p) => quote! { .positional(#p as u8) },
             None => quote! {},
         };
-        let opt_expr = if *optional { quote! { .optional() } } else { quote! {} };
+        let opt_expr = if *optional {
+            quote! { .optional() }
+        } else {
+            quote! {}
+        };
 
         let (shape_expr, to_value_expr, from_value_expr): (proc_macro2::TokenStream, proc_macro2::TokenStream, proc_macro2::TokenStream) = match kind {
             FieldKind::Scalar => (
@@ -542,7 +562,11 @@ pub fn derive_dsl_record(input: TokenStream) -> TokenStream {
         Some(k) => quote! { Some(#k.to_string()) },
         None => quote! { None },
     };
-    let layout_expr = if container.lines_layout { quote! { ::dsl::RecordLayout::Lines } } else { quote! { ::dsl::RecordLayout::Inline } };
+    let layout_expr = if container.lines_layout {
+        quote! { ::dsl::RecordLayout::Lines }
+    } else {
+        quote! { ::dsl::RecordLayout::Inline }
+    };
 
     let expanded = quote! {
         impl #name {
@@ -596,7 +620,11 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
         Some(k) => quote! { Some(#k.to_string()) },
         None => quote! { None },
     };
-    let layout_expr = if container.lines_layout { quote! { ::dsl::RecordLayout::Lines } } else { quote! { ::dsl::RecordLayout::Inline } };
+    let layout_expr = if container.lines_layout {
+        quote! { ::dsl::RecordLayout::Lines }
+    } else {
+        quote! { ::dsl::RecordLayout::Inline }
+    };
 
     let expanded = quote! {
         impl #name {
@@ -760,8 +788,16 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
         let field_binds: Vec<proc_macro2::TokenStream> = field_idents.iter().map(|f| quote! { #f }).collect();
         let to_value_stmts_for_variant: Vec<proc_macro2::TokenStream> = record_codegen_to_value_from_bindings(fields);
         let is_unit = matches!(fields, Fields::Unit);
-        let match_pattern = if is_unit { quote! { #name::#variant_ident } } else { quote! { #name::#variant_ident { #(#field_binds),* } } };
-        let construct_expr = if is_unit { quote! { #name::#variant_ident } } else { quote! { #name::#variant_ident { #(#field_idents),* } } };
+        let match_pattern = if is_unit {
+            quote! { #name::#variant_ident }
+        } else {
+            quote! { #name::#variant_ident { #(#field_binds),* } }
+        };
+        let construct_expr = if is_unit {
+            quote! { #name::#variant_ident }
+        } else {
+            quote! { #name::#variant_ident { #(#field_idents),* } }
+        };
         to_named_arms.push(quote! {
             #match_pattern => {
                 let mut record = ::dsl::RecordValue::default();

@@ -48,7 +48,11 @@ pub enum LayoutCommand {
     #[dsl(key = "canvas-drag-leave")]
     CanvasDragLeave,
     #[dsl(key = "camera")]
-    SetCamera { surface_id: Option<String>, #[dsl(block)] camera: LayoutCamera },
+    SetCamera {
+        surface_id: Option<String>,
+        #[dsl(block)]
+        camera: LayoutCamera,
+    },
     #[dsl(key = "locale")]
     SetLocale { value: String },
 

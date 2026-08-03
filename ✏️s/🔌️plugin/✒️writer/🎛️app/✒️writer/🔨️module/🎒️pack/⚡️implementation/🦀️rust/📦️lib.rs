@@ -21,13 +21,7 @@ mod tests {
     /// ✍️ Hand-built representative document — verbatim from the original file's `🔖️DslAndOpText`
     /// test region (duplicated per-crate since each constitutional crate's tests compile independently).
     fn jack_projection() -> WriterProjection {
-        WriterProjection {
-            schema: "writer.document".into(),
-            id: "jack".into(),
-            language_id: "jack".into(),
-            uri: "writer://jack".into(),
-            text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into(),
-        }
+        WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
     }
 
     #[test]

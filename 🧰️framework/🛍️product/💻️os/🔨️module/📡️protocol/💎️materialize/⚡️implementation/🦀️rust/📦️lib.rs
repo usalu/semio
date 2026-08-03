@@ -12,7 +12,7 @@
 
 use pack_core::{ByteReader, ByteWriter};
 use protocol_core::{DictReader, ProtocolError, ProtocolLimits, RecordHasher};
-use protocol_format::{Blake3Hasher, FrameCursor, HEADER_SIZE, RecoveryMode, ReverseFrameCursor, VerificationLevel};
+use protocol_format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, VerificationLevel, HEADER_SIZE};
 use std::collections::HashMap;
 
 //#region 🔖️Projection
@@ -137,13 +137,7 @@ pub fn encode_projection(record: &ProjectionRecord) -> Vec<u8> {
 pub fn decode_projection(payload: &[u8]) -> Result<ProjectionRecord, ProtocolError> {
     let (header, body_span) = parse_projection(payload)?;
     let body = body_span.map(|(start, len)| payload[start..start + len].to_vec());
-    Ok(ProjectionRecord {
-        anchor_checkpoint_id: header.anchor_checkpoint_id,
-        edit_ordinal: header.edit_ordinal,
-        body_kind: header.body_kind,
-        body_hash: header.body_hash,
-        body,
-    })
+    Ok(ProjectionRecord { anchor_checkpoint_id: header.anchor_checkpoint_id, edit_ordinal: header.edit_ordinal, body_kind: header.body_kind, body_hash: header.body_hash, body })
 }
 
 /// @emoji 🔎️ Reads a dict-record payload written by `protocol_history`'s (private) flush routine —
@@ -477,12 +471,7 @@ fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(DictRead
 /// (default limits — no `limits` parameter on this frozen signature) so a torn live tail is silently
 /// excluded rather than surfaced as an error, matching how every other reader in this crate family
 /// treats the boundary `protocol_format::recover` establishes.
-pub fn materialize_with<P, E>(
-    plan: MaterializePlan<'_>,
-    protocol_bytes: &[u8],
-    decode_base: impl FnOnce(&[u8]) -> Result<P, E>,
-    mut apply_edit: impl FnMut(&mut P, &protocol_history::HistoryEdit) -> Result<(), E>,
-) -> Result<(P, MaterializeReport), E>
+pub fn materialize_with<P, E>(plan: MaterializePlan<'_>, protocol_bytes: &[u8], decode_base: impl FnOnce(&[u8]) -> Result<P, E>, mut apply_edit: impl FnMut(&mut P, &protocol_history::HistoryEdit) -> Result<(), E>) -> Result<(P, MaterializeReport), E>
 where
     E: From<ProtocolError>,
 {
@@ -528,10 +517,7 @@ where
     let genesis_replay = plan.base.applied_edits == 0;
     let snapshot_used = if genesis_replay { None } else { Some((None, plan.base.applied_edits)) };
 
-    Ok((
-        projection,
-        MaterializeReport { snapshot_used, snapshots_skipped_corrupt: plan.skipped_corrupt, edits_replayed, bytes_read, genesis_replay },
-    ))
+    Ok((projection, MaterializeReport { snapshot_used, snapshots_skipped_corrupt: plan.skipped_corrupt, edits_replayed, bytes_read, genesis_replay }))
 }
 //#endregion 🔖️Drive
 
@@ -585,7 +571,17 @@ mod tests {
 
     //#region 🔖️Plan
     fn sample_edit(id: &str, op_text: &str) -> HistoryEdit {
-        HistoryEdit { id: id.to_string(), actor: None, started_at: format!("t-{id}"), finished_at: None, coalesce_key: None, description: None, ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }], backwards: Vec::new(), meta: None }
+        HistoryEdit {
+            id: id.to_string(),
+            actor: None,
+            started_at: format!("t-{id}"),
+            finished_at: None,
+            coalesce_key: None,
+            description: None,
+            ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }],
+            backwards: Vec::new(),
+            meta: None,
+        }
     }
 
     fn flush_dict_delta<S: pack_core::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {

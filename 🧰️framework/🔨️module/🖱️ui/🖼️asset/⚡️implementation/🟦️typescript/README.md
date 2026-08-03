@@ -131,6 +131,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./📜️scri
 - `lod-depth`
 - `lowpoly-model`
 - `magnet`
+- `map`
 - `math-app`
 - `math-graph`
 - `maximize-2`
@@ -246,6 +247,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./📜️scri
 - `undo`
 - `undo-2`
 - `unlink`
+- `unlock`
 - `user`
 - `users`
 - `volume-brush`

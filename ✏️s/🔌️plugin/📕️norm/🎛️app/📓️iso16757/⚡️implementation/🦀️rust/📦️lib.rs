@@ -504,7 +504,10 @@ pub mod part_2 {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
     #[serde(tag = "node", rename_all = "camelCase")]
     pub enum GeometryNode {
-        Primitive { kind: String, parameters: BTreeMap<String, f64> },
+        Primitive {
+            kind: String,
+            parameters: BTreeMap<String, f64>,
+        },
         Transform {
             translation: [f64; 3],
             rotation_deg: [f64; 3],
@@ -516,7 +519,9 @@ pub mod part_2 {
             #[dsl(statements, block)]
             children: Vec<GeometryNode>,
         },
-        Reference { geometry_id: String },
+        Reference {
+            geometry_id: String,
+        },
     }
 
     /// ➕️ Boolean CSG operator.
@@ -841,10 +846,7 @@ impl Document {
                 names: Names {
                     preferred: LocalizedText { locale: "en".into(), text: "Control valve".into() },
                     short_name: Some("Valve".into()),
-                    alternatives: vec![
-                        LocalizedText { locale: "de".into(), text: "Regelventil".into() },
-                        LocalizedText { locale: "fr".into(), text: "Vanne de régulation".into() },
-                    ],
+                    alternatives: vec![LocalizedText { locale: "de".into(), text: "Regelventil".into() }, LocalizedText { locale: "fr".into(), text: "Vanne de régulation".into() }],
                 },
                 definition: LocalizedText { locale: "en".into(), text: "Flow control valve".into() },
                 parent_id: None,
@@ -852,22 +854,14 @@ impl Document {
             relationships: Vec::new(),
             properties: vec![part_4::DictionaryProperty {
                 id: "prop.dn".into(),
-                names: Names {
-                    preferred: LocalizedText { locale: "en".into(), text: "Nominal diameter".into() },
-                    short_name: None,
-                    alternatives: Vec::new(),
-                },
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Nominal diameter".into() }, short_name: None, alternatives: Vec::new() },
                 kind: part_1::PropertyKind::Static,
                 data_type: "decimal".into(),
                 unit: Some(CatalogueUnit { symbol: "mm".into(), dimension: DimensionSignature::LENGTH, si_factor: 0.001 }),
                 applicable_subject_ids: vec!["subject.valve".into()],
                 value_constraints: vec![part_4::ValueConstraint { min: Some(15.0), max: Some(300.0), allowed_values: Vec::new() }],
             }],
-            controlled_lists: vec![part_4::ControlledValueList {
-                id: "dn.list".into(),
-                values: vec!["50".into(), "80".into(), "100".into()],
-                context_subject_ids: vec!["subject.valve".into()],
-            }],
+            controlled_lists: vec![part_4::ControlledValueList { id: "dn.list".into(), values: vec!["50".into(), "80".into(), "100".into()], context_subject_ids: vec!["subject.valve".into()] }],
             meta_subjects: Vec::new(),
         };
         let geometry_id: String = "geom.valve.50".into();
@@ -876,114 +870,64 @@ impl Document {
             geometry_id.clone(),
             part_2::GeometryObject {
                 id: geometry_id.clone(),
-                shape: Some(part_2::GeometryNode::Primitive {
-                    kind: "box".into(),
-                    parameters: BTreeMap::from([("width".into(), 0.15), ("height".into(), 0.20), ("depth".into(), 0.10)]),
-                }),
+                shape: Some(part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 0.15), ("height".into(), 0.20), ("depth".into(), 0.10)]) }),
                 symbolic: None,
                 spaces: vec![part_2::SpaceEnvelope { kind: part_2::SpaceKind::Installation, bounds: part_2::BoundingBox::from_size(0.30, 0.30, 0.30) }],
                 surfaces: Vec::new(),
-                ports: vec![part_2::PortDefinition {
-                    id: "port.in".into(),
-                    medium: "water".into(),
-                    position: [0.0, 0.1, 0.05],
-                    direction: [1.0, 0.0, 0.0],
-                    port_type: "inlet".into(),
-                }],
+                ports: vec![part_2::PortDefinition { id: "port.in".into(), medium: "water".into(), position: [0.0, 0.1, 0.05], direction: [1.0, 0.0, 0.0], port_type: "inlet".into() }],
                 parameter_bindings: BTreeMap::from([("width".into(), "prop.dn".into())]),
             },
         );
         let catalogue = part_1::Catalogue {
             id: CatalogueId("cat.demo".into()),
             metadata: part_1::CatalogueMetadata {
-                names: Names {
-                    preferred: LocalizedText { locale: "en".into(), text: "Demo HVAC catalogue".into() },
-                    short_name: Some("Demo".into()),
-                    alternatives: Vec::new(),
-                },
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Demo HVAC catalogue".into() }, short_name: Some("Demo".into()), alternatives: Vec::new() },
                 lifecycle: Lifecycle { revision: "1".into(), status: "published".into(), valid_from: None, valid_to: None },
                 edition_profile: part_1::EditionProfile::FullPublished,
             },
             manufacturer: part_1::Manufacturer {
                 id: "mfg.demo".into(),
-                names: Names {
-                    preferred: LocalizedText { locale: "en".into(), text: "Demo Manufacturer".into() },
-                    short_name: None,
-                    alternatives: vec![LocalizedText { locale: "de".into(), text: "Demo Hersteller".into() }],
-                },
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Demo Manufacturer".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "Demo Hersteller".into() }] },
             },
             dictionary: dictionary.reference.clone(),
             product_groups: vec![part_1::ProductGroup {
                 id: "group.valves".into(),
-                names: Names {
-                    preferred: LocalizedText { locale: "en".into(), text: "Valves".into() },
-                    short_name: None,
-                    alternatives: Vec::new(),
-                },
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Valves".into() }, short_name: None, alternatives: Vec::new() },
                 dictionary_subject_id: Some("subject.valve".into()),
             }],
             product_classes: vec![part_1::ProductClass {
                 id: "class.valve".into(),
                 group_id: "group.valves".into(),
                 parent_id: None,
-                names: Names {
-                    preferred: LocalizedText { locale: "en".into(), text: "Control valve".into() },
-                    short_name: None,
-                    alternatives: Vec::new(),
-                },
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Control valve".into() }, short_name: None, alternatives: Vec::new() },
                 required_property_ids: vec!["prop.dn".into()],
                 optional_property_ids: Vec::new(),
             }],
             product_series: vec![part_1::ProductSeries {
                 id: "series.cv".into(),
                 class_id: "class.valve".into(),
-                names: Names {
-                    preferred: LocalizedText { locale: "en".into(), text: "CV series".into() },
-                    short_name: None,
-                    alternatives: Vec::new(),
-                },
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "CV series".into() }, short_name: None, alternatives: Vec::new() },
                 shared_property_values: BTreeMap::new(),
                 geometry_id: Some(geometry_id.clone()),
             }],
             products: vec![part_1::Product {
                 id: "product.cv".into(),
                 series_id: "series.cv".into(),
-                names: Names {
-                    preferred: LocalizedText { locale: "en".into(), text: "CV-50".into() },
-                    short_name: None,
-                    alternatives: Vec::new(),
-                },
-                parameter_domains: vec![part_1::ParameterDomain {
-                    parameter_id: "dn".into(),
-                    allowed_values: vec![CatalogueValue::Decimal { value: 50.0 }],
-                    default_value: Some(CatalogueValue::Decimal { value: 50.0 }),
-                }],
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "CV-50".into() }, short_name: None, alternatives: Vec::new() },
+                parameter_domains: vec![part_1::ParameterDomain { parameter_id: "dn".into(), allowed_values: vec![CatalogueValue::Decimal { value: 50.0 }], default_value: Some(CatalogueValue::Decimal { value: 50.0 }) }],
                 variants: vec![part_1::ProductVariant {
                     id: "variant.50".into(),
                     parameter_values: BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
-                    property_values: vec![part_1::PropertyValue {
-                        definition_id: "prop.dn".into(),
-                        value: CatalogueValue::Decimal { value: 50.0 },
-                        function_id: None,
-                    }],
+                    property_values: vec![part_1::PropertyValue { definition_id: "prop.dn".into(), value: CatalogueValue::Decimal { value: 50.0 }, function_id: None }],
                     article_number: Some("CV-50".into()),
                     geometry_id: Some(geometry_id),
                 }],
                 static_properties: Vec::new(),
             }],
-            product_indexes: vec![part_1::ProductIndex {
-                id: "index.cv50".into(),
-                product_id: "product.cv".into(),
-                variant_id: Some("variant.50".into()),
-                search_tags: vec!["valve".into(), "dn50".into()],
-            }],
+            product_indexes: vec![part_1::ProductIndex { id: "index.cv50".into(), product_id: "product.cv".into(), variant_id: Some("variant.50".into()), search_tags: vec!["valve".into(), "dn50".into()] }],
             property_definitions: vec![part_1::PropertyDefinition {
                 id: "prop.dn".into(),
-                names: Names {
-                    preferred: LocalizedText { locale: "en".into(), text: "Nominal diameter".into() },
-                    short_name: None,
-                    alternatives: Vec::new(),
-                },
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Nominal diameter".into() }, short_name: None, alternatives: Vec::new() },
                 data_type: "decimal".into(),
                 unit: Some(CatalogueUnit { symbol: "mm".into(), dimension: DimensionSignature::LENGTH, si_factor: 0.001 }),
                 cardinality: Cardinality::required(),
@@ -1001,11 +945,7 @@ impl Document {
             geometry: part_2::GeometryCatalogue { objects: geometry_objects, primitive_registry: part_2::GeometryCatalogue::default_primitives() },
             selection: part_1::SelectionRequest {
                 class_id: "class.valve".into(),
-                constraints: vec![part_1::SelectionConstraint {
-                    property_id: "prop.dn".into(),
-                    operator: part_1::ConstraintOperator::Equal,
-                    value: CatalogueValue::Decimal { value: 50.0 },
-                }],
+                constraints: vec![part_1::SelectionConstraint { property_id: "prop.dn".into(), operator: part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 50.0 } }],
                 series_id: Some("series.cv".into()),
             },
             part_number_rule: part_5::PartNumberRule::Script { function_id: "partno".into(), source: "dn * 10 + 50".into() },

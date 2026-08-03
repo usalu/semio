@@ -169,9 +169,7 @@ mod tests {
     fn flow_document_text_round_trips_store_with_applied_operation() {
         let envelope = store::create_document_envelope::<FlowFixture, FlowOperation>("flow.fixture", "doc-text-test", FlowFixture::default(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![FlowOperation::SetLayout { entries: Vec::new() }], description: None })
-            .expect("apply");
+        doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![FlowOperation::SetLayout { entries: Vec::new() }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&doc_store);
         store::test_support::assert_document_pack_round_trip(&doc_store);
     }

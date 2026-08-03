@@ -13,14 +13,30 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum NoteOperation {
-    SetGridVisible { visible: Option<bool> },
-    SetGridSpacing { spacing: Option<f64> },
-    SetGridSubdivisions { value: Option<f64> },
-    SetGridOpacity { opacity: Option<f64> },
-    SetSnapEnabled { enabled: Option<bool> },
-    SetSnapGridSpacing { spacing: Option<f64> },
-    SetPencilWidth { width: Option<f64> },
-    SetEraserRadius { radius: Option<f64> },
+    SetGridVisible {
+        visible: Option<bool>,
+    },
+    SetGridSpacing {
+        spacing: Option<f64>,
+    },
+    SetGridSubdivisions {
+        value: Option<f64>,
+    },
+    SetGridOpacity {
+        opacity: Option<f64>,
+    },
+    SetSnapEnabled {
+        enabled: Option<bool>,
+    },
+    SetSnapGridSpacing {
+        spacing: Option<f64>,
+    },
+    SetPencilWidth {
+        width: Option<f64>,
+    },
+    SetEraserRadius {
+        radius: Option<f64>,
+    },
     SetBlocks {
         #[dsl(statements, block)]
         blocks: Vec<NoteBlockNode>,
@@ -32,11 +48,13 @@ pub enum NoteOperation {
     },
     /// 🗑️ True composed inverse of a `PutAsset` that introduced the key — the whole-document
     /// `SetDocument` snapshot this used to invert to would have undone every other pending change too.
-    RemoveAsset { key: String },
+    RemoveAsset {
+        key: String,
+    },
     SetDocument {
         #[dsl(block)]
         document: NoteDocument,
-    }
+    },
 }
 
 /// 🧩️ Snapshot diff wrapping the forward `NoteOperation` — `apply` replays it, `absorb` keeps the latest
@@ -224,10 +242,7 @@ mod tests {
         };
         store::test_support::assert_op_text_binary_equivalence(&NoteOperation::SetBlocks { blocks: vec![text_block, stroke_with_points] });
 
-        store::test_support::assert_op_text_binary_equivalence(&NoteOperation::PutAsset {
-            key: "asset-2".into(),
-            asset: NoteImageAsset { mime: "image/jpeg".into(), data: "data:image/jpeg;base64,xyz".into(), width: None, height: None },
-        });
+        store::test_support::assert_op_text_binary_equivalence(&NoteOperation::PutAsset { key: "asset-2".into(), asset: NoteImageAsset { mime: "image/jpeg".into(), data: "data:image/jpeg;base64,xyz".into(), width: None, height: None } });
         store::test_support::assert_op_text_binary_equivalence(&NoteOperation::RemoveAsset { key: "asset-2".into() });
 
         store::test_support::assert_op_text_binary_equivalence(&NoteOperation::SetDocument { document: note_engine::empty_note_document() });

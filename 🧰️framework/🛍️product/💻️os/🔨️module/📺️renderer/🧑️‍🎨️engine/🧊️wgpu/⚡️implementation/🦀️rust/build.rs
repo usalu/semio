@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
-    let icons_dir = manifest_dir.join("../../../../../../../../🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript/🔣️icon");
+    let icons_dir = manifest_dir.join("../../../../../../../../🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🔣️icon");
     let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR"));
     let out_icons = out_dir.join("icons");
     let _ = fs::remove_dir_all(&out_icons);

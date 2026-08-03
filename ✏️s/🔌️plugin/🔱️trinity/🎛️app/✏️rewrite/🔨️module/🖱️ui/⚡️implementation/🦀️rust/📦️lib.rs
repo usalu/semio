@@ -8,30 +8,22 @@
 //! `shooting_ui::ShootingPlayApp`/`trinity_jack_ui::TrinityJackPlayApp` (the B1 pilot + its jack
 //! sibling) — see their doc comments for the full rationale.
 
-use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    app_labels, build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at,
-    tree_item, tree_item_with_action,
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabels, ContextMenuItemSpec, ContextMenuRequest,
-    ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, NodeGraphHover, MediaClass, MediaForm, MediaType, PanelTreeBuilder,
-    TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
-    Terminology, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
-    WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
+use rewrite::{LayoutPoint, RewriteRuleState, REWRITE_RULE_SCHEMA};
+use rewrite_engine::{apply_rule, build_rule_query, rewrite_io, rule_query_json, trinity_lod_scale_json, AssignmentJson, Lhs, ParameterKind, ParameterSpec, PatternJson, RewriteConfig, Rhs, Rule};
+use rewrite_op::{RewriteConfigOperation, RewriteRuleOperation};
+use rewrite_protocol::TrinityRewriteCommand;
+use semio_framework_plugin::{
+    app_labels, build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at, tree_item, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field,
+    ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabels, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, MeasureSelectItem,
+    Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphHover, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology,
+    TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
+use store::{DocumentDsl, DocumentPack};
 use trinity_jack::semantic_tokens;
 use trinity_ram::{Camera, Graph, GraphFixture, Node, PortDirection, PropertyValue, TRINITY_GRAPH_SCHEMA};
-use rewrite::{LayoutPoint, RewriteRuleState, REWRITE_RULE_SCHEMA};
-use rewrite_engine::{
-    apply_rule, build_rule_query, rule_query_json, rewrite_io, trinity_lod_scale_json,
-    AssignmentJson, Lhs, ParameterKind, ParameterSpec, Rhs, Rule, PatternJson, RewriteConfig,
-};
-use rewrite_op::{RewriteConfigOperation, RewriteRuleOperation};
-use rewrite_protocol::TrinityRewriteCommand;
-use store::{DocumentDsl, DocumentPack};
 
 //#region 🔖️Constants
 const TRINITY_REWRITE_PLAY_APP_ID: &str = "trinity-rewrite-play";
@@ -92,7 +84,11 @@ fn is_de_locale(cfg: &RewriteConfig) -> bool {
 
 /// 🗣️ `RewriteConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
 fn rewrite_locale(cfg: &RewriteConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
@@ -111,13 +107,7 @@ fn nakagin_fixture_json() -> String {
 }
 
 fn default_rule_state() -> RewriteRuleState {
-    let mut state = RewriteRuleState {
-        before_fixture_json: nakagin_fixture_json(),
-        lhs_json: DEFAULT_LHS_JSON.into(),
-        rhs_json: DEFAULT_RHS_JSON.into(),
-        parameter_bindings: BTreeMap::new(),
-        rule_layout: BTreeMap::new(),
-    };
+    let mut state = RewriteRuleState { before_fixture_json: nakagin_fixture_json(), lhs_json: DEFAULT_LHS_JSON.into(), rhs_json: DEFAULT_RHS_JSON.into(), parameter_bindings: BTreeMap::new(), rule_layout: BTreeMap::new() };
     state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
     state
 }
@@ -129,11 +119,7 @@ fn seed_before_pane_camera(state: &RewriteRuleState) -> Camera {
 }
 
 fn rewrite_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: TRINITY_REWRITE_PLAY_CONTROLLER_ID.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: TRINITY_REWRITE_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn parse_fixture_json(json: &str) -> Option<GraphFixture> {
@@ -144,20 +130,13 @@ fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, PropertyValue>
     let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
         return BTreeMap::new();
     };
-    rhs.parameters
-        .iter()
-        .map(|param| (param.name.clone(), param.default.clone()))
-        .collect()
+    rhs.parameters.iter().map(|param| (param.name.clone(), param.default.clone())).collect()
 }
 
 fn build_rule_from_state(state: &RewriteRuleState) -> Result<Rule, String> {
     let lhs: Lhs = serde_json::from_str(&state.lhs_json).map_err(|e| e.to_string())?;
     let rhs: Rhs = serde_json::from_str(&state.rhs_json).map_err(|e| e.to_string())?;
-    Ok(Rule {
-        name: TRINITY_REWRITE_PLAY_RULE_NAME.into(),
-        lhs,
-        rhs,
-    })
+    Ok(Rule { name: TRINITY_REWRITE_PLAY_RULE_NAME.into(), lhs, rhs })
 }
 
 fn compiled_jack_query(state: &RewriteRuleState) -> String {
@@ -170,11 +149,7 @@ fn compiled_jack_query(state: &RewriteRuleState) -> String {
         .ok()
         .and_then(|json| serde_json::from_str::<Value>(&json).ok())
         .and_then(|value| value.get("query").and_then(|query| query.as_str()).map(str::to_string))
-        .unwrap_or_else(|| {
-            build_rule_from_state(state)
-                .map(|rule| build_rule_query(&rule, &state.parameter_bindings))
-                .unwrap_or_default()
-        })
+        .unwrap_or_else(|| build_rule_from_state(state).map(|rule| build_rule_query(&rule, &state.parameter_bindings)).unwrap_or_default())
 }
 
 fn apply_rewrite_to_fixture(before_json: &str, state: &RewriteRuleState) -> String {
@@ -433,38 +408,15 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
 
 fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_layout: &BTreeMap<String, LayoutPoint>) -> Node {
     let (x, y) = rule_layout.get(id).map(|point| (point.x, point.y)).unwrap_or((x, y));
-    Node {
-        id: id.into(),
-        name: name.into(),
-        kind: kind.into(),
-        x,
-        y,
-        width: 160.0,
-        height: 56.0,
-        ports: vec![],
-        properties: Default::default(),
-    }
+    Node { id: id.into(), name: name.into(), kind: kind.into(), x, y, width: 160.0, height: 56.0, ports: vec![], properties: Default::default() }
 }
 
 fn lhs_semantic_graph_fixture(lhs: &Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> GraphFixture {
-    let mut nodes = vec![semantic_rule_node(
-        "lhs-match",
-        "rewrite.match",
-        &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind),
-        0.0,
-        0.0,
-        rule_layout,
-    )];
+    let mut nodes = vec![semantic_rule_node("lhs-match", "rewrite.match", &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind), 0.0, 0.0, rule_layout)];
     let mut edges = Vec::new();
     if let Some(where_clause) = lhs.where_clause.as_deref().filter(|value| !value.trim().is_empty()) {
         nodes.push(semantic_rule_node("lhs-where", "rewrite.where", where_clause, 220.0, 80.0, rule_layout));
-        edges.push(trinity_ram::Edge {
-            id: "lhs-match-where".into(),
-            kind: "rewrite.flow".into(),
-            source: "lhs-match@out".into(),
-            target: "lhs-where@in".into(),
-            properties: Default::default(),
-        });
+        edges.push(trinity_ram::Edge { id: "lhs-match-where".into(), kind: "rewrite.flow".into(), source: "lhs-match@out".into(), target: "lhs-where@in".into(), properties: Default::default() });
     }
     GraphFixture {
         schema: GraphFixture::SCHEMA.into(),
@@ -484,38 +436,17 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPo
     let mut y = 0.0;
     for (index, pattern) in rhs.create.iter().enumerate() {
         let id = format!("rhs-create-{index}");
-        nodes.push(semantic_rule_node(
-            &id,
-            "rewrite.create",
-            &format!("{}:{}", pattern.left_var, pattern.left_kind),
-            (index as f64) * 220.0,
-            y,
-            rule_layout,
-        ));
+        nodes.push(semantic_rule_node(&id, "rewrite.create", &format!("{}:{}", pattern.left_var, pattern.left_kind), (index as f64) * 220.0, y, rule_layout));
     }
     y += 80.0;
     for (index, pattern) in rhs.merge.iter().enumerate() {
         let id = format!("rhs-merge-{index}");
-        nodes.push(semantic_rule_node(
-            &id,
-            "rewrite.merge",
-            &format!("{}:{}", pattern.left_var, pattern.left_kind),
-            (index as f64) * 220.0,
-            y,
-            rule_layout,
-        ));
+        nodes.push(semantic_rule_node(&id, "rewrite.merge", &format!("{}:{}", pattern.left_var, pattern.left_kind), (index as f64) * 220.0, y, rule_layout));
     }
     y += 80.0;
     for (index, assignment) in rhs.set.iter().enumerate() {
         let id = format!("rhs-set-{index}");
-        nodes.push(semantic_rule_node(
-            &id,
-            "rewrite.set",
-            &format!("{}.{} = {:?}", assignment.var, assignment.prop, assignment.value),
-            (index as f64) * 220.0,
-            y,
-            rule_layout,
-        ));
+        nodes.push(semantic_rule_node(&id, "rewrite.set", &format!("{}.{} = {:?}", assignment.var, assignment.prop, assignment.value), (index as f64) * 220.0, y, rule_layout));
     }
     y += 80.0;
     for (index, name) in rhs.delete.iter().enumerate() {
@@ -530,14 +461,7 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPo
             ParameterKind::Number => "number",
             ParameterKind::Boolean => "boolean",
         };
-        nodes.push(semantic_rule_node(
-            &id,
-            "rewrite.parameter",
-            &format!("{}:{kind}", parameter.name),
-            (index as f64) * 220.0,
-            y,
-            rule_layout,
-        ));
+        nodes.push(semantic_rule_node(&id, "rewrite.parameter", &format!("{}:{kind}", parameter.name), (index as f64) * 220.0, y, rule_layout));
     }
     if nodes.is_empty() {
         nodes.push(semantic_rule_node("rhs-empty", "rewrite.create", "result:Piece", 0.0, 0.0, rule_layout));
@@ -558,20 +482,14 @@ fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutP
     let Ok(lhs) = serde_json::from_str::<Lhs>(lhs_json) else {
         return nakagin_fixture_json();
     };
-    Graph::from_fixture(lhs_semantic_graph_fixture(&lhs, rule_layout))
-        .ok()
-        .and_then(|graph| graph.fixture_json().ok())
-        .unwrap_or_else(nakagin_fixture_json)
+    Graph::from_fixture(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
 fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
     let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
         return nakagin_fixture_json();
     };
-    Graph::from_fixture(rhs_semantic_graph_fixture(&rhs, rule_layout))
-        .ok()
-        .and_then(|graph| graph.fixture_json().ok())
-        .unwrap_or_else(nakagin_fixture_json)
+    Graph::from_fixture(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
 fn node_id_for_var(fixture_json: &str, var: &str) -> Option<String> {
@@ -579,23 +497,11 @@ fn node_id_for_var(fixture_json: &str, var: &str) -> Option<String> {
         return None;
     }
     let fixture = GraphFixture::from_json(fixture_json).ok()?;
-    fixture
-        .nodes
-        .iter()
-        .find(|node| {
-            node.name.starts_with(&format!("{var}:"))
-                || node.name == var
-                || var_from_node_name(&node.name).as_deref() == Some(var)
-        })
-        .map(|node| node.id.clone())
+    fixture.nodes.iter().find(|node| node.name.starts_with(&format!("{var}:")) || node.name == var || var_from_node_name(&node.name).as_deref() == Some(var)).map(|node| node.id.clone())
 }
 
 fn graph_hover(fixture_json: &str, hover_var: &str, hover_node_id: &str) -> Option<NodeGraphHover> {
-    let node_id = if !hover_node_id.is_empty() {
-        Some(hover_node_id.to_string())
-    } else {
-        node_id_for_var(fixture_json, hover_var)
-    }?;
+    let node_id = if !hover_node_id.is_empty() { Some(hover_node_id.to_string()) } else { node_id_for_var(fixture_json, hover_var) }?;
     Some(NodeGraphHover { node_id: Some(node_id) })
 }
 
@@ -630,14 +536,7 @@ fn fixture_to_workflow(fixture: &GraphFixture) -> (Vec<NodeGraphNodeRecord>, Vec
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            NodeGraphEdgeRecord {
-                id: edge.id.clone(),
-                source_node_id,
-                source_port_id,
-                target_node_id,
-                target_port_id,
-                label: None,
-            }
+            NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
     let viewport = NodeGraphViewport { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom };
@@ -654,26 +553,8 @@ fn node_to_workflow_record(node: &Node) -> NodeGraphNodeRecord {
         y: node.y,
         width,
         height,
-        inputs: node
-            .ports
-            .iter()
-            .filter(|port| port.direction == PortDirection::In)
-            .map(|port| NodeGraphPortRecord {
-                id: trinity_ram::port_key(&node.id, &port.id),
-                label: Some(port.id.clone()),
-                ..Default::default()
-            })
-            .collect(),
-        outputs: node
-            .ports
-            .iter()
-            .filter(|port| port.direction == PortDirection::Out)
-            .map(|port| NodeGraphPortRecord {
-                id: trinity_ram::port_key(&node.id, &port.id),
-                label: Some(port.id.clone()),
-                ..Default::default()
-            })
-            .collect(),
+        inputs: node.ports.iter().filter(|port| port.direction == PortDirection::In).map(|port| NodeGraphPortRecord { id: trinity_ram::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
+        outputs: node.ports.iter().filter(|port| port.direction == PortDirection::Out).map(|port| NodeGraphPortRecord { id: trinity_ram::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
         ..Default::default()
     }
 }
@@ -720,26 +601,15 @@ fn build_document_tree(state: &RewriteRuleState, cfg: &RewriteConfig, labels: &T
         .nodes
         .iter()
         .map(|node| {
-            tree_item_with_action(
-                builder.item_id("node", &node.id),
-                Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
-                Some(node.kind.clone()),
-                rewrite_action("setSelection", Some(json!({ "ids": [node.id] }))),
-            )
+            tree_item_with_action(builder.item_id("node", &node.id), Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }), Some(node.kind.clone()), rewrite_action("setSelection", Some(json!({ "ids": [node.id] }))))
         })
         .collect();
     let selected = cfg.selected_node_ids.iter().map(|id| builder.item_id("node", id)).collect();
-    builder
-        .section("trinity-document.nodes", Some(labels.pieces.into()), true, node_items)
-        .selected(selected)
-        .selection_change(rewrite_action("setSelection", Some(json!({ "ids": [] }))))
-        .build()
+    builder.section("trinity-document.nodes", Some(labels.pieces.into()), true, node_items).selected(selected).selection_change(rewrite_action("setSelection", Some(json!({ "ids": [] })))).build()
 }
 
 fn catalogue_add_item(id: &str, label: impl Into<Label>, clause_kind: &str) -> UiTreeItemNode {
-    UiTreeItemNode {
-        ..tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind }))))
-    }
+    UiTreeItemNode { ..tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind })))) }
 }
 
 fn build_catalogue_tree(labels: &TrinityRewriteLabels) -> UiNode {
@@ -748,18 +618,9 @@ fn build_catalogue_tree(labels: &TrinityRewriteLabels) -> UiNode {
             "trinity-catalogue.kinds",
             Some(labels.catalogue.into()),
             true,
-            vec![
-                tree_item("trinity-catalogue.piece", labels.piece),
-                tree_item("trinity-catalogue.connection", labels.connection),
-                tree_item("trinity-catalogue.connector", labels.connector),
-            ],
+            vec![tree_item("trinity-catalogue.piece", labels.piece), tree_item("trinity-catalogue.connection", labels.connection), tree_item("trinity-catalogue.connector", labels.connector)],
         )
-        .section(
-            "trinity-catalogue.lhs",
-            Some(labels.add_to_lhs.into()),
-            true,
-            vec![catalogue_add_item("trinity-catalogue.add-where", Label::data("Where clause"), "where")],
-        )
+        .section("trinity-catalogue.lhs", Some(labels.add_to_lhs.into()), true, vec![catalogue_add_item("trinity-catalogue.add-where", Label::data("Where clause"), "where")])
         .section(
             "trinity-catalogue.rhs",
             Some(labels.add_to_rhs.into()),
@@ -811,11 +672,7 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
             menu: None,
         }]);
     }
-    let nodes: Vec<&Node> = cfg
-        .selected_node_ids
-        .iter()
-        .filter_map(|id| fixture.nodes.iter().find(|node| &node.id == id))
-        .collect();
+    let nodes: Vec<&Node> = cfg.selected_node_ids.iter().filter_map(|id| fixture.nodes.iter().find(|node| &node.id == id)).collect();
     if nodes.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "trinity-inspector.empty".into(),
@@ -830,19 +687,14 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
     let name_mixed = ui_inspector_mixed_text(&nodes.iter().map(|node| node.name.clone()).collect::<Vec<_>>());
     let kind_mixed = ui_inspector_mixed_text(&nodes.iter().map(|node| node.kind.clone()).collect::<Vec<_>>());
     let derived_fixture = fixture_with_derived(&state.before_fixture_json);
-    let derived_uv = |id: &str| -> (String, String) {
-        derived_fixture
-            .as_ref()
-            .and_then(|fixture| fixture.nodes.iter().find(|node| node.id == id))
-            .map(flat_position_uv)
-            .unwrap_or_default()
-    };
+    let derived_uv = |id: &str| -> (String, String) { derived_fixture.as_ref().and_then(|fixture| fixture.nodes.iter().find(|node| node.id == id)).map(flat_position_uv).unwrap_or_default() };
     let u_values: Vec<String> = node_ids.iter().map(|id| derived_uv(id).0).collect();
     let v_values: Vec<String> = node_ids.iter().map(|id| derived_uv(id).1).collect();
     let u_mixed = ui_inspector_mixed_text(&u_values);
     let v_mixed = ui_inspector_mixed_text(&v_values);
     ui_inspector_groups_to_tree(&[
-        UiInspectorFieldGroup { presence: UiPresence::default(),
+        UiInspectorFieldGroup {
+            presence: UiPresence::default(),
             id: "trinity-inspector.geometry".into(),
             label: term_labels.geometry.into(),
             default_open: None,
@@ -865,10 +717,12 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
             label: term_labels.identity.into(),
             default_open: None,
             fields: vec![
-                UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+                UiNode::Field(UiFieldNode {
+                    presence: UiPresence::default(),
                     id: "trinity-inspector.name".into(),
                     label: Label::data("Name"),
-                    child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
+                    child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                        presence: UiPresence::default(),
                         id: "trinity-inspector.name.input".into(),
                         input_kind: "text".into(),
                         value: name_mixed.value,
@@ -889,11 +743,7 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
                 ui_inspector_readonly_field(
                     "trinity-inspector.kind",
                     Label::data("Kind"),
-                    if kind_mixed.placeholder.is_none() {
-                        nodes.first().map(|node| node.kind.clone()).unwrap_or_default()
-                    } else {
-                        kind_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into())
-                    },
+                    if kind_mixed.placeholder.is_none() { nodes.first().map(|node| node.kind.clone()).unwrap_or_default() } else { kind_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
                 ),
             ],
         },
@@ -906,21 +756,19 @@ fn build_parameters_panel(state: &RewriteRuleState, labels: &TrinityRewriteLabel
     };
     let mut children: Vec<UiNode> = Vec::new();
     for param in &rhs.parameters {
-        let value = state
-            .parameter_bindings
-            .get(&param.name)
-            .cloned()
-            .unwrap_or_else(|| param.default.clone());
+        let value = state.parameter_bindings.get(&param.name).cloned().unwrap_or_else(|| param.default.clone());
         let display = match value {
             PropertyValue::String(text) => text,
             PropertyValue::Number(number) => number.to_string(),
             PropertyValue::Bool(flag) => flag.to_string(),
             _ => String::new(),
         };
-        children.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+        children.push(UiNode::Field(UiFieldNode {
+            presence: UiPresence::default(),
             id: format!("trinity-rewrite.param.{}", param.name),
             label: Label::data(param.name.clone()),
-            child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
+            child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                presence: UiPresence::default(),
                 id: format!("trinity-rewrite.param.{}.input", param.name),
                 input_kind: match param.kind {
                     ParameterKind::Number => "number",
@@ -947,14 +795,7 @@ fn build_parameters_panel(state: &RewriteRuleState, labels: &TrinityRewriteLabel
     if children.is_empty() {
         children.push(ui_text(Label::data("No parameters declared on RHS.")));
     }
-    ui_declarative_sections_to_tree(&[UiSectionNode {
-        id: "trinity-rewrite.parameters".into(),
-        label: Some(labels.parameters.into()),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        children,
-        menu: None,
-    }])
+    ui_declarative_sections_to_tree(&[UiSectionNode { id: "trinity-rewrite.parameters".into(), label: Some(labels.parameters.into()), default_open: Some(true), presence: UiPresence::default(), children, menu: None }])
 }
 
 trait ParameterKindLabel {
@@ -990,13 +831,7 @@ fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> WindowMea
         let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
         Some(MeasureSelectItem { id: id.clone(), value: id, label: name })
     }));
-    WindowMeasure::Select {
-        id: format!("{window_id}-lod"),
-        label: Some("LOD".into()),
-        value: current_mode.into(),
-        items,
-        on_change: rewrite_action("setLodMode", Some(json!({ "windowId": window_id }))),
-    }
+    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: rewrite_action("setLodMode", Some(json!({ "windowId": window_id }))) }
 }
 
 fn jack_token_at_offset(text: &str, offset: usize) -> Option<String> {
@@ -1012,31 +847,13 @@ fn jack_token_at_offset(text: &str, offset: usize) -> Option<String> {
     }
 }
 
-fn render_rule_graph(
-    surface_id: &str,
-    window_id: &str,
-    fixture_json: &str,
-    cfg: &RewriteConfig,
-    hover_node_id: &str,
-    editable: bool,
-    camera_override: Option<&Camera>,
-) -> UiNode {
+fn render_rule_graph(surface_id: &str, window_id: &str, fixture_json: &str, cfg: &RewriteConfig, hover_node_id: &str, editable: bool, camera_override: Option<&Camera>) -> UiNode {
     let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
     let (nodes, edges, fixture_viewport) = fixture_to_workflow(&fixture);
     let viewport = camera_override.map(|camera| NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom }).unwrap_or(fixture_viewport);
     let hover = graph_hover(fixture_json, &cfg.active_hover_var, hover_node_id);
     let selection = graph_selection(fixture_json, &cfg.active_select_var, &cfg.selected_node_ids);
-    build_node_graph_scene(
-        surface_id,
-        TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        NodeGraphScene {
-            hover,
-            selection,
-            lod_json: rewrite_lod_json_for_window(cfg, window_id),
-            editable: editable.then_some(true),
-            ..NodeGraphScene::base(nodes, edges, viewport)
-        },
-    )
+    build_node_graph_scene(surface_id, TRINITY_REWRITE_PLAY_CONTROLLER_ID, NodeGraphScene { hover, selection, lod_json: rewrite_lod_json_for_window(cfg, window_id), editable: editable.then_some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 
 fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_json: &str, cfg: &RewriteConfig, editable: bool, camera_override: Option<&Camera>) -> UiNode {
@@ -1066,19 +883,11 @@ fn var_occurrences_json(text: &str, var: &str) -> Option<String> {
 
 fn render_jack_editor(state: &RewriteRuleState, cfg: &RewriteConfig) -> UiNode {
     let query = compiled_jack_query(state);
-    let active_var = if !cfg.active_hover_var.is_empty() {
-        cfg.active_hover_var.as_str()
-    } else {
-        cfg.active_select_var.as_str()
-    };
+    let active_var = if !cfg.active_hover_var.is_empty() { cfg.active_hover_var.as_str() } else { cfg.active_select_var.as_str() };
     build_text_editor_scene(
         TRINITY_REWRITE_PLAY_SURFACE_JACK,
         TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        TextEditorScene {
-            tokens_json: serde_json::to_string(&semantic_tokens(&query)).ok(),
-            occurrences_json: var_occurrences_json(&query, active_var),
-            ..TextEditorScene::base(query, Some("jack".into()), None)
-        },
+        TextEditorScene { tokens_json: serde_json::to_string(&semantic_tokens(&query)).ok(), occurrences_json: var_occurrences_json(&query, active_var), ..TextEditorScene::base(query, Some("jack".into()), None) },
     )
 }
 //#endregion 🔖️Render
@@ -1166,10 +975,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 let fixture_json = after_fixture_json(doc.projection);
                 let fixture = GraphFixture::from_json(&fixture_json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let bytes = DocumentPack::encode_pack(&fixture);
-                Ok(Media {
-                    media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
-                    payload: MediaPayload::Structured { schema: TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity }, payload: MediaPayload::Structured { schema: TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "document:out" => {
                 let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
@@ -1204,12 +1010,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &TrinityRewriteCommand,
-        doc: &DocumentView<'_, RewriteRuleState>,
-        cfg: &ConfigView<'_, RewriteConfig>,
-    ) -> Emit<RewriteRuleOperation, RewriteConfigOperation> {
+    fn handle(&self, command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> Emit<RewriteRuleOperation, RewriteConfigOperation> {
         let state = doc.projection;
         let config = cfg.projection;
         match command {
@@ -1226,13 +1027,21 @@ impl DocumentApp for TrinityRewritePlayApp {
             TrinityRewriteCommand::SetLhsJson { value } => {
                 let mut next = state.clone();
                 next.lhs_json = value.clone();
-                if &next == state { Emit::default() } else { Emit::operations(vec![RewriteRuleOperation::SetState { state: next }]) }
+                if &next == state {
+                    Emit::default()
+                } else {
+                    Emit::operations(vec![RewriteRuleOperation::SetState { state: next }])
+                }
             }
             TrinityRewriteCommand::SetRhsJson { value } => {
                 let mut next = state.clone();
                 next.rhs_json = value.clone();
                 next.parameter_bindings = default_parameter_bindings(&next.rhs_json);
-                if &next == state { Emit::default() } else { Emit::operations(vec![RewriteRuleOperation::SetState { state: next }]) }
+                if &next == state {
+                    Emit::default()
+                } else {
+                    Emit::operations(vec![RewriteRuleOperation::SetState { state: next }])
+                }
             }
             TrinityRewriteCommand::SetParameter { name, value } => {
                 if name.is_empty() {
@@ -1251,7 +1060,11 @@ impl DocumentApp for TrinityRewritePlayApp {
                     Some(parsed) => {
                         let mut next = state.clone();
                         next.parameter_bindings.insert(name.clone(), parsed);
-                        if &next == state { Emit::default() } else { Emit::operations(vec![RewriteRuleOperation::SetState { state: next }]) }
+                        if &next == state {
+                            Emit::default()
+                        } else {
+                            Emit::operations(vec![RewriteRuleOperation::SetState { state: next }])
+                        }
                     }
                     None => Emit::default(),
                 }
@@ -1283,7 +1096,11 @@ impl DocumentApp for TrinityRewritePlayApp {
                     Some(patched) => {
                         let mut next = state.clone();
                         next.before_fixture_json = patched;
-                        if &next == state { Emit::default() } else { Emit::operations(vec![RewriteRuleOperation::SetState { state: next }]) }
+                        if &next == state {
+                            Emit::default()
+                        } else {
+                            Emit::operations(vec![RewriteRuleOperation::SetState { state: next }])
+                        }
                     }
                     None => Emit::default(),
                 }
@@ -1320,9 +1137,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                     Emit::default()
                 }
             }
-            TrinityRewriteCommand::GraphPointerDown { node_id } => {
-                Emit::config(vec![RewriteConfigOperation::SetSelection { node_ids: node_id.clone().map(|id| vec![id]).unwrap_or_default() }])
-            }
+            TrinityRewriteCommand::GraphPointerDown { node_id } => Emit::config(vec![RewriteConfigOperation::SetSelection { node_ids: node_id.clone().map(|id| vec![id]).unwrap_or_default() }]),
             TrinityRewriteCommand::TextSelect { var, start } => {
                 let mut config_operations = vec![RewriteConfigOperation::SetSelectEpoch { value: config.select_epoch + 1 }];
                 if let Some(var) = var {
@@ -1356,38 +1171,10 @@ impl DocumentApp for TrinityRewritePlayApp {
         let config = cfg.projection;
         let labels = resolve_labels::<TrinityRewriteLabels>(config);
         match body_key {
-            TRINITY_REWRITE_PLAY_BODY_BEFORE => render_fixture_graph(
-                TRINITY_REWRITE_PLAY_SURFACE_BEFORE,
-                TRINITY_REWRITE_PLAY_WINDOW_BEFORE,
-                &state.before_fixture_json,
-                config,
-                true,
-                Some(&config.before_pane_camera),
-            ),
-            TRINITY_REWRITE_PLAY_BODY_AFTER => render_fixture_graph(
-                TRINITY_REWRITE_PLAY_SURFACE_AFTER,
-                TRINITY_REWRITE_PLAY_WINDOW_AFTER,
-                &after_fixture_json(state),
-                config,
-                false,
-                None,
-            ),
-            TRINITY_REWRITE_PLAY_BODY_LHS => render_fixture_graph(
-                TRINITY_REWRITE_PLAY_SURFACE_LHS,
-                TRINITY_REWRITE_PLAY_WINDOW_LHS,
-                &lhs_graph_fixture_json(&state.lhs_json, &state.rule_layout),
-                config,
-                true,
-                None,
-            ),
-            TRINITY_REWRITE_PLAY_BODY_RHS => render_fixture_graph(
-                TRINITY_REWRITE_PLAY_SURFACE_RHS,
-                TRINITY_REWRITE_PLAY_WINDOW_RHS,
-                &rhs_graph_fixture_json(&state.rhs_json, &state.rule_layout),
-                config,
-                true,
-                None,
-            ),
+            TRINITY_REWRITE_PLAY_BODY_BEFORE => render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_BEFORE, TRINITY_REWRITE_PLAY_WINDOW_BEFORE, &state.before_fixture_json, config, true, Some(&config.before_pane_camera)),
+            TRINITY_REWRITE_PLAY_BODY_AFTER => render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_AFTER, TRINITY_REWRITE_PLAY_WINDOW_AFTER, &after_fixture_json(state), config, false, None),
+            TRINITY_REWRITE_PLAY_BODY_LHS => render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_LHS, TRINITY_REWRITE_PLAY_WINDOW_LHS, &lhs_graph_fixture_json(&state.lhs_json, &state.rule_layout), config, true, None),
+            TRINITY_REWRITE_PLAY_BODY_RHS => render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_RHS, TRINITY_REWRITE_PLAY_WINDOW_RHS, &rhs_graph_fixture_json(&state.rhs_json, &state.rule_layout), config, true, None),
             TRINITY_REWRITE_PLAY_BODY_JACK => render_jack_editor(state, config),
             TRINITY_REWRITE_PLAY_BODY_PARAMETERS => build_parameters_panel(state, labels),
             TRINITY_REWRITE_PLAY_BODY_DOCUMENT => build_document_tree(state, config, labels),
@@ -1408,13 +1195,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         ])
     }
 
-    fn context_menu(
-        &self,
-        request: &ContextMenuRequest,
-        _doc: &DocumentView<'_, RewriteRuleState>,
-        cfg: &ConfigView<'_, RewriteConfig>,
-        registry: &AppActionRegistry,
-    ) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
         let is_de = is_de_locale(cfg.projection);
@@ -1450,13 +1231,7 @@ fn rewrite_window_stack(id: &str, title: &str, size: Option<f64>) -> WindowLayou
         kind: "stack".into(),
         size,
         active_window_kind_id: None,
-        children: vec![WindowLayoutWindowNode {
-            kind: "window".into(),
-            window_kind_id: id.into(),
-            title: Some(title.into()),
-            instance_id: None,
-            template_id: None,
-        }],
+        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: id.into(), title: Some(title.into()), instance_id: None, template_id: None }],
     })
 }
 
@@ -1588,12 +1363,7 @@ mod tests {
     fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
         let mut app = testkit::new_app_with_registry::<TrinityRewritePlayApp>(create_rewrite_app);
         app.dispatch_typed(TrinityRewriteCommand::SetSelection { ids: vec!["n1".into(), "n2".into()], surface_id: None }, &meta("local")).expect("select");
-        let request = semio_framework_plugin::ContextMenuRequest {
-            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
-            surface: None,
-            window_instance_id: None,
-            point: None,
-        };
+        let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let menu = app.context_menu(&request);
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");
@@ -1619,12 +1389,7 @@ mod tests {
     fn set_viewport_writes_before_pane_config_camera_without_document_operations() {
         let mut app = new_app();
         let before_state = app.projection().unwrap();
-        let result = app
-            .dispatch_typed(
-                TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() },
-                &meta("local"),
-            )
-            .expect("viewport");
+        let result = app.dispatch_typed(TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local")).expect("viewport");
         assert!(result.operations.is_empty(), "camera is a config-only command, no document operations");
         assert_eq!(app.projection().unwrap(), before_state, "document is untouched by a viewport pan");
         let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewState::default()).expect("render");
@@ -1673,12 +1438,8 @@ mod tests {
         assert_eq!(rhs.set.len(), 2);
         // deleteSelection requires a prior selection; select the newly added clause first (config).
         app.dispatch_typed(TrinityRewriteCommand::SetSelection { ids: vec!["rhs-set-1".into()], surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_RHS.into()) }, &meta("local")).expect("select");
-        let result = app
-            .dispatch_typed(
-                TrinityRewriteCommand::NodeGraphEdit { surface_id: TRINITY_REWRITE_PLAY_SURFACE_RHS.into(), operations_json: json!([{ "operation": "deleteSelection" }]).to_string() },
-                &meta("local"),
-            )
-            .expect("delete selection");
+        let result =
+            app.dispatch_typed(TrinityRewriteCommand::NodeGraphEdit { surface_id: TRINITY_REWRITE_PLAY_SURFACE_RHS.into(), operations_json: json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local")).expect("delete selection");
         assert!(!result.operations.is_empty());
         let rhs: Rhs = serde_json::from_str(&app.projection().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 1);

@@ -22,30 +22,15 @@ pub struct BackboneWorkerHost {
 impl BackboneWorkerHost {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self {
-            host: DocumentHost::new(),
-            documents: std::collections::HashMap::new(),
-        }
+        Self { host: DocumentHost::new(), documents: std::collections::HashMap::new() }
     }
 
     #[wasm_bindgen(js_name = handleRequestBytes)]
     pub fn handle_request_bytes(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
         let request = backbone_worker_wire::decode_request(bytes).map_err(|error| JsValue::from_str(&error))?;
         match request {
-            BackboneWorkerRequest::Open {
-                document_id,
-                schema,
-                bindings,
-                watch_external,
-                actor,
-            } => {
-                let config = store_sync::DocumentActorConfig {
-                    document_id: document_id.clone(),
-                    schema,
-                    bindings,
-                    watch_external: watch_external.unwrap_or(true),
-                    actor,
-                };
+            BackboneWorkerRequest::Open { document_id, schema, bindings, watch_external, actor } => {
+                let config = store_sync::DocumentActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: watch_external.unwrap_or(true), actor };
                 self.host.close(&document_id);
                 let channels = self.host.open(config);
                 let mut events = self.host.subscribe(&document_id);
@@ -55,10 +40,7 @@ impl BackboneWorkerHost {
                     loop {
                         match events.recv().await {
                             Ok(event) => {
-                                let response = BackboneWorkerResponse::Event {
-                                    document_id: document_id.clone(),
-                                    event,
-                                };
+                                let response = BackboneWorkerResponse::Event { document_id: document_id.clone(), event };
                                 if let Ok(bytes) = backbone_worker_wire::encode_response(&response) {
                                     post_worker_message_bytes(&bytes);
                                 }

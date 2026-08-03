@@ -5,26 +5,22 @@
 //! `backwards`, no ad hoc `InverseAction`); every action dispatches through the single typed
 //! `gis2d_protocol::Gis2dCommand` channel via `DocumentApp::handle`.
 
+use dsl::DslValue;
+use framework_surface_tiled_map::{clamp_map_layer_weight, gis_map_layer_weight_slider_ids_json, gis_map_lod_scale_json, MapHost, GIS_MAP_LOD_MODE_AUTOMATIC};
 use gis2d::{MapFeature, MapFeaturePatch, GIS_MAP_SCHEMA};
 use gis2d_engine::{default_document, gis2d_features_in_port, gis2d_io, gis2d_map_media, gis2d_map_out_port, gis_map_descriptor_json, gis_map_document_from_descriptor_json, Gis2dConfig};
 use gis2d_op::{Gis2dConfigOperation, GisMapOperation};
 use gis2d_protocol::Gis2dCommand;
-use framework_surface_tiled_map::{clamp_map_layer_weight, gis_map_layer_weight_slider_ids_json, gis_map_lod_scale_json, MapHost, GIS_MAP_LOD_MODE_AUTOMATIC};
-use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    app_labels, build_tiled_map_scene, create_default_layout, tree_item_with_action,
-    MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ArtifactKindSpec,
-    ActionDefinition, ActionKind, ConfigView, DocumentApp, DocumentView, Emit, AppLabels, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, Terminology, TiledMapScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
-    UiToggleNode, UiTreeItemNode, WindowMeasure,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
-use semio_framework_plugin::kernel::HostEffect;
-use serde_json::{json, Value};
-use dsl::DslValue;
-use std::collections::{HashMap, HashSet};
 use protocol::CollectionOperation;
+use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::{
+    app_labels, build_tiled_map_scene, create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor,
+    ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability,
+    OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, TiledMapScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, WindowMeasure,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+};
+use serde_json::{json, Value};
+use std::collections::{HashMap, HashSet};
 use store::DocumentPack;
 
 //#region 🔖️Constants
@@ -56,7 +52,11 @@ const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
 /// `semio_framework_plugin::resolve_labels` — `Gis2dConfig` carries no terminology axis, so this app
 /// is always `Terminology::Native`. Mirrors `shooting_ui`'s identical fix.
 fn gis2d_locale(cfg: &Gis2dConfig) -> Locale {
-    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
+    if cfg.locale.starts_with("de") {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &Gis2dConfig) -> &'static L {
@@ -97,31 +97,17 @@ fn layer_visibility_json(cfg: &Gis2dConfig) -> String {
 }
 
 fn layer_stroke_scale_json(cfg: &Gis2dConfig) -> String {
-    let mut map: HashMap<String, f64> = GIS_MAP_LAYER_IDS
-        .iter()
-        .map(|(id, _, _)| ((*id).into(), 1.0))
-        .collect();
+    let mut map: HashMap<String, f64> = GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), 1.0)).collect();
     for (id, weight) in &cfg.layer_stroke_scale {
         map.insert(id.clone(), clamp_map_layer_weight(*weight));
     }
     serde_json::to_string(&map).unwrap_or_else(|_| "{}".into())
 }
 
-fn merge_feature_selection(
-    current_json: &str,
-    positions: Vec<String>,
-    routes: Vec<String>,
-    mode: &str,
-) -> Value {
+fn merge_feature_selection(current_json: &str, positions: Vec<String>, routes: Vec<String>, mode: &str) -> Value {
     let current: Value = serde_json::from_str(current_json).unwrap_or(json!({"positions":[],"routes":[]}));
-    let current_positions: Vec<String> = current
-        .get("positions")
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .unwrap_or_default();
-    let current_routes: Vec<String> = current
-        .get("routes")
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .unwrap_or_default();
+    let current_positions: Vec<String> = current.get("positions").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+    let current_routes: Vec<String> = current.get("routes").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
     let mut next_positions: HashSet<String> = current_positions.iter().cloned().collect();
     let mut next_routes: HashSet<String> = current_routes.iter().cloned().collect();
     let incoming_positions: HashSet<String> = positions.into_iter().collect();
@@ -159,11 +145,7 @@ fn merge_feature_selection(
 }
 
 fn gis2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: GIS2D_PLAY_APP_ID.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: GIS2D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🌉️ Diffs one feature collection before/after an in-place edit into granular id-keyed
@@ -181,10 +163,7 @@ fn feature_collection_operations(before: &[MapFeature], after: &[MapFeature], wr
     for (index, feature) in after.iter().enumerate() {
         match before.iter().find(|entry| entry.id == feature.id) {
             None => operations.push(wrap(CollectionOperation::Add { id: feature.id.clone(), item: feature.clone(), at: index })),
-            Some(prev) if prev.data != feature.data => operations.push(wrap(CollectionOperation::Patch {
-                id: feature.id.clone(),
-                patch: MapFeaturePatch { data: Some(feature.data.clone()) },
-            })),
+            Some(prev) if prev.data != feature.data => operations.push(wrap(CollectionOperation::Patch { id: feature.id.clone(), patch: MapFeaturePatch { data: Some(feature.data.clone()) } })),
             Some(_) => {}
         }
     }
@@ -211,19 +190,18 @@ fn layer_weight_slider_fields(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Ve
     layer_weight_entries(cfg, labels)
         .into_iter()
         .map(|(layer_id, label, value)| {
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: format!("gis2d-play-inspector.weight.{layer_id}"),
                 label: Label::data(format!("{label} {}", labels.weight_suffix.as_str())),
-                child: Box::new(UiNode::Slider(UiSliderNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Slider(UiSliderNode {
+                    presence: UiPresence::default(),
                     id: format!("gis2d-play-inspector.weight.{layer_id}.slider"),
                     value,
                     min: 0.25,
                     max: 3.0,
                     step: 0.05,
-                    on_change: gis2d_action(
-                        "setLayerStrokeScale",
-                        Some(json!({ "layerId": layer_id })),
-                    ),
+                    on_change: gis2d_action("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
                     unit: None,
                     menu: None,
                 })),
@@ -238,33 +216,19 @@ fn layer_weight_slider_fields(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Ve
 
 fn lod_select_entries(labels: &Gis2dPlayLabels) -> Vec<(String, String)> {
     std::iter::once((GIS_MAP_LOD_MODE_AUTOMATIC.into(), labels.lod_automatic.into()))
-        .chain(
-            serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json())
-                .unwrap_or_default()
-                .into_iter()
-                .filter_map(|lod| {
-                    let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
-                    let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
-                    Some((id, name))
-                }),
-        )
+        .chain(serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
+            let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
+            let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
+            Some((id, name))
+        }))
         .collect()
 }
 
 fn layer_weight_entries(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<(String, String, f64)> {
-    let ids: Vec<String> = serde_json::from_str(&gis_map_layer_weight_slider_ids_json(
-        &cfg.lod_mode,
-        &cfg.render_mode,
-    ))
-    .unwrap_or_default();
+    let ids: Vec<String> = serde_json::from_str(&gis_map_layer_weight_slider_ids_json(&cfg.lod_mode, &cfg.render_mode)).unwrap_or_default();
     ids.into_iter()
         .map(|layer_id| {
-            let value = cfg
-                .layer_stroke_scale
-                .get(&layer_id)
-                .copied()
-                .map(clamp_map_layer_weight)
-                .unwrap_or(1.0);
+            let value = cfg.layer_stroke_scale.get(&layer_id).copied().map(clamp_map_layer_weight).unwrap_or(1.0);
             let label = gis2d_layer_label(&layer_id, labels).to_string();
             (layer_id, label, value)
         })
@@ -298,7 +262,8 @@ fn gis2d_window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<Win
             reveal: None,
             on_change: gis2d_action("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
 
-            waiting: None,})
+            waiting: None,
+        })
         .collect();
     vec![
         WindowMeasure::Select {
@@ -327,10 +292,7 @@ fn gis2d_window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<Win
             id: "gis2d-play-window.lod-mode".into(),
             label: Some(labels.lod_mode.into()),
             value: cfg.lod_mode.clone(),
-            items: lod_select_entries(labels)
-                .into_iter()
-                .map(|(value, label)| MeasureSelectItem { id: value.clone(), value, label })
-                .collect(),
+            items: lod_select_entries(labels).into_iter().map(|(value, label)| MeasureSelectItem { id: value.clone(), value, label }).collect(),
             on_change: gis2d_action("setLodMode", None),
         },
         WindowMeasure::Select {
@@ -445,24 +407,13 @@ fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static str {
 /// 🌳️ A layer tree item — `tree_item_with_action` plus the icon that identifies each map layer, since
 /// the SDK's `PanelKit` family has no icon-carrying constructor.
 fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: Option<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None,
-    ..tree_item_with_action(id, label, description, action) }
+    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..tree_item_with_action(id, label, description, action) }
 }
 
 fn build_document_tree(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("gis2d-play-document");
-    let layer_items: Vec<UiTreeItemNode> = GIS_MAP_LAYER_IDS
-        .iter()
-        .map(|(id, _, icon)| {
-            gis2d_layer_tree_item(
-                builder.item_id("layer", id),
-                Label::data(gis2d_layer_label(id, labels)),
-                Some((*id).into()),
-                icon,
-                gis2d_action("setSelection", Some(json!({ "ids": [id] }))),
-            )
-        })
-        .collect();
+    let layer_items: Vec<UiTreeItemNode> =
+        GIS_MAP_LAYER_IDS.iter().map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id), Label::data(gis2d_layer_label(id, labels)), Some((*id).into()), icon, gis2d_action("setSelection", Some(json!({ "ids": [id] }))))).collect();
     builder
         .section("gis2d-play-document.layers", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, layer_items)
         .selected(cfg.selected_ids.iter().map(|id| format!("gis2d-play-document.layer.{id}")).collect())
@@ -473,146 +424,116 @@ fn build_document_tree(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
 fn build_catalogue_tree(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
     let _ = cfg;
     let builder = PanelTreeBuilder::new("gis2d-play-catalogue");
-    let items: Vec<UiTreeItemNode> = GIS_MAP_LAYER_IDS
-        .iter()
-        .map(|(id, _, icon)| {
-            gis2d_layer_tree_item(
-                builder.item_id("layer", id),
-                Label::data(gis2d_layer_label(id, labels)),
-                None,
-                icon,
-                gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id }))),
-            )
-        })
-        .collect();
+    let items: Vec<UiTreeItemNode> =
+        GIS_MAP_LAYER_IDS.iter().map(|(id, _, icon)| gis2d_layer_tree_item(builder.item_id("layer", id), Label::data(gis2d_layer_label(id, labels)), None, icon, gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id }))))).collect();
     builder.section("gis2d-play-catalogue.layers", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).build()
 }
 
 fn map_view_field_group(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiInspectorFieldGroup {
-    let lod_items: Vec<UiSelectItem> = lod_select_entries(labels)
-        .into_iter()
-        .map(|(value, label)| UiSelectItem { value, label: Label::data(label),
-        })
-        .collect();
+    let lod_items: Vec<UiSelectItem> = lod_select_entries(labels).into_iter().map(|(value, label)| UiSelectItem { value, label: Label::data(label) }).collect();
     let selection: Value = serde_json::from_str(&cfg.feature_selection_json).unwrap_or(json!({"positions":[],"routes":[]}));
-    let selected_count = selection.get("positions").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
-        + selection.get("routes").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0);
+    let selected_count = selection.get("positions").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0) + selection.get("routes").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0);
     let mut fields = vec![
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
-                id: "gis2d-play-inspector.render-mode".into(),
-                label: labels.render_mode.into(),
-                child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(),
-                    id: "gis2d-play-inspector.render-mode.select".into(),
-                    value: cfg.render_mode.clone(),
-                    items: vec![
-                        UiSelectItem { value: "image".into(), label: labels.render_mode_image.into(),
-        },
-                        UiSelectItem { value: "vector".into(), label: labels.render_mode_vector.into(),
-        },
-                        UiSelectItem { value: "combined".into(), label: labels.render_mode_combined.into(),
-        },
-                    ],
-                    placeholder: None,
-                    on_change: gis2d_action("setRenderMode", None),
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
+        UiNode::Field(UiFieldNode {
+            presence: UiPresence::default(),
+            id: "gis2d-play-inspector.render-mode".into(),
+            label: labels.render_mode.into(),
+            child: Box::new(UiNode::Select(UiSelectNode {
+                presence: UiPresence::default(),
+                id: "gis2d-play-inspector.render-mode.select".into(),
+                value: cfg.render_mode.clone(),
+                items: vec![
+                    UiSelectItem { value: "image".into(), label: labels.render_mode_image.into() },
+                    UiSelectItem { value: "vector".into(), label: labels.render_mode_vector.into() },
+                    UiSelectItem { value: "combined".into(), label: labels.render_mode_combined.into() },
+                ],
+                placeholder: None,
+                on_change: gis2d_action("setRenderMode", None),
                 menu: None,
-            }),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
-                id: "gis2d-play-inspector.vector-style".into(),
-                label: labels.vector_style.into(),
-                child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(),
-                    id: "gis2d-play-inspector.vector-style.select".into(),
-                    value: cfg.vector_style.clone(),
-                    items: vec![
-                        UiSelectItem { value: "colored".into(), label: labels.vector_style_colored.into(),
-        },
-                        UiSelectItem { value: "figureGround".into(), label: labels.vector_style_figure_ground.into(),
-        },
-                        UiSelectItem { value: "invertedFigure".into(), label: labels.vector_style_inverted_figure.into(),
-        },
-                    ],
-                    placeholder: None,
-                    on_change: gis2d_action("setVectorStyle", None),
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
+            })),
+            description: None,
+            required: None,
+            error: None,
+            menu: None,
+        }),
+        UiNode::Field(UiFieldNode {
+            presence: UiPresence::default(),
+            id: "gis2d-play-inspector.vector-style".into(),
+            label: labels.vector_style.into(),
+            child: Box::new(UiNode::Select(UiSelectNode {
+                presence: UiPresence::default(),
+                id: "gis2d-play-inspector.vector-style.select".into(),
+                value: cfg.vector_style.clone(),
+                items: vec![
+                    UiSelectItem { value: "colored".into(), label: labels.vector_style_colored.into() },
+                    UiSelectItem { value: "figureGround".into(), label: labels.vector_style_figure_ground.into() },
+                    UiSelectItem { value: "invertedFigure".into(), label: labels.vector_style_inverted_figure.into() },
+                ],
+                placeholder: None,
+                on_change: gis2d_action("setVectorStyle", None),
                 menu: None,
-            }),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
-                id: "gis2d-play-inspector.lod-mode".into(),
-                label: labels.lod_mode.into(),
-                child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(),
-                    id: "gis2d-play-inspector.lod-mode.select".into(),
-                    value: cfg.lod_mode.clone(),
-                    items: lod_items,
-                    placeholder: None,
-                    on_change: gis2d_action("setLodMode", None),
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
+            })),
+            description: None,
+            required: None,
+            error: None,
+            menu: None,
+        }),
+        UiNode::Field(UiFieldNode {
+            presence: UiPresence::default(),
+            id: "gis2d-play-inspector.lod-mode".into(),
+            label: labels.lod_mode.into(),
+            child: Box::new(UiNode::Select(UiSelectNode {
+                presence: UiPresence::default(),
+                id: "gis2d-play-inspector.lod-mode.select".into(),
+                value: cfg.lod_mode.clone(),
+                items: lod_items,
+                placeholder: None,
+                on_change: gis2d_action("setLodMode", None),
                 menu: None,
-            }),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
-                id: "gis2d-play-inspector.selection-method".into(),
-                label: labels.selection_method.into(),
-                child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(),
-                    id: "gis2d-play-inspector.selection-method.select".into(),
-                    value: cfg.selection_method.clone(),
-                    items: vec![
-                        UiSelectItem { value: "rectangle".into(), label: labels.selection_method_rectangle.into(),
-        },
-                        UiSelectItem { value: "lasso".into(), label: labels.selection_method_lasso.into(),
-        },
-                    ],
-                    placeholder: None,
-                    on_change: gis2d_action("setSelectionMethod", None),
-                    menu: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
+            })),
+            description: None,
+            required: None,
+            error: None,
+            menu: None,
+        }),
+        UiNode::Field(UiFieldNode {
+            presence: UiPresence::default(),
+            id: "gis2d-play-inspector.selection-method".into(),
+            label: labels.selection_method.into(),
+            child: Box::new(UiNode::Select(UiSelectNode {
+                presence: UiPresence::default(),
+                id: "gis2d-play-inspector.selection-method.select".into(),
+                value: cfg.selection_method.clone(),
+                items: vec![UiSelectItem { value: "rectangle".into(), label: labels.selection_method_rectangle.into() }, UiSelectItem { value: "lasso".into(), label: labels.selection_method_lasso.into() }],
+                placeholder: None,
+                on_change: gis2d_action("setSelectionMethod", None),
                 menu: None,
-            }),
-            ui_inspector_readonly_field("gis2d-play-inspector.feature-selection", labels.selected_features, selected_count.to_string()),
+            })),
+            description: None,
+            required: None,
+            error: None,
+            menu: None,
+        }),
+        ui_inspector_readonly_field("gis2d-play-inspector.feature-selection", labels.selected_features, selected_count.to_string()),
     ];
     fields.extend(layer_weight_slider_fields(cfg, labels));
-    UiInspectorFieldGroup {
-        presence: UiPresence::default(),
-        id: "gis2d-play-inspector.map-view".into(),
-        label: labels.map_view.into(),
-        default_open: Some(true),
-        fields,
-    }
+    UiInspectorFieldGroup { presence: UiPresence::default(), id: "gis2d-play-inspector.map-view".into(), label: labels.map_view.into(), default_open: Some(true), fields }
 }
 
 fn build_inspector_tree(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
     let map_view_group = map_view_field_group(cfg, labels);
     if cfg.selected_ids.is_empty() {
-        let visible_count = GIS_MAP_LAYER_IDS
-            .iter()
-            .filter(|(id, _, _)| layer_visible(cfg, id))
-            .count();
+        let visible_count = GIS_MAP_LAYER_IDS.iter().filter(|(id, _, _)| layer_visible(cfg, id)).count();
         return ui_inspector_groups_to_tree(&[
             map_view_group,
-            UiInspectorFieldGroup { presence: UiPresence::default(),
+            UiInspectorFieldGroup {
+                presence: UiPresence::default(),
                 id: "gis2d-play-inspector.summary".into(),
                 label: labels.map_layer.into(),
                 default_open: Some(true),
                 fields: vec![
                     ui_inspector_readonly_field("gis2d-play-inspector.schema", labels.schema, GIS_MAP_SCHEMA.to_string()),
-                    ui_inspector_readonly_field(
-                        "gis2d-play-inspector.visible-count",
-                        labels.layers_visible,
-                        format!("{visible_count}/{}", GIS_MAP_LAYER_IDS.len()),
-                    ),
+                    ui_inspector_readonly_field("gis2d-play-inspector.visible-count", labels.layers_visible, format!("{visible_count}/{}", GIS_MAP_LAYER_IDS.len())),
                 ],
             },
         ]);
@@ -631,7 +552,8 @@ fn build_inspector_tree(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
             fields: vec![
                 ui_inspector_readonly_field("gis2d-play-inspector.id", labels.field_id, layer_id.clone()),
                 ui_inspector_readonly_field("gis2d-play-inspector.label", labels.field_label, label.to_string()),
-                UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+                UiNode::Field(UiFieldNode {
+                    presence: UiPresence::default(),
                     id: "gis2d-play-inspector.visible".into(),
                     label: labels.field_visible.into(),
                     child: Box::new(UiNode::Toggle(UiToggleNode {
@@ -691,36 +613,27 @@ pub struct Gis2dPlayApp;
 /// disclosure via `Menu::of(registry)`; `organize_context_menu` (run automatically at the
 /// `VcsDocumentApp::context_menu` funnel) sorts the declared `.group(...)` rows into
 /// `RIBBON_PARENT_CATEGORIES` taxonomy order and inserts the pre-destructive separator itself.
-fn gis2d_context_menu_items(
-    registry: &semio_framework_plugin::AppActionRegistry,
-    surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>,
-    selected_ids: &[String],
-) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+fn gis2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>, selected_ids: &[String]) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     let hits = surface.map(|s| s.hits.as_slice()).unwrap_or(&[]);
     let feature = hits.iter().find(|h| h.domain == "feature" || h.domain == "position" || h.domain == "route");
     if let Some(feature) = feature {
         let kind = if feature.domain == "route" { "route" } else { "position" };
         let selected = selected_ids.iter().any(|id| id == &feature.id);
         return Menu::of(registry)
-            .action_args("setFeatureSelection", json!({
-                "positions": if kind == "position" { vec![&feature.id] } else { Vec::<&String>::new() },
-                "routes": if kind == "route" { vec![&feature.id] } else { Vec::<&String>::new() },
-                "mode": "default",
-            }))
+            .action_args(
+                "setFeatureSelection",
+                json!({
+                    "positions": if kind == "position" { vec![&feature.id] } else { Vec::<&String>::new() },
+                    "routes": if kind == "route" { vec![&feature.id] } else { Vec::<&String>::new() },
+                    "mode": "default",
+                }),
+            )
             .action_args("focusFeature", json!({ "featureId": feature.id, "featureKind": kind }))
-            .when(selected, |m| {
-                m.group("selection", |m| m.action_args("deselect", json!({ "featureId": feature.id, "featureKind": kind })))
-            })
-            .when(kind == "position", |m| {
-                m.group("open", |m| m.action_args("openSource", json!({ "featureId": feature.id })))
-            })
+            .when(selected, |m| m.group("selection", |m| m.action_args("deselect", json!({ "featureId": feature.id, "featureKind": kind }))))
+            .when(kind == "position", |m| m.group("open", |m| m.action_args("openSource", json!({ "featureId": feature.id }))))
             .build();
     }
-    let mut items = Menu::of(registry)
-        .action("selectAll")
-        .action("fitWorld")
-        .destructive("clearSelection")
-        .build();
+    let mut items = Menu::of(registry).action("selectAll").action("fitWorld").destructive("clearSelection").build();
     if let Some(clear) = items.iter_mut().find(|entry| entry.id == "clearSelection") {
         clear.disabled = selected_ids.is_empty().then_some(true);
     }
@@ -765,10 +678,7 @@ impl DocumentApp for Gis2dPlayApp {
             "document:out" => {
                 let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
                 let bytes = doc.projection.encode_pack();
-                Ok(Media {
-                    media_type,
-                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -842,27 +752,12 @@ impl DocumentApp for Gis2dPlayApp {
     /// `OpBinary` bytes directly.
     fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, String> {
         let args = args.cloned().unwrap_or(Value::Null);
-        let str_arg = |keys: &[&str]| -> Option<String> {
-            keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string))
-        };
-        let string_list = |key: &str| -> Vec<String> {
-            args.get(key)
-                .and_then(|value| value.as_array())
-                .map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect())
-                .unwrap_or_default()
-        };
-        let f64_arg = |keys: &[&str]| -> Option<f64> {
-            keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64()))
-        };
+        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
+        let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
+        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         match action {
-            "setActiveExample" => Ok(Gis2dCommand::SetActiveExample {
-                example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default(),
-            }),
-            "patchPositions" => Ok(Gis2dCommand::PatchPositions {
-                positions_json: str_arg(&["positionsJson", "positions_json"])
-                    .or_else(|| args.get("positions").map(|value| value.to_string()))
-                    .unwrap_or_else(|| "[]".into()),
-            }),
+            "setActiveExample" => Ok(Gis2dCommand::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() }),
+            "patchPositions" => Ok(Gis2dCommand::PatchPositions { positions_json: str_arg(&["positionsJson", "positions_json"]).or_else(|| args.get("positions").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()) }),
             "patchRoutes" => Ok(Gis2dCommand::PatchRoutes {
                 route_ids: {
                     let mut ids = string_list("routeIds");
@@ -874,42 +769,18 @@ impl DocumentApp for Gis2dPlayApp {
                 field: str_arg(&["field"]).unwrap_or_default(),
                 value: str_arg(&["value"]).unwrap_or_default(),
             }),
-            "patchRoute" => Ok(Gis2dCommand::PatchRoute {
-                route_id: str_arg(&["routeId", "route_id"]).unwrap_or_default(),
-                field: str_arg(&["field"]).unwrap_or_default(),
-                value: str_arg(&["value"]).unwrap_or_default(),
-            }),
+            "patchRoute" => Ok(Gis2dCommand::PatchRoute { route_id: str_arg(&["routeId", "route_id"]).unwrap_or_default(), field: str_arg(&["field"]).unwrap_or_default(), value: str_arg(&["value"]).unwrap_or_default() }),
             "setSelection" => Ok(Gis2dCommand::SetSelection { ids: string_list("ids") }),
-            "toggleLayerVisibility" => Ok(Gis2dCommand::ToggleLayerVisibility {
-                layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default(),
-            }),
+            "toggleLayerVisibility" => Ok(Gis2dCommand::ToggleLayerVisibility { layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default() }),
             "fitWorld" => Ok(Gis2dCommand::FitWorld),
             "setCamera" => {
-                let camera_json = str_arg(&["cameraJson", "camera_json"]).or_else(|| {
-                    args.get("camera").map(|value| {
-                        if value.is_string() {
-                            value.as_str().unwrap_or("{}").to_string()
-                        } else {
-                            value.to_string()
-                        }
-                    })
-                }).unwrap_or_else(|| "{}".into());
+                let camera_json = str_arg(&["cameraJson", "camera_json"]).or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() })).unwrap_or_else(|| "{}".into());
                 Ok(Gis2dCommand::SetCamera { camera_json })
             }
-            "setRenderMode" => Ok(Gis2dCommand::SetRenderMode {
-                value: str_arg(&["value", "renderMode", "render_mode"]).unwrap_or_default(),
-            }),
-            "setVectorStyle" => Ok(Gis2dCommand::SetVectorStyle {
-                value: str_arg(&["value", "vectorStyle", "vector_style"]).unwrap_or_default(),
-            }),
-            "setLodMode" => Ok(Gis2dCommand::SetLodMode {
-                value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default(),
-            }),
-            "setFeatureSelection" => Ok(Gis2dCommand::SetFeatureSelection {
-                positions: string_list("positions"),
-                routes: string_list("routes"),
-                mode: str_arg(&["mode"]).unwrap_or_else(|| "default".into()),
-            }),
+            "setRenderMode" => Ok(Gis2dCommand::SetRenderMode { value: str_arg(&["value", "renderMode", "render_mode"]).unwrap_or_default() }),
+            "setVectorStyle" => Ok(Gis2dCommand::SetVectorStyle { value: str_arg(&["value", "vectorStyle", "vector_style"]).unwrap_or_default() }),
+            "setLodMode" => Ok(Gis2dCommand::SetLodMode { value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default() }),
+            "setFeatureSelection" => Ok(Gis2dCommand::SetFeatureSelection { positions: string_list("positions"), routes: string_list("routes"), mode: str_arg(&["mode"]).unwrap_or_else(|| "default".into()) }),
             "setHover" => {
                 let hover_json = str_arg(&["hoverJson", "hover_json"])
                     .or_else(|| args.get("hover").map(|value| value.to_string()))
@@ -924,32 +795,15 @@ impl DocumentApp for Gis2dPlayApp {
                     .unwrap_or_else(|| "null".into());
                 Ok(Gis2dCommand::SetHover { hover_json })
             }
-            "setSelectionMethod" => Ok(Gis2dCommand::SetSelectionMethod {
-                value: str_arg(&["value", "selectionMethod", "selection_method"]).unwrap_or_default(),
-            }),
-            "setSelectionMode" => Ok(Gis2dCommand::SetSelectionMode {
-                value: str_arg(&["value", "selectionMode", "selection_mode"]).unwrap_or_default(),
-            }),
+            "setSelectionMethod" => Ok(Gis2dCommand::SetSelectionMethod { value: str_arg(&["value", "selectionMethod", "selection_method"]).unwrap_or_default() }),
+            "setSelectionMode" => Ok(Gis2dCommand::SetSelectionMode { value: str_arg(&["value", "selectionMode", "selection_mode"]).unwrap_or_default() }),
             "clearSelection" => Ok(Gis2dCommand::ClearSelection),
             "selectAll" => Ok(Gis2dCommand::SelectAll),
-            "deselect" => Ok(Gis2dCommand::Deselect {
-                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
-                feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()),
-            }),
-            "focusFeature" => Ok(Gis2dCommand::FocusFeature {
-                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
-                feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()),
-            }),
-            "setLayerStrokeScale" => Ok(Gis2dCommand::SetLayerStrokeScale {
-                layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default(),
-                value: f64_arg(&["value"]).unwrap_or(1.0),
-            }),
-            "setLocale" => Ok(Gis2dCommand::SetLocale {
-                value: str_arg(&["value", "locale"]).unwrap_or_default(),
-            }),
-            "openSource" => Ok(Gis2dCommand::OpenSource {
-                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
-            }),
+            "deselect" => Ok(Gis2dCommand::Deselect { feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(), feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()) }),
+            "focusFeature" => Ok(Gis2dCommand::FocusFeature { feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(), feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()) }),
+            "setLayerStrokeScale" => Ok(Gis2dCommand::SetLayerStrokeScale { layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default(), value: f64_arg(&["value"]).unwrap_or(1.0) }),
+            "setLocale" => Ok(Gis2dCommand::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() }),
+            "openSource" => Ok(Gis2dCommand::OpenSource { feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default() }),
             other => Err(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -957,12 +811,7 @@ impl DocumentApp for Gis2dPlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &Gis2dCommand,
-        doc: &DocumentView<'_, gis2d::GisMapDocument>,
-        cfg: &ConfigView<'_, Gis2dConfig>,
-    ) -> Emit<GisMapOperation, Gis2dConfigOperation> {
+    fn handle(&self, command: &Gis2dCommand, doc: &DocumentView<'_, gis2d::GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Emit<GisMapOperation, Gis2dConfigOperation> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
@@ -1038,9 +887,7 @@ impl DocumentApp for Gis2dPlayApp {
                     Emit::default()
                 }
             }
-            Gis2dCommand::SetLayerStrokeScale { layer_id, value } => {
-                Emit::config(vec![Gis2dConfigOperation::SetLayerStrokeScale { layer_id: layer_id.clone(), value: clamp_map_layer_weight(*value) }])
-            }
+            Gis2dCommand::SetLayerStrokeScale { layer_id, value } => Emit::config(vec![Gis2dConfigOperation::SetLayerStrokeScale { layer_id: layer_id.clone(), value: clamp_map_layer_weight(*value) }]),
             Gis2dCommand::SetLocale { value } => Emit::config(vec![Gis2dConfigOperation::SetLocale { value: value.clone() }]),
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
             Gis2dCommand::OpenSource { feature_id } => {
@@ -1071,11 +918,7 @@ impl DocumentApp for Gis2dPlayApp {
         }
     }
 
-    fn window_measures(
-        &self,
-        _doc: &DocumentView<'_, gis2d::GisMapDocument>,
-        cfg: &ConfigView<'_, Gis2dConfig>,
-    ) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, gis2d::GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<Gis2dPlayLabels>(cfg.projection);
         HashMap::from([(GIS2D_PLAY_WINDOW_MAIN.into(), gis2d_window_measures(cfg.projection, labels))])
     }
@@ -1124,16 +967,11 @@ fn patch_routes_operations(document: &gis2d::GisMapDocument, route_ids: &[String
 /// tier from the map descriptor, labelled in the app's base locale (localization is applied by overlay).
 fn lod_arg_options() -> Vec<ActionArgOption> {
     std::iter::once(ActionArgOption::new(GIS_MAP_LOD_MODE_AUTOMATIC, LocalizedLabel::native("Automatic", "Automatisch")))
-        .chain(
-            serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json())
-                .unwrap_or_default()
-                .into_iter()
-                .filter_map(|lod| {
-                    let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
-                    let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
-                    Some(ActionArgOption::new(id, LocalizedLabel::data(name)))
-                }),
-        )
+        .chain(serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
+            let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
+            let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
+            Some(ActionArgOption::new(id, LocalizedLabel::data(name)))
+        }))
         .collect()
 }
 
@@ -1274,50 +1112,32 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<GisMapDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: GisMapEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: GisMapEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     GisMapStore::new(envelope)
                 }
-                None => GisMapStore::new(store::create_document_envelope(
-                    GIS_MAP_SCHEMA,
-                    "gis",
-                    gis2d_engine::empty_gis_map_projection(),
-                    None,
-                )),
+                None => GisMapStore::new(store::create_document_envelope(GIS_MAP_SCHEMA, "gis", gis2d_engine::empty_gis_map_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
         pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_text(command_text)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
         pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_binary(command_bytes)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .envelope_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
@@ -1332,7 +1152,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionKind, ContextMenuRequest, PluginApp, ViewState, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, ActionKind, ContextMenuRequest, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app() -> VcsDocumentApp<Gis2dPlayApp> {
         testkit::new_app::<Gis2dPlayApp>()
@@ -1447,9 +1267,7 @@ mod tests {
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
 
         let mut app = new_app_with_registry();
-        let result = app
-            .dispatch_typed(Gis2dCommand::SetActiveExample { example_id: "".into() }, &testkit::meta("local"))
-            .expect("operation emits operations without tripping the kind-discipline guard");
+        let result = app.dispatch_typed(Gis2dCommand::SetActiveExample { example_id: "".into() }, &testkit::meta("local")).expect("operation emits operations without tripping the kind-discipline guard");
         assert_eq!(result.operations.len(), 1, "loading an example is one document-replacing edit");
         assert!(app.projection().expect("projection").positions.is_empty(), "the empty example clears every position feature");
     }
@@ -1469,9 +1287,7 @@ mod tests {
     fn patch_routes_emits_route_patch_ops_and_updates_document() {
         let mut app = new_app();
         let route_id = "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0";
-        let result = app
-            .dispatch_typed(Gis2dCommand::PatchRoute { route_id: route_id.into(), field: "label".into(), value: "Renamed Route".into() }, &testkit::meta("local"))
-            .expect("patchRoute");
+        let result = app.dispatch_typed(Gis2dCommand::PatchRoute { route_id: route_id.into(), field: "label".into(), value: "Renamed Route".into() }, &testkit::meta("local")).expect("patchRoute");
         assert_eq!(result.operations.len(), 1, "one matching route → one patch operation");
         let document = app.projection().expect("projection");
         let route = document.routes.iter().find(|route| route.id == route_id).expect("route");
@@ -1487,15 +1303,10 @@ mod tests {
         let command_a = Gis2dCommand::PatchRoute { route_id: route_a.into(), field: "label".into(), value: "A".into() };
         let command_b = Gis2dCommand::PatchRoute { route_id: route_b.into(), field: "label".into(), value: "B".into() };
         let label = |document: &gis2d::GisMapDocument, id: &str| document.routes.iter().find(|route| route.id == id).and_then(|route| route.data.get("label").and_then(|value| value.as_str().map(str::to_string)));
-        testkit::assert_two_instances_converge::<Gis2dPlayApp, _>(
-            "mem://gis2d-convergence",
-            command_a,
-            command_b,
-            |app| {
-                let document = app.projection().expect("projection");
-                (label(&document, route_a), label(&document, route_b))
-            },
-        );
+        testkit::assert_two_instances_converge::<Gis2dPlayApp, _>("mem://gis2d-convergence", command_a, command_b, |app| {
+            let document = app.projection().expect("projection");
+            (label(&document, route_a), label(&document, route_b))
+        });
     }
 
     #[test]
@@ -1536,12 +1347,7 @@ mod tests {
     #[test]
     fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
         let mut app = new_app_with_registry();
-        let request = ContextMenuRequest {
-            menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None },
-            surface: None,
-            window_instance_id: None,
-            point: None,
-        };
+        let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let menu = app.context_menu(&request);
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("empty-canvas context menu should not be empty");

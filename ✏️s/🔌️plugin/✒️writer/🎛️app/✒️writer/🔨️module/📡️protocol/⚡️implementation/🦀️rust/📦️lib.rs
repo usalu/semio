@@ -102,26 +102,13 @@ mod tests {
     /// ✍️ Hand-built representative document — verbatim from the original file's `🔖️DslAndOpText`
     /// test region (duplicated per-crate since each constitutional crate's tests compile independently).
     fn jack_projection() -> WriterProjection {
-        WriterProjection {
-            schema: "writer.document".into(),
-            id: "jack".into(),
-            language_id: "jack".into(),
-            uri: "writer://jack".into(),
-            text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into(),
-        }
+        WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
     }
 
     #[test]
     fn writer_document_text_round_trips_through_the_store() {
-        let mut store = DocumentStore::<WriterProjection, WriterOperation>::new(create_document_envelope(
-            "writer.document",
-            "writer",
-            writer_engine::empty_writer_projection(),
-            None,
-        ));
-        store
-            .dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetDocument { document: jack_projection() }], description: None })
-            .expect("apply");
+        let mut store = DocumentStore::<WriterProjection, WriterOperation>::new(create_document_envelope("writer.document", "writer", writer_engine::empty_writer_projection(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetDocument { document: jack_projection() }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

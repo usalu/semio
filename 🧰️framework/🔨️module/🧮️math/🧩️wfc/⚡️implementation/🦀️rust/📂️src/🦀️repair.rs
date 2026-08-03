@@ -63,11 +63,7 @@ pub(crate) fn repair_region<T: Topology>(model: &CompiledModel, topo: &T, adjace
     for &n in &region {
         in_region[n.index()] = true;
     }
-    let fixed: Vec<(NodeId, PatternId)> = (0..adjacency.node_count())
-        .map(NodeId::from_index)
-        .filter(|&n| !in_region[n.index()])
-        .map(|n| (n, previous_assignment[n.index()]))
-        .collect();
+    let fixed: Vec<(NodeId, PatternId)> = (0..adjacency.node_count()).map(NodeId::from_index).filter(|&n| !in_region[n.index()]).map(|n| (n, previous_assignment[n.index()])).collect();
     search::solve(model, topo, config, seed, None, &fixed)
 }
 // #endregion 🔖️Repair

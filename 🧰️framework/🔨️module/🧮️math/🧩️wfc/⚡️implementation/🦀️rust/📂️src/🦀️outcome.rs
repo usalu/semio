@@ -55,8 +55,14 @@ pub enum SolveOutcome {
     Solved(Solution),
     Unsatisfiable(UnsatReport),
     Contradiction(ContradictionReport),
-    BudgetExceeded { partial: PartialState, report: RunReport },
+    BudgetExceeded {
+        partial: PartialState,
+        report: RunReport,
+    },
     /// 🏁️ A caller-supplied [`crate::search::CancelToken`] was set before the attempt concluded.
-    Cancelled { partial: PartialState, report: RunReport },
+    Cancelled {
+        partial: PartialState,
+        report: RunReport,
+    },
 }
 // #endregion 🔖️Outcome

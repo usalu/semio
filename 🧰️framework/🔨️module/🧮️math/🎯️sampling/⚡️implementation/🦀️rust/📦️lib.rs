@@ -1348,14 +1348,31 @@ pub struct ScheduleInput {
 #[derive(Clone, PartialEq, Debug)]
 pub enum Schedule {
     Constant(f64),
-    Linear { from: f64, to: f64, over_steps: u32 },
-    Exponential { from: f64, to: f64, over_steps: u32 },
-    Cosine { from: f64, to: f64, over_steps: u32 },
+    Linear {
+        from: f64,
+        to: f64,
+        over_steps: u32,
+    },
+    Exponential {
+        from: f64,
+        to: f64,
+        over_steps: u32,
+    },
+    Cosine {
+        from: f64,
+        to: f64,
+        over_steps: u32,
+    },
     /// 📅️ Step-indexed breakpoints; the value holds at the most recent breakpoint `<= step`.
     Piecewise(Vec<(StepIndex, f64)>),
     /// 📅️ One value per generated-token position, clamped to the last entry past its length.
     ByPosition(Vec<f64>),
-    EntropyScaled { base: f64, gain: f64, min: f64, max: f64 },
+    EntropyScaled {
+        base: f64,
+        gain: f64,
+        min: f64,
+        max: f64,
+    },
     /// 📅️ Escape hatch for host-defined logic; not text-serializable (see [`Schedule::to_json`]).
     Callback(fn(ScheduleInput) -> f64),
 }
@@ -1414,42 +1431,12 @@ impl Schedule {
         let obj = |pairs: Vec<(&str, JsonValue)>| JsonValue::Object(pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
         match self {
             Self::Constant(v) => obj(vec![("kind", JsonValue::Str("constant".into())), ("value", JsonValue::Num(*v))]),
-            Self::Linear { from, to, over_steps } => obj(vec![
-                ("kind", JsonValue::Str("linear".into())),
-                ("from", JsonValue::Num(*from)),
-                ("to", JsonValue::Num(*to)),
-                ("over_steps", JsonValue::Num(*over_steps as f64)),
-            ]),
-            Self::Exponential { from, to, over_steps } => obj(vec![
-                ("kind", JsonValue::Str("exponential".into())),
-                ("from", JsonValue::Num(*from)),
-                ("to", JsonValue::Num(*to)),
-                ("over_steps", JsonValue::Num(*over_steps as f64)),
-            ]),
-            Self::Cosine { from, to, over_steps } => obj(vec![
-                ("kind", JsonValue::Str("cosine".into())),
-                ("from", JsonValue::Num(*from)),
-                ("to", JsonValue::Num(*to)),
-                ("over_steps", JsonValue::Num(*over_steps as f64)),
-            ]),
-            Self::Piecewise(pieces) => obj(vec![
-                ("kind", JsonValue::Str("piecewise".into())),
-                (
-                    "pieces",
-                    JsonValue::Array(pieces.iter().map(|(s, v)| JsonValue::Array(vec![JsonValue::Num(s.get() as f64), JsonValue::Num(*v)])).collect()),
-                ),
-            ]),
-            Self::ByPosition(values) => obj(vec![
-                ("kind", JsonValue::Str("by_position".into())),
-                ("values", JsonValue::Array(values.iter().map(|v| JsonValue::Num(*v)).collect())),
-            ]),
-            Self::EntropyScaled { base, gain, min, max } => obj(vec![
-                ("kind", JsonValue::Str("entropy_scaled".into())),
-                ("base", JsonValue::Num(*base)),
-                ("gain", JsonValue::Num(*gain)),
-                ("min", JsonValue::Num(*min)),
-                ("max", JsonValue::Num(*max)),
-            ]),
+            Self::Linear { from, to, over_steps } => obj(vec![("kind", JsonValue::Str("linear".into())), ("from", JsonValue::Num(*from)), ("to", JsonValue::Num(*to)), ("over_steps", JsonValue::Num(*over_steps as f64))]),
+            Self::Exponential { from, to, over_steps } => obj(vec![("kind", JsonValue::Str("exponential".into())), ("from", JsonValue::Num(*from)), ("to", JsonValue::Num(*to)), ("over_steps", JsonValue::Num(*over_steps as f64))]),
+            Self::Cosine { from, to, over_steps } => obj(vec![("kind", JsonValue::Str("cosine".into())), ("from", JsonValue::Num(*from)), ("to", JsonValue::Num(*to)), ("over_steps", JsonValue::Num(*over_steps as f64))]),
+            Self::Piecewise(pieces) => obj(vec![("kind", JsonValue::Str("piecewise".into())), ("pieces", JsonValue::Array(pieces.iter().map(|(s, v)| JsonValue::Array(vec![JsonValue::Num(s.get() as f64), JsonValue::Num(*v)])).collect()))]),
+            Self::ByPosition(values) => obj(vec![("kind", JsonValue::Str("by_position".into())), ("values", JsonValue::Array(values.iter().map(|v| JsonValue::Num(*v)).collect()))]),
+            Self::EntropyScaled { base, gain, min, max } => obj(vec![("kind", JsonValue::Str("entropy_scaled".into())), ("base", JsonValue::Num(*base)), ("gain", JsonValue::Num(*gain)), ("min", JsonValue::Num(*min)), ("max", JsonValue::Num(*max))]),
             Self::Callback(_) => obj(vec![("kind", JsonValue::Str("callback".into()))]),
         }
     }
@@ -1553,39 +1540,131 @@ pub enum MirostatVersion {
 /// [`Schedule`]-typed so config presets and per-step dynamics share one representation.
 #[derive(Clone, PartialEq, Debug)]
 pub enum ProcessorSpec {
-    Temperature { value: Schedule },
-    DynamicTemperature { base: Schedule, entropy_gain: f64, min: f64, max: f64 },
-    TopK { k: Schedule, min_keep: usize },
-    TopP { p: Schedule, min_keep: usize },
-    MinP { p: Schedule, min_keep: usize },
-    Typical { mass: Schedule, min_keep: usize },
-    LocallyTypical { mass: Schedule, min_keep: usize },
-    TailFree { z: Schedule, min_keep: usize },
-    Epsilon { cutoff: Schedule, min_keep: usize },
-    Eta { cutoff: Schedule, min_keep: usize },
-    TopA { power: Schedule, min_keep: usize },
-    RankTruncation { max_rank: usize },
-    AdaptiveTruncation { target_entropy: Option<f64>, target_effective_count: Option<f64> },
-    RepetitionPenalty { penalty: f32, scope: PenaltyScope },
-    PresencePenalty { penalty: f32, scope: PenaltyScope },
-    FrequencyPenalty { penalty: f32, scope: PenaltyScope },
-    DecayingPenalty { penalty: f32, window: usize, half_life: f64, scope: PenaltyScope },
+    Temperature {
+        value: Schedule,
+    },
+    DynamicTemperature {
+        base: Schedule,
+        entropy_gain: f64,
+        min: f64,
+        max: f64,
+    },
+    TopK {
+        k: Schedule,
+        min_keep: usize,
+    },
+    TopP {
+        p: Schedule,
+        min_keep: usize,
+    },
+    MinP {
+        p: Schedule,
+        min_keep: usize,
+    },
+    Typical {
+        mass: Schedule,
+        min_keep: usize,
+    },
+    LocallyTypical {
+        mass: Schedule,
+        min_keep: usize,
+    },
+    TailFree {
+        z: Schedule,
+        min_keep: usize,
+    },
+    Epsilon {
+        cutoff: Schedule,
+        min_keep: usize,
+    },
+    Eta {
+        cutoff: Schedule,
+        min_keep: usize,
+    },
+    TopA {
+        power: Schedule,
+        min_keep: usize,
+    },
+    RankTruncation {
+        max_rank: usize,
+    },
+    AdaptiveTruncation {
+        target_entropy: Option<f64>,
+        target_effective_count: Option<f64>,
+    },
+    RepetitionPenalty {
+        penalty: f32,
+        scope: PenaltyScope,
+    },
+    PresencePenalty {
+        penalty: f32,
+        scope: PenaltyScope,
+    },
+    FrequencyPenalty {
+        penalty: f32,
+        scope: PenaltyScope,
+    },
+    DecayingPenalty {
+        penalty: f32,
+        window: usize,
+        half_life: f64,
+        scope: PenaltyScope,
+    },
     /// ⚙️ `class_tokens[c]` lists the token ids in class `c`; `factors[c]` is that class's
     /// multiplicative penalty factor (same lengths, index-aligned).
-    TokenClassPenalty { class_tokens: Vec<Vec<TokenId>>, factors: Vec<f32> },
-    NoRepeatNgram { n: usize },
-    PhrasePenalty { phrases: Vec<Vec<TokenId>>, penalty: f32 },
-    LogitBiasSparse { entries: Vec<(TokenId, f32)> },
-    LogitBiasDense { values: Vec<f32> },
-    AllowTokens { tokens: Vec<TokenId> },
-    ForbidTokens { tokens: Vec<TokenId> },
+    TokenClassPenalty {
+        class_tokens: Vec<Vec<TokenId>>,
+        factors: Vec<f32>,
+    },
+    NoRepeatNgram {
+        n: usize,
+    },
+    PhrasePenalty {
+        phrases: Vec<Vec<TokenId>>,
+        penalty: f32,
+    },
+    LogitBiasSparse {
+        entries: Vec<(TokenId, f32)>,
+    },
+    LogitBiasDense {
+        values: Vec<f32>,
+    },
+    AllowTokens {
+        tokens: Vec<TokenId>,
+    },
+    ForbidTokens {
+        tokens: Vec<TokenId>,
+    },
     SuppressSpecial,
-    BadWords { phrases: Vec<Vec<TokenId>> },
-    SequenceEncouragement { phrases: Vec<Vec<TokenId>>, bonus: f32 },
-    Mirostat { version: MirostatVersion, target_surprise: f64, learning_rate: f64 },
-    EntropyPid { target: f64, kp: f64, ki: f64, kd: f64 },
-    RepetitionController { window: usize, threshold: f64, boost: f64 },
-    ConfidenceController { low_entropy: f64, high_entropy: f64, low_temp: f64, high_temp: f64 },
+    BadWords {
+        phrases: Vec<Vec<TokenId>>,
+    },
+    SequenceEncouragement {
+        phrases: Vec<Vec<TokenId>>,
+        bonus: f32,
+    },
+    Mirostat {
+        version: MirostatVersion,
+        target_surprise: f64,
+        learning_rate: f64,
+    },
+    EntropyPid {
+        target: f64,
+        kp: f64,
+        ki: f64,
+        kd: f64,
+    },
+    RepetitionController {
+        window: usize,
+        threshold: f64,
+        boost: f64,
+    },
+    ConfidenceController {
+        low_entropy: f64,
+        high_entropy: f64,
+        low_temp: f64,
+        high_temp: f64,
+    },
 }
 
 /// ⚙️ One hand-rolled-constraint source. Compiled into a [`Constraint`] impl by the engine.
@@ -1758,11 +1837,7 @@ impl SamplingConfig {
     pub fn creative() -> Self {
         Self {
             method: SamplingMethod::Multinomial { strategy: MultinomialStrategy::CdfBinarySearch },
-            processors: vec![
-                ProcessorSpec::Temperature { value: Schedule::Constant(1.0) },
-                ProcessorSpec::TopK { k: Schedule::Constant(100.0), min_keep: 1 },
-                ProcessorSpec::TopP { p: Schedule::Constant(0.95), min_keep: 1 },
-            ],
+            processors: vec![ProcessorSpec::Temperature { value: Schedule::Constant(1.0) }, ProcessorSpec::TopK { k: Schedule::Constant(100.0), min_keep: 1 }, ProcessorSpec::TopP { p: Schedule::Constant(0.95), min_keep: 1 }],
             ..Self::default()
         }
     }
@@ -1778,7 +1853,13 @@ impl SamplingConfig {
             ("version".into(), JsonValue::Num(1.0)),
             ("method".into(), sampling_method_to_json(&self.method)),
             ("processors".into(), JsonValue::Array(self.processors.iter().map(processor_spec_to_json).collect())),
-            ("error_mode".into(), JsonValue::Str(match self.error_mode { ErrorMode::Strict => "strict".into(), ErrorMode::Permissive => "permissive".into() })),
+            (
+                "error_mode".into(),
+                JsonValue::Str(match self.error_mode {
+                    ErrorMode::Strict => "strict".into(),
+                    ErrorMode::Permissive => "permissive".into(),
+                }),
+            ),
             ("seed".into(), JsonValue::Num(self.seed as f64)),
             ("candidate_count".into(), JsonValue::Num(self.candidate_count as f64)),
             ("min_tokens".into(), JsonValue::Num(self.min_tokens as f64)),
@@ -1794,29 +1875,14 @@ impl SamplingConfig {
             return Err(SamplingError::SerializationVersion { expected: 1, actual: version as u32 });
         }
         let method = value.get("method").ok_or(SamplingError::Corrupted { reason: "config missing method" }).and_then(sampling_method_from_json)?;
-        let processors = value
-            .get("processors")
-            .and_then(JsonValue::as_array)
-            .ok_or(SamplingError::Corrupted { reason: "config missing processors" })?
-            .iter()
-            .map(processor_spec_from_json)
-            .collect::<Result<Vec<_>, _>>()?;
+        let processors = value.get("processors").and_then(JsonValue::as_array).ok_or(SamplingError::Corrupted { reason: "config missing processors" })?.iter().map(processor_spec_from_json).collect::<Result<Vec<_>, _>>()?;
         let error_mode = match value.get("error_mode").and_then(JsonValue::as_str) {
             Some("strict") => ErrorMode::Strict,
             Some("permissive") | None => ErrorMode::Permissive,
             Some(_) => return Err(SamplingError::Corrupted { reason: "unknown error_mode" }),
         };
         let num = |key: &'static str, default: f64| value.get(key).and_then(JsonValue::as_f64).unwrap_or(default);
-        Ok(Self {
-            method,
-            processors,
-            error_mode,
-            seed: num("seed", 0.0) as u64,
-            candidate_count: num("candidate_count", 1.0) as usize,
-            min_tokens: num("min_tokens", 0.0) as usize,
-            max_tokens: num("max_tokens", 4_096.0) as usize,
-            ..Self::default()
-        })
+        Ok(Self { method, processors, error_mode, seed: num("seed", 0.0) as u64, candidate_count: num("candidate_count", 1.0) as usize, min_tokens: num("min_tokens", 0.0) as usize, max_tokens: num("max_tokens", 4_096.0) as usize, ..Self::default() })
     }
 }
 
@@ -1923,13 +1989,9 @@ fn processor_spec_to_json(spec: &ProcessorSpec) -> JsonValue {
     let phrases_json = |phrases: &[Vec<TokenId>]| JsonValue::Array(phrases.iter().map(|p| tokens_json(p)).collect());
     match spec {
         ProcessorSpec::Temperature { value } => obj(vec![("kind", JsonValue::Str("temperature".into())), ("value", value.to_json())]),
-        ProcessorSpec::DynamicTemperature { base, entropy_gain, min, max } => obj(vec![
-            ("kind", JsonValue::Str("dynamic_temperature".into())),
-            ("base", base.to_json()),
-            ("entropy_gain", JsonValue::Num(*entropy_gain)),
-            ("min", JsonValue::Num(*min)),
-            ("max", JsonValue::Num(*max)),
-        ]),
+        ProcessorSpec::DynamicTemperature { base, entropy_gain, min, max } => {
+            obj(vec![("kind", JsonValue::Str("dynamic_temperature".into())), ("base", base.to_json()), ("entropy_gain", JsonValue::Num(*entropy_gain)), ("min", JsonValue::Num(*min)), ("max", JsonValue::Num(*max))])
+        }
         ProcessorSpec::TopK { k, min_keep } => obj(vec![("kind", JsonValue::Str("top_k".into())), ("k", k.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
         ProcessorSpec::TopP { p, min_keep } => obj(vec![("kind", JsonValue::Str("top_p".into())), ("p", p.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
         ProcessorSpec::MinP { p, min_keep } => obj(vec![("kind", JsonValue::Str("min_p".into())), ("p", p.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
@@ -1940,32 +2002,23 @@ fn processor_spec_to_json(spec: &ProcessorSpec) -> JsonValue {
         ProcessorSpec::Eta { cutoff, min_keep } => obj(vec![("kind", JsonValue::Str("eta".into())), ("cutoff", cutoff.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
         ProcessorSpec::TopA { power, min_keep } => obj(vec![("kind", JsonValue::Str("top_a".into())), ("power", power.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
         ProcessorSpec::RankTruncation { max_rank } => obj(vec![("kind", JsonValue::Str("rank_truncation".into())), ("max_rank", JsonValue::Num(*max_rank as f64))]),
-        ProcessorSpec::AdaptiveTruncation { target_entropy, target_effective_count } => obj(vec![
-            ("kind", JsonValue::Str("adaptive_truncation".into())),
-            ("target_entropy", target_entropy.map_or(JsonValue::Null, JsonValue::Num)),
-            ("target_effective_count", target_effective_count.map_or(JsonValue::Null, JsonValue::Num)),
-        ]),
+        ProcessorSpec::AdaptiveTruncation { target_entropy, target_effective_count } => {
+            obj(vec![("kind", JsonValue::Str("adaptive_truncation".into())), ("target_entropy", target_entropy.map_or(JsonValue::Null, JsonValue::Num)), ("target_effective_count", target_effective_count.map_or(JsonValue::Null, JsonValue::Num))])
+        }
         ProcessorSpec::RepetitionPenalty { penalty, scope } => obj(vec![("kind", JsonValue::Str("repetition_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("scope", penalty_scope_to_json(*scope))]),
         ProcessorSpec::PresencePenalty { penalty, scope } => obj(vec![("kind", JsonValue::Str("presence_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("scope", penalty_scope_to_json(*scope))]),
         ProcessorSpec::FrequencyPenalty { penalty, scope } => obj(vec![("kind", JsonValue::Str("frequency_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("scope", penalty_scope_to_json(*scope))]),
-        ProcessorSpec::DecayingPenalty { penalty, window, half_life, scope } => obj(vec![
-            ("kind", JsonValue::Str("decaying_penalty".into())),
-            ("penalty", JsonValue::Num(*penalty as f64)),
-            ("window", JsonValue::Num(*window as f64)),
-            ("half_life", JsonValue::Num(*half_life)),
-            ("scope", penalty_scope_to_json(*scope)),
-        ]),
-        ProcessorSpec::TokenClassPenalty { class_tokens, factors } => obj(vec![
-            ("kind", JsonValue::Str("token_class_penalty".into())),
-            ("class_tokens", phrases_json(class_tokens)),
-            ("factors", JsonValue::Array(factors.iter().map(|f| JsonValue::Num(*f as f64)).collect())),
-        ]),
+        ProcessorSpec::DecayingPenalty { penalty, window, half_life, scope } => {
+            obj(vec![("kind", JsonValue::Str("decaying_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("window", JsonValue::Num(*window as f64)), ("half_life", JsonValue::Num(*half_life)), ("scope", penalty_scope_to_json(*scope))])
+        }
+        ProcessorSpec::TokenClassPenalty { class_tokens, factors } => {
+            obj(vec![("kind", JsonValue::Str("token_class_penalty".into())), ("class_tokens", phrases_json(class_tokens)), ("factors", JsonValue::Array(factors.iter().map(|f| JsonValue::Num(*f as f64)).collect()))])
+        }
         ProcessorSpec::NoRepeatNgram { n } => obj(vec![("kind", JsonValue::Str("no_repeat_ngram".into())), ("n", JsonValue::Num(*n as f64))]),
         ProcessorSpec::PhrasePenalty { phrases, penalty } => obj(vec![("kind", JsonValue::Str("phrase_penalty".into())), ("phrases", phrases_json(phrases)), ("penalty", JsonValue::Num(*penalty as f64))]),
-        ProcessorSpec::LogitBiasSparse { entries } => obj(vec![
-            ("kind", JsonValue::Str("logit_bias_sparse".into())),
-            ("entries", JsonValue::Array(entries.iter().map(|(t, b)| JsonValue::Array(vec![JsonValue::Num(t.get() as f64), JsonValue::Num(*b as f64)])).collect())),
-        ]),
+        ProcessorSpec::LogitBiasSparse { entries } => {
+            obj(vec![("kind", JsonValue::Str("logit_bias_sparse".into())), ("entries", JsonValue::Array(entries.iter().map(|(t, b)| JsonValue::Array(vec![JsonValue::Num(t.get() as f64), JsonValue::Num(*b as f64)])).collect()))])
+        }
         ProcessorSpec::LogitBiasDense { values } => obj(vec![("kind", JsonValue::Str("logit_bias_dense".into())), ("values", JsonValue::Array(values.iter().map(|v| JsonValue::Num(*v as f64)).collect()))]),
         ProcessorSpec::AllowTokens { tokens } => obj(vec![("kind", JsonValue::Str("allow_tokens".into())), ("tokens", tokens_json(tokens))]),
         ProcessorSpec::ForbidTokens { tokens } => obj(vec![("kind", JsonValue::Str("forbid_tokens".into())), ("tokens", tokens_json(tokens))]),
@@ -1978,19 +2031,10 @@ fn processor_spec_to_json(spec: &ProcessorSpec) -> JsonValue {
             ("target_surprise", JsonValue::Num(*target_surprise)),
             ("learning_rate", JsonValue::Num(*learning_rate)),
         ]),
-        ProcessorSpec::EntropyPid { target, kp, ki, kd } => obj(vec![
-            ("kind", JsonValue::Str("entropy_pid".into())),
-            ("target", JsonValue::Num(*target)),
-            ("kp", JsonValue::Num(*kp)),
-            ("ki", JsonValue::Num(*ki)),
-            ("kd", JsonValue::Num(*kd)),
-        ]),
-        ProcessorSpec::RepetitionController { window, threshold, boost } => obj(vec![
-            ("kind", JsonValue::Str("repetition_controller".into())),
-            ("window", JsonValue::Num(*window as f64)),
-            ("threshold", JsonValue::Num(*threshold)),
-            ("boost", JsonValue::Num(*boost)),
-        ]),
+        ProcessorSpec::EntropyPid { target, kp, ki, kd } => obj(vec![("kind", JsonValue::Str("entropy_pid".into())), ("target", JsonValue::Num(*target)), ("kp", JsonValue::Num(*kp)), ("ki", JsonValue::Num(*ki)), ("kd", JsonValue::Num(*kd))]),
+        ProcessorSpec::RepetitionController { window, threshold, boost } => {
+            obj(vec![("kind", JsonValue::Str("repetition_controller".into())), ("window", JsonValue::Num(*window as f64)), ("threshold", JsonValue::Num(*threshold)), ("boost", JsonValue::Num(*boost))])
+        }
         ProcessorSpec::ConfidenceController { low_entropy, high_entropy, low_temp, high_temp } => obj(vec![
             ("kind", JsonValue::Str("confidence_controller".into())),
             ("low_entropy", JsonValue::Num(*low_entropy)),
@@ -2005,15 +2049,9 @@ fn processor_spec_from_json(value: &JsonValue) -> Result<ProcessorSpec, Sampling
     let kind = value.get("kind").and_then(JsonValue::as_str).ok_or(SamplingError::Corrupted { reason: "processor missing kind" })?;
     let schedule = |key: &'static str| -> Result<Schedule, SamplingError> { value.get(key).ok_or(SamplingError::Corrupted { reason: "processor missing schedule field" }).and_then(Schedule::from_json) };
     let num = |key: &'static str, default: f64| value.get(key).and_then(JsonValue::as_f64).unwrap_or(default);
-    let tokens = |key: &'static str| -> Vec<TokenId> {
-        value.get(key).and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| TokenId::new(n as u32)).collect()).unwrap_or_default()
-    };
+    let tokens = |key: &'static str| -> Vec<TokenId> { value.get(key).and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| TokenId::new(n as u32)).collect()).unwrap_or_default() };
     let phrases = |key: &'static str| -> Vec<Vec<TokenId>> {
-        value
-            .get(key)
-            .and_then(JsonValue::as_array)
-            .map(|a| a.iter().filter_map(JsonValue::as_array).map(|p| p.iter().filter_map(JsonValue::as_f64).map(|n| TokenId::new(n as u32)).collect()).collect())
-            .unwrap_or_default()
+        value.get(key).and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_array).map(|p| p.iter().filter_map(JsonValue::as_f64).map(|n| TokenId::new(n as u32)).collect()).collect()).unwrap_or_default()
     };
     match kind {
         "temperature" => Ok(ProcessorSpec::Temperature { value: schedule("value")? }),
@@ -2028,35 +2066,21 @@ fn processor_spec_from_json(value: &JsonValue) -> Result<ProcessorSpec, Sampling
         "eta" => Ok(ProcessorSpec::Eta { cutoff: schedule("cutoff")?, min_keep: num("min_keep", 1.0) as usize }),
         "top_a" => Ok(ProcessorSpec::TopA { power: schedule("power")?, min_keep: num("min_keep", 1.0) as usize }),
         "rank_truncation" => Ok(ProcessorSpec::RankTruncation { max_rank: num("max_rank", 1.0) as usize }),
-        "adaptive_truncation" => Ok(ProcessorSpec::AdaptiveTruncation {
-            target_entropy: value.get("target_entropy").and_then(JsonValue::as_f64),
-            target_effective_count: value.get("target_effective_count").and_then(JsonValue::as_f64),
-        }),
+        "adaptive_truncation" => Ok(ProcessorSpec::AdaptiveTruncation { target_entropy: value.get("target_entropy").and_then(JsonValue::as_f64), target_effective_count: value.get("target_effective_count").and_then(JsonValue::as_f64) }),
         "repetition_penalty" => Ok(ProcessorSpec::RepetitionPenalty { penalty: num("penalty", 1.0) as f32, scope: penalty_scope_from_json(value.get("scope"))? }),
         "presence_penalty" => Ok(ProcessorSpec::PresencePenalty { penalty: num("penalty", 0.0) as f32, scope: penalty_scope_from_json(value.get("scope"))? }),
         "frequency_penalty" => Ok(ProcessorSpec::FrequencyPenalty { penalty: num("penalty", 0.0) as f32, scope: penalty_scope_from_json(value.get("scope"))? }),
-        "decaying_penalty" => Ok(ProcessorSpec::DecayingPenalty {
-            penalty: num("penalty", 0.0) as f32,
-            window: num("window", 16.0) as usize,
-            half_life: num("half_life", 1.0),
-            scope: penalty_scope_from_json(value.get("scope"))?,
-        }),
-        "token_class_penalty" => Ok(ProcessorSpec::TokenClassPenalty {
-            class_tokens: phrases("class_tokens"),
-            factors: value.get("factors").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| n as f32).collect()).unwrap_or_default(),
-        }),
+        "decaying_penalty" => Ok(ProcessorSpec::DecayingPenalty { penalty: num("penalty", 0.0) as f32, window: num("window", 16.0) as usize, half_life: num("half_life", 1.0), scope: penalty_scope_from_json(value.get("scope"))? }),
+        "token_class_penalty" => {
+            Ok(ProcessorSpec::TokenClassPenalty { class_tokens: phrases("class_tokens"), factors: value.get("factors").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| n as f32).collect()).unwrap_or_default() })
+        }
         "no_repeat_ngram" => Ok(ProcessorSpec::NoRepeatNgram { n: num("n", 3.0) as usize }),
         "phrase_penalty" => Ok(ProcessorSpec::PhrasePenalty { phrases: phrases("phrases"), penalty: num("penalty", 0.0) as f32 }),
         "logit_bias_sparse" => Ok(ProcessorSpec::LogitBiasSparse {
             entries: value
                 .get("entries")
                 .and_then(JsonValue::as_array)
-                .map(|a| {
-                    a.iter()
-                        .filter_map(JsonValue::as_array)
-                        .filter_map(|pair| Some((TokenId::new(pair.first()?.as_f64()? as u32), pair.get(1)?.as_f64()? as f32)))
-                        .collect()
-                })
+                .map(|a| a.iter().filter_map(JsonValue::as_array).filter_map(|pair| Some((TokenId::new(pair.first()?.as_f64()? as u32), pair.get(1)?.as_f64()? as f32))).collect())
                 .unwrap_or_default(),
         }),
         "logit_bias_dense" => Ok(ProcessorSpec::LogitBiasDense { values: value.get("values").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| n as f32).collect()).unwrap_or_default() }),
@@ -2072,12 +2096,7 @@ fn processor_spec_from_json(value: &JsonValue) -> Result<ProcessorSpec, Sampling
         }),
         "entropy_pid" => Ok(ProcessorSpec::EntropyPid { target: num("target", 2.0), kp: num("kp", 0.1), ki: num("ki", 0.0), kd: num("kd", 0.0) }),
         "repetition_controller" => Ok(ProcessorSpec::RepetitionController { window: num("window", 16.0) as usize, threshold: num("threshold", 0.5), boost: num("boost", 0.2) }),
-        "confidence_controller" => Ok(ProcessorSpec::ConfidenceController {
-            low_entropy: num("low_entropy", 0.5),
-            high_entropy: num("high_entropy", 3.0),
-            low_temp: num("low_temp", 0.5),
-            high_temp: num("high_temp", 1.2),
-        }),
+        "confidence_controller" => Ok(ProcessorSpec::ConfidenceController { low_entropy: num("low_entropy", 0.5), high_entropy: num("high_entropy", 3.0), low_temp: num("low_temp", 0.5), high_temp: num("high_temp", 1.2) }),
         _ => Err(SamplingError::Corrupted { reason: "unknown processor kind" }),
     }
 }
@@ -2444,9 +2463,7 @@ impl LogitsWorkspace {
         for (i, slot) in sort_order[..n].iter_mut().enumerate() {
             *slot = i as u32;
         }
-        sort_order[..n].sort_unstable_by(|&a, &b| {
-            probs[b as usize].partial_cmp(&probs[a as usize]).unwrap_or(core::cmp::Ordering::Equal).then_with(|| live[a as usize].cmp(&live[b as usize]))
-        });
+        sort_order[..n].sort_unstable_by(|&a, &b| probs[b as usize].partial_cmp(&probs[a as usize]).unwrap_or(core::cmp::Ordering::Equal).then_with(|| live[a as usize].cmp(&live[b as usize])));
         if sorted_live_buf.len() < n {
             sorted_live_buf.resize(n, 0);
         }
@@ -5401,15 +5418,7 @@ impl Constraint for JsonModeConstraint {
         *self = Self::new();
     }
     fn fork(&self) -> Box<dyn Constraint> {
-        Box::new(Self {
-            stack: self.stack.clone(),
-            expect: self.expect,
-            in_string: self.in_string,
-            string_escaped: self.string_escaped,
-            string_is_key: self.string_is_key,
-            dead: self.dead,
-            snapshots: self.snapshots.clone(),
-        })
+        Box::new(Self { stack: self.stack.clone(), expect: self.expect, in_string: self.in_string, string_escaped: self.string_escaped, string_is_key: self.string_is_key, dead: self.dead, snapshots: self.snapshots.clone() })
     }
 }
 
@@ -5621,13 +5630,7 @@ impl Constraint for EbnfConstraint {
         self.0.reset();
     }
     fn fork(&self) -> Box<dyn Constraint> {
-        Box::new(Self(RegexConstraint {
-            dfa: self.0.dfa.clone(),
-            cache: DfaTokenCache::new(self.0.max_cache_entries),
-            max_cache_entries: self.0.max_cache_entries,
-            state: self.0.state,
-            snapshots: self.0.snapshots.clone(),
-        }))
+        Box::new(Self(RegexConstraint { dfa: self.0.dfa.clone(), cache: DfaTokenCache::new(self.0.max_cache_entries), max_cache_entries: self.0.max_cache_entries, state: self.0.state, snapshots: self.0.snapshots.clone() }))
     }
 }
 
@@ -5880,20 +5883,7 @@ impl SequenceState {
         if !config.stops.sequences.is_empty() {
             stops.push(Box::new(TextStopCondition::new(&config.stops.sequences, config.stops.mode)));
         }
-        Ok(Self {
-            id,
-            prompt,
-            generated: Vec::new(),
-            cumulative_logprob: 0.0,
-            processors,
-            sampler,
-            constraints,
-            stops,
-            rng,
-            finish: None,
-            config_fingerprint: config.fingerprint(),
-            checkpoints: Vec::new(),
-        })
+        Ok(Self { id, prompt, generated: Vec::new(), cumulative_logprob: 0.0, processors, sampler, constraints, stops, rng, finish: None, config_fingerprint: config.fingerprint(), checkpoints: Vec::new() })
     }
 
     pub fn id(&self) -> SequenceId {
@@ -6110,15 +6100,7 @@ pub fn sample_step_stateless(config: &SamplingConfig, ws: &mut LogitsWorkspace, 
     ws.set_accum(config.accum);
     ws.reset_for_step(raw_logits, config.sanitize)?;
 
-    let view = StepView {
-        sequence: input.sequence,
-        step: input.step,
-        prompt: input.prompt,
-        generated: input.generated,
-        vocab: input.vocab,
-        adapter: input.adapter,
-        last_entropy: input.last_entropy,
-    };
+    let view = StepView { sequence: input.sequence, step: input.step, prompt: input.prompt, generated: input.generated, vocab: input.vocab, adapter: input.adapter, last_entropy: input.last_entropy };
 
     let mut processors = Vec::with_capacity(config.processors.len());
     for spec in &config.processors {
@@ -6191,7 +6173,15 @@ pub fn sample_step_stateless(config: &SamplingConfig, ws: &mut LogitsWorkspace, 
 /// but only after a token has been definitively selected (the "state update only after successful
 /// token selection" pipeline guarantee). `view` is scoped to short-lived blocks throughout so its
 /// borrow of `state.prompt`/`state.generated` never overlaps a later `&mut state` access.
-pub fn sample_step(config: &SamplingConfig, state: &mut SequenceState, ws: &mut LogitsWorkspace, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, raw_logits: &[f32], observer: &mut dyn SamplingObserver) -> Result<SamplingResult, SamplingError> {
+pub fn sample_step(
+    config: &SamplingConfig,
+    state: &mut SequenceState,
+    ws: &mut LogitsWorkspace,
+    vocab: &Vocabulary,
+    adapter: Option<&dyn TokenTextAdapter>,
+    raw_logits: &[f32],
+    observer: &mut dyn SamplingObserver,
+) -> Result<SamplingResult, SamplingError> {
     if state.finish.is_some() {
         return Err(SamplingError::InvalidConfig { field: "state", reason: "sequence already finished" });
     }
@@ -6454,7 +6444,14 @@ pub struct BeamSearchConfig {
 /// [`SequenceState::fork`] so per-sequence state (penalties, constraints, RNG) never aliases
 /// across beams. Finished hypotheses are set aside and never re-expanded. Returns every
 /// hypothesis (finished or step-exhausted), sorted best-first by length-normalized score.
-pub fn beam_search(config: &SamplingConfig, beam_config: &BeamSearchConfig, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, initial: SequenceState, mut next_logits: impl FnMut(&SequenceState) -> Vec<f32>) -> Result<Vec<BeamHypothesis>, SamplingError> {
+pub fn beam_search(
+    config: &SamplingConfig,
+    beam_config: &BeamSearchConfig,
+    vocab: &Vocabulary,
+    adapter: Option<&dyn TokenTextAdapter>,
+    initial: SequenceState,
+    mut next_logits: impl FnMut(&SequenceState) -> Vec<f32>,
+) -> Result<Vec<BeamHypothesis>, SamplingError> {
     let mut ws = LogitsWorkspace::new(vocab.size);
     let mut beams = vec![BeamHypothesis { state: initial, score: 0.0 }];
     let mut finished: Vec<BeamHypothesis> = Vec::new();
@@ -6518,7 +6515,16 @@ pub struct BestOfN {
 
 impl BestOfN {
     #[allow(clippy::too_many_arguments)]
-    pub fn run(&self, config: &SamplingConfig, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, max_steps: usize, observer: &mut dyn SamplingObserver, make_initial: impl Fn(usize) -> Result<SequenceState, SamplingError>, mut next_logits: impl FnMut(&SequenceState) -> Vec<f32>) -> Result<Vec<(SequenceState, f64)>, SamplingError> {
+    pub fn run(
+        &self,
+        config: &SamplingConfig,
+        vocab: &Vocabulary,
+        adapter: Option<&dyn TokenTextAdapter>,
+        max_steps: usize,
+        observer: &mut dyn SamplingObserver,
+        make_initial: impl Fn(usize) -> Result<SequenceState, SamplingError>,
+        mut next_logits: impl FnMut(&SequenceState) -> Vec<f32>,
+    ) -> Result<Vec<(SequenceState, f64)>, SamplingError> {
         let mut candidates = Vec::with_capacity(self.n);
         for i in 0..self.n {
             let mut state = make_initial(i)?;
@@ -6586,7 +6592,17 @@ pub struct SpecMetrics {
 /// constraint/penalty/stop state stays exactly what non-speculative decoding would have produced
 /// for the same accepted prefix.
 #[allow(clippy::too_many_arguments)]
-pub fn speculative_decode(config: &SamplingConfig, state: &mut SequenceState, ws: &mut LogitsWorkspace, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, draft_tokens: &[TokenId], draft_distributions: &[Vec<f32>], mut target_logits: impl FnMut(&SequenceState) -> Vec<f32>, observer: &mut dyn SamplingObserver) -> Result<(Vec<SamplingResult>, SpecMetrics), SamplingError> {
+pub fn speculative_decode(
+    config: &SamplingConfig,
+    state: &mut SequenceState,
+    ws: &mut LogitsWorkspace,
+    vocab: &Vocabulary,
+    adapter: Option<&dyn TokenTextAdapter>,
+    draft_tokens: &[TokenId],
+    draft_distributions: &[Vec<f32>],
+    mut target_logits: impl FnMut(&SequenceState) -> Vec<f32>,
+    observer: &mut dyn SamplingObserver,
+) -> Result<(Vec<SamplingResult>, SpecMetrics), SamplingError> {
     let mut results = Vec::new();
     let mut metrics = SpecMetrics { proposed: draft_tokens.len(), accepted: 0, bonus_taken: false };
     let stream_key = StreamKey { request: 0, sequence: state.id().get(), beam: 0, candidate: 0, purpose: StreamPurpose::Speculative };
@@ -7766,11 +7782,7 @@ mod tests {
     #[test]
     fn validate_rejects_too_many_stop_sequences() {
         let limits = SamplingLimits { max_stop_sequences: 1, ..SamplingLimits::default() };
-        let config = SamplingConfig {
-            limits,
-            stops: StopSpec { sequences: vec![b"a".to_vec(), b"b".to_vec()], ..StopSpec::default() },
-            ..SamplingConfig::default()
-        };
+        let config = SamplingConfig { limits, stops: StopSpec { sequences: vec![b"a".to_vec(), b"b".to_vec()], ..StopSpec::default() }, ..SamplingConfig::default() };
         assert!(config.validate().is_err());
     }
 
@@ -7782,10 +7794,7 @@ mod tests {
 
     #[test]
     fn validate_rejects_mismatched_token_class_penalty_lengths() {
-        let config = SamplingConfig {
-            processors: vec![ProcessorSpec::TokenClassPenalty { class_tokens: vec![vec![TokenId::new(0)], vec![TokenId::new(1)]], factors: vec![0.5] }],
-            ..SamplingConfig::default()
-        };
+        let config = SamplingConfig { processors: vec![ProcessorSpec::TokenClassPenalty { class_tokens: vec![vec![TokenId::new(0)], vec![TokenId::new(1)]], factors: vec![0.5] }], ..SamplingConfig::default() };
         assert!(config.validate().is_err());
     }
 
@@ -8895,12 +8904,7 @@ mod tests {
 
     #[test]
     fn sample_step_with_no_repeat_ngram_avoids_recreating_a_bigram() {
-        let config = SamplingConfig {
-            method: SamplingMethod::Greedy { tie_break: TieBreak::LowestTokenId },
-            processors: vec![ProcessorSpec::NoRepeatNgram { n: 2 }],
-            max_tokens: 6,
-            ..SamplingConfig::default()
-        };
+        let config = SamplingConfig { method: SamplingMethod::Greedy { tie_break: TieBreak::LowestTokenId }, processors: vec![ProcessorSpec::NoRepeatNgram { n: 2 }], max_tokens: 6, ..SamplingConfig::default() };
         let vocab = small_vocab();
         let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
         let mut ws = LogitsWorkspace::new(8);
@@ -9235,12 +9239,7 @@ mod tests {
 
     #[test]
     fn sample_step_with_regex_constraint_only_ever_emits_matching_text() {
-        let config = SamplingConfig {
-            method: SamplingMethod::Greedy { tie_break: TieBreak::LowestTokenId },
-            constraints: vec![ConstraintSpec::Regex("(a|b)".into())],
-            max_tokens: 1,
-            ..SamplingConfig::default()
-        };
+        let config = SamplingConfig { method: SamplingMethod::Greedy { tie_break: TieBreak::LowestTokenId }, constraints: vec![ConstraintSpec::Regex("(a|b)".into())], max_tokens: 1, ..SamplingConfig::default() };
         let tokens: Vec<&[u8]> = vec![b"z", b"a", b"b"];
         let adapter = SliceTextAdapter::new(&tokens);
         let vocab = Vocabulary::new(3);
@@ -9407,9 +9406,7 @@ mod tests {
         let vocab = Vocabulary::new(4).with_eos(vec![TokenId::new(3)]);
         let best_of = BestOfN { n: 3 };
         let mut observer = NullObserver;
-        let results = best_of
-            .run(&config, &vocab, None, 2, &mut observer, |i| SequenceState::new(SequenceId::new(i as u64), Vec::new(), &config, Box::new(CounterRng::from_seed(i as u64))), |_state| vec![0.0, 9.0, 0.0, 1.0])
-            .unwrap();
+        let results = best_of.run(&config, &vocab, None, 2, &mut observer, |i| SequenceState::new(SequenceId::new(i as u64), Vec::new(), &config, Box::new(CounterRng::from_seed(i as u64))), |_state| vec![0.0, 9.0, 0.0, 1.0]).unwrap();
         assert_eq!(results.len(), 3);
         for i in 1..results.len() {
             assert!(results[i - 1].1 >= results[i].1, "results must be sorted best-first by mean logprob");

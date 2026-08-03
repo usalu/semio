@@ -1,9 +1,9 @@
 //! ⚙️ DIN V 18599 app — headless compute (constitutional: engine).
 
+use din16798_engine::part_3::residential_ventilation_rate;
 use din18599::{BalancingInputs, Document, MonthlyClimate, UseClass};
 use din4108_engine::part_2::{total_resistance, u_value_from_resistance, Layer};
 use din4108_engine::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
-use din16798_engine::part_3::residential_ventilation_rate;
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, NormFamily, NormFamilyId, NormHost, Quantity};
 use serde::{Deserialize, Serialize};
 
@@ -625,10 +625,7 @@ mod tests {
 
     #[test]
     fn part_1_primary_energy_aggregation_worked_example() {
-        let deliveries = vec![
-            part_1::FinalEnergyDelivery { carrier: "natural_gas".into(), q_f_kwh: 10_000.0 },
-            part_1::FinalEnergyDelivery { carrier: "electricity_grid".into(), q_f_kwh: 2_000.0 },
-        ];
+        let deliveries = vec![part_1::FinalEnergyDelivery { carrier: "natural_gas".into(), q_f_kwh: 10_000.0 }, part_1::FinalEnergyDelivery { carrier: "electricity_grid".into(), q_f_kwh: 2_000.0 }];
         let q_p = part_1::aggregate_primary_energy_kwh(&deliveries);
         assert!((q_p - 14_600.0).abs() < 1e-9, "q_p = {q_p}, expected 10000*1.1 + 2000*1.8 = 14600");
     }

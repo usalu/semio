@@ -297,11 +297,7 @@ mod tests {
         // Simulates a hand-edited file: valid JSON shape, but a bitset with a stray bit set past
         // its declared `len` in the `words` array — must be caught by `is_well_formed`, not panic.
         let (model, topo) = checkerboard();
-        let json = format!(
-            r#"{{"version":1,"domains":[{{"words":[999999],"len":2}}{}],"model_fingerprint":{},"seed":0}}"#,
-            ",{\"words\":[3],\"len\":2}".repeat(topo.node_count() - 1),
-            model.fingerprint()
-        );
+        let json = format!(r#"{{"version":1,"domains":[{{"words":[999999],"len":2}}{}],"model_fingerprint":{},"seed":0}}"#, ",{\"words\":[3],\"len\":2}".repeat(topo.node_count() - 1), model.fingerprint());
         let doc: CheckpointDoc = serde_json::from_str(&json).unwrap();
         assert_eq!(doc.into_checkpoint(&model, topo.node_count()).unwrap_err(), SolveError::CorruptCheckpoint { reason: "domain bitset failed structural well-formedness check" });
     }

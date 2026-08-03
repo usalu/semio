@@ -59,12 +59,7 @@ mod tests {
 
     fn solid_slab_doc() -> Fem3dDocument {
         Fem3dDocument {
-            nodes: vec![
-                FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 },
-                FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 },
-                FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 },
-                FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 },
-            ],
+            nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
             elements: vec![],
             materials: vec![FemMaterial { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
             sections: vec![],

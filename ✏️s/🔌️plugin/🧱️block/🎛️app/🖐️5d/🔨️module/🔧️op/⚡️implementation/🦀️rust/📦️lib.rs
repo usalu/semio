@@ -175,41 +175,82 @@ impl OperationDiff<Block5dDefinition> for Block5dDiff {
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Block5dOperation {
     #[dsl(key = "setPartKind")]
-    SetPartKind { #[dsl(block)] part_kind: BlockKindIdentity },
+    SetPartKind {
+        #[dsl(block)]
+        part_kind: BlockKindIdentity,
+    },
     #[dsl(key = "setPart2d")]
-    SetPart2d { #[dsl(block)] part_2d: Block5dPart2d },
+    SetPart2d {
+        #[dsl(block)]
+        part_2d: Block5dPart2d,
+    },
     #[dsl(key = "setPart3d")]
-    SetPart3d { #[dsl(block)] part_3d: Block5dPart3d },
+    SetPart3d {
+        #[dsl(block)]
+        part_3d: Block5dPart3d,
+    },
     #[dsl(key = "setRepresentation")]
-    SetRepresentation { index: usize, #[dsl(block)] representation: BlockRepresentation },
+    SetRepresentation {
+        index: usize,
+        #[dsl(block)]
+        representation: BlockRepresentation,
+    },
     #[dsl(key = "removeRepresentation")]
     RemoveRepresentation { id: String },
     #[dsl(key = "setGripKind")]
-    SetGripKind { index: usize, #[dsl(block)] grip_kind: Block5dGripKind },
+    SetGripKind {
+        index: usize,
+        #[dsl(block)]
+        grip_kind: Block5dGripKind,
+    },
     #[dsl(key = "removeGripKind")]
     RemoveGripKind { id: String },
     #[dsl(key = "setGrip")]
-    SetGrip { index: usize, #[dsl(block)] grip: Block5dGripTemplate },
+    SetGrip {
+        index: usize,
+        #[dsl(block)]
+        grip: Block5dGripTemplate,
+    },
     #[dsl(key = "removeGrip")]
     RemoveGrip { id: String },
     #[dsl(key = "setCompatibilityRule")]
-    SetCompatibilityRule { index: usize, #[dsl(block)] rule: BlockCompatibilityRule },
+    SetCompatibilityRule {
+        index: usize,
+        #[dsl(block)]
+        rule: BlockCompatibilityRule,
+    },
     #[dsl(key = "removeCompatibilityRule")]
     RemoveCompatibilityRule { id: String },
     #[dsl(key = "setAttribute")]
-    SetAttribute { index: usize, #[dsl(block)] attribute: BlockAttribute },
+    SetAttribute {
+        index: usize,
+        #[dsl(block)]
+        attribute: BlockAttribute,
+    },
     #[dsl(key = "removeAttribute")]
     RemoveAttribute { key: String },
     #[dsl(key = "setAuthors")]
     SetAuthors { authors: Vec<BlockAuthor> },
     #[dsl(key = "setCamera2d")]
-    SetCamera2d { #[dsl(block)] camera2d: BlockCamera2d },
+    SetCamera2d {
+        #[dsl(block)]
+        camera2d: BlockCamera2d,
+    },
     #[dsl(key = "setCamera3d")]
-    SetCamera3d { #[dsl(block)] camera3d: BlockCamera3d },
+    SetCamera3d {
+        #[dsl(block)]
+        camera3d: BlockCamera3d,
+    },
     #[dsl(key = "setMeta")]
-    SetMeta { #[dsl(block)] meta: BlockMeta },
+    SetMeta {
+        #[dsl(block)]
+        meta: BlockMeta,
+    },
     #[dsl(key = "setDocument")]
-    SetDocument { #[dsl(block)] document: Block5dDefinition },
+    SetDocument {
+        #[dsl(block)]
+        document: Block5dDefinition,
+    },
 }
 
 fn block5d_operation_diff(operation: &Block5dOperation) -> Block5dDiff {
@@ -253,7 +294,9 @@ impl Operation<Block5dDefinition> for Block5dOperation {
                 Some(index) => vec![Block5dOperation::SetRepresentation { index, representation: projection.representations[index].clone() }],
                 None => vec![Block5dOperation::RemoveRepresentation { id: representation.id.clone() }],
             },
-            Block5dOperation::RemoveRepresentation { id } => block5d_index_of(&projection.representations, id).map(|index| vec![Block5dOperation::SetRepresentation { index, representation: projection.representations[index].clone() }]).unwrap_or_default(),
+            Block5dOperation::RemoveRepresentation { id } => {
+                block5d_index_of(&projection.representations, id).map(|index| vec![Block5dOperation::SetRepresentation { index, representation: projection.representations[index].clone() }]).unwrap_or_default()
+            }
             Block5dOperation::SetGripKind { grip_kind, .. } => match block5d_index_of(&projection.grip_kinds, &grip_kind.id) {
                 Some(index) => vec![Block5dOperation::SetGripKind { index, grip_kind: projection.grip_kinds[index].clone() }],
                 None => vec![Block5dOperation::RemoveGripKind { id: grip_kind.id.clone() }],
@@ -292,7 +335,10 @@ impl Operation<Block5dDefinition> for Block5dOperation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum Block5dConfigOperation {
     #[dsl(key = "snapshot")]
-    Snapshot { #[dsl(block)] config: block_5d_engine::Block5dConfig },
+    Snapshot {
+        #[dsl(block)]
+        config: block_5d_engine::Block5dConfig,
+    },
     #[dsl(key = "selection")]
     SetSelection { ids: Vec<String> },
     #[dsl(key = "locale")]

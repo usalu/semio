@@ -12,9 +12,9 @@ use present_protocol::PresentCommand;
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
     app_labels, build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
-    ActionDescriptor, AppIo, App, AppLabels, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
-    UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    ActionDescriptor, App, AppIo, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    OsMediaCapability, PanelGroup, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde_json::{json, Value};
 use std::collections::HashSet;
@@ -63,12 +63,7 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
     match &media.payload {
         MediaPayload::Structured { json, .. } => {
             let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            Ok(value
-                .get("name")
-                .and_then(|v| v.as_str())
-                .or_else(|| value.get("src").and_then(|v| v.as_str()))
-                .map(str::to_string)
-                .unwrap_or_else(|| "Imported frame".into()))
+            Ok(value.get("name").and_then(|v| v.as_str()).or_else(|| value.get("src").and_then(|v| v.as_str())).map(str::to_string).unwrap_or_else(|| "Imported frame".into()))
         }
         MediaPayload::Binary { blob_hash, .. } => Ok(format!("frame-{}", &blob_hash[..blob_hash.len().min(8)])),
     }
@@ -162,7 +157,11 @@ app_labels! {
 /// unknown/absent locales fall back to native English. `PresentConfig` carries no terminology axis,
 /// so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
 fn animate_present_locale(config: &PresentConfig) -> Locale {
-    if config.locale.starts_with("de") { Locale::De } else { Locale::En }
+    if config.locale.starts_with("de") {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn animate_present_labels(config: &PresentConfig) -> &'static AnimatePresentLabels {
@@ -306,7 +305,11 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
         presence: UiPresence::default(),
         menu: None,
     })];
-    identity_fields.push(ui_inspector_readonly_field("animate.present.play.tile.id", labels.field_id, if tile_ids.len() == 1 { tile_ids.first().cloned().unwrap_or_default() } else { format!("{} {}", tile_ids.len(), labels.selected_suffix.as_str()) }));
+    identity_fields.push(ui_inspector_readonly_field(
+        "animate.present.play.tile.id",
+        labels.field_id,
+        if tile_ids.len() == 1 { tile_ids.first().cloned().unwrap_or_default() } else { format!("{} {}", tile_ids.len(), labels.selected_suffix.as_str()) },
+    ));
     if tile_ids.len() == 1 {
         identity_fields.push(UiNode::Button(semio_framework_plugin::UiButtonNode {
             id: Some(format!("animate.present.play.tile.{}.delete", tile_ids[0])),
@@ -346,9 +349,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
 }
 
 fn catalogue_button(id: &str, label: impl Into<Label>, action: &str, args: Option<Value>) -> UiNode {
-    UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, presence: UiPresence::default(),
-        menu: None,
-    })
+    UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, presence: UiPresence::default(), menu: None })
 }
 
 fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> UiNode {
@@ -589,11 +590,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                     Emit::default()
                 }
             }
-            PresentCommand::ClearTiles => Emit {
-                document_operations: vec![PresentOperation::SetTiles { tiles: Vec::new() }],
-                config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }],
-                ..Default::default()
-            },
+            PresentCommand::ClearTiles => Emit { document_operations: vec![PresentOperation::SetTiles { tiles: Vec::new() }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }], ..Default::default() },
             PresentCommand::EngagementSubmit { value } => {
                 let trimmed = value.trim();
                 if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
@@ -641,12 +638,9 @@ impl DocumentApp for AnimatePresentPlayApp {
             PresentCommand::ExportVideoFromDeck { output_dir, scene_json } => {
                 let scene = serde_json::from_str::<PresentScene>(scene_json).unwrap_or_else(|_| PresentScene::empty("Deck export"));
                 match export_video_from_deck(&scene, output_dir) {
-                    Ok(bundles) => Emit::effect(HostEffect::DownloadMediaExport {
-                        filename: "animate-video-export.ops".into(),
-                        mime_type: "text/plain".into(),
-                        data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()),
-                        encoding: None,
-                    }),
+                    Ok(bundles) => {
+                        Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()), encoding: None })
+                    }
                     Err(error) => Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export-error.txt".into(), mime_type: "text/plain".into(), data: error.to_string(), encoding: None }),
                 }
             }
@@ -762,7 +756,7 @@ mod tests {
     use super::*;
     use present_engine::empty_present_deck;
     use semio_framework_plugin::app::AppActionRegistry;
-    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app() -> VcsDocumentApp<AnimatePresentPlayApp> {
         VcsDocumentApp::new(AnimatePresentPlayApp)

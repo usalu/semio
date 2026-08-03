@@ -475,7 +475,11 @@ fn cmd_verify(rest: &[String]) -> i32 {
             }
         }
     }
-    if failures > 0 { 1 } else { 0 }
+    if failures > 0 {
+        1
+    } else {
+        0
+    }
 }
 //#endregion 🔖️Verify
 
@@ -741,13 +745,7 @@ fn describe_resolution_plan(plan: db::conflict::ResolutionPlan) -> String {
 }
 
 fn touched_command(command_id: &str, actor: &str, kind: &str, rule: protocol::ConflictRule, hlc_actor: u64, paths: &str) -> db::conflict::CommandTouch {
-    let touch = db::conflict::CommandTouch::new(
-        protocol::OperationId(command_id.to_string()),
-        protocol::ActorId(actor.to_string()),
-        db::conflict::CommandKind::from(kind),
-        rule,
-        protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms()),
-    );
+    let touch = db::conflict::CommandTouch::new(protocol::OperationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db::conflict::CommandKind::from(kind), rule, protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms()));
     paths.split(',').map(str::trim).filter(|path| !path.is_empty()).fold(touch, |touch, path| touch.touch(db::state::TouchedRegion::write(path)))
 }
 
@@ -946,14 +944,8 @@ fn cmd_profile(rest: &[String]) -> i32 {
             document_id: document_id.clone(),
             actor: protocol::ActorId("profiler".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff {
-                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::Value::Object(forward)).unwrap_or_default(),
-            },
-            inverse: protocol::InverseOperation {
-                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::Value::Object(backward)).unwrap_or_default(),
-            },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(forward)).unwrap_or_default() },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(backward)).unwrap_or_default() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms()),
         };
         let batch = match db::document::CommandBatch::new(vec![envelope]) {
@@ -1056,14 +1048,8 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId("tester".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff {
-                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::json!({"greeting": "hello"})).unwrap(),
-            },
-            inverse: protocol::InverseOperation {
-                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
-                payload: serde_json::to_vec(&serde_json::json!({"greeting": null})).unwrap(),
-            },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": "hello"})).unwrap() },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": null})).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -1123,12 +1109,7 @@ mod tests {
         seed_document(&root);
 
         let wal_dir = root.join("wal").join("doc-1");
-        let segment_path = std::fs::read_dir(&wal_dir)
-            .unwrap()
-            .filter_map(|entry| entry.ok())
-            .map(|entry| entry.path())
-            .find(|path| path.extension().is_some_and(|ext| ext == "bin"))
-            .expect("expected at least one wal segment file");
+        let segment_path = std::fs::read_dir(&wal_dir).unwrap().filter_map(|entry| entry.ok()).map(|entry| entry.path()).find(|path| path.extension().is_some_and(|ext| ext == "bin")).expect("expected at least one wal segment file");
         let mut bytes = std::fs::read(&segment_path).unwrap();
         assert!(bytes.len() > 16, "segment must be large enough to truncate meaningfully");
         bytes.truncate(bytes.len() - 5);
@@ -1145,14 +1126,8 @@ mod tests {
     //#region 🔖️ConflictSimulate
     #[test]
     fn cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones() {
-        assert_eq!(
-            main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("a/name")]),
-            1
-        );
-        assert_eq!(
-            main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("b/name")]),
-            0
-        );
+        assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("a/name")]), 1);
+        assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("b/name")]), 0);
     }
 
     #[test]
@@ -1181,10 +1156,7 @@ mod tests {
     fn cli_migrate_appends_a_migration_record_visible_to_wal_inspect() {
         let root = tempdir("migrate");
         let root_str = root.to_string_lossy().to_string();
-        assert_eq!(
-            main_impl(&[String::from("migrate"), root_str.clone(), String::from("doc-1"), String::from("rename-field"), String::from("--payload"), String::from("old->new")]),
-            0
-        );
+        assert_eq!(main_impl(&[String::from("migrate"), root_str.clone(), String::from("doc-1"), String::from("rename-field"), String::from("--payload"), String::from("old->new")]), 0);
         assert_eq!(main_impl(&[String::from("wal-inspect"), root_str, String::from("doc-1")]), 0);
     }
 
@@ -1199,10 +1171,7 @@ mod tests {
     fn cli_profile_reports_throughput_for_n_commands_on_a_fresh_document() {
         let root = tempdir("profile");
         let root_str = root.to_string_lossy().to_string();
-        assert_eq!(
-            main_impl(&[String::from("profile"), root_str.clone(), String::from("doc-1"), String::from("--commands"), String::from("5"), String::from("--durability"), String::from("memory")]),
-            0
-        );
+        assert_eq!(main_impl(&[String::from("profile"), root_str.clone(), String::from("doc-1"), String::from("--commands"), String::from("5"), String::from("--durability"), String::from("memory")]), 0);
         // 🎯️ The 5 profiled commands are real, durable commits — verified via the query subcommand
         // rather than parsing this test's own stdout (`println!` isn't easily captured in-process).
         assert_eq!(main_impl(&[String::from("query"), root_str, String::from("doc-1"), String::from("cli/profile/counter")]), 0);

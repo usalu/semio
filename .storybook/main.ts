@@ -13,7 +13,7 @@ import { dirname, join, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -26,13 +26,11 @@ const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "..");
 const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
 
-const uiReactDir = resolve(repoRootPath, "framework/module/ui/js/react");
-const uiStylingDir = resolve(repoRootPath, "framework/module/ui/styling/js");
+const uiReactDir = resolve(repoRootPath, "🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript");
+const uiStylingDir = resolve(repoRootPath, "🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript");
 const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
-const composeAssetsDir = resolve(repoRootPath, "framework/module/asset");
+const composeAssetsDir = resolve(repoRootPath, "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript");
 const composeFixturesDir = resolve(repoRootPath, "compose/fixture");
-const puzzleAssetsDir = resolve(repoRootPath, "puzzle/asset");
-const uiAssetsRootPath = resolve(repoRootPath, "framework/module/ui/asset");
 
 function toVitePath(value: string): string {
   return value.replaceAll("\\", "/");
@@ -56,7 +54,7 @@ function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
     "@semio-tech/ui-react": toVitePath(uiReactDir),
     "@semio-tech/ui-styling": toVitePath(uiStylingDir),
-    "@semio-tech/puzzle-asset": toVitePath(puzzleAssetsDir),
+    "@semio-tech/puzzle-asset": toVitePath(resolve(repoRootPath, "✏️s/🔌️plugin/🧩️puzzle/🔨️module/🖼️asset/⚡️implementation/🟦️typescript")),
     "@semio-tech/compose-js": toVitePath(composeJsDir),
     "@semio-tech/compose-react": toVitePath(composeJsDir),
     "@semio-tech/asset": toVitePath(composeAssetsDir),
@@ -133,7 +131,7 @@ const config: StorybookConfig = {
     }
     const hasUiAssetsPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "ui-assets-serve");
     if (!hasUiAssetsPlugin) {
-      config.plugins.push(...uiAssetsVitePlugin(uiAssetsRootPath));
+      config.plugins.push(...semioAssetsVitePlugin(repoRootPath));
     }
     // #region 🔖️ScopeAssetsAndPlugins
     /** @emoji 🌐️ Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */

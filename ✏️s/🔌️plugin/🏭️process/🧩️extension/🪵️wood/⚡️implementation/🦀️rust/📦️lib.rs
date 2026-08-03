@@ -57,12 +57,7 @@ impl MachineCatalog for WoodCatalog {
                     label: "Rip".into(),
                     icon_id: "scissors".into(),
                     recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
-                    parameters: vec![
-                        parameter("bladeDiameter", "Blade Diameter", 0.315),
-                        parameter("kerf", "Kerf", 0.0032),
-                        parameter("maxCutDepth", "Max Cut Depth", 0.102),
-                        parameter("fenceWidth", "Fence Width", 0.8),
-                    ],
+                    parameters: vec![parameter("bladeDiameter", "Blade Diameter", 0.315), parameter("kerf", "Kerf", 0.0032), parameter("maxCutDepth", "Max Cut Depth", 0.102), parameter("fenceWidth", "Fence Width", 0.8)],
                     rules: vec![max_rule(StockQuantity::Height, "maxCutDepth", 0.0), max_rule(StockQuantity::Width, "fenceWidth", 0.0)],
                 }],
             },

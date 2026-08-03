@@ -430,15 +430,9 @@ mod ureq_transport {
                 let response = call.call().map_err(|error| PackError::Io(error.to_string()))?;
                 let range_satisfied = response.status() == 206;
                 let etag = response.header("ETag").map(|value| value.to_string());
-                let total_len = response
-                    .header("Content-Range")
-                    .and_then(|value| value.rsplit('/').next())
-                    .and_then(|value| value.parse::<u64>().ok());
+                let total_len = response.header("Content-Range").and_then(|value| value.rsplit('/').next()).and_then(|value| value.parse::<u64>().ok());
                 let mut bytes = Vec::new();
-                response
-                    .into_reader()
-                    .read_to_end(&mut bytes)
-                    .map_err(|error| PackError::Io(error.to_string()))?;
+                response.into_reader().read_to_end(&mut bytes).map_err(|error| PackError::Io(error.to_string()))?;
                 Ok(RangeResponse { bytes, etag, total_len, range_satisfied })
             })
             .join()
@@ -473,13 +467,7 @@ mod tests {
 
     impl FakeTransport {
         fn new(data: Vec<u8>, etag: &str) -> Self {
-            Self {
-                data: Arc::new(data),
-                etag: Arc::from(etag),
-                fail_first_n: Arc::new(AtomicU32::new(0)),
-                call_count: Arc::new(AtomicU32::new(0)),
-                requests_seen: Arc::new(Mutex::new(Vec::new())),
-            }
+            Self { data: Arc::new(data), etag: Arc::from(etag), fail_first_n: Arc::new(AtomicU32::new(0)), call_count: Arc::new(AtomicU32::new(0)), requests_seen: Arc::new(Mutex::new(Vec::new())) }
         }
 
         fn failing_first(self, n: u32) -> Self {
@@ -492,11 +480,7 @@ mod tests {
     impl RangeTransport for FakeTransport {
         async fn fetch_range(&self, request: RangeRequest) -> Result<RangeResponse, PackError> {
             self.call_count.fetch_add(1, Ordering::SeqCst);
-            self.requests_seen.lock().unwrap().push(RangeRequest {
-                url: request.url.clone(),
-                range: request.range,
-                if_range_etag: request.if_range_etag.clone(),
-            });
+            self.requests_seen.lock().unwrap().push(RangeRequest { url: request.url.clone(), range: request.range, if_range_etag: request.if_range_etag.clone() });
 
             let remaining = self.fail_first_n.load(Ordering::SeqCst);
             if remaining > 0 {
@@ -508,12 +492,7 @@ mod tests {
             let end = (start + request.range.len as usize).min(self.data.len());
             let bytes = self.data[start..end].to_vec();
             let range_satisfied = end - start == request.range.len as usize;
-            Ok(RangeResponse {
-                bytes,
-                etag: Some(self.etag.to_string()),
-                total_len: Some(self.data.len() as u64),
-                range_satisfied,
-            })
+            Ok(RangeResponse { bytes, etag: Some(self.etag.to_string()), total_len: Some(self.data.len() as u64), range_satisfied })
         }
     }
 
@@ -544,11 +523,7 @@ mod tests {
         let seen = inspector.requests_seen.lock().unwrap();
         assert_eq!(seen.len(), 2, "expected exactly two physical fetches, one per read_at call");
         assert_eq!(seen[0].if_range_etag, None, "the first request has no prior etag to revalidate against");
-        assert_eq!(
-            seen[1].if_range_etag.as_deref(),
-            Some("etag-abc"),
-            "the second request must carry the etag observed from the first response for revalidation"
-        );
+        assert_eq!(seen[1].if_range_etag.as_deref(), Some("etag-abc"), "the second request must carry the etag observed from the first response for revalidation");
     }
 
     #[test]
@@ -556,11 +531,7 @@ mod tests {
         let data: Vec<u8> = (0..16u16).map(|value| value as u8).collect();
         let transport = FakeTransport::new(data.clone(), "etag-r").failing_first(2);
         let inspector = transport.clone();
-        let source = HttpPackSource::with_retry_policy(
-            "https://example.test/doc.pack".to_string(),
-            transport,
-            RetryPolicy { max_retries: 5, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(20) },
-        );
+        let source = HttpPackSource::with_retry_policy("https://example.test/doc.pack".to_string(), transport, RetryPolicy { max_retries: 5, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(20) });
 
         let bytes = futures_lite::future::block_on(source.read_at(0, 16)).unwrap();
         assert_eq!(bytes, data);
@@ -571,11 +542,7 @@ mod tests {
     fn exhausting_retries_surfaces_the_transient_error() {
         let transport = FakeTransport::new(vec![0u8; 8], "etag-x").failing_first(10);
         let inspector = transport.clone();
-        let source = HttpPackSource::with_retry_policy(
-            "https://example.test/doc.pack".to_string(),
-            transport,
-            RetryPolicy { max_retries: 2, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(5) },
-        );
+        let source = HttpPackSource::with_retry_policy("https://example.test/doc.pack".to_string(), transport, RetryPolicy { max_retries: 2, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(5) });
 
         let result = futures_lite::future::block_on(source.read_at(0, 8));
         assert!(result.is_err());

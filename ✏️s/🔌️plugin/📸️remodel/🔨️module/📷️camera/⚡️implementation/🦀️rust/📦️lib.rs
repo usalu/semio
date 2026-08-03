@@ -117,12 +117,7 @@ impl Distortion {
                 let dyd_dx = y * dscale_dx;
                 let dyd_dy = scale + y * dscale_dy;
                 let dscale_dk = |theta_pow: f64| theta_pow / r;
-                let params = vec![
-                    [x * dscale_dk(t3), y * dscale_dk(t3)],
-                    [x * dscale_dk(t5), y * dscale_dk(t5)],
-                    [x * dscale_dk(t7), y * dscale_dk(t7)],
-                    [x * dscale_dk(t9), y * dscale_dk(t9)],
-                ];
+                let params = vec![[x * dscale_dk(t3), y * dscale_dk(t3)], [x * dscale_dk(t5), y * dscale_dk(t5)], [x * dscale_dk(t7), y * dscale_dk(t7)], [x * dscale_dk(t9), y * dscale_dk(t9)]];
                 ([x * scale, y * scale], [[dxd_dx, dxd_dy], [dyd_dx, dyd_dy]], params)
             }
         }
@@ -797,14 +792,7 @@ fn recover_pose(h: &[[f64; 3]; 3], fx: f64, fy: f64, cx: f64, cy: f64, skew: f64
 }
 
 fn intrinsics_from_params(x: &VecD) -> Intrinsics {
-    Intrinsics {
-        fx: x.get(0),
-        fy: x.get(1),
-        cx: x.get(2),
-        cy: x.get(3),
-        skew: x.get(4),
-        distortion: Distortion::BrownConrady { k1: x.get(5), k2: x.get(6), k3: 0.0, p1: x.get(7), p2: x.get(8) },
-    }
+    Intrinsics { fx: x.get(0), fy: x.get(1), cx: x.get(2), cy: x.get(3), skew: x.get(4), distortion: Distortion::BrownConrady { k1: x.get(5), k2: x.get(6), k3: 0.0, p1: x.get(7), p2: x.get(8) } }
 }
 
 /// 🧩️ Joint planar-calibration least-squares problem: one shared `Intrinsics` (9 params: fx, fy, cx, cy,
@@ -1081,10 +1069,7 @@ mod tests {
 
     #[test]
     fn undistort_distort_round_trips_for_brown_conrady_and_fisheye() {
-        let models = [
-            Distortion::BrownConrady { k1: -0.15, k2: 0.03, k3: -0.002, p1: 0.001, p2: -0.0015 },
-            Distortion::FisheyeEquidistant { k1: -0.05, k2: 0.01, k3: -0.002, k4: 0.0005 },
-        ];
+        let models = [Distortion::BrownConrady { k1: -0.15, k2: 0.03, k3: -0.002, p1: 0.001, p2: -0.0015 }, Distortion::FisheyeEquidistant { k1: -0.05, k2: 0.01, k3: -0.002, k4: 0.0005 }];
         for distortion in models {
             let intr = Intrinsics { fx: 700.0, fy: 690.0, cx: 330.0, cy: 250.0, skew: 0.0, distortion };
             for ix in -4..=4 {
@@ -1121,9 +1106,7 @@ mod tests {
         let num_cameras = 3;
         let num_points = 8;
         let mut state = 42_u64;
-        let true_poses: Vec<Se3> = (0..num_cameras)
-            .map(|i| Se3 { r: So3::exp([0.1 * i as f64, -0.05 * i as f64, 0.05 * i as f64]), t: [0.2 * i as f64, -0.1 * i as f64, 0.0] })
-            .collect();
+        let true_poses: Vec<Se3> = (0..num_cameras).map(|i| Se3 { r: So3::exp([0.1 * i as f64, -0.05 * i as f64, 0.05 * i as f64]), t: [0.2 * i as f64, -0.1 * i as f64, 0.0] }).collect();
         let true_points: Vec<[f64; 3]> = (0..num_points).map(|_| [lcg(&mut state) * 0.5, lcg(&mut state) * 0.5, 2.0 + lcg(&mut state) * 0.3]).collect();
 
         let mut observations = Vec::new();
@@ -1453,11 +1436,7 @@ mod tests {
     #[test]
     fn reprojection_jacobians_match_central_difference_at_random_configurations() {
         let mut state = 909_u64;
-        let models = [
-            Distortion::None,
-            Distortion::BrownConrady { k1: -0.12, k2: 0.02, k3: 0.001, p1: 0.0008, p2: -0.0005 },
-            Distortion::FisheyeEquidistant { k1: -0.04, k2: 0.008, k3: -0.001, k4: 0.0002 },
-        ];
+        let models = [Distortion::None, Distortion::BrownConrady { k1: -0.12, k2: 0.02, k3: 0.001, p1: 0.0008, p2: -0.0005 }, Distortion::FisheyeEquidistant { k1: -0.04, k2: 0.008, k3: -0.001, k4: 0.0002 }];
         let eps = 1e-6;
         for distortion in models {
             for _ in 0..5 {

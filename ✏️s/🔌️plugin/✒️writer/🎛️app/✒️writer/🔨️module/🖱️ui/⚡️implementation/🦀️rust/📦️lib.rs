@@ -5,31 +5,25 @@
 //! action dispatches through the single typed `writer_protocol::WriterCommand` channel via
 //! `DocumentApp::handle` — mirrors `shooting_ui::ShootingPlayApp` (the B1 pilot) exactly.
 
-use trinity_jack::{example_graph, lint, semantic_tokens, Diagnostic};
-use writer::{WriterCamera, WriterProjection, WRITER_DOCUMENT_SCHEMA};
-use writer_engine::{
-    apply_jack_rename, dag_jack_example_document, dag_jack_example_json, empty_writer_projection, find_deepest_jack_ast_node_at, format_writer_text, jack_ast_node_by_id,
-    jack_ast_node_for_selection, jack_ast_tree_icon, jack_completions_json, jack_editor_placeholders, jack_example_document, jack_example_json, jack_newline_gate_offsets, jack_symbol_at_offset,
-    parse_jack_ast, selectable_spans_for_jack, tokenize_language, writer_chapter_payload, JackAstNode, JackSymbolKind, WriterConfig, WriterEditorSelection,
-};
-use writer_op::{WriterConfigOperation, WriterOperation};
-use writer_protocol::WriterCommand;
-use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
-    build_text_editor_scene, engagement_token_matches, strip_engagement_prefix,
-    tree_item, ui_declarative_sections_to_tree, ui_text, App,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, AppActionRegistry, AppIo, LocalizedLabel,
-    ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, Menu,
-    DocumentApp, DocumentView, ConfigView, Emit, IconName, AppLabels, Label, Locale, Terminology, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
-    UiTreeItemNode, WindowEngagement, WindowEngagementInput,
-    WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, create_default_layout,
+use semio_framework_plugin::{
+    build_text_editor_scene, create_default_layout, engagement_token_matches, strip_engagement_prefix, tree_item, ui_declarative_sections_to_tree, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
+    AppActionRegistry, AppIo, AppLabels, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, DocumentApp, DocumentView, Emit, IconName, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError,
+    MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability, PanelGroup, PanelTabSpec, PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, WindowEngagement, WindowEngagementInput,
+    WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::DocumentPack;
+use trinity_jack::{example_graph, lint, semantic_tokens, Diagnostic};
+use writer::{WriterCamera, WriterProjection, WRITER_DOCUMENT_SCHEMA};
+use writer_engine::{
+    apply_jack_rename, dag_jack_example_document, dag_jack_example_json, empty_writer_projection, find_deepest_jack_ast_node_at, format_writer_text, jack_ast_node_by_id, jack_ast_node_for_selection, jack_ast_tree_icon, jack_completions_json,
+    jack_editor_placeholders, jack_example_document, jack_example_json, jack_newline_gate_offsets, jack_symbol_at_offset, parse_jack_ast, selectable_spans_for_jack, tokenize_language, writer_chapter_payload, JackAstNode, JackSymbolKind,
+    WriterConfig, WriterEditorSelection,
+};
+use writer_op::{WriterConfigOperation, WriterOperation};
+use writer_protocol::WriterCommand;
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_APP_ID: &str = "writer-play";
@@ -54,7 +48,11 @@ fn is_de_locale(cfg: &WriterConfig) -> bool {
 }
 
 fn writer_locale(cfg: &WriterConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &WriterConfig) -> &'static L {
@@ -74,11 +72,7 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
         icon_id: jack_ast_tree_icon(&node.kind).and_then(IconName::from_str),
         presence: UiPresence::default(),
         default_open: Some(matches!(node.kind.as_str(), "query" | "match" | "pattern" | "return")),
-        action: Some(play_action(
-            WRITER_PLAY_CONTROLLER_ID,
-            "selectAstNode",
-            Some(json!({ "id": node.id, "start": node.start, "end": node.end })),
-        )),
+        action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "selectAstNode", Some(json!({ "id": node.id, "start": node.start, "end": node.end })))),
         hover_action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstHover", Some(json!({ "id": node.id })))),
         unhover_action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstHover", Some(json!({ "id": Value::Null })))),
         actions: None,
@@ -100,12 +94,7 @@ fn editor_hover_context(document: &WriterProjection, config: &WriterConfig) -> (
     let tree_span = config.tree_hovered_ast_id.as_ref().and_then(|id| jack_ast_node_by_id(&root, id)).map(|node| (node.start, node.end));
     let editor_hovered_ast_id = config.editor_hover_offset.and_then(|offset| find_deepest_jack_ast_node_at(&root, offset)).map(|node| node.id.clone());
     let highlighted = config.tree_hovered_ast_id.clone().or(editor_hovered_ast_id);
-    let hover_occurrences = config
-        .editor_hover_offset
-        .and_then(|offset| jack_symbol_at_offset(&document.text, offset))
-        .filter(|symbol| symbol.kind == JackSymbolKind::Variable)
-        .map(|symbol| symbol.occurrences)
-        .unwrap_or_default();
+    let hover_occurrences = config.editor_hover_offset.and_then(|offset| jack_symbol_at_offset(&document.text, offset)).filter(|symbol| symbol.kind == JackSymbolKind::Variable).map(|symbol| symbol.occurrences).unwrap_or_default();
     (highlighted, tree_span, hover_occurrences)
 }
 //#endregion 🔖️DocumentHelpers
@@ -134,11 +123,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Panels
 fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: controller_id.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: controller_id.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn render_document_panel(document: &WriterProjection, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
@@ -154,11 +139,7 @@ fn render_document_panel(document: &WriterProjection, config: &WriterConfig, lab
     }
     let root = parse_jack_ast(&document.text);
     let items = if root.kind == "error" {
-        vec![UiTreeItemNode {
-            description: Some(root.kind.clone()),
-            icon_id: jack_ast_tree_icon(&root.kind).and_then(IconName::from_str),
-            ..tree_item(root.id.as_str(), Label::data(root.label.as_str()))
-        }]
+        vec![UiTreeItemNode { description: Some(root.kind.clone()), icon_id: jack_ast_tree_icon(&root.kind).and_then(IconName::from_str), ..tree_item(root.id.as_str(), Label::data(root.label.as_str())) }]
     } else {
         vec![jack_ast_to_tree_item(&root)]
     };
@@ -172,14 +153,7 @@ fn render_document_panel(document: &WriterProjection, config: &WriterConfig, lab
 }
 
 fn render_catalogue_panel(labels: &WriterPlayLabels) -> UiNode {
-    ui_declarative_sections_to_tree(&[UiSectionNode {
-        id: "writer-catalogue".into(),
-        label: Some(labels.language.into()),
-        default_open: Some(true),
-        children: vec![ui_text(labels.jack_description)],
-        presence: UiPresence::default(),
-        menu: None,
-    }])
+    ui_declarative_sections_to_tree(&[UiSectionNode { id: "writer-catalogue".into(), label: Some(labels.language.into()), default_open: Some(true), children: vec![ui_text(labels.jack_description)], presence: UiPresence::default(), menu: None }])
 }
 
 fn render_inspection_panel(document: &WriterProjection, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
@@ -202,11 +176,7 @@ fn render_inspection_panel(document: &WriterProjection, config: &WriterConfig, l
             id: "writer-inspector.camera".into(),
             label: Some(labels.camera.into()),
             default_open: Some(false),
-            children: vec![
-                ui_text(Label::data(format!("x: {}", config.camera.x))),
-                ui_text(Label::data(format!("y: {}", config.camera.y))),
-                ui_text(Label::data(format!("zoom: {}", config.camera.zoom))),
-            ],
+            children: vec![ui_text(Label::data(format!("x: {}", config.camera.x))), ui_text(Label::data(format!("y: {}", config.camera.y))), ui_text(Label::data(format!("zoom: {}", config.camera.zoom)))],
             presence: UiPresence::default(),
             menu: None,
         },
@@ -237,18 +207,11 @@ fn render_main_scene(document: &WriterProjection, config: &WriterConfig) -> UiNo
     let selection_json = Some(json!({ "start": selection.start, "end": selection.end }).to_string());
 
     let grammar_tokens = tokenize_language(&document.text, &document.language_id);
-    let tokens_json = if is_jack {
-        serde_json::to_string(&semantic_tokens(&document.text)).ok()
-    } else {
-        serde_json::to_string(&grammar_tokens).ok()
-    };
+    let tokens_json = if is_jack { serde_json::to_string(&semantic_tokens(&document.text)).ok() } else { serde_json::to_string(&grammar_tokens).ok() };
 
     let diagnostics_json = if is_jack {
         let graph = example_graph();
-        let diagnostics: Vec<Value> = lint(&graph, &document.text)
-            .into_iter()
-            .map(|diag: Diagnostic| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message }))
-            .collect();
+        let diagnostics: Vec<Value> = lint(&graph, &document.text).into_iter().map(|diag: Diagnostic| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message })).collect();
         Some(serde_json::to_string(&diagnostics).unwrap_or_else(|_| "[]".into()))
     } else if config.lint_signal > 0 {
         Some(json!([{ "start": 0, "end": document.text.len().max(1), "severity": "info", "message": format!("Lint pass #{}", config.lint_signal) }]).to_string())
@@ -286,8 +249,7 @@ fn render_main_scene(document: &WriterProjection, config: &WriterConfig) -> UiNo
         .to_string()
     });
 
-    let extra_carets_json = (!selection_occurrences.is_empty())
-        .then(|| serde_json::to_string(&selection_occurrences.iter().map(|(s, _)| *s).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into()));
+    let extra_carets_json = (!selection_occurrences.is_empty()).then(|| serde_json::to_string(&selection_occurrences.iter().map(|(s, _)| *s).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into()));
 
     let completions_json = is_jack.then(|| jack_completions_json(&document.text, cursor)).flatten();
 
@@ -331,10 +293,7 @@ struct WriterEngagementOutcome {
 /// operations this interaction produces instead of mutating a `&mut runtime` in place.
 fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str, value: &str) -> WriterEngagementOutcome {
     let trimmed = value.trim();
-    let mut config_operations = vec![
-        WriterConfigOperation::SetEngagementInput { value: String::new() },
-        WriterConfigOperation::SetRevision { value: config.revision + 1 },
-    ];
+    let mut config_operations = vec![WriterConfigOperation::SetEngagementInput { value: String::new() }, WriterConfigOperation::SetRevision { value: config.revision + 1 }];
     if trimmed.is_empty() {
         return WriterEngagementOutcome { text: None, config_operations };
     }
@@ -387,11 +346,7 @@ pub struct WriterPlayApp;
 /// entry makes sense for them), so they stay bespoke `.item(...)` rows per `Menu::of`'s escape hatch;
 /// `requestCompletions`/`lintDocument`/`formatDocument`/`commitRename` are declared actions and resolve
 /// through `.action(...)` against `registry`.
-fn writer_context_menu_items<'a>(
-    registry: &'a AppActionRegistry,
-    text: Option<&ContextMenuTextContext>,
-    is_de: bool,
-) -> Vec<ContextMenuItemSpec> {
+fn writer_context_menu_items<'a>(registry: &'a AppActionRegistry, text: Option<&ContextMenuTextContext>, is_de: bool) -> Vec<ContextMenuItemSpec> {
     let can_suggest = text.map(|t| t.has_completions).unwrap_or(false);
     let has_selection = text.map(|t| t.has_selection).unwrap_or(false);
     let can_rename = text.map(|t| t.can_rename).unwrap_or(false);
@@ -408,21 +363,31 @@ fn writer_context_menu_items<'a>(
         .item(bespoke("writer-copy", if is_de { "Kopieren" } else { "Copy" }, "copy", "copy", !has_selection))
         .item(bespoke("writer-paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", false))
         .group("selection", |m| {
-            m.item(bespoke("writer-select-line", if is_de { "Zeile auswählen" } else { "Select line" }, "list-ordered", "selectLine", false))
-                .item(bespoke("writer-select-all", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", false))
+            m.item(bespoke("writer-select-line", if is_de { "Zeile auswählen" } else { "Select line" }, "list-ordered", "selectLine", false)).item(bespoke(
+                "writer-select-all",
+                if is_de { "Alles auswählen" } else { "Select All" },
+                "select-all",
+                "selectAll",
+                false,
+            ))
         })
         .group("tools", |m| {
             let m = m.action("lintDocument");
-            if can_suggest { m.action("requestCompletions") } else { m }
+            if can_suggest {
+                m.action("requestCompletions")
+            } else {
+                m
+            }
         })
         .group("transform", |m| {
             let m = m.action("formatDocument");
-            if can_rename { m.action("commitRename") } else { m }
+            if can_rename {
+                m.action("commitRename")
+            } else {
+                m
+            }
         })
-        .item(ContextMenuItemSpec {
-            destructive: Some(true),
-            ..bespoke("writer-cut", if is_de { "Ausschneiden" } else { "Cut" }, "scissors", "cut", !has_selection)
-        })
+        .item(ContextMenuItemSpec { destructive: Some(true), ..bespoke("writer-cut", if is_de { "Ausschneiden" } else { "Cut" }, "scissors", "cut", !has_selection) })
         .build()
 }
 
@@ -483,12 +448,7 @@ impl DocumentApp for WriterPlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &WriterCommand,
-        doc: &DocumentView<'_, WriterProjection>,
-        cfg: &ConfigView<'_, WriterConfig>,
-    ) -> Emit<WriterOperation, WriterConfigOperation> {
+    fn handle(&self, command: &WriterCommand, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Emit<WriterOperation, WriterConfigOperation> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
@@ -544,10 +504,7 @@ impl DocumentApp for WriterPlayApp {
             // 🎥️ View command: the editor viewport never touches the document — config-only.
             WriterCommand::SetCamera { camera } => Emit::config(vec![WriterConfigOperation::SetCamera { camera: camera.clone() }]),
             WriterCommand::RequestCompletions => Emit::config(vec![WriterConfigOperation::SetRevision { value: config.revision + 1 }]),
-            WriterCommand::LintDocument => Emit::config(vec![
-                WriterConfigOperation::SetLintSignal { value: config.lint_signal + 1 },
-                WriterConfigOperation::SetRevision { value: config.revision + 1 },
-            ]),
+            WriterCommand::LintDocument => Emit::config(vec![WriterConfigOperation::SetLintSignal { value: config.lint_signal + 1 }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]),
             WriterCommand::TextSelect { start, end } | WriterCommand::SetEditorSelection { start, end } => {
                 let mut ops = vec![WriterConfigOperation::SetEditorSelection { selection: Some(WriterEditorSelection { start: *start, end: *end }) }];
                 let ids = if document.language_id == "jack" {
@@ -583,10 +540,7 @@ impl DocumentApp for WriterPlayApp {
             }
             WriterCommand::SetAstHover { id } => {
                 if *id != config.tree_hovered_ast_id {
-                    Emit::config(vec![
-                        WriterConfigOperation::SetTreeHoveredAstId { id: id.clone() },
-                        WriterConfigOperation::SetRevision { value: config.revision + 1 },
-                    ])
+                    Emit::config(vec![WriterConfigOperation::SetTreeHoveredAstId { id: id.clone() }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
                 } else {
                     Emit::default()
                 }
@@ -597,10 +551,7 @@ impl DocumentApp for WriterPlayApp {
                     _ => None,
                 };
                 if offset != config.editor_hover_offset {
-                    Emit::config(vec![
-                        WriterConfigOperation::SetEditorHoverOffset { offset },
-                        WriterConfigOperation::SetRevision { value: config.revision + 1 },
-                    ])
+                    Emit::config(vec![WriterConfigOperation::SetEditorHoverOffset { offset }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
                 } else {
                     Emit::default()
                 }
@@ -635,11 +586,7 @@ impl DocumentApp for WriterPlayApp {
             WriterCommand::EngagementSubmit { value } => {
                 let value = value.clone().unwrap_or_else(|| config.engagement_input.clone());
                 let outcome = apply_engagement(config, &document.text, &document.language_id, &value);
-                Emit {
-                    document_operations: outcome.text.map(|text| vec![WriterOperation::SetText { text }]).unwrap_or_default(),
-                    config_operations: outcome.config_operations,
-                    ..Default::default()
-                }
+                Emit { document_operations: outcome.text.map(|text| vec![WriterOperation::SetText { text }]).unwrap_or_default(), config_operations: outcome.config_operations, ..Default::default() }
             }
             WriterCommand::SetLocale { value } => Emit::config(vec![WriterConfigOperation::SetLocale { value: value.clone() }]),
         }
@@ -659,10 +606,7 @@ impl DocumentApp for WriterPlayApp {
             return Err(MediaError::NotImplemented);
         }
         let bytes = doc.projection.encode_pack();
-        Ok(Media {
-            media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
-            payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-        })
+        Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> UiNode {
@@ -730,7 +674,7 @@ impl DocumentApp for WriterPlayApp {
                 disabled: None,
                 reveal: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "fontPx" }))),
-                },
+            },
             WindowMeasure::Slider {
                 id: "writer-line-height-measure".into(),
                 label: Some(labels.line_height.into()),
@@ -744,7 +688,7 @@ impl DocumentApp for WriterPlayApp {
                 disabled: None,
                 reveal: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "lineHeight" }))),
-                },
+            },
             WindowMeasure::Slider {
                 id: "writer-tab-size-measure".into(),
                 label: Some(labels.tab_size.into()),
@@ -758,7 +702,7 @@ impl DocumentApp for WriterPlayApp {
                 disabled: None,
                 reveal: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "tabSize" }))),
-                },
+            },
             WindowMeasure::Toggle {
                 id: "writer-line-numbers-measure".into(),
                 icon_id: "list-ordered".into(),
@@ -771,13 +715,7 @@ impl DocumentApp for WriterPlayApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), measures)])
     }
 
-    fn context_menu(
-        &self,
-        request: &ContextMenuRequest,
-        _doc: &DocumentView<'_, WriterProjection>,
-        cfg: &ConfigView<'_, WriterConfig>,
-        registry: &AppActionRegistry,
-    ) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let is_de = is_de_locale(cfg.projection);
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, is_de)
@@ -1065,13 +1003,7 @@ mod tests {
         // (`normalizeEngagementActionText`), so "font 16" arrives as "Font16", "tab 4" as "Tab4",
         // and "line numbers" as "LineNumbers".
         let mut app = new_app();
-        let before_toggle = app
-            .window_engagements()
-            .get(WRITER_PLAY_WINDOW_KIND)
-            .and_then(|engagement| engagement.options.as_ref())
-            .and_then(|options| options.first())
-            .and_then(|option| option.pressed)
-            .expect("line-numbers pressed state");
+        let before_toggle = app.window_engagements().get(WRITER_PLAY_WINDOW_KIND).and_then(|engagement| engagement.options.as_ref()).and_then(|options| options.first()).and_then(|option| option.pressed).expect("line-numbers pressed state");
 
         app.dispatch_typed(WriterCommand::EngagementSubmit { value: Some("Font16".into()) }, &meta("local")).expect("font");
         app.dispatch_typed(WriterCommand::EngagementSubmit { value: Some("Tab4".into()) }, &meta("local")).expect("tab");
@@ -1082,13 +1014,7 @@ mod tests {
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-font-size-measure" && *value == 16.0)));
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-tab-size-measure" && *value == 4.0)));
 
-        let after_toggle = app
-            .window_engagements()
-            .get(WRITER_PLAY_WINDOW_KIND)
-            .and_then(|engagement| engagement.options.as_ref())
-            .and_then(|options| options.first())
-            .and_then(|option| option.pressed)
-            .expect("line-numbers pressed state");
+        let after_toggle = app.window_engagements().get(WRITER_PLAY_WINDOW_KIND).and_then(|engagement| engagement.options.as_ref()).and_then(|options| options.first()).and_then(|option| option.pressed).expect("line-numbers pressed state");
         assert_eq!(after_toggle, !before_toggle);
     }
 

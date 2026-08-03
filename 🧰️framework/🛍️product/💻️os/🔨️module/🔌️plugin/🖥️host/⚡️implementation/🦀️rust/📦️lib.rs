@@ -1,7 +1,7 @@
 //! 🛡️ Sandboxed wasmtime component plugin host with capability-gated imports.
 
 use semio_framework_core::{
-    kernel::{CapabilityRequirement, ArtifactKind, Rights, Scope},
+    kernel::{ArtifactKind, CapabilityRequirement, Rights, Scope},
     PluginManifest, ViewState,
 };
 use std::collections::HashMap;

@@ -31,10 +31,7 @@ mod tests {
 
     #[test]
     fn gis3d_terrain_document_pack_agrees_with_dsl_for_imported_features_json() {
-        store::test_support::assert_dsl_pack_equivalence(&Gis3dTerrainDocument {
-            exaggeration: 1.0,
-            imported_features_json: r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#.into(),
-        });
+        store::test_support::assert_dsl_pack_equivalence(&Gis3dTerrainDocument { exaggeration: 1.0, imported_features_json: r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#.into() });
     }
 }
 //#endregion 🧪️Tests

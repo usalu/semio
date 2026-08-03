@@ -3,7 +3,7 @@
 //! ordinary domain overrides and fixed pins before delegating to the same generic kernel.
 
 use crate::bitset::PatternSet;
-use crate::constraint::{AdjacencyView, Constraint, ConstraintSet, build_adjacency_view};
+use crate::constraint::{build_adjacency_view, AdjacencyView, Constraint, ConstraintSet};
 use crate::error::SolveError;
 use crate::grid3d::Grid3dTopology;
 use crate::ids::PatternId;
@@ -87,7 +87,11 @@ pub struct Grid3dSolver {
 
 impl Grid3dSolver {
     fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
-        if self.constraints.is_empty() { None } else { Some(ConstraintSet { constraints: &self.constraints, adjacency: &self.adjacency }) }
+        if self.constraints.is_empty() {
+            None
+        } else {
+            Some(ConstraintSet { constraints: &self.constraints, adjacency: &self.adjacency })
+        }
     }
 
     pub fn solve(&mut self, seed: u64) -> SolveOutcome {
@@ -135,7 +139,7 @@ impl Grid3dSolver {
 mod tests {
     use super::*;
     use crate::grid2d::Boundary;
-    use crate::grid3d::{Stencil3d, declare_stencil_relations_3d_tiled};
+    use crate::grid3d::{declare_stencil_relations_3d_tiled, Stencil3d};
     use crate::tiled::TiledModelBuilder;
 
     fn checkerboard3d(size: usize, boundary: Boundary) -> (CompiledModel, Grid3dTopology) {

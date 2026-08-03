@@ -1,7 +1,7 @@
 //! ⚡️ Trinity Rewrite app — operation enum + laws (constitutional: op).
 
-use rewrite::{RewriteRuleState, TrinityRewriteError, REWRITE_RULE_SCHEMA};
 use protocol::{Operation, OperationDiff};
+use rewrite::{RewriteRuleState, TrinityRewriteError, REWRITE_RULE_SCHEMA};
 use serde::{Deserialize, Serialize};
 use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore};
 
@@ -128,9 +128,9 @@ impl Operation<rewrite_engine::RewriteConfig> for RewriteConfigOperation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::OpText;
     use rewrite::{LayoutPoint, RewriteRuleState};
     use std::collections::BTreeMap;
-    use protocol::OpText;
     use store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
     use trinity_ram::PropertyValue;
 

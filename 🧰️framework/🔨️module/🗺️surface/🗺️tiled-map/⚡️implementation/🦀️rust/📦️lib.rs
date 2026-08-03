@@ -1381,7 +1381,7 @@ enum MapInteraction {
     Pan {
         origin: canvas::camera::Camera,
         start_screen: Point,
-    }
+    },
 }
 
 fn map_point_segment_distance(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f64) -> f64 {
@@ -4152,19 +4152,7 @@ mod tests {
 
     #[test]
     fn map_layer_stroke_scale_sanitized_clamps_every_field() {
-        let scale = super::MapLayerStrokeScale {
-            raster: 100.0,
-            water: -1.0,
-            land: 100.0,
-            roads: 100.0,
-            buildings: 100.0,
-            borders: 100.0,
-            labels: 100.0,
-            positions: 100.0,
-            position_labels: 100.0,
-            routes: 100.0,
-            regions: -1.0,
-        };
+        let scale = super::MapLayerStrokeScale { raster: 100.0, water: -1.0, land: 100.0, roads: 100.0, buildings: 100.0, borders: 100.0, labels: 100.0, positions: 100.0, position_labels: 100.0, routes: 100.0, regions: -1.0 };
         let s = scale.sanitized();
         assert_eq!(s.raster, super::MAP_LAYER_WEIGHT_MAX);
         assert_eq!(s.water, super::MAP_LAYER_WEIGHT_MIN);

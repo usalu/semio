@@ -138,12 +138,7 @@ mod tests {
         let initial = gis2d_engine::empty_gis_map_projection();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
         let mut store = store::DocumentStore::new(envelope);
-        store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 })],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 })], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

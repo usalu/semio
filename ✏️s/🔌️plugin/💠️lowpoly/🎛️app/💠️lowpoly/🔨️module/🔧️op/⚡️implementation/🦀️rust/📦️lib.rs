@@ -59,8 +59,13 @@ pub enum LowpolyOperation {
         #[dsl(block)]
         item: LowpolyObject,
     },
-    ObjectsRemove { id: String },
-    ObjectsMove { id: String, to_index: usize },
+    ObjectsRemove {
+        id: String,
+    },
+    ObjectsMove {
+        id: String,
+        to_index: usize,
+    },
     ObjectsPatch {
         id: String,
         #[dsl(block)]
@@ -72,7 +77,10 @@ pub enum LowpolyOperation {
         #[dsl(block)]
         layer: lowpoly::LowpolyPaintLayer,
     },
-    RemovePaintLayer { object_id: String, index: usize },
+    RemovePaintLayer {
+        object_id: String,
+        index: usize,
+    },
     PatchPaintLayer {
         object_id: String,
         index: usize,
@@ -88,7 +96,7 @@ pub enum LowpolyOperation {
     SetProjection {
         #[dsl(block)]
         projection: LowpolyProjection,
-    }
+    },
 }
 
 /// 🔁️ Converts a generic objects `CollectionOperation` (as produced by `protocol::invert_collection_operation`)
@@ -178,16 +186,10 @@ pub fn apply_lowpoly_operation(projection: &mut LowpolyProjection, operation: &L
 /// bytes at each run's offset so undo restores the exact overwritten pixels (not merely "clear paint").
 pub fn invert_lowpoly_operation(projection: &LowpolyProjection, operation: &LowpolyOperation) -> LowpolyOperation {
     match operation {
-        LowpolyOperation::ObjectsAdd { index, item } => {
-            objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index }))
-        }
+        LowpolyOperation::ObjectsAdd { index, item } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })),
         LowpolyOperation::ObjectsRemove { id } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Remove { id: id.clone() })),
-        LowpolyOperation::ObjectsMove { id, to_index } => {
-            objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Move { id: id.clone(), to: *to_index }))
-        }
-        LowpolyOperation::ObjectsPatch { id, patch } => {
-            objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }))
-        }
+        LowpolyOperation::ObjectsMove { id, to_index } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Move { id: id.clone(), to: *to_index })),
+        LowpolyOperation::ObjectsPatch { id, patch } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })),
         LowpolyOperation::AddPaintLayer { object_id, index, .. } => LowpolyOperation::RemovePaintLayer { object_id: object_id.clone(), index: *index },
         LowpolyOperation::RemovePaintLayer { object_id, index } => {
             let layer = projection.objects.iter().find(|object| object.id == *object_id).and_then(|object| object.paint_layers.get(*index)).cloned().unwrap_or_else(|| lowpoly::LowpolyPaintLayer::new("Layer"));

@@ -24,25 +24,11 @@ fn na_check(part: &str, section: &str, message: impl Into<String>) -> CheckResul
 }
 
 fn pass_check(part: &str, section: &str, message: impl Into<String>) -> CheckResult {
-    CheckResult::pass(
-        clause(part, section),
-        Quantity::new(QuantityKind::Dimensionless, 1.0),
-        Quantity::new(QuantityKind::Dimensionless, 1.0),
-        1.0,
-        message,
-        ANNEX,
-    )
+    CheckResult::pass(clause(part, section), Quantity::new(QuantityKind::Dimensionless, 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 1.0, message, ANNEX)
 }
 
 fn fail_check(part: &str, section: &str, message: impl Into<String>) -> CheckResult {
-    CheckResult::fail(
-        clause(part, section),
-        Quantity::new(QuantityKind::Dimensionless, 0.0),
-        Quantity::new(QuantityKind::Dimensionless, 1.0),
-        2.0,
-        message,
-        ANNEX,
-    )
+    CheckResult::fail(clause(part, section), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 2.0, message, ANNEX)
 }
 
 // #region Part1
@@ -56,10 +42,7 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
         return Err(NormError::IncompleteInput { field: "header_fields".into() });
     }
     let bsn = BuildingSystemNumber::parse(header_fields[2])?;
-    let record_count: u32 = header_fields[4].parse().map_err(|_| NormError::InvalidValue {
-        field: "record_count".into(),
-        reason: "numeric expected".into(),
-    })?;
+    let record_count: u32 = header_fields[4].parse().map_err(|_| NormError::InvalidValue { field: "record_count".into(), reason: "numeric expected".into() })?;
     let mut records = Vec::new();
     let mut products = Vec::new();
     for line in lines {
@@ -73,23 +56,14 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
         let family = RecordFamilyId(fields[0].clone());
         if fields[0] == "100" && fields.len() >= 4 {
             let article_number = fields.get(3).cloned().unwrap_or_default();
-            let identity = ProductIdentity {
-                manufacturer_code: fields.get(1).cloned().unwrap_or_default(),
-                product_group: fields.get(2).cloned().unwrap_or_default(),
-                article_number: article_number.clone(),
-            };
+            let identity = ProductIdentity { manufacturer_code: fields.get(1).cloned().unwrap_or_default(), product_group: fields.get(2).cloned().unwrap_or_default(), article_number: article_number.clone() };
             let sheet_no: u16 = fields.get(4).and_then(|s| s.parse().ok()).unwrap_or(2);
             products.push(CatalogueProduct {
                 identity,
                 title: LocalizedText::new("Produkt", "Product"),
                 sheet: SheetId(sheet_no),
                 records: Vec::new(),
-                configuration: Configuration {
-                    id: format!("cfg.{}", article_number),
-                    parameters: BTreeMap::new(),
-                    geometry_ref: None,
-                    function_refs: Vec::new(),
-                },
+                configuration: Configuration { id: format!("cfg.{}", article_number), parameters: BTreeMap::new(), geometry_ref: None, function_refs: Vec::new() },
                 accessories: Vec::new(),
                 components: Vec::new(),
                 extensions: ExtensionBag::default(),
@@ -112,22 +86,9 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
 /// 🔤️ Serialize catalogue to semicolon-delimited native text.
 pub fn serialize_native_text(catalog: &ManufacturerCatalog) -> String {
     let f = &catalog.file;
-    let mut out = format!(
-        "{};{};{};{};{}\n",
-        f.header_version,
-        f.manufacturer,
-        f.building_system_number.render(),
-        f.created,
-        f.record_count
-    );
+    let mut out = format!("{};{};{};{};{}\n", f.header_version, f.manufacturer, f.building_system_number.render(), f.created, f.record_count);
     for product in &catalog.products {
-        out.push_str(&format!(
-            "100;{};{};{};{}\n",
-            product.identity.manufacturer_code,
-            product.identity.product_group,
-            product.identity.article_number,
-            product.sheet.0
-        ));
+        out.push_str(&format!("100;{};{};{};{}\n", product.identity.manufacturer_code, product.identity.product_group, product.identity.article_number, product.sheet.0));
     }
     for product in &catalog.products {
         for record in &product.records {
@@ -152,26 +113,17 @@ pub fn validate_structure(catalog: &ManufacturerCatalog) -> Vec<Diagnostic> {
     }
     for product in &catalog.products {
         if product.identity.article_number.is_empty() {
-            issues.push(Diagnostic::error(
-                &format!("product.{}", product.sheet.0),
-                "missing article number",
-            ));
+            issues.push(Diagnostic::error(&format!("product.{}", product.sheet.0), "missing article number"));
         }
         if product.configuration.id.is_empty() {
-            issues.push(Diagnostic::warning(
-                &format!("configuration.{}", product.sheet.0),
-                "missing configuration id",
-            ));
+            issues.push(Diagnostic::warning(&format!("configuration.{}", product.sheet.0), "missing configuration id"));
         }
     }
     let known: std::collections::BTreeSet<&str> = RecordFamilyId::all_known().iter().copied().collect();
     for product in &catalog.products {
         for record in &product.records {
             if !known.contains(record.family.0.as_str()) && !record.family.0.starts_with("9") {
-                issues.push(Diagnostic::info(
-                    &format!("record.{}", record.family.0),
-                    "unknown record family preserved",
-                ));
+                issues.push(Diagnostic::info(&format!("record.{}", record.family.0), "unknown record family preserved"));
             }
         }
     }
@@ -192,31 +144,19 @@ pub fn linear_map(x: f64, x0: f64, x1: f64, y0: f64, y1: f64) -> f64 {
 // #region Io
 /// 📤️ JSON round-trip for manufacturer catalogues.
 pub fn catalog_to_json(catalog: &ManufacturerCatalog) -> Result<String, NormError> {
-    serde_json::to_string_pretty(catalog).map_err(|e| NormError::InvalidValue {
-        field: "json".into(),
-        reason: e.to_string(),
-    })
+    serde_json::to_string_pretty(catalog).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
 pub fn catalog_from_json(json: &str) -> Result<ManufacturerCatalog, NormError> {
-    serde_json::from_str(json).map_err(|e| NormError::InvalidValue {
-        field: "json".into(),
-        reason: e.to_string(),
-    })
+    serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
 pub fn document_to_json(document: &Document) -> Result<String, NormError> {
-    serde_json::to_string_pretty(document).map_err(|e| NormError::InvalidValue {
-        field: "json".into(),
-        reason: e.to_string(),
-    })
+    serde_json::to_string_pretty(document).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 
 pub fn document_from_json(json: &str) -> Result<Document, NormError> {
-    serde_json::from_str(json).map_err(|e| NormError::InvalidValue {
-        field: "json".into(),
-        reason: e.to_string(),
-    })
+    serde_json::from_str(json).map_err(|e| NormError::InvalidValue { field: "json".into(), reason: e.to_string() })
 }
 // #endregion Io
 
@@ -446,7 +386,6 @@ define_vdi_part!(part_100, 100, multi_profile);
 fn all_part_checks(document: &Document) -> Vec<CheckResult> {
     vec![
         part_1::check(document),
-
         part_02::check(document),
         part_03::check(document),
         part_04::check(document),
@@ -564,24 +503,12 @@ pub fn evaluate(document: &Document) -> CheckReport {
         }
     }
 
-    let operative: std::collections::BTreeSet<u16> = registry
-        .operative_sheets()
-        .iter()
-        .map(|s| s.id.0)
-        .collect();
-    report.push(pass_check(
-        "registry",
-        "operative",
-        format!("{} operative sheets", operative.len()),
-    ));
+    let operative: std::collections::BTreeSet<u16> = registry.operative_sheets().iter().map(|s| s.id.0).collect();
+    report.push(pass_check("registry", "operative", format!("{} operative sheets", operative.len())));
 
     for corr in registry.corrections_for_sheet(SheetId(2)) {
         let applies = corr.applies_as_of(document.correction_as_of);
-        report.push(if applies {
-            pass_check("2", "correction", format!("{} applies", corr.id))
-        } else {
-            pass_check("2", "correction", format!("{} not yet effective", corr.id))
-        });
+        report.push(if applies { pass_check("2", "correction", format!("{} applies", corr.id)) } else { pass_check("2", "correction", format!("{} not yet effective", corr.id)) });
     }
 
     match catalog_to_json(&document.catalog) {
@@ -611,15 +538,7 @@ pub fn evaluate(document: &Document) -> CheckReport {
     }
 
     let heating = registry.sheets_in_domain(Domain::Heating);
-    report.push(pass_check(
-        "catalog",
-        "index",
-        format!(
-            "index {} entries, {} heating sheets",
-            document.index.entries.len(),
-            heating.len()
-        ),
-    ));
+    report.push(pass_check("catalog", "index", format!("index {} entries, {} heating sheets", document.index.entries.len(), heating.len())));
 
     let dn50 = document.index.filter_by_dn(50);
     if !dn50.is_empty() {
@@ -639,13 +558,7 @@ pub fn evaluate(document: &Document) -> CheckReport {
 
     if let Some(curve) = document.curves.get("curve.kvs") {
         let y = curve.interpolate(50.0);
-        report.push(CheckResult::from_utilization(
-            clause("functions", "curve"),
-            Quantity::new(QuantityKind::Volume, y),
-            Quantity::new(QuantityKind::Volume, 2.25),
-            format!("kvs curve at 50% = {y:.3}"),
-            ANNEX,
-        ));
+        report.push(CheckResult::from_utilization(clause("functions", "curve"), Quantity::new(QuantityKind::Volume, y), Quantity::new(QuantityKind::Volume, 2.25), format!("kvs curve at 50% = {y:.3}"), ANNEX));
     }
 
     for diag in validate_structure(&document.catalog) {
@@ -668,12 +581,7 @@ mod tests {
     #[test]
     fn evaluate_reaches_operative_sheet_families() {
         let report = evaluate(&Document::default());
-        let parts: BTreeSet<String> = report
-            .checks
-            .iter()
-            .map(|c| c.clause.part.clone())
-            .filter(|p| p.chars().all(|ch| ch.is_ascii_digit()))
-            .collect();
+        let parts: BTreeSet<String> = report.checks.iter().map(|c| c.clause.part.clone()).filter(|p| p.chars().all(|ch| ch.is_ascii_digit())).collect();
         let registry = SchemaRegistry::current();
         for sheet in registry.operative_sheets() {
             let part = sheet.id.0.to_string();
@@ -772,11 +680,7 @@ mod tests {
     #[test]
     fn validate_structure_reports_unknown_record_family() {
         let mut doc = Document::default();
-        doc.catalog.products[0].records.push(NativeRecord {
-            family: RecordFamilyId("888".into()),
-            fields: vec!["888".into()],
-            extensions: ExtensionBag::default(),
-        });
+        doc.catalog.products[0].records.push(NativeRecord { family: RecordFamilyId("888".into()), fields: vec!["888".into()], extensions: ExtensionBag::default() });
         let issues = validate_structure(&doc.catalog);
         assert!(issues.iter().any(|d| d.severity == Severity::Info && d.field.contains("888")));
     }
@@ -789,11 +693,7 @@ mod tests {
 
     #[test]
     fn diagnostic_constructors_and_report_mapping() {
-        let diags = vec![
-            Diagnostic::error("f1", "bad"),
-            Diagnostic::warning("f2", "meh"),
-            Diagnostic::info("f3", "fyi"),
-        ];
+        let diags = vec![Diagnostic::error("f1", "bad"), Diagnostic::warning("f2", "meh"), Diagnostic::info("f3", "fyi")];
         let report = diagnostics_to_report(&diags, "1", "validate");
         assert_eq!(report[0].status, CheckStatus::Fail);
         assert_eq!(report[1].status, CheckStatus::Pass);

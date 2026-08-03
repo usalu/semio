@@ -122,11 +122,7 @@ pub struct CollectionDiff<TId, TPatch, TAdded> {
 
 impl<TId, TPatch, TAdded> Default for CollectionDiff<TId, TPatch, TAdded> {
     fn default() -> Self {
-        Self {
-            removed: Vec::new(),
-            modified: Vec::new(),
-            added: Vec::new(),
-        }
+        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
     }
 }
 //#endregion 🔖️CollectionDiff
@@ -183,10 +179,7 @@ where
 
 /// @emoji ↩️ Computes the inverse `CollectionOperation` from the pre-state `items`. Panics if `operation` targets
 /// an id absent from `items` (Remove/Move/Patch always target an existing item by construction).
-pub fn invert_collection_operation<TId, TItem, TPatch>(
-    items: &[TItem],
-    operation: &CollectionOperation<TId, TItem, TPatch>,
-) -> CollectionOperation<TId, TItem, TPatch>
+pub fn invert_collection_operation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionOperation<TId, TItem, TPatch>) -> CollectionOperation<TId, TItem, TPatch>
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone + Patchable<TPatch>,
@@ -194,36 +187,17 @@ where
     match operation {
         CollectionOperation::Add { item, .. } => CollectionOperation::Remove { id: item.id().clone() },
         CollectionOperation::Remove { id } => {
-            let index = items
-                .iter()
-                .position(|item| item.id() == id)
-                .expect("remove target must exist in pre-state");
-            CollectionOperation::Add {
-                index,
-                item: items[index].clone(),
-            }
+            let index = items.iter().position(|item| item.id() == id).expect("remove target must exist in pre-state");
+            CollectionOperation::Add { index, item: items[index].clone() }
         }
         CollectionOperation::Move { id, .. } => {
-            let index = items
-                .iter()
-                .position(|item| item.id() == id)
-                .expect("move target must exist in pre-state");
-            CollectionOperation::Move {
-                id: id.clone(),
-                to_index: index,
-            }
+            let index = items.iter().position(|item| item.id() == id).expect("move target must exist in pre-state");
+            CollectionOperation::Move { id: id.clone(), to_index: index }
         }
         CollectionOperation::Patch { id, patch } => {
-            let mut prior = items
-                .iter()
-                .find(|item| item.id() == id)
-                .cloned()
-                .expect("patch target must exist in pre-state");
+            let mut prior = items.iter().find(|item| item.id() == id).cloned().expect("patch target must exist in pre-state");
             let inverse_patch = prior.apply_patch(patch);
-            CollectionOperation::Patch {
-                id: id.clone(),
-                patch: inverse_patch,
-            }
+            CollectionOperation::Patch { id: id.clone(), patch: inverse_patch }
         }
     }
 }
@@ -233,10 +207,7 @@ where
 /// `added`. `Add` → `added`, `Remove` → `removed`, `Patch` → `modified`. `CollectionDiff` has no
 /// positional-move channel, so `Move` is encoded as `removed` + `added` (delete then re-add by
 /// identity); a plugin that keeps items keyed by id reconstructs order from item identity.
-pub fn collection_diff_from_operation<TId, TItem, TPatch>(
-    items: &[TItem],
-    operation: &CollectionOperation<TId, TItem, TPatch>,
-) -> CollectionDiff<TId, TPatch, TItem>
+pub fn collection_diff_from_operation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionOperation<TId, TItem, TPatch>) -> CollectionDiff<TId, TPatch, TItem>
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone,
@@ -246,10 +217,7 @@ where
     match operation {
         CollectionOperation::Add { item, .. } => diff.added.push(item.clone()),
         CollectionOperation::Remove { id } => diff.removed.push(id.clone()),
-        CollectionOperation::Patch { id, patch } => diff.modified.push(ItemPatch {
-            id: id.clone(),
-            patch: patch.clone(),
-        }),
+        CollectionOperation::Patch { id, patch } => diff.modified.push(ItemPatch { id: id.clone(), patch: patch.clone() }),
         CollectionOperation::Move { id, .. } => {
             if let Some(item) = items.iter().find(|item| item.id() == id) {
                 diff.removed.push(id.clone());
@@ -296,11 +264,7 @@ pub fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[St
     input.extend_from_slice(parent_id.unwrap_or("").as_bytes());
     input.push(0);
     for change_id in change_ids {
-        let change_hash = changes
-            .iter()
-            .find(|change| change.id == *change_id)
-            .map(|change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes())
-            .unwrap_or([0u8; 32]);
+        let change_hash = changes.iter().find(|change| change.id == *change_id).map(|change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()).unwrap_or([0u8; 32]);
         input.extend_from_slice(&change_hash);
     }
     input.push(0);
@@ -352,30 +316,15 @@ mod tests {
 
     #[test]
     fn collection_diff_from_op_projects_each_variant() {
-        let items: Vec<DemoItem> = vec![
-            DemoItem { id: "a".into(), value: 1 },
-            DemoItem { id: "b".into(), value: 2 },
-        ];
-        let added = collection_diff_from_operation::<String, DemoItem, DemoItemPatch>(
-            &items,
-            &CollectionOperation::Add {
-                index: 0,
-                item: DemoItem { id: "c".into(), value: 3 },
-            },
-        );
+        let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
+        let added = collection_diff_from_operation::<String, DemoItem, DemoItemPatch>(&items, &CollectionOperation::Add { index: 0, item: DemoItem { id: "c".into(), value: 3 } });
         assert_eq!(added.added.len(), 1);
         assert!(added.removed.is_empty() && added.modified.is_empty());
 
         let removed = collection_diff_from_operation::<String, DemoItem, DemoItemPatch>(&items, &CollectionOperation::Remove { id: "a".into() });
         assert_eq!(removed.removed, vec!["a".to_string()]);
 
-        let patched = collection_diff_from_operation(
-            &items,
-            &CollectionOperation::Patch {
-                id: "b".into(),
-                patch: DemoItemPatch { value: Some(9) },
-            },
-        );
+        let patched = collection_diff_from_operation(&items, &CollectionOperation::Patch { id: "b".into(), patch: DemoItemPatch { value: Some(9) } });
         assert_eq!(patched.modified.len(), 1);
         assert_eq!(patched.modified[0].id, "b");
 
@@ -387,17 +336,8 @@ mod tests {
 
     #[test]
     fn collection_op_add_and_invert() {
-        let items: Vec<DemoItem> = vec![DemoItem {
-            id: "a".into(),
-            value: 1,
-        }];
-        let operation = CollectionOperation::Add {
-            index: 1,
-            item: DemoItem {
-                id: "b".into(),
-                value: 2,
-            },
-        };
+        let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
+        let operation = CollectionOperation::Add { index: 1, item: DemoItem { id: "b".into(), value: 2 } };
         let mut applied = items.clone();
         apply_collection_operation(&mut applied, &operation);
         assert_eq!(applied.len(), 2);
@@ -409,15 +349,8 @@ mod tests {
 
     #[test]
     fn collection_op_move_and_invert() {
-        let items: Vec<DemoItem> = vec![
-            DemoItem { id: "a".into(), value: 1 },
-            DemoItem { id: "b".into(), value: 2 },
-            DemoItem { id: "c".into(), value: 3 },
-        ];
-        let operation = CollectionOperation::Move {
-            id: "a".into(),
-            to_index: 2,
-        };
+        let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }, DemoItem { id: "c".into(), value: 3 }];
+        let operation = CollectionOperation::Move { id: "a".into(), to_index: 2 };
         let mut applied = items.clone();
         apply_collection_operation(&mut applied, &operation);
         assert_eq!(applied.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["b", "c", "a"]);
@@ -429,10 +362,7 @@ mod tests {
     #[test]
     fn collection_op_patch_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
-        let operation = CollectionOperation::Patch {
-            id: "a".into(),
-            patch: DemoItemPatch { value: Some(9) },
-        };
+        let operation = CollectionOperation::Patch { id: "a".into(), patch: DemoItemPatch { value: Some(9) } };
         let mut applied = items.clone();
         apply_collection_operation(&mut applied, &operation);
         assert_eq!(applied[0].value, 9);
@@ -443,10 +373,7 @@ mod tests {
 
     #[test]
     fn collection_op_remove_and_invert() {
-        let items: Vec<DemoItem> = vec![
-            DemoItem { id: "a".into(), value: 1 },
-            DemoItem { id: "b".into(), value: 2 },
-        ];
+        let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
         let operation = CollectionOperation::Remove { id: "a".into() };
         let mut applied = items.clone();
         apply_collection_operation(&mut applied, &operation);
@@ -480,6 +407,5 @@ mod tests {
         let id_different_timestamp = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:02Z");
         assert_ne!(id_a, id_different_timestamp, "a different timestamp must change the id");
     }
-
 }
 //#endregion 🧪️Tests

@@ -278,11 +278,9 @@ pub fn find_replaceable_kinds(projection: &Puzzle5dProjection, part_id: &str) ->
         }
         let candidate_grip_kinds: HashSet<&str> = candidate.grips.iter().map(|template| template.grip_kind.as_str()).collect();
         let compatible = grip_kinds.iter().any(|source_kind| {
-            candidate_grip_kinds.iter().any(|target_kind| {
-                projection.kind_compatibility.iter().any(|rule| {
-                    (rule.source == *source_kind && rule.target == *target_kind) || (rule.bidirectional && rule.source == *target_kind && rule.target == *source_kind)
-                })
-            })
+            candidate_grip_kinds
+                .iter()
+                .any(|target_kind| projection.kind_compatibility.iter().any(|rule| (rule.source == *source_kind && rule.target == *target_kind) || (rule.bidirectional && rule.source == *target_kind && rule.target == *source_kind)))
         });
         if compatible {
             candidates.push(candidate.id.clone());
@@ -353,13 +351,7 @@ fn compose_piece_to_part(piece: &Value) -> Option<Puzzle5dPart> {
         (Some(x_axis), Some(y_axis)) => Some(quaternion_from_axes(x_axis, y_axis, vec3_cross(x_axis, y_axis))),
         _ => None,
     };
-    Some(Puzzle5dPart {
-        id,
-        part_kind,
-        part_2d: Puzzle5dPart2d { x, y, ..Default::default() },
-        part_3d: Puzzle5dPart3d { origin, orientation, ..Default::default() },
-        grips: Vec::new(),
-    })
+    Some(Puzzle5dPart { id, part_kind, part_2d: Puzzle5dPart2d { x, y, ..Default::default() }, part_3d: Puzzle5dPart3d { origin, orientation, ..Default::default() }, grips: Vec::new() })
 }
 
 fn compose_connection_to_fastener(connection: &Value) -> Option<Puzzle5dFastener> {
@@ -507,20 +499,8 @@ mod tests {
         projection.kind_catalogs = Some(puzzle_5d::Puzzle5dKindCatalogs {
             parts: vec![
                 puzzle_5d::Puzzle5dCatalogPart { id: "kind-a".into(), name: "A".into(), label: "A".into(), mesh_url: None, grips: vec![] },
-                puzzle_5d::Puzzle5dCatalogPart {
-                    id: "kind-b".into(),
-                    name: "B".into(),
-                    label: "B".into(),
-                    mesh_url: None,
-                    grips: vec![puzzle_5d::Puzzle5dCatalogGripTemplate { grip_kind: "k2".into(), grip_2d: None, grip_3d: None }],
-                },
-                puzzle_5d::Puzzle5dCatalogPart {
-                    id: "kind-c".into(),
-                    name: "C".into(),
-                    label: "C".into(),
-                    mesh_url: None,
-                    grips: vec![puzzle_5d::Puzzle5dCatalogGripTemplate { grip_kind: "unrelated".into(), grip_2d: None, grip_3d: None }],
-                },
+                puzzle_5d::Puzzle5dCatalogPart { id: "kind-b".into(), name: "B".into(), label: "B".into(), mesh_url: None, grips: vec![puzzle_5d::Puzzle5dCatalogGripTemplate { grip_kind: "k2".into(), grip_2d: None, grip_3d: None }] },
+                puzzle_5d::Puzzle5dCatalogPart { id: "kind-c".into(), name: "C".into(), label: "C".into(), mesh_url: None, grips: vec![puzzle_5d::Puzzle5dCatalogGripTemplate { grip_kind: "unrelated".into(), grip_2d: None, grip_3d: None }] },
             ],
             grips: vec![],
             fasteners: vec![],

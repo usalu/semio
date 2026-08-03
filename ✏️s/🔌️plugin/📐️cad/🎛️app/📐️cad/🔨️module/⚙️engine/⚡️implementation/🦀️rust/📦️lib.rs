@@ -13,17 +13,11 @@ pub mod geometry_import {
 
     //#region 🔖️Parse
     pub fn parse_geometry(value: Option<&Value>) -> CadGeometry {
-        value
-            .and_then(|entry| serde_json::from_value(entry.clone()).ok())
-            .unwrap_or_default()
+        value.and_then(|entry| serde_json::from_value(entry.clone()).ok()).unwrap_or_default()
     }
 
     fn vertex_map(geometry: &CadGeometry) -> HashMap<String, [f64; 3]> {
-        geometry
-            .vertices
-            .iter()
-            .map(|vertex| (vertex.id.clone(), vertex.position))
-            .collect()
+        geometry.vertices.iter().map(|vertex| (vertex.id.clone(), vertex.position)).collect()
     }
 
     fn edge_map(geometry: &CadGeometry) -> HashMap<String, &CadEdge> {
@@ -57,10 +51,7 @@ pub mod geometry_import {
         let mut deduped: Vec<Vec3> = Vec::new();
         for point in points {
             if let Some(last) = deduped.last() {
-                if (point[0] - last[0]).abs() < EPS
-                    && (point[1] - last[1]).abs() < EPS
-                    && (point[2] - last[2]).abs() < EPS
-                {
+                if (point[0] - last[0]).abs() < EPS && (point[1] - last[1]).abs() < EPS && (point[2] - last[2]).abs() < EPS {
                     continue;
                 }
             }
@@ -114,36 +105,15 @@ pub mod geometry_import {
         chain
     }
 
-    fn wire_points(
-        wire: &CadWire,
-        edges: &HashMap<String, &CadEdge>,
-        vertices: &HashMap<String, [f64; 3]>,
-    ) -> Vec<Vec3> {
-        dedupe_consecutive_points(
-            wire_vertex_chain(wire, edges)
-                .iter()
-                .filter_map(|vertex_id| vertices.get(vertex_id).map(|position| to_vec3(*position)))
-                .collect(),
-        )
+    fn wire_points(wire: &CadWire, edges: &HashMap<String, &CadEdge>, vertices: &HashMap<String, [f64; 3]>) -> Vec<Vec3> {
+        dedupe_consecutive_points(wire_vertex_chain(wire, edges).iter().filter_map(|vertex_id| vertices.get(vertex_id).map(|position| to_vec3(*position))).collect())
     }
 
-    fn face_boundary_points(
-        face: &CadFace,
-        wires: &HashMap<String, &CadWire>,
-        edges: &HashMap<String, &CadEdge>,
-        vertices: &HashMap<String, [f64; 3]>,
-    ) -> Vec<Vec3> {
-        face.wire_ids
-            .iter()
-            .find_map(|wire_id| wires.get(wire_id))
-            .map(|wire| wire_points(wire, edges, vertices))
-            .unwrap_or_default()
+    fn face_boundary_points(face: &CadFace, wires: &HashMap<String, &CadWire>, edges: &HashMap<String, &CadEdge>, vertices: &HashMap<String, [f64; 3]>) -> Vec<Vec3> {
+        face.wire_ids.iter().find_map(|wire_id| wires.get(wire_id)).map(|wire| wire_points(wire, edges, vertices)).unwrap_or_default()
     }
 
-    pub fn import_geometry_handles(
-        kernel: &mut dyn BrepKernel,
-        geometry: &CadGeometry,
-    ) -> HashMap<String, String> {
+    pub fn import_geometry_handles(kernel: &mut dyn BrepKernel, geometry: &CadGeometry) -> HashMap<String, String> {
         let vertices = vertex_map(geometry);
         let edges = edge_map(geometry);
         let wires = wire_map(geometry);
@@ -186,12 +156,7 @@ pub mod geometry_import {
         }
 
         for shell in &geometry.shells {
-            let face_handles: Vec<GeometryHandle> = shell
-                .face_ids
-                .iter()
-                .filter_map(|face_id| faces.get(face_id))
-                .filter_map(|face| handles.get(&face.id).cloned().map(GeometryHandle))
-                .collect();
+            let face_handles: Vec<GeometryHandle> = shell.face_ids.iter().filter_map(|face_id| faces.get(face_id)).filter_map(|face| handles.get(&face.id).cloned().map(GeometryHandle)).collect();
             if face_handles.len() < 1 {
                 continue;
             }
@@ -201,22 +166,12 @@ pub mod geometry_import {
         }
 
         for solid in &geometry.solids {
-            let shell_handles: Vec<GeometryHandle> = solid
-                .shell_ids
-                .iter()
-                .filter_map(|shell_id| handles.get(shell_id).cloned().map(GeometryHandle))
-                .collect();
+            let shell_handles: Vec<GeometryHandle> = solid.shell_ids.iter().filter_map(|shell_id| handles.get(shell_id).cloned().map(GeometryHandle)).collect();
             if shell_handles.len() == 1 {
                 handles.insert(solid.id.clone(), shell_handles[0].0.clone());
                 continue;
             }
-            let face_handles: Vec<GeometryHandle> = solid
-                .shell_ids
-                .iter()
-                .filter_map(|shell_id| shells.get(shell_id))
-                .flat_map(|shell| shell.face_ids.iter())
-                .filter_map(|face_id| handles.get(face_id).cloned().map(GeometryHandle))
-                .collect();
+            let face_handles: Vec<GeometryHandle> = solid.shell_ids.iter().filter_map(|shell_id| shells.get(shell_id)).flat_map(|shell| shell.face_ids.iter()).filter_map(|face_id| handles.get(face_id).cloned().map(GeometryHandle)).collect();
             if face_handles.is_empty() {
                 continue;
             }
@@ -228,10 +183,7 @@ pub mod geometry_import {
         handles
     }
 
-    pub fn resolve_primitive_handle(
-        primitives: &[CadPrimitiveSlot],
-        handles: &HashMap<String, String>,
-    ) -> Option<(String, String)> {
+    pub fn resolve_primitive_handle(primitives: &[CadPrimitiveSlot], handles: &HashMap<String, String>) -> Option<(String, String)> {
         for primitive in primitives {
             if let Some(handle) = handles.get(&primitive.primitive_id) {
                 return Some((handle.clone(), primitive.kind.clone()));
@@ -251,46 +203,18 @@ pub mod geometry_import {
         let solids = solid_map(geometry);
 
         let wire_ids: Vec<&String> = if let Some(solid) = solids.get(primitive_id) {
-            solid
-                .shell_ids
-                .iter()
-                .filter_map(|shell_id| shells.get(shell_id))
-                .flat_map(|shell| shell.face_ids.iter())
-                .filter_map(|face_id| faces.get(face_id))
-                .flat_map(|face| face.wire_ids.iter())
-                .collect()
+            solid.shell_ids.iter().filter_map(|shell_id| shells.get(shell_id)).flat_map(|shell| shell.face_ids.iter()).filter_map(|face_id| faces.get(face_id)).flat_map(|face| face.wire_ids.iter()).collect()
         } else if let Some(shell) = shells.get(primitive_id) {
-            shell
-                .face_ids
-                .iter()
-                .filter_map(|face_id| faces.get(face_id))
-                .flat_map(|face| face.wire_ids.iter())
-                .collect()
+            shell.face_ids.iter().filter_map(|face_id| faces.get(face_id)).flat_map(|face| face.wire_ids.iter()).collect()
         } else if let Some(face) = faces.get(primitive_id) {
             face.wire_ids.iter().collect()
         } else {
             Vec::new()
         };
 
-        let edge_ids: Vec<&String> = if let Some(wire) = wires.get(primitive_id) {
-            wire.edge_ids.iter().collect()
-        } else {
-            wire_ids
-                .into_iter()
-                .filter_map(|wire_id| wires.get(wire_id))
-                .flat_map(|wire| wire.edge_ids.iter())
-                .collect()
-        };
+        let edge_ids: Vec<&String> = if let Some(wire) = wires.get(primitive_id) { wire.edge_ids.iter().collect() } else { wire_ids.into_iter().filter_map(|wire_id| wires.get(wire_id)).flat_map(|wire| wire.edge_ids.iter()).collect() };
 
-        let vertex_ids: Vec<&String> = if let Some(edge) = edges.get(primitive_id) {
-            edge.vertex_ids.iter().collect()
-        } else {
-            edge_ids
-                .into_iter()
-                .filter_map(|edge_id| edges.get(edge_id))
-                .flat_map(|edge| edge.vertex_ids.iter())
-                .collect()
-        };
+        let vertex_ids: Vec<&String> = if let Some(edge) = edges.get(primitive_id) { edge.vertex_ids.iter().collect() } else { edge_ids.into_iter().filter_map(|edge_id| edges.get(edge_id)).flat_map(|edge| edge.vertex_ids.iter()).collect() };
 
         vertex_ids.into_iter().filter_map(|id| vertices.get(id).copied()).collect()
     }
@@ -313,9 +237,7 @@ pub mod geometry_import {
     /// Derives an object's world-space bounding extent from its authored geometry, trying each
     /// primitive slot in order (mirrors `resolve_primitive_handle`'s slot priority).
     pub fn extent_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
-        primitives
-            .iter()
-            .find_map(|primitive| extent_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
+        primitives.iter().find_map(|primitive| extent_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
     }
 
     fn centroid_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
@@ -335,9 +257,7 @@ pub mod geometry_import {
 
     /// 🎯️ World-space centroid of the first primitive slot that resolves against authored geometry.
     pub fn centroid_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
-        primitives
-            .iter()
-            .find_map(|primitive| centroid_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
+        primitives.iter().find_map(|primitive| centroid_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
     }
 
     /// 🧵️ Tessellates an object through a kernel handle when that handle is still resident.
@@ -350,11 +270,7 @@ pub mod geometry_import {
     }
 
     /// 🧵️ Re-imports fixture geometry and tessellates the object's primitive slots.
-    pub fn tessellate_object_mesh_from_fixture(
-        kernel: &mut dyn BrepKernel,
-        object: &CadObject,
-        geometry: &CadGeometry,
-    ) -> Option<MeshData> {
+    pub fn tessellate_object_mesh_from_fixture(kernel: &mut dyn BrepKernel, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
         if object.primitives.is_empty() {
             return None;
         }
@@ -363,11 +279,7 @@ pub mod geometry_import {
         tessellate_geometry_handle(kernel, &handle_id, &kind)
     }
 
-    pub fn tessellate_geometry_handle(
-        kernel: &mut dyn BrepKernel,
-        handle_id: &str,
-        kind: &str,
-    ) -> Option<MeshData> {
+    pub fn tessellate_geometry_handle(kernel: &mut dyn BrepKernel, handle_id: &str, kind: &str) -> Option<MeshData> {
         let handle = GeometryHandle(handle_id.into());
         if kind == "curve" {
             return curve_mesh_from_wire(kernel, &handle);
@@ -421,51 +333,17 @@ pub mod geometry_import {
     /// `solidHandle`/`primitives` path fixture geometry uses. Falls back to an extent-only object
     /// with no primitives (rendered via the typology bounding-box mesh fallback) when the mesh has
     /// no triangles or the kernel is unable to import it.
-    pub fn cad_object_from_mesh(
-        kernel: &mut dyn BrepKernel,
-        id: impl Into<String>,
-        label: impl Into<String>,
-        typology: impl Into<String>,
-        mesh: &MeshData,
-    ) -> CadObject {
+    pub fn cad_object_from_mesh(kernel: &mut dyn BrepKernel, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
         let extent = mesh_extent(mesh);
-        let solid_handle = if mesh.indices.len() >= 3 {
-            block_on(kernel.import_obj(&mesh_to_obj_text(mesh), 0.01)).ok().map(|handle| handle.0)
-        } else {
-            None
-        };
-        let primitives = solid_handle
-            .clone()
-            .map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }])
-            .unwrap_or_default();
-        CadObject {
-            id: id.into(),
-            label: label.into(),
-            typology: typology.into(),
-            visible: true,
-            locked: false,
-            origin: [0.0, 0.0, 0.0],
-            orientation: Some([0.0, 0.0, 0.0, 1.0]),
-            scale: None,
-            mesh_url: None,
-            extent,
-            solid_handle,
-            primitives,
-        }
+        let solid_handle = if mesh.indices.len() >= 3 { block_on(kernel.import_obj(&mesh_to_obj_text(mesh), 0.01)).ok().map(|handle| handle.0) } else { None };
+        let primitives = solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
+        CadObject { id: id.into(), label: label.into(), typology: typology.into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, mesh_url: None, extent, solid_handle, primitives }
     }
     /// 🧊️ Builds a `CadObject` around a solid `GeometryHandle` already resident in `kernel` (e.g. from
     /// a native OBJ/STL/STEP import), tessellating once just to derive a display `extent` — the
     /// handle itself is kept verbatim rather than being round-tripped through a mesh reimport.
-    pub fn cad_object_from_solid_handle(
-        kernel: &mut dyn BrepKernel,
-        id: impl Into<String>,
-        label: impl Into<String>,
-        typology: impl Into<String>,
-        handle: GeometryHandle,
-    ) -> CadObject {
-        let extent = block_on(kernel.tessellate(&handle, 0.1))
-            .ok()
-            .and_then(|mesh| mesh_extent(&mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index)));
+    pub fn cad_object_from_solid_handle(kernel: &mut dyn BrepKernel, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, handle: GeometryHandle) -> CadObject {
+        let extent = block_on(kernel.tessellate(&handle, 0.1)).ok().and_then(|mesh| mesh_extent(&mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index)));
         let handle_id = handle.0.clone();
         CadObject {
             id: id.into(),
@@ -485,32 +363,18 @@ pub mod geometry_import {
     //#endregion 🔖️MeshImport
 
     pub fn object_label_from_id(object_id: &str) -> String {
-        object_id
-            .split('-')
-            .last()
-            .map(str::to_string)
-            .unwrap_or_else(|| object_id.to_string())
+        object_id.split('-').last().map(str::to_string).unwrap_or_else(|| object_id.to_string())
     }
 
-    pub fn objects_from_fixture_model(
-        kernel: &mut dyn BrepKernel,
-        objects_value: &[Value],
-        geometry: &CadGeometry,
-    ) -> Vec<CadObject> {
+    pub fn objects_from_fixture_model(kernel: &mut dyn BrepKernel, objects_value: &[Value], geometry: &CadGeometry) -> Vec<CadObject> {
         let handles = import_geometry_handles(kernel, geometry);
         objects_value
             .iter()
             .filter_map(|entry| {
                 let object_id = entry.get("id")?.as_str()?;
-                let typology = entry
-                    .get("typology")
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("")
-                    .to_string();
+                let typology = entry.get("typology").and_then(|value| value.as_str()).unwrap_or("").to_string();
                 let primitives = primitives_from_json(entry);
-                let (solid_handle, _primary_kind) = resolve_primitive_handle(&primitives, &handles)
-                    .map(|(handle, kind)| (Some(handle), kind))
-                    .unwrap_or((None, String::new()));
+                let (solid_handle, _primary_kind) = resolve_primitive_handle(&primitives, &handles).map(|(handle, kind)| (Some(handle), kind)).unwrap_or((None, String::new()));
                 let extent = extent_from_fixture_primitives(geometry, &primitives);
                 Some(CadObject {
                     id: object_id.into(),
@@ -535,14 +399,7 @@ pub mod geometry_import {
             return Vec::new();
         };
         if let Some(map) = primitives.as_object() {
-            return map
-                .iter()
-                .map(|(slot, value)| CadPrimitiveSlot {
-                    slot: slot.clone(),
-                    primitive_id: value.as_str().unwrap_or_default().into(),
-                    kind: slot.clone(),
-                })
-                .collect();
+            return map.iter().map(|(slot, value)| CadPrimitiveSlot { slot: slot.clone(), primitive_id: value.as_str().unwrap_or_default().into(), kind: slot.clone() }).collect();
         }
         if let Some(rows) = primitives.as_array() {
             return rows
@@ -550,15 +407,8 @@ pub mod geometry_import {
                 .filter_map(|row| {
                     let kind = row.get("kind")?.as_str()?;
                     let primitive_id = row.get("id")?.as_str()?;
-                    let slot = row
-                        .get("slot")
-                        .and_then(|value| value.as_str())
-                        .unwrap_or(kind);
-                    Some(CadPrimitiveSlot {
-                        slot: slot.into(),
-                        primitive_id: primitive_id.into(),
-                        kind: kind.into(),
-                    })
+                    let slot = row.get("slot").and_then(|value| value.as_str()).unwrap_or(kind);
+                    Some(CadPrimitiveSlot { slot: slot.into(), primitive_id: primitive_id.into(), kind: kind.into() })
                 })
                 .collect();
         }
@@ -575,31 +425,13 @@ pub mod geometry_import {
             let i0 = mesh.indices[triangle_index * 3] as usize;
             let i1 = mesh.indices[triangle_index * 3 + 1] as usize;
             let i2 = mesh.indices[triangle_index * 3 + 2] as usize;
-            let p0 = [
-                mesh.positions[i0 * 3],
-                mesh.positions[i0 * 3 + 1],
-                mesh.positions[i0 * 3 + 2],
-            ];
-            let p1 = [
-                mesh.positions[i1 * 3],
-                mesh.positions[i1 * 3 + 1],
-                mesh.positions[i1 * 3 + 2],
-            ];
-            let p2 = [
-                mesh.positions[i2 * 3],
-                mesh.positions[i2 * 3 + 1],
-                mesh.positions[i2 * 3 + 2],
-            ];
+            let p0 = [mesh.positions[i0 * 3], mesh.positions[i0 * 3 + 1], mesh.positions[i0 * 3 + 2]];
+            let p1 = [mesh.positions[i1 * 3], mesh.positions[i1 * 3 + 1], mesh.positions[i1 * 3 + 2]];
+            let p2 = [mesh.positions[i2 * 3], mesh.positions[i2 * 3 + 1], mesh.positions[i2 * 3 + 2]];
             let e0 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
             let e1 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
-            let cross = [
-                e0[1] * e1[2] - e0[2] * e1[1],
-                e0[2] * e1[0] - e0[0] * e1[2],
-                e0[0] * e1[1] - e0[1] * e1[0],
-            ];
-            0.5
-                * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2])
-                    .sqrt()
+            let cross = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
+            0.5 * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt()
         }
 
         #[test]
@@ -608,11 +440,7 @@ pub mod geometry_import {
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
             let edges = edge_map(&geometry);
-            let wire = geometry
-                .wires
-                .iter()
-                .find(|wire| wire.id == "hexagonal-cut-concrete-forest-left-wire-103")
-                .expect("wire");
+            let wire = geometry.wires.iter().find(|wire| wire.id == "hexagonal-cut-concrete-forest-left-wire-103").expect("wire");
             let chain = wire_vertex_chain(wire, &edges);
             assert_eq!(
                 chain,
@@ -631,29 +459,17 @@ pub mod geometry_import {
             let source = include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
-            let objects = root
-                .pointer("/models/0/model/objects")
-                .and_then(|value| value.as_array())
-                .cloned()
-                .unwrap_or_default();
+            let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
             let mut kernel = BrepkitKernel::new();
             let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
             assert_eq!(imported.len(), 1);
             assert!(imported[0].solid_handle.is_some());
-            let mesh = tessellate_geometry_handle(
-                &mut kernel,
-                imported[0].solid_handle.as_ref().expect("handle"),
-                "solid",
-            )
-            .expect("mesh");
+            let mesh = tessellate_geometry_handle(&mut kernel, imported[0].solid_handle.as_ref().expect("handle"), "solid").expect("mesh");
             assert!(mesh.positions.len() > 12);
             assert!(mesh.edge_positions.len() >= 6);
             assert_eq!(mesh.edge_positions.len() % 6, 0);
             for triangle_index in 0..mesh.triangle_count() {
-                assert!(
-                    mesh_triangle_area(&mesh, triangle_index) > 1e-10,
-                    "triangle {triangle_index} must not be degenerate"
-                );
+                assert!(mesh_triangle_area(&mesh, triangle_index) > 1e-10, "triangle {triangle_index} must not be degenerate");
             }
         }
 
@@ -662,27 +478,15 @@ pub mod geometry_import {
             let source = include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/2/model/geometry"));
-            let objects = root
-                .pointer("/models/2/model/objects")
-                .and_then(|value| value.as_array())
-                .cloned()
-                .unwrap_or_default();
+            let objects = root.pointer("/models/2/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
             let mut kernel = BrepkitKernel::new();
             let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
             assert_eq!(imported.len(), 1);
             assert!(imported[0].solid_handle.is_some(), "energy face handle");
             let handle_id = imported[0].solid_handle.as_ref().expect("handle");
             let mesh = tessellate_geometry_handle(&mut kernel, handle_id, "surface").expect("surface mesh");
-            let min_z = mesh
-                .positions
-                .chunks_exact(3)
-                .map(|vertex| vertex[2])
-                .fold(f32::INFINITY, f32::min);
-            let max_z = mesh
-                .positions
-                .chunks_exact(3)
-                .map(|vertex| vertex[2])
-                .fold(f32::NEG_INFINITY, f32::max);
+            let min_z = mesh.positions.chunks_exact(3).map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
+            let max_z = mesh.positions.chunks_exact(3).map(|vertex| vertex[2]).fold(f32::NEG_INFINITY, f32::max);
             assert!(min_z > 2.5, "energy surface min z {min_z}");
             assert!(max_z < 3.5, "energy surface max z {max_z}");
         }
@@ -692,28 +496,12 @@ pub mod geometry_import {
             let source = include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
-            let objects = root
-                .pointer("/models/3/model/objects")
-                .and_then(|value| value.as_array())
-                .cloned()
-                .unwrap_or_default();
+            let objects = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
             let mut kernel = BrepkitKernel::new();
             let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
-            let slab = imported
-                .iter()
-                .find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface"))
-                .expect("surface object");
-            let mesh = tessellate_geometry_handle(
-                &mut kernel,
-                slab.solid_handle.as_ref().expect("handle"),
-                "surface",
-            )
-            .expect("surface mesh");
-            let min_z = mesh
-                .positions
-                .chunks_exact(3)
-                .map(|vertex| vertex[2])
-                .fold(f32::INFINITY, f32::min);
+            let slab = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface")).expect("surface object");
+            let mesh = tessellate_geometry_handle(&mut kernel, slab.solid_handle.as_ref().expect("handle"), "surface").expect("surface mesh");
+            let min_z = mesh.positions.chunks_exact(3).map(|vertex| vertex[2]).fold(f32::INFINITY, f32::min);
             assert!(min_z > 2.5, "structure slab min z {min_z}");
         }
 
@@ -722,18 +510,11 @@ pub mod geometry_import {
             let source = include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
-            let objects = root
-                .pointer("/models/3/model/objects")
-                .and_then(|value| value.as_array())
-                .cloned()
-                .unwrap_or_default();
+            let objects = root.pointer("/models/3/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
             let mut kernel = BrepkitKernel::new();
             let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
             assert!(!imported.is_empty());
-            let curve_object = imported
-                .iter()
-                .find(|object| object.primitives.iter().any(|primitive| primitive.kind == "curve"))
-                .expect("curve object");
+            let curve_object = imported.iter().find(|object| object.primitives.iter().any(|primitive| primitive.kind == "curve")).expect("curve object");
             let handle = curve_object.solid_handle.as_ref().expect("curve handle");
             let mesh = tessellate_geometry_handle(&mut kernel, handle, "curve").expect("curve mesh");
             assert!(mesh.edge_positions.len() >= 6);
@@ -747,7 +528,7 @@ pub mod transformation {
     //! 🔄️ CAD derive-transformation engine — ports premigration `runDeriveTransformation` onto `kernel_3d_brepkit`.
 
     use cad_document::{CadObject, CadPrimitiveSlot};
-    
+
     use kernel_3d_engine::{BrepKernel, GeometryHandle, Vec3};
     use std::collections::HashMap;
 
@@ -778,60 +559,14 @@ pub mod transformation {
     }
 
     const FROM_GEOMETRY_CLASSIFY_RULES: &[ClassifyRule] = &[
-        ClassifyRule {
-            role: "roof",
-            typology: "energy.energy.roof",
-            dominant_axis: Some(DominantAxis::Z),
-            min_dominant_normal: Some(0.75),
-            min_axis_normal: None,
-            z_band: Some(ZBand::Max),
-            fallback: false,
-        },
-        ClassifyRule {
-            role: "baseplate",
-            typology: "energy.energy.baseplate",
-            dominant_axis: Some(DominantAxis::Z),
-            min_dominant_normal: Some(0.75),
-            min_axis_normal: None,
-            z_band: Some(ZBand::Min),
-            fallback: false,
-        },
-        ClassifyRule {
-            role: "slab",
-            typology: "energy.energy.hull",
-            dominant_axis: Some(DominantAxis::Z),
-            min_dominant_normal: Some(0.75),
-            min_axis_normal: None,
-            z_band: None,
-            fallback: false,
-        },
-        ClassifyRule {
-            role: "externalwall",
-            typology: "energy.energy.externalwall",
-            dominant_axis: None,
-            min_dominant_normal: None,
-            min_axis_normal: Some(0.5),
-            z_band: None,
-            fallback: false,
-        },
-        ClassifyRule {
-            role: "slab",
-            typology: "energy.energy.hull",
-            dominant_axis: None,
-            min_dominant_normal: None,
-            min_axis_normal: None,
-            z_band: None,
-            fallback: true,
-        },
+        ClassifyRule { role: "roof", typology: "energy.energy.roof", dominant_axis: Some(DominantAxis::Z), min_dominant_normal: Some(0.75), min_axis_normal: None, z_band: Some(ZBand::Max), fallback: false },
+        ClassifyRule { role: "baseplate", typology: "energy.energy.baseplate", dominant_axis: Some(DominantAxis::Z), min_dominant_normal: Some(0.75), min_axis_normal: None, z_band: Some(ZBand::Min), fallback: false },
+        ClassifyRule { role: "slab", typology: "energy.energy.hull", dominant_axis: Some(DominantAxis::Z), min_dominant_normal: Some(0.75), min_axis_normal: None, z_band: None, fallback: false },
+        ClassifyRule { role: "externalwall", typology: "energy.energy.externalwall", dominant_axis: None, min_dominant_normal: None, min_axis_normal: Some(0.5), z_band: None, fallback: false },
+        ClassifyRule { role: "slab", typology: "energy.energy.hull", dominant_axis: None, min_dominant_normal: None, min_axis_normal: None, z_band: None, fallback: true },
     ];
 
-    const ENERGY_TYPOLOGIES: &[&str] = &[
-        "energy.energy.hull",
-        "energy.energy.baseplate",
-        "energy.energy.roof",
-        "energy.energy.externalwall",
-        "energy.energy.windows",
-    ];
+    const ENERGY_TYPOLOGIES: &[&str] = &["energy.energy.hull", "energy.energy.baseplate", "energy.energy.roof", "energy.energy.externalwall", "energy.energy.windows"];
     //#endregion 🔖️ClassifyRules
 
     //#region 🔖️FaceAnalytics
@@ -857,12 +592,7 @@ pub mod transformation {
             ("z", nz.signum())
         };
         let q = |v: f64| (v * 1000.0).round() / 1000.0;
-        format!(
-            "{dominant}:{sign}:{}:{}:{}",
-            q(centroid[0]),
-            q(centroid[1]),
-            q(centroid[2])
-        )
+        format!("{dominant}:{sign}:{}:{}:{}", q(centroid[0]), q(centroid[1]), q(centroid[2]))
     }
 
     fn dominant_axis_of(normal: Vec3) -> DominantAxis {
@@ -885,14 +615,7 @@ pub mod transformation {
         }
     }
 
-    fn classify_rule_matches(
-        rule: &ClassifyRule,
-        normal: Vec3,
-        centroid_z: f64,
-        z_min: f64,
-        z_max: f64,
-        z_tol: f64,
-    ) -> bool {
+    fn classify_rule_matches(rule: &ClassifyRule, normal: Vec3, centroid_z: f64, z_min: f64, z_max: f64, z_tol: f64) -> bool {
         if rule.fallback {
             return true;
         }
@@ -942,20 +665,12 @@ pub mod transformation {
         let [ex, ey, ez] = object.extent.unwrap_or([1.0, 1.0, 1.0]);
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         let is_cylindrical = object.typology.contains("column");
-        let handle = if is_cylindrical {
-            kernel_3d_engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
-        } else {
-            kernel_3d_engine::block_on(kernel.box_prim(width, depth, height)).ok()
-        }?;
+        let handle = if is_cylindrical { kernel_3d_engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok() } else { kernel_3d_engine::block_on(kernel.box_prim(width, depth, height)).ok() }?;
         Some(handle)
     }
 
     /// @emoji 📦️ Builds a kernel solid sized from extent without mutating the object.
-    pub fn build_solid_for_typology(
-        kernel: &mut dyn BrepKernel,
-        typology: &str,
-        extent: [f64; 3],
-    ) -> Option<GeometryHandle> {
+    pub fn build_solid_for_typology(kernel: &mut dyn BrepKernel, typology: &str, extent: [f64; 3]) -> Option<GeometryHandle> {
         let [ex, ey, ez] = extent;
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         if typology.contains("column") {
@@ -989,15 +704,8 @@ pub mod transformation {
     }
 
     /// @emoji 🔄️ Derives energy objects from shape-pane solids via fuse + face classification.
-    pub fn run_derive_from_geometry(
-        kernel: &mut dyn BrepKernel,
-        source_objects: &[CadObject],
-        id_seed: &str,
-    ) -> Vec<CadObject> {
-        let solids: Vec<GeometryHandle> = source_objects
-            .iter()
-            .filter_map(|object| solid_for_object(kernel, object))
-            .collect();
+    pub fn run_derive_from_geometry(kernel: &mut dyn BrepKernel, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
+        let solids: Vec<GeometryHandle> = source_objects.iter().filter_map(|object| solid_for_object(kernel, object)).collect();
         if solids.is_empty() {
             return Vec::new();
         }
@@ -1015,11 +723,7 @@ pub mod transformation {
             .filter_map(|face| {
                 let normal = face_normal_sync(kernel, face)?;
                 let centroid = face_centroid_sync(kernel, face)?;
-                Some(FaceMeta {
-                    handle: face.clone(),
-                    normal,
-                    centroid,
-                })
+                Some(FaceMeta { handle: face.clone(), normal, centroid })
             })
             .collect();
         if face_meta.is_empty() {
@@ -1035,11 +739,7 @@ pub mod transformation {
                 mesh_url: None,
                 extent: None,
                 solid_handle: Some(hull.0.clone()),
-                primitives: vec![CadPrimitiveSlot {
-                    slot: "solid".into(),
-                    primitive_id: hull.0.clone(),
-                    kind: "solid".into(),
-                }],
+                primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: hull.0.clone(), kind: "solid".into() }],
             }];
         }
         let z_min = face_meta.iter().map(|face| face.centroid[2]).fold(f64::INFINITY, f64::min);
@@ -1060,18 +760,11 @@ pub mod transformation {
             mesh_url: None,
             extent: None,
             solid_handle: Some(hull.0.clone()),
-            primitives: vec![CadPrimitiveSlot {
-                slot: "solid".into(),
-                primitive_id: hull.0.clone(),
-                kind: "solid".into(),
-            }],
+            primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: hull.0.clone(), kind: "solid".into() }],
         });
         let mut grouped: HashMap<String, Vec<&FaceMeta>> = HashMap::new();
         for face in &face_meta {
-            let rule = FROM_GEOMETRY_CLASSIFY_RULES
-                .iter()
-                .find(|rule| classify_rule_matches(rule, face.normal, face.centroid[2], z_min, z_max, z_tol))
-                .unwrap_or(&FROM_GEOMETRY_CLASSIFY_RULES[FROM_GEOMETRY_CLASSIFY_RULES.len() - 1]);
+            let rule = FROM_GEOMETRY_CLASSIFY_RULES.iter().find(|rule| classify_rule_matches(rule, face.normal, face.centroid[2], z_min, z_max, z_tol)).unwrap_or(&FROM_GEOMETRY_CLASSIFY_RULES[FROM_GEOMETRY_CLASSIFY_RULES.len() - 1]);
             if rule.role == "slab" && rule.fallback {
                 continue;
             }
@@ -1081,10 +774,7 @@ pub mod transformation {
         let mut index = 1usize;
         for (_key, faces) in grouped {
             let face = faces[0];
-            let rule = FROM_GEOMETRY_CLASSIFY_RULES
-                .iter()
-                .find(|rule| classify_rule_matches(rule, face.normal, face.centroid[2], z_min, z_max, z_tol))
-                .unwrap_or(&FROM_GEOMETRY_CLASSIFY_RULES[FROM_GEOMETRY_CLASSIFY_RULES.len() - 1]);
+            let rule = FROM_GEOMETRY_CLASSIFY_RULES.iter().find(|rule| classify_rule_matches(rule, face.normal, face.centroid[2], z_min, z_max, z_tol)).unwrap_or(&FROM_GEOMETRY_CLASSIFY_RULES[FROM_GEOMETRY_CLASSIFY_RULES.len() - 1]);
             let label = rule.role.replace("externalwall", "External Wall").replace("slab", "Slab");
             objects.push(CadObject {
                 id: next_object_id(id_seed, index),
@@ -1098,11 +788,7 @@ pub mod transformation {
                 mesh_url: None,
                 extent: None,
                 solid_handle: Some(face.handle.0.clone()),
-                primitives: vec![CadPrimitiveSlot {
-                    slot: "surface".into(),
-                    primitive_id: face.handle.0.clone(),
-                    kind: "surface".into(),
-                }],
+                primitives: vec![CadPrimitiveSlot { slot: "surface".into(), primitive_id: face.handle.0.clone(), kind: "surface".into() }],
             });
             index += 1;
         }
@@ -1139,12 +825,7 @@ pub mod transformation {
         let mut counts: HashMap<&str, usize> = HashMap::new();
         source_objects
             .iter()
-            .filter_map(|object| {
-                BUILDING_TO_STRUCTURE
-                    .iter()
-                    .find(|(from, _)| *from == object.typology.as_str())
-                    .map(|(_, to)| (*to, object))
-            })
+            .filter_map(|object| BUILDING_TO_STRUCTURE.iter().find(|(from, _)| *from == object.typology.as_str()).map(|(_, to)| (*to, object)))
             .map(|(mapped, object)| {
                 let index = counts.entry(mapped).or_insert(0);
                 let object_id = format!("{id_seed}-{mapped}-{index}");
@@ -1216,11 +897,7 @@ pub mod transformation {
                 mesh_url: None,
                 extent: Some([2.0, 2.0, 3.0]),
                 solid_handle: Some(solid.0.clone()),
-                primitives: vec![CadPrimitiveSlot {
-                    slot: "solid".into(),
-                    primitive_id: solid.0.clone(),
-                    kind: "solid".into(),
-                }],
+                primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: solid.0.clone(), kind: "solid".into() }],
             }];
             let derived = run_derive_from_geometry(&mut kernel, &source, "energy");
             assert!(derived.iter().any(|object| object.typology == "energy.energy.hull"));
@@ -1237,7 +914,6 @@ pub mod transformation {
     }
 }
 
-
 pub mod interaction {
     //! 🎮️ CAD interaction statechart — a generic interpreter over `spatial.interaction` JSON assets
     //! (`cad/asset/modelDefinition/*/interaction/*.json`, mirroring `cad/schema/json/🔣️inter🔣️action.json`),
@@ -1246,11 +922,8 @@ pub mod interaction {
     //! no interaction directory) and keep a bespoke hand-written statechart (`legacy_*` functions)
     //! identical to the pre-engine behavior.
 
-    use cad_document::{
-        evaluate_expr, CadObject, CadPaneId, CadPrimitiveSlot, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot,
-        ExprPathSegment, ExprPathTarget, InteractionSpec,
-    };
-    
+    use cad_document::{evaluate_expr, CadObject, CadPaneId, CadPrimitiveSlot, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
+
     use kernel_3d_engine::BrepKernel;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -1332,42 +1005,16 @@ pub mod interaction {
         ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🔥️aec.building.energy/🎬️interaction/🔣️constructHull.json")),
         ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🔥️aec.building.energy/🎬️interaction/🔣️constructRoof.json")),
         ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🔥️aec.building.energy/🎬️interaction/🔣️constructWindows.json")),
-        (
-            "aec.building.structure.classic",
-            include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬️interaction/🔣️constructOneWayReinforcedConcreteSlab.json"),
-        ),
-        (
-            "aec.building.structure.classic",
-            include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬️interaction/🔣️constructReinforcedConcreteColumn.json"),
-        ),
-        (
-            "aec.building.structure.classic",
-            include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬️interaction/🔣️constructReinforcedConcreteExternalWall.json"),
-        ),
-        (
-            "aec.building.structure.classic",
-            include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬️interaction/🔣️constructReinforcedConcreteInternalWall.json"),
-        ),
-        (
-            "aec.building.structure.fem.line",
-            include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/📏️aec.building.structure.fem.line/🎬️interaction/🔣️constructLineElement.json"),
-        ),
-        (
-            "aec.building.structure.fem.solid",
-            include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🧊️aec.building.structure.fem.solid/🎬️interaction/🔣️constructSolidElement.json"),
-        ),
-        (
-            "aec.building.structure.fem.surface",
-            include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🗺️aec.building.structure.fem.surface/🎬️interaction/🔣️constructSurfaceElement.json"),
-        ),
+        ("aec.building.structure.classic", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬️interaction/🔣️constructOneWayReinforcedConcreteSlab.json")),
+        ("aec.building.structure.classic", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬️interaction/🔣️constructReinforcedConcreteColumn.json")),
+        ("aec.building.structure.classic", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬️interaction/🔣️constructReinforcedConcreteExternalWall.json")),
+        ("aec.building.structure.classic", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬️interaction/🔣️constructReinforcedConcreteInternalWall.json")),
+        ("aec.building.structure.fem.line", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/📏️aec.building.structure.fem.line/🎬️interaction/🔣️constructLineElement.json")),
+        ("aec.building.structure.fem.solid", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🧊️aec.building.structure.fem.solid/🎬️interaction/🔣️constructSolidElement.json")),
+        ("aec.building.structure.fem.surface", include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🏗️modelDefinition/🗺️aec.building.structure.fem.surface/🎬️interaction/🔣️constructSurfaceElement.json")),
     ];
 
-    const LEGACY_BUILDING_INTERACTION_IDS: &[&str] = &[
-        "building.building.constructWall",
-        "building.building.constructBeam",
-        "building.building.constructColumn",
-        "building.building.constructSlab",
-    ];
+    const LEGACY_BUILDING_INTERACTION_IDS: &[&str] = &["building.building.constructWall", "building.building.constructBeam", "building.building.constructColumn", "building.building.constructSlab"];
 
     fn is_legacy_building_id(id: &str) -> bool {
         LEGACY_BUILDING_INTERACTION_IDS.contains(&id)
@@ -1376,12 +1023,7 @@ pub mod interaction {
     static PARSED_SPECS: OnceLock<Vec<(&'static str, InteractionSpec)>> = OnceLock::new();
 
     fn parsed_specs() -> &'static [(&'static str, InteractionSpec)] {
-        PARSED_SPECS.get_or_init(|| {
-            RAW_INTERACTION_ASSETS
-                .iter()
-                .filter_map(|(model_def, raw)| serde_json::from_str::<InteractionSpec>(raw).ok().map(|spec| (*model_def, spec)))
-                .collect()
-        })
+        PARSED_SPECS.get_or_init(|| RAW_INTERACTION_ASSETS.iter().filter_map(|(model_def, raw)| serde_json::from_str::<InteractionSpec>(raw).ok().map(|spec| (*model_def, spec))).collect())
     }
 
     fn spec_by_id(id: &str) -> Option<&'static InteractionSpec> {
@@ -1393,20 +1035,8 @@ pub mod interaction {
     fn catalog() -> &'static [InteractionCatalogEntry] {
         CATALOG.get_or_init(|| {
             let mut entries = vec![
-                InteractionCatalogEntry {
-                    id: "building.building.constructWall".to_string(),
-                    label: "Wall".to_string(),
-                    key: "w".to_string(),
-                    model_definition_id: "aec.building".to_string(),
-                    produces_typology: "building.building.wall".to_string(),
-                },
-                InteractionCatalogEntry {
-                    id: "building.building.constructBeam".to_string(),
-                    label: "Beam".to_string(),
-                    key: "m".to_string(),
-                    model_definition_id: "aec.building".to_string(),
-                    produces_typology: "building.building.beam".to_string(),
-                },
+                InteractionCatalogEntry { id: "building.building.constructWall".to_string(), label: "Wall".to_string(), key: "w".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.wall".to_string() },
+                InteractionCatalogEntry { id: "building.building.constructBeam".to_string(), label: "Beam".to_string(), key: "m".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.beam".to_string() },
                 InteractionCatalogEntry {
                     id: "building.building.constructColumn".to_string(),
                     label: "Column".to_string(),
@@ -1414,13 +1044,7 @@ pub mod interaction {
                     model_definition_id: "aec.building".to_string(),
                     produces_typology: "building.building.column".to_string(),
                 },
-                InteractionCatalogEntry {
-                    id: "building.building.constructSlab".to_string(),
-                    label: "Slab".to_string(),
-                    key: "l".to_string(),
-                    model_definition_id: "aec.building".to_string(),
-                    produces_typology: "building.building.slab".to_string(),
-                },
+                InteractionCatalogEntry { id: "building.building.constructSlab".to_string(), label: "Slab".to_string(), key: "l".to_string(), model_definition_id: "aec.building".to_string(), produces_typology: "building.building.slab".to_string() },
             ];
             for (model_def, spec) in parsed_specs() {
                 entries.push(InteractionCatalogEntry {
@@ -1443,12 +1067,7 @@ pub mod interaction {
 
     pub fn resolve_interaction_key(input: &str, model_definition_id: &str) -> Option<&'static InteractionCatalogEntry> {
         let trimmed = input.trim().to_lowercase();
-        catalog().iter().find(|entry| {
-            entry.model_definition_id == model_definition_id
-                && (entry.key == trimmed
-                    || entry.id.eq_ignore_ascii_case(&trimmed)
-                    || entry.id.to_lowercase().ends_with(&format!(".{trimmed}")))
-        })
+        catalog().iter().find(|entry| entry.model_definition_id == model_definition_id && (entry.key == trimmed || entry.id.eq_ignore_ascii_case(&trimmed) || entry.id.to_lowercase().ends_with(&format!(".{trimmed}"))))
     }
 
     pub fn interaction_by_id(id: &str) -> Option<&'static InteractionCatalogEntry> {
@@ -1475,22 +1094,10 @@ pub mod interaction {
 
     pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagementSession> {
         if is_legacy_building_id(interaction_id) {
-            return Some(CadEngagementSession {
-                interaction_id: interaction_id.to_string(),
-                state: "idle".to_string(),
-                context: HashMap::new(),
-                pane,
-                last_response: None,
-            });
+            return Some(CadEngagementSession { interaction_id: interaction_id.to_string(), state: "idle".to_string(), context: HashMap::new(), pane, last_response: None });
         }
         let spec = spec_by_id(interaction_id)?;
-        Some(CadEngagementSession {
-            interaction_id: spec.id.clone(),
-            state: spec.machine.initial.clone(),
-            context: HashMap::new(),
-            pane,
-            last_response: None,
-        })
+        Some(CadEngagementSession { interaction_id: spec.id.clone(), state: spec.machine.initial.clone(), context: HashMap::new(), pane, last_response: None })
     }
 
     pub fn keyed_transitions(session: &CadEngagementSession) -> Vec<KeyedTransition> {
@@ -1507,11 +1114,7 @@ pub mod interaction {
         for handler in &state.on {
             for transition in &handler.transitions {
                 if let Some(key) = &transition.key {
-                    out.push(KeyedTransition {
-                        key: key.clone(),
-                        label: transition.label.clone().unwrap_or_else(|| handler.event.clone()),
-                        event_kind: handler.event.clone(),
-                    });
+                    out.push(KeyedTransition { key: key.clone(), label: transition.label.clone().unwrap_or_else(|| handler.event.clone()), event_kind: handler.event.clone() });
                 }
             }
         }
@@ -1575,12 +1178,7 @@ pub mod interaction {
     /// The remaining `box.*` rubber-band helpers and selection-driven actions (used only by box's
     /// advanced cube/3-point/center sub-modes and by selection-based utilities) are a documented
     /// follow-up; they no-operation here rather than error.
-    fn run_named_action_effect(
-        context: &mut HashMap<String, Value>,
-        payload: Option<&Value>,
-        action: &str,
-        params: &HashMap<String, Value>,
-    ) {
+    fn run_named_action_effect(context: &mut HashMap<String, Value>, payload: Option<&Value>, action: &str, params: &HashMap<String, Value>) {
         match action {
             "command.addPoint" => {
                 let field = params.get("field").and_then(|value| value.as_str()).unwrap_or("points").to_string();
@@ -1638,8 +1236,7 @@ pub mod interaction {
             Effect::Raise { event } => raised.push(event.clone()),
             Effect::Action { action, params, .. } => {
                 let env = ExprEnv { context: &session.context, event: payload };
-                let evaluated: HashMap<String, Value> =
-                    params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
+                let evaluated: HashMap<String, Value> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
                 run_named_action_effect(&mut session.context, payload, action, &evaluated);
             }
             // Emit/OpenTransaction/CommitTransaction/RollbackTransaction/RequestPreview/KernelQuery/
@@ -1765,8 +1362,7 @@ pub mod interaction {
     }
 
     /// States where a numeric-only line commits the pending height (premigration `tryCommitNumericEntry`).
-    const NUMERIC_ENTRY_STATES: &[&str] =
-        &["first_corner_height", "two_points_height", "slab_height", "column_height", "radius", "curve_height"];
+    const NUMERIC_ENTRY_STATES: &[&str] = &["first_corner_height", "two_points_height", "slab_height", "column_height", "radius", "curve_height"];
 
     fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
         if text.len() < prefix.len() {
@@ -1817,12 +1413,7 @@ pub mod interaction {
     //#endregion 🔖️Statechart
 
     //#region 🔖️CommitRunner
-    fn commit_primitive_box(
-        kernel: &mut dyn BrepKernel,
-        params: &HashMap<String, Value>,
-        label_count: usize,
-        next_id: impl Fn(&str) -> String,
-    ) -> Option<CadObject> {
+    fn commit_primitive_box(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
         let corner_a = params.get("cornerA").and_then(parse_vec3)?;
         let corner_b = params.get("cornerB").and_then(parse_vec3)?;
         let height = params.get("height").and_then(|value| value.as_f64()).unwrap_or(1.0);
@@ -1849,13 +1440,7 @@ pub mod interaction {
     /// `aec.building.structure.classic`, and `aec.building.structure.fem.*` construction interaction
     /// (`commit.operation.action` ending in `From2PointsAndHeight`/`FromSurface`) — differentiated only
     /// by the `typology` commit param.
-    fn commit_from_2_points_and_height(
-        kernel: &mut dyn BrepKernel,
-        params: &HashMap<String, Value>,
-        label: &str,
-        label_count: usize,
-        next_id: impl Fn(&str) -> String,
-    ) -> Option<CadObject> {
+    fn commit_from_2_points_and_height(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, label: &str, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
         let typology = params.get("typology").and_then(|value| value.as_str()).unwrap_or("").to_string();
         let lower = typology.to_lowercase();
         let point_a = params.get("pointA").and_then(parse_vec3)?;
@@ -1914,13 +1499,7 @@ pub mod interaction {
     /// implemented so far; other result kinds (cylinder/circle/plane/curve/boolean/...) are a
     /// documented follow-up — this returns `None` for them, matching the pre-engine fallback behavior
     /// for any not-yet-implemented interaction.
-    fn commit_command_finish(
-        kernel: &mut dyn BrepKernel,
-        params: &HashMap<String, Value>,
-        context: &HashMap<String, Value>,
-        label_count: usize,
-        next_id: impl Fn(&str) -> String,
-    ) -> Option<CadObject> {
+    fn commit_command_finish(kernel: &mut dyn BrepKernel, params: &HashMap<String, Value>, context: &HashMap<String, Value>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
         let result_kind = params.get("resultKind").and_then(|value| value.as_str())?;
         match result_kind {
             "sphere" => {
@@ -1930,10 +1509,7 @@ pub mod interaction {
                     radius
                 } else {
                     let radius_point = points.get("radiusPoint").and_then(parse_vec3)?;
-                    ((radius_point[0] - center[0]).powi(2)
-                        + (radius_point[1] - center[1]).powi(2)
-                        + (radius_point[2] - center[2]).powi(2))
-                    .sqrt()
+                    ((radius_point[0] - center[0]).powi(2) + (radius_point[1] - center[1]).powi(2) + (radius_point[2] - center[2]).powi(2)).sqrt()
                 }
                 .max(0.05);
                 let solid = kernel_3d_engine::block_on(kernel.sphere_prim(radius)).ok()?;
@@ -1956,12 +1532,7 @@ pub mod interaction {
         }
     }
 
-    fn legacy_commit_object(
-        kernel: &mut dyn BrepKernel,
-        session: &CadEngagementSession,
-        label_count: usize,
-        next_id: impl Fn(&str) -> String,
-    ) -> Option<CadObject> {
+    fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementSession, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
         let entry = interaction_by_id(&session.interaction_id)?;
         if session.interaction_id == "building.building.constructColumn" {
             let base = context_point(session, "base")?;
@@ -1986,7 +1557,13 @@ pub mod interaction {
         let corner_a = context_point(session, "cornerA")?;
         let corner_b = context_point(session, "cornerB")?;
         let id = session.interaction_id.as_str();
-        let default_height = if id.contains("Slab") { 0.25 } else if id.contains("Beam") { 0.4 } else { 3.0 };
+        let default_height = if id.contains("Slab") {
+            0.25
+        } else if id.contains("Beam") {
+            0.4
+        } else {
+            3.0
+        };
         let height = session.context.get("height").and_then(|value| value.as_f64()).unwrap_or(default_height);
         let span = ((corner_b[0] - corner_a[0]).powi(2) + (corner_b[1] - corner_a[1]).powi(2)).sqrt().max(0.5);
         let width = (corner_b[0] - corner_a[0]).abs().max(0.5);
@@ -2015,25 +1592,14 @@ pub mod interaction {
         })
     }
 
-    pub fn commit_object(
-        kernel: &mut dyn BrepKernel,
-        session: &CadEngagementSession,
-        label_count: usize,
-        next_id: impl Fn(&str) -> String,
-    ) -> Option<CadObject> {
+    pub fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementSession, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
         if is_legacy_building_id(&session.interaction_id) {
             return legacy_commit_object(kernel, session, label_count, next_id);
         }
         let spec = spec_by_id(&session.interaction_id)?;
         let env = ExprEnv { context: &session.context, event: None };
         let empty_vars = HashMap::new();
-        let params: HashMap<String, Value> = spec
-            .commit
-            .operation
-            .params
-            .iter()
-            .map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars)))
-            .collect();
+        let params: HashMap<String, Value> = spec.commit.operation.params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
         let action = spec.commit.operation.action.as_str();
         let label = spec.label.clone().unwrap_or_else(|| spec.id.clone());
         if action == "primitive.createBoxFromCorners" {
@@ -2130,8 +1696,7 @@ pub mod interaction {
             DisplayItemSpec::Curve { role, .. } => Some(json!({ "kind": "curve", "role": role })),
             DisplayItemSpec::Mesh { role, .. } => Some(json!({ "kind": "mesh", "role": role })),
             DisplayItemSpec::Preview { role, preview_kind, params, .. } => {
-                let evaluated_params: serde_json::Map<String, Value> =
-                    params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, env, vars))).collect();
+                let evaluated_params: serde_json::Map<String, Value> = params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, env, vars))).collect();
                 Some(json!({ "kind": "preview", "role": role, "previewKind": preview_kind, "params": evaluated_params }))
             }
         }
@@ -2225,9 +1790,7 @@ pub mod interaction {
 
         #[test]
         fn reinforced_concrete_column_interaction_commits_as_cylinder() {
-            let mut session =
-                start_session("structure.structure.constructReinforcedConcreteColumn", CadPaneId::StructureClassic)
-                    .expect("session");
+            let mut session = start_session("structure.structure.constructReinforcedConcreteColumn", CadPaneId::StructureClassic).expect("session");
             assert!(apply_event(&mut session, "mode.2points", None));
             assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.0, 1.0, 0.0] }))));
             assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [1.5, 1.0, 0.0] }))));
@@ -2241,11 +1804,7 @@ pub mod interaction {
 
         #[test]
         fn slab_interaction_commits() {
-            let mut session = start_session(
-                "structure.structure.constructOneWayReinforcedConcreteSlab",
-                CadPaneId::StructureClassic,
-            )
-            .expect("session");
+            let mut session = start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic).expect("session");
             assert!(apply_event(&mut session, "mode.2points", None));
             assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
             assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [4.0, 5.0, 0.0] }))));
@@ -2257,11 +1816,7 @@ pub mod interaction {
 
         #[test]
         fn slab_preview_shows_footprint_point() {
-            let mut session = start_session(
-                "structure.structure.constructOneWayReinforcedConcreteSlab",
-                CadPaneId::StructureClassic,
-            )
-            .expect("session");
+            let mut session = start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic).expect("session");
             assert!(apply_event(&mut session, "mode.2points", None));
             assert!(apply_event(&mut session, "pointer.down", Some(&json!({ "point": [0.0, 0.0, 0.0] }))));
             let items = preview_display_items(&session);
@@ -2332,12 +1887,9 @@ pub mod interaction {
     }
 }
 
-use cad_document::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadScene, CAD_PLAY_DOCUMENT_SCHEMA};
 use base64::Engine as _;
-use geometry_import::{
-    cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model,
-    parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture,
-};
+use cad_document::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadScene, CAD_PLAY_DOCUMENT_SCHEMA};
+use geometry_import::{cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, tessellate_object_mesh, tessellate_object_mesh_from_fixture};
 use kernel_3d_brepkit::{mesh_data_from_mesh_transfer, BrepkitKernel};
 use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
 use semio_framework_core::MeshImporter;
@@ -2362,8 +1914,7 @@ const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
 
 static CAD_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
-const FOREST_LEFT_MODEL_JSON: &str =
-    include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
+const FOREST_LEFT_MODEL_JSON: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/🖼️asset/🎮️play/🔣️hexagonal-cut-concrete-forest-left.model.json");
 
 pub const CAD_MODEL_DEFINITION_SHAPE: &str = "spatial.shape";
 
@@ -2398,12 +1949,7 @@ pub fn cad_brep_kernel() -> &'static Mutex<Box<dyn BrepKernel + Send + Sync>> {
 
 /// @emoji 📐️ Tessellates a typology's primitive sized from authored geometry (or a universal
 /// fallback extent when no geometry was captured), instead of hardcoded per-typology constants.
-fn typology_brep_mesh(
-    typology: &str,
-    extent: Option<[f64; 3]>,
-    solid_handle: Option<&str>,
-    centroid: Option<[f64; 3]>,
-) -> MeshData {
+fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Option<&str>, centroid: Option<[f64; 3]>) -> MeshData {
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return mesh_from_kind(typology_mesh_kind(typology));
     };
@@ -2464,11 +2010,7 @@ pub fn align_mesh_to_fixture_centroid(mesh: &mut MeshData, geometry: &CadGeometr
     let Some(current) = mesh_centroid(mesh) else {
         return;
     };
-    let delta = [
-        (target[0] as f32) - current[0],
-        (target[1] as f32) - current[1],
-        (target[2] as f32) - current[2],
-    ];
+    let delta = [(target[0] as f32) - current[0], (target[1] as f32) - current[1], (target[2] as f32) - current[2]];
     if delta[0].abs() + delta[1].abs() + delta[2].abs() > 0.05 {
         translate_mesh_positions(mesh, delta);
     }
@@ -2477,11 +2019,7 @@ pub fn align_mesh_to_fixture_centroid(mesh: &mut MeshData, geometry: &CadGeometr
 /// @emoji 🖼️ Centers the concrete-forest reference and moves it forward from the authored base corner.
 fn forest_reference_origin(reference_z: f64) -> [f64; 3] {
     let height_world = CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX;
-    [
-        CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[0] + CAD_FOREST_REFERENCE_WIDTH_WORLD * 0.5,
-        CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[1] + height_world * (0.5 + CAD_FOREST_REFERENCE_Y_OFFSET_RATIO),
-        reference_z,
-    ]
+    [CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[0] + CAD_FOREST_REFERENCE_WIDTH_WORLD * 0.5, CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[1] + height_world * (0.5 + CAD_FOREST_REFERENCE_Y_OFFSET_RATIO), reference_z]
 }
 
 fn translate_mesh_positions(mesh: &mut MeshData, offset: [f32; 3]) {
@@ -2506,10 +2044,7 @@ fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadOb
         return (Vec::new(), CadGeometry::default());
     };
     let geometry = parse_geometry(root.pointer(&format!("/models/{model_index}/model/geometry")));
-    let Some(objects_value) = root
-        .pointer(&format!("/models/{model_index}/model/objects"))
-        .and_then(|value| value.as_array())
-    else {
+    let Some(objects_value) = root.pointer(&format!("/models/{model_index}/model/objects")).and_then(|value| value.as_array()) else {
         return (Vec::new(), geometry);
     };
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
@@ -2544,9 +2079,7 @@ fn forest_references_for_model_definitions(reference_z: f64) -> std::collections
 
 pub fn typology_mesh_kind(typology: &str) -> &'static str {
     match typology {
-        "building.building.column"
-        | "structure.structure.reinforcedconcretecolumn"
-        | "aec.building.column" => "cylinder",
+        "building.building.column" | "structure.structure.reinforcedconcretecolumn" | "aec.building.column" => "cylinder",
         _ => "box",
     }
 }
@@ -2567,24 +2100,9 @@ pub fn default_document() -> CadScene {
             mesh_url: None,
             extent: Some([1.0, 1.0, 1.0]),
             solid_handle: None,
-            primitives: vec![CadPrimitiveSlot {
-                slot: "solid".into(),
-                primitive_id: "box-solid".into(),
-                kind: "solid".into(),
-            }],
+            primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "box-solid".into(), kind: "solid".into() }],
         }],
-        nodes: vec![
-            CadNode {
-                id: "node-root".into(),
-                label: "Model".into(),
-                kind: "group".into(),
-            },
-            CadNode {
-                id: "node-box".into(),
-                label: "Box".into(),
-                kind: "solid".into(),
-            },
-        ],
+        nodes: vec![CadNode { id: "node-root".into(), label: "Model".into(), kind: "group".into() }, CadNode { id: "node-box".into(), label: "Box".into(), kind: "solid".into() }],
         building_objects: Vec::new(),
         energy_objects: Vec::new(),
         structure_classic_objects: Vec::new(),
@@ -2604,17 +2122,12 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
     let (shape_objects, shape_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_SHAPE);
     let (building_objects, building_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_BUILDING);
     let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
-    let (structure_classic_objects, structure_classic_geometry) =
-        cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
+    let (structure_classic_objects, structure_classic_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
     CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: id.into(),
         objects: shape_objects,
-        nodes: vec![CadNode {
-            id: "node-root".into(),
-            label: "Concrete Forest Left".into(),
-            kind: "group".into(),
-        }],
+        nodes: vec![CadNode { id: "node-root".into(), label: "Concrete Forest Left".into(), kind: "group".into() }],
         building_objects,
         energy_objects,
         structure_classic_objects,
@@ -2632,9 +2145,7 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
 /// `initial_projection`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
 pub fn forest_play_scene() -> CadScene {
     static FOREST_PLAY_SCENE: OnceLock<CadScene> = OnceLock::new();
-    FOREST_PLAY_SCENE
-        .get_or_init(|| forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT))
-        .clone()
+    FOREST_PLAY_SCENE.get_or_init(|| forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT)).clone()
 }
 
 pub fn next_cad_id(prefix: &str) -> String {
@@ -2646,13 +2157,7 @@ pub fn next_cad_id(prefix: &str) -> String {
 /// now (camera moved off `CadScene`), matching the pose the document used to carry before the
 /// camera-as-View-action refactor.
 pub fn forest_play_camera() -> CadCamera {
-    CadCamera {
-        position: [12.0, -12.0, 8.0],
-        target: [5.4, 2.34, 1.5],
-        zoom: 1.0,
-        fov: 50.0,
-        projection: CadProjectionDsl::default(),
-    }
+    CadCamera { position: [12.0, -12.0, 8.0], target: [5.4, 2.34, 1.5], zoom: 1.0, fov: 50.0, projection: CadProjectionDsl::default() }
 }
 
 /// 📐️ Converts `camera.projection`'s local DSL twin into the shared taxonomy config — field-for-field,
@@ -2718,11 +2223,7 @@ pub fn ensure_object_solid_handle(kernel: &mut dyn BrepKernel, object: &mut CadO
         let primitive_id = handle.0.clone();
         object.solid_handle = Some(primitive_id.clone());
         if object.primitives.is_empty() {
-            object.primitives.push(CadPrimitiveSlot {
-                slot: "solid".into(),
-                primitive_id,
-                kind: "solid".into(),
-            });
+            object.primitives.push(CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() });
         }
     }
 }
@@ -2849,11 +2350,7 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadScene> {
             let model_definition_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("");
             let objects_value = entry.pointer("/model/objects")?;
             let geometry = parse_geometry(entry.pointer("/model/geometry"));
-            let objects = objects_value
-                .as_array()
-                .map(|objects| objects_from_fixture_model(&mut **kernel, objects, &geometry))
-                .filter(|objects| !objects.is_empty())
-                .or_else(|| serde_json::from_value(objects_value.clone()).ok())?;
+            let objects = objects_value.as_array().map(|objects| objects_from_fixture_model(&mut **kernel, objects, &geometry)).filter(|objects| !objects.is_empty()).or_else(|| serde_json::from_value(objects_value.clone()).ok())?;
             match model_definition_id {
                 CAD_MODEL_DEFINITION_SHAPE => {
                     scene.objects = objects;
@@ -2893,11 +2390,7 @@ pub fn scene_from_spatial_payload(payload: &Value) -> Option<CadScene> {
             .filter(|objects| !objects.is_empty())
             .or_else(|| serde_json::from_value(payload.get("objects")?.clone()).ok())?;
         let mut scene = default_document();
-        let pane = payload
-            .get("modelDefinitionId")
-            .and_then(|value| value.as_str())
-            .and_then(cad_pane_from_model_definition_id)
-            .unwrap_or(CadPaneId::Shape);
+        let pane = payload.get("modelDefinitionId").and_then(|value| value.as_str()).and_then(cad_pane_from_model_definition_id).unwrap_or(CadPaneId::Shape);
         match pane {
             CadPaneId::Shape => {
                 scene.objects = objects;
@@ -2927,20 +2420,13 @@ pub fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
 }
 
 pub fn primary_primitive_kind(object: &CadObject) -> &str {
-    object
-        .primitives
-        .first()
-        .map(|primitive| primitive.kind.as_str())
-        .unwrap_or("solid")
+    object.primitives.first().map(|primitive| primitive.kind.as_str()).unwrap_or("solid")
 }
 
 pub fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
     let kind = primary_primitive_kind(object);
     if let Ok(mut kernel) = cad_brep_kernel().lock() {
-        let mesh = geometry
-            .filter(|_| !object.primitives.is_empty())
-            .and_then(|geometry| tessellate_object_mesh_from_fixture(&mut **kernel, object, geometry))
-            .or_else(|| tessellate_object_mesh(&mut **kernel, object, kind));
+        let mesh = geometry.filter(|_| !object.primitives.is_empty()).and_then(|geometry| tessellate_object_mesh_from_fixture(&mut **kernel, object, geometry)).or_else(|| tessellate_object_mesh(&mut **kernel, object, kind));
         if let Some(mut mesh) = mesh {
             if let Some(geometry) = geometry {
                 align_mesh_to_fixture_centroid(&mut mesh, geometry, &object.primitives);
@@ -2949,12 +2435,7 @@ pub fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> M
         }
     }
     let centroid = geometry.and_then(|geometry| centroid_from_fixture_primitives(geometry, &object.primitives));
-    typology_brep_mesh(
-        &object.typology,
-        object.extent,
-        object.solid_handle.as_deref(),
-        centroid,
-    )
+    typology_brep_mesh(&object.typology, object.extent, object.solid_handle.as_deref(), centroid)
 }
 
 pub fn collect_mesh_urls(objects: &[CadObject]) -> Vec<String> {
@@ -2976,14 +2457,10 @@ pub fn object_scale_json(object: &CadObject) -> [f64; 3] {
 /// exists at this boundary).
 pub fn export_mesh_from_scene(document: &CadScene) -> MeshData {
     let first = cad_all_objects(document).next();
-    let typology = first
-        .map(|(object, _)| object.typology.as_str())
-        .unwrap_or("spatial.shape.primitive.box");
+    let typology = first.map(|(object, _)| object.typology.as_str()).unwrap_or("spatial.shape.primitive.box");
     let extent = first.and_then(|(object, _)| object.extent);
     let solid_handle = first.and_then(|(object, _)| object.solid_handle.as_deref());
-    let centroid = first.and_then(|(object, pane)| {
-        cad_pane_geometry(document, pane).and_then(|geometry| centroid_from_fixture_primitives(geometry, &object.primitives))
-    });
+    let centroid = first.and_then(|(object, pane)| cad_pane_geometry(document, pane).and_then(|geometry| centroid_from_fixture_primitives(geometry, &object.primitives)));
     typology_brep_mesh(typology, extent, solid_handle, centroid)
 }
 
@@ -3039,8 +2516,8 @@ pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
 /// runs against this today via `mathematical_graph_dsl::run_query`, with zero new grammar.
 pub mod construct {
     use cad_document::CadGeometry;
-    use mathematical_graph_manifest::PropertyValue;
     use mathematical_graph_dsl::{QueryableEdge, QueryableGraph};
+    use mathematical_graph_manifest::PropertyValue;
     use std::collections::BTreeSet;
 
     /// @emoji 🏷️ The Jack node-label vocabulary for brep entities — mirrors TopoCypher's
@@ -3080,7 +2557,9 @@ pub mod construct {
 
         fn node_ids(&self) -> Vec<String> {
             let g = self.geometry;
-            g.vertices.iter().map(|v| v.id.clone())
+            g.vertices
+                .iter()
+                .map(|v| v.id.clone())
                 .chain(g.edges.iter().map(|e| e.id.clone()))
                 .chain(g.wires.iter().map(|w| w.id.clone()))
                 .chain(g.faces.iter().map(|f| f.id.clone()))
@@ -3120,14 +2599,10 @@ pub mod construct {
         fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
             let g = self.geometry;
             match key {
-                "position" => g.vertices.iter().find(|v| v.id == id).map(|v| {
-                    PropertyValue::Array(v.position.iter().map(|c| PropertyValue::Number(*c)).collect())
-                }),
+                "position" => g.vertices.iter().find(|v| v.id == id).map(|v| PropertyValue::Array(v.position.iter().map(|c| PropertyValue::Number(*c)).collect())),
                 "curveKind" => g.edges.iter().find(|e| e.id == id).map(|e| PropertyValue::String(e.curve.kind.clone())),
                 "surfaceKind" => g.faces.iter().find(|f| f.id == id).map(|f| PropertyValue::String(f.surface.kind.clone())),
-                "normal" => g.faces.iter().find(|f| f.id == id).map(|f| {
-                    PropertyValue::Array(f.surface.normal.iter().map(|c| PropertyValue::Number(*c)).collect())
-                }),
+                "normal" => g.faces.iter().find(|f| f.id == id).map(|f| PropertyValue::Array(f.surface.normal.iter().map(|c| PropertyValue::Number(*c)).collect())),
                 _ => None,
             }
         }
@@ -3138,15 +2613,7 @@ pub mod construct {
             let mut next_id = 0usize;
             let mut push = |kind: &str, source_node_id: String, target_node_id: String| {
                 next_id += 1;
-                out.push(QueryableEdge {
-                    id: format!("{kind}-{next_id}"),
-                    kind: kind.to_string(),
-                    source_node_id,
-                    target_node_id,
-                    source_port: None,
-                    target_port: None,
-                    properties: mathematical_graph_manifest::PropertyBag::default(),
-                });
+                out.push(QueryableEdge { id: format!("{kind}-{next_id}"), kind: kind.to_string(), source_node_id, target_node_id, source_port: None, target_port: None, properties: mathematical_graph_manifest::PropertyBag::default() });
             };
             for solid in &g.solids {
                 for shell_id in &solid.shell_ids {
@@ -3200,21 +2667,23 @@ pub mod construct {
         /// 📦️ A closed box: 8 vertices, 12 edges, 6 wires, 6 faces, 1 shell, 1 solid — enough
         /// topology to exercise BOUNDED_BY/CONTAINS traversal across every dimension.
         fn box_geometry() -> CadGeometry {
-            let corners: [[f64; 3]; 8] = [
-                [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0],
-                [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0],
-            ];
+            let corners: [[f64; 3]; 8] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]];
             let vertices: Vec<CadVertex> = corners.iter().enumerate().map(|(i, p)| CadVertex { id: format!("v{i}"), position: *p }).collect();
             let edge_pairs: [(usize, usize); 12] = [
-                (0, 1), (1, 2), (2, 3), (3, 0), // bottom
-                (4, 5), (5, 6), (6, 7), (7, 4), // top
-                (0, 4), (1, 5), (2, 6), (3, 7), // verticals
+                (0, 1),
+                (1, 2),
+                (2, 3),
+                (3, 0), // bottom
+                (4, 5),
+                (5, 6),
+                (6, 7),
+                (7, 4), // top
+                (0, 4),
+                (1, 5),
+                (2, 6),
+                (3, 7), // verticals
             ];
-            let edges: Vec<CadEdge> = edge_pairs
-                .iter()
-                .enumerate()
-                .map(|(i, (a, b))| CadEdge { id: format!("e{i}"), vertex_ids: vec![format!("v{a}"), format!("v{b}")], curve: CadEdgeCurve { kind: "line".into() } })
-                .collect();
+            let edges: Vec<CadEdge> = edge_pairs.iter().enumerate().map(|(i, (a, b))| CadEdge { id: format!("e{i}"), vertex_ids: vec![format!("v{a}"), format!("v{b}")], curve: CadEdgeCurve { kind: "line".into() } }).collect();
             let face_wire_edges: [[usize; 4]; 6] = [
                 [0, 1, 2, 3],   // bottom
                 [4, 5, 6, 7],   // top
@@ -3224,9 +2693,7 @@ pub mod construct {
                 [1, 10, 5, 9],  // right
             ];
             let wires: Vec<CadWire> = face_wire_edges.iter().enumerate().map(|(i, es)| CadWire { id: format!("w{i}"), edge_ids: es.iter().map(|e| format!("e{e}")).collect() }).collect();
-            let faces: Vec<CadFace> = (0..6)
-                .map(|i| CadFace { id: format!("f{i}"), wire_ids: vec![format!("w{i}")], surface: CadPlaneSurface { kind: "plane".into(), origin: [0.0, 0.0, 0.0], normal: [0.0, 0.0, 1.0] } })
-                .collect();
+            let faces: Vec<CadFace> = (0..6).map(|i| CadFace { id: format!("f{i}"), wire_ids: vec![format!("w{i}")], surface: CadPlaneSurface { kind: "plane".into(), origin: [0.0, 0.0, 0.0], normal: [0.0, 0.0, 1.0] } }).collect();
             let shell = CadShell { id: "s0".into(), face_ids: (0..6).map(|i| format!("f{i}")).collect() };
             let solid = CadSolid { id: "sol0".into(), shell_ids: vec!["s0".into()] };
             CadGeometry { anchors: Vec::new(), vertices, edges, wires, faces, shells: vec![shell], solids: vec![solid] }

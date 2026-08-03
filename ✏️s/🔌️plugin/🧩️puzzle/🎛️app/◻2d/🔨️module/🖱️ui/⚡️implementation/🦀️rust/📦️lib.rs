@@ -3,15 +3,14 @@
 use puzzle_2d::Puzzle2dProjection;
 use puzzle_2d_engine::{puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Puzzle2dExtension, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
 use puzzle_2d_op::{puzzle2d_document_delta_operations, Puzzle2dOperation, Puzzle2dPlayProjection};
-use semio_framework_plugin::{
-    build_board2d_scene, create_default_layout,
-    MeasureSelectItem, WindowEngagementStatus,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ActionDescriptor, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, ArtifactPresentation, Board2dScene, PortMultiplicity, SurfaceKind, ToolRef, UiInspectorFieldGroup, UiPresence, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
-    WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
-    tree_item, tree_item_with_action,
-    AppLabels, Label, LocalizedLabel, Locale, Terminology,
-};
 use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::{
+    build_board2d_scene, create_default_layout, tree_item, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef,
+    ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, ArtifactPresentation, Board2dScene, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, MeasureSelectItem, Media,
+    MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, PortMultiplicity, SurfaceKind, Terminology, ToolRef, UiInspectorFieldGroup, UiNode, UiPresence,
+    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -800,15 +799,7 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> semio_framework_core::kernel
     if panel_properties {
         panel_bodies.push(PUZZLE2D_PLAY_BODY_PROPERTIES.to_string());
     }
-    UiDirtyScope::Partial {
-        window_bodies: if window_bodies { panes } else { Vec::new() },
-        panel_bodies,
-        utilities: false,
-        tools: false,
-        engagements,
-        measures,
-        labels: false,
-    }
+    UiDirtyScope::Partial { window_bodies: if window_bodies { panes } else { Vec::new() }, panel_bodies, utilities: false, tools: false, engagements, measures, labels: false }
 }
 
 /// 🐢️ Narrow `UiDirtyScope` shared by pure view/selection/camera actions that only touch the 3
@@ -952,7 +943,8 @@ fn puzzle2d_brush_utility_options(envelope: &Puzzle2dScene, labels: &Puzzle2dLab
             max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
             step: Some(PUZZLE2D_SUGGESTION_OFFSET_STEP),
             ready: None,
-            loading: None, waiting: None,
+            loading: None,
+            waiting: None,
             disabled: None,
             reveal: None,
             on_change: puzzle2d_action("setSuggestionOffset", None),
@@ -1050,7 +1042,8 @@ fn puzzle2d_fill_tool_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels
             max: PUZZLE2D_FILL_COUNT_MAX as f64,
             step: Some(1.0),
             ready: None,
-            loading: None, waiting: None,
+            loading: None,
+            waiting: None,
             disabled: None,
             reveal: None,
             on_change: puzzle2d_action("setFillCount", None),
@@ -1196,12 +1189,7 @@ fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &st
         "handleWeights": envelope.runtime.handle_kind_weights,
     }))
     .unwrap_or_else(|_| "{}".into());
-    let placement_compatibility_json = fixture
-        .get("meta")
-        .and_then(|value| value.get("kindCompatibility"))
-        .or_else(|| fixture.get("kindCompatibility"))
-        .map(|value| value.to_string())
-        .unwrap_or_else(|| "[]".into());
+    let placement_compatibility_json = fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| fixture.get("kindCompatibility")).map(|value| value.to_string()).unwrap_or_else(|| "[]".into());
     let lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).cloned().unwrap_or_else(|| PUZZLE2D_LOD_MODE_AUTOMATIC.to_string());
     Board2dScene {
         fixture_json: cached_fixture_json(document_json, fixture),
@@ -1358,14 +1346,24 @@ fn render_document_panel(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> U
         .iter()
         .filter_map(|node| {
             let id = node.get("id")?.as_str()?;
-            Some(tree_item_with_action(format!("puzzle2d-play-document.node.{id}"), Label::data(node_label(node)), node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_action("setSelection", Some(json!({ "ids": [id] })))))
+            Some(tree_item_with_action(
+                format!("puzzle2d-play-document.node.{id}"),
+                Label::data(node_label(node)),
+                node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string),
+                puzzle2d_action("setSelection", Some(json!({ "ids": [id] }))),
+            ))
         })
         .collect();
     let edge_items: Vec<UiTreeItemNode> = fixture_edges(fixture)
         .iter()
         .filter_map(|edge| {
             let id = edge.get("id")?.as_str()?;
-            Some(tree_item_with_action(format!("puzzle2d-play-document.edge.{id}"), Label::data(edge_label(edge, fixture)), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_action("setSelection", Some(json!({ "ids": [id] })))))
+            Some(tree_item_with_action(
+                format!("puzzle2d-play-document.edge.{id}"),
+                Label::data(edge_label(edge, fixture)),
+                edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string),
+                puzzle2d_action("setSelection", Some(json!({ "ids": [id] }))),
+            ))
         })
         .collect();
     PanelTreeBuilder::new("puzzle2d-play-document")
@@ -1467,13 +1465,7 @@ fn kind_catalog_section(section_id: &str, slice: &str, label: impl Into<Label>, 
             }
         })
         .collect();
-    UiTreeSectionNode {
-        presence: UiPresence::default(),
-        id: section_id.into(),
-        label: Some(label.into()),
-        default_open: Some(true),
-        items: if items.is_empty() { vec![tree_item(format!("{section_id}.empty"), labels.none)] } else { items },
-    }
+    UiTreeSectionNode { presence: UiPresence::default(), id: section_id.into(), label: Some(label.into()), default_open: Some(true), items: if items.is_empty() { vec![tree_item(format!("{section_id}.empty"), labels.none)] } else { items } }
 }
 
 fn render_catalogue_panel(fixture: &Value, labels: &Puzzle2dLabels) -> UiNode {
@@ -1625,7 +1617,8 @@ fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMa
                 max: 1.0,
                 step: Some(0.01),
                 ready: None,
-                loading: None, waiting: None,
+                loading: None,
+                waiting: None,
                 disabled: None,
                 reveal: None,
                 on_change: puzzle2d_action("setBrushKindWeights", Some(json!({ "kindId": kind_id, "catalogSlice": catalog_slice }))),
@@ -1659,7 +1652,6 @@ impl Default for Puzzle2dPlayApp {
     }
 }
 
-
 /// 🖱️ On-demand puzzle 2d board context menu from selection snapshot. Grouped disclosure:
 /// toggleHidden/toggleLocked/duplicate/focusSelection stay top-level (the four most frequent
 /// verbs); selectSameKind folds into the "selection" taxonomy group; deleteSelection stays the
@@ -1667,12 +1659,7 @@ impl Default for Puzzle2dPlayApp {
 /// `VcsDocumentApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
 /// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed
 /// here (unlike the pre-migration hand-written `sep-selection`/`sep-delete` rows).
-fn puzzle2d_context_menu_items(
-    registry: &semio_framework_plugin::AppActionRegistry,
-    fixture: &Value,
-    selected: &[String],
-    is_de: bool,
-) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, fixture: &Value, selected: &[String], is_de: bool) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
     // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
     // declared-action lookup) — appended via `Menu::item(...)`, the documented escape hatch.
@@ -1718,8 +1705,48 @@ fn puzzle2d_context_menu_items(
     let any_unlocked = entities.iter().any(|entity| entity.get("locked").and_then(|v| v.as_bool()) != Some(true));
     let phrase = selection_count_phrase(is_de, &[(selected.len(), if is_de { "Element" } else { "item" }, if is_de { "Elemente" } else { "items" })]);
     Menu::of(registry)
-        .item(item("toggleHidden", if any_visible { if is_de { "Ausblenden" } else { "Hide" } } else { if is_de { "Einblenden" } else { "Show" } }, if any_visible { "eye-off" } else { "eye" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": any_visible })), false, false))
-        .item(item("toggleLocked", if any_unlocked { if is_de { "Sperren" } else { "Lock" } } else { if is_de { "Entsperren" } else { "Unlock" } }, if any_unlocked { "lock" } else { "lock-open" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": any_unlocked })), false, false))
+        .item(item(
+            "toggleHidden",
+            if any_visible {
+                if is_de {
+                    "Ausblenden"
+                } else {
+                    "Hide"
+                }
+            } else {
+                if is_de {
+                    "Einblenden"
+                } else {
+                    "Show"
+                }
+            },
+            if any_visible { "eye-off" } else { "eye" },
+            "setSelectionFlag",
+            Some(json!({ "flag": "hidden", "value": any_visible })),
+            false,
+            false,
+        ))
+        .item(item(
+            "toggleLocked",
+            if any_unlocked {
+                if is_de {
+                    "Sperren"
+                } else {
+                    "Lock"
+                }
+            } else {
+                if is_de {
+                    "Entsperren"
+                } else {
+                    "Unlock"
+                }
+            },
+            if any_unlocked { "lock" } else { "lock-open" },
+            "setSelectionFlag",
+            Some(json!({ "flag": "locked", "value": any_unlocked })),
+            false,
+            false,
+        ))
         .item(item("duplicate", if is_de { "Duplizieren" } else { "Duplicate" }, "copy", "duplicateSelection", None, false, !has_selected_node))
         .item(item("focusSelection", if is_de { "Auf Auswahl zoomen" } else { "Zoom to selection" }, "crosshair", "focusSelection", None, false, false))
         .group("selection", |m| m.item(item("selectSameKind", if is_de { "Gleiche Art auswählen" } else { "Select same kind" }, "layers", "selectSameKind", None, false, false)))
@@ -1873,31 +1900,27 @@ impl DocumentApp for Puzzle2dPlayApp {
     /// (see `import_media` below for why it stays `NotImplemented`) and `design:out`.
     fn io(&self) -> Option<AppIo> {
         Some(
-            AppIo::from_document(
-                "puzzle.2d",
-                MediaType { class: MediaClass::TwoD, form: MediaForm::Design },
-                ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() },
-            )
-            .with_ports(vec![
-                MediaPortSpec {
-                    id: "kit:in".into(),
-                    label: "Kit Catalog".into(),
-                    direction: MediaPortDirection::In,
-                    media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                    kind_id: Some("kit.catalog".into()),
-                    required: false,
-                    multiplicity: PortMultiplicity::Many,
-                },
-                MediaPortSpec {
-                    id: "design:out".into(),
-                    label: "Puzzle Design".into(),
-                    direction: MediaPortDirection::Out,
-                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Design },
-                    kind_id: Some("2d.puzzle".into()),
-                    required: false,
-                    multiplicity: PortMultiplicity::Many,
-                },
-            ]),
+            AppIo::from_document("puzzle.2d", MediaType { class: MediaClass::TwoD, form: MediaForm::Design }, ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() })
+                .with_ports(vec![
+                    MediaPortSpec {
+                        id: "kit:in".into(),
+                        label: "Kit Catalog".into(),
+                        direction: MediaPortDirection::In,
+                        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+                        kind_id: Some("kit.catalog".into()),
+                        required: false,
+                        multiplicity: PortMultiplicity::Many,
+                    },
+                    MediaPortSpec {
+                        id: "design:out".into(),
+                        label: "Puzzle Design".into(),
+                        direction: MediaPortDirection::Out,
+                        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Design },
+                        kind_id: Some("2d.puzzle".into()),
+                        required: false,
+                        multiplicity: PortMultiplicity::Many,
+                    },
+                ]),
         )
     }
 

@@ -11,10 +11,10 @@
 //! to whenever `DocumentApp::handle_typed_command` returns `None` — see `shooting_ui`'s
 //! `ShootingPlayApp::handle_typed_command` for the dispatch and exactly which actions are covered.
 
-use shooting::{ShootingCamera, ShootingFixture};
-use shooting_op::ShootingOperation;
 use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
+use shooting::{ShootingCamera, ShootingFixture};
+use shooting_op::ShootingOperation;
 use store::{DocumentEnvelope, DocumentStore};
 
 /// 📦️ Encodes a `ShootingOperation` to its binary command form.
@@ -48,7 +48,11 @@ pub enum ShootingCommand {
     #[dsl(key = "active-asset")]
     SetActiveAsset { asset_id: Option<String> },
     #[dsl(key = "shot-camera")]
-    SetShotCamera { shot_id: String, #[dsl(block)] camera: ShootingCamera },
+    SetShotCamera {
+        shot_id: String,
+        #[dsl(block)]
+        camera: ShootingCamera,
+    },
     #[dsl(key = "save-camera")]
     SaveCamera,
     #[dsl(key = "sun-azimuth")]
@@ -93,7 +97,10 @@ pub enum ShootingCommand {
     // 👁️ Config-only (was ephemeral `ShootingPlayRuntime` state) — emit `config_operations`, never
     // document operations.
     #[dsl(key = "camera")]
-    SetCamera { #[dsl(block)] camera: ShootingCamera },
+    SetCamera {
+        #[dsl(block)]
+        camera: ShootingCamera,
+    },
     #[dsl(key = "load-saved-camera")]
     LoadSavedCamera { id: String },
     #[dsl(key = "camera-draft-label")]
@@ -229,8 +236,12 @@ mod tests {
             })
             .expect("seed saved camera + referencing shot");
         let edits_before = store.envelope().vcs.edits.len();
-        store.dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetShotCamera { shot_id: "s1".into(), camera: ShootingCamera { position: [1.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("first drag tick");
-        store.dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetShotCamera { shot_id: "s1".into(), camera: ShootingCamera { position: [2.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("second drag tick");
+        store
+            .dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetShotCamera { shot_id: "s1".into(), camera: ShootingCamera { position: [1.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) })
+            .expect("first drag tick");
+        store
+            .dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetShotCamera { shot_id: "s1".into(), camera: ShootingCamera { position: [2.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) })
+            .expect("second drag tick");
         assert_eq!(store.envelope().vcs.edits.len(), edits_before + 1, "coalesced drag must produce exactly one edit");
         assert_eq!(store.projection().expect("projection").saved_cameras[0].camera.position, [2.0, 0.0, 0.0]);
     }
@@ -238,12 +249,7 @@ mod tests {
     #[test]
     fn shooting_document_text_round_trips_store_with_applied_operation() {
         let mut store = ShootingStore::new(store::create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", shooting::empty_shooting_fixture(), None));
-        store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: sample_asset("a1"), at: 0 })],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: sample_asset("a1"), at: 0 })], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

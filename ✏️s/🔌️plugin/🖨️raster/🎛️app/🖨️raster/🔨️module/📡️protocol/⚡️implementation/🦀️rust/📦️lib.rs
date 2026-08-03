@@ -1,8 +1,8 @@
 //! ⚖️ Raster app — binary command protocol surface + laws (constitutional: protocol).
 
+use protocol::OpBinary;
 use raster::RasterCamera;
 use raster_op::RasterOperation;
-use protocol::OpBinary;
 
 /// 📦️ Encodes a `RasterOperation` to its binary command form.
 pub fn encode_op(operation: &RasterOperation) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -109,12 +109,7 @@ mod tests {
     fn raster_document_text_round_trips_store_with_applied_operation() {
         use raster::{RasterLayerNode, RasterProjection, RasterTransform};
 
-        let envelope = store::create_document_envelope::<RasterProjection, RasterOperation>(
-            RASTER_DOCUMENT_SCHEMA,
-            "doc-text-test",
-            raster_engine::empty_raster_document(),
-            None,
-        );
+        let envelope = store::create_document_envelope::<RasterProjection, RasterOperation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", raster_engine::empty_raster_document(), None);
         let mut store = store::DocumentStore::new(envelope);
         store
             .dispatch(store::DocumentCommand::Apply {

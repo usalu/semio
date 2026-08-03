@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
-    "@semio-tech/ui-asset": "workspace:*"
+    "@semio-tech/asset": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

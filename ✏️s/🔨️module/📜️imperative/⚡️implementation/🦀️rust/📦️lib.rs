@@ -64,7 +64,11 @@ impl protocol::Patchable<Dictionary> for Step {
     }
 
     fn diff_patch(&self, other: &Self) -> Option<Dictionary> {
-        if self.params == other.params { None } else { Some(other.params.clone()) }
+        if self.params == other.params {
+            None
+        } else {
+            Some(other.params.clone())
+        }
     }
 }
 // #endregion 🔖️Path

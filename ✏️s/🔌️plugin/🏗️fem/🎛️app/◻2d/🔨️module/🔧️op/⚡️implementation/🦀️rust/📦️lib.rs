@@ -201,25 +201,79 @@ impl OperationDiff<Fem2dDocument> for Fem2dDiff {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Fem2dOperation {
-    SetNode { index: usize, #[dsl(block)] node: FemNode },
-    RemoveNode { id: String },
-    SetElement { index: usize, #[dsl(statements)] element: Box<FemElement> },
-    RemoveElement { id: String },
-    SetMaterial { index: usize, #[dsl(block)] material: FemMaterial },
-    RemoveMaterial { id: String },
-    SetSection { index: usize, #[dsl(block)] section: FemSection },
-    RemoveSection { id: String },
-    SetSupport { index: usize, #[dsl(block)] support: FemSupport },
-    RemoveSupport { id: String },
-    SetLoadCase { index: usize, #[dsl(block)] load_case: FemLoadCase },
-    RemoveLoadCase { id: String },
-    SetRegion { index: usize, #[dsl(block)] region: FemRegion },
-    RemoveRegion { id: String },
-    SetCombination { index: usize, #[dsl(block)] combination: FemCombination },
-    RemoveCombination { id: String },
-    SetAnalysisSettings { #[dsl(block)] settings: FemAnalysisSettings },
+    SetNode {
+        index: usize,
+        #[dsl(block)]
+        node: FemNode,
+    },
+    RemoveNode {
+        id: String,
+    },
+    SetElement {
+        index: usize,
+        #[dsl(statements)]
+        element: Box<FemElement>,
+    },
+    RemoveElement {
+        id: String,
+    },
+    SetMaterial {
+        index: usize,
+        #[dsl(block)]
+        material: FemMaterial,
+    },
+    RemoveMaterial {
+        id: String,
+    },
+    SetSection {
+        index: usize,
+        #[dsl(block)]
+        section: FemSection,
+    },
+    RemoveSection {
+        id: String,
+    },
+    SetSupport {
+        index: usize,
+        #[dsl(block)]
+        support: FemSupport,
+    },
+    RemoveSupport {
+        id: String,
+    },
+    SetLoadCase {
+        index: usize,
+        #[dsl(block)]
+        load_case: FemLoadCase,
+    },
+    RemoveLoadCase {
+        id: String,
+    },
+    SetRegion {
+        index: usize,
+        #[dsl(block)]
+        region: FemRegion,
+    },
+    RemoveRegion {
+        id: String,
+    },
+    SetCombination {
+        index: usize,
+        #[dsl(block)]
+        combination: FemCombination,
+    },
+    RemoveCombination {
+        id: String,
+    },
+    SetAnalysisSettings {
+        #[dsl(block)]
+        settings: FemAnalysisSettings,
+    },
     /// 🌍️ Replaces the whole document (example import / reset).
-    SetDocument { #[dsl(block)] document: Fem2dDocument },
+    SetDocument {
+        #[dsl(block)]
+        document: Fem2dDocument,
+    },
 }
 
 impl Operation<Fem2dDocument> for Fem2dOperation {
@@ -497,14 +551,8 @@ mod tests {
     fn fem2d_op_text_round_trips_every_variant() {
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetNode { index: 0, node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveNode { id: "n1".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetElement {
-            index: 0,
-            element: Box::new(FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }),
-        });
-        store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetElement {
-            index: 0,
-            element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }),
-        });
+        store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetElement { index: 0, element: Box::new(FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }) });
+        store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetElement { index: 0, element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }) });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveElement { id: "e1".into() });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetMaterial { index: 0, material: FemMaterial { id: "steel".into(), name: "Steel S235".into(), e: 210e9, nu: 0.3, rho: 7850.0 } });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveMaterial { id: "steel".into() });
@@ -539,7 +587,10 @@ mod tests {
             },
         });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveRegion { id: "r1".into() });
-        store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetCombination { index: 0, combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![fem2d::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, fem2d::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] } });
+        store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetCombination {
+            index: 0,
+            combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![fem2d::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, fem2d::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] },
+        });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveCombination { id: "uls".into() });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetDocument { document: simply_supported_beam_doc() });

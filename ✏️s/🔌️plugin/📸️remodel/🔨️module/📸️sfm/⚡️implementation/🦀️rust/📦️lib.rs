@@ -696,28 +696,8 @@ pub fn select_two_view_model(matches: &[([f64; 2], [f64; 2])]) -> Option<TwoView
 /// total, and the ten cubic constraint polynomials generically cut the degree-`<=3` space down to a
 /// 10-dimensional quotient with the degree-`<=2` monomials as a natural basis, since `C(2+3,3) = 10`
 /// exactly matches), so it is re-derivable from first principles rather than memorized.
-const MONO3: [(u8, u8, u8); 20] = [
-    (3, 0, 0),
-    (0, 3, 0),
-    (0, 0, 3),
-    (2, 1, 0),
-    (2, 0, 1),
-    (1, 2, 0),
-    (0, 2, 1),
-    (1, 0, 2),
-    (0, 1, 2),
-    (1, 1, 1),
-    (0, 0, 0),
-    (1, 0, 0),
-    (0, 1, 0),
-    (0, 0, 1),
-    (2, 0, 0),
-    (0, 2, 0),
-    (0, 0, 2),
-    (1, 1, 0),
-    (1, 0, 1),
-    (0, 1, 1),
-];
+const MONO3: [(u8, u8, u8); 20] =
+    [(3, 0, 0), (0, 3, 0), (0, 0, 3), (2, 1, 0), (2, 0, 1), (1, 2, 0), (0, 2, 1), (1, 0, 2), (0, 1, 2), (1, 1, 1), (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1), (2, 0, 0), (0, 2, 0), (0, 0, 2), (1, 1, 0), (1, 0, 1), (0, 1, 1)];
 
 fn mono3_index(i: u8, j: u8, k: u8) -> Option<usize> {
     MONO3.iter().position(|&m| m == (i, j, k))
@@ -1223,9 +1203,7 @@ pub fn p3p_grunert(cam_rays: &[[f64; 3]; 3], world_pts: &[[f64; 3]; 3]) -> Vec<S
             }
             let s2 = s1 * x;
             let s3 = s1 * y;
-            let residual = (s2 * s2 + s3 * s3 - 2.0 * s2 * s3 * cos_alpha - a * a).abs()
-                + (s1 * s1 + s3 * s3 - 2.0 * s1 * s3 * cos_beta - b * b).abs()
-                + (s1 * s1 + s2 * s2 - 2.0 * s1 * s2 * cos_gamma - c * c).abs();
+            let residual = (s2 * s2 + s3 * s3 - 2.0 * s2 * s3 * cos_alpha - a * a).abs() + (s1 * s1 + s3 * s3 - 2.0 * s1 * s3 * cos_beta - b * b).abs() + (s1 * s1 + s2 * s2 - 2.0 * s1 * s2 * cos_gamma - c * c).abs();
             if residual > 1e-6 * scale2 {
                 continue;
             }
@@ -3082,11 +3060,7 @@ mod tests {
         });
         let candidates = p3p_grunert(&rays, &world_pts);
         assert!(!candidates.is_empty(), "P3P should return at least one candidate for a non-degenerate configuration");
-        let (best_rot, best_t) = candidates
-            .iter()
-            .map(|c| (rotation_error_deg(&c.r, &pose.0.r), norm3(sub3(c.t, pose.0.t))))
-            .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
-            .unwrap();
+        let (best_rot, best_t) = candidates.iter().map(|c| (rotation_error_deg(&c.r, &pose.0.r), norm3(sub3(c.t, pose.0.t)))).min_by(|a, b| a.0.partial_cmp(&b.0).unwrap()).unwrap();
         assert!(best_rot < 1e-3, "true pose rotation should be (near-)exactly among P3P's candidate roots, got {best_rot} deg");
         assert!(best_t < 1e-3, "true pose translation should be (near-)exactly among P3P's candidate roots, got {best_t}");
     }

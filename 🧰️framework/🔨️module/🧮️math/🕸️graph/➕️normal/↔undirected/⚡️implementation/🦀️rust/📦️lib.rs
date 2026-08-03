@@ -1,8 +1,6 @@
 //! ⚪️ The undirected simple graph family — NetworkX `Graph` parity facade.
 
-use mathematical_graph::{
-    pairwise, AttrView, AttrWeight, Directed, EdgeId, EdgeRef, EdgeSubgraphView, EdgeWeights, GraphView, Normal, NodeId, PropertyBag, PropertyValue, Storage, SubgraphView, Undirected,
-};
+use mathematical_graph::{pairwise, AttrView, AttrWeight, Directed, EdgeId, EdgeRef, EdgeSubgraphView, EdgeWeights, GraphView, NodeId, Normal, PropertyBag, PropertyValue, Storage, SubgraphView, Undirected};
 use std::collections::BTreeMap;
 
 // #region 🔖️Construction

@@ -62,13 +62,7 @@ fn child_seed(macro_seed: u64, node: NodeId) -> u64 {
 /// generated hierarchy usually isn't useful to a caller that hasn't decided its own fallback
 /// policy yet.
 #[allow(dead_code)] // exercised today only by this module's own tests; see HierarchyOutcome's note
-pub(crate) fn solve_hierarchy<MT, CT>(
-    macro_model: &CompiledModel,
-    macro_topo: &MT,
-    macro_config: &SearchConfig,
-    macro_seed: u64,
-    child_model_for: impl Fn(NodeId, PatternId) -> (CompiledModel, CT, SearchConfig),
-) -> HierarchyOutcome
+pub(crate) fn solve_hierarchy<MT, CT>(macro_model: &CompiledModel, macro_topo: &MT, macro_config: &SearchConfig, macro_seed: u64, child_model_for: impl Fn(NodeId, PatternId) -> (CompiledModel, CT, SearchConfig)) -> HierarchyOutcome
 where
     MT: Topology,
     CT: Topology,
@@ -192,7 +186,11 @@ mod tests {
         let (model, topo) = checkerboard(3);
         let config = SearchConfig::default();
         let child_model_for = |node: NodeId, pattern: PatternId| -> (CompiledModel, GraphTopology, SearchConfig) {
-            if node == NodeId(1) { unsatisfiable_child(node, pattern) } else { always_satisfiable_child(node, pattern) }
+            if node == NodeId(1) {
+                unsatisfiable_child(node, pattern)
+            } else {
+                always_satisfiable_child(node, pattern)
+            }
         };
 
         let outcome = solve_hierarchy(&model, &topo, &config, 1, child_model_for);

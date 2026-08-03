@@ -1,0 +1,14 @@
+{
+  "title": "Localize New Design Default Document Name",
+  "emoji": "🌐️",
+  "status": "open",
+  "description": "Localize 'New design' default document name in compose/client/lib/sketchpad/js/index.ts. Add compose.sketchpad.design.defaultName key to translation bundles and resolve via i18next instance.",
+  "summary": "",
+  "github": {
+    "issue": ""
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪e647bfdb06dd42319c6449a4598f29a3"
+  ]
+}

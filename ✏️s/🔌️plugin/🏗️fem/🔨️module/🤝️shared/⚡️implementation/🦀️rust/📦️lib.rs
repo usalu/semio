@@ -45,10 +45,7 @@ pub fn hex_to_rgb01(hex: &str) -> (f64, f64, f64) {
 /// modes amplitude before scaling by `MODE_SHAPE_AMPLITUDE_RATIO * model_extent`. A near-zero shape
 /// (degenerate/rigid mode) is left untouched rather than divided by a near-zero magnitude.
 pub fn normalize_mode_shape(disp_map: &mut HashMap<String, [f64; 6]>) {
-    let peak = disp_map
-        .values()
-        .map(|d| (d[Dof::Tx.index()].powi(2) + d[Dof::Ty.index()].powi(2) + d[Dof::Tz.index()].powi(2)).sqrt())
-        .fold(0.0_f64, f64::max);
+    let peak = disp_map.values().map(|d| (d[Dof::Tx.index()].powi(2) + d[Dof::Ty.index()].powi(2) + d[Dof::Tz.index()].powi(2)).sqrt()).fold(0.0_f64, f64::max);
     if peak < 1e-12 {
         return;
     }
@@ -111,11 +108,7 @@ pub fn result_display_action_args() -> Vec<ActionArgDef> {
         ActionArgDef::select(
             "mode",
             LocalizedLabel::data("Mode"),
-            vec![
-                ActionArgOption::new("static", LocalizedLabel::data("Static")),
-                ActionArgOption::new("modal", LocalizedLabel::data("Modal")),
-                ActionArgOption::new("buckling", LocalizedLabel::data("Buckling")),
-            ],
+            vec![ActionArgOption::new("static", LocalizedLabel::data("Static")), ActionArgOption::new("modal", LocalizedLabel::data("Modal")), ActionArgOption::new("buckling", LocalizedLabel::data("Buckling"))],
         ),
         ActionArgDef::number("modeIndex", LocalizedLabel::data("Mode Index")),
     ]

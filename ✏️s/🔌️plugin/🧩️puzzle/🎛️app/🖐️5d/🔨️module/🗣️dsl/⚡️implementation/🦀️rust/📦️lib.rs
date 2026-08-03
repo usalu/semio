@@ -37,7 +37,13 @@ mod tests {
             part_2d: Puzzle5dPart2d { x: 230.7, y: 93.5, shape: Some("circle".into()), radius: Some(20.0), width: None, height: None, text: Some("Hexagonal Cut Concrete Forest Left".into()), icon_kind: None, hidden: None, locked: None },
             // 📏️ Vec3 (per-axis) case of `Puzzle5dScale`, exercised alongside the Uniform case
             // below so both `Shape::Tuple(_, None)` arities round-trip through this test.
-            part_3d: Puzzle5dPart3d { origin: [0.0, 0.0, 0.0], mesh_url: Some("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb".into()), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some(Puzzle5dScale::Vec3([1.0, 1.0, 1.5])), label: Some("Hexagonal Cut Concrete Forest Left".into()) },
+            part_3d: Puzzle5dPart3d {
+                origin: [0.0, 0.0, 0.0],
+                mesh_url: Some("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb".into()),
+                orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                scale: Some(Puzzle5dScale::Vec3([1.0, 1.0, 1.5])),
+                label: Some("Hexagonal Cut Concrete Forest Left".into()),
+            },
             grips: vec![Puzzle5dGrip {
                 id: "v0".into(),
                 grip_kind: Some("b-l".into()),

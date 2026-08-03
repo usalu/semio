@@ -1,49 +1,76 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import {
-  playgroundPlayBootHtmlPlugin,
-  playgroundStaticSiteBuildOptions,
-  semioEmojiIndexHtmlVitePlugin,
-  staticDirVitePlugin,
-  uiAssetsVitePlugin,
-} from "../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
-import { DEMONSTRATOR_ASSETS_DIR } from "./🟦️brand.ts";
+import { playgroundAssetVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, staticDirVitePlugin } from "../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts";
+import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_PANES } from "./🟦️brand.ts";
 
-const dir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(dir, "../..");
-const uiAssetsRoot = resolve(repoRoot, "./🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript");
-const uiReact = resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx");
+const playDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(playDir, "../..");
+const pluginModulesDir = path.join(playDir, "../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules");
+
+//#region 🔖️DemonstratorUnionAssets
+/** @emoji 🎪️ Registry rows for exactly this demonstrator's six panes — the union this page needs to
+ * actually mount, not every playground variant in the monorepo (mirrors `os/dev`'s own `resolvedPlaygroundAssets`,
+ * scoped down from its "studio serves everything" fallback since a demonstrator pane list is fixed). */
+const demonstratorTargets = PLAYGROUND_BUILD_TARGETS.filter((target) => DEMONSTRATOR_PANES.some((pane) => pane.variant === target.variant));
+const resolvedPlaygroundAssets = demonstratorTargets.flatMap((target) => target.assets);
+/** @emoji 🔌️ `_vendor` (shared `🟨️host-shim.js` deps every plugin imports) plus each demonstrator pane's
+ * own resolved plugin crate dir — mirrors `os/dev`'s single-variant `pluginModuleDirNames`, unioned
+ * across all six panes instead of just one. */
+const pluginModuleDirNames = ["_vendor", ...new Set(demonstratorTargets.map((target) => target.pluginId))];
+//#endregion 🔖️DemonstratorUnionAssets
 
 export default defineConfig({
-  root: dir,
-  base: "./",
-  publicDir: resolve(dir, "public"),
-  build: playgroundStaticSiteBuildOptions({ outDir: "dist" }),
-  plugins: [
-    playgroundPlayBootHtmlPlugin(),
-    semioEmojiIndexHtmlVitePlugin(dir),
-    ...uiAssetsVitePlugin(uiAssetsRoot),
-    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${DEMONSTRATOR_ASSETS_DIR}`, root: DEMONSTRATOR_ASSETS_DIR }),
-    tailwindcss(),
-    react(),
-  ],
+  root: playDir,
+  cacheDir: path.join(repoRoot, "node_modules/.vite-mit-bestand-demonstrator"),
+  publicDir: path.join(playDir, "public"),
+  assetsInclude: ["**/*.wasm"],
+  resolve: {
+    alias: [
+      ...playgroundSceneHostResolveAliases(repoRoot),
+      { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx") },
+      { find: "@semio-tech/asset", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript") },
+      { find: "@semio-tech/infinite-canvas-react-renderer", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementation/🟦️typescript/📦️index.tsx") },
+      { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🌍️world/🎨️r3f/⚡️implementation/🟦️typescript/📦️index.tsx") },
+      { find: "@semio-tech/framework-renderer-react", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx") },
+      { find: "@semio-tech/framework-core", replacement: path.resolve(repoRoot, "./🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/framework-os-core", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/⚡️implementation/🟦️typescript/📦️index.ts") },
+      { find: "/plugin-modules", replacement: pluginModulesDir },
+    ],
+    dedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],
+  },
   server: {
-    fs: { allow: [repoRoot] },
     port: Number(process.env.MIT_BESTAND_DEMONSTRATOR_PORT ?? 6029),
     strictPort: true,
-    proxy: {
-      "/generator": { target: "http://127.0.0.1:6027", changeOrigin: true, ws: true, rewrite: (path) => path.replace(/^\/generator/, "") || "/" },
-      "/koordinator": { target: "http://127.0.0.1:6028", changeOrigin: true, ws: true, rewrite: (path) => path.replace(/^\/koordinator/, "") || "/" },
-      "/aggregator": { target: "http://127.0.0.1:6023", changeOrigin: true, ws: true, rewrite: (path) => path.replace(/^\/aggregator/, "") || "/" },
-      "/aussuchen": { target: "http://127.0.0.1:6030", changeOrigin: true, ws: true, rewrite: (path) => path.replace(/^\/aussuchen/, "") || "/" },
-      "/bearbeiten": { target: "http://127.0.0.1:6031", changeOrigin: true, ws: true, rewrite: (path) => path.replace(/^\/bearbeiten/, "") || "/" },
-      "/verfolgen": { target: "http://127.0.0.1:6032", changeOrigin: true, ws: true, rewrite: (path) => path.replace(/^\/verfolgen/, "") || "/" },
-    },
+    fs: { allow: [repoRoot, pluginModulesDir] },
   },
-  resolve: {
-    alias: [{ find: "@semio-tech/ui-react", replacement: uiReact }],
+  plugins: [
+    ...semioHostHtmlVitePlugin(repoRoot, {
+      title: "Entwerfen mit Bestand · Demonstrator",
+      entry: "./📦️index.tsx",
+      bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground",
+    }),
+    semioEmojiIndexHtmlVitePlugin(playDir),
+    semioBackboneVitePlugin(),
+    semioBlobVitePlugin(),
+    ...semioAssetsVitePlugin(repoRoot),
+    // 🔌️ Same reasoning as `os/dev`'s vite config: the bundler `resolve.alias` above only covers static
+    // imports — plugins are also fetched at runtime via absolute-URL `import()`, which a production build
+    // never bundles, so each union plugin dir needs its own static-dir copy into `dist/`.
+    ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/plugin-modules/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
+    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${DEMONSTRATOR_ASSETS_DIR}`, root: DEMONSTRATOR_ASSETS_DIR }),
+    ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
+    react(),
+    tailwindcss(),
+  ],
+  optimizeDeps: {
+    entries: [path.join(playDir, "🌐️index.html")],
+    include: ["react-reconciler", "react-reconciler/constants", "three", "@react-three/fiber", "fuse.js"],
+    exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents"],
   },
 });

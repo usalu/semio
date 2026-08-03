@@ -9,7 +9,10 @@ fn register_draw_exports() {
     semio_framework_os::register_os_media_export_handler("2d.drawing", semio_framework_os::OsMediaFormat::Dwg, |doc| {
         let bytes = draw_engine::draw_document_json_to_dwg_bytes(doc)?;
         Ok(semio_framework_os::OsMediaExportResult {
-            data: { use base64::Engine; base64::engine::general_purpose::STANDARD.encode(bytes) },
+            data: {
+                use base64::Engine;
+                base64::engine::general_purpose::STANDARD.encode(bytes)
+            },
             mime_type: semio_framework_os::OsMediaFormat::Dwg.mime_type().into(),
             file_name: "draw.dwg".into(),
             encoding: Some("base64".into()),

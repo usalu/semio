@@ -58,7 +58,11 @@ impl SplitMix64 {
 
     /// @emoji 🎯️ A uniform draw in `0..bound`, or `0` if `bound == 0` (never divides by zero).
     pub fn next_range(&mut self, bound: u64) -> u64 {
-        if bound == 0 { 0 } else { self.next_u64() % bound }
+        if bound == 0 {
+            0
+        } else {
+            self.next_u64() % bound
+        }
     }
 }
 //#endregion 🔖️Prng
@@ -130,14 +134,8 @@ impl WorkloadGen {
                     document_id: document.clone(),
                     actor,
                     dependencies: Vec::new(),
-                    diff: protocol::DocumentDiff {
-                        schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
-                        payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default(),
-                    },
-                    inverse: protocol::InverseOperation {
-                        schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
-                        payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default(),
-                    },
+                    diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
+                    inverse: protocol::InverseOperation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
                     timestamp: protocol::HybridLogicalTimestamp::new(0, index as u64),
                 }
             })
@@ -639,9 +637,7 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
         let database = db_engine::Database::open_at(&root, db_core::Profile::Test).expect("testkit: open_at for replay law");
         let handle = database.create_document(db_engine::DocumentSpec::new(document.clone())).expect("testkit: create_document for replay law");
         for envelope in &ops {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }))
-                .expect("submit future resolved")
-                .expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
         }
         let frontier = handle.frontier().expect("frontier");
         drop(handle);
@@ -664,9 +660,7 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
         let database = db_engine::Database::open_at(&root_independent, db_core::Profile::Test).expect("testkit: open independent replica");
         let handle = database.create_document(db_engine::DocumentSpec::new(document)).expect("testkit: create independent replica document");
         for envelope in &ops_regenerated {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }))
-                .expect("submit future resolved")
-                .expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
         }
         handle.frontier().expect("frontier")
     };
@@ -692,8 +686,7 @@ pub fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usi
             }
         }
     }
-    let (materialized_from_snapshot, report_a) =
-        db_document::DocumentEngine::open(document.clone(), &storage_snapshotting, db_document::DocumentEngineConfig::default(), 0).expect("open engine a");
+    let (materialized_from_snapshot, report_a) = db_document::DocumentEngine::open(document.clone(), &storage_snapshotting, db_document::DocumentEngineConfig::default(), 0).expect("open engine a");
     assert!(before_snapshot == 0 || report_a.from_snapshot, "replica a must have materialized from a real snapshot when one was published");
 
     let storage_full_replay: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
@@ -703,8 +696,7 @@ pub fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usi
             engine.submit(single_envelope_batch(envelope.clone()), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, i as u64).expect("submit b");
         }
     }
-    let (materialized_full_replay, report_b) =
-        db_document::DocumentEngine::open(document, &storage_full_replay, db_document::DocumentEngineConfig::default(), 0).expect("open engine b");
+    let (materialized_full_replay, report_b) = db_document::DocumentEngine::open(document, &storage_full_replay, db_document::DocumentEngineConfig::default(), 0).expect("open engine b");
     assert!(!report_b.from_snapshot, "replica b must never have snapshotted");
     assert_eq!(report_b.commands_replayed as usize, ops.len(), "a never-snapshotted replica must replay every command from genesis");
 
@@ -786,10 +778,7 @@ fn schema_erased_envelope(document: &protocol::DocumentId, operation_id: &str, a
         actor: protocol::ActorId(actor.to_string()),
         dependencies: Vec::new(),
         diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
-        inverse: protocol::InverseOperation {
-            schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
-            payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default(),
-        },
+        inverse: protocol::InverseOperation { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
     }
 }
@@ -983,10 +972,7 @@ mod tests {
         let ops_c = WorkloadGen::new(43).disjoint_batch(&document, 8);
         assert_eq!(ops_a, ops_b, "same seed must generate byte-identical envelopes");
         assert_ne!(ops_a, ops_c, "a different seed must generate different actor/value draws");
-        let paths: std::collections::HashSet<String> = ops_a
-            .iter()
-            .flat_map(|envelope| serde_json::from_slice::<serde_json::Value>(&envelope.diff.payload).unwrap().as_object().unwrap().keys().cloned().collect::<Vec<_>>())
-            .collect();
+        let paths: std::collections::HashSet<String> = ops_a.iter().flat_map(|envelope| serde_json::from_slice::<serde_json::Value>(&envelope.diff.payload).unwrap().as_object().unwrap().keys().cloned().collect::<Vec<_>>()).collect();
         assert_eq!(paths.len(), 8, "disjoint_batch must touch exactly `count` distinct paths");
     }
     //#endregion 🔖️Prng + Generators
@@ -1024,18 +1010,13 @@ mod tests {
         let hashes = explore_interleavings(4242, 12, |seed| {
             let ops = WorkloadGen::new(55).disjoint_batch(&document, 5);
             let storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
-            let engine = Rc::new(RefCell::new(
-                db_document::DocumentEngine::create(document.clone(), storage, db_document::DocumentEngineConfig::default(), 0).expect("create engine"),
-            ));
+            let engine = Rc::new(RefCell::new(db_document::DocumentEngine::create(document.clone(), storage, db_document::DocumentEngineConfig::default(), 0).expect("create engine")));
             let mut runtime = SimRuntime::new(seed);
             for (i, envelope) in ops.into_iter().enumerate() {
                 let engine = engine.clone();
                 runtime.schedule(envelope.operation_id.0.clone(), move |clock| {
                     let now = clock.now_ms() + i as u64;
-                    engine
-                        .borrow_mut()
-                        .submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, now)
-                        .expect("submit");
+                    engine.borrow_mut().submit(single_envelope_batch(envelope), db_document::SubmitOptions { durability: db_core::DurabilityClass::Fsync }, now).expect("submit");
                 });
             }
             runtime.run(4);
@@ -1194,9 +1175,7 @@ mod tests {
             storage.create_segment(&document, 0).map_err(|err| err.to_string())?;
             storage.append(&document, 0, bytes).map_err(|err| err.to_string())?;
             let storage: Arc<dyn DbStorage> = Arc::new(storage);
-            db_document::DocumentEngine::open(protocol::DocumentId(document.0), &storage, db_document::DocumentEngineConfig::default(), 0)
-                .map(|_| ())
-                .map_err(|err| err.to_string())
+            db_document::DocumentEngine::open(protocol::DocumentId(document.0), &storage, db_document::DocumentEngineConfig::default(), 0).map(|_| ()).map_err(|err| err.to_string())
         }
 
         #[test]

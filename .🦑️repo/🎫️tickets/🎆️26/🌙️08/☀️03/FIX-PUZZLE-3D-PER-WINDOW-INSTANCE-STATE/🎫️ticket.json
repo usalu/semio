@@ -1,0 +1,7 @@
+{
+  "id": "2026/08/03/FIX-PUZZLE-3D-PER-WINDOW-INSTANCE-STATE",
+  "title": "Fix Puzzle 3D Per-Window Instance State",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "status": "open",
+  "description": "Fix 7 cargo test failures in semio-s-app-puzzle-3d-ui caused by regression in per-window-instance state scoping."
+}

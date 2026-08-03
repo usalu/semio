@@ -324,7 +324,10 @@ fn extract_avc_config(children: &[u8]) -> Result<(Vec<u8>, u8), VideoError> {
 
 /// 📥️ `stsd` (sample description) → `(codec, width, height, avc_config)`; only the first sample entry is
 /// consulted (multiple codec-switching entries per track are not something this crate's writers ever produce).
-#[allow(clippy::type_complexity, reason = "the four probed fields (codec, width, height, optional avcC config) are each simple and self-explanatory in context; a named struct would just rename them without clarifying anything, and this is a private, single-call-site parser")]
+#[allow(
+    clippy::type_complexity,
+    reason = "the four probed fields (codec, width, height, optional avcC config) are each simple and self-explanatory in context; a named struct would just rename them without clarifying anything, and this is a private, single-call-site parser"
+)]
 fn parse_stsd(payload: &[u8]) -> Result<(VideoCodec, u16, u16, Option<(Vec<u8>, u8)>), VideoError> {
     let mut r = ByteReader::new(payload);
     r.skip(4)?;
@@ -770,11 +773,7 @@ fn parse_idx1(idx1: &[u8], movi: &[u8], bytes: &[u8]) -> Result<Vec<(u64, u32, b
     let mut chosen_base = None;
     'bases: for &base in &candidates {
         for e in entries.iter().take(entries.len().min(4)) {
-            let matches = base
-                .checked_add(e.chunk_offset as usize)
-                .and_then(|start| start.checked_add(4).map(|end| (start, end)))
-                .and_then(|(start, end)| bytes.get(start..end))
-                .is_some_and(|found| found == e.ckid.0);
+            let matches = base.checked_add(e.chunk_offset as usize).and_then(|start| start.checked_add(4).map(|end| (start, end))).and_then(|(start, end)| bytes.get(start..end)).is_some_and(|found| found == e.ckid.0);
             if !matches {
                 continue 'bases;
             }
@@ -854,7 +853,13 @@ pub fn probe_avi(bytes: &[u8]) -> Result<AviInfo, VideoError> {
             b"MJPG" | b"mjpg" => VideoCodec::Mjpeg,
             _ => VideoCodec::Unknown(compression),
         };
-        let fps = if scale > 0 { f64::from(rate) / f64::from(scale) } else if micro_sec_per_frame > 0 { 1_000_000.0 / f64::from(micro_sec_per_frame) } else { 0.0 };
+        let fps = if scale > 0 {
+            f64::from(rate) / f64::from(scale)
+        } else if micro_sec_per_frame > 0 {
+            1_000_000.0 / f64::from(micro_sec_per_frame)
+        } else {
+            0.0
+        };
         stream = Some((fps, codec));
         break;
     }
@@ -869,11 +874,7 @@ pub fn probe_avi(bytes: &[u8]) -> Result<AviInfo, VideoError> {
         scan_movi_chunks(movi, bytes, &mut triples)?;
     }
 
-    let samples: Vec<SampleInfo> = triples
-        .into_iter()
-        .enumerate()
-        .map(|(i, (offset, size, is_sync))| SampleInfo { offset, size, timestamp_ms: if fps > 0.0 { i as f64 * 1000.0 / fps } else { 0.0 }, is_sync })
-        .collect();
+    let samples: Vec<SampleInfo> = triples.into_iter().enumerate().map(|(i, (offset, size, is_sync))| SampleInfo { offset, size, timestamp_ms: if fps > 0.0 { i as f64 * 1000.0 / fps } else { 0.0 }, is_sync }).collect();
 
     Ok(AviInfo { width: avih_width, height: avih_height, fps, frame_count: samples.len() as u32, codec, samples })
 }
@@ -1281,28 +1282,36 @@ struct CoeffTokenTable {
 /// 📖️ `coeff_token` VLC tables selected by `nC` bucket, transcribed from ITU-T H.264 Table 9-5.
 const COEFF_TOKEN_TABLES: [CoeffTokenTable; 4] = [
     CoeffTokenTable {
-        len: &[1, 0, 0, 0, 6, 2, 0, 0, 8, 6, 3, 0, 9, 8, 7, 5, 10, 9, 8, 6, 11, 10, 9, 7, 13, 11, 10, 8, 13, 13, 11, 9, 13, 13, 13, 10, 14, 14, 13, 11, 14, 14, 14, 13, 15, 15, 14, 14, 15, 15, 15, 14, 16, 15, 15, 15, 16, 16, 16, 15, 16, 16, 16, 16, 16, 16, 16, 16],
+        len: &[
+            1, 0, 0, 0, 6, 2, 0, 0, 8, 6, 3, 0, 9, 8, 7, 5, 10, 9, 8, 6, 11, 10, 9, 7, 13, 11, 10, 8, 13, 13, 11, 9, 13, 13, 13, 10, 14, 14, 13, 11, 14, 14, 14, 13, 15, 15, 14, 14, 15, 15, 15, 14, 16, 15, 15, 15, 16, 16, 16, 15, 16, 16, 16, 16, 16,
+            16, 16, 16,
+        ],
         bits: &[1, 0, 0, 0, 5, 1, 0, 0, 7, 4, 1, 0, 7, 6, 5, 3, 7, 6, 5, 3, 7, 6, 5, 4, 15, 6, 5, 4, 11, 14, 5, 4, 8, 10, 13, 4, 15, 14, 9, 4, 11, 10, 13, 12, 15, 14, 9, 12, 11, 10, 13, 8, 15, 1, 9, 12, 11, 14, 13, 8, 7, 10, 9, 12, 4, 6, 5, 8],
     },
     CoeffTokenTable {
-        len: &[2, 0, 0, 0, 6, 2, 0, 0, 6, 5, 3, 0, 7, 6, 6, 4, 8, 6, 6, 4, 8, 7, 7, 5, 9, 8, 8, 6, 11, 9, 9, 6, 11, 11, 11, 7, 12, 11, 11, 9, 12, 12, 12, 11, 12, 12, 12, 11, 13, 13, 13, 12, 13, 13, 13, 13, 13, 14, 13, 13, 14, 14, 14, 13, 14, 14, 14, 14],
+        len: &[
+            2, 0, 0, 0, 6, 2, 0, 0, 6, 5, 3, 0, 7, 6, 6, 4, 8, 6, 6, 4, 8, 7, 7, 5, 9, 8, 8, 6, 11, 9, 9, 6, 11, 11, 11, 7, 12, 11, 11, 9, 12, 12, 12, 11, 12, 12, 12, 11, 13, 13, 13, 12, 13, 13, 13, 13, 13, 14, 13, 13, 14, 14, 14, 13, 14, 14, 14, 14,
+        ],
         bits: &[3, 0, 0, 0, 11, 2, 0, 0, 7, 7, 3, 0, 7, 10, 9, 5, 7, 6, 5, 4, 4, 6, 5, 6, 7, 6, 5, 8, 15, 6, 5, 4, 11, 14, 13, 4, 15, 10, 9, 4, 11, 14, 13, 12, 8, 10, 9, 8, 15, 14, 13, 12, 11, 10, 9, 12, 7, 11, 6, 8, 9, 8, 10, 1, 7, 6, 5, 4],
     },
     CoeffTokenTable {
         len: &[4, 0, 0, 0, 6, 4, 0, 0, 6, 5, 4, 0, 6, 5, 5, 4, 7, 5, 5, 4, 7, 5, 5, 4, 7, 6, 6, 4, 7, 6, 6, 4, 8, 7, 7, 5, 8, 8, 7, 6, 9, 8, 8, 7, 9, 9, 8, 8, 9, 9, 9, 8, 10, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
-        bits: &[15, 0, 0, 0, 15, 14, 0, 0, 11, 15, 13, 0, 8, 12, 14, 12, 15, 10, 11, 11, 11, 8, 9, 10, 9, 14, 13, 9, 8, 10, 9, 8, 15, 14, 13, 13, 11, 14, 10, 12, 15, 10, 13, 12, 11, 14, 9, 12, 8, 10, 13, 8, 13, 7, 9, 12, 9, 12, 11, 10, 5, 8, 7, 6, 1, 4, 3, 2],
+        bits: &[
+            15, 0, 0, 0, 15, 14, 0, 0, 11, 15, 13, 0, 8, 12, 14, 12, 15, 10, 11, 11, 11, 8, 9, 10, 9, 14, 13, 9, 8, 10, 9, 8, 15, 14, 13, 13, 11, 14, 10, 12, 15, 10, 13, 12, 11, 14, 9, 12, 8, 10, 13, 8, 13, 7, 9, 12, 9, 12, 11, 10, 5, 8, 7, 6, 1, 4,
+            3, 2,
+        ],
     },
     CoeffTokenTable {
         len: &[6, 0, 0, 0, 6, 6, 0, 0, 6, 6, 6, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
-        bits: &[3, 0, 0, 0, 0, 1, 0, 0, 4, 5, 6, 0, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63],
+        bits: &[
+            3, 0, 0, 0, 0, 1, 0, 0, 4, 5, 6, 0, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
+            59, 60, 61, 62, 63,
+        ],
     },
 ];
 
 /// 📖️ `coeff_token` VLC for chroma DC (`nC == -1`, 4:2:0's 2×2 block), Table 9-5's rightmost-but-one column.
-const CHROMA_DC_COEFF_TOKEN: CoeffTokenTable = CoeffTokenTable {
-    len: &[2, 0, 0, 0, 6, 1, 0, 0, 6, 6, 3, 0, 6, 7, 7, 6, 6, 8, 8, 7],
-    bits: &[1, 0, 0, 0, 7, 1, 0, 0, 4, 6, 1, 0, 3, 3, 2, 5, 2, 3, 2, 0],
-};
+const CHROMA_DC_COEFF_TOKEN: CoeffTokenTable = CoeffTokenTable { len: &[2, 0, 0, 0, 6, 1, 0, 0, 6, 6, 3, 0, 6, 7, 7, 6, 6, 8, 8, 7], bits: &[1, 0, 0, 0, 7, 1, 0, 0, 4, 6, 1, 0, 3, 3, 2, 5, 2, 3, 2, 0] };
 
 /// 🔎️ Reads one `coeff_token` from `table`, returning `(total_coeff, trailing_ones)`.
 fn read_coeff_token(b: &mut BitReader<'_>, table: &CoeffTokenTable) -> Result<(u32, u32), H264Error> {
@@ -1417,7 +1426,13 @@ fn read_residual_block(b: &mut BitReader<'_>, nc_selector: NcSelector, scan: &[u
         NcSelector::ChromaDc => read_coeff_token(b, &CHROMA_DC_COEFF_TOKEN)?,
         NcSelector::Nc(nc) if nc >= 8 => read_coeff_token_fixed(b)?,
         NcSelector::Nc(nc) => {
-            let bucket = if nc < 2 { 0 } else if nc < 4 { 1 } else { 2 };
+            let bucket = if nc < 2 {
+                0
+            } else if nc < 4 {
+                1
+            } else {
+                2
+            };
             read_coeff_token(b, &COEFF_TOKEN_TABLES[bucket])?
         }
     };
@@ -1482,11 +1497,7 @@ fn read_residual_block(b: &mut BitReader<'_>, nc_selector: NcSelector, scan: &[u
         if zeros_remaining == 0 {
             break;
         }
-        let r = if zeros_remaining < 7 {
-            read_vlc(b, RUN_BEFORE_LEN[zeros_remaining as usize - 1], RUN_BEFORE_BITS[zeros_remaining as usize - 1])?
-        } else {
-            read_vlc(b, RUN_BEFORE_LEN[6], RUN_BEFORE_BITS[6])?
-        };
+        let r = if zeros_remaining < 7 { read_vlc(b, RUN_BEFORE_LEN[zeros_remaining as usize - 1], RUN_BEFORE_BITS[zeros_remaining as usize - 1])? } else { read_vlc(b, RUN_BEFORE_LEN[6], RUN_BEFORE_BITS[6])? };
         *slot = r;
         zeros_remaining -= r;
     }
@@ -2039,7 +2050,10 @@ fn mc_luma_block(rp: &RefPlanes<'_>, px: i32, py: i32, w: usize, h: usize, mv: [
 
 /// 🎯️ Motion-compensates one `w×h` chroma block (either plane) at chroma position `(px, py)` from a luma-space
 /// `mv` (quarter-pel; reinterpreted as eighth-chroma-pel per clause 8.4.1.4).
-#[allow(clippy::too_many_arguments, reason = "one plane plus its geometry (dims, origin, size) plus the motion vector is the natural, self-describing parameter list for a block motion-compensation primitive; bundling them into a struct would just rename the same fields")]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "one plane plus its geometry (dims, origin, size) plus the motion vector is the natural, self-describing parameter list for a block motion-compensation primitive; bundling them into a struct would just rename the same fields"
+)]
 fn mc_chroma_block(plane: &[u8], plane_w: i32, plane_h: i32, px: i32, py: i32, w: usize, h: usize, mv: [i32; 2], out: &mut [i32]) {
     for y in 0..h {
         for x in 0..w {
@@ -2074,10 +2088,58 @@ const DEBLOCK_BETA: [i32; 52] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 /// 📏️ `tC0[qP][bS-1]` for `bS` 1..3, `qP` 0..51 (clause 8.7.2.3, Table 8-17); `bS == 4` never consults this
 /// table (it uses the strong, unconditional intra filter instead).
 const DEBLOCK_TC0: [[i32; 3]; 52] = [
-    [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0],
-    [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 1, 1], [0, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 2], [1, 1, 2], [1, 1, 2], [1, 1, 2], [1, 2, 3], [1, 2, 3], [2, 2, 3],
-    [2, 2, 4], [2, 3, 4], [2, 3, 4], [3, 3, 5], [3, 4, 6], [3, 4, 6], [4, 5, 7], [4, 5, 8], [4, 6, 9], [5, 7, 10], [6, 8, 11], [6, 8, 13], [7, 10, 14], [8, 11, 16], [9, 12, 18], [10, 13, 20],
-    [11, 15, 23], [13, 17, 25],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 1, 1],
+    [0, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 1],
+    [1, 1, 2],
+    [1, 1, 2],
+    [1, 1, 2],
+    [1, 1, 2],
+    [1, 2, 3],
+    [1, 2, 3],
+    [2, 2, 3],
+    [2, 2, 4],
+    [2, 3, 4],
+    [2, 3, 4],
+    [3, 3, 5],
+    [3, 4, 6],
+    [3, 4, 6],
+    [4, 5, 7],
+    [4, 5, 8],
+    [4, 6, 9],
+    [5, 7, 10],
+    [6, 8, 11],
+    [6, 8, 13],
+    [7, 10, 14],
+    [8, 11, 16],
+    [9, 12, 18],
+    [10, 13, 20],
+    [11, 15, 23],
+    [13, 17, 25],
 ];
 
 /// 🧮️ Boundary strength (clause 8.7.2.1) for the edge between 4×4 luma blocks `p` and `q`: `4` only at a true
@@ -2337,7 +2399,8 @@ fn deblock_chroma_mb_edges(pic: &mut Picture, sps: &SpsInfo, a_off: i32, b_off: 
                 for row in (mb_y * 8) as usize + qy * 4..(mb_y * 8) as usize + qy * 4 + 4 {
                     for plane in [&mut pic.cb, &mut pic.cr] {
                         let get = |dx: i32, plane: &[u8]| i32::from(plane[row * cw + (edge_x as i32 + dx) as usize]);
-                        let filtered = if bs == 4 { filter_chroma_strong(get(-2, plane), get(-1, plane), get(0, plane), get(1, plane), alpha, beta) } else { filter_chroma_normal(get(-2, plane), get(-1, plane), get(0, plane), get(1, plane), alpha, beta, tc) };
+                        let filtered =
+                            if bs == 4 { filter_chroma_strong(get(-2, plane), get(-1, plane), get(0, plane), get(1, plane), alpha, beta) } else { filter_chroma_normal(get(-2, plane), get(-1, plane), get(0, plane), get(1, plane), alpha, beta, tc) };
                         if let Some((p0, q0)) = filtered {
                             plane[row * cw + edge_x - 1] = p0.clamp(0, 255) as u8;
                             plane[row * cw + edge_x] = q0.clamp(0, 255) as u8;
@@ -2415,10 +2478,7 @@ const GOLOMB_TO_INTRA4X4_CBP: [u8; 48] = [47, 31, 15, 0, 23, 27, 29, 30, 7, 11, 
 const GOLOMB_TO_INTER_CBP: [u8; 48] = [0, 16, 1, 2, 4, 8, 32, 3, 5, 10, 12, 15, 47, 7, 11, 13, 14, 6, 9, 31, 35, 37, 42, 44, 33, 34, 36, 40, 39, 43, 45, 46, 17, 18, 20, 24, 19, 21, 26, 28, 23, 27, 29, 30, 22, 25, 38, 41];
 
 /// 🎚️ `QPc` as a function of `qPI = Clip3(0, 51, QPY + chroma_qp_index_offset)` (clause 8.5.8, Table 8-15).
-const CHROMA_QP_TABLE: [i32; 52] = [
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 34, 35, 35, 36, 36, 37, 37, 37, 38, 38, 38, 39, 39, 39,
-    39,
-];
+const CHROMA_QP_TABLE: [i32; 52] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 34, 35, 35, 36, 36, 37, 37, 37, 38, 38, 38, 39, 39, 39, 39];
 
 fn chroma_qp(luma_qp: i32, offset: i32) -> i32 {
     CHROMA_QP_TABLE[(luma_qp + offset).clamp(0, 51) as usize]
@@ -2455,7 +2515,11 @@ fn luma_nc(pic: &Picture, gx: i32, gy: i32) -> Option<u8> {
         return None;
     }
     let idx = gy as usize * pic.luma4_width() + gx as usize;
-    if pic.decoded_luma4[idx] { Some(pic.nnz_luma[idx]) } else { None }
+    if pic.decoded_luma4[idx] {
+        Some(pic.nnz_luma[idx])
+    } else {
+        None
+    }
 }
 
 /// 🔍️ Left/above `intra4x4_pred_mode` neighbor for clause 8.3.1.1's mode prediction; unavailable or non-
@@ -2469,7 +2533,11 @@ fn intra4x4_mode_neighbor(pic: &Picture, gx: i32, gy: i32) -> u8 {
         return 2;
     }
     let m = pic.intra4x4_mode[idx];
-    if m < 0 { 2 } else { m as u8 }
+    if m < 0 {
+        2
+    } else {
+        m as u8
+    }
 }
 
 /// 🎨️ Gathers a 4×4 luma block's intra-prediction neighbors from the picture buffer (clause 6.4.11.4 /
@@ -2640,7 +2708,11 @@ fn decode_intra4x4_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y:
             predicted
         } else {
             let rem = b.u(3)? as u8;
-            if rem < predicted { rem } else { rem + 1 }
+            if rem < predicted {
+                rem
+            } else {
+                rem + 1
+            }
         };
         if m > 8 {
             return Err(H264Error::Malformed("intra4x4 pred mode out of range"));
@@ -2944,8 +3016,14 @@ fn decode_p_skip_mb(pic: &mut Picture, mb_x: u32, mb_y: u32, ref0: &Picture, qp:
 /// 📥️ Decodes one coded (non-skip) P macroblock: `P_L0_16x16`/`P_L0_L0_16x8`/`P_L0_L0_8x16` (`code_num` 0..2);
 /// `code_num` 3/4 (`P_8x8`/`P_8x8ref0`, sub-8×8 partitions) are a deliberate scope cut of this decoder — see
 /// crate-level notes — and fail loudly rather than misdecode.
-#[allow(clippy::too_many_lines, reason = "the P-macroblock syntax genuinely has this many sequential steps (ref_idx*, mvd*, motion compensation, cbp, qp, luma residual, chroma residual) and splitting it up would just scatter tightly-coupled per-partition state across more function boundaries")]
-#[allow(clippy::too_many_arguments, reason = "these are the macroblock's own coordinates, the always-needed parsed-header context (pps/header), the reference list, and the running QP predictor — the natural, self-describing parameter list for a single-slice macroblock decoder with no surrounding decoder-state struct")]
+#[allow(
+    clippy::too_many_lines,
+    reason = "the P-macroblock syntax genuinely has this many sequential steps (ref_idx*, mvd*, motion compensation, cbp, qp, luma residual, chroma residual) and splitting it up would just scatter tightly-coupled per-partition state across more function boundaries"
+)]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "these are the macroblock's own coordinates, the always-needed parsed-header context (pps/header), the reference list, and the running QP predictor — the natural, self-describing parameter list for a single-slice macroblock decoder with no surrounding decoder-state struct"
+)]
 fn decode_p_mb(b: &mut BitReader<'_>, pic: &mut Picture, mb_x: u32, mb_y: u32, code_num: u32, pps: &PpsInfo, header: &SliceHeaderInfo, ref_list0: &[&Picture], prev_qp: &mut i32) -> Result<(), H264Error> {
     if code_num >= 3 {
         return Err(H264Error::Unsupported("P_8x8 sub-macroblock partitions"));
@@ -3852,7 +3930,6 @@ impl<'a> FrameIter<'a> {
         let selected = select_sample_indices(samples.len(), &opts);
         Self { bytes, samples, decoder, opts, selected, cursor: 0, sample_idx: 0 }
     }
-
 }
 
 fn frame_iter_sample_bytes<'a>(bytes: &'a [u8], samples: &[SampleInfo], idx: usize) -> Result<&'a [u8], VideoError> {

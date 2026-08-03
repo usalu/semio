@@ -54,30 +54,19 @@ impl protocol::OperationDiff<MathConfig> for MathConfig {
 pub fn mathematical_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: "semio.mathematical/v1".into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::Computation,
-            form: semio_framework_plugin::MediaForm::Value,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Value },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "result:out".into(),
             label: "Result".into(),
             direction: semio_framework_plugin::MediaPortDirection::Out,
-            media_type: semio_framework_plugin::MediaType {
-                class: semio_framework_plugin::MediaClass::Data,
-                form: semio_framework_plugin::MediaForm::Value,
-            },
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
             kind_id: Some("computation.mathematical".into()),
             required: false,
             multiplicity: semio_framework_core::PortMultiplicity::Many,
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "computation.mathematical".into(),
-            name: "Mathematical".into(),
-            dimension: "graph".into(),
-            component_kind: "mathematical".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "computation.mathematical".into(), name: "Mathematical".into(), dimension: "graph".into(), component_kind: "mathematical".into() },
     }
 }
 //#endregion 🔖️Io
@@ -144,31 +133,11 @@ pub fn workflow_json(graph: &MathGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGr
         .iter()
         .map(|node| {
             let suffix = overlay.get(&node.id).cloned().unwrap_or_default();
-            NodeGraphNodeRecord {
-                id: node.id.clone(),
-                label: Some(format!("{}{}", node.label, suffix)),
-                x: node.x,
-                y: node.y,
-                width: 72.0,
-                height: 40.0,
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                ..Default::default()
-            }
+            NodeGraphNodeRecord { id: node.id.clone(), label: Some(format!("{}{}", node.label, suffix)), x: node.x, y: node.y, width: 72.0, height: 40.0, inputs: Vec::new(), outputs: Vec::new(), ..Default::default() }
         })
         .collect();
-    let edges: Vec<NodeGraphEdgeRecord> = graph
-        .edges
-        .iter()
-        .map(|edge| NodeGraphEdgeRecord {
-            id: edge.id.clone(),
-            source_node_id: edge.source.clone(),
-            source_port_id: "out".into(),
-            target_node_id: edge.target.clone(),
-            target_port_id: "in".into(),
-            label: None,
-        })
-        .collect();
+    let edges: Vec<NodeGraphEdgeRecord> =
+        graph.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.source.clone(), source_port_id: "out".into(), target_node_id: edge.target.clone(), target_port_id: "in".into(), label: None }).collect();
     (nodes, edges)
 }
 //#endregion 🔖️GraphAlgorithms

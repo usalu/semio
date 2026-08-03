@@ -35,7 +35,11 @@ pub enum GeometryRecipe {
         #[dsl(unit = "m")]
         thickness: f64,
     },
-    Mesh { positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32> },
+    Mesh {
+        positions: Vec<f32>,
+        normals: Vec<f32>,
+        indices: Vec<u32>,
+    },
 }
 //#endregion 🔖️Geometry
 

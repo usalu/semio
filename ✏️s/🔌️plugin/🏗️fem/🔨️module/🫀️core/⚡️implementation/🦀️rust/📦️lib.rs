@@ -10,11 +10,8 @@ pub mod analyses {
     //! (`nodal_averaged_scalar`) — all sparse-backed (RCM-ordered, single LDLT factorization shared
     //! across every load case / eigen-solve).
 
-    use crate::sparse::{rcm_order, subspace_iteration, ldlt_factor, Coo, Csr, EigenPairs, LdltFactor};
-    use crate::{
-        BeamStation, Dof, Element, ElementContext, ElementResult, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress,
-        SolutionChecks, StaticResult, Support,
-    };
+    use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
+    use crate::{BeamStation, Dof, Element, ElementContext, ElementResult, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
     use mathematical_algebra::{MatD, VecD};
     use std::collections::{HashMap, HashSet};
 
@@ -352,9 +349,7 @@ pub mod analyses {
             ElementResult::Plane { gauss } => ElementResult::Plane { gauss: gauss.iter().map(|_| PlaneStress { sxx: 0.0, syy: 0.0, sxy: 0.0, von_mises: 0.0 }).collect() },
             ElementResult::Plate { gauss } => ElementResult::Plate { gauss: gauss.iter().map(|_| PlateMoments { mx: 0.0, my: 0.0, mxy: 0.0 }).collect() },
             ElementResult::Solid { gauss } => ElementResult::Solid { gauss: gauss.iter().map(|_| SolidStress { sxx: 0.0, syy: 0.0, szz: 0.0, sxy: 0.0, syz: 0.0, sxz: 0.0, von_mises: 0.0 }).collect() },
-            ElementResult::Shell { gauss } => ElementResult::Shell {
-                gauss: gauss.iter().map(|_| ShellState { nxx: 0.0, nyy: 0.0, nxy: 0.0, mxx: 0.0, myy: 0.0, mxy: 0.0, von_mises_top: 0.0, von_mises_bottom: 0.0 }).collect(),
-            },
+            ElementResult::Shell { gauss } => ElementResult::Shell { gauss: gauss.iter().map(|_| ShellState { nxx: 0.0, nyy: 0.0, nxy: 0.0, mxx: 0.0, myy: 0.0, mxy: 0.0, von_mises_top: 0.0, von_mises_bottom: 0.0 }).collect() },
         }
     }
 
@@ -901,11 +896,7 @@ pub mod analyses {
         /// 🔍️ Duplicate-node-id models are rejected the same way `lib.rs::validate` rejects them.
         #[test]
         fn duplicate_node_id_is_rejected() {
-            let model = AnalysisModel {
-                nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "a".into(), pos: [1.0, 0.0, 0.0] }],
-                elements: vec![],
-                supports: vec![],
-            };
+            let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "a".into(), pos: [1.0, 0.0, 0.0] }], elements: vec![], supports: vec![] };
             let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
             assert_eq!(err, FemError::DuplicateNodeId("a".into()));
         }
@@ -1013,11 +1004,7 @@ pub mod analyses {
         /// 🔍️ An element referencing a node id absent from `model.nodes` is rejected.
         #[test]
         fn dangling_element_node_ref_is_rejected() {
-            let model = AnalysisModel {
-                nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }],
-                elements: vec![Box::new(Bar2 { id: "e1".into(), start: "a".into(), end: "missing".into(), e: 1.0, area: 1.0, density: 0.0 })],
-                supports: vec![],
-            };
+            let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![Box::new(Bar2 { id: "e1".into(), start: "a".into(), end: "missing".into(), e: 1.0, area: 1.0, density: 0.0 })], supports: vec![] };
             let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
             assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
         }
@@ -1025,11 +1012,7 @@ pub mod analyses {
         /// 🔍️ A support referencing a node id absent from `model.nodes` is rejected.
         #[test]
         fn dangling_support_node_ref_is_rejected() {
-            let model = AnalysisModel {
-                nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }],
-                elements: vec![],
-                supports: vec![Support { node_id: "missing".into(), fixed: vec![Dof::Tx] }],
-            };
+            let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![], supports: vec![Support { node_id: "missing".into(), fixed: vec![Dof::Tx] }] };
             let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
             assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
         }
@@ -1342,14 +1325,7 @@ pub mod elements2d {
 
     /// 🌬️ Local fixed-end load vector `[u1,v1,θ1,u2,v2,θ2]` for a local-frame UDL `(wx_local, wy_local)`.
     fn beam_local_udl(l: f64, wx_local: f64, wy_local: f64) -> VecD {
-        VecD::from_vec(vec![
-            wx_local * l / 2.0,
-            wy_local * l / 2.0,
-            wy_local * l * l / 12.0,
-            wx_local * l / 2.0,
-            wy_local * l / 2.0,
-            -wy_local * l * l / 12.0,
-        ])
+        VecD::from_vec(vec![wx_local * l / 2.0, wy_local * l / 2.0, wy_local * l * l / 12.0, wx_local * l / 2.0, wy_local * l / 2.0, -wy_local * l * l / 12.0])
     }
 
     /// 🏋️ Consistent local mass matrix, dof order `[u1,v1,θ1,u2,v2,θ2]` — axial `ρAL/6*[[2,1],[1,2]]` at
@@ -1367,12 +1343,7 @@ pub mod elements2d {
         let l2 = l * l;
         let factor = density * area * l / 420.0;
         let idx = [1usize, 2, 4, 5];
-        let block = [
-            [156.0, 22.0 * l, 54.0, -13.0 * l],
-            [22.0 * l, 4.0 * l2, 13.0 * l, -3.0 * l2],
-            [54.0, 13.0 * l, 156.0, -22.0 * l],
-            [-13.0 * l, -3.0 * l2, -22.0 * l, 4.0 * l2],
-        ];
+        let block = [[156.0, 22.0 * l, 54.0, -13.0 * l], [22.0 * l, 4.0 * l2, 13.0 * l, -3.0 * l2], [54.0, 13.0 * l, 156.0, -22.0 * l], [-13.0 * l, -3.0 * l2, -22.0 * l, 4.0 * l2]];
         for (bi, &gi) in idx.iter().enumerate() {
             for (bj, &gj) in idx.iter().enumerate() {
                 m.set(gi, gj, factor * block[bi][bj]);
@@ -1389,12 +1360,7 @@ pub mod elements2d {
         let l2 = l * l;
         let coeff = n / l;
         let idx = [1usize, 2, 4, 5];
-        let block = [
-            [6.0 / 5.0, l / 10.0, -6.0 / 5.0, l / 10.0],
-            [l / 10.0, 2.0 * l2 / 15.0, -l / 10.0, -l2 / 30.0],
-            [-6.0 / 5.0, -l / 10.0, 6.0 / 5.0, -l / 10.0],
-            [l / 10.0, -l2 / 30.0, -l / 10.0, 2.0 * l2 / 15.0],
-        ];
+        let block = [[6.0 / 5.0, l / 10.0, -6.0 / 5.0, l / 10.0], [l / 10.0, 2.0 * l2 / 15.0, -l / 10.0, -l2 / 30.0], [-6.0 / 5.0, -l / 10.0, 6.0 / 5.0, -l / 10.0], [l / 10.0, -l2 / 30.0, -l / 10.0, 2.0 * l2 / 15.0]];
         for (bi, &gi) in idx.iter().enumerate() {
             for (bj, &gj) in idx.iter().enumerate() {
                 kg.set(gi, gj, coeff * block[bi][bj]);
@@ -1895,13 +1861,7 @@ pub mod elements2d {
         let x_ij = pi[0] - pj[0];
         let y_ij = pi[1] - pj[1];
         let l2 = x_ij * x_ij + y_ij * y_ij;
-        DktEdge {
-            a: -x_ij / l2,
-            b: 0.75 * x_ij * y_ij / l2,
-            c: (0.25 * x_ij * x_ij - 0.5 * y_ij * y_ij) / l2,
-            d: -y_ij / l2,
-            e: (0.25 * y_ij * y_ij - 0.5 * x_ij * x_ij) / l2,
-        }
+        DktEdge { a: -x_ij / l2, b: 0.75 * x_ij * y_ij / l2, c: (0.25 * x_ij * x_ij - 0.5 * y_ij * y_ij) / l2, d: -y_ij / l2, e: (0.25 * y_ij * y_ij - 0.5 * x_ij * x_ij) / l2 }
     }
 
     /// 🧱️ Bending constitutive matrix `(E t³)/(12(1-ν²)) [[1,ν,0],[ν,1,0],[0,0,(1-ν)/2]]`, shared by
@@ -2107,7 +2067,7 @@ pub mod elements2d {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::{solve_linear_static, Model, Node, NodalLoad, Support};
+        use crate::{solve_linear_static, Model, NodalLoad, Node, Support};
 
         /// 🪢️ Headless (no document layer) axial elongation check: δ = FL/EA, N = F.
         #[test]
@@ -2292,7 +2252,7 @@ pub mod elements2d {
     #[cfg(test)]
     mod continuum_tests {
         use super::*;
-        use crate::{solve_linear_static, Model, Node, NodalLoad, Support};
+        use crate::{solve_linear_static, Model, NodalLoad, Node, Support};
 
         /// 📐️ Builds a node-major `[u_i,v_i]` displacement vector by sampling the linear field
         /// `u = a.0 + a.1*x + a.2*y`, `v = b.0 + b.1*x + b.2*y` at every node coordinate — the standard
@@ -2414,15 +2374,7 @@ pub mod elements2d {
         #[test]
         fn quad8_patch_test_reproduces_linear_field() {
             let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
-            let el = Quad8 {
-                id: "q8".into(),
-                nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()],
-                e: E,
-                nu: NU,
-                thickness: 1.0,
-                kind: PlaneKind::Stress,
-                density: 0.0,
-            };
+            let el = Quad8 { id: "q8".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
             let ctx = ctx_of(&coords);
             let u = linear_field_u_local(&coords, A, B);
             let ElementResult::Plane { gauss } = el.recover(&ctx, &u, None) else { panic!("expected plane result") };
@@ -2433,15 +2385,7 @@ pub mod elements2d {
         #[test]
         fn quad8_rigid_translation_gives_zero_force() {
             let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
-            let el = Quad8 {
-                id: "q8".into(),
-                nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()],
-                e: E,
-                nu: NU,
-                thickness: 1.0,
-                kind: PlaneKind::Stress,
-                density: 0.0,
-            };
+            let el = Quad8 { id: "q8".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
             let ctx = ctx_of(&coords);
             let ke = el.stiffness_global(&ctx);
             assert_rigid_body_gives_zero_force(&ke, &rigid_translation_u_local(8, 1.5, -2.3));
@@ -2471,15 +2415,7 @@ pub mod elements2d {
             let mut elements: Vec<Box<dyn Element>> = Vec::new();
             for i in 0..n {
                 for j in 0..n {
-                    elements.push(Box::new(Quad4 {
-                        id: format!("e{i}_{j}"),
-                        nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1), node_id(i, j + 1)],
-                        e: 1.0,
-                        nu: 1.0 / 3.0,
-                        thickness: 1.0,
-                        kind: PlaneKind::Stress,
-                        density: 0.0,
-                    }));
+                    elements.push(Box::new(Quad4 { id: format!("e{i}_{j}"), nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1), node_id(i, j + 1)], e: 1.0, nu: 1.0 / 3.0, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }));
                 }
             }
             let supports = (0..=n).map(|j| Support { node_id: node_id(0, j), fixed: vec![Dof::Tx, Dof::Ty] }).collect();
@@ -2610,15 +2546,7 @@ pub mod elements2d {
         fn quad8_mass_total_equals_rho_t_area() {
             let (density, thickness) = (2400.0, 0.15);
             let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
-            let el = Quad8 {
-                id: "q8".into(),
-                nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()],
-                e: E,
-                nu: NU,
-                thickness,
-                kind: PlaneKind::Stress,
-                density,
-            };
+            let el = Quad8 { id: "q8".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()], e: E, nu: NU, thickness, kind: PlaneKind::Stress, density };
             let ctx = ctx_of(&coords);
             let m = el.mass(&ctx).expect("quad8 reports mass");
             let area = triangle_signed_area(&[coords[0], coords[1], coords[2]]).abs() + triangle_signed_area(&[coords[0], coords[2], coords[3]]).abs();
@@ -2631,15 +2559,7 @@ pub mod elements2d {
         #[test]
         fn quad8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
             let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
-            let el = Quad8 {
-                id: "q8".into(),
-                nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()],
-                e: E,
-                nu: NU,
-                thickness: 1.0,
-                kind: PlaneKind::Stress,
-                density: 0.0,
-            };
+            let el = Quad8 { id: "q8".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
             let ctx = ctx_of(&coords);
             let u = linear_field_u_local(&coords, A, B);
             let kg = el.geometric_stiffness(&ctx, &u).expect("quad8 reports geometric stiffness");
@@ -2662,13 +2582,8 @@ pub mod elements2d {
         #[test]
         fn continuum_elements_solve_correctly_via_dyn_dispatch() {
             let p = 1000.0;
-            let mut nodes = vec![
-                Node { id: "t3_a".into(), pos: [0.0, 0.0, 0.0] },
-                Node { id: "t3_b".into(), pos: [2.0, 0.0, 0.0] },
-                Node { id: "t3_c".into(), pos: [0.0, 2.0, 0.0] },
-            ];
-            let mut elements: Vec<Box<dyn Element>> =
-                vec![Box::new(Tri3Cst { id: "t3".into(), nodes: ["t3_a".into(), "t3_b".into(), "t3_c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 })];
+            let mut nodes = vec![Node { id: "t3_a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "t3_b".into(), pos: [2.0, 0.0, 0.0] }, Node { id: "t3_c".into(), pos: [0.0, 2.0, 0.0] }];
+            let mut elements: Vec<Box<dyn Element>> = vec![Box::new(Tri3Cst { id: "t3".into(), nodes: ["t3_a".into(), "t3_b".into(), "t3_c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 })];
             let mut supports = vec![Support { node_id: "t3_a".into(), fixed: vec![Dof::Tx, Dof::Ty] }, Support { node_id: "t3_b".into(), fixed: vec![Dof::Tx, Dof::Ty] }];
             let mut nodal_loads = vec![NodalLoad { node_id: "t3_c".into(), dof: Dof::Tx, value: p }];
 
@@ -2677,15 +2592,7 @@ pub mod elements2d {
             for i in 0..6 {
                 nodes.push(Node { id: tri6_ids[i].into(), pos: [tri6_coords[i][0], tri6_coords[i][1], 0.0] });
             }
-            elements.push(Box::new(Tri6Lst {
-                id: "t6".into(),
-                nodes: std::array::from_fn(|i| tri6_ids[i].to_string()),
-                e: E,
-                nu: NU,
-                thickness: 1.0,
-                kind: PlaneKind::Stress,
-                density: 0.0,
-            }));
+            elements.push(Box::new(Tri6Lst { id: "t6".into(), nodes: std::array::from_fn(|i| tri6_ids[i].to_string()), e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }));
             for &id in &tri6_ids[..5] {
                 supports.push(Support { node_id: id.into(), fixed: vec![Dof::Tx, Dof::Ty] });
             }
@@ -2696,15 +2603,7 @@ pub mod elements2d {
             for i in 0..8 {
                 nodes.push(Node { id: quad8_ids[i].into(), pos: [quad8_coords[i][0], quad8_coords[i][1], 0.0] });
             }
-            elements.push(Box::new(Quad8 {
-                id: "q8".into(),
-                nodes: std::array::from_fn(|i| quad8_ids[i].to_string()),
-                e: E,
-                nu: NU,
-                thickness: 1.0,
-                kind: PlaneKind::Stress,
-                density: 0.0,
-            }));
+            elements.push(Box::new(Quad8 { id: "q8".into(), nodes: std::array::from_fn(|i| quad8_ids[i].to_string()), e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 }));
             for &id in &quad8_ids[..7] {
                 supports.push(Support { node_id: id.into(), fixed: vec![Dof::Tx, Dof::Ty] });
             }
@@ -2727,7 +2626,7 @@ pub mod elements2d {
     #[cfg(test)]
     mod plate_tests {
         use super::*;
-        use crate::{solve_linear_static, Model, Node, NodalLoad, Support};
+        use crate::{solve_linear_static, Model, NodalLoad, Node, Support};
 
         const E: f64 = 1000.0;
         const NU: f64 = 0.25;
@@ -2839,30 +2738,12 @@ pub mod elements2d {
             for i in 0..n {
                 for j in 0..n {
                     // Each grid cell split into 2 triangles along the (i,j)-(i+1,j+1) diagonal.
-                    elements.push(Box::new(PlateDkt {
-                        id: format!("t{i}_{j}a"),
-                        nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1)],
-                        e,
-                        nu,
-                        thickness: t,
-                        density: 0.0,
-                    }));
-                    elements.push(Box::new(PlateDkt {
-                        id: format!("t{i}_{j}b"),
-                        nodes: [node_id(i, j), node_id(i + 1, j + 1), node_id(i, j + 1)],
-                        e,
-                        nu,
-                        thickness: t,
-                        density: 0.0,
-                    }));
+                    elements.push(Box::new(PlateDkt { id: format!("t{i}_{j}a"), nodes: [node_id(i, j), node_id(i + 1, j), node_id(i + 1, j + 1)], e, nu, thickness: t, density: 0.0 }));
+                    elements.push(Box::new(PlateDkt { id: format!("t{i}_{j}b"), nodes: [node_id(i, j), node_id(i + 1, j + 1), node_id(i, j + 1)], e, nu, thickness: t, density: 0.0 }));
                 }
             }
 
-            let supports = (0..=n)
-                .flat_map(|i| (0..=n).map(move |j| (i, j)))
-                .filter(|&(i, j)| i == 0 || i == n || j == 0 || j == n)
-                .map(|(i, j)| Support { node_id: node_id(i, j), fixed: vec![Dof::Tz] })
-                .collect();
+            let supports = (0..=n).flat_map(|i| (0..=n).map(move |j| (i, j))).filter(|&(i, j)| i == 0 || i == n || j == 0 || j == n).map(|(i, j)| Support { node_id: node_id(i, j), fixed: vec![Dof::Tz] }).collect();
 
             // Lump `q*Area/3` per triangle onto its 3 nodes, summed across all triangles sharing a node.
             let mut lumped: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
@@ -3049,16 +2930,8 @@ pub mod elements3d {
             let y_unrot = vec3d_normalize(vec3d_cross(reference, cx));
             let z_unrot = vec3d_cross(cx, y_unrot);
             let (sin_r, cos_r) = self.roll.sin_cos();
-            let local_y = [
-                y_unrot[0] * cos_r + z_unrot[0] * sin_r,
-                y_unrot[1] * cos_r + z_unrot[1] * sin_r,
-                y_unrot[2] * cos_r + z_unrot[2] * sin_r,
-            ];
-            let local_z = [
-                z_unrot[0] * cos_r - y_unrot[0] * sin_r,
-                z_unrot[1] * cos_r - y_unrot[1] * sin_r,
-                z_unrot[2] * cos_r - y_unrot[2] * sin_r,
-            ];
+            let local_y = [y_unrot[0] * cos_r + z_unrot[0] * sin_r, y_unrot[1] * cos_r + z_unrot[1] * sin_r, y_unrot[2] * cos_r + z_unrot[2] * sin_r];
+            let local_z = [z_unrot[0] * cos_r - y_unrot[0] * sin_r, z_unrot[1] * cos_r - y_unrot[1] * sin_r, z_unrot[2] * cos_r - y_unrot[2] * sin_r];
             let rt = Mat3d::from_axes(cx, local_y, local_z).transpose();
             let mut t = MatD::zeros(12, 12);
             for offset in [0usize, 3, 6, 9] {
@@ -3089,23 +2962,13 @@ pub mod elements3d {
             set_bend_block(
                 &mut k,
                 [1, 5, 7, 11],
-                [
-                    [12.0 * bz / l2, 6.0 * bz / l, -12.0 * bz / l2, 6.0 * bz / l],
-                    [6.0 * bz / l, 4.0 * bz, -6.0 * bz / l, 2.0 * bz],
-                    [-12.0 * bz / l2, -6.0 * bz / l, 12.0 * bz / l2, -6.0 * bz / l],
-                    [6.0 * bz / l, 2.0 * bz, -6.0 * bz / l, 4.0 * bz],
-                ],
+                [[12.0 * bz / l2, 6.0 * bz / l, -12.0 * bz / l2, 6.0 * bz / l], [6.0 * bz / l, 4.0 * bz, -6.0 * bz / l, 2.0 * bz], [-12.0 * bz / l2, -6.0 * bz / l, 12.0 * bz / l2, -6.0 * bz / l], [6.0 * bz / l, 2.0 * bz, -6.0 * bz / l, 4.0 * bz]],
             );
             let by = self.e * self.iy / l;
             set_bend_block(
                 &mut k,
                 [2, 4, 8, 10],
-                [
-                    [12.0 * by / l2, -6.0 * by / l, -12.0 * by / l2, -6.0 * by / l],
-                    [-6.0 * by / l, 4.0 * by, 6.0 * by / l, 2.0 * by],
-                    [-12.0 * by / l2, 6.0 * by / l, 12.0 * by / l2, 6.0 * by / l],
-                    [-6.0 * by / l, 2.0 * by, 6.0 * by / l, 4.0 * by],
-                ],
+                [[12.0 * by / l2, -6.0 * by / l, -12.0 * by / l2, -6.0 * by / l], [-6.0 * by / l, 4.0 * by, 6.0 * by / l, 2.0 * by], [-12.0 * by / l2, 6.0 * by / l, 12.0 * by / l2, 6.0 * by / l], [-6.0 * by / l, 2.0 * by, 6.0 * by / l, 4.0 * by]],
             );
             k
         }
@@ -3130,12 +2993,7 @@ pub mod elements3d {
 
             let l2 = l * l;
             let factor = self.density * self.a * l / 420.0;
-            let block = [
-                [156.0, 22.0 * l, 54.0, -13.0 * l],
-                [22.0 * l, 4.0 * l2, 13.0 * l, -3.0 * l2],
-                [54.0, 13.0 * l, 156.0, -22.0 * l],
-                [-13.0 * l, -3.0 * l2, -22.0 * l, 4.0 * l2],
-            ];
+            let block = [[156.0, 22.0 * l, 54.0, -13.0 * l], [22.0 * l, 4.0 * l2, 13.0 * l, -3.0 * l2], [54.0, 13.0 * l, 156.0, -22.0 * l], [-13.0 * l, -3.0 * l2, -22.0 * l, 4.0 * l2]];
             for (bi, &gi) in [1usize, 5, 7, 11].iter().enumerate() {
                 for (bj, &gj) in [1usize, 5, 7, 11].iter().enumerate() {
                     m.set(gi, gj, factor * block[bi][bj]);
@@ -3156,12 +3014,7 @@ pub mod elements3d {
             let mut kg = MatD::zeros(12, 12);
             let l2 = l * l;
             let coeff = n / l;
-            let block = [
-                [6.0 / 5.0, l / 10.0, -6.0 / 5.0, l / 10.0],
-                [l / 10.0, 2.0 * l2 / 15.0, -l / 10.0, -l2 / 30.0],
-                [-6.0 / 5.0, -l / 10.0, 6.0 / 5.0, -l / 10.0],
-                [l / 10.0, -l2 / 30.0, -l / 10.0, 2.0 * l2 / 15.0],
-            ];
+            let block = [[6.0 / 5.0, l / 10.0, -6.0 / 5.0, l / 10.0], [l / 10.0, 2.0 * l2 / 15.0, -l / 10.0, -l2 / 30.0], [-6.0 / 5.0, -l / 10.0, 6.0 / 5.0, -l / 10.0], [l / 10.0, -l2 / 30.0, -l / 10.0, 2.0 * l2 / 15.0]];
             for (bi, &gi) in [1usize, 5, 7, 11].iter().enumerate() {
                 for (bj, &gj) in [1usize, 5, 7, 11].iter().enumerate() {
                     kg.set(gi, gj, coeff * block[bi][bj]);
@@ -3445,16 +3298,7 @@ pub mod elements3d {
     // #region 🔖️Hex8
     /// 🧭️ Reference-cube corner sign vectors `(ξi,ηi,ζi)`, node order: bottom face (ζ=-1) CCW from
     /// `(-1,-1,-1)` [0-3], top face (ζ=1) CCW from `(-1,-1,1)` [4-7] — node `i+4` sits above node `i`.
-    const HEX8_CORNERS: [[f64; 3]; 8] = [
-        [-1.0, -1.0, -1.0],
-        [1.0, -1.0, -1.0],
-        [1.0, 1.0, -1.0],
-        [-1.0, 1.0, -1.0],
-        [-1.0, -1.0, 1.0],
-        [1.0, -1.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [-1.0, 1.0, 1.0],
-    ];
+    const HEX8_CORNERS: [[f64; 3]; 8] = [[-1.0, -1.0, -1.0], [1.0, -1.0, -1.0], [1.0, 1.0, -1.0], [-1.0, 1.0, -1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, 1.0], [-1.0, 1.0, 1.0]];
 
     /// 🧭️ 2x2x2 Gauss points (`±1/√3`, weight 1 each — 8 points, tensor product of the 1D 2-point rule).
     fn hex8_gauss_points() -> [([f64; 3], f64); 8] {
@@ -3487,19 +3331,14 @@ pub mod elements3d {
         let mut out = [[0.0; 3]; 8];
         for (i, c) in HEX8_CORNERS.iter().enumerate() {
             let (xi_i, eta_i, zeta_i) = (c[0], c[1], c[2]);
-            out[i] = [
-                0.125 * xi_i * (1.0 + eta * eta_i) * (1.0 + zeta * zeta_i),
-                0.125 * eta_i * (1.0 + xi * xi_i) * (1.0 + zeta * zeta_i),
-                0.125 * zeta_i * (1.0 + xi * xi_i) * (1.0 + eta * eta_i),
-            ];
+            out[i] = [0.125 * xi_i * (1.0 + eta * eta_i) * (1.0 + zeta * zeta_i), 0.125 * eta_i * (1.0 + xi * xi_i) * (1.0 + zeta * zeta_i), 0.125 * zeta_i * (1.0 + xi * xi_i) * (1.0 + eta * eta_i)];
         }
         out
     }
 
     /// 🧭️ 3x3 determinant via cofactor expansion (Jacobians are always 3x3, no need for general-`n` logic).
     fn mat3_det(j: &MatD) -> f64 {
-        j.get(0, 0) * (j.get(1, 1) * j.get(2, 2) - j.get(1, 2) * j.get(2, 1)) - j.get(0, 1) * (j.get(1, 0) * j.get(2, 2) - j.get(1, 2) * j.get(2, 0))
-            + j.get(0, 2) * (j.get(1, 0) * j.get(2, 1) - j.get(1, 1) * j.get(2, 0))
+        j.get(0, 0) * (j.get(1, 1) * j.get(2, 2) - j.get(1, 2) * j.get(2, 1)) - j.get(0, 1) * (j.get(1, 0) * j.get(2, 2) - j.get(1, 2) * j.get(2, 0)) + j.get(0, 2) * (j.get(1, 0) * j.get(2, 1) - j.get(1, 1) * j.get(2, 0))
     }
 
     /// 🧊️ Eight-node trilinear hexahedron ("brick") — DOFs `[Tx,Ty,Tz]` per node, 2x2x2 Gauss integration.
@@ -3850,7 +3689,7 @@ pub mod elements3d {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::{solve_linear_static, Model, Node, NodalLoad, Support};
+        use crate::{solve_linear_static, Model, NodalLoad, Node, Support};
 
         /// 🪵️ Headless axial elongation check along an arbitrary (non-axis-aligned) 3D direction.
         #[test]
@@ -3874,19 +3713,20 @@ pub mod elements3d {
                     Box::new(Bar3 { id: "bc".into(), node_a: "b".into(), node_b: "c".into(), e, a, density: 0.0 }),
                     Box::new(Bar3 { id: "bd".into(), node_a: "b".into(), node_b: "d".into(), e, a, density: 0.0 }),
                 ],
-                supports: vec![
-                    Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
-                    Support { node_id: "c".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
-                    Support { node_id: "d".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
-                ],
+                supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }, Support { node_id: "c".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }, Support { node_id: "d".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }],
                 nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Tx, value: p * 0.6 }, NodalLoad { node_id: "b".into(), dof: Dof::Ty, value: p * 0.8 }],
                 member_loads: vec![],
             };
             let result = solve_linear_static(&model).expect("solves");
-            let n_e1 = result.elements.iter().find(|(id, _)| id == "e1").map(|(_, r)| match r {
-                ElementResult::Bar { n } => *n,
-                _ => panic!("expected bar"),
-            }).unwrap();
+            let n_e1 = result
+                .elements
+                .iter()
+                .find(|(id, _)| id == "e1")
+                .map(|(_, r)| match r {
+                    ElementResult::Bar { n } => *n,
+                    _ => panic!("expected bar"),
+                })
+                .unwrap();
             assert!((n_e1 - p).abs() / p < 1e-6, "axial force {n_e1} vs expected {p}");
             let expected_elongation = p * l / (e * a);
             let b = result.displacements.iter().find(|d| d.node_id == "b").unwrap();
@@ -4065,7 +3905,7 @@ pub mod elements3d {
     #[cfg(test)]
     mod solid_tests {
         use super::*;
-        use crate::{solve_linear_static, Model, Node, NodalLoad, Support};
+        use crate::{solve_linear_static, Model, NodalLoad, Node, Support};
 
         /// 🧮️ Linear displacement field `u=ux·x+uy·y+uz·z` (and analogous `v`,`w`) shared by the Tet4/Hex8
         /// patch tests — its gradient (hence strain) is constant everywhere, so a direct
@@ -4236,16 +4076,7 @@ pub mod elements3d {
 
         // #region 🔖️Hex8
         fn skew_hex_positions() -> [[f64; 3]; 8] {
-            [
-                [0.0, 0.0, 0.0],
-                [1.0, 0.0, 0.0],
-                [1.05, 1.0, 0.02],
-                [-0.03, 0.98, 0.01],
-                [0.02, 0.01, 1.0],
-                [1.02, -0.01, 0.97],
-                [0.99, 1.03, 1.05],
-                [0.01, 1.0, 0.98],
-            ]
+            [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.05, 1.0, 0.02], [-0.03, 0.98, 0.01], [0.02, 0.01, 1.0], [1.02, -0.01, 0.97], [0.99, 1.03, 1.05], [0.01, 1.0, 0.98]]
         }
 
         /// 🧮️ Constant-strain patch test, same field as `Tet4`'s — checked at all 8 Gauss points (a
@@ -4314,16 +4145,7 @@ pub mod elements3d {
             for ix in 0..nx {
                 elements.push(Box::new(Hex8 {
                     id: format!("hex{ix}"),
-                    nodes: [
-                        corner_id(ix, 0, 0),
-                        corner_id(ix + 1, 0, 0),
-                        corner_id(ix + 1, 1, 0),
-                        corner_id(ix, 1, 0),
-                        corner_id(ix, 0, 1),
-                        corner_id(ix + 1, 0, 1),
-                        corner_id(ix + 1, 1, 1),
-                        corner_id(ix, 1, 1),
-                    ],
+                    nodes: [corner_id(ix, 0, 0), corner_id(ix + 1, 0, 0), corner_id(ix + 1, 1, 0), corner_id(ix, 1, 0), corner_id(ix, 0, 1), corner_id(ix + 1, 0, 1), corner_id(ix + 1, 1, 1), corner_id(ix, 1, 1)],
                     e,
                     nu,
                     density: 0.0,
@@ -4399,7 +4221,7 @@ pub mod elements3d {
     #[cfg(test)]
     mod shell_tests {
         use super::*;
-        use crate::{solve_linear_static, Model, Node, NodalLoad, Support};
+        use crate::{solve_linear_static, Model, NodalLoad, Node, Support};
 
         const E: f64 = 1000.0;
         const NU: f64 = 0.25;
@@ -4491,10 +4313,7 @@ pub mod elements3d {
             let model = Model {
                 nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [1.0, 0.0, 0.0] }, Node { id: "c".into(), pos: [0.0, 1.0, 0.0] }],
                 elements: vec![Box::new(ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e, nu, thickness: t, density: 0.0 })],
-                supports: vec![
-                    Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz] },
-                    Support { node_id: "b".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz] },
-                ],
+                supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz] }, Support { node_id: "b".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz] }],
                 nodal_loads: vec![NodalLoad { node_id: "c".into(), dof: Dof::Tz, value: p }],
                 member_loads: vec![],
             };
@@ -4604,15 +4423,7 @@ pub mod formulation {
                 let b = (6.0 + 15.0f64.sqrt()) / 21.0;
                 let w1 = (155.0 - 15.0f64.sqrt()) / 2400.0;
                 let w2 = (155.0 + 15.0f64.sqrt()) / 2400.0;
-                vec![
-                    (1.0 / 3.0, 1.0 / 3.0, 9.0 / 80.0),
-                    (a, a, w1),
-                    (1.0 - 2.0 * a, a, w1),
-                    (a, 1.0 - 2.0 * a, w1),
-                    (b, b, w2),
-                    (1.0 - 2.0 * b, b, w2),
-                    (b, 1.0 - 2.0 * b, w2),
-                ]
+                vec![(1.0 / 3.0, 1.0 / 3.0, 9.0 / 80.0), (a, a, w1), (1.0 - 2.0 * a, a, w1), (a, 1.0 - 2.0 * a, w1), (b, b, w2), (1.0 - 2.0 * b, b, w2), (b, 1.0 - 2.0 * b, w2)]
             }
             _ => panic!("gauss_tri: unsupported order {n}, only 1, 3, 7 are implemented"),
         }
@@ -4649,26 +4460,14 @@ pub mod formulation {
         let l2 = xi;
         let l3 = eta;
         let n = [l1 * (2.0 * l1 - 1.0), l2 * (2.0 * l2 - 1.0), l3 * (2.0 * l3 - 1.0), 4.0 * l1 * l2, 4.0 * l2 * l3, 4.0 * l3 * l1];
-        let dn = [
-            [1.0 - 4.0 * l1, 1.0 - 4.0 * l1],
-            [4.0 * l2 - 1.0, 0.0],
-            [0.0, 4.0 * l3 - 1.0],
-            [4.0 * (l1 - l2), -4.0 * l2],
-            [4.0 * l3, 4.0 * l2],
-            [-4.0 * l3, 4.0 * (l1 - l3)],
-        ];
+        let dn = [[1.0 - 4.0 * l1, 1.0 - 4.0 * l1], [4.0 * l2 - 1.0, 0.0], [0.0, 4.0 * l3 - 1.0], [4.0 * (l1 - l2), -4.0 * l2], [4.0 * l3, 4.0 * l2], [-4.0 * l3, 4.0 * (l1 - l3)]];
         (n, dn)
     }
 
     /// 📐️ Quad4 (bilinear) on reference square `[-1,1]^2`, node order counterclockwise from `(-1,-1)`.
     pub fn shape_quad4(xi: f64, eta: f64) -> ([f64; 4], [[f64; 2]; 4]) {
         let n = [0.25 * (1.0 - xi) * (1.0 - eta), 0.25 * (1.0 + xi) * (1.0 - eta), 0.25 * (1.0 + xi) * (1.0 + eta), 0.25 * (1.0 - xi) * (1.0 + eta)];
-        let dn = [
-            [-0.25 * (1.0 - eta), -0.25 * (1.0 - xi)],
-            [0.25 * (1.0 - eta), -0.25 * (1.0 + xi)],
-            [0.25 * (1.0 + eta), 0.25 * (1.0 + xi)],
-            [-0.25 * (1.0 + eta), 0.25 * (1.0 - xi)],
-        ];
+        let dn = [[-0.25 * (1.0 - eta), -0.25 * (1.0 - xi)], [0.25 * (1.0 - eta), -0.25 * (1.0 + xi)], [0.25 * (1.0 + eta), 0.25 * (1.0 + xi)], [-0.25 * (1.0 + eta), 0.25 * (1.0 - xi)]];
         (n, dn)
     }
 
@@ -4716,10 +4515,7 @@ pub mod formulation {
         }
         let j = [[dx_dxi, dx_deta], [dy_dxi, dy_deta]];
         let det_j = dx_dxi * dy_deta - dx_deta * dy_dxi;
-        let d_n_xy = d_n_param
-            .iter()
-            .map(|dn| [(dy_deta * dn[0] - dy_dxi * dn[1]) / det_j, (-dx_deta * dn[0] + dx_dxi * dn[1]) / det_j])
-            .collect();
+        let d_n_xy = d_n_param.iter().map(|dn| [(dy_deta * dn[0] - dy_dxi * dn[1]) / det_j, (-dx_deta * dn[0] + dx_dxi * dn[1]) / det_j]).collect();
         (j, det_j, d_n_xy)
     }
     // #endregion 🔖️Jacobian
@@ -6534,9 +6330,7 @@ pub mod sparse {
                 adjacency[v].push(u);
                 edges.push((u, v));
             }
-            let bandwidth = |index_of: &dyn Fn(usize) -> usize| -> usize {
-                edges.iter().map(|&(u, v)| (index_of(u) as i64 - index_of(v) as i64).unsigned_abs() as usize).max().unwrap()
-            };
+            let bandwidth = |index_of: &dyn Fn(usize) -> usize| -> usize { edges.iter().map(|&(u, v)| (index_of(u) as i64 - index_of(v) as i64).unsigned_abs() as usize).max().unwrap() };
             let before = bandwidth(&|x| x);
             let perm = rcm_order(&adjacency);
             let mut new_index = vec![0usize; 10];

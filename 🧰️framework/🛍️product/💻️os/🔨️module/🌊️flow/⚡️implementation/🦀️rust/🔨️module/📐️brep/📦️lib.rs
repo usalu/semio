@@ -676,7 +676,14 @@ impl Operation for Pipe {
     }
 }
 
-geo_operation!(HelicalSweep, "solid", |k, i| k.helical_sweep(&read_geometry(i, "profile")?, read_xyz(i, "axisOrigin")?, read_xyz(i, "axisDirection")?, read_channel_number(i, "radius")?, read_channel_number(i, "pitch")?, read_channel_number(i, "turns")?,));
+geo_operation!(HelicalSweep, "solid", |k, i| k.helical_sweep(
+    &read_geometry(i, "profile")?,
+    read_xyz(i, "axisOrigin")?,
+    read_xyz(i, "axisDirection")?,
+    read_channel_number(i, "radius")?,
+    read_channel_number(i, "pitch")?,
+    read_channel_number(i, "turns")?,
+));
 // #endregion 🔖️Sweeps
 
 // #region 🔖️Booleans
@@ -2206,9 +2213,7 @@ pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framewo
             return Ok(cached.clone());
         }
     }
-    let guard = kernel()
-        .read()
-        .map_err(|_| "brep kernel lock poisoned".to_string())?;
+    let guard = kernel().read().map_err(|_| "brep kernel lock poisoned".to_string())?;
     let mesh = {
         let geometry = GeometryHandle(handle.to_string());
         block_on(guard.tessellate(&geometry, tolerance)).map_err(|error| error.to_string())?

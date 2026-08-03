@@ -27,7 +27,7 @@
 //! `TouchedRegionOracle` (plain `TouchedSet::conflicts_with`, no bloom prefilter or kind matrix)
 //! remains available for callers that want to bypass `db_conflict` entirely.
 
-use db_core::{ActorId, DbError, DbLimits, DocumentId, Frontier, check_len};
+use db_core::{check_len, ActorId, DbError, DbLimits, DocumentId, Frontier};
 use db_state::TouchedSet;
 use protocol::OperationEnvelope;
 use std::collections::HashMap;
@@ -92,9 +92,7 @@ impl PreviewState {
         if self == PreviewState::Active && to != PreviewState::Active {
             Ok(())
         } else {
-            Err(DbError::InvalidArgument(format!(
-                "illegal preview transition {self:?} -> {to:?}: only Active may transition, only to a terminal state"
-            )))
+            Err(DbError::InvalidArgument(format!("illegal preview transition {self:?} -> {to:?}: only Active may transition, only to a terminal state")))
         }
     }
 }
@@ -124,13 +122,7 @@ impl PreviewBudgets {
     /// ceiling (floored at one second) so an un-specified-TTL preview expires promptly rather than
     /// lingering for the full ceiling by default.
     pub fn from_limits(limits: &DbLimits) -> PreviewBudgets {
-        PreviewBudgets {
-            max_active_per_document: 4_096,
-            max_active_per_actor: 64,
-            max_touched_regions: 256,
-            default_ttl_ms: (limits.max_preview_ttl_ms / 10).max(1_000),
-            max_ttl_ms: limits.max_preview_ttl_ms,
-        }
+        PreviewBudgets { max_active_per_document: 4_096, max_active_per_actor: 64, max_touched_regions: 256, default_ttl_ms: (limits.max_preview_ttl_ms / 10).max(1_000), max_ttl_ms: limits.max_preview_ttl_ms }
     }
 }
 
@@ -349,10 +341,7 @@ impl PreviewStore {
     /// key)` (coalescing), evicts under population-budget pressure if needed, then inserts.
     pub fn publish(&mut self, request: PublishPreviewRequest) -> Result<PreviewId, DbError> {
         if request.document != self.document {
-            return Err(DbError::InvalidArgument(format!(
-                "preview published for document {} against a store scoped to {}",
-                request.document, self.document
-            )));
+            return Err(DbError::InvalidArgument(format!("preview published for document {} against a store scoped to {}", request.document, self.document)));
         }
         check_len(request.touched.regions.len() as u64, self.budgets.max_touched_regions as u64, "preview touched regions")?;
 
@@ -414,13 +403,7 @@ impl PreviewStore {
     /// restricted to `only_actor` — the "shed-previews-first" admission law applied to this
     /// crate's own population budget.
     fn evict_oldest_active(&mut self, only_actor: Option<&ActorId>) -> Option<PreviewId> {
-        let victim = self
-            .previews
-            .values()
-            .filter(|preview| preview.is_active())
-            .filter(|preview| only_actor.is_none_or(|actor| &preview.actor == actor))
-            .min_by_key(|preview| preview.sequence)
-            .map(|preview| preview.id.clone());
+        let victim = self.previews.values().filter(|preview| preview.is_active()).filter(|preview| only_actor.is_none_or(|actor| &preview.actor == actor)).min_by_key(|preview| preview.sequence).map(|preview| preview.id.clone());
         if let Some(id) = &victim {
             self.force_supersede(id);
             self.purge_active_index(std::slice::from_ref(id));
@@ -549,16 +532,7 @@ mod tests {
     }
 
     fn publish_request(document: &str, actor: &str, key: &str, head_seq: u64, now_ms: u64, paths: &[(&str, bool)]) -> PublishPreviewRequest {
-        PublishPreviewRequest {
-            document: document.into(),
-            actor: actor.into(),
-            key: key.to_string(),
-            base: sample_frontier(document, head_seq),
-            envelope: sample_envelope(actor),
-            touched: touched(paths),
-            ttl_ms: None,
-            now_ms,
-        }
+        PublishPreviewRequest { document: document.into(), actor: actor.into(), key: key.to_string(), base: sample_frontier(document, head_seq), envelope: sample_envelope(actor), touched: touched(paths), ttl_ms: None, now_ms }
     }
 
     fn store() -> PreviewStore {
@@ -854,10 +828,7 @@ mod tests {
         let source = include_str!("../../../👁️preview/⚡️implementation/🦀️rust/📦️lib.rs");
         let marker = "//#region 🧪️Tests";
         let production_source = source.split(marker).next().expect("this file must contain its own tests region marker");
-        let forbidden_tokens = [
-            "Wal", "SprWriter", "FrameCursor", "recover(", "SnapshotStorage", "PayloadStorage", "CatalogStorage",
-            "std::fs::", "std::io::", "fsync", "write_atomic",
-        ];
+        let forbidden_tokens = ["Wal", "SprWriter", "FrameCursor", "recover(", "SnapshotStorage", "PayloadStorage", "CatalogStorage", "std::fs::", "std::io::", "fsync", "write_atomic"];
         for forbidden in forbidden_tokens {
             assert!(!production_source.contains(forbidden), "db_preview's production source must never reference WAL/durable-storage-shaped symbol {forbidden:?} — previews never enter the WAL");
         }

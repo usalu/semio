@@ -15,24 +15,7 @@ pub struct Keypoint {
 // #endregion 🔖️Keypoint
 
 // #region 🔖️Detect
-const FAST_CIRCLE_OFFSETS: [(i32, i32); 16] = [
-    (0, -3),
-    (1, -3),
-    (2, -2),
-    (3, -1),
-    (3, 0),
-    (3, 1),
-    (2, 2),
-    (1, 3),
-    (0, 3),
-    (-1, 3),
-    (-2, 2),
-    (-3, 1),
-    (-3, 0),
-    (-3, -1),
-    (-2, -2),
-    (-1, -3),
-];
+const FAST_CIRCLE_OFFSETS: [(i32, i32); 16] = [(0, -3), (1, -3), (2, -2), (3, -1), (3, 0), (3, 1), (2, 2), (1, 3), (0, 3), (-1, 3), (-2, 2), (-3, 1), (-3, 0), (-3, -1), (-2, -2), (-1, -3)];
 const FAST_ARC_LENGTH: usize = 9;
 const FAST_BORDER_MARGIN: i64 = 3;
 const ORB_HARRIS_K: f32 = 0.04;
@@ -196,11 +179,7 @@ pub fn detect_orb_keypoints(pyramid: &Pyramid, target_count: usize) -> Vec<Keypo
             continue;
         }
         let harris = harris_response(level, ORB_HARRIS_K);
-        let candidates: Vec<(u32, u32, f32)> = fast_corners(level, ORB_FAST_THRESHOLD)
-            .into_iter()
-            .map(|(x, y, _)| (x, y, harris[(y * level.width + x) as usize]))
-            .filter(|&(_, _, score)| score > 0.0)
-            .collect();
+        let candidates: Vec<(u32, u32, f32)> = fast_corners(level, ORB_FAST_THRESHOLD).into_iter().map(|(x, y, _)| (x, y, harris[(y * level.width + x) as usize])).filter(|&(_, _, score)| score > 0.0).collect();
         let cells_x = level.width.div_ceil(ORB_GRID_CELL).max(1);
         let cells_y = level.height.div_ceil(ORB_GRID_CELL).max(1);
         let per_cell = level_target.div_ceil((cells_x * cells_y) as usize).max(1);
@@ -222,12 +201,7 @@ pub fn detect_harris_keypoints(image: &ImageGray, target_count: usize) -> Vec<Ke
         return Vec::new();
     }
     let harris = harris_response(image, ORB_HARRIS_K);
-    let candidates: Vec<(u32, u32, f32)> = harris
-        .iter()
-        .enumerate()
-        .map(|(idx, &score)| (idx as u32 % image.width, idx as u32 / image.width, score))
-        .filter(|&(_, _, score)| score > 0.0)
-        .collect();
+    let candidates: Vec<(u32, u32, f32)> = harris.iter().enumerate().map(|(idx, &score)| (idx as u32 % image.width, idx as u32 / image.width, score)).filter(|&(_, _, score)| score > 0.0).collect();
     let cells_x = image.width.div_ceil(ORB_GRID_CELL).max(1);
     let cells_y = image.height.div_ceil(ORB_GRID_CELL).max(1);
     let per_cell = target_count.div_ceil((cells_x * cells_y) as usize).max(1);
@@ -1018,11 +992,7 @@ mod tests {
         let img = corner_image(48);
         let keypoints = detect_harris_keypoints(&img, 30);
         assert!(!keypoints.is_empty(), "expected some harris keypoints on a corner image");
-        assert!(
-            keypoints.iter().any(|kp| (kp.x - 24.0).abs() <= 4.0 && (kp.y - 24.0).abs() <= 4.0),
-            "expected a harris keypoint near the planted L-corner at (24, 24), got {:?}",
-            keypoints.iter().map(|kp| (kp.x, kp.y)).collect::<Vec<_>>()
-        );
+        assert!(keypoints.iter().any(|kp| (kp.x - 24.0).abs() <= 4.0 && (kp.y - 24.0).abs() <= 4.0), "expected a harris keypoint near the planted L-corner at (24, 24), got {:?}", keypoints.iter().map(|kp| (kp.x, kp.y)).collect::<Vec<_>>());
         let flat = ImageGray::new(48, 48);
         assert!(detect_harris_keypoints(&flat, 30).is_empty(), "a flat image should have no harris keypoints");
     }
@@ -1056,10 +1026,7 @@ mod tests {
             *per_bucket.entry((x / cell, y / cell)).or_default() += 1;
         }
         assert!(per_bucket.values().all(|&n| n <= 1), "each grid cell should keep at most per_cell=1 points");
-        assert!(
-            results.iter().any(|&(x, y, score)| (x as i32 - 24).abs() <= 8 && (y as i32 - 24).abs() <= 8 && score > 0.0),
-            "expected a high min-eigenvalue point near the planted corner at (24, 24), got {results:?}"
-        );
+        assert!(results.iter().any(|&(x, y, score)| (x as i32 - 24).abs() <= 8 && (y as i32 - 24).abs() <= 8 && score > 0.0), "expected a high min-eigenvalue point near the planted corner at (24, 24), got {results:?}");
     }
 
     #[test]
@@ -1334,10 +1301,7 @@ mod tests {
     fn rotate_scale_matrix(t: &TestTransform) -> [[f32; 3]; 2] {
         let (sin_t, cos_t) = t.theta.sin_cos();
         let inv_s = 1.0 / t.scale;
-        [
-            [cos_t * inv_s, sin_t * inv_s, t.cx - t.cx * cos_t * inv_s - t.cy * sin_t * inv_s],
-            [-sin_t * inv_s, cos_t * inv_s, t.cy + t.cx * sin_t * inv_s - t.cy * cos_t * inv_s],
-        ]
+        [[cos_t * inv_s, sin_t * inv_s, t.cx - t.cx * cos_t * inv_s - t.cy * sin_t * inv_s], [-sin_t * inv_s, cos_t * inv_s, t.cy + t.cx * sin_t * inv_s - t.cy * cos_t * inv_s]]
     }
 
     fn transform_point(t: &TestTransform, x: f32, y: f32) -> (f32, f32) {
@@ -1393,10 +1357,7 @@ mod tests {
 
         assert!(!orb_a.is_empty() && !akaze_a.is_empty(), "both detectors should find keypoints on the base image");
         assert!(akaze_repeatability > 0.0, "expected some AKAZE keypoints to survive the scale+rotation transform, got {akaze_repeatability:.3}");
-        assert!(
-            akaze_repeatability >= orb_repeatability,
-            "expected AKAZE repeatability ({akaze_repeatability:.3}) to be at least ORB's repeatability ({orb_repeatability:.3}) under a 1.25x scale + 12deg rotation"
-        );
+        assert!(akaze_repeatability >= orb_repeatability, "expected AKAZE repeatability ({akaze_repeatability:.3}) to be at least ORB's repeatability ({orb_repeatability:.3}) under a 1.25x scale + 12deg rotation");
     }
 
     #[test]

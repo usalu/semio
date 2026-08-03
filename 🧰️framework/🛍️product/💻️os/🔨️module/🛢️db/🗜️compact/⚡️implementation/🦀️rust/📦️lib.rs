@@ -30,7 +30,7 @@
 //! since a snapshot builder and a compactor may legitimately run concurrently for two different
 //! documents, but never for the SAME document at the same time).
 
-use db_core::{DbError, DocumentId, check_len};
+use db_core::{check_len, DbError, DocumentId};
 
 //#region 🔖️Budget
 /// @emoji 💰️ Bounds how much work one `Compactor::run` pass does across every subsystem — the
@@ -161,12 +161,7 @@ pub fn plan_wal_retention(horizons: &[SegmentHorizon], floor_head_seq: u64, budg
     let Some(max_index) = horizons.iter().map(|horizon| horizon.segment_index).max() else {
         return Vec::new();
     };
-    let mut selected: Vec<u64> = horizons
-        .iter()
-        .filter(|horizon| horizon.segment_index != max_index)
-        .filter(|horizon| horizon.max_head_seq.is_some_and(|seq| seq <= floor_head_seq))
-        .map(|horizon| horizon.segment_index)
-        .collect();
+    let mut selected: Vec<u64> = horizons.iter().filter(|horizon| horizon.segment_index != max_index).filter(|horizon| horizon.max_head_seq.is_some_and(|seq| seq <= floor_head_seq)).map(|horizon| horizon.segment_index).collect();
     selected.sort_unstable();
     selected.truncate(usize::try_from(budget.max_wal_segments).unwrap_or(usize::MAX));
     selected
@@ -200,12 +195,7 @@ pub struct PayloadGcReport {
 /// stores don't need one for `put`/`get`/`delete`), so this crate cannot do a full mark-and-sweep
 /// over every payload ever stored; it can only trace liveness for a caller-supplied candidate set,
 /// which is exactly what `Compactor::run` derives from its own WAL retention pass.
-pub fn sweep_payloads(
-    payload_storage: &dyn db_storage::PayloadStorage,
-    records: &[db_wal::WalRecord],
-    deleted_segments: &[u64],
-    budget: &CompactionBudget,
-) -> Result<PayloadGcReport, DbError> {
+pub fn sweep_payloads(payload_storage: &dyn db_storage::PayloadStorage, records: &[db_wal::WalRecord], deleted_segments: &[u64], budget: &CompactionBudget) -> Result<PayloadGcReport, DbError> {
     let deleted_set: std::collections::HashSet<u64> = deleted_segments.iter().copied().collect();
     let mut candidates = std::collections::HashSet::new();
     let mut live = std::collections::HashSet::new();
@@ -261,12 +251,7 @@ pub fn compact_all_indexes(storage: &dyn db_storage::IndexStorage, document: &Do
 /// @emoji 🌳️ Walks the snapshot chain from `through_generation` back to its full-baseline root,
 /// returning the latest generation's own descriptor plus every page introduced anywhere in the
 /// chain, deduplicated by content hash — `SnapshotConsolidator::consolidate`'s input.
-fn collect_chain_pages(
-    manager: &db_snapshot::SnapshotManager<'_>,
-    document: &DocumentId,
-    through_generation: u64,
-    budget: &CompactionBudget,
-) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
+fn collect_chain_pages(manager: &db_snapshot::SnapshotManager<'_>, document: &DocumentId, through_generation: u64, budget: &CompactionBudget) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
     let combined = manager.materialize_chain(document, through_generation)?;
     let mut handle = db_snapshot::open_latest(&combined)?;
     let latest_descriptor = handle.descriptor.clone();
@@ -384,15 +369,7 @@ impl<'storage> Compactor<'storage> {
     /// `DbError::Conflict` rather than silently racing another compactor. The lease is ALWAYS
     /// released before returning, including when a step fails partway through — a failed pass must
     /// never leave a document permanently unfenceable.
-    pub fn run(
-        &self,
-        document: &DocumentId,
-        holder: &str,
-        wal_floor_head_seq: u64,
-        consolidate_snapshots: bool,
-        budget: &CompactionBudget,
-        now_ms: u64,
-    ) -> Result<CompactionReport, DbError> {
+    pub fn run(&self, document: &DocumentId, holder: &str, wal_floor_head_seq: u64, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
         let fence = CompactionLease::acquire(self.storage.lease(), document, holder, DEFAULT_LEASE_TTL_MS, now_ms)?;
         let result = self.run_under_lease(document, wal_floor_head_seq, consolidate_snapshots, budget);
         let release_result = CompactionLease::release(self.storage.lease(), document, holder, fence);
@@ -405,17 +382,8 @@ impl<'storage> Compactor<'storage> {
 
     /// @emoji 🧭️ Convenience over `run`: derives `wal_floor_head_seq` from `document`'s current
     /// latest snapshot generation (or `0`, i.e. nothing deletable, if it has none yet).
-    pub fn run_from_latest_snapshot(
-        &self,
-        document: &DocumentId,
-        holder: &str,
-        consolidate_snapshots: bool,
-        budget: &CompactionBudget,
-        now_ms: u64,
-    ) -> Result<CompactionReport, DbError> {
-        let floor = db_snapshot::SnapshotManager::new(self.storage.snapshot())
-            .load_latest(document)?
-            .map_or(0, |(_, descriptor)| descriptor.head_seq);
+    pub fn run_from_latest_snapshot(&self, document: &DocumentId, holder: &str, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
+        let floor = db_snapshot::SnapshotManager::new(self.storage.snapshot()).load_latest(document)?.map_or(0, |(_, descriptor)| descriptor.head_seq);
         self.run(document, holder, floor, consolidate_snapshots, budget, now_ms)
     }
 
@@ -465,17 +433,7 @@ mod tests {
     }
 
     fn sample_body(head_seq: u64) -> db_snapshot::SnapshotBody {
-        db_snapshot::SnapshotBody {
-            head_seq,
-            commit_seq: head_seq,
-            epoch: 0,
-            chain_hash: [0u8; 32],
-            protocol_version: 1,
-            vcs_head: None,
-            base_pack_hash: None,
-            roots: vec![],
-            created_at_ms: head_seq * 1_000,
-        }
+        db_snapshot::SnapshotBody { head_seq, commit_seq: head_seq, epoch: 0, chain_hash: [0u8; 32], protocol_version: 1, vcs_head: None, base_pack_hash: None, roots: vec![], created_at_ms: head_seq * 1_000 }
     }
 
     //#region 🔖️Budget
@@ -525,49 +483,33 @@ mod tests {
             WalRecord::Command(b"b".to_vec()),
         ];
         let horizons = segment_horizons(&records);
-        assert_eq!(
-            horizons,
-            vec![
-                SegmentHorizon { segment_index: 0, max_head_seq: Some(7) },
-                SegmentHorizon { segment_index: 1, max_head_seq: None },
-            ]
-        );
+        assert_eq!(horizons, vec![SegmentHorizon { segment_index: 0, max_head_seq: Some(7) }, SegmentHorizon { segment_index: 1, max_head_seq: None },]);
     }
 
     #[test]
     fn plan_wal_retention_never_selects_the_highest_segment_index_even_if_it_qualifies() {
-        let horizons =
-            vec![SegmentHorizon { segment_index: 0, max_head_seq: Some(5) }, SegmentHorizon { segment_index: 1, max_head_seq: Some(5) }];
+        let horizons = vec![SegmentHorizon { segment_index: 0, max_head_seq: Some(5) }, SegmentHorizon { segment_index: 1, max_head_seq: Some(5) }];
         let selected = plan_wal_retention(&horizons, 100, &CompactionBudget::default());
         assert_eq!(selected, vec![0]);
     }
 
     #[test]
     fn plan_wal_retention_never_selects_a_segment_with_no_known_horizon() {
-        let horizons =
-            vec![SegmentHorizon { segment_index: 0, max_head_seq: None }, SegmentHorizon { segment_index: 1, max_head_seq: Some(999) }];
+        let horizons = vec![SegmentHorizon { segment_index: 0, max_head_seq: None }, SegmentHorizon { segment_index: 1, max_head_seq: Some(999) }];
         let selected = plan_wal_retention(&horizons, 10, &CompactionBudget::default());
         assert!(selected.is_empty());
     }
 
     #[test]
     fn plan_wal_retention_only_selects_segments_at_or_below_the_floor() {
-        let horizons = vec![
-            SegmentHorizon { segment_index: 0, max_head_seq: Some(5) },
-            SegmentHorizon { segment_index: 1, max_head_seq: Some(15) },
-            SegmentHorizon { segment_index: 2, max_head_seq: Some(20) },
-        ];
+        let horizons = vec![SegmentHorizon { segment_index: 0, max_head_seq: Some(5) }, SegmentHorizon { segment_index: 1, max_head_seq: Some(15) }, SegmentHorizon { segment_index: 2, max_head_seq: Some(20) }];
         let selected = plan_wal_retention(&horizons, 10, &CompactionBudget::default());
         assert_eq!(selected, vec![0]);
     }
 
     #[test]
     fn plan_wal_retention_respects_the_budget_cap() {
-        let horizons = vec![
-            SegmentHorizon { segment_index: 0, max_head_seq: Some(1) },
-            SegmentHorizon { segment_index: 1, max_head_seq: Some(1) },
-            SegmentHorizon { segment_index: 2, max_head_seq: Some(1) },
-        ];
+        let horizons = vec![SegmentHorizon { segment_index: 0, max_head_seq: Some(1) }, SegmentHorizon { segment_index: 1, max_head_seq: Some(1) }, SegmentHorizon { segment_index: 2, max_head_seq: Some(1) }];
         let budget = CompactionBudget { max_wal_segments: 1, ..CompactionBudget::default() };
         let selected = plan_wal_retention(&horizons, 100, &budget);
         assert_eq!(selected.len(), 1);
@@ -619,11 +561,7 @@ mod tests {
         let hash_a = storage.put(b"a").unwrap();
         let hash_b = storage.put(b"b").unwrap();
         let document = doc("doc-1");
-        let records = vec![
-            WalRecord::SegmentHeader { document, segment_index: 0, prev_chain_hash: None },
-            WalRecord::Payload(WalPayloadRef::CasRef(hash_a)),
-            WalRecord::Payload(WalPayloadRef::CasRef(hash_b)),
-        ];
+        let records = vec![WalRecord::SegmentHeader { document, segment_index: 0, prev_chain_hash: None }, WalRecord::Payload(WalPayloadRef::CasRef(hash_a)), WalRecord::Payload(WalPayloadRef::CasRef(hash_b))];
         let budget = CompactionBudget { max_payloads: 1, ..CompactionBudget::default() };
         let report = sweep_payloads(&storage, &records, &[0], &budget).unwrap();
         assert_eq!(report.deleted, 1);

@@ -29,6 +29,20 @@
         "cwd": "🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive"
       }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust",
+        "command": "bun ./📜️script.ts generate"
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust",
+        "command": "bun ./📜️script.ts check"
+      }
     }
   }
 }

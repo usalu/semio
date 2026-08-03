@@ -6,10 +6,7 @@
 //! under the app's own constitutional `op` slot so `protocol`/`ui` depend on `op` per the standard
 //! layout instead of reaching into the kernel directly.
 
-pub use playbook::{
-    add_block_operation, add_step_operation, move_block_operation, move_step_operation, remove_block_operation, remove_step_operation,
-    update_playbook_title_operation, PlaybookOperation,
-};
+pub use playbook::{add_block_operation, add_step_operation, move_block_operation, move_step_operation, remove_block_operation, remove_step_operation, update_playbook_title_operation, PlaybookOperation};
 
 //#region 🔖️ConfigOperations
 use playbook_engine::PlaybookConfig;

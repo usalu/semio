@@ -7,7 +7,7 @@ import { MDXProvider } from "@mdx-js/react";
 import type { Platform } from "@semio-tech/framework-core";
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import { mountReactApp, PlatformShell, PlatformViewWithHistory, registerUiPanelSurfaceHost } from "@semio-tech/framework-platform-renderer-react";
-import { Aside, Button, Card, CardGrid, FileTree, Input, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@semio-tech/ui-react";
+import { Aside, Button, Card, CardGrid, FileTree, Input, Steps, Tabs, TabsContent, TabsList, TabsTrigger, Textarea, useLabel } from "@semio-tech/ui-react";
 import React, { Suspense, useEffect, useState } from "react";
 import {
   SKETCHPAD_SHELL_CONTROLLER_ID,
@@ -56,6 +56,8 @@ const SKETCHPAD_MDX_COMPONENTS = {
 };
 
 function SketchpadDocsMdxHost({ platform }: { readonly node: UiPanelHostSurfaceNode; readonly platform?: Platform }): React.ReactElement {
+  const loadingLabel = useLabel("compose.sketchpad.docs.loading");
+  const renderingLabel = useLabel("compose.sketchpad.docs.rendering");
   const pathOnly = platform?.uri.split("?")[0] ?? "/";
   const docsPath = parseSketchpadRouteScopeFromPath(pathOnly).docsPath;
   const [state, setState] = useState<{ readonly status: "loading" } | { readonly status: "ready"; readonly module: SketchpadMdxModule } | { readonly status: "error"; readonly message: string }>({ status: "loading" });
@@ -89,7 +91,7 @@ function SketchpadDocsMdxHost({ platform }: { readonly node: UiPanelHostSurfaceN
   }, [docsPath, state]);
 
   if (state.status === "loading") {
-    return <div className="p-4 text-sm text-muted-foreground">Loading documentation…</div>;
+    return <div className="p-4 text-sm text-muted-foreground">{loadingLabel}</div>;
   }
   if (state.status === "error") {
     return <div className="p-4 text-sm text-destructive">{state.message}</div>;
@@ -99,7 +101,7 @@ function SketchpadDocsMdxHost({ platform }: { readonly node: UiPanelHostSurfaceN
     <article className="prose prose-sm dark:prose-invert max-w-none p-4">
       <h1 className="not-prose mb-4 text-xl font-semibold">{title}</h1>
       <MDXProvider components={SKETCHPAD_MDX_COMPONENTS}>
-        <Suspense fallback={<div className="text-muted-foreground">Rendering…</div>}>
+        <Suspense fallback={<div className="text-muted-foreground">{renderingLabel}</div>}>
           <Content />
         </Suspense>
       </MDXProvider>
@@ -113,6 +115,15 @@ function readFeedbackDraft(): SketchpadFeedbackDraft {
 }
 
 function SketchpadFeedbackFormHost({ platform }: { readonly node: UiPanelHostSurfaceNode; readonly platform?: Platform }): React.ReactElement {
+  const titleLabel = useLabel("compose.sketchpad.feedbackForm.title");
+  const descriptionLabel = useLabel("compose.sketchpad.feedbackForm.description");
+  const messageLabel = useLabel("compose.sketchpad.feedbackForm.message");
+  const messagePlaceholderLabel = useLabel("compose.sketchpad.feedbackForm.messagePlaceholder");
+  const contactLabel = useLabel("compose.sketchpad.feedbackForm.contact");
+  const contactPlaceholderLabel = useLabel("compose.sketchpad.feedbackForm.contactPlaceholder");
+  const submitLabel = useLabel("compose.sketchpad.feedbackForm.submit");
+  const missingMessageLabel = useLabel("compose.sketchpad.feedbackForm.missingMessage");
+  const mailOpeningLabel = useLabel("compose.sketchpad.feedbackForm.mailOpening");
   const [draft, setDraft] = useState<SketchpadFeedbackDraft>(() => readFeedbackDraft());
   const [submitted, setSubmitted] = useState(false);
 
@@ -139,20 +150,20 @@ function SketchpadFeedbackFormHost({ platform }: { readonly node: UiPanelHostSur
         setSubmitted(true);
       }}
     >
-      <h1 className="text-lg font-semibold">Feedback</h1>
-      <p className="text-sm text-muted-foreground">Share bugs, ideas, or questions about Compose Sketchpad.</p>
+      <h1 className="text-lg font-semibold">{titleLabel}</h1>
+      <p className="text-sm text-muted-foreground">{descriptionLabel}</p>
       <label className="flex flex-col gap-tiny text-sm">
-        <span>Message</span>
-        <Textarea value={draft.message} onChange={(event) => dispatchDraft({ ...draft, message: event.target.value })} placeholder="What should we know?" rows={8} required />
+        <span>{messageLabel}</span>
+        <Textarea value={draft.message} onChange={(event) => dispatchDraft({ ...draft, message: event.target.value })} placeholder={messagePlaceholderLabel} rows={8} required />
       </label>
       <label className="flex flex-col gap-tiny text-sm">
-        <span>Contact (optional)</span>
-        <Input value={draft.contact} onChange={(event) => dispatchDraft({ ...draft, contact: event.target.value })} placeholder="email@example.com" />
+        <span>{contactLabel}</span>
+        <Input value={draft.contact} onChange={(event) => dispatchDraft({ ...draft, contact: event.target.value })} placeholder={contactPlaceholderLabel} />
       </label>
       <div className="flex flex-wrap items-center gap-tight">
-        <Button type="submit">Send feedback</Button>
-        {submitted && !sketchpadFeedbackMailtoUri(draft) ? <span className="text-sm text-destructive">Enter a message before sending.</span> : null}
-        {submitted && sketchpadFeedbackMailtoUri(draft) ? <span className="text-sm text-muted-foreground">Opening your mail client…</span> : null}
+        <Button type="submit">{submitLabel}</Button>
+        {submitted && !sketchpadFeedbackMailtoUri(draft) ? <span className="text-sm text-destructive">{missingMessageLabel}</span> : null}
+        {submitted && sketchpadFeedbackMailtoUri(draft) ? <span className="text-sm text-muted-foreground">{mailOpeningLabel}</span> : null}
       </div>
     </form>
   );

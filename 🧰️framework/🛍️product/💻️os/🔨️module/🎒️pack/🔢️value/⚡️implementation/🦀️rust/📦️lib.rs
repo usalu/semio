@@ -11,7 +11,7 @@
 //! byte layout this module implements against.
 
 use dsl_schema::{DslValue, FieldSpec, FieldValue, RecordSpec, RecordValue, Shape, WireNode, WireValue};
-use pack_core::{ByteReader, ChunkId, CodecId, PackError, PackLimits, write_varint_i64, write_varint_u64};
+use pack_core::{write_varint_i64, write_varint_u64, ByteReader, ChunkId, CodecId, PackError, PackLimits};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Tags
@@ -182,10 +182,7 @@ fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
 /// @emoji 🔗️ Writes a bare symref varint with NO leading tag — the wire rule for `Statements`
 /// keywords and `TableSoA` `Str` columns, both of which are unconditionally interned.
 fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Result<(), PackError> {
-    let idx = *ctx
-        .symbol_index
-        .get(s)
-        .ok_or_else(|| PackError::Schema(format!("symbol {s:?} missing from precomputed table")))?;
+    let idx = *ctx.symbol_index.get(s).ok_or_else(|| PackError::Schema(format!("symbol {s:?} missing from precomputed table")))?;
     write_varint_u64(out, idx);
     Ok(())
 }
@@ -346,13 +343,7 @@ fn walk_dsl_value_for_symbols(counts: &mut HashMap<String, u64>, v: &DslValue) {
 fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record: &RecordValue, depth: u16) -> Result<Vec<u8>, PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     let preserve_unknown = ctx.options.preserve_unknown;
-    let mut ids: Vec<u16> = record
-        .fields
-        .iter()
-        .filter(|(_, v)| !matches!(v, FieldValue::Absent))
-        .filter(|(id, _)| preserve_unknown || spec.is_some_and(|s| s.fields.iter().any(|f| f.id == **id)))
-        .map(|(id, _)| *id)
-        .collect();
+    let mut ids: Vec<u16> = record.fields.iter().filter(|(_, v)| !matches!(v, FieldValue::Absent)).filter(|(id, _)| preserve_unknown || spec.is_some_and(|s| s.fields.iter().any(|f| f.id == **id))).map(|(id, _)| *id).collect();
     ids.sort_unstable();
     let mut buf = Vec::new();
     write_varint_u64(&mut buf, ids.len() as u64);
@@ -632,10 +623,7 @@ impl DecCtx<'_> {
 fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
     match &ctx.source {
         DecSource::File(pack_file) => pack_file.symbol(symref).map(str::to_string),
-        DecSource::Inline { symbols } => symbols
-            .get(symref as usize)
-            .cloned()
-            .ok_or_else(|| PackError::Malformed { what: "symref", offset: 0, detail: format!("symref {symref} out of range for inline table of {}", symbols.len()) }),
+        DecSource::Inline { symbols } => symbols.get(symref as usize).cloned().ok_or_else(|| PackError::Malformed { what: "symref", offset: 0, detail: format!("symref {symref} out of range for inline table of {}", symbols.len()) }),
     }
 }
 
@@ -651,9 +639,7 @@ fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits)
 
 fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
     let bytes = read_len_prefixed_bytes(reader, &ctx.limits)?;
-    std::str::from_utf8(bytes)
-        .map(str::to_string)
-        .map_err(|_| PackError::Malformed { what: "text", offset: reader.position() as u64, detail: "invalid utf8".to_string() })
+    std::str::from_utf8(bytes).map(str::to_string).map_err(|_| PackError::Malformed { what: "text", offset: reader.position() as u64, detail: "invalid utf8".to_string() })
 }
 
 fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
@@ -964,10 +950,7 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
     write_varint_u64(out, row_count as u64);
     write_varint_u64(out, columns.len() as u64);
     for field in &columns {
-        let present: Vec<bool> = items
-            .iter()
-            .map(|row| matches!(row, FieldValue::Record(r) if r.fields.get(&field.id).is_some_and(|v| !matches!(v, FieldValue::Absent))))
-            .collect();
+        let present: Vec<bool> = items.iter().map(|row| matches!(row, FieldValue::Record(r) if r.fields.get(&field.id).is_some_and(|v| !matches!(v, FieldValue::Absent)))).collect();
         let dense = present.iter().all(|p| *p);
         write_varint_u64(out, field.id as u64);
         out.push(if dense { 0 } else { 1 });
@@ -1240,15 +1223,7 @@ pub struct EncodeOptions {
 
 impl Default for EncodeOptions {
     fn default() -> Self {
-        Self {
-            canonical: true,
-            codec: CodecId(1),
-            chunk_threshold: 256 * 1024,
-            chunk_size: 1024 * 1024,
-            frame_size: 1024 * 1024,
-            preserve_unknown: true,
-            limits: PackLimits::default(),
-        }
+        Self { canonical: true, codec: CodecId(1), chunk_threshold: 256 * 1024, chunk_size: 1024 * 1024, frame_size: 1024 * 1024, preserve_unknown: true, limits: PackLimits::default() }
     }
 }
 
@@ -1289,11 +1264,7 @@ pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &Encode
         symbol_index.insert(s.clone(), i as u64);
     }
 
-    let write_options = pack_format::WriteOptions {
-        required_flags: 0,
-        optional_flags: if options.canonical { pack_format::OPTIONAL_CANONICAL } else { 0 },
-        codec: options.codec,
-    };
+    let write_options = pack_format::WriteOptions { required_flags: 0, optional_flags: if options.canonical { pack_format::OPTIONAL_CANONICAL } else { 0 }, codec: options.codec };
     let mut writer = pack_format::PackWriter::begin(Vec::new(), &write_options)?;
 
     let symbols_payload = pack_format::encode_symbols(&symbols);
@@ -1342,13 +1313,7 @@ pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions)
     let body = pack_file.body_bytes(options.verification)?;
 
     let mut reader = ByteReader::new(&body);
-    let mut dec_ctx = DecCtx {
-        source: DecSource::File(&pack_file),
-        limits: options.limits.clone(),
-        verification: options.verification,
-        preserve_unknown: options.preserve_unknown,
-        unknown_field_ids: Vec::new(),
-    };
+    let mut dec_ctx = DecCtx { source: DecSource::File(&pack_file), limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new() };
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
 
     let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift, verified: options.verification };
@@ -1400,17 +1365,10 @@ pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptio
             return Err(PackError::LimitExceeded("record-body symbol length exceeds max_segment_len"));
         }
         let raw = reader.read_bytes(len as usize)?;
-        let s = std::str::from_utf8(raw)
-            .map_err(|_| PackError::Malformed { what: "symbol", offset: reader.position() as u64, detail: "invalid utf8".to_string() })?;
+        let s = std::str::from_utf8(raw).map_err(|_| PackError::Malformed { what: "symbol", offset: reader.position() as u64, detail: "invalid utf8".to_string() })?;
         symbols.push(s.to_string());
     }
-    let mut dec_ctx = DecCtx {
-        source: DecSource::Inline { symbols },
-        limits: options.limits.clone(),
-        verification: options.verification,
-        preserve_unknown: options.preserve_unknown,
-        unknown_field_ids: Vec::new(),
-    };
+    let mut dec_ctx = DecCtx { source: DecSource::Inline { symbols }, limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new() };
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
     let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift: false, verified: options.verification };
     Ok((record, report))
@@ -1426,24 +1384,11 @@ mod tests {
 
     //#region 🔖️Fixtures
     fn nested_spec() -> RecordSpec {
-        RecordSpec::new(
-            None,
-            RecordLayout::Inline,
-            vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text).optional()],
-        )
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text).optional()])
     }
 
     fn table_row_spec() -> RecordSpec {
-        RecordSpec::new(
-            None,
-            RecordLayout::Inline,
-            vec![
-                FieldSpec::new(1, "id", Shape::UInt),
-                FieldSpec::new(2, "name", Shape::Text),
-                FieldSpec::new(3, "score", Shape::Float),
-                FieldSpec::new(4, "active", Shape::Bool),
-            ],
-        )
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "name", Shape::Text), FieldSpec::new(3, "score", Shape::Float), FieldSpec::new(4, "active", Shape::Bool)])
     }
 
     fn header_spec() -> RecordSpec {
@@ -1455,11 +1400,7 @@ mod tests {
     }
 
     fn table_row_with_tuple_spec() -> RecordSpec {
-        RecordSpec::new(
-            None,
-            RecordLayout::Inline,
-            vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "distortion", Shape::Tuple(Box::new(Shape::Float), Some(5)))],
-        )
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "distortion", Shape::Tuple(Box::new(Shape::Float), Some(5)))])
     }
 
     fn stmt_foo_spec() -> RecordSpec {
@@ -1526,18 +1467,12 @@ mod tests {
         foo_fields.insert(1, FieldValue::Int(5));
         let mut bar_fields = HashMap::new();
         bar_fields.insert(1, FieldValue::Text("statement text".to_string()));
-        fields.insert(
-            12,
-            FieldValue::Statements(vec![("foo".to_string(), RecordValue { fields: foo_fields }), ("bar".to_string(), RecordValue { fields: bar_fields })]),
-        );
+        fields.insert(12, FieldValue::Statements(vec![("foo".to_string(), RecordValue { fields: foo_fields }), ("bar".to_string(), RecordValue { fields: bar_fields })]));
         // `Map`/`DslValue::Object` are `Vec`-backed so `PartialEq` is order-sensitive; since
         // canonical encoding always sorts entries by key bytes, these fixtures are pre-sorted
         // ("aaa" < "zzz", "arr" < "k") so the round-trip equality check below holds exactly.
         fields.insert(13, FieldValue::Map(vec![("aaa".to_string(), FieldValue::Int(2)), ("zzz".to_string(), FieldValue::Int(1))]));
-        fields.insert(
-            14,
-            FieldValue::Value(DslValue::Object(vec![("arr".to_string(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null])), ("k".to_string(), DslValue::Number(1.0))])),
-        );
+        fields.insert(14, FieldValue::Value(DslValue::Object(vec![("arr".to_string(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null])), ("k".to_string(), DslValue::Number(1.0))])));
         let table_rows: Vec<FieldValue> = (0..3)
             .map(|i| {
                 let mut row = HashMap::new();
@@ -1751,10 +1686,7 @@ mod tests {
     fn wire_literal_round_trips_bare_node_and_undirected_edge() {
         let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "w", Shape::Wire)]);
         let mut fields = HashMap::new();
-        fields.insert(
-            1,
-            FieldValue::Wire(WireValue { from: WireNode { id: "solo".to_string(), kind: None, port: None }, edge: None, properties: DslValue::Object(vec![]) }),
-        );
+        fields.insert(1, FieldValue::Wire(WireValue { from: WireNode { id: "solo".to_string(), kind: None, port: None }, edge: None, properties: DslValue::Object(vec![]) }));
         let record = RecordValue { fields };
         let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
         let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
@@ -1921,11 +1853,7 @@ mod tests {
 
     #[test]
     fn record_body_preserves_and_reports_unknown_fields() {
-        let wide = RecordSpec::new(
-            None,
-            RecordLayout::Inline,
-            vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(9, "extra", Shape::Text)],
-        );
+        let wide = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(9, "extra", Shape::Text)]);
         let narrow = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
         let mut fields = HashMap::new();
         fields.insert(1, FieldValue::Int(3));

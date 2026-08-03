@@ -247,13 +247,7 @@ impl<S: EventSink> AuditSink<S> {
     /// the chain math for the surviving window stays exact) — the durable JSON-lines themselves
     /// are unbounded (owned by `S`), only the tamper-evidence window is capped.
     pub fn new(sink: S, max_retained: usize) -> Self {
-        Self {
-            sink,
-            next_seq: AtomicU64::new(0),
-            state: Mutex::new(AuditChainState { base_checksum: 0, links: VecDeque::new() }),
-            max_retained: max_retained.max(1),
-            failed_writes: AtomicU64::new(0),
-        }
+        Self { sink, next_seq: AtomicU64::new(0), state: Mutex::new(AuditChainState { base_checksum: 0, links: VecDeque::new() }), max_retained: max_retained.max(1), failed_writes: AtomicU64::new(0) }
     }
 
     /// @emoji 🚨️ See `StructuredSink::failed_writes` — same rationale (`Emit::emit` has no
@@ -276,11 +270,7 @@ impl<S: EventSink> AuditSink<S> {
     pub fn verify_chain(&self, lines: &[String]) -> Result<(), db_core::DbError> {
         let state = lock(&self.state);
         if lines.len() != state.links.len() {
-            return Err(db_core::DbError::Corrupt(format!(
-                "audit chain length mismatch: expected {} retained lines, got {}",
-                state.links.len(),
-                lines.len()
-            )));
+            return Err(db_core::DbError::Corrupt(format!("audit chain length mismatch: expected {} retained lines, got {}", state.links.len(), lines.len())));
         }
         let mut prev_checksum = state.base_checksum;
         for (line, expected) in lines.iter().zip(state.links.iter()) {
@@ -413,12 +403,7 @@ pub struct MetricRegistry {
 
 impl MetricRegistry {
     pub fn new(max_series_per_metric: usize) -> MetricRegistry {
-        MetricRegistry {
-            cardinality: CardinalityLimiter::new(max_series_per_metric),
-            counters: Mutex::new(HashMap::new()),
-            gauges: Mutex::new(HashMap::new()),
-            histograms: Mutex::new(HashMap::new()),
-        }
+        MetricRegistry { cardinality: CardinalityLimiter::new(max_series_per_metric), counters: Mutex::new(HashMap::new()), gauges: Mutex::new(HashMap::new()), histograms: Mutex::new(HashMap::new()) }
     }
 
     /// @emoji ➕️ Monotonically increments the counter series `(name, labels)` by `delta`.
@@ -447,30 +432,15 @@ impl MetricRegistry {
     /// observation. Later calls for the same series reuse the bounds fixed at creation — a
     /// mismatched `bounds.len()` is a caller bug (`DbError::InvalidArgument`), not silently
     /// ignored.
-    pub fn observe_histogram(
-        &self,
-        name: &'static str,
-        labels: Labels,
-        bounds: &[f64],
-        value: f64,
-    ) -> Result<(), db_core::DbError> {
+    pub fn observe_histogram(&self, name: &'static str, labels: Labels, bounds: &[f64], value: f64) -> Result<(), db_core::DbError> {
         if bounds.is_empty() {
             return Err(db_core::DbError::InvalidArgument("histogram bounds must not be empty".to_string()));
         }
         let labels = self.cardinality.admit(name, labels);
         let mut histograms = lock(&self.histograms);
-        let state = histograms.entry((name, labels)).or_insert_with(|| HistogramState {
-            bounds: bounds.to_vec(),
-            bucket_counts: vec![0; bounds.len() + 1],
-            sum: 0.0,
-            count: 0,
-        });
+        let state = histograms.entry((name, labels)).or_insert_with(|| HistogramState { bounds: bounds.to_vec(), bucket_counts: vec![0; bounds.len() + 1], sum: 0.0, count: 0 });
         if state.bounds.len() != bounds.len() {
-            return Err(db_core::DbError::InvalidArgument(format!(
-                "histogram {name} bounds length changed: {} vs {}",
-                state.bounds.len(),
-                bounds.len()
-            )));
+            return Err(db_core::DbError::InvalidArgument(format!("histogram {name} bounds length changed: {} vs {}", state.bounds.len(), bounds.len())));
         }
         let bucket = state.bounds.iter().position(|&b| value <= b).unwrap_or(state.bounds.len());
         state.bucket_counts[bucket] += 1;
@@ -480,12 +450,7 @@ impl MetricRegistry {
     }
 
     pub fn histogram_snapshot(&self, name: &'static str, labels: &Labels) -> Option<HistogramSnapshot> {
-        lock(&self.histograms).get(&(name, labels.clone())).map(|s| HistogramSnapshot {
-            bounds: s.bounds.clone(),
-            bucket_counts: s.bucket_counts.clone(),
-            sum: s.sum,
-            count: s.count,
-        })
+        lock(&self.histograms).get(&(name, labels.clone())).map(|s| HistogramSnapshot { bounds: s.bounds.clone(), bucket_counts: s.bucket_counts.clone(), sum: s.sum, count: s.count })
     }
 }
 //#endregion 🔖️Metrics
@@ -504,9 +469,7 @@ pub struct SystemClock;
 
 impl Clock for SystemClock {
     fn now_ms(&self) -> u64 {
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |d| d.as_millis() as u64)
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
     }
 }
 
@@ -553,13 +516,7 @@ impl SpanRegistry<SystemClock> {
 
 impl<C: Clock> SpanRegistry<C> {
     pub fn with_clock(clock: C, max_retained: usize) -> SpanRegistry<C> {
-        SpanRegistry {
-            clock,
-            next_id: AtomicU64::new(0),
-            active: Mutex::new(HashMap::new()),
-            completed: Mutex::new(VecDeque::new()),
-            max_retained: max_retained.max(1),
-        }
+        SpanRegistry { clock, next_id: AtomicU64::new(0), active: Mutex::new(HashMap::new()), completed: Mutex::new(VecDeque::new()), max_retained: max_retained.max(1) }
     }
 
     /// @emoji ▶️ Starts a new span, returning its id (pass to `end`).
@@ -576,15 +533,7 @@ impl<C: Clock> SpanRegistry<C> {
     pub fn end(&self, id: SpanId) -> Option<CompletedSpan> {
         let active = lock(&self.active).remove(&id.0)?;
         let end_ms = self.clock.now_ms();
-        let span = CompletedSpan {
-            id,
-            name: active.name,
-            parent: active.parent,
-            document: active.document,
-            start_ms: active.start_ms,
-            end_ms,
-            duration_ms: end_ms.saturating_sub(active.start_ms),
-        };
+        let span = CompletedSpan { id, name: active.name, parent: active.parent, document: active.document, start_ms: active.start_ms, end_ms, duration_ms: end_ms.saturating_sub(active.start_ms) };
         let mut completed = lock(&self.completed);
         completed.push_back(span.clone());
         while completed.len() > self.max_retained {
@@ -686,11 +635,7 @@ impl DeterminismVerifier {
     /// "replay"]`); `max_pending` bounds how many not-yet-fully-reported sequence numbers this
     /// verifier holds onto at once — a stream that stalls forever can't grow this unboundedly.
     pub fn new(expected_labels: impl IntoIterator<Item = impl Into<String>>, max_pending: usize) -> DeterminismVerifier {
-        DeterminismVerifier {
-            expected_labels: expected_labels.into_iter().map(Into::into).collect(),
-            pending: Mutex::new(HashMap::new()),
-            max_pending: max_pending.max(1),
-        }
+        DeterminismVerifier { expected_labels: expected_labels.into_iter().map(Into::into).collect(), pending: Mutex::new(HashMap::new()), max_pending: max_pending.max(1) }
     }
 
     /// @emoji 📮️ Records `label`'s digest for `seq`. Once every expected label has reported for
@@ -698,12 +643,7 @@ impl DeterminismVerifier {
     /// agree — either way `seq` is pruned afterward, so a completed sequence never grows the
     /// pending set. Errs with `LimitExceeded` if `seq` is new and the pending window is already
     /// full (protects against an expected label that never reports).
-    pub fn record(
-        &self,
-        seq: u64,
-        label: &str,
-        digest: pack_core::ContentHash,
-    ) -> Result<Option<DivergenceReport>, db_core::DbError> {
+    pub fn record(&self, seq: u64, label: &str, digest: pack_core::ContentHash) -> Result<Option<DivergenceReport>, db_core::DbError> {
         let mut pending = lock(&self.pending);
         if !pending.contains_key(&seq) && pending.len() >= self.max_pending {
             return Err(db_core::DbError::LimitExceeded("determinism verifier pending-sequence window exceeded"));
@@ -715,8 +655,7 @@ impl DeterminismVerifier {
             return Ok(None);
         }
 
-        let mut digests: Vec<(String, pack_core::ContentHash)> =
-            self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+        let mut digests: Vec<(String, pack_core::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
         let all_match = digests.windows(2).all(|w| w[0].1 == w[1].1);
         pending.remove(&seq);
 
@@ -1046,15 +985,7 @@ mod tests {
     #[cfg(feature = "otel")]
     #[test]
     fn unwired_otel_exporter_reports_unimplemented_rather_than_panicking() {
-        let span = CompletedSpan {
-            id: SpanId(0),
-            name: "s",
-            parent: None,
-            document: None,
-            start_ms: 0,
-            end_ms: 1,
-            duration_ms: 1,
-        };
+        let span = CompletedSpan { id: SpanId(0), name: "s", parent: None, document: None, start_ms: 0, end_ms: 1, duration_ms: 1 };
         let err = UnwiredOtelExporter.export(&span).unwrap_err();
         assert!(matches!(err, db_core::DbError::Unimplemented(_)));
     }

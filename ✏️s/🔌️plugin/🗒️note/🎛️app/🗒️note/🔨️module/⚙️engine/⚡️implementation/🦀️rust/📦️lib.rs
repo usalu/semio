@@ -45,14 +45,7 @@ pub struct NoteConfig {
 
 impl Default for NoteConfig {
     fn default() -> Self {
-        Self {
-            selected_block_ids: Vec::new(),
-            hovered_block_id: None,
-            engagement_input: String::new(),
-            camera: NoteCamera::default(),
-            active_utility_id: "selectDirect".into(),
-            locale: "en-US".into(),
-        }
+        Self { selected_block_ids: Vec::new(), hovered_block_id: None, engagement_input: String::new(), camera: NoteCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
     }
 }
 
@@ -112,23 +105,13 @@ pub fn empty_note_document() -> NoteDocument {
 
 pub fn block_id(block: &NoteBlockNode) -> &str {
     match block {
-        NoteBlockNode::Text { id, .. }
-        | NoteBlockNode::Image { id, .. }
-        | NoteBlockNode::Table { id, .. }
-        | NoteBlockNode::Math { id, .. }
-        | NoteBlockNode::Ink { id, .. }
-        | NoteBlockNode::Group { id, .. } => id,
+        NoteBlockNode::Text { id, .. } | NoteBlockNode::Image { id, .. } | NoteBlockNode::Table { id, .. } | NoteBlockNode::Math { id, .. } | NoteBlockNode::Ink { id, .. } | NoteBlockNode::Group { id, .. } => id,
     }
 }
 
 pub fn block_name(block: &NoteBlockNode) -> &str {
     match block {
-        NoteBlockNode::Text { name, .. }
-        | NoteBlockNode::Image { name, .. }
-        | NoteBlockNode::Table { name, .. }
-        | NoteBlockNode::Math { name, .. }
-        | NoteBlockNode::Ink { name, .. }
-        | NoteBlockNode::Group { name, .. } => name,
+        NoteBlockNode::Text { name, .. } | NoteBlockNode::Image { name, .. } | NoteBlockNode::Table { name, .. } | NoteBlockNode::Math { name, .. } | NoteBlockNode::Ink { name, .. } | NoteBlockNode::Group { name, .. } => name,
     }
 }
 
@@ -145,12 +128,7 @@ pub fn block_kind(block: &NoteBlockNode) -> &str {
 
 pub fn block_visible(block: &NoteBlockNode) -> bool {
     match block {
-        NoteBlockNode::Text { visible, .. }
-        | NoteBlockNode::Image { visible, .. }
-        | NoteBlockNode::Table { visible, .. }
-        | NoteBlockNode::Math { visible, .. }
-        | NoteBlockNode::Ink { visible, .. }
-        | NoteBlockNode::Group { visible, .. } => *visible,
+        NoteBlockNode::Text { visible, .. } | NoteBlockNode::Image { visible, .. } | NoteBlockNode::Table { visible, .. } | NoteBlockNode::Math { visible, .. } | NoteBlockNode::Ink { visible, .. } | NoteBlockNode::Group { visible, .. } => *visible,
     }
 }
 
@@ -204,18 +182,7 @@ pub fn flatten_blocks(blocks: &[NoteBlockNode]) -> Vec<&NoteBlockNode> {
 pub fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
     let id = create_note_id(kind);
     match kind {
-        "image" => NoteBlockNode::Image {
-            id,
-            name: "Image".into(),
-            x,
-            y,
-            width: 240.0,
-            height: 160.0,
-            rotation: 0.0,
-            visible: true,
-            locked: false,
-            image_key: "placeholder".into(),
-        },
+        "image" => NoteBlockNode::Image { id, name: "Image".into(), x, y, width: 240.0, height: 160.0, rotation: 0.0, visible: true, locked: false, image_key: "placeholder".into() },
         "table" => NoteBlockNode::Table {
             id,
             name: "Table".into(),
@@ -228,57 +195,13 @@ pub fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
             locked: false,
             columns: vec!["A".into(), "B".into(), "C".into()],
             rows: vec![
-                vec![
-                    NoteTableCell { content: String::new() },
-                    NoteTableCell { content: String::new() },
-                    NoteTableCell { content: String::new() },
-                ],
-                vec![
-                    NoteTableCell { content: String::new() },
-                    NoteTableCell { content: String::new() },
-                    NoteTableCell { content: String::new() },
-                ],
+                vec![NoteTableCell { content: String::new() }, NoteTableCell { content: String::new() }, NoteTableCell { content: String::new() }],
+                vec![NoteTableCell { content: String::new() }, NoteTableCell { content: String::new() }, NoteTableCell { content: String::new() }],
             ],
         },
-        "math" => NoteBlockNode::Math {
-            id,
-            name: "Math".into(),
-            x,
-            y,
-            width: 200.0,
-            height: 80.0,
-            rotation: 0.0,
-            visible: true,
-            locked: false,
-            tex: "E = mc^2".into(),
-            display_mode: true,
-        },
-        "stroke" => NoteBlockNode::Ink {
-            id,
-            name: "Ink".into(),
-            x,
-            y,
-            width: 1.0,
-            height: 1.0,
-            rotation: 0.0,
-            visible: true,
-            locked: false,
-            points: Vec::new(),
-            stroke_width: 3.0,
-            color: [0.0, 0.0, 0.0, 1.0],
-        },
-        "group" => NoteBlockNode::Group {
-            id,
-            name: "Group".into(),
-            x,
-            y,
-            width: 280.0,
-            height: 120.0,
-            rotation: 0.0,
-            visible: true,
-            locked: false,
-            children: Vec::new(),
-        },
+        "math" => NoteBlockNode::Math { id, name: "Math".into(), x, y, width: 200.0, height: 80.0, rotation: 0.0, visible: true, locked: false, tex: "E = mc^2".into(), display_mode: true },
+        "stroke" => NoteBlockNode::Ink { id, name: "Ink".into(), x, y, width: 1.0, height: 1.0, rotation: 0.0, visible: true, locked: false, points: Vec::new(), stroke_width: 3.0, color: [0.0, 0.0, 0.0, 1.0] },
+        "group" => NoteBlockNode::Group { id, name: "Group".into(), x, y, width: 280.0, height: 120.0, rotation: 0.0, visible: true, locked: false, children: Vec::new() },
         _ => NoteBlockNode::Text {
             id,
             name: "Text".into(),
@@ -289,15 +212,7 @@ pub fn create_block_by_kind(kind: &str, x: f64, y: f64) -> NoteBlockNode {
             rotation: 0.0,
             visible: true,
             locked: false,
-            paragraphs: vec![NoteTextParagraph {
-                runs: vec![NoteTextRun {
-                    text: String::new(),
-                    bold: None,
-                    italic: None,
-                    underline: None,
-                    link: None,
-                }],
-            }],
+            paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: String::new(), bold: None, italic: None, underline: None, link: None }] }],
             font_size: 18.0,
             font_weight: "normal".into(),
             align: "left".into(),
@@ -323,12 +238,7 @@ pub fn remove_block_from_tree(blocks: &mut Vec<NoteBlockNode>, target_id: &str) 
 pub fn reid_block_tree(block: &mut NoteBlockNode, rename_top: bool) {
     let kind = block_kind(block).to_string();
     match block {
-        NoteBlockNode::Text { id, name, .. }
-        | NoteBlockNode::Image { id, name, .. }
-        | NoteBlockNode::Table { id, name, .. }
-        | NoteBlockNode::Math { id, name, .. }
-        | NoteBlockNode::Ink { id, name, .. }
-        | NoteBlockNode::Group { id, name, .. } => {
+        NoteBlockNode::Text { id, name, .. } | NoteBlockNode::Image { id, name, .. } | NoteBlockNode::Table { id, name, .. } | NoteBlockNode::Math { id, name, .. } | NoteBlockNode::Ink { id, name, .. } | NoteBlockNode::Group { id, name, .. } => {
             *id = create_note_id(&kind);
             if rename_top {
                 *name = format!("{name} copy");
@@ -350,12 +260,7 @@ pub fn clone_block(block: &NoteBlockNode) -> NoteBlockNode {
 
 pub fn offset_block_tree(block: &mut NoteBlockNode, dx: f64, dy: f64) {
     match block {
-        NoteBlockNode::Text { x, y, .. }
-        | NoteBlockNode::Image { x, y, .. }
-        | NoteBlockNode::Table { x, y, .. }
-        | NoteBlockNode::Math { x, y, .. }
-        | NoteBlockNode::Ink { x, y, .. }
-        | NoteBlockNode::Group { x, y, .. } => {
+        NoteBlockNode::Text { x, y, .. } | NoteBlockNode::Image { x, y, .. } | NoteBlockNode::Table { x, y, .. } | NoteBlockNode::Math { x, y, .. } | NoteBlockNode::Ink { x, y, .. } | NoteBlockNode::Group { x, y, .. } => {
             *x += dx;
             *y += dy;
         }
@@ -415,11 +320,7 @@ pub fn update_block_in_tree(blocks: &mut [NoteBlockNode], target_id: &str, next_
     false
 }
 
-pub fn mutate_block_in_tree(
-    blocks: &mut [NoteBlockNode],
-    target_id: &str,
-    mutator: &mut impl FnMut(&NoteBlockNode) -> NoteBlockNode,
-) -> bool {
+pub fn mutate_block_in_tree(blocks: &mut [NoteBlockNode], target_id: &str, mutator: &mut impl FnMut(&NoteBlockNode) -> NoteBlockNode) -> bool {
     for block in blocks.iter_mut() {
         if block_id(block) == target_id {
             *block = mutator(block);
@@ -455,12 +356,9 @@ pub fn patch_block_field(document: &NoteDocument, block_id: &str, field: &str, v
             mutate_block_in_tree(&mut next.blocks, block_id, &mut |block| {
                 let mut cloned = block.clone();
                 match &mut cloned {
-                    NoteBlockNode::Text { name, .. }
-                    | NoteBlockNode::Image { name, .. }
-                    | NoteBlockNode::Table { name, .. }
-                    | NoteBlockNode::Math { name, .. }
-                    | NoteBlockNode::Ink { name, .. }
-                    | NoteBlockNode::Group { name, .. } => *name = value.as_str().unwrap_or("").into(),
+                    NoteBlockNode::Text { name, .. } | NoteBlockNode::Image { name, .. } | NoteBlockNode::Table { name, .. } | NoteBlockNode::Math { name, .. } | NoteBlockNode::Ink { name, .. } | NoteBlockNode::Group { name, .. } => {
+                        *name = value.as_str().unwrap_or("").into()
+                    }
                 }
                 cloned
             });
@@ -485,12 +383,9 @@ pub fn patch_block_field(document: &NoteDocument, block_id: &str, field: &str, v
             mutate_block_in_tree(&mut next.blocks, block_id, &mut |block| {
                 let mut cloned = block.clone();
                 match &mut cloned {
-                    NoteBlockNode::Text { locked, .. }
-                    | NoteBlockNode::Image { locked, .. }
-                    | NoteBlockNode::Table { locked, .. }
-                    | NoteBlockNode::Math { locked, .. }
-                    | NoteBlockNode::Ink { locked, .. }
-                    | NoteBlockNode::Group { locked, .. } => *locked = pressed,
+                    NoteBlockNode::Text { locked, .. } | NoteBlockNode::Image { locked, .. } | NoteBlockNode::Table { locked, .. } | NoteBlockNode::Math { locked, .. } | NoteBlockNode::Ink { locked, .. } | NoteBlockNode::Group { locked, .. } => {
+                        *locked = pressed
+                    }
                 }
                 cloned
             });
@@ -543,15 +438,7 @@ pub fn patch_block_field(document: &NoteDocument, block_id: &str, field: &str, v
         "textContent" => {
             if let NoteBlockNode::Text { .. } = block {
                 let text = value.as_str().unwrap_or("");
-                let paragraphs = vec![NoteTextParagraph {
-                    runs: vec![NoteTextRun {
-                        text: text.into(),
-                        bold: None,
-                        italic: None,
-                        underline: None,
-                        link: None,
-                    }],
-                }];
+                let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: text.into(), bold: None, italic: None, underline: None, link: None }] }];
                 let mut updated = block;
                 if let NoteBlockNode::Text { paragraphs: p, .. } = &mut updated {
                     *p = paragraphs;
@@ -678,40 +565,18 @@ fn note_block_to_svg(block: &NoteBlockNode, document: &NoteDocument) -> String {
     };
     let transform = format!("translate({x} {y}) rotate({rotation})");
     match block {
-        NoteBlockNode::Text {
-            paragraphs,
-            font_size,
-            font_weight,
-            ..
-        } => {
-            let text = paragraphs
-                .iter()
-                .map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str()).collect::<Vec<_>>().join(""))
-                .collect::<Vec<_>>()
-                .join("\n");
-            format!(
-                r#"<g transform="{transform}"><text x="0" y="{font_size}" font-size="{font_size}" font-weight="{font_weight}" fill="black">{}</text></g>"#,
-                escape_svg_text(&text)
-            )
+        NoteBlockNode::Text { paragraphs, font_size, font_weight, .. } => {
+            let text = paragraphs.iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str()).collect::<Vec<_>>().join("")).collect::<Vec<_>>().join("\n");
+            format!(r#"<g transform="{transform}"><text x="0" y="{font_size}" font-size="{font_size}" font-weight="{font_weight}" fill="black">{}</text></g>"#, escape_svg_text(&text))
         }
         NoteBlockNode::Image { image_key, .. } => {
             if let Some(asset) = document.assets.get(image_key) {
-                format!(
-                    r#"<g transform="{transform}"><image href="{}" width="{width}" height="{height}"/></g>"#,
-                    asset.data
-                )
+                format!(r#"<g transform="{transform}"><image href="{}" width="{width}" height="{height}"/></g>"#, asset.data)
             } else {
-                format!(
-                    "<g transform=\"{transform}\"><rect width=\"{width}\" height=\"{height}\" fill=\"#ddd\" stroke=\"#888\"/></g>"
-                )
+                format!("<g transform=\"{transform}\"><rect width=\"{width}\" height=\"{height}\" fill=\"#ddd\" stroke=\"#888\"/></g>")
             }
         }
-        NoteBlockNode::Ink {
-            points,
-            stroke_width,
-            color,
-            ..
-        } => {
+        NoteBlockNode::Ink { points, stroke_width, color, .. } => {
             if points.len() < 2 {
                 return String::new();
             }
@@ -719,34 +584,17 @@ fn note_block_to_svg(block: &NoteBlockNode, document: &NoteDocument) -> String {
             for point in points.iter().skip(1) {
                 d.push_str(&format!(" L {} {}", point[0], point[1]));
             }
-            let stroke = format!(
-                "rgba({},{},{},{})",
-                (color[0] * 255.0).round() as u8,
-                (color[1] * 255.0).round() as u8,
-                (color[2] * 255.0).round() as u8,
-                color[3]
-            );
-            format!(
-                r#"<g transform="{transform}"><path d="{d}" fill="none" stroke="{stroke}" stroke-width="{stroke_width}" stroke-linecap="round" stroke-linejoin="round"/></g>"#
-            )
+            let stroke = format!("rgba({},{},{},{})", (color[0] * 255.0).round() as u8, (color[1] * 255.0).round() as u8, (color[2] * 255.0).round() as u8, color[3]);
+            format!(r#"<g transform="{transform}"><path d="{d}" fill="none" stroke="{stroke}" stroke-width="{stroke_width}" stroke-linecap="round" stroke-linejoin="round"/></g>"#)
         }
-        _ => format!(
-            "<g transform=\"{transform}\"><rect width=\"{width}\" height=\"{height}\" fill=\"none\" stroke=\"#888\"/></g>"
-        ),
+        _ => format!("<g transform=\"{transform}\"><rect width=\"{width}\" height=\"{height}\" fill=\"none\" stroke=\"#888\"/></g>"),
     }
 }
 
 pub fn note_document_to_svg(document: &NoteDocument) -> (String, u32, u32) {
     let (width, height) = note_document_bounds(document);
-    let body = flatten_blocks(&document.blocks)
-        .into_iter()
-        .filter(|block| block_visible(block))
-        .map(|block| note_block_to_svg(block, document))
-        .collect::<Vec<_>>()
-        .join("");
-    let svg = format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">{body}</svg>"#
-    );
+    let body = flatten_blocks(&document.blocks).into_iter().filter(|block| block_visible(block)).map(|block| note_block_to_svg(block, document)).collect::<Vec<_>>().join("");
+    let svg = format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">{body}</svg>"#);
     (svg, width, height)
 }
 
@@ -797,9 +645,7 @@ fn text_block_from_dwg(at: &[f64; 3], height: f64, rotation: f64, content: &str)
         rotation,
         visible: true,
         locked: false,
-        paragraphs: vec![NoteTextParagraph {
-            runs: vec![NoteTextRun { text: content.to_string(), bold: None, italic: None, underline: None, link: None }],
-        }],
+        paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: content.to_string(), bold: None, italic: None, underline: None, link: None }] }],
         font_size,
         font_weight: "normal".into(),
         align: "left".into(),
@@ -844,18 +690,7 @@ mod tests {
     fn clone_block_reids_group_children() {
         let child = create_block_by_kind("text", 0.0, 0.0);
         let child_id = block_id(&child).to_string();
-        let group = NoteBlockNode::Group {
-            id: "group-1".into(),
-            name: "Group".into(),
-            x: 0.0,
-            y: 0.0,
-            width: 100.0,
-            height: 100.0,
-            rotation: 0.0,
-            visible: true,
-            locked: false,
-            children: vec![child],
-        };
+        let group = NoteBlockNode::Group { id: "group-1".into(), name: "Group".into(), x: 0.0, y: 0.0, width: 100.0, height: 100.0, rotation: 0.0, visible: true, locked: false, children: vec![child] };
         let cloned = clone_block(&group);
         if let NoteBlockNode::Group { children, .. } = &cloned {
             assert_ne!(block_id(&children[0]), child_id);
@@ -869,21 +704,8 @@ mod tests {
         let drawing = DwgDrawing {
             layers: vec![DwgLayer::default()],
             entities: vec![
-                DwgEntity {
-                    layer: 0,
-                    color: DwgColor::ByLayer,
-                    geometry: DwgGeometry::LwPolyline {
-                        closed: true,
-                        elevation: 0.0,
-                        vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0]],
-                        bulges: vec![0.0, 0.5, 0.0],
-                    },
-                },
-                DwgEntity {
-                    layer: 0,
-                    color: DwgColor::ByLayer,
-                    geometry: DwgGeometry::Text { at: [1.0, 2.0, 0.0], height: 2.5, rotation: 0.0, content: "semio".into() },
-                },
+                DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0]], bulges: vec![0.0, 0.5, 0.0] } },
+                DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [1.0, 2.0, 0.0], height: 2.5, rotation: 0.0, content: "semio".into() } },
             ],
             extmin: [0.0, 0.0, 0.0],
             extmax: [10.0, 10.0, 0.0],

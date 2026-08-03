@@ -321,8 +321,17 @@ try {
     }, 50);
   });
 
-  if (!bindings.semioRendererBoot) throw new Error("[DEBUG] missing semioRendererBoot");
-  await (bindings.semioRendererBoot as (handles: typeof handles, pluginFilter: string) => Promise<void>)(handles, pluginFilter);
+  if (!bindings.semioWgpuMount) throw new Error("[DEBUG] missing semioWgpuMount");
+  const root = document.getElementById("root");
+  if (!root) throw new Error("[DEBUG] missing #root");
+  const canvas = document.createElement("canvas");
+  canvas.style.display = "block";
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.touchAction = "none";
+  canvas.style.outline = "none";
+  root.replaceChildren(canvas);
+  (bindings.semioWgpuMount as (canvas: HTMLCanvasElement, handles: typeof handles, pluginFilter: string) => void)(canvas, handles, pluginFilter);
 } catch (error) {
   renderBootErrorBanner(error instanceof Error ? error.message : String(error));
   throw error;

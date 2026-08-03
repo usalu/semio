@@ -371,15 +371,6 @@ pub struct Puzzle5dProjection {
 
 impl Default for Puzzle5dProjection {
     fn default() -> Self {
-        Self {
-            schema: PUZZLE_5D_SCHEMA.to_string(),
-            domain: "architecture".to_string(),
-            label: None,
-            meta: Puzzle5dMeta::default(),
-            kind_catalogs: None,
-            kind_compatibility: Vec::new(),
-            parts: Vec::new(),
-            fasteners: Vec::new(),
-        }
+        Self { schema: PUZZLE_5D_SCHEMA.to_string(), domain: "architecture".to_string(), label: None, meta: Puzzle5dMeta::default(), kind_catalogs: None, kind_compatibility: Vec::new(), parts: Vec::new(), fasteners: Vec::new() }
     }
 }

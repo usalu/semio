@@ -919,9 +919,10 @@ mod tests {
     }
 
     fn point_list(points: &[(f64, f64)]) -> Dictionary {
-        points.iter().enumerate().fold(Dictionary::with_schema("list"), |list, (index, (x, y))| {
-            list.insert(index.to_string(), Value::Dictionary(Dictionary::new().insert("x", Value::Atom(Atom::Decimal(*x))).insert("y", Value::Atom(Atom::Decimal(*y)))))
-        })
+        points
+            .iter()
+            .enumerate()
+            .fold(Dictionary::with_schema("list"), |list, (index, (x, y))| list.insert(index.to_string(), Value::Dictionary(Dictionary::new().insert("x", Value::Atom(Atom::Decimal(*x))).insert("y", Value::Atom(Atom::Decimal(*y))))))
     }
 
     fn drawing_handle_of(output: &Dictionary) -> String {
@@ -1105,10 +1106,8 @@ mod tests {
 
     #[test]
     fn text_operator_creates_drawing_with_default_size() {
-        let input = Dictionary::new()
-            .insert("x", Value::Dictionary(number_dictionary(0.0)))
-            .insert("y", Value::Dictionary(number_dictionary(0.0)))
-            .insert("text", Value::Dictionary(Dictionary::new().insert("value", Value::Atom(Atom::String("hi".into())))));
+        let input =
+            Dictionary::new().insert("x", Value::Dictionary(number_dictionary(0.0))).insert("y", Value::Dictionary(number_dictionary(0.0))).insert("text", Value::Dictionary(Dictionary::new().insert("value", Value::Atom(Atom::String("hi".into())))));
         let out = DrawText.evaluate(&input).unwrap();
         assert_eq!(drawing_kind_of(&out), "text");
     }

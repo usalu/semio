@@ -5,23 +5,23 @@
 //! Block `kind`s beyond [`PLAYBOOK_BUILTIN_KINDS`] are module-contributed
 //! (see `Contribution::PlaybookBlockKind` in `semio-framework-core`).
 
-use serde::{Deserialize, Serialize};
 use dsl::DslValue;
+use protocol::{Operation, OperationDiff};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use store::{DocumentEnvelope, DocumentStore};
-use protocol::{Operation, OperationDiff};
 
 pub const PLAYBOOK_DOCUMENT_SCHEMA: &str = "playbook.program";
 
 pub use builder_kit::{
-    add_block_operation, add_step_operation, build_palette, build_playbook_list_scene, move_block_operation, move_step_operation, playbook_builder_action, remove_block_operation, remove_step_operation, render_playbook_builder, update_playbook_title_operation, PlaybookBuilderConfig,
-    PlaybookBuilderLabels, PLAYBOOK_BUILDER_LABELS_EN,
+    add_block_operation, add_step_operation, build_palette, build_playbook_list_scene, move_block_operation, move_step_operation, playbook_builder_action, remove_block_operation, remove_step_operation, render_playbook_builder,
+    update_playbook_title_operation, PlaybookBuilderConfig, PlaybookBuilderLabels, PLAYBOOK_BUILDER_LABELS_EN,
 };
 /// 🧬️ Flattens `generation_forms`/`builder_kit` onto the crate root so callers keep the flat
 /// `playbook::*` import surface (mirrors how `semio-framework-plugin` flattened these before the move).
 pub use generation_forms::{
-    add_generation, apply_generation_operation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generation_form_body, render_generation_preview_text,
-    render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationOperation, GenerationPlayState,
+    add_generation, apply_generation_operation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generation_form_body,
+    render_generation_preview_text, render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationOperation, GenerationPlayState,
 };
 
 //#region 🔖️Domain
@@ -105,8 +105,12 @@ pub struct PlaybookBlockOption {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PlaybookExpr {
-    Const { value: DslValue },
-    Var { name: String },
+    Const {
+        value: DslValue,
+    },
+    Var {
+        name: String,
+    },
     Eq {
         #[dsl(statements, block)]
         left: Box<PlaybookExpr>,
@@ -124,7 +128,7 @@ pub enum PlaybookExpr {
     Truthy {
         #[dsl(statements, block)]
         expr: Box<PlaybookExpr>,
-    }
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -200,11 +204,7 @@ pub fn eval_playbook_expr(expr: &PlaybookExpr, values: &PlaybookValues) -> DslVa
 }
 
 pub fn is_block_visible(block: &PlaybookBlock, values: &serde_json::Map<String, serde_json::Value>) -> bool {
-    block
-        .condition
-        .as_ref()
-        .map(|expr| eval_playbook_expr(expr, &playbook_values_from_json(values)).as_bool().unwrap_or(false))
-        .unwrap_or(true)
+    block.condition.as_ref().map(|expr| eval_playbook_expr(expr, &playbook_values_from_json(values)).as_bool().unwrap_or(false)).unwrap_or(true)
 }
 
 pub fn default_value_for_block(block: &PlaybookBlock) -> DslValue {
@@ -212,19 +212,11 @@ pub fn default_value_for_block(block: &PlaybookBlock) -> DslValue {
         "text" | "longText" => block.default.clone().unwrap_or(DslValue::String(String::new())),
         "number" | "slider" => block.default.clone().or_else(|| block.min.map(DslValue::Number)).unwrap_or(DslValue::Number(0.0)),
         "boolean" => block.default.clone().unwrap_or(DslValue::Bool(false)),
-        "single" => block
-            .default
-            .clone()
-            .or_else(|| block.options.as_ref().and_then(|options| options.first()).map(|option| DslValue::String(option.value.clone())))
-            .unwrap_or(DslValue::String(String::new())),
+        "single" => block.default.clone().or_else(|| block.options.as_ref().and_then(|options| options.first()).map(|option| DslValue::String(option.value.clone()))).unwrap_or(DslValue::String(String::new())),
         "multi" => block.default.clone().unwrap_or(DslValue::Array(vec![])),
         "date" | "color" => block.default.clone().unwrap_or(DslValue::String(String::new())),
         "vector" => {
-            let values: Vec<DslValue> = block
-                .fields
-                .as_ref()
-                .map(|fields| fields.iter().map(|field| DslValue::Number(field.value.unwrap_or(0.0))).collect())
-                .unwrap_or_default();
+            let values: Vec<DslValue> = block.fields.as_ref().map(|fields| fields.iter().map(|field| DslValue::Number(field.value.unwrap_or(0.0))).collect()).unwrap_or_default();
             DslValue::Array(values)
         }
         "note" | "image" | "file" => DslValue::Null,
@@ -331,7 +323,7 @@ pub enum PlaybookOperation {
     UpdatePlaybook {
         #[serde(skip_serializing_if = "Option::is_none")]
         title: Option<String>,
-    }
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -377,7 +369,7 @@ pub enum PlaybookDiff {
     UpdatePlaybook {
         #[serde(skip_serializing_if = "Option::is_none")]
         title: Option<String>,
-    }
+    },
 }
 
 impl OperationDiff<PlaybookSpec> for PlaybookDiff {
@@ -557,8 +549,8 @@ pub mod generation_forms {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Map, Value};
     use ui_wgpu::{
-        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
-        UiTreeSectionNode,
+        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeActionPlacement,
+        UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
 
     //#region 🔖️Types
@@ -750,11 +742,7 @@ pub mod generation_forms {
 
     //#region 🔖️Render
     fn generation_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
-        ActionDescriptor {
-            controller_id: controller_id.into(),
-            action: action.into(),
-            args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)),
-        }
+        ActionDescriptor { controller_id: controller_id.into(), action: action.into(), args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)) }
     }
 
     pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, generations: &[FormGeneration], selected_id: Option<&str>) -> UiNode {
@@ -764,8 +752,12 @@ pub mod generation_forms {
                 // 🚧️ Chrome literals ("Remove"/"Rename"/etc below) — genuinely static app copy, not yet
                 // routed through app_labels! (this crate predates the two-axis macro); flagged as a
                 // follow-up rather than fixed in this pass. `Label::data` unblocks compilation.
-                let mut actions = vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(Label::data("Remove")), action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))), placement: Some(UiTreeActionPlacement::Menu),
-        }];
+                let mut actions = vec![UiTreeItemAction {
+                    icon_id: "trash-2".into(),
+                    label: Some(Label::data("Remove")),
+                    action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))),
+                    placement: Some(UiTreeActionPlacement::Menu),
+                }];
                 actions.insert(
                     0,
                     UiTreeItemAction {
@@ -847,15 +839,7 @@ pub mod generation_forms {
             }],
             presence: UiPresence::default(),
         });
-        UiNode::Tree(UiTreeNode {
-            sections,
-            presence: UiPresence::default(),
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: Some(generation_action(controller_id, "selectGeneration", None)),
-            drop_action: None,
-            menu: None,
-        })
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: Some(generation_action(controller_id, "selectGeneration", None)), drop_action: None, menu: None })
     }
 
     fn render_question_field(question: &PlaybookBlock, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> Option<UiNode> {
@@ -914,15 +898,25 @@ pub mod generation_forms {
                 presence: UiPresence::default(),
                 menu: None,
             }),
-            "boolean" => UiControlNode::Toggle(UiToggleNode { id: format!("{field_id}.toggle"), icon_id: "toggle-left".into(), text: Some(Label::data(question.label.clone())), on_change: on_change(), presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
-        menu: None,
-    }),
+            "boolean" => UiControlNode::Toggle(UiToggleNode {
+                id: format!("{field_id}.toggle"),
+                icon_id: "toggle-left".into(),
+                text: Some(Label::data(question.label.clone())),
+                on_change: on_change(),
+                presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
+                menu: None,
+            }),
             "single" => {
-                let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.clone()),
-        }).collect()).unwrap_or_default();
-                UiControlNode::Select(UiSelectNode { id: format!("{field_id}.select"), value: value.as_str().unwrap_or_default().to_string(), items, placeholder: question.placeholder.clone().map(Label::data), on_change: on_change(), presence: UiPresence::default(),
-        menu: None,
-    })
+                let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.clone()) }).collect()).unwrap_or_default();
+                UiControlNode::Select(UiSelectNode {
+                    id: format!("{field_id}.select"),
+                    value: value.as_str().unwrap_or_default().to_string(),
+                    items,
+                    placeholder: question.placeholder.clone().map(Label::data),
+                    on_change: on_change(),
+                    presence: UiPresence::default(),
+                    menu: None,
+                })
             }
             "vector" => {
                 let numbers = value.as_array().cloned().unwrap_or_else(|| question.fields.as_ref().map(|fields| fields.iter().map(|field| json!(field.value.unwrap_or(0.0))).collect()).unwrap_or_default());
@@ -988,9 +982,7 @@ pub mod generation_forms {
                 menu: None,
             }),
         };
-        Some(UiNode::Field(UiFieldNode { id: field_id, label: Label::data(question.label.clone()), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default(),
-        menu: None,
-    }))
+        Some(UiNode::Field(UiFieldNode { id: field_id, label: Label::data(question.label.clone()), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default(), menu: None }))
     }
 
     pub fn render_generation_form_body(form_spec: &PlaybookSpec, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> UiNode {
@@ -1144,11 +1136,7 @@ pub mod builder_kit {
 
     //#region 🔖️Render
     pub fn playbook_builder_action(config: &PlaybookBuilderConfig, action: &str, args: Option<Value>) -> ActionDescriptor {
-        ActionDescriptor {
-            controller_id: config.controller_id.into(),
-            action: action.into(),
-            args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)),
-        }
+        ActionDescriptor { controller_id: config.controller_id.into(), action: action.into(), args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)) }
     }
 
     /// 🧩️ Builds the palette of insertable block kinds from a host app's built-in kinds plus any
@@ -1532,14 +1520,9 @@ mod tests {
     fn document_text_round_trips_after_applied_operations() {
         let mut store = PlaybookStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None));
         store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![PlaybookOperation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() }, index: None }],
-                description: None,
-            })
+            .dispatch(DocumentCommand::Apply { operations: vec![PlaybookOperation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() }, index: None }], description: None })
             .expect("add step");
-        store
-            .dispatch(DocumentCommand::Apply { operations: vec![PlaybookOperation::AddBlock { step_id: "step-2".into(), block: fully_populated_block(), index: None }], description: None })
-            .expect("add block");
+        store.dispatch(DocumentCommand::Apply { operations: vec![PlaybookOperation::AddBlock { step_id: "step-2".into(), block: fully_populated_block(), index: None }], description: None }).expect("add block");
         store.dispatch(DocumentCommand::Apply { operations: vec![PlaybookOperation::UpdatePlaybook { title: Some("Recipe".into()) }], description: None }).expect("update title");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);

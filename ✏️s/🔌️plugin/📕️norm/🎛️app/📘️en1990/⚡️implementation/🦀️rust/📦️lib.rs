@@ -33,14 +33,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            g_k: 100.0,
-            q_k: vec![QkEntry { category: "office".into(), value: 50.0 }, QkEntry { category: "wind".into(), value: 30.0 }],
-            resistance_kn: 300.0,
-            consequence_class: 2,
-            annex: AnnexChoice::De,
-            seismic_a_ed_kn: 40.0,
-        }
+        Self { g_k: 100.0, q_k: vec![QkEntry { category: "office".into(), value: 50.0 }, QkEntry { category: "wind".into(), value: 30.0 }], resistance_kn: 300.0, consequence_class: 2, annex: AnnexChoice::De, seismic_a_ed_kn: 40.0 }
     }
 }
 //#endregion 🔖️Types

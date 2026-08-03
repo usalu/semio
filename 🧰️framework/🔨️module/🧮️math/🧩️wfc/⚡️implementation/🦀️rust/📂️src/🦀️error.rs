@@ -18,19 +18,33 @@ pub enum ModelError {
     /// 🚨️ The same relation name/id was registered twice.
     DuplicateRelation(crate::ids::RelationId),
     /// 🚨️ A weight failed validation (`NaN`, infinite, or negative).
-    InvalidWeight { pattern_index: usize, value: f64 },
+    InvalidWeight {
+        pattern_index: usize,
+        value: f64,
+    },
     /// 🚨️ `allowed[r][a].get(b) != allowed[inv(r)][b].get(a)` — the declared inverse relation is
     /// not actually the transpose of the forward relation's compatibility table.
-    AsymmetricInverse { relation: crate::ids::RelationId },
+    AsymmetricInverse {
+        relation: crate::ids::RelationId,
+    },
     /// 🚨️ A checked multiplication/addition needed to size an internal table overflowed.
-    CapacityOverflow { what: &'static str },
+    CapacityOverflow {
+        what: &'static str,
+    },
     /// 🚨️ A symmetry transform did not close under composition/inverse (generator set is broken).
-    InvalidSymmetryGroup { reason: &'static str },
+    InvalidSymmetryGroup {
+        reason: &'static str,
+    },
     /// 🚨️ A socket rule referenced a socket label that was never declared compatible with anything.
-    IncompatibleSocketRule { reason: &'static str },
+    IncompatibleSocketRule {
+        reason: &'static str,
+    },
     /// 🚨️ A [`crate::serial::SourceModelDoc`]'s schema version does not match this build's. No
     /// migration — this crate has no users yet, so an unrecognized version is simply rejected.
-    SchemaVersionMismatch { expected: u32, actual: u32 },
+    SchemaVersionMismatch {
+        expected: u32,
+        actual: u32,
+    },
 }
 
 impl core::fmt::Display for ModelError {
@@ -109,14 +123,19 @@ impl std::error::Error for TopologyError {}
 #[derive(Clone, PartialEq, Debug)]
 pub enum ConstraintError {
     /// 🚨️ A cardinality/distance bound was internally inconsistent (e.g. `min > max`).
-    InvalidBounds { reason: &'static str },
+    InvalidBounds {
+        reason: &'static str,
+    },
     /// 🚨️ A referenced region/tag was never declared.
     UnknownRegion(crate::ids::RegionId),
     UnknownTag(u32),
     /// 🚨️ A tuple-table constraint was given zero tuples.
     EmptyTupleTable,
     /// 🚨️ A tuple in a tuple-table constraint did not match the declared node-scope arity.
-    ArityMismatch { expected: usize, actual: usize },
+    ArityMismatch {
+        expected: usize,
+        actual: usize,
+    },
     /// 🚨️ A constraint referenced a node outside the topology.
     UnknownNode(crate::ids::NodeId),
 }

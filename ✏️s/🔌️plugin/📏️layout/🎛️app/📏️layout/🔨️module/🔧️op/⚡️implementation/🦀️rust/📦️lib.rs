@@ -83,13 +83,27 @@ pub enum LayoutOperation {
     Pages(CollectionOperation<String, Page, PagePatch>),
     Stories(CollectionOperation<String, TextStory, TextStoryPatch>),
     Links(CollectionOperation<String, ImageLink, ImageLinkPatch>),
-    AddFrame { page_id: String, index: usize, frame: Frame, layer_id: Option<String> },
-    RemoveFrame { page_id: String, frame_id: String },
-    PatchFrame { page_id: String, frame_id: String, patch: FramePatch },
+    AddFrame {
+        page_id: String,
+        index: usize,
+        frame: Frame,
+        layer_id: Option<String>,
+    },
+    RemoveFrame {
+        page_id: String,
+        frame_id: String,
+    },
+    PatchFrame {
+        page_id: String,
+        frame_id: String,
+        patch: FramePatch,
+    },
     /// 🔠️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: whole-field replace for
     /// `LayoutDocument::data_fields_json` — the `fields:in` workflow port's real, undoable write (see
     /// `layout_ui::LayoutPlayApp::import_media`).
-    SetDataFields { json: Option<String> }
+    SetDataFields {
+        json: Option<String>,
+    },
 }
 
 fn apply_layout_operation(doc: &mut LayoutDocument, operation: &LayoutOperation) {
@@ -283,7 +297,9 @@ enum LayoutOperationDsl {
         #[dsl(block)]
         item: Page,
     },
-    PagesRemove { id: String },
+    PagesRemove {
+        id: String,
+    },
     PagesMove {
         id: String,
         to_index: usize,
@@ -298,7 +314,9 @@ enum LayoutOperationDsl {
         #[dsl(block)]
         item: TextStory,
     },
-    StoriesRemove { id: String },
+    StoriesRemove {
+        id: String,
+    },
     StoriesMove {
         id: String,
         to_index: usize,
@@ -313,7 +331,9 @@ enum LayoutOperationDsl {
         #[dsl(block)]
         item: ImageLink,
     },
-    LinksRemove { id: String },
+    LinksRemove {
+        id: String,
+    },
     LinksMove {
         id: String,
         to_index: usize,
@@ -341,7 +361,9 @@ enum LayoutOperationDsl {
         patch: FramePatchDsl,
     },
     #[dsl(key = "data-fields")]
-    SetDataFields { json: Option<String> }
+    SetDataFields {
+        json: Option<String>,
+    },
 }
 
 fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
@@ -358,13 +380,9 @@ fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
         LayoutOperation::Links(CollectionOperation::Remove { id }) => LayoutOperationDsl::LinksRemove { id: id.clone() },
         LayoutOperation::Links(CollectionOperation::Move { id, to }) => LayoutOperationDsl::LinksMove { id: id.clone(), to_index: *to },
         LayoutOperation::Links(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::LinksPatch { id: id.clone(), patch: patch.clone() },
-        LayoutOperation::AddFrame { page_id, index, frame, layer_id } => {
-            LayoutOperationDsl::AddFrame { page_id: page_id.clone(), index: *index, frame: Box::new(frame.clone()), layer_id: layer_id.clone() }
-        }
+        LayoutOperation::AddFrame { page_id, index, frame, layer_id } => LayoutOperationDsl::AddFrame { page_id: page_id.clone(), index: *index, frame: Box::new(frame.clone()), layer_id: layer_id.clone() },
         LayoutOperation::RemoveFrame { page_id, frame_id } => LayoutOperationDsl::RemoveFrame { page_id: page_id.clone(), frame_id: frame_id.clone() },
-        LayoutOperation::PatchFrame { page_id, frame_id, patch } => {
-            LayoutOperationDsl::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: frame_patch_to_dsl(patch) }
-        }
+        LayoutOperation::PatchFrame { page_id, frame_id, patch } => LayoutOperationDsl::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: frame_patch_to_dsl(patch) },
         LayoutOperation::SetDataFields { json } => LayoutOperationDsl::SetDataFields { json: json.clone() },
     }
 }
@@ -556,7 +574,18 @@ mod tests {
     }
 
     fn new_text(id: &str) -> Frame {
-        Frame::Text { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 }, locked: None, visible: None, story_id: "story-1".into(), thread_next: None, columns: 1, inset: layout::LayoutRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 }, wrap_mode: "box".into() }
+        Frame::Text {
+            id: id.into(),
+            layer_id: "layer-1".into(),
+            bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 },
+            locked: None,
+            visible: None,
+            story_id: "story-1".into(),
+            thread_next: None,
+            columns: 1,
+            inset: layout::LayoutRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 },
+            wrap_mode: "box".into(),
+        }
     }
 
     #[test]
@@ -615,10 +644,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Add { id: page_2.id.clone(), item: page_2, at: 1 }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Remove { id: "page-1".into() }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Move { id: "page-1".into(), to: 1 }));
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch {
-            id: "page-1".into(),
-            patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() },
-        }));
+        store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() } }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch::default() }));
 
         let mut story_2 = doc.stories[0].clone();
@@ -637,24 +663,10 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } }));
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: None } }));
 
-        let rect_frame = Frame::Rect {
-            id: "frame-new".into(),
-            layer_id: "layer-1".into(),
-            bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 },
-            locked: None,
-            visible: Some(true),
-            fill: Some([0.1, 0.2, 0.3, 1.0]),
-            stroke: None,
-        };
+        let rect_frame =
+            Frame::Rect { id: "frame-new".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 }, locked: None, visible: Some(true), fill: Some([0.1, 0.2, 0.3, 1.0]), stroke: None };
         store::test_support::assert_op_line_round_trip(&LayoutOperation::AddFrame { page_id: "page-1".into(), index: 1, frame: rect_frame, layer_id: Some("layer-1".into()) });
-        let image_frame = Frame::Image {
-            id: "frame-img".into(),
-            layer_id: "layer-1".into(),
-            bounds: LayoutBounds { x: 1.0, y: 2.0, width: 3.0, height: 4.0, rotation: 5.0 },
-            locked: Some(false),
-            visible: None,
-            link_id: "link-missing".into(),
-        };
+        let image_frame = Frame::Image { id: "frame-img".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 1.0, y: 2.0, width: 3.0, height: 4.0, rotation: 5.0 }, locked: Some(false), visible: None, link_id: "link-missing".into() };
         store::test_support::assert_op_line_round_trip(&LayoutOperation::AddFrame { page_id: "page-1".into(), index: 1, frame: image_frame, layer_id: None });
         store::test_support::assert_op_line_round_trip(&LayoutOperation::RemoveFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into() });
         store::test_support::assert_op_line_round_trip(&LayoutOperation::PatchFrame {
@@ -667,7 +679,8 @@ mod tests {
 
     #[test]
     fn op_text_round_trips_full_page_and_frame_patch_fields() {
-        let full_page_patch = PagePatch { name: Some("Renamed".into()), width: Some(300.0), height: Some(400.0), margin_top: Some(1.0), margin_right: Some(2.0), margin_bottom: Some(3.0), margin_left: Some(4.0), columns_count: Some(5), columns_gutter: Some(6.0) };
+        let full_page_patch =
+            PagePatch { name: Some("Renamed".into()), width: Some(300.0), height: Some(400.0), margin_top: Some(1.0), margin_right: Some(2.0), margin_bottom: Some(3.0), margin_left: Some(4.0), columns_count: Some(5), columns_gutter: Some(6.0) };
         store::test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: full_page_patch }));
 
         let full_frame_patch = FramePatch { x: Some(1.0), y: Some(2.0), width: Some(3.0), height: Some(4.0), fill: Some(Some([0.1, 0.2, 0.3, 0.4])), stroke: Some(None), wrap_mode: Some("column".into()), columns: Some(3) };

@@ -8,17 +8,15 @@
 //! read-mostly for this first pass — exaggeration and the `map:in` overlay layer are the only
 //! editable/undoable document state (see `gis3d::Gis3dTerrainDocument`).
 
+use framework_surface_terrain::{build_terrain_scene_json, projection, TerrainDescriptorJson};
 use gis3d::{Gis3dTerrainDocument, GIS_3D_TERRAIN_SCHEMA};
 use gis3d_dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
 use gis3d_engine::{default_terrain_document, gis3d_io, gis3d_map_in_port, gis3d_scene_media, gis3d_scene_out_port, Gis3dConfig};
 use gis3d_op::{Gis3dConfigOperation, Gis3dTerrainOperation};
 use gis3d_protocol::Gis3dCommand;
-use framework_surface_terrain::{build_terrain_scene_json, projection, TerrainDescriptorJson};
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, ui_text,
-    world3d_scene_extended, world3d_selection_json,
-    ArtifactKindSpec, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
-    App,
+    build_world_3d_scene, create_default_layout, ui_text, world3d_scene_extended, world3d_selection_json, App, AppIo, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
 };
 use serde_json::{json, Value};
 use store::DocumentPack;
@@ -189,27 +187,8 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
 
 fn render_canvas(document: &Gis3dTerrainDocument, cfg: &Gis3dConfig) -> UiNode {
     let descriptor = parse_descriptor(document);
-    let mut scene = world3d_scene_extended(
-        cfg.camera_json.clone(),
-        "[]".into(),
-        instances_json(&descriptor),
-        world3d_selection_json("rectangle", &cfg.selected_ids, None),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let mut scene =
+        world3d_scene_extended(cfg.camera_json.clone(), "[]".into(), instances_json(&descriptor), world3d_selection_json("rectangle", &cfg.selected_ids, None), None, None, None, None, None, None, None, None, None, None, None, None, None, None, None);
     scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
     build_world_3d_scene(GIS3D_PLAY_SURFACE, GIS3D_PLAY_APP_ID, scene)
 }
@@ -259,10 +238,7 @@ impl DocumentApp for Gis3dPlayApp {
             "document:out" => {
                 let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
                 let bytes = doc.projection.encode_pack();
-                Ok(Media {
-                    media_type,
-                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -308,12 +284,7 @@ impl DocumentApp for Gis3dPlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &Gis3dCommand,
-        _doc: &DocumentView<'_, Gis3dTerrainDocument>,
-        _cfg: &ConfigView<'_, Gis3dConfig>,
-    ) -> Emit<Gis3dTerrainOperation, Gis3dConfigOperation> {
+    fn handle(&self, command: &Gis3dCommand, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Emit<Gis3dTerrainOperation, Gis3dConfigOperation> {
         match command {
             Gis3dCommand::SetCamera { camera_json } => Emit::config(vec![Gis3dConfigOperation::SetCamera { camera_json: camera_json.clone() }]),
             Gis3dCommand::SetSelection { ids } | Gis3dCommand::WorldSelect { ids } => Emit::config(vec![Gis3dConfigOperation::SetSelection { ids: ids.clone() }]),
@@ -411,13 +382,9 @@ mod tests {
     #[test]
     fn camera_and_selection_are_config_state_and_emit_no_operations() {
         let mut app = new_app();
-        let camera = app
-            .dispatch_typed(Gis3dCommand::SetCamera { camera_json: json!({ "position": [1.0, 1.0, 1.0] }).to_string() }, &testkit::meta("local"))
-            .expect("setCamera");
+        let camera = app.dispatch_typed(Gis3dCommand::SetCamera { camera_json: json!({ "position": [1.0, 1.0, 1.0] }).to_string() }, &testkit::meta("local")).expect("setCamera");
         assert!(camera.operations.is_empty(), "camera is ephemeral config state");
-        let selection = app
-            .dispatch_typed(Gis3dCommand::WorldSelect { ids: vec!["p_institut_de_botanique_ulg_liege".into()] }, &testkit::meta("local"))
-            .expect("worldSelect");
+        let selection = app.dispatch_typed(Gis3dCommand::WorldSelect { ids: vec!["p_institut_de_botanique_ulg_liege".into()] }, &testkit::meta("local")).expect("worldSelect");
         assert!(selection.operations.is_empty(), "selection is ephemeral config state");
     }
 
@@ -451,10 +418,7 @@ mod tests {
     /// 🔌️ `map:in`'s overlay layer renders as extra pins alongside the fixture's own two.
     #[test]
     fn imported_map_features_render_as_extra_pins() {
-        let document = Gis3dTerrainDocument {
-            exaggeration: 1.5,
-            imported_features_json: json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string(),
-        };
+        let document = Gis3dTerrainDocument { exaggeration: 1.5, imported_features_json: json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string() };
         let descriptor = parse_descriptor(&document);
         assert_eq!(descriptor.positions.len(), 3, "2 fixture pins + 1 imported pin");
         assert!(descriptor.positions.iter().any(|position| position.id == "imported-1"));

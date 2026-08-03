@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin, uiAssetsVitePlugin } from "../../../../../../🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { isStudioPluginFilter } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/📜️script.ts";
 import { resolveShellBrandById } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🏷️brand/📦️index.ts";
@@ -19,7 +19,6 @@ const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;
 const brand = resolveShellBrandById(brandId);
-const uiAssetsRoot = path.join(repoRoot, "./🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript");
 
 //#region 🔖️RegistryDrivenAssetsAndEngines
 /** @emoji 🔌️ Framework engine crates every react-renderer dev session needs regardless of the active
@@ -72,7 +71,7 @@ export default defineConfig({
     alias: [
       ...playgroundSceneHostResolveAliases(repoRoot),
       { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx") },
-      { find: "@semio-tech/ui-asset", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript") },
+      { find: "@semio-tech/asset", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/📦️index.ts") },
       { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript") },
       { find: "@semio-tech/infinite-canvas-react-renderer", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementation/🟦️typescript/📦️index.tsx") },
       { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🌍️world/🎨️r3f/⚡️implementation/🟦️typescript/📦️index.tsx") },
@@ -91,11 +90,15 @@ export default defineConfig({
     fs: { allow: [repoRoot, pluginModulesDir, rendererModulesDir] },
   },
   plugins: [
+    ...semioHostHtmlVitePlugin(repoRoot, {
+      title: "semio · os",
+      entry: "./📦️index.ts",
+    }),
     semioEmojiIndexHtmlVitePlugin(playDir),
     playgroundFlowWasmDevStubPlugin(repoRoot),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
-    ...uiAssetsVitePlugin(uiAssetsRoot),
+    ...semioAssetsVitePlugin(repoRoot),
     // 🔌️ `resolve.alias`'s `/plugin-modules` entry above only covers *bundler* resolution (static imports
     // Vite can inline) — the shell also fetches wasm plugin modules at runtime via plain absolute-URL
     // `import()`s, which a production build never bundles. Without an explicit static-dir copy, a

@@ -4,7 +4,7 @@
 //! [`crate::grid2d::declare_stencil_relations`] so an extracted model's relations line up exactly
 //! with a [`crate::grid2d::Grid2dTopology`] built with the same (von Neumann) stencil.
 
-use crate::grid2d::{Stencil2d, declare_stencil_relations};
+use crate::grid2d::{declare_stencil_relations, Stencil2d};
 use crate::ids::{PatternId, TileId};
 use crate::model::{CompiledModel, ModelBuilder};
 use crate::symmetry::SymmetryGroup2d;

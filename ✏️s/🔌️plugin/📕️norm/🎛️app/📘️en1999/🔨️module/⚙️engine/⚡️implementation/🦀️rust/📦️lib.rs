@@ -5,8 +5,8 @@ use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
 // #region 🔖️NaDe
 pub mod na_de {
-    pub use norm_en_1990::na_de::NaDe;
     use norm_core::AnnexChoice;
+    pub use norm_en_1990::na_de::NaDe;
 
     pub const HAZ_ZONE_MM: f64 = 25.0;
 
@@ -177,13 +177,7 @@ pub mod part_1_2 {
     }
 
     pub fn check_fire_protection(theta_c: f64, theta_limit_c: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1999-1-2", "§4", "4.2"),
-            Quantity::new(norm_core::QuantityKind::Temperature, theta_c),
-            Quantity::new(norm_core::QuantityKind::Temperature, theta_limit_c),
-            "aluminium fire protection",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1999-1-2", "§4", "4.2"), Quantity::new(norm_core::QuantityKind::Temperature, theta_c), Quantity::new(norm_core::QuantityKind::Temperature, theta_limit_c), "aluminium fire protection", annex)
     }
 }
 // #endregion 🔖️Part1_2

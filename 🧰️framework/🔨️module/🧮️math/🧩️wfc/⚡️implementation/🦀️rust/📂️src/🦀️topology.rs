@@ -13,8 +13,8 @@ use crate::ids::{NodeId, RegionId, RelationId};
 /// each one's incoming arcs live in a dense per-arc-slot indexing scheme (used by AC-4's support
 /// counters). Implementors are always monomorphized into the kernel — never called through `dyn`.
 #[allow(dead_code)] // arc_count/region_of/for_each_in_arc/max_in_degree are consumed starting
-// with the AC-4 propagator (P6) and region-scoped constraints (P7); the trait's full shape is
-// fixed now so those phases never need to touch this sealed boundary.
+                    // with the AC-4 propagator (P6) and region-scoped constraints (P7); the trait's full shape is
+                    // fixed now so those phases never need to touch this sealed boundary.
 pub(crate) trait Topology {
     fn node_count(&self) -> usize;
     fn arc_count(&self) -> usize;
@@ -38,7 +38,7 @@ pub(crate) trait Topology {
 /// multiedges (repeated `(from, to)` under different or identical relations) and self-loops.
 #[derive(Clone, Debug)]
 #[allow(dead_code)] // in_sources/in_relations/regions back for_each_in_arc/in_arc_slot/region_of,
-// unread until AC-4 (P6) and region-scoped constraints (P7) call those trait methods.
+                    // unread until AC-4 (P6) and region-scoped constraints (P7) call those trait methods.
 pub struct GraphTopology {
     node_count: usize,
     out_starts: Vec<u32>,

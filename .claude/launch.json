@@ -34,6 +34,12 @@
       "port": 6023
     },
     {
+      "name": "mit-bestand-demonstrator-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/mit-bestand-demonstrator:dev"],
+      "port": 6029
+    },
+    {
       "name": "block2d-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:block:2d"],

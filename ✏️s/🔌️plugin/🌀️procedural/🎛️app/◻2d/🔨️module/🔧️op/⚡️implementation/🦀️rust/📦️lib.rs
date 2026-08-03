@@ -3,8 +3,8 @@
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{apply_generation_operation, invert_generation_operation, GenerationOperation};
 use procedural_2d::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_id, widget_to_dsl,
-    CameraJsonDsl, FormGenerationDsl, Procedural2dDocument, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl,
+    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_id, widget_to_dsl, CameraJsonDsl, FormGenerationDsl,
+    Procedural2dDocument, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl,
 };
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
@@ -243,35 +243,48 @@ enum Procedural2dOperationDsl {
         #[dsl(statements)]
         widget: Box<WidgetDsl>,
     },
-    RemoveWidget { id: String },
+    RemoveWidget {
+        id: String,
+    },
     SetSynapse {
         index: usize,
         #[dsl(block)]
         synapse: SynapseSpecDsl,
     },
-    RemoveSynapse { id: String },
+    RemoveSynapse {
+        id: String,
+    },
     SetLayout {
         id: String,
         #[dsl(block)]
         layout: WidgetLayoutDsl,
     },
-    RemoveLayout { id: String },
+    RemoveLayout {
+        id: String,
+    },
     SetCamera {
         #[dsl(block)]
         camera: CameraJsonDsl,
     },
-    SetSchema { schema: String },
+    SetSchema {
+        schema: String,
+    },
     GenerationAdd {
         #[dsl(block)]
         generation: FormGenerationDsl,
     },
-    GenerationRemove { id: String },
-    GenerationRename { id: String, name: String },
+    GenerationRemove {
+        id: String,
+    },
+    GenerationRename {
+        id: String,
+        name: String,
+    },
     GenerationUpdateValues {
         id: String,
         question_id: String,
         value: dsl::DslValue,
-    }
+    },
 }
 
 fn procedural2d_operation_to_dsl(operation: &Procedural2dOperation) -> Procedural2dOperationDsl {
@@ -288,11 +301,7 @@ fn procedural2d_operation_to_dsl(operation: &Procedural2dOperation) -> Procedura
         Procedural2dOperation::Generation(GenerationOperation::Remove { id }) => Procedural2dOperationDsl::GenerationRemove { id: id.clone() },
         Procedural2dOperation::Generation(GenerationOperation::Rename { id, name }) => Procedural2dOperationDsl::GenerationRename { id: id.clone(), name: name.clone() },
         Procedural2dOperation::Generation(GenerationOperation::UpdateValues { id, question_id, value }) => {
-            Procedural2dOperationDsl::GenerationUpdateValues {
-                id: id.clone(),
-                question_id: question_id.clone(),
-                value: dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null),
-            }
+            Procedural2dOperationDsl::GenerationUpdateValues { id: id.clone(), question_id: question_id.clone(), value: dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null) }
         }
     }
 }
@@ -310,11 +319,7 @@ fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Resul
         Procedural2dOperationDsl::GenerationAdd { generation } => Procedural2dOperation::Generation(GenerationOperation::Add { generation: form_generation_from_dsl(generation) }),
         Procedural2dOperationDsl::GenerationRemove { id } => Procedural2dOperation::Generation(GenerationOperation::Remove { id }),
         Procedural2dOperationDsl::GenerationRename { id, name } => Procedural2dOperation::Generation(GenerationOperation::Rename { id, name }),
-        Procedural2dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural2dOperation::Generation(GenerationOperation::UpdateValues {
-            id,
-            question_id,
-            value: dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null),
-        }),
+        Procedural2dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural2dOperation::Generation(GenerationOperation::UpdateValues { id, question_id, value: dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null) }),
     })
 }
 
@@ -409,8 +414,8 @@ pub type Procedural2dStore = DocumentStore<Procedural2dDocument, Procedural2dOpe
 mod tests {
     use super::*;
     use procedural_2d_engine::empty_procedural2d_projection;
-    use store::test_support;
     use protocol::OpText;
+    use store::test_support;
     use vcs::apply_operation;
 
     fn round_trip(projection: &Procedural2dDocument, operation: &Procedural2dOperation) -> Procedural2dDocument {
@@ -494,10 +499,7 @@ mod tests {
         let projection = empty_procedural2d_projection();
         let existing_id = widget_id(&projection.fixture.widgets[1]).to_string();
         let diff = Procedural2dDiff {
-            widgets: WidgetsDiff {
-                removed: vec![],
-                set: vec![(0, Widget::InputNote { id: existing_id.clone(), text: "replaced".into() }), (999, Widget::InputNote { id: "brand-new".into(), text: "new".into() })],
-            },
+            widgets: WidgetsDiff { removed: vec![], set: vec![(0, Widget::InputNote { id: existing_id.clone(), text: "replaced".into() }), (999, Widget::InputNote { id: "brand-new".into(), text: "new".into() })] },
             ..Default::default()
         };
         let next = diff.apply(&projection);
@@ -654,10 +656,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_set_synapse() {
-        test_support::assert_op_line_round_trip(&Procedural2dOperation::SetSynapse {
-            index: 1,
-            synapse: SynapseSpec { id: "s1".into(), from: "rect".into(), to: "fill".into(), from_port: "draw.drawing".into(), to_port: String::new() },
-        });
+        test_support::assert_op_line_round_trip(&Procedural2dOperation::SetSynapse { index: 1, synapse: SynapseSpec { id: "s1".into(), from: "rect".into(), to: "fill".into(), from_port: "draw.drawing".into(), to_port: String::new() } });
     }
 
     #[test]

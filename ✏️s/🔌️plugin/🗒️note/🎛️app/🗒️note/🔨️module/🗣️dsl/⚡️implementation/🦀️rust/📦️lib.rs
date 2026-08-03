@@ -31,10 +31,7 @@ mod tests {
     #[test]
     fn note_dsl_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
-        assets.insert(
-            "asset-1".into(),
-            NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) },
-        );
+        assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
         let document = NoteDocument {
             schema: NOTE_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),
@@ -62,31 +59,14 @@ mod tests {
                     paragraphs: vec![NoteTextParagraph {
                         runs: vec![
                             NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None },
-                            NoteTextRun {
-                                text: "bold+link".into(),
-                                bold: Some(true),
-                                italic: Some(false),
-                                underline: Some(true),
-                                link: Some("https://semio.io".into()),
-                            },
+                            NoteTextRun { text: "bold+link".into(), bold: Some(true), italic: Some(false), underline: Some(true), link: Some("https://semio.io".into()) },
                         ],
                     }],
                     font_size: 16.0,
                     font_weight: "bold".into(),
                     align: "center".into(),
                 },
-                NoteBlockNode::Image {
-                    id: "image-1".into(),
-                    name: "Image".into(),
-                    x: 10.0,
-                    y: 10.0,
-                    width: 240.0,
-                    height: 160.0,
-                    rotation: 15.0,
-                    visible: false,
-                    locked: true,
-                    image_key: "asset-1".into(),
-                },
+                NoteBlockNode::Image { id: "image-1".into(), name: "Image".into(), x: 10.0, y: 10.0, width: 240.0, height: 160.0, rotation: 15.0, visible: false, locked: true, image_key: "asset-1".into() },
                 NoteBlockNode::Table {
                     id: "table-1".into(),
                     name: "Table".into(),
@@ -98,24 +78,9 @@ mod tests {
                     visible: true,
                     locked: false,
                     columns: vec!["A".into(), "B".into()],
-                    rows: vec![
-                        vec![NoteTableCell { content: "a1".into() }, NoteTableCell { content: "b1".into() }],
-                        vec![NoteTableCell { content: "a2".into() }, NoteTableCell { content: "with \"quotes\" and \\ backslash".into() }],
-                    ],
+                    rows: vec![vec![NoteTableCell { content: "a1".into() }, NoteTableCell { content: "b1".into() }], vec![NoteTableCell { content: "a2".into() }, NoteTableCell { content: "with \"quotes\" and \\ backslash".into() }]],
                 },
-                NoteBlockNode::Math {
-                    id: "math-1".into(),
-                    name: "Math".into(),
-                    x: 30.0,
-                    y: 30.0,
-                    width: 200.0,
-                    height: 80.0,
-                    rotation: 0.0,
-                    visible: true,
-                    locked: false,
-                    tex: "\\int_0^1 x\\,dx".into(),
-                    display_mode: true,
-                },
+                NoteBlockNode::Math { id: "math-1".into(), name: "Math".into(), x: 30.0, y: 30.0, width: 200.0, height: 80.0, rotation: 0.0, visible: true, locked: false, tex: "\\int_0^1 x\\,dx".into(), display_mode: true },
                 NoteBlockNode::Ink {
                     id: "stroke-1".into(),
                     name: "Ink".into(),

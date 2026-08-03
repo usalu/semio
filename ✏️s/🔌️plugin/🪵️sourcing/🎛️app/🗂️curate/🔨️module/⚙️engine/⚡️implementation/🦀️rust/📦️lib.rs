@@ -94,11 +94,7 @@ pub fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
 /// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
 /// mesh as "no visual representation yet", not an error.
 pub fn sourcing_catalog_fragment(document: &CurateDocument) -> Value {
-    let object_kinds: Vec<Value> = document
-        .stock
-        .iter()
-        .map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() }))
-        .collect();
+    let object_kinds: Vec<Value> = document.stock.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() })).collect();
     json!({
         "schema": "manifest",
         "objectKinds": object_kinds,

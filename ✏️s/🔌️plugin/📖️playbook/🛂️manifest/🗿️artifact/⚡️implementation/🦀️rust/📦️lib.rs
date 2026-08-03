@@ -23,8 +23,7 @@ fn register_playbook_play_exports() {
 
 fn playbook_play_bundle() -> semio_framework_plugin::PluginBundle {
     register_playbook_play_exports();
-    semio_framework_plugin::PluginBundle::new(PLAYBOOK_PLAY_PLUGIN_ID, "Playbook", "0.1.0")
-        .register_document_app(playbook_ui::create_playbook_play_app(), playbook_ui::PlaybookPlayApp::default)
+    semio_framework_plugin::PluginBundle::new(PLAYBOOK_PLAY_PLUGIN_ID, "Playbook", "0.1.0").register_document_app(playbook_ui::create_playbook_play_app(), playbook_ui::PlaybookPlayApp::default)
 }
 
 semio_framework_plugin::plugin_exports!(playbook_play_bundle);

@@ -1,135 +1,129 @@
 //! 🃏️ Cypher-inspired query language for trinity graphs.
 
 pub mod queryable {
-// #region queryable
-//! 🔍️ Trinity RAM graph adapter for shared Jack query language.
+    // #region queryable
+    //! 🔍️ Trinity RAM graph adapter for shared Jack query language.
 
-use mathematical_graph_dsl::{QueryableEdge, QueryableGraph};
-use mathematical_graph_manifest::{manifest_by_id, GraphManifest, PropertyValue};
-use std::collections::BTreeSet;
-use std::sync::OnceLock;
-use trinity_ram::{port_node_id, port_port_id, Graph};
+    use mathematical_graph_dsl::{QueryableEdge, QueryableGraph};
+    use mathematical_graph_manifest::{manifest_by_id, GraphManifest, PropertyValue};
+    use std::collections::BTreeSet;
+    use std::sync::OnceLock;
+    use trinity_ram::{port_node_id, port_port_id, Graph};
 
-static TRINITY_JACK_MANIFEST: OnceLock<GraphManifest> = OnceLock::new();
+    static TRINITY_JACK_MANIFEST: OnceLock<GraphManifest> = OnceLock::new();
 
-fn trinity_jack_manifest() -> &'static GraphManifest {
-    TRINITY_JACK_MANIFEST.get_or_init(|| manifest_by_id("nakagin").expect("nakagin manifest"))
-}
+    fn trinity_jack_manifest() -> &'static GraphManifest {
+        TRINITY_JACK_MANIFEST.get_or_init(|| manifest_by_id("nakagin").expect("nakagin manifest"))
+    }
 
-fn trinity_queryable_edges(graph: &Graph) -> Vec<QueryableEdge> {
-    graph
-        .edges
-        .values()
-        .filter_map(|edge| {
-            let source_node_id = port_node_id(&edge.source)?.to_string();
-            let target_node_id = port_node_id(&edge.target)?.to_string();
-            Some(QueryableEdge {
-                id: edge.id.clone(),
-                kind: edge.kind.clone(),
-                source_node_id,
-                target_node_id,
-                source_port: port_port_id(&edge.source).map(str::to_string),
-                target_port: port_port_id(&edge.target).map(str::to_string),
-                properties: edge.properties.clone(),
+    fn trinity_queryable_edges(graph: &Graph) -> Vec<QueryableEdge> {
+        graph
+            .edges
+            .values()
+            .filter_map(|edge| {
+                let source_node_id = port_node_id(&edge.source)?.to_string();
+                let target_node_id = port_node_id(&edge.target)?.to_string();
+                Some(QueryableEdge {
+                    id: edge.id.clone(),
+                    kind: edge.kind.clone(),
+                    source_node_id,
+                    target_node_id,
+                    source_port: port_port_id(&edge.source).map(str::to_string),
+                    target_port: port_port_id(&edge.target).map(str::to_string),
+                    properties: edge.properties.clone(),
+                })
             })
-        })
-        .collect()
-}
-
-/// 🕸️ Jack query surface over a borrowed trinity graph.
-pub struct TrinityQueryableGraph<'a>(pub &'a Graph);
-
-impl QueryableGraph for TrinityQueryableGraph<'_> {
-    fn manifest(&self) -> Option<&GraphManifest> {
-        Some(trinity_jack_manifest())
+            .collect()
     }
 
-    fn node_ids(&self) -> Vec<String> {
-        self.0.nodes.keys().cloned().collect()
-    }
+    /// 🕸️ Jack query surface over a borrowed trinity graph.
+    pub struct TrinityQueryableGraph<'a>(pub &'a Graph);
 
-    fn node_kind(&self, id: &str) -> Option<String> {
-        self.0.nodes.get(id).map(|node| node.kind.clone())
-    }
+    impl QueryableGraph for TrinityQueryableGraph<'_> {
+        fn manifest(&self) -> Option<&GraphManifest> {
+            Some(trinity_jack_manifest())
+        }
 
-    fn node_name(&self, id: &str) -> Option<String> {
-        self.0.nodes.get(id).map(|node| node.name.clone())
-    }
+        fn node_ids(&self) -> Vec<String> {
+            self.0.nodes.keys().cloned().collect()
+        }
 
-    fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
-        let node = self.0.nodes.get(id)?;
-        match key {
-            "id" => Some(PropertyValue::String(id.to_string())),
-            "name" | "label" | "text" => Some(PropertyValue::String(node.name.clone())),
-            "kind" => Some(PropertyValue::String(node.kind.clone())),
-            "__all" => Some(PropertyValue::Object(node.properties.clone())),
-            _ => node.properties.get(key).cloned(),
+        fn node_kind(&self, id: &str) -> Option<String> {
+            self.0.nodes.get(id).map(|node| node.kind.clone())
+        }
+
+        fn node_name(&self, id: &str) -> Option<String> {
+            self.0.nodes.get(id).map(|node| node.name.clone())
+        }
+
+        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
+            let node = self.0.nodes.get(id)?;
+            match key {
+                "id" => Some(PropertyValue::String(id.to_string())),
+                "name" | "label" | "text" => Some(PropertyValue::String(node.name.clone())),
+                "kind" => Some(PropertyValue::String(node.kind.clone())),
+                "__all" => Some(PropertyValue::Object(node.properties.clone())),
+                _ => node.properties.get(key).cloned(),
+            }
+        }
+
+        fn edges(&self) -> Vec<QueryableEdge> {
+            trinity_queryable_edges(self.0)
+        }
+
+        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
+            self.0.subgraph_fixture(node_ids, edge_ids).to_json().ok()
         }
     }
 
-    fn edges(&self) -> Vec<QueryableEdge> {
-        trinity_queryable_edges(self.0)
-    }
+    /// 🕸️ Jack query surface over an owned trinity graph.
+    pub struct OwnedTrinityQueryableGraph(pub Graph);
 
-    fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
-        self.0.subgraph_fixture(node_ids, edge_ids).to_json().ok()
-    }
-}
+    impl QueryableGraph for OwnedTrinityQueryableGraph {
+        fn manifest(&self) -> Option<&GraphManifest> {
+            Some(trinity_jack_manifest())
+        }
 
-/// 🕸️ Jack query surface over an owned trinity graph.
-pub struct OwnedTrinityQueryableGraph(pub Graph);
+        fn node_ids(&self) -> Vec<String> {
+            self.0.nodes.keys().cloned().collect()
+        }
 
-impl QueryableGraph for OwnedTrinityQueryableGraph {
-    fn manifest(&self) -> Option<&GraphManifest> {
-        Some(trinity_jack_manifest())
-    }
+        fn node_kind(&self, id: &str) -> Option<String> {
+            self.0.nodes.get(id).map(|node| node.kind.clone())
+        }
 
-    fn node_ids(&self) -> Vec<String> {
-        self.0.nodes.keys().cloned().collect()
-    }
+        fn node_name(&self, id: &str) -> Option<String> {
+            self.0.nodes.get(id).map(|node| node.name.clone())
+        }
 
-    fn node_kind(&self, id: &str) -> Option<String> {
-        self.0.nodes.get(id).map(|node| node.kind.clone())
-    }
+        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
+            let node = self.0.nodes.get(id)?;
+            match key {
+                "id" => Some(PropertyValue::String(id.to_string())),
+                "name" | "label" | "text" => Some(PropertyValue::String(node.name.clone())),
+                "kind" => Some(PropertyValue::String(node.kind.clone())),
+                "__all" => Some(PropertyValue::Object(node.properties.clone())),
+                _ => node.properties.get(key).cloned(),
+            }
+        }
 
-    fn node_name(&self, id: &str) -> Option<String> {
-        self.0.nodes.get(id).map(|node| node.name.clone())
-    }
+        fn edges(&self) -> Vec<QueryableEdge> {
+            trinity_queryable_edges(&self.0)
+        }
 
-    fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
-        let node = self.0.nodes.get(id)?;
-        match key {
-            "id" => Some(PropertyValue::String(id.to_string())),
-            "name" | "label" | "text" => Some(PropertyValue::String(node.name.clone())),
-            "kind" => Some(PropertyValue::String(node.kind.clone())),
-            "__all" => Some(PropertyValue::Object(node.properties.clone())),
-            _ => node.properties.get(key).cloned(),
+        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
+            self.0.subgraph_fixture(node_ids, edge_ids).to_json().ok()
         }
     }
-
-    fn edges(&self) -> Vec<QueryableEdge> {
-        trinity_queryable_edges(&self.0)
-    }
-
-    fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
-        self.0.subgraph_fixture(node_ids, edge_ids).to_json().ok()
-    }
+    // #endregion queryable
 }
-// #endregion queryable
-}
-
 
 pub use queryable::{OwnedTrinityQueryableGraph, TrinityQueryableGraph};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-use trinity_ram::{
-    apply_trinity_graph_operations, Camera, Edge, EntityRef, Graph, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag,
-    PropertyValue, TrinityGraphOperation, port_key,
-};
+use trinity_ram::{apply_trinity_graph_operations, port_key, Camera, Edge, EntityRef, Graph, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue, TrinityGraphOperation};
 
-pub use mathematical_graph_dsl::{
-    Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken,
-};
+pub use mathematical_graph_dsl::{Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken};
 
 // #region 🔖️Ast
 /// 🌳️ Jack query abstract syntax tree.
@@ -286,26 +280,12 @@ pub struct SpannedToken {
 
 fn token_class(token: &Token) -> TokenClass {
     match token {
-        Token::KwMatch
-        | Token::KwWhere
-        | Token::KwReturn
-        | Token::KwCreate
-        | Token::KwDelete
-        | Token::KwSet
-        | Token::KwMerge
-        | Token::And
-        | Token::Or => TokenClass::Keyword,
+        Token::KwMatch | Token::KwWhere | Token::KwReturn | Token::KwCreate | Token::KwDelete | Token::KwSet | Token::KwMerge | Token::And | Token::Or => TokenClass::Keyword,
         Token::Ident(_) => TokenClass::Ident,
         Token::Number(_) => TokenClass::Number,
         Token::StringLit(_) => TokenClass::String,
         Token::Eq | Token::Ne | Token::Dash | Token::Arrow => TokenClass::Operator,
-        Token::LParen
-        | Token::RParen
-        | Token::LBracket
-        | Token::RBracket
-        | Token::Colon
-        | Token::Comma
-        | Token::Dot => TokenClass::Punctuation,
+        Token::LParen | Token::RParen | Token::LBracket | Token::RBracket | Token::Colon | Token::Comma | Token::Dot => TokenClass::Punctuation,
         Token::Eof => TokenClass::Punctuation,
     }
 }
@@ -447,8 +427,7 @@ pub fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, St
 }
 
 fn lex(input: &str) -> Result<Vec<Token>, String> {
-    lex_spanned(input, false)
-        .map(|spanned| spanned.into_iter().map(|row| row.token).collect())
+    lex_spanned(input, false).map(|spanned| spanned.into_iter().map(|row| row.token).collect())
 }
 
 /// 🎨️ Tokenize jack source for editor highlighting (never fails).
@@ -468,11 +447,7 @@ pub fn tokenize(input: &str) -> Vec<TokenSpan> {
                     }
                 }
             }
-            TokenSpan {
-                class,
-                start: row.start,
-                end: row.end,
-            }
+            TokenSpan { class, start: row.start, end: row.end }
         })
         .collect()
 }
@@ -619,12 +594,7 @@ fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Opti
     let mut out = Vec::new();
     for (label, kind, detail) in candidates {
         if prefix.is_empty() || label.to_ascii_lowercase().starts_with(&prefix_lower) {
-            out.push(Completion {
-                insert: label.clone(),
-                label,
-                kind,
-                detail,
-            });
+            out.push(Completion { insert: label.clone(), label, kind, detail });
         }
     }
     out.sort_by(|a, b| a.label.cmp(&b.label));
@@ -717,13 +687,7 @@ fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic>
                     for node in &pattern.nodes {
                         if !node_kinds.contains(&node.kind) {
                             if let Some((start, end)) = find_kind_span(source, &node.kind) {
-                                out.push(Diagnostic {
-                                    start,
-                                    end,
-                                    severity: DiagnosticSeverity::Error,
-                                    message: format!("unknown node kind '{}'", node.kind),
-                                    code: Some("jack/unknown-node-kind".into()),
-                                });
+                                out.push(Diagnostic { start, end, severity: DiagnosticSeverity::Error, message: format!("unknown node kind '{}'", node.kind), code: Some("jack/unknown-node-kind".into()) });
                             }
                         }
                     }
@@ -731,13 +695,7 @@ fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic>
                         if let Some(kind) = &edge.kind {
                             if !edge_kinds.contains(kind) {
                                 if let Some((start, end)) = find_kind_span(source, kind) {
-                                    out.push(Diagnostic {
-                                        start,
-                                        end,
-                                        severity: DiagnosticSeverity::Error,
-                                        message: format!("unknown edge kind '{}'", kind),
-                                        code: Some("jack/unknown-edge-kind".into()),
-                                    });
+                                    out.push(Diagnostic { start, end, severity: DiagnosticSeverity::Error, message: format!("unknown edge kind '{}'", kind), code: Some("jack/unknown-edge-kind".into()) });
                                 }
                             }
                         }
@@ -748,13 +706,7 @@ fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic>
                 for node in &pattern.nodes {
                     if !node_kinds.contains(&node.kind) {
                         if let Some((start, end)) = find_kind_span(source, &node.kind) {
-                            out.push(Diagnostic {
-                                start,
-                                end,
-                                severity: DiagnosticSeverity::Error,
-                                message: format!("unknown node kind '{}'", node.kind),
-                                code: Some("jack/unknown-node-kind".into()),
-                            });
+                            out.push(Diagnostic { start, end, severity: DiagnosticSeverity::Error, message: format!("unknown node kind '{}'", node.kind), code: Some("jack/unknown-node-kind".into()) });
                         }
                     }
                 }
@@ -765,13 +717,7 @@ fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic>
     for (var, _, _) in collect_referenced_vars(&query.clauses) {
         if !bound.contains(&var) {
             if let Some((start, end)) = find_ident_span(source, &var) {
-                out.push(Diagnostic {
-                    start,
-                    end,
-                    severity: DiagnosticSeverity::Error,
-                    message: format!("variable '{var}' is not bound by MATCH"),
-                    code: Some("jack/unbound-variable".into()),
-                });
+                out.push(Diagnostic { start, end, severity: DiagnosticSeverity::Error, message: format!("variable '{var}' is not bound by MATCH"), code: Some("jack/unbound-variable".into()) });
             }
         }
     }
@@ -924,13 +870,7 @@ pub fn example_graph_fixture() -> GraphFixture {
                 ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
             },
         ],
-        edges: vec![Edge {
-            id: "e1".into(),
-            kind: "Connection".into(),
-            source: "root@out".into(),
-            target: "child@in".into(),
-            properties: PropertyBag::new(),
-        }],
+        edges: vec![Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out".into(), target: "child@in".into(), properties: PropertyBag::new() }],
     }
 }
 
@@ -1044,11 +984,7 @@ impl Parser {
         if matches!(self.peek(), Token::Dash) {
             self.bump();
             self.expect(Token::LBracket)?;
-            let edge_var = if matches!(self.peek(), Token::Ident(_)) {
-                Some(self.expect_ident()?)
-            } else {
-                None
-            };
+            let edge_var = if matches!(self.peek(), Token::Ident(_)) { Some(self.expect_ident()?) } else { None };
             let edge_kind = if matches!(self.peek(), Token::Colon) {
                 self.bump();
                 Some(self.expect_ident()?)
@@ -1060,10 +996,7 @@ impl Parser {
             self.expect(Token::LParen)?;
             let right = self.parse_pattern_node()?;
             self.expect(Token::RParen)?;
-            Ok(Pattern {
-                nodes: vec![left],
-                edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed: true, right }),
-            })
+            Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed: true, right }) })
         } else {
             Ok(Pattern { nodes: vec![left], edge: None })
         }
@@ -1677,12 +1610,7 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
         let mut row = Vec::new();
         for item in items {
             let val = match item {
-                ReturnItem::Var(v) => binding
-                    .nodes
-                    .get(v)
-                    .and_then(|id| graph.node(id))
-                    .map(|n| PropertyValue::String(n.name.clone()))
-                    .unwrap_or(PropertyValue::Null),
+                ReturnItem::Var(v) => binding.nodes.get(v).and_then(|id| graph.node(id)).map(|n| PropertyValue::String(n.name.clone())).unwrap_or(PropertyValue::Null),
                 ReturnItem::Property { var, prop } => binding_value(graph, binding, var, prop).unwrap_or(PropertyValue::Null),
             };
             row.push(val);
@@ -1693,42 +1621,23 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
 }
 
 fn emit_set_operation(fixture: &GraphFixture, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphOperation, String> {
-    let node = fixture
-        .nodes
-        .iter()
-        .find(|node| node.id == node_id)
-        .ok_or_else(|| format!("node {node_id} not found"))?;
+    let node = fixture.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
     match prop {
         "name" => {
             let PropertyValue::String(name) = value else {
                 return Err(format!("node {node_id}.name expects string value"));
             };
-            Ok(TrinityGraphOperation::Rename {
-                id: node_id.to_string(),
-                name,
-            })
+            Ok(TrinityGraphOperation::Rename { id: node_id.to_string(), name })
         }
         "x" => {
             let x = value.as_f64().ok_or_else(|| format!("node {node_id}.x expects number value"))?;
-            Ok(TrinityGraphOperation::Reposition {
-                id: node_id.to_string(),
-                x,
-                y: node.y,
-            })
+            Ok(TrinityGraphOperation::Reposition { id: node_id.to_string(), x, y: node.y })
         }
         "y" => {
             let y = value.as_f64().ok_or_else(|| format!("node {node_id}.y expects number value"))?;
-            Ok(TrinityGraphOperation::Reposition {
-                id: node_id.to_string(),
-                x: node.x,
-                y,
-            })
+            Ok(TrinityGraphOperation::Reposition { id: node_id.to_string(), x: node.x, y })
         }
-        _ => Ok(TrinityGraphOperation::SetDataProperty {
-            entity: EntityRef::Node(node_id.to_string()),
-            key: prop.to_string(),
-            value,
-        }),
+        _ => Ok(TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node(node_id.to_string()), key: prop.to_string(), value }),
     }
 }
 
@@ -1738,23 +1647,9 @@ fn emit_create_operations(fixture: &GraphFixture, pattern: &Pattern) -> Result<V
     let mut operations = Vec::new();
     let mut left_ports = Vec::new();
     if pattern.edge.is_some() {
-        left_ports.push(Port {
-            id: "out".into(),
-            kind: "Connector".into(),
-            direction: PortDirection::Out,
-            properties: PropertyBag::new(),
-        });
+        left_ports.push(Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
     }
-    operations.push(TrinityGraphOperation::CreateNode {
-        id: left_id.clone(),
-        kind: left.kind.clone(),
-        name: left.var.clone(),
-        x: fixture.nodes.len() as f64 * 120.0,
-        y: 0.0,
-        width: 80.0,
-        height: 40.0,
-        ports: left_ports,
-    });
+    operations.push(TrinityGraphOperation::CreateNode { id: left_id.clone(), kind: left.kind.clone(), name: left.var.clone(), x: fixture.nodes.len() as f64 * 120.0, y: 0.0, width: 80.0, height: 40.0, ports: left_ports });
     if let Some(edge_pat) = &pattern.edge {
         let right_id = format!("{}-{}", edge_pat.right.var, fixture.nodes.len() + 1);
         operations.push(TrinityGraphOperation::CreateNode {
@@ -1765,12 +1660,7 @@ fn emit_create_operations(fixture: &GraphFixture, pattern: &Pattern) -> Result<V
             y: 80.0,
             width: 80.0,
             height: 40.0,
-            ports: vec![Port {
-                id: "in".into(),
-                kind: "Connector".into(),
-                direction: PortDirection::In,
-                properties: PropertyBag::new(),
-            }],
+            ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
         });
         operations.push(TrinityGraphOperation::CreateEdge {
             id: format!("e-{}", fixture.edges.len()),

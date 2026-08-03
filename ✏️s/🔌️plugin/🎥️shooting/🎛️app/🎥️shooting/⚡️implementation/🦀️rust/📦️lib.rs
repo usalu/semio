@@ -2,8 +2,8 @@
 //! (assets, shots, saved cameras, scene lighting) shared by every other `shooting` constitutional
 //! crate.
 
-use serde::{Deserialize, Serialize};
 use protocol::{Identified, Patchable};
+use serde::{Deserialize, Serialize};
 
 pub const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
 
@@ -205,15 +205,7 @@ pub struct ShootingFixture {
 }
 
 pub fn empty_shooting_fixture() -> ShootingFixture {
-    ShootingFixture {
-        schema: SHOOTING_FIXTURE_SCHEMA.into(),
-        assets: Vec::new(),
-        saved_cameras: Vec::new(),
-        scene: ShootingSceneLighting::default(),
-        shots: Vec::new(),
-        active_shot_id: String::new(),
-        active_asset_id: String::new(),
-    }
+    ShootingFixture { schema: SHOOTING_FIXTURE_SCHEMA.into(), assets: Vec::new(), saved_cameras: Vec::new(), scene: ShootingSceneLighting::default(), shots: Vec::new(), active_shot_id: String::new(), active_asset_id: String::new() }
 }
 
 /// 🧮️ Resolves an asset's scale, defaulting an absent `scale` to identity `[1, 1, 1]`.

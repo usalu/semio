@@ -8,25 +8,20 @@
 
 use draw::{DrawArtboard, DrawDocument, DrawLayerNode, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPERATIONS, DRAW_DOCUMENT_SCHEMA};
 use draw_engine::{
-    create_draw_boolean_layer, create_draw_path_layer, create_draw_trace_layer, create_layer_by_kind, default_draw_document, default_layer_base,
-    draw_layer_descendant_leaf_ids, draw_layer_world_bounds, draw_io, draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id,
-    draw_transform_to_matrix, draw_vector_media, empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes, flatten_draw_layers,
+    create_draw_boolean_layer, create_draw_path_layer, create_draw_trace_layer, create_layer_by_kind, default_draw_document, default_layer_base, draw_io, draw_layer_descendant_leaf_ids, draw_layer_world_bounds, draw_play_boolean_child_row_id,
+    draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id, draw_transform_to_matrix, draw_vector_media, empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes, flatten_draw_layers,
     layer_base, layer_id, layer_kind_label, layer_to_path_segments, resolve_draw_artboard, rgba_to_hex, semio_draw_example_document, semio_draw_example_json, DrawConfig,
 };
 use draw_op::{draw_op_for_layer_field, DrawConfigOperation, DrawOperation};
 use draw_protocol::DrawCommand;
-use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionKind, AppIo, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaError, MediaPayload,
-    build_canvas_2d_scene, create_default_layout, selection_ids,
-    tree_item, tree_item_with_action, tree_item_with_action_draggable,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec,
-    ActionDescriptor, PanelGroup, Terminology, UtilityCategory, UtilityDefinition, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem,
-    UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, WindowEngagement,
-    WindowEngagementInput, WindowEngagementStatus,
+use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::{
+    build_canvas_2d_scene, create_default_layout, selection_ids, tree_item, tree_item_with_action, tree_item_with_action_draggable, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_select, ui_inspector_mixed_slider,
+    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp,
+    DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode,
+    UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
-use semio_framework_plugin::kernel::HostEffect;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -55,7 +50,11 @@ fn is_de_locale(cfg: &DrawConfig) -> bool {
 }
 
 fn draw_locale(cfg: &DrawConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🗣️ `AppLabels::labels` (was the deleted `LocaleLabels::locale_labels_en/de`).
@@ -66,19 +65,12 @@ fn resolve_labels<L: AppLabels>(cfg: &DrawConfig) -> &'static L {
 
 //#region 🔖️DocumentHelpers
 fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: DRAW_PLAY_CONTROLLER_ID.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: DRAW_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn canvas_point_to_world(camera: &draw::DrawCamera, x: f64, y: f64, viewport_w: f64, viewport_h: f64) -> (f64, f64) {
     let zoom = camera.zoom.max(0.01);
-    (
-        (x - viewport_w * 0.5) / zoom + camera.x,
-        (y - viewport_h * 0.5) / zoom + camera.y,
-    )
+    ((x - viewport_w * 0.5) / zoom + camera.x, (y - viewport_h * 0.5) / zoom + camera.y)
 }
 
 //#region 🔖️GestureMachine
@@ -269,13 +261,7 @@ fn shape_preview_segments(utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<
     let width = (end[0] - start[0]).abs();
     let height = (end[1] - start[1]).abs();
     if utility == "shapeRect" {
-        return vec![
-            PathSegment::Move { to: [x, y] },
-            PathSegment::Line { to: [x + width, y] },
-            PathSegment::Line { to: [x + width, y + height] },
-            PathSegment::Line { to: [x, y + height] },
-            PathSegment::Close,
-        ];
+        return vec![PathSegment::Move { to: [x, y] }, PathSegment::Line { to: [x + width, y] }, PathSegment::Line { to: [x + width, y + height] }, PathSegment::Line { to: [x, y + height] }, PathSegment::Close];
     }
     let cx = x + width / 2.0;
     let cy = y + height / 2.0;
@@ -330,11 +316,7 @@ fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawDocument, utility: 
         }
         .into(),
         rect: if utility == "shapeRect" { Some(draw::DrawRect { x, y, width, height }) } else { None },
-        ellipse: if utility == "shapeEllipse" {
-            Some(draw::DrawEllipse { cx: x + width / 2.0, cy: y + height / 2.0, rx: width / 2.0, ry: height / 2.0 })
-        } else {
-            None
-        },
+        ellipse: if utility == "shapeEllipse" { Some(draw::DrawEllipse { cx: x + width / 2.0, cy: y + height / 2.0, rx: width / 2.0, ry: height / 2.0 }) } else { None },
         circle: None,
         line: if utility == "shapeLine" { Some(draw::DrawLine { x1: start[0], y1: start[1], x2: end[0], y2: end[1] }) } else { None },
         polygon: None,
@@ -357,15 +339,7 @@ fn commit_draft(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str,
         }
         create_draw_path_layer("Path", segments)
     } else {
-        DrawLayerNode::Shape(draw::DrawShapeBody {
-            base: default_layer_base("Polygon"),
-            shape_kind: "polygon".into(),
-            rect: None,
-            ellipse: None,
-            circle: None,
-            line: None,
-            polygon: Some(draw::DrawPolygon { points: points.to_vec() }),
-        })
+        DrawLayerNode::Shape(draw::DrawShapeBody { base: default_layer_base("Polygon"), shape_kind: "polygon".into(), rect: None, ellipse: None, circle: None, line: None, polygon: Some(draw::DrawPolygon { points: points.to_vec() }) })
     };
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
@@ -398,10 +372,7 @@ fn commit_with_utility_reset(operations: Vec<DrawOperation>, description: &str) 
         return Emit::default();
     }
     let mut emit = Emit::commit(operations, description);
-    emit.effects.push(HostEffect::SetActiveUtility {
-        window_id: DRAW_PLAY_WINDOW_CANVAS.into(),
-        utility_id: DRAW_DEFAULT_UTILITY.into(),
-    });
+    emit.effects.push(HostEffect::SetActiveUtility { window_id: DRAW_PLAY_WINDOW_CANVAS.into(), utility_id: DRAW_DEFAULT_UTILITY.into() });
     emit
 }
 
@@ -574,15 +545,7 @@ fn gesture_update_draft_cursor(ctx: &mut GestureContext, event: Option<&draw_ges
 
 fn gesture_commit_marquee(ctx: &mut GestureContext, event: Option<&draw_gesture::Event>, sink: &mut dyn fsm::CommandSink<draw_gesture::DrawGesture>) {
     if let Some(draw_gesture::Event::PointerUp { world, shift, ctrl, meta, .. }) = event {
-        sink.push(fsm::Command::Effect(GestureEffect::CommitMarquee {
-            start: ctx.start,
-            end: *world,
-            active: ctx.active,
-            merge: ctx.merge.clone(),
-            shift: *shift,
-            ctrl: *ctrl,
-            meta: *meta,
-        }));
+        sink.push(fsm::Command::Effect(GestureEffect::CommitMarquee { start: ctx.start, end: *world, active: ctx.active, merge: ctx.merge.clone(), shift: *shift, ctrl: *ctrl, meta: *meta }));
     }
 }
 
@@ -685,11 +648,7 @@ fn resolve_reorder_target(document: &DrawDocument, target_row_id: &str, drop_pos
                 }
             }
             if let Some(location) = find_draw_layer_location(document, &layer_id) {
-                let index = if drop_position == "before" {
-                    location.index
-                } else {
-                    location.index + 1
-                };
+                let index = if drop_position == "before" { location.index } else { location.index + 1 };
                 return (location.parent_id, index);
             }
         }
@@ -769,13 +728,7 @@ fn layer_tree_item(doc: &DrawDocument, layer: &draw::DrawLayerNode) -> UiTreeIte
     let base = layer_base(layer);
     let nested_items = match layer {
         draw::DrawLayerNode::Group(group) => Some(group.children.iter().map(|child| layer_tree_item(doc, child)).collect()),
-        draw::DrawLayerNode::Boolean(boolean) => Some(
-            boolean
-                .children
-                .iter()
-                .map(|child_id| boolean_child_item(doc, &boolean.base.id, child_id))
-                .collect(),
-        ),
+        draw::DrawLayerNode::Boolean(boolean) => Some(boolean.children.iter().map(|child_id| boolean_child_item(doc, &boolean.base.id, child_id)).collect()),
         _ => None,
     };
     let description = Some(match layer {
@@ -796,20 +749,8 @@ fn layer_tree_item(doc: &DrawDocument, layer: &draw::DrawLayerNode) -> UiTreeIte
 fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> UiTreeItemNode {
     let row_id = draw_play_boolean_child_row_id(boolean_id, child_id);
     match find_draw_layer(doc, child_id) {
-        Some(child) => UiTreeItemNode {
-            draggable: Some(false),
-            ..tree_item_with_action(
-                row_id,
-                Label::data(layer_base(child).name.clone()),
-                Some(layer_kind_label(child)),
-                draw_play_action("setSelection", Some(json!({ "ids": [child_id] }))),
-            )
-        },
-        None => UiTreeItemNode {
-            icon_id: Some("alert-circle".into()),
-            draggable: Some(false),
-            ..tree_item(row_id, Label::data(format!("{child_id} (missing)")))
-        },
+        Some(child) => UiTreeItemNode { draggable: Some(false), ..tree_item_with_action(row_id, Label::data(layer_base(child).name.clone()), Some(layer_kind_label(child)), draw_play_action("setSelection", Some(json!({ "ids": [child_id] })))) },
+        None => UiTreeItemNode { icon_id: Some("alert-circle".into()), draggable: Some(false), ..tree_item(row_id, Label::data(format!("{child_id} (missing)"))) },
     }
 }
 
@@ -822,33 +763,25 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawConfig, labels
         tree_button("draw-play-layers.add.boolean", labels.add_boolean, "combine", "addLayer", json!({ "kind": "boolean" })),
     ];
     let layer_items = if document.layers.is_empty() {
-        vec![UiTreeItemNode { icon_id: Some("pen-tool".into()), menu: None,
-        ..tree_item("draw-play-layers.empty", labels.empty_state)
-    }]
+        vec![UiTreeItemNode { icon_id: Some("pen-tool".into()), menu: None, ..tree_item("draw-play-layers.empty", labels.empty_state) }]
     } else {
         document.layers.iter().map(|layer| layer_tree_item(document, layer)).collect()
     };
-    let selected_tree_ids: Vec<String> = interaction
-        .selected_ids
-        .iter()
-        .filter_map(|id| find_draw_layer(document, id).map(draw_play_layers_tree_row_id))
-        .collect();
-    let highlighted_ids: Vec<String> = interaction
-        .hovered_id
-        .as_ref()
-        .and_then(|id| find_draw_layer(document, id).map(draw_play_layers_tree_row_id))
-        .into_iter()
-        .collect();
+    let selected_tree_ids: Vec<String> = interaction.selected_ids.iter().filter_map(|id| find_draw_layer(document, id).map(draw_play_layers_tree_row_id)).collect();
+    let highlighted_ids: Vec<String> = interaction.hovered_id.as_ref().and_then(|id| find_draw_layer(document, id).map(draw_play_layers_tree_row_id)).into_iter().collect();
     let builder = PanelTreeBuilder::new("draw-play-layers")
         .section("draw-play-layers", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, action_items.into_iter().chain(layer_items).collect())
         .selected(selected_tree_ids)
         .selection_change(draw_play_action("setSelection", None));
-    if highlighted_ids.is_empty() { builder.build() } else { builder.highlighted(highlighted_ids).build() }
+    if highlighted_ids.is_empty() {
+        builder.build()
+    } else {
+        builder.highlighted(highlighted_ids).build()
+    }
 }
 
 fn tree_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args: Value) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon.into()), menu: None,
-    ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args))) }
+    UiTreeItemNode { icon_id: Some(icon.into()), menu: None, ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args))) }
 }
 
 fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawConfig, labels: &DrawPlayLabels) -> UiNode {
@@ -869,12 +802,7 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawConfig, la
         .map(|(kind, label, icon)| {
             let mut drag_data = HashMap::new();
             drag_data.insert(DRAW_LAYER_KIND_DRAG_MIME.into(), json!({ "kind": kind }).to_string());
-            UiTreeItemNode {
-                icon_id: Some(icon.into()),
-                draggable: Some(true),
-                drag_data: Some(drag_data),
-                ..tree_item(format!("draw-play-catalogue.{kind}"), label)
-            }
+            UiTreeItemNode { icon_id: Some(icon.into()), draggable: Some(true), drag_data: Some(drag_data), ..tree_item(format!("draw-play-catalogue.{kind}"), label) }
         })
         .collect();
     for operation in DRAW_BOOLEAN_OPERATIONS {
@@ -888,9 +816,7 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawConfig, la
             )
         });
     }
-    PanelTreeBuilder::new("draw-play-catalogue")
-        .section("draw-play-catalogue", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)
-        .build()
+    PanelTreeBuilder::new("draw-play-catalogue").section("draw-play-catalogue", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).build()
 }
 
 fn inspector_patch(layer_ids: &[String], field: &str) -> ActionDescriptor {
@@ -903,7 +829,8 @@ fn inspector_number_field(layer_ids: &[String], field_id: &str, label: impl Into
         presence: UiPresence::default(),
         id: field_id.into(),
         label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
+        child: Box::new(UiNode::Input(UiInputNode {
+            presence: UiPresence::default(),
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
@@ -929,7 +856,8 @@ fn inspector_text_field(layer_ids: &[String], field_id: &str, label: impl Into<L
         presence: UiPresence::default(),
         id: field_id.into(),
         label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
+        child: Box::new(UiNode::Input(UiInputNode {
+            presence: UiPresence::default(),
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
@@ -980,12 +908,12 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 presence: UiPresence::default(),
                 id: "draw-play-inspector.boolean-operation".into(),
                 label: labels.boolean_operation.into(),
-                child: Box::new(UiNode::Select(UiSelectNode { presence: UiPresence::default(),
+                child: Box::new(UiNode::Select(UiSelectNode {
+                    presence: UiPresence::default(),
                     id: "draw-play-inspector.boolean-operation.select".into(),
                     value: op_mixed.value,
                     placeholder: op_mixed.placeholder.map(Label::data),
-                    items: DRAW_BOOLEAN_OPERATIONS.iter().map(|operation| UiSelectItem { value: (*operation).into(), label: Label::data(*operation),
-        }).collect(),
+                    items: DRAW_BOOLEAN_OPERATIONS.iter().map(|operation| UiSelectItem { value: (*operation).into(), label: Label::data(*operation) }).collect(),
                     on_change: inspector_patch(&layer_ids, "booleanOperation"),
                     menu: None,
                 })),
@@ -994,23 +922,9 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 error: None,
                 menu: None,
             }));
-            let child_labels = boolean
-                .children
-                .iter()
-                .filter_map(|child_id| find_draw_layer(doc, child_id).map(|child| layer_base(child).name.clone()))
-                .collect::<Vec<_>>()
-                .join(", ");
-            fields.push(ui_inspector_readonly_field(
-                "draw-play-inspector.boolean-children",
-                labels.children,
-                if child_labels.is_empty() { "—".into() } else { child_labels },
-            ));
-            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
-                id: "draw-play-inspector.kind.boolean".into(),
-                label: labels.kind_boolean.into(),
-                default_open: None,
-                fields,
-            });
+            let child_labels = boolean.children.iter().filter_map(|child_id| find_draw_layer(doc, child_id).map(|child| layer_base(child).name.clone())).collect::<Vec<_>>().join(", ");
+            fields.push(ui_inspector_readonly_field("draw-play-inspector.boolean-children", labels.children, if child_labels.is_empty() { "—".into() } else { child_labels }));
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(), id: "draw-play-inspector.kind.boolean".into(), label: labels.kind_boolean.into(), default_open: None, fields });
         }
         draw::DrawLayerNode::Trace(trace) => {
             let thresholds: Vec<f64> = uniform
@@ -1033,7 +947,8 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 presence: UiPresence::default(),
                 id: "draw-play-inspector.trace-threshold".into(),
                 label: labels.trace_threshold.into(),
-                child: Box::new(UiNode::Slider(UiSliderNode { presence: UiPresence::default(),
+                child: Box::new(UiNode::Slider(UiSliderNode {
+                    presence: UiPresence::default(),
                     id: "draw-play-inspector.trace-threshold.slider".into(),
                     value: if threshold_mixed.uniform { threshold_mixed.value } else { 0.0 },
                     min: 0.0,
@@ -1052,7 +967,8 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 presence: UiPresence::default(),
                 id: "draw-play-inspector.trace-simplify".into(),
                 label: labels.simplify.into(),
-                child: Box::new(UiNode::Slider(UiSliderNode { presence: UiPresence::default(),
+                child: Box::new(UiNode::Slider(UiSliderNode {
+                    presence: UiPresence::default(),
                     id: "draw-play-inspector.trace-simplify.slider".into(),
                     value: if simplify_mixed.uniform { simplify_mixed.value } else { 0.0 },
                     min: 0.0,
@@ -1067,45 +983,37 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 error: None,
                 menu: None,
             }));
-            fields.push(ui_inspector_readonly_field(
-                "draw-play-inspector.trace-source",
-                labels.source_key,
-                trace.source_key.clone(),
-            ));
-            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
-                id: "draw-play-inspector.kind.trace".into(),
-                label: labels.kind_trace.into(),
-                default_open: None,
-                fields,
-            });
+            fields.push(ui_inspector_readonly_field("draw-play-inspector.trace-source", labels.source_key, trace.source_key.clone()));
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(), id: "draw-play-inspector.kind.trace".into(), label: labels.kind_trace.into(), default_open: None, fields });
         }
         draw::DrawLayerNode::Shape(shape) if shape.shape_kind == "rect" => {
             fields.push(inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.rect-width",
                 labels.width,
-                &uniform.iter().filter_map(|entry| match entry {
-                    draw::DrawLayerNode::Shape(entry) => entry.rect.as_ref().map(|rect| rect.width),
-                    _ => None,
-                }).collect::<Vec<_>>(),
+                &uniform
+                    .iter()
+                    .filter_map(|entry| match entry {
+                        draw::DrawLayerNode::Shape(entry) => entry.rect.as_ref().map(|rect| rect.width),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>(),
                 "rectWidth",
             ));
             fields.push(inspector_number_field(
                 &layer_ids,
                 "draw-play-inspector.rect-height",
                 labels.height,
-                &uniform.iter().filter_map(|entry| match entry {
-                    draw::DrawLayerNode::Shape(entry) => entry.rect.as_ref().map(|rect| rect.height),
-                    _ => None,
-                }).collect::<Vec<_>>(),
+                &uniform
+                    .iter()
+                    .filter_map(|entry| match entry {
+                        draw::DrawLayerNode::Shape(entry) => entry.rect.as_ref().map(|rect| rect.height),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>(),
                 "rectHeight",
             ));
-            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
-                id: "draw-play-inspector.kind.rect".into(),
-                label: labels.kind_rectangle.into(),
-                default_open: None,
-                fields,
-            });
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(), id: "draw-play-inspector.kind.rect".into(), label: labels.kind_rectangle.into(), default_open: None, fields });
         }
         draw::DrawLayerNode::Text(_) => {
             fields.push(inspector_text_field(
@@ -1134,38 +1042,15 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                     .collect::<Vec<_>>(),
                 "textSize",
             ));
-            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
-                id: "draw-play-inspector.kind.text".into(),
-                label: labels.kind_text.into(),
-                default_open: None,
-                fields,
-            });
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(), id: "draw-play-inspector.kind.text".into(), label: labels.kind_text.into(), default_open: None, fields });
         }
         draw::DrawLayerNode::Path(path) => {
-            fields.push(ui_inspector_readonly_field(
-                "draw-play-inspector.path-segments",
-                labels.segment_count,
-                path.segments.len().to_string(),
-            ));
-            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
-                id: "draw-play-inspector.kind.path".into(),
-                label: labels.kind_path.into(),
-                default_open: None,
-                fields,
-            });
+            fields.push(ui_inspector_readonly_field("draw-play-inspector.path-segments", labels.segment_count, path.segments.len().to_string()));
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(), id: "draw-play-inspector.kind.path".into(), label: labels.kind_path.into(), default_open: None, fields });
         }
         draw::DrawLayerNode::Group(group) => {
-            fields.push(ui_inspector_readonly_field(
-                "draw-play-inspector.group-children",
-                labels.children_count,
-                group.children.len().to_string(),
-            ));
-            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
-                id: "draw-play-inspector.kind.group".into(),
-                label: labels.kind_group.into(),
-                default_open: None,
-                fields,
-            });
+            fields.push(ui_inspector_readonly_field("draw-play-inspector.group-children", labels.children_count, group.children.len().to_string()));
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(), id: "draw-play-inspector.kind.group".into(), label: labels.kind_group.into(), default_open: None, fields });
         }
         _ => {}
     }
@@ -1202,10 +1087,7 @@ fn inspector_appearance_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlay
                 .unwrap_or(1.0)
         })
         .collect();
-    let stroke_widths: Vec<f64> = layers
-        .iter()
-        .map(|entry| layer_base(entry).attributes.stroke.as_ref().map(|stroke| stroke.width).unwrap_or(1.0))
-        .collect();
+    let stroke_widths: Vec<f64> = layers.iter().map(|entry| layer_base(entry).attributes.stroke.as_ref().map(|stroke| stroke.width).unwrap_or(1.0)).collect();
     let fill_alpha_mixed = ui_inspector_mixed_slider(&fill_alphas);
     UiInspectorFieldGroup {
         id: "draw-play-inspector.appearance".into(),
@@ -1218,7 +1100,8 @@ fn inspector_appearance_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlay
                 presence: UiPresence::default(),
                 id: "draw-play-inspector.fill-alpha".into(),
                 label: labels.fill_alpha.into(),
-                child: Box::new(UiNode::Slider(UiSliderNode { presence: UiPresence::default(),
+                child: Box::new(UiNode::Slider(UiSliderNode {
+                    presence: UiPresence::default(),
                     id: "draw-play-inspector.fill-alpha.slider".into(),
                     value: if fill_alpha_mixed.uniform { fill_alpha_mixed.value } else { 0.0 },
                     min: 0.0,
@@ -1260,15 +1143,12 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
                 presence: UiPresence::default(),
                 id: "draw-play-inspector.blend-mode".into(),
                 label: labels.blend_mode.into(),
-                child: Box::new(UiNode::Select(UiSelectNode { presence: UiPresence::default(),
+                child: Box::new(UiNode::Select(UiSelectNode {
+                    presence: UiPresence::default(),
                     id: "draw-play-inspector.blend-mode.select".into(),
                     value: blend_mixed.value,
                     placeholder: blend_mixed.placeholder.map(Label::data),
-                    items: DRAW_BLEND_MODES
-                        .iter()
-                        .map(|mode| UiSelectItem { value: (*mode).into(), label: Label::data(*mode),
-        })
-                        .collect(),
+                    items: DRAW_BLEND_MODES.iter().map(|mode| UiSelectItem { value: (*mode).into(), label: Label::data(*mode) }).collect(),
                     on_change: inspector_patch(&layer_ids, "blendMode"),
                     menu: None,
                 })),
@@ -1277,7 +1157,8 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
                 error: None,
                 menu: None,
             }),
-            UiNode::Field(UiFieldNode { presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "draw-play-inspector.visible".into(),
                 label: labels.visible.into(),
                 child: Box::new(UiNode::Toggle(UiToggleNode {
@@ -1293,7 +1174,8 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
                 error: None,
                 menu: None,
             }),
-            UiNode::Field(UiFieldNode { presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "draw-play-inspector.locked".into(),
                 label: labels.locked.into(),
                 child: Box::new(UiNode::Toggle(UiToggleNode {
@@ -1321,51 +1203,17 @@ fn inspector_orientation_group(layers: &[&draw::DrawLayerNode], labels: &DrawPla
         default_open: None,
         presence: UiPresence::default(),
         fields: vec![
-            inspector_number_field(
-                &layer_ids,
-                "draw-play-inspector.transform-x",
-                labels.position_x,
-                &layers.iter().map(|entry| layer_base(entry).transform.x).collect::<Vec<_>>(),
-                "transformX",
-            ),
-            inspector_number_field(
-                &layer_ids,
-                "draw-play-inspector.transform-y",
-                labels.position_y,
-                &layers.iter().map(|entry| layer_base(entry).transform.y).collect::<Vec<_>>(),
-                "transformY",
-            ),
-            inspector_number_field(
-                &layer_ids,
-                "draw-play-inspector.transform-scale-x",
-                labels.scale_x,
-                &layers.iter().map(|entry| layer_base(entry).transform.scale_x).collect::<Vec<_>>(),
-                "transformScaleX",
-            ),
-            inspector_number_field(
-                &layer_ids,
-                "draw-play-inspector.transform-scale-y",
-                labels.scale_y,
-                &layers.iter().map(|entry| layer_base(entry).transform.scale_y).collect::<Vec<_>>(),
-                "transformScaleY",
-            ),
-            inspector_number_field(
-                &layer_ids,
-                "draw-play-inspector.transform-rotation",
-                labels.rotation,
-                &layers.iter().map(|entry| layer_base(entry).transform.rotation).collect::<Vec<_>>(),
-                "transformRotation",
-            ),
+            inspector_number_field(&layer_ids, "draw-play-inspector.transform-x", labels.position_x, &layers.iter().map(|entry| layer_base(entry).transform.x).collect::<Vec<_>>(), "transformX"),
+            inspector_number_field(&layer_ids, "draw-play-inspector.transform-y", labels.position_y, &layers.iter().map(|entry| layer_base(entry).transform.y).collect::<Vec<_>>(), "transformY"),
+            inspector_number_field(&layer_ids, "draw-play-inspector.transform-scale-x", labels.scale_x, &layers.iter().map(|entry| layer_base(entry).transform.scale_x).collect::<Vec<_>>(), "transformScaleX"),
+            inspector_number_field(&layer_ids, "draw-play-inspector.transform-scale-y", labels.scale_y, &layers.iter().map(|entry| layer_base(entry).transform.scale_y).collect::<Vec<_>>(), "transformScaleY"),
+            inspector_number_field(&layer_ids, "draw-play-inspector.transform-rotation", labels.rotation, &layers.iter().map(|entry| layer_base(entry).transform.rotation).collect::<Vec<_>>(), "transformRotation"),
         ],
     }
 }
 
 fn render_properties_panel(document: &DrawDocument, interaction: &DrawConfig, labels: &DrawPlayLabels, active_utility: &str) -> UiNode {
-    let selected_layers: Vec<&draw::DrawLayerNode> = interaction
-        .selected_ids
-        .iter()
-        .filter_map(|id| find_draw_layer(document, id))
-        .collect();
+    let selected_layers: Vec<&draw::DrawLayerNode> = interaction.selected_ids.iter().filter_map(|id| find_draw_layer(document, id)).collect();
     if selected_layers.is_empty() {
         return ui_stack_vertical(vec![
             ui_text(Label::data(format!("Schema: {}", DRAW_DOCUMENT_SCHEMA))),
@@ -1423,25 +1271,12 @@ fn artboard_scene_records(document: &DrawDocument) -> Vec<Value> {
     let artboard = resolve_draw_artboard(document).unwrap_or(DrawArtboard { width: 1024.0, height: 1024.0 });
     let width = artboard.width.max(1.0);
     let height = artboard.height.max(1.0);
-    let segments = vec![
-        PathSegment::Move { to: [0.0, 0.0] },
-        PathSegment::Line { to: [width, 0.0] },
-        PathSegment::Line { to: [width, height] },
-        PathSegment::Line { to: [0.0, height] },
-        PathSegment::Close,
-    ];
+    let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [width, 0.0] }, PathSegment::Line { to: [width, height] }, PathSegment::Line { to: [0.0, height] }, PathSegment::Close];
     let label = format!("{} × {}", format_artboard_dimension(width), format_artboard_dimension(height));
     let label_size = 12.0_f64;
     let label_x = (width * 0.5) - (label.len() as f64 * label_size * 0.28);
     vec![
-        overlay_record(
-            "artboard:frame".into(),
-            [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-            &segments,
-            Some(DRAW_ARTBOARD_FILL),
-            DRAW_ARTBOARD_STROKE,
-            1.0,
-        ),
+        overlay_record("artboard:frame".into(), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_ARTBOARD_FILL), DRAW_ARTBOARD_STROKE, 1.0),
         json!({
             "id": "artboard:dimensions",
             "role": "overlay",
@@ -1470,22 +1305,10 @@ fn render_canvas(document: &DrawDocument, interaction: &DrawConfig, gesture: &dr
         records.push(serde_json::to_value(node).unwrap_or(Value::Null));
     }
     let node_by_id: HashMap<&str, &draw_engine::DrawSceneNode> = scene_nodes.iter().map(|node| (node.id.as_str(), node)).collect();
-    let selected_leaf_ids: Vec<String> = interaction
-        .selected_ids
-        .iter()
-        .filter_map(|id| find_draw_layer(document, id))
-        .flat_map(draw_layer_descendant_leaf_ids)
-        .collect();
+    let selected_leaf_ids: Vec<String> = interaction.selected_ids.iter().filter_map(|id| find_draw_layer(document, id)).flat_map(draw_layer_descendant_leaf_ids).collect();
     for leaf_id in &selected_leaf_ids {
         if let Some(node) = node_by_id.get(leaf_id.as_str()) {
-            records.push(overlay_record(
-                format!("overlay:sel:{leaf_id}"),
-                node.transform,
-                &node.segments,
-                Some(DRAW_OVERLAY_SELECTION_FILL),
-                DRAW_OVERLAY_SELECTION_STROKE,
-                2.0,
-            ));
+            records.push(overlay_record(format!("overlay:sel:{leaf_id}"), node.transform, &node.segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 2.0));
         }
     }
     if let Some(hovered_id) = &interaction.hovered_id {
@@ -1493,14 +1316,7 @@ fn render_canvas(document: &DrawDocument, interaction: &DrawConfig, gesture: &dr
             if let Some(layer) = find_draw_layer(document, hovered_id) {
                 for leaf_id in draw_layer_descendant_leaf_ids(layer) {
                     if let Some(node) = node_by_id.get(leaf_id.as_str()) {
-                        records.push(overlay_record(
-                            format!("overlay:hover:{leaf_id}"),
-                            node.transform,
-                            &node.segments,
-                            None,
-                            DRAW_OVERLAY_HOVER_STROKE,
-                            1.5,
-                        ));
+                        records.push(overlay_record(format!("overlay:hover:{leaf_id}"), node.transform, &node.segments, None, DRAW_OVERLAY_HOVER_STROKE, 1.5));
                     }
                 }
             }
@@ -1512,53 +1328,21 @@ fn render_canvas(document: &DrawDocument, interaction: &DrawConfig, gesture: &dr
         let y = ctx.start[1].min(ctx.cursor[1]);
         let width = (ctx.cursor[0] - ctx.start[0]).abs();
         let height = (ctx.cursor[1] - ctx.start[1]).abs();
-        let segments = vec![
-            PathSegment::Move { to: [x, y] },
-            PathSegment::Line { to: [x + width, y] },
-            PathSegment::Line { to: [x + width, y + height] },
-            PathSegment::Line { to: [x, y + height] },
-            PathSegment::Close,
-        ];
-        records.push(overlay_record(
-            "overlay:marquee".into(),
-            [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-            &segments,
-            Some(DRAW_OVERLAY_MARQUEE_FILL),
-            DRAW_OVERLAY_MARQUEE_STROKE,
-            1.0,
-        ));
+        let segments = vec![PathSegment::Move { to: [x, y] }, PathSegment::Line { to: [x + width, y] }, PathSegment::Line { to: [x + width, y + height] }, PathSegment::Line { to: [x, y + height] }, PathSegment::Close];
+        records.push(overlay_record("overlay:marquee".into(), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_MARQUEE_FILL), DRAW_OVERLAY_MARQUEE_STROKE, 1.0));
     } else if gesture.matches("shape_dragging") {
         let ctx = &gesture.context;
         let segments = shape_preview_segments(&ctx.utility, ctx.start, ctx.cursor);
-        records.push(overlay_record(
-            "overlay:preview".into(),
-            [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-            &segments,
-            Some(DRAW_OVERLAY_SELECTION_FILL),
-            DRAW_OVERLAY_SELECTION_STROKE,
-            1.5,
-        ));
+        records.push(overlay_record("overlay:preview".into(), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
     } else if gesture.matches("drafting") {
         let ctx = &gesture.context;
         let segments = draft_preview_segments(&ctx.utility, &ctx.points, ctx.cursor);
-        records.push(overlay_record(
-            "overlay:preview".into(),
-            [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-            &segments,
-            Some(DRAW_OVERLAY_SELECTION_FILL),
-            DRAW_OVERLAY_SELECTION_STROKE,
-            1.5,
-        ));
+        records.push(overlay_record("overlay:preview".into(), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAW_OVERLAY_SELECTION_FILL), DRAW_OVERLAY_SELECTION_STROKE, 1.5));
     }
     build_canvas_2d_scene(
         DRAW_PLAY_SURFACE_ID,
         DRAW_PLAY_CONTROLLER_ID,
-        Canvas2dScene {
-            camera_x: interaction.camera.x,
-            camera_y: interaction.camera.y,
-            zoom: interaction.camera.zoom,
-            layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()),
-        },
+        Canvas2dScene { camera_x: interaction.camera.x, camera_y: interaction.camera.y, zoom: interaction.camera.zoom, layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()) },
     )
 }
 //#endregion 🔖️Render
@@ -1579,10 +1363,7 @@ pub struct DrawPlayApp {
 impl Default for DrawPlayApp {
     fn default() -> Self {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
-        Self {
-            gesture: RefCell::new(fsm::init::<draw_gesture::DrawGesture>((), &mut sink)),
-            preview_seq: RefCell::new(0),
-        }
+        Self { gesture: RefCell::new(fsm::init::<draw_gesture::DrawGesture>((), &mut sink)), preview_seq: RefCell::new(0) }
     }
 }
 
@@ -1679,10 +1460,7 @@ impl DocumentApp for DrawPlayApp {
             "document:out" => {
                 let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
                 let bytes = doc.projection.encode_pack();
-                Ok(Media {
-                    media_type,
-                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -1735,9 +1513,7 @@ impl DocumentApp for DrawPlayApp {
         let mut config = cfg.projection.clone();
         match command {
             //#region 🔖️ContentOperations
-            DrawCommand::SetDocument { document: next } | DrawCommand::CommitDocument { document: next } => {
-                Emit::operations(vec![DrawOperation::SetDocument { document: next.clone() }])
-            }
+            DrawCommand::SetDocument { document: next } | DrawCommand::CommitDocument { document: next } => Emit::operations(vec![DrawOperation::SetDocument { document: next.clone() }]),
             DrawCommand::SetFixtureJson { json } => {
                 if json.contains(DRAW_DOCUMENT_SCHEMA) {
                     if let Ok(document) = serde_json::from_str::<DrawDocument>(json) {
@@ -1755,21 +1531,12 @@ impl DocumentApp for DrawPlayApp {
                     None
                 };
                 match next {
-                    Some(document) => Emit {
-                        document_operations: vec![DrawOperation::SetDocument { document }],
-                        config_operations: vec![DrawConfigOperation::SetSelection { ids: Vec::new() }],
-                        ..Default::default()
-                    },
+                    Some(document) => Emit { document_operations: vec![DrawOperation::SetDocument { document }], config_operations: vec![DrawConfigOperation::SetSelection { ids: Vec::new() }], ..Default::default() },
                     None => Emit::default(),
                 }
             }
             DrawCommand::SetSelectedOpacity { value } => {
-                let operations: Vec<DrawOperation> = config
-                    .selected_ids
-                    .iter()
-                    .filter(|id| find_draw_layer(document, id).is_some())
-                    .map(|id| DrawOperation::SetLayerOpacity { layer_id: id.clone(), opacity: *value })
-                    .collect();
+                let operations: Vec<DrawOperation> = config.selected_ids.iter().filter(|id| find_draw_layer(document, id).is_some()).map(|id| DrawOperation::SetLayerOpacity { layer_id: id.clone(), opacity: *value }).collect();
                 if operations.is_empty() {
                     return Emit::default();
                 }
@@ -1796,11 +1563,7 @@ impl DocumentApp for DrawPlayApp {
                 let layer = create_layer_by_kind(kind);
                 let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
                 let select_id = layer_id(&layer).to_string();
-                Emit {
-                    document_operations: vec![DrawOperation::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }],
-                    config_operations: vec![DrawConfigOperation::SetSelection { ids: vec![select_id] }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![DrawOperation::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }], config_operations: vec![DrawConfigOperation::SetSelection { ids: vec![select_id] }], ..Default::default() }
             }
             DrawCommand::MoveLayer { layer_id: target_id, target_row_id, drop_position } => {
                 let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
@@ -1811,11 +1574,7 @@ impl DocumentApp for DrawPlayApp {
                     return Emit::default();
                 }
                 let remaining: Vec<String> = config.selected_ids.iter().filter(|id| *id != target_id).cloned().collect();
-                Emit {
-                    document_operations: vec![DrawOperation::RemoveLayer { layer_id: target_id.clone() }],
-                    config_operations: vec![DrawConfigOperation::SetSelection { ids: remaining }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![DrawOperation::RemoveLayer { layer_id: target_id.clone() }], config_operations: vec![DrawConfigOperation::SetSelection { ids: remaining }], ..Default::default() }
             }
             DrawCommand::DuplicateLayer { layer_id: target_id } => {
                 if target_id.is_empty() {
@@ -1918,8 +1677,7 @@ impl DocumentApp for DrawPlayApp {
             DrawCommand::CanvasEscape => {
                 let emit = self.step_gesture(draw_gesture::Event::Escape, document, &mut config);
                 finish_gesture_emit(emit, cfg.projection, &config)
-            }
-            //#endregion 🔖️CanvasGestures
+            } //#endregion 🔖️CanvasGestures
         }
     }
 
@@ -1937,7 +1695,6 @@ impl DocumentApp for DrawPlayApp {
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
-
 }
 //#endregion 🔖️DrawPlayApp
 
@@ -1969,10 +1726,7 @@ pub fn create_draw_app() -> App {
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus {
-            id: "draw-layer-count".into(),
-            text: "0 layers · 0 selected".into(),
-        }]),
+        status: Some(vec![WindowEngagementStatus { id: "draw-layer-count".into(), text: "0 layers · 0 selected".into() }]),
         possible_engagements: None,
     };
     App::from_builder(
@@ -2059,12 +1813,7 @@ pub fn create_draw_app() -> App {
                 Some(&["Canvas".into()]),
             )),
     )
-    .example(
-        DRAW_PLAY_EXAMPLE_DEFAULT_ID,
-        LocalizedLabel::native("Semio", "Semio"),
-        semio_draw_example_json(),
-        "sparkles",
-    )
+    .example(DRAW_PLAY_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Semio", "Semio"), semio_draw_example_json(), "sparkles")
     .workflow("draw", "Draw", "2d.drawing")
 }
 //#endregion 🔖️Manifest
@@ -2136,7 +1885,7 @@ mod wasm_bridge {
 mod tests {
     use super::*;
     use draw_engine::create_draw_shape_layer_rect;
-    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app() -> VcsDocumentApp<DrawPlayApp> {
         testkit::new_app::<DrawPlayApp>()
@@ -2174,18 +1923,9 @@ mod tests {
         assert!(layers_json.contains("segments"));
         let records: Vec<Value> = serde_json::from_str(layers_json).unwrap();
         assert!(records.iter().any(|record| record.get("role").and_then(|value| value.as_str()) == Some("meta")));
+        assert!(records.iter().any(|record| record.get("id").and_then(|value| value.as_str()) == Some("artboard:frame")), "canvas must show the document artboard frame");
         assert!(
-            records.iter().any(|record| record.get("id").and_then(|value| value.as_str()) == Some("artboard:frame")),
-            "canvas must show the document artboard frame"
-        );
-        assert!(
-            records.iter().any(|record| {
-                record.get("id").and_then(|value| value.as_str()) == Some("artboard:dimensions")
-                    && record
-                        .pointer("/text/content")
-                        .and_then(|value| value.as_str())
-                        .is_some_and(|label| label.contains('×'))
-            }),
+            records.iter().any(|record| { record.get("id").and_then(|value| value.as_str()) == Some("artboard:dimensions") && record.pointer("/text/content").and_then(|value| value.as_str()).is_some_and(|label| label.contains('×')) }),
             "canvas must show document dimension label"
         );
         assert!(layers_json.contains("200 × 200"), "example artboard dimensions must be visible");
@@ -2233,9 +1973,7 @@ mod tests {
     fn patch_layers_opacity_emits_granular_operation() {
         let mut app = new_app();
         let id = first_layer_id(&app);
-        let result = app
-            .dispatch_typed(DrawCommand::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }, &testkit::meta("local"))
-            .expect("patch");
+        let result = app.dispatch_typed(DrawCommand::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }, &testkit::meta("local")).expect("patch");
         assert_eq!(result.operations.len(), 1);
         let projection = app.projection().unwrap();
         assert!((layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
@@ -2245,9 +1983,7 @@ mod tests {
     fn patch_layer_name_emits_op_and_changes_projection() {
         let mut app = new_app();
         let id = first_layer_id(&app);
-        let result = app
-            .dispatch_typed(DrawCommand::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }, &testkit::meta("local"))
-            .expect("patch");
+        let result = app.dispatch_typed(DrawCommand::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }, &testkit::meta("local")).expect("patch");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(layer_base(&app.projection().unwrap().layers[0]).name, "Renamed");
     }
@@ -2329,16 +2065,13 @@ mod tests {
     }
     //#endregion 🔖️GesturePreview
 
-
     #[test]
     fn combine_boolean_creates_boolean_layer() {
         let mut app = new_app();
         let first_id = first_layer_id(&app);
         app.dispatch_typed(DrawCommand::AddLayer { kind: "shape:rect".into() }, &testkit::meta("local")).expect("add rect");
         let second_id = last_layer_id(&app);
-        let result = app
-            .dispatch_typed(DrawCommand::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }, &testkit::meta("local"))
-            .expect("combine");
+        let result = app.dispatch_typed(DrawCommand::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }, &testkit::meta("local")).expect("combine");
         assert_eq!(result.operations.len(), 1);
         assert!(app.projection().unwrap().layers.iter().any(|layer| matches!(layer, DrawLayerNode::Boolean(_))));
     }
@@ -2359,16 +2092,17 @@ mod tests {
         set_utility(&mut app, "shapeRect");
         app.dispatch_typed(DrawCommand::CanvasPointerDown { x: 500.0, y: 400.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("down");
         app.dispatch_typed(DrawCommand::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0 }, &testkit::meta("local")).expect("move");
-        let result = app
-            .dispatch_typed(DrawCommand::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local"))
-            .expect("up");
+        let result = app.dispatch_typed(DrawCommand::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("up");
         assert_eq!(result.operations.len(), 1, "a shape drag commits as one edit adding exactly the layer");
         let projection = app.projection().unwrap();
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));
-        assert!(matches!(
-            result.requested_effects.as_slice(),
-            [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == DRAW_PLAY_WINDOW_CANVAS && utility_id == "selectDirect"
-        ), "the canvas returns to select-direct via a host effect, not a document operation");
+        assert!(
+            matches!(
+                result.requested_effects.as_slice(),
+                [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == DRAW_PLAY_WINDOW_CANVAS && utility_id == "selectDirect"
+            ),
+            "the canvas returns to select-direct via a host effect, not a document operation"
+        );
     }
 
     #[test]
@@ -2430,9 +2164,7 @@ mod tests {
     fn set_camera_writes_runtime_and_emits_no_operations() {
         let mut app = new_app();
         let before = app.projection().expect("projection");
-        let result = app
-            .dispatch_typed(DrawCommand::SetCamera { camera: draw::DrawCamera { x: 5.0, y: 5.0, zoom: 2.0 } }, &testkit::meta("local"))
-            .expect("camera");
+        let result = app.dispatch_typed(DrawCommand::SetCamera { camera: draw::DrawCamera { x: 5.0, y: 5.0, zoom: 2.0 } }, &testkit::meta("local")).expect("camera");
         assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
         assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
         let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
@@ -2444,9 +2176,7 @@ mod tests {
     fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
         let mut app = new_app();
         app.dispatch_typed(DrawCommand::SetCamera { camera: draw::DrawCamera { x: 4.0, y: 5.0, zoom: 1.0 } }, &testkit::meta("local")).expect("set camera");
-        let result = app
-            .dispatch_typed(DrawCommand::SetCameraZoom { value: 3.0 }, &testkit::meta("local"))
-            .expect("set camera zoom");
+        let result = app.dispatch_typed(DrawCommand::SetCameraZoom { value: 3.0 }, &testkit::meta("local")).expect("set camera zoom");
         assert!(result.operations.is_empty(), "camera zoom is a view action and emits no operations");
         let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
         assert!(json.contains(r#""zoom":3.0"#), "zoom updated: {json}");
@@ -2457,23 +2187,14 @@ mod tests {
     fn add_layer_undo_round_trip_through_wrapper() {
         let mut app = new_app();
         let before = app.projection().unwrap().layers.len();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            DrawCommand::AddLayer { kind: "path".into() },
-            |app| app.projection().unwrap().layers.len(),
-            before,
-            before + 1,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, DrawCommand::AddLayer { kind: "path".into() }, |app| app.projection().unwrap().layers.len(), before, before + 1);
     }
 
     #[test]
     fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
         let definition = create_draw_app().definition;
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
-        assert_eq!(
-            utility_ids,
-            ["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"],
-        );
+        assert_eq!(utility_ids, ["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"],);
         // Selection utilities carry the Selection category; the rest are Tools.
         let selects: Vec<&str> = definition.utilities.iter().filter(|utility| utility.category == Some(UtilityCategory::Selection)).map(|utility| utility.id.as_str()).collect();
         assert_eq!(selects, ["selectMarquee", "selectLasso", "selectDirect"]);

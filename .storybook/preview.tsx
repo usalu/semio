@@ -255,10 +255,11 @@ export const withAppearance: Decorator = (Story, context) => (
 
 //#region 🔖️withLocale
 import { setUiLocale, writeStoredUiChromeLocale, type UiLocale } from "@semio-tech/ui-react";
+import { createBrowserStoragePort } from "@semio-tech/framework-core";
 
 const LocaleHost: React.FC<{ children: React.ReactNode; locale: UiLocale }> = ({ children, locale }) => {
   React.useEffect(() => {
-    writeStoredUiChromeLocale(locale);
+    writeStoredUiChromeLocale(createBrowserStoragePort(), locale);
     void setUiLocale(locale);
   }, [locale]);
   return <>{children}</>;
@@ -277,7 +278,7 @@ import { writeStoredUiChromeTerminology, type UiChromeTerminologyId } from "@sem
 
 const TerminologyHost: React.FC<{ children: React.ReactNode; terminology: UiChromeTerminologyId }> = ({ children, terminology }) => {
   React.useEffect(() => {
-    writeStoredUiChromeTerminology(terminology);
+    writeStoredUiChromeTerminology(createBrowserStoragePort(), terminology);
   }, [terminology]);
   return <>{children}</>;
 };

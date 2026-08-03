@@ -25,15 +25,7 @@ mod tests {
         ShootingFixture {
             schema: SHOOTING_FIXTURE_SCHEMA.into(),
             assets: vec![
-                ShootingAsset {
-                    id: "a1".into(),
-                    name: "Base \"Mesh\"".into(),
-                    url: "/mesh/a1.glb".into(),
-                    format: "glb".into(),
-                    origin: [1.0, 2.0, 3.0],
-                    orientation: Some([0.0, 0.0, 0.7071, 0.7071]),
-                    scale: Some([2.0, 2.0, 2.0]),
-                },
+                ShootingAsset { id: "a1".into(), name: "Base \"Mesh\"".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [1.0, 2.0, 3.0], orientation: Some([0.0, 0.0, 0.7071, 0.7071]), scale: Some([2.0, 2.0, 2.0]) },
                 ShootingAsset { id: "a2".into(), name: "Plain".into(), url: "/mesh/a2.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None },
             ],
             saved_cameras: vec![ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera { position: [9.0, 9.0, 9.0], ..Default::default() } }],

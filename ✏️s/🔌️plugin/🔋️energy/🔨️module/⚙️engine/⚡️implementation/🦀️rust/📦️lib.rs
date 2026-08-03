@@ -5617,7 +5617,8 @@ mod kernel {
                 let cool_sp = model.thermostats.iter().find(|t| t.zone_id == zone.id).map_or(setpoints.cooling_c, |t| config.schedules.lookup(t.cooling_setpoint_schedule_id, &ctx) * 6.0 + 24.0);
 
                 let humidistat = model.humidistats.iter().find(|h| h.zone_id == zone.id);
-                let hum_spec = humidistat.map(|h| HumidistatSpec { humidifying_setpoint_rh: 0.4, dehumidifying_setpoint_rh: 0.6, humidifying_throttle_range: h.humidifying_throttle_range, dehumidifying_throttle_range: h.dehumidifying_throttle_range });
+                let hum_spec =
+                    humidistat.map(|h| HumidistatSpec { humidifying_setpoint_rh: 0.4, dehumidifying_setpoint_rh: 0.6, humidifying_throttle_range: h.humidifying_throttle_range, dehumidifying_throttle_range: h.dehumidifying_throttle_range });
                 let therm_spec = ThermostatSpec {
                     heating_setpoint_c: heat_sp,
                     cooling_setpoint_c: cool_sp,
@@ -5918,7 +5919,14 @@ mod kernel {
             use crate::model::*;
             let mut model = crate::sim::test_model_single_zone();
             model.zone_equipment.push(ZoneEquipmentAssignment { id: EntityId(92), zone_id: EntityId(1), equipment_type: ZoneEquipmentType::Baseboard, priority: 1, heating_capacity_w: 2000.0, cooling_capacity_w: 0.0 });
-            model.humidistats.push(Humidistat { id: EntityId(93), zone_id: EntityId(1), humidifying_setpoint_schedule_id: ScheduleId(0), dehumidifying_setpoint_schedule_id: ScheduleId(0), humidifying_throttle_range: 5.0, dehumidifying_throttle_range: 5.0 });
+            model.humidistats.push(Humidistat {
+                id: EntityId(93),
+                zone_id: EntityId(1),
+                humidifying_setpoint_schedule_id: ScheduleId(0),
+                dehumidifying_setpoint_schedule_id: ScheduleId(0),
+                humidifying_throttle_range: 5.0,
+                dehumidifying_throttle_range: 5.0,
+            });
             let pre = PrecomputedModel::build(&model, 60, 60);
             let weather = default_weather(10);
             let mut state = SimulationKernel::initialize(&model, &pre, &weather);
@@ -7077,7 +7085,17 @@ mod model {
         fn valid_model() -> Model {
             Model {
                 zones: vec![minimal_zone()],
-                materials: vec![Material { id: EntityId(10), name: "Mat".into(), thickness_m: 0.1, conductivity_w_m_k: 0.04, density_kg_m3: 50.0, specific_heat_j_kg_k: 1000.0, thermal_absorptance: 0.9, solar_absorptance: 0.7, visible_absorptance: 0.7 }],
+                materials: vec![Material {
+                    id: EntityId(10),
+                    name: "Mat".into(),
+                    thickness_m: 0.1,
+                    conductivity_w_m_k: 0.04,
+                    density_kg_m3: 50.0,
+                    specific_heat_j_kg_k: 1000.0,
+                    thermal_absorptance: 0.9,
+                    solar_absorptance: 0.7,
+                    visible_absorptance: 0.7,
+                }],
                 constructions: vec![Construction { id: EntityId(20), name: "Wall".into(), layer_material_ids: vec![EntityId(10)] }],
                 surfaces: vec![Surface {
                     id: EntityId(30),
@@ -7180,14 +7198,30 @@ mod model {
         #[test]
         fn ideal_loads_unknown_zone_fails() {
             let mut m = valid_model();
-            m.ideal_loads.push(IdealLoadsSystem { id: EntityId(60), zone_id: EntityId(999), max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.0, outdoor_air_per_area_m3_s_m2: 0.0 });
+            m.ideal_loads.push(IdealLoadsSystem {
+                id: EntityId(60),
+                zone_id: EntityId(999),
+                max_heating_supply_air_temp_c: 50.0,
+                min_cooling_supply_air_temp_c: 13.0,
+                max_heating_capacity_w: None,
+                max_cooling_capacity_w: None,
+                outdoor_air_per_person_m3_s: 0.0,
+                outdoor_air_per_area_m3_s_m2: 0.0,
+            });
             assert!(m.validate().is_err());
         }
 
         #[test]
         fn humidistat_unknown_zone_fails() {
             let mut m = valid_model();
-            m.humidistats.push(Humidistat { id: EntityId(70), zone_id: EntityId(999), humidifying_setpoint_schedule_id: ScheduleId(1), dehumidifying_setpoint_schedule_id: ScheduleId(1), humidifying_throttle_range: 5.0, dehumidifying_throttle_range: 5.0 });
+            m.humidistats.push(Humidistat {
+                id: EntityId(70),
+                zone_id: EntityId(999),
+                humidifying_setpoint_schedule_id: ScheduleId(1),
+                dehumidifying_setpoint_schedule_id: ScheduleId(1),
+                humidifying_throttle_range: 5.0,
+                dehumidifying_throttle_range: 5.0,
+            });
             assert!(m.validate().is_err());
         }
 

@@ -1,7 +1,7 @@
 //! ⚡️ Puzzle 2d app — operation enum + laws (constitutional: op).
 
-use puzzle_2d::{Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dProjection};
 use protocol::{Operation, OperationDiff};
+use puzzle_2d::{Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dProjection};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -115,18 +115,32 @@ impl OperationDiff<Puzzle2dProjection> for Puzzle2dDiff {
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Puzzle2dOperation {
     #[dsl(key = "setNode")]
-    SetNode { index: usize, #[dsl(block)] node: Puzzle2dNode },
+    SetNode {
+        index: usize,
+        #[dsl(block)]
+        node: Puzzle2dNode,
+    },
     #[dsl(key = "removeNode")]
     RemoveNode { id: String },
     #[dsl(key = "setEdge")]
-    SetEdge { index: usize, #[dsl(block)] edge: Puzzle2dEdge },
+    SetEdge {
+        index: usize,
+        #[dsl(block)]
+        edge: Puzzle2dEdge,
+    },
     #[dsl(key = "removeEdge")]
     RemoveEdge { id: String },
     #[dsl(key = "setMeta")]
-    SetMeta { #[dsl(block)] meta: Puzzle2dMeta },
+    SetMeta {
+        #[dsl(block)]
+        meta: Puzzle2dMeta,
+    },
     /// 🌍️ Replaces the whole document (example import / reset / engine fill).
     #[dsl(key = "setDocument")]
-    SetDocument { #[dsl(block)] document: Puzzle2dProjection },
+    SetDocument {
+        #[dsl(block)]
+        document: Puzzle2dProjection,
+    },
 }
 
 fn puzzle2d_operation_diff(operation: &Puzzle2dOperation) -> Puzzle2dDiff {
@@ -415,16 +429,12 @@ impl store::DocumentDsl for Puzzle2dPlayProjection {
 
 impl store::DocumentPack for Puzzle2dPlayProjection {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::to_dsl_value(&self.0)
-            .map_err(store::PackError::Schema)?
-            .encode_pack_with(options)
+        dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value)
-            .map(Puzzle2dPlayProjection)
-            .map_err(store::PackError::Schema)
+        dsl::from_dsl_value(value).map(Puzzle2dPlayProjection).map_err(store::PackError::Schema)
     }
 }
 
@@ -460,9 +470,9 @@ mod tests {
     #[test]
     fn puzzle2d_delta_ops_are_granular_and_round_trip() {
         use crate::{puzzle2d_document_delta_operations, Puzzle2dOperation};
+        use protocol::{Operation, OperationDiff};
         use puzzle_2d::PUZZLE_2D_SCHEMA;
         use serde_json::Value;
-        use protocol::{Operation, OperationDiff};
 
         let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
         // Move n2, add n3, remove n1 — a disjoint mix of granular edits. The camera is deliberately

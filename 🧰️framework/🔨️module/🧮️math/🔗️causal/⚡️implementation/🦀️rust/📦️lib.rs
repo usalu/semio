@@ -936,9 +936,7 @@ pub fn identify(dag: &CausalDag, x: usize, y: usize) -> Result<Identification, C
             }
         }
     }
-    Err(CausalError::NotIdentifiable(
-        "no backdoor or frontdoor adjustment found; latent-confounder ADMG identification (general ID algorithm) is out of scope for a fully-observed DAG".to_string(),
-    ))
+    Err(CausalError::NotIdentifiable("no backdoor or frontdoor adjustment found; latent-confounder ADMG identification (general ID algorithm) is out of scope for a fully-observed DAG".to_string()))
 }
 // #endregion 🔖️Identification
 
@@ -1254,8 +1252,7 @@ impl DiscreteScm {
         }
         let mut eliminate: Vec<usize> = (0..n).filter(|v| *v != target && !evidence_map.contains_key(v)).collect();
         while !eliminate.is_empty() {
-            let (pos, &var) =
-                eliminate.iter().enumerate().min_by_key(|&(_, &v)| factors.iter().filter(|f| f.vars.contains(&v)).count()).expect("eliminate is non-empty");
+            let (pos, &var) = eliminate.iter().enumerate().min_by_key(|&(_, &v)| factors.iter().filter(|f| f.vars.contains(&v)).count()).expect("eliminate is non-empty");
             eliminate.remove(pos);
             let (involved, mut rest): (Vec<Factor>, Vec<Factor>) = factors.into_iter().partition(|f| f.vars.contains(&var));
             if involved.is_empty() {
@@ -1486,9 +1483,7 @@ fn g_formula_point(data: &mathematical_tabular::Table, treatment: usize, outcome
     let predict_mean = |design: &mathematical_algebra::MatD| -> f64 {
         let n = design.rows;
         let p = design.cols;
-        let total: f64 = (0..n)
-            .map(|row| fit.coefficients[0] + (0..p).map(|col| fit.coefficients[col + 1] * design.get(row, col)).sum::<f64>())
-            .sum();
+        let total: f64 = (0..n).map(|row| fit.coefficients[0] + (0..p).map(|col| fit.coefficients[col + 1] * design.get(row, col)).sum::<f64>()).sum();
         total / n as f64
     };
     let design_t1 = design_with_treatment(data, treatment, covariates, Some(1.0))?;
@@ -1576,9 +1571,7 @@ impl LinearGaussianScm {
             return self.interventional_mean(target, &what_if.interventions);
         }
         if what_if.evidence.len() != self.dag.n() {
-            return Err(CausalError::InvalidQuery(
-                "counterfactual queries need evidence for every variable in v1 (partial-evidence abduction is out of scope)".to_string(),
-            ));
+            return Err(CausalError::InvalidQuery("counterfactual queries need evidence for every variable in v1 (partial-evidence abduction is out of scope)".to_string()));
         }
         let mut observed = vec![0.0; self.dag.n()];
         for &(v, value) in &what_if.evidence {
@@ -1850,11 +1843,7 @@ mod tests {
     // #region 🔖️ScmDiscreteTests
     fn sprinkler_scm() -> DiscreteScm {
         // Classic sprinkler net: Cloudy -> {Sprinkler, Rain} -> Wet. All variables binary (0=false, 1=true).
-        let dag = CausalDag::from_named_edges(
-            vec!["cloudy".into(), "sprinkler".into(), "rain".into(), "wet".into()],
-            &[("cloudy", "sprinkler"), ("cloudy", "rain"), ("sprinkler", "wet"), ("rain", "wet")],
-        )
-        .unwrap();
+        let dag = CausalDag::from_named_edges(vec!["cloudy".into(), "sprinkler".into(), "rain".into(), "wet".into()], &[("cloudy", "sprinkler"), ("cloudy", "rain"), ("sprinkler", "wet"), ("rain", "wet")]).unwrap();
         let cardinalities = vec![2, 2, 2, 2];
         let cloudy = Cpt { node: 0, parents: vec![], cardinality: 2, probs: vec![0.5, 0.5] };
         // sprinkler | cloudy: P(sprinkler=1|cloudy=0)=0.5, P(sprinkler=1|cloudy=1)=0.1

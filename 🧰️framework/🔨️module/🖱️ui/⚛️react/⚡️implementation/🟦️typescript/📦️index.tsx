@@ -143,7 +143,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
 import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import { ICONS, assertUniqueIconConceptAssignments, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/ui-asset";
+import { ICONS, assertUniqueIconConceptAssignments, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/asset";
 import { isMetabolismIconName, METABOLISM_ICONS, resolveMetabolismIconSvgFromTheme, type MetabolismIconName } from "@semio-tech/asset";
 export type { IconName, MetabolismIconName };
 import { createPortal } from "react-dom";
@@ -1056,7 +1056,7 @@ export type CanvasPickMenuProps = {
   readonly onPick: (target: CanvasPickTarget) => void;
   readonly onDismiss: () => void;
   readonly renderRow?: (target: CanvasPickTarget, active: boolean) => React.ReactNode;
-  readonly title?: string;
+  readonly title?: UiLabel;
 };
 
 export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "@semio-tech/framework-core";
@@ -1650,7 +1650,7 @@ export interface IconProps {
   icon: IconSource;
   size?: number | IconSizeToken;
   className?: string;
-  title?: string;
+  title?: UiLabel;
 }
 
 /** @emoji 🖼️ Raw vendored SVG markup for an icon name, or `undefined` when the name is not a vendored {@link IconName}. */
@@ -1947,7 +1947,7 @@ function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destr
  **/
 export interface ContextMenuItem {
   id: string;
-  label?: string;
+  label?: UiLabel;
   icon?: IconSource | string;
   color?: string;
   shortcut?: string;
@@ -2029,7 +2029,7 @@ export interface ContextMenuProps {
   items?: readonly ContextMenuItem[];
   children: React.ReactNode;
   /** @emoji 🪟️ Title chip on the window-chrome cap row. */
-  title?: string;
+  title: UiLabel;
   /** @emoji 🪟️ Catalog icon shown in the title chip before the title. */
   titleIcon?: IconSource;
 }
@@ -2037,7 +2037,7 @@ export interface ContextMenuProps {
 /**
  * 🧩️ Right-click host: always suppresses the native menu; opens the shared viewport-fixed menu only when `items` is non-empty.
  **/
-export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title = "Menu", titleIcon = "list" }) => {
+export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title, titleIcon = "list" }) => {
   const [open, setOpen] = reactHostPort.useState(false);
   const [point, setPoint] = reactHostPort.useState<{ x: number; y: number } | null>(null);
   const hasItems = !!items?.length;
@@ -2074,7 +2074,7 @@ export interface ContextMenuControllerProps {
   items: readonly ContextMenuItem[];
   onOpenChange: (open: boolean) => void;
   /** @emoji 🪟️ Title chip on the window-chrome cap row. */
-  title?: string;
+  title: UiLabel;
   /** @emoji 🪟️ Catalog icon in the title chip. */
   titleIcon?: IconSource;
   /** 🖱️ When false, selecting a row does not dismiss — the row action owns closing (e.g. acceptSuggestion). Outside pointer / Escape still dismiss. Default true. */
@@ -2454,7 +2454,7 @@ export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): C
 /**
  * 🧩️ Controlled right-click menu whose title chip bottom-left anchors at viewport coordinates (puzzle 2d canvas bridge), keeping the first row beside the pointer. Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
-export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title = "Menu", titleIcon = "list", closeOnSelect = true }) => {
+export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title, titleIcon = "list", closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
   // 🐚️ Falls back to `document.body` outside any shell — inside one, portals into that shell's own
   // overlay layer so a context menu never visually escapes into another mounted shell's stacking context.
@@ -2680,10 +2680,10 @@ export function isDomTextEditableTarget(target: EventTarget | null): boolean {
 }
 
 export interface TextSelectionContextMenuLabels {
-  readonly cut: string;
-  readonly copy: string;
-  readonly paste: string;
-  readonly selectAll: string;
+  readonly cut: UiLabel;
+  readonly copy: UiLabel;
+  readonly paste: UiLabel;
+  readonly selectAll: UiLabel;
 }
 
 export interface TextSelectionContextMenuActions {
@@ -2703,7 +2703,7 @@ export function buildTextSelectionContextMenuItems(input: { readonly editable: b
   if (input.editable) {
     items.push({ id: "text-paste", label: labels.paste, icon: "clipboard", shortcut: formatModShortcut("v"), onSelect: () => actions.paste() });
   }
-  items.push({ id: "text-sep", label: "", separator: true });
+  items.push({ id: "text-sep", label: uiDataLabel(""), separator: true });
   items.push({ id: "text-select-all", label: labels.selectAll, icon: "select-all", shortcut: formatModShortcut("a"), onSelect: () => actions.selectAll() });
   return items;
 }
@@ -2787,10 +2787,11 @@ export function selectAllDomText(target: EventTarget | null): void {
  * 📋️ Global host: right-click on a DOM text selection opens Cut/Copy/Paste/Select All (native menus are suppressed by {@link installElementsSurfaceBrowserDefaultSuppression}).
  **/
 export const TextSelectionContextMenuHost: React.FC = () => {
-  const cutLabel = useLabel("ui.contextMenu.cut") ?? "Cut";
-  const copyLabel = useLabel("ui.contextMenu.copy") ?? "Copy";
-  const pasteLabel = useLabel("ui.contextMenu.paste") ?? "Paste";
-  const selectAllLabel = useLabel("ui.contextMenu.selectAll") ?? "Select All";
+  const contextMenuTitle = useLabel("ui.common.actions");
+  const cutLabel = useLabel("ui.contextMenu.cut");
+  const copyLabel = useLabel("ui.contextMenu.copy");
+  const pasteLabel = useLabel("ui.contextMenu.paste");
+  const selectAllLabel = useLabel("ui.contextMenu.selectAll");
   const [open, setOpen] = reactHostPort.useState(false);
   const [position, setPosition] = reactHostPort.useState<{ x: number; y: number } | null>(null);
   const [items, setItems] = reactHostPort.useState<readonly ContextMenuItem[]>([]);
@@ -2832,7 +2833,7 @@ export const TextSelectionContextMenuHost: React.FC = () => {
     document.addEventListener("contextmenu", onContextMenu, true);
     return () => document.removeEventListener("contextmenu", onContextMenu, true);
   }, [cutLabel, copyLabel, pasteLabel, selectAllLabel]);
-  return <ContextMenuController open={open} position={position} items={items} onOpenChange={setOpen} />;
+  return <ContextMenuController open={open} position={position} items={items} onOpenChange={setOpen} title={contextMenuTitle} />;
 };
 
 // #endregion 🖱️ContextMenu
@@ -2992,7 +2993,7 @@ function syncElementsSurfaceChromeProviders(input: ElementsSurfaceChromeInput | 
     setUiDriverProvider(() => input.driver);
     return;
   }
-  setUiDriverProvider(() => readStoredUiDriver());
+  setUiDriverProvider(() => readStoredUiDriver(createBrowserStoragePort()));
 }
 
 function applyElementsSurfaceChromeDriverDom(root: HTMLElement, driver: UiDriver): void {
@@ -3511,7 +3512,7 @@ export function setUiDriverProvider(fn: () => UiDriver): void {
 
 /** @emoji 🚗️ Resolves the active driver outside React render context. */
 export function activeUiDriver(): UiDriver {
-  return _uiDriverProvider ? _uiDriverProvider() : readStoredUiDriver();
+  return _uiDriverProvider ? _uiDriverProvider() : readStoredUiDriver(createBrowserStoragePort());
 }
 
 /** @emoji 🚗️ The active driver controlling labels, drag affordances, chrome/gumball reveal, and tooltips. */
@@ -3525,7 +3526,7 @@ export function useUiDriver(): UiDriver {
 export function UiDriverProvider({ driver, children }: { readonly driver: UiDriver; readonly children: React.ReactNode }): React.ReactElement {
   reactHostPort.useEffect(() => {
     setUiDriverProvider(() => driver);
-    return () => setUiDriverProvider(() => readStoredUiDriver());
+    return () => setUiDriverProvider(() => readStoredUiDriver(createBrowserStoragePort()));
   }, [driver]);
   return <UiDriverContext.Provider value={driver}>{children}</UiDriverContext.Provider>;
 }
@@ -4065,6 +4066,17 @@ export type UiTranslationSchema = {
     readonly ring: {
       readonly demo: UiLabelValue;
     };
+    readonly iconSelector: {
+      readonly mode: {
+        readonly url: UiLabelValue;
+        readonly shortcode: UiLabelValue;
+        readonly math: UiLabelValue;
+        readonly data: UiLabelValue;
+        readonly emoji: UiLabelValue;
+        readonly text: UiLabelValue;
+        readonly vector: UiLabelValue;
+      };
+    };
     readonly stepper: {
       readonly demo: UiLabelValue;
     };
@@ -4078,6 +4090,38 @@ export type UiTranslationSchema = {
       readonly actionActive: UiLabelValue;
       readonly suggestions: UiLabelValue;
       readonly noMatches: UiLabelValue;
+    };
+    readonly flowSpotlight: {
+      readonly typeToAdd: UiLabelValue;
+      readonly collapseSuggestions: UiLabelValue;
+      readonly showAllSuggestions: UiLabelValue;
+    };
+    readonly sync: {
+      readonly attach: UiLabelValue;
+      readonly detach: UiLabelValue;
+    };
+    readonly ink: {
+      readonly link: UiLabelValue;
+      readonly linkUrlPrompt: UiLabelValue;
+    };
+    readonly surfaceContextMenu: {
+      readonly file: UiLabelValue;
+      readonly workspace: UiLabelValue;
+      readonly canvas: UiLabelValue;
+      readonly scene: UiLabelValue;
+      readonly placementSuggestions: UiLabelValue;
+      readonly node: UiLabelValue;
+      readonly flow: UiLabelValue;
+      readonly row: UiLabelValue;
+      readonly paint: UiLabelValue;
+      readonly board: UiLabelValue;
+      readonly ink: UiLabelValue;
+      readonly history: UiLabelValue;
+      readonly step: UiLabelValue;
+      readonly diff: UiLabelValue;
+      readonly event: UiLabelValue;
+      readonly editor: UiLabelValue;
+      readonly map: UiLabelValue;
     };
   };
   readonly settings: {
@@ -4739,6 +4783,17 @@ export const uiChromeTranslationBundles = {
             },
           },
         },
+        iconSelector: {
+          mode: {
+            url: { label: { normal: "URL", beginner: "URL" } },
+            shortcode: { label: { normal: "Kurzcode", beginner: "Kurzcode" } },
+            math: { label: { normal: "Mathe / Typst", beginner: "Mathe / Typst" } },
+            data: { label: { normal: "Daten-URL", beginner: "Daten-URL" } },
+            emoji: { label: { normal: "Emoji", beginner: "Emoji" } },
+            text: { label: { normal: "Text", beginner: "Text" } },
+            vector: { label: { normal: "Katalog / SVG", beginner: "Katalog / SVG" } },
+          },
+        },
         stepper: {
           demo: {
             label: {
@@ -4792,6 +4847,38 @@ export const uiChromeTranslationBundles = {
               beginner: "Keine passenden Aktionen",
             },
           },
+        },
+        flowSpotlight: {
+          typeToAdd: { label: { normal: "Zum Hinzufügen tippen…", beginner: "Zum Hinzufügen tippen…" } },
+          collapseSuggestions: { label: { normal: "Vorschläge einklappen", beginner: "Vorschläge einklappen" } },
+          showAllSuggestions: { label: { normal: "Alle Vorschläge anzeigen", beginner: "Alle Vorschläge anzeigen" } },
+        },
+        sync: {
+          attach: { label: { normal: "Verbinden", beginner: "Verbinden" } },
+          detach: { label: { normal: "Trennen", beginner: "Trennen" } },
+        },
+        ink: {
+          link: { label: { normal: "Link", beginner: "Link" } },
+          linkUrlPrompt: { label: { normal: "Link-URL", beginner: "Link-URL" } },
+        },
+        surfaceContextMenu: {
+          file: { label: { normal: "Dateiaktionen", beginner: "Dateiaktionen" } },
+          workspace: { label: { normal: "Arbeitsbereich-Aktionen", beginner: "Arbeitsbereich-Aktionen" } },
+          canvas: { label: { normal: "Canvas-Aktionen", beginner: "Canvas-Aktionen" } },
+          scene: { label: { normal: "Szenen-Aktionen", beginner: "Szenen-Aktionen" } },
+          placementSuggestions: { label: { normal: "Platzierungsvorschläge", beginner: "Platzierungsvorschläge" } },
+          node: { label: { normal: "Knoten-Aktionen", beginner: "Knoten-Aktionen" } },
+          flow: { label: { normal: "Flow-Aktionen", beginner: "Flow-Aktionen" } },
+          row: { label: { normal: "Zeilenaktionen", beginner: "Zeilenaktionen" } },
+          paint: { label: { normal: "Mal-Aktionen", beginner: "Mal-Aktionen" } },
+          board: { label: { normal: "Board-Aktionen", beginner: "Board-Aktionen" } },
+          ink: { label: { normal: "Tinten-Aktionen", beginner: "Tinten-Aktionen" } },
+          history: { label: { normal: "Verlaufsaktionen", beginner: "Verlaufsaktionen" } },
+          step: { label: { normal: "Schrittaktionen", beginner: "Schrittaktionen" } },
+          diff: { label: { normal: "Vergleichsaktionen", beginner: "Vergleichsaktionen" } },
+          event: { label: { normal: "Ereignisaktionen", beginner: "Ereignisaktionen" } },
+          editor: { label: { normal: "Editor-Aktionen", beginner: "Editor-Aktionen" } },
+          map: { label: { normal: "Kartenaktionen", beginner: "Kartenaktionen" } },
         },
       },
       settings: {
@@ -5368,6 +5455,17 @@ export const uiChromeTranslationBundles = {
             },
           },
         },
+        iconSelector: {
+          mode: {
+            url: { label: { normal: "URL", beginner: "URL" } },
+            shortcode: { label: { normal: "Shortcode", beginner: "Shortcode" } },
+            math: { label: { normal: "Math / Typst", beginner: "Math / Typst" } },
+            data: { label: { normal: "Data URL", beginner: "Data URL" } },
+            emoji: { label: { normal: "Emoji", beginner: "Emoji" } },
+            text: { label: { normal: "Text", beginner: "Text" } },
+            vector: { label: { normal: "Catalog / SVG", beginner: "Catalog / SVG" } },
+          },
+        },
         stepper: {
           demo: {
             label: {
@@ -5421,6 +5519,38 @@ export const uiChromeTranslationBundles = {
               beginner: "No matching actions",
             },
           },
+        },
+        flowSpotlight: {
+          typeToAdd: { label: { normal: "Type to add…", beginner: "Type to add…" } },
+          collapseSuggestions: { label: { normal: "Collapse suggestions", beginner: "Collapse suggestions" } },
+          showAllSuggestions: { label: { normal: "Show all suggestions", beginner: "Show all suggestions" } },
+        },
+        sync: {
+          attach: { label: { normal: "Attach", beginner: "Attach" } },
+          detach: { label: { normal: "Detach", beginner: "Detach" } },
+        },
+        ink: {
+          link: { label: { normal: "Link", beginner: "Link" } },
+          linkUrlPrompt: { label: { normal: "Link URL", beginner: "Link URL" } },
+        },
+        surfaceContextMenu: {
+          file: { label: { normal: "File actions", beginner: "File actions" } },
+          workspace: { label: { normal: "Workspace actions", beginner: "Workspace actions" } },
+          canvas: { label: { normal: "Canvas actions", beginner: "Canvas actions" } },
+          scene: { label: { normal: "Scene actions", beginner: "Scene actions" } },
+          placementSuggestions: { label: { normal: "Placement suggestions", beginner: "Placement suggestions" } },
+          node: { label: { normal: "Node actions", beginner: "Node actions" } },
+          flow: { label: { normal: "Flow actions", beginner: "Flow actions" } },
+          row: { label: { normal: "Row actions", beginner: "Row actions" } },
+          paint: { label: { normal: "Paint actions", beginner: "Paint actions" } },
+          board: { label: { normal: "Board actions", beginner: "Board actions" } },
+          ink: { label: { normal: "Ink actions", beginner: "Ink actions" } },
+          history: { label: { normal: "History actions", beginner: "History actions" } },
+          step: { label: { normal: "Step actions", beginner: "Step actions" } },
+          diff: { label: { normal: "Diff actions", beginner: "Diff actions" } },
+          event: { label: { normal: "Event actions", beginner: "Event actions" } },
+          editor: { label: { normal: "Editor actions", beginner: "Editor actions" } },
+          map: { label: { normal: "Map actions", beginner: "Map actions" } },
         },
       },
       settings: {
@@ -8678,7 +8808,7 @@ export function flowChevronIconName(inline: FlowInline, pointsOut: boolean): Ico
 export interface PanelTreeUnit {
   readonly id: string;
   readonly tree: TreePanelSource;
-  readonly label?: string;
+  readonly label?: UiLabel;
   readonly icon?: React.ComponentType<{ size?: number }>;
   readonly order?: number;
 }
@@ -11032,7 +11162,7 @@ function CommandDialog({
   shouldFilter,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
-  title?: string;
+  title?: UiLabel;
   description?: string;
   className?: string;
   showCloseButton?: boolean;
@@ -11430,7 +11560,7 @@ export interface TooltipConfig {
  * Data interface for description-based tooltip content.
  **/
 export interface DescriptionTooltipData {
-  label?: string;
+  label?: UiLabel;
   description?: string;
   descriptionBeginner?: string;
   manual?: string;
@@ -11895,7 +12025,7 @@ export { DescriptionTooltipContent, EnhancedTooltipContent, IdComposeTooltip, Co
  **/
 export interface AsideProps {
   kind?: "note" | "tip" | "caution" | "danger";
-  title?: string;
+  title?: UiLabel;
   children: React.ReactNode;
 }
 
@@ -11988,7 +12118,7 @@ export interface DraggableAvatarProps {
   isSelected?: boolean;
   isHovered?: boolean;
   shouldFade?: boolean;
-  title?: string;
+  title?: UiLabel;
   dragRef?: (element: HTMLElement | null) => void;
   dragListeners?: any;
   dragAttributes?: any;
@@ -12116,8 +12246,9 @@ export interface CardProps {
  * Content card with title, icon, and children.
  **/
 export const Card: React.FC<CardProps> = ({ title, icon, children, className = "", contextMenu }) => {
+  const contextMenuTitle = useLabel("ui.common.actions");
   return (
-    <ContextMenu items={contextMenu}>
+    <ContextMenu items={contextMenu} title={contextMenuTitle}>
       <div className={`border p-single ${className}`}>
         <div className="flex items-start gap-tiny mb-single">
           {icon && typeof icon !== "string" && <Icon icon={icon} size="small" className="flex-shrink-0 mt-0.5" />}
@@ -12349,7 +12480,7 @@ export function EmptyState({ id, icon, title, description, action }: EmptyStateP
  **/
 export interface ErrorViewProps {
   id?: string;
-  title?: string;
+  title?: UiLabel;
   message: string;
   onRetry?: () => void;
 }
@@ -12430,8 +12561,9 @@ export interface DiagramNodeProps {
  * Individual node element within a diagram graph.
  **/
 export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = false, hovered = false, isPlaceholder = false, showTopHandle = false, showBottomHandle = false, className = "", onMouseEnter, onMouseLeave, onClick, contextMenu }) => {
+  const contextMenuTitle = useLabel("ui.common.actions");
   return (
-    <ContextMenu items={contextMenu}>
+    <ContextMenu items={contextMenu} title={contextMenuTitle}>
       <div
         className={`
         relative flex items-center justify-center
@@ -12562,7 +12694,7 @@ export { Cursor };
  **/
 export interface SectionProps {
   id?: string;
-  title?: string;
+  title?: UiLabel;
   children: React.ReactNode;
   className?: string;
 }
@@ -12746,7 +12878,7 @@ function ActionGroupItem({
 interface ActionDropdownOption {
   value: string;
   icon: ControlIcon;
-  label?: string;
+  label?: UiLabel;
 }
 
 /**
@@ -13072,9 +13204,9 @@ interface ComboboxOption {
 interface ComboboxProps extends ElementProps {
   options: ComboboxOption[];
   value?: string;
-  placeholder?: string;
+  placeholder?: UiLabel;
   placeholderId?: string;
-  emptyMessage?: string;
+  emptyMessage?: UiLabel;
   onValueChange?: (value: string) => void;
   className?: string;
   allowClear?: boolean;
@@ -13318,7 +13450,7 @@ interface CollapsedFieldDisplayProps {
   id?: string;
   mixed?: boolean;
   onActivate: () => void;
-  placeholder?: string;
+  placeholder?: UiLabel;
   slot: "input" | "textarea";
   value: string;
 }
@@ -13525,7 +13657,13 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const setActiveInteraction = commands?.setActiveInteraction;
   const placeholderLabel = useIdLabel(placeholderId);
   const mixedLabel = useLabel("ui.common.mixedValues");
-  const computedPlaceholder = mixed ? mixedLabel || "—" : placeholderId ? placeholderLabel : placeholder;
+  const computedPlaceholder: UiLabel | undefined = mixed
+    ? mixedLabel || uiDataLabel("—")
+    : placeholderId
+      ? placeholderLabel
+      : placeholder !== undefined
+        ? uiDataLabel(placeholder)
+        : undefined;
 
   reactHostPort.useEffect(() => {
     if (!isEditing) setLocalValue(type === "number" ? formatNumber(scalarInputValue(externalValue)) : scalarInputValue(externalValue).toString() || "");
@@ -14511,9 +14649,9 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const textareaRef = reactHostPort.useRef<HTMLTextAreaElement>(null);
   const placeholderIdLabel = useIdLabel(placeholderId);
-  const computedPlaceholder = placeholderId ? placeholderIdLabel : placeholder;
+  const computedPlaceholder: UiLabel | undefined = placeholderId ? placeholderIdLabel : placeholder !== undefined ? uiDataLabel(placeholder) : undefined;
   const mixedLabel = useLabel("ui.common.mixedValues");
-  const effectivePlaceholder = mixed ? mixedLabel || "—" : computedPlaceholder;
+  const effectivePlaceholder: UiLabel | undefined = mixed ? mixedLabel || uiDataLabel("—") : computedPlaceholder;
 
   reactHostPort.useEffect(() => {
     if (!isEditing) setLocalValue(externalValue?.toString() || "");
@@ -14681,7 +14819,7 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   onValueChange?: (value: T) => void;
   items: ToggleItem<T>[];
   showLabel?: boolean;
-  placeholder?: string;
+  placeholder?: UiLabel;
   dropdownId?: string;
   dropdownSide?: "top" | "right" | "bottom" | "left";
   dropdownAlign?: "start" | "center" | "end";
@@ -16061,7 +16199,7 @@ export interface NavbarExampleOption {
 /** @emoji 🧪️ Props for {@link NavbarExampleSelect}. */
 export interface NavbarExampleSelectProps {
   readonly id: string;
-  readonly label?: string;
+  readonly label?: UiLabel;
   readonly value: string;
   readonly options: readonly NavbarExampleOption[];
   readonly onValueChange: (exampleId: string) => void;
@@ -16330,6 +16468,13 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
   const editorValue = uniform ? innerFromIconForSelectorMode(value, activeMode) : "";
   const importFileLabel = useLabel("ui.common.importFile");
   const clearLabel = useLabel("ui.common.clear");
+  const modeUrlLabel = useLabel("ui.iconSelector.mode.url");
+  const modeShortcodeLabel = useLabel("ui.iconSelector.mode.shortcode");
+  const modeMathLabel = useLabel("ui.iconSelector.mode.math");
+  const modeDataLabel = useLabel("ui.iconSelector.mode.data");
+  const modeEmojiLabel = useLabel("ui.iconSelector.mode.emoji");
+  const modeTextLabel = useLabel("ui.iconSelector.mode.text");
+  const modeVectorLabel = useLabel("ui.iconSelector.mode.vector");
 
   const onModeSelect = (next: string) => {
     if (locked) {
@@ -16404,25 +16549,25 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
         </SelectTrigger>
         <SelectContent position="popper">
           <SelectItem id={`${id}.mode.url`} value="url">
-            URL
+            {modeUrlLabel}
           </SelectItem>
           <SelectItem id={`${id}.mode.shortcode`} value="shortcode">
-            Shortcode
+            {modeShortcodeLabel}
           </SelectItem>
           <SelectItem id={`${id}.mode.math`} value="math">
-            Math / Typst
+            {modeMathLabel}
           </SelectItem>
           <SelectItem id={`${id}.mode.data`} value="data">
-            Data URL
+            {modeDataLabel}
           </SelectItem>
           <SelectItem id={`${id}.mode.emoji`} value="emoji">
-            Emoji
+            {modeEmojiLabel}
           </SelectItem>
           <SelectItem id={`${id}.mode.text`} value="text">
-            Text
+            {modeTextLabel}
           </SelectItem>
           <SelectItem id={`${id}.mode.vector`} value="vector">
-            Catalog / SVG
+            {modeVectorLabel}
           </SelectItem>
         </SelectContent>
       </Select>
@@ -16878,7 +17023,7 @@ export interface TreeSectionAction {
   kind?: "button";
   icon: ControlIcon;
   onClick: () => void;
-  title?: string;
+  title?: UiLabel;
   text?: string;
   id?: string;
   disabled?: boolean;
@@ -16893,7 +17038,7 @@ export interface TreeCheckboxAction {
   kind: "checkbox";
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
-  title?: string;
+  title?: UiLabel;
   id?: string;
   disabled?: boolean;
   ariaLabel?: string;
@@ -16926,7 +17071,7 @@ function menuTreeHeaderActionsToContextItems(actions: readonly TreeHeaderAction[
     .filter((action): action is TreeSectionAction => action.kind !== "checkbox" && treeSectionActionPlacement(action) === "menu")
     .map((action, index) => ({
       id: action.id ?? `tree-row-action-${index}`,
-      label: action.text ?? action.title ?? "",
+      label: action.text !== undefined ? uiDataLabel(action.text) : (action.title ?? uiDataLabel("")),
       icon: action.icon,
       disabled: action.disabled,
       onSelect: () => action.onClick(),
@@ -16991,7 +17136,7 @@ export interface TreeCheckboxProps {
   id?: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
-  title?: string;
+  title?: UiLabel;
   disabled?: boolean;
   ariaLabel?: string;
 }
@@ -17048,7 +17193,7 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => {
     return null;
   }
   return (
-    <div data-slot="tree-header-actions" data-ui-reveal-region className={treeHeaderActionsClassName}>
+    <div data-slot="tree-header-actions" data-ui-reveal-region="" className={treeHeaderActionsClassName}>
       {rowActions.map((action, index) => renderTreeHeaderAction(action, action.id ?? index))}
     </div>
   );
@@ -17808,10 +17953,11 @@ function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHid
 }
 
 const TreeItemRowContextMenu: React.FC<{ readonly items?: readonly ContextMenuItem[]; readonly children: React.ReactNode }> = ({ items, children }) => {
+  const contextMenuTitle = useLabel("ui.common.actions");
   if (!items?.length) {
     return <>{children}</>;
   }
-  return <ContextMenu items={items}>{children}</ContextMenu>;
+  return <ContextMenu items={items} title={contextMenuTitle}>{children}</ContextMenu>;
 };
 
 /** @emoji 🖱️ Skip row leave when pointer moves to another tree row or nested branch (avoids stale leave clearing fast-hover highlight). */
@@ -20076,7 +20222,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
  * TreeFilesProps holds the data fields for a TreeFilesProps record.
  **/
 interface TreeFilesProps {
-  title?: string;
+  title?: UiLabel;
   nodes: FileTreeNode[];
   currentPath?: string;
   onNavigate?: (path: string) => void;
@@ -20539,7 +20685,7 @@ export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ 
 };
 
 export interface WindowMeasureTreeLeafProps {
-  label?: string;
+  label?: UiLabel;
   icon?: React.ReactNode;
   children: React.ReactNode;
   fullWidth?: boolean;
@@ -21528,7 +21674,7 @@ export interface PaneProps {
   readonly onFoldToggle?: () => void;
   /** @emoji 🖼️ Fixed semantic icon for the pane chrome toggle — never a fold-direction chevron. */
   readonly icon: IconName;
-  readonly label?: string;
+  readonly label?: UiLabel;
   readonly size?: number;
   readonly onSizeChange?: (size: number) => void;
   readonly minSize?: number;
@@ -21911,7 +22057,7 @@ export { Ribbon };
 
 export interface EngagementOption {
   id: string;
-  label?: string;
+  label?: UiLabel;
   icon: ControlIcon;
   pressed?: boolean;
   disabled?: boolean;
@@ -21934,7 +22080,7 @@ export interface EngagementRingOption {
 export interface EngagementSliderControl {
   kind: "slider";
   id?: string;
-  label?: string;
+  label?: UiLabel;
   value: number;
   min: number;
   max: number;
@@ -21951,7 +22097,7 @@ export interface EngagementSliderControl {
 export interface EngagementStepperControl {
   kind: "stepper";
   id?: string;
-  label?: string;
+  label?: UiLabel;
   value: number;
   min?: number;
   max?: number;
@@ -21966,7 +22112,7 @@ export interface EngagementStepperControl {
 export interface EngagementRingControl {
   kind: "ring";
   id?: string;
-  label?: string;
+  label?: UiLabel;
   value?: string;
   options: readonly EngagementRingOption[];
   disabled?: boolean;
@@ -21985,7 +22131,7 @@ export interface EngagementToggleGroupOption {
 export interface EngagementToggleGroupControl {
   kind: "toggleGroup";
   id?: string;
-  label?: string;
+  label?: UiLabel;
   value?: string;
   options: readonly EngagementToggleGroupOption[];
   disabled?: boolean;
@@ -22003,9 +22149,9 @@ export interface EngagementSelectItem {
 export interface EngagementSelectControl {
   kind: "select";
   id?: string;
-  label?: string;
+  label?: UiLabel;
   value?: string;
-  placeholder?: string;
+  placeholder?: UiLabel;
   items: readonly EngagementSelectItem[];
   disabled?: boolean;
   onChange?: (value: string) => void;
@@ -22066,7 +22212,7 @@ export function engagementActionTokenEquals(a: string, b: string): boolean {
 export interface SearchInput {
   id?: string;
   value?: string;
-  placeholder?: string;
+  placeholder?: UiLabel;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
   /** @emoji 🔁️ Restarts the last finalized engagement when Space is pressed with an empty action. */
@@ -22382,7 +22528,7 @@ export interface EngagementSpec {
 export interface WindowLayoutWindowNode {
   kind: "window";
   id: string;
-  title?: string;
+  title?: UiLabel;
   size?: number;
 }
 
@@ -23228,7 +23374,7 @@ export { Window };
  * Frontmatter metadata interface for a documentation page.
  **/
 export interface PageFrontmatter {
-  title?: string;
+  title?: UiLabel;
   description?: string;
   icon?: string;
   sidebar?: boolean;
@@ -26174,7 +26320,7 @@ export interface TableProps<T = unknown> {
   onRowMouseLeave?: (row: T, index: number) => void;
   rowClassName?: (row: T, index: number) => string;
   rowKey?: (row: T, index: number) => string;
-  emptyMessage?: string;
+  emptyMessage?: UiLabel;
   className?: string;
   sortColumn?: string;
   sortDirection?: SortDirection;
@@ -26761,7 +26907,7 @@ export type DescriptorKind =
 export interface FileNodeDescriptor {
   readonly id: string;
   readonly descriptorKindId: string;
-  readonly label?: string;
+  readonly label?: UiLabel;
   readonly description?: string;
 }
 
@@ -26798,8 +26944,8 @@ export const VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS: Readonly<Record<string, F
     name: "Root",
     icon: "layout-grid",
     descriptors: [
-      { id: "path", descriptorKindId: "text", label: "Path" }, // chrome-i18n-allow: demo fixture
-      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" }, // chrome-i18n-allow: demo fixture
+      { id: "path", descriptorKindId: "text", label: uiDataLabel("Path") }, // chrome-i18n-allow: demo fixture
+      { id: "fileNodeKind", descriptorKindId: "text", label: uiDataLabel("Node kind") }, // chrome-i18n-allow: demo fixture
     ],
   },
   branch: {
@@ -26807,8 +26953,8 @@ export const VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS: Readonly<Record<string, F
     name: "Branch",
     icon: "folder",
     descriptors: [
-      { id: "path", descriptorKindId: "text", label: "Path" }, // chrome-i18n-allow: demo fixture
-      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" }, // chrome-i18n-allow: demo fixture
+      { id: "path", descriptorKindId: "text", label: uiDataLabel("Path") }, // chrome-i18n-allow: demo fixture
+      { id: "fileNodeKind", descriptorKindId: "text", label: uiDataLabel("Node kind") }, // chrome-i18n-allow: demo fixture
     ],
   },
   leaf: {
@@ -26816,8 +26962,8 @@ export const VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS: Readonly<Record<string, F
     name: "Leaf",
     icon: "file",
     descriptors: [
-      { id: "path", descriptorKindId: "text", label: "Path" }, // chrome-i18n-allow: demo fixture
-      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" }, // chrome-i18n-allow: demo fixture
+      { id: "path", descriptorKindId: "text", label: uiDataLabel("Path") }, // chrome-i18n-allow: demo fixture
+      { id: "fileNodeKind", descriptorKindId: "text", label: uiDataLabel("Node kind") }, // chrome-i18n-allow: demo fixture
     ],
   },
 };
@@ -26866,7 +27012,7 @@ export interface VirtualFileSystemProps {
   readonly onRowMouseLeave?: (row: VirtualFileSystemRow, index: number) => void;
   readonly rowClassName?: (row: VirtualFileSystemRow, index: number) => string;
   readonly onToggleExpand?: (rowId: string) => void;
-  readonly emptyMessage?: string;
+  readonly emptyMessage?: UiLabel;
   readonly className?: string;
   readonly rowHeight?: TableProps<VirtualFileSystemRow>["rowHeight"];
   readonly dragDrop?: DragDropConfig;
@@ -27317,7 +27463,7 @@ export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ child
 
 /** @emoji 🪟️ Window descriptor rendered inside {@link Mode}. */
 export interface ModeWindowDescriptor extends Omit<WindowConfig, "children" | "onOpenInNewWindow" | "onMaximize" | "onMinimize" | "onClose"> {
-  title?: string;
+  title?: UiLabel;
   iconId: IconName;
   children: React.ReactNode;
 }
@@ -29075,7 +29221,7 @@ export {
 /** @emoji 📱️ Mode descriptor rendered inside {@link App}. */
 export interface AppModeDescriptor {
   id: string;
-  label?: string;
+  label?: UiLabel;
   icon?: React.ReactNode;
   children: React.ReactNode;
 }
@@ -29130,7 +29276,7 @@ export { App };
 /** @emoji 🖥️ App descriptor rendered inside {@link Ui}. */
 export interface UiAppDescriptor {
   id: string;
-  label?: string;
+  label?: UiLabel;
   icon?: ControlIcon;
   children: React.ReactNode;
 }
@@ -29622,7 +29768,7 @@ if (import.meta.vitest) {
             windows={[
               {
                 id: "puzzle3d-main-top",
-                title: "Top",
+                title: uiDataLabel("Top"),
                 utilityBar: (
                   <button id="transform" type="button">
                     Transform
@@ -29682,7 +29828,7 @@ if (import.meta.vitest) {
             windows={[
               {
                 id: "puzzle3d-main-top",
-                title: "Top",
+                title: uiDataLabel("Top"),
                 children: <div id="framework.window.puzzle3dMain">Main Pane</div>,
               },
             ]}
@@ -31904,7 +32050,7 @@ if (import.meta.vitest) {
           navbar={<Navbar items={[{ key: "n", content: "Nav" }]} showFullscreenToggle={false} />}
           footer={<Footer items={[{ key: "f", content: "Foot" }]} />}
           canvas={
-            <Mode windows={[{ id: "w", title: "W", iconId: "app-window", children: <div>Body</div> }]} activeWindowId="w" onActiveWindowChange={() => {}} />
+            <Mode windows={[{ id: "w", title: uiDataLabel("W"), iconId: "app-window", children: <div>Body</div> }]} activeWindowId="w" onActiveWindowChange={() => {}} />
           }
         />,
       );
@@ -31929,7 +32075,7 @@ if (import.meta.vitest) {
       expect(renderToStaticMarkup(<Navbar items={[{ key: "n", content: "Nav" }]} showFullscreenToggle={false} />)).toContain("ui-surface");
       expect(renderToStaticMarkup(<Footer items={[{ key: "f", content: "Foot" }]} />)).toContain("ui-surface");
       expect(renderToStaticMarkup(<Canvas>c</Canvas>)).toContain("ui-surface");
-      const { container } = render(<Mode windows={[{ id: "w", title: "W", iconId: "app-window", children: <div>Body</div> }]} activeWindowId="w" onActiveWindowChange={() => {}} />);
+      const { container } = render(<Mode windows={[{ id: "w", title: uiDataLabel("W"), iconId: "app-window", children: <div>Body</div> }]} activeWindowId="w" onActiveWindowChange={() => {}} />);
       expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("ui-surface");
     });
   });
@@ -31937,7 +32083,7 @@ if (import.meta.vitest) {
   describe("ContextMenu", () => {
     it("prevents the native context menu when no items are registered", () => {
       render(
-        <ContextMenu>
+        <ContextMenu title={uiDataLabel("Menu")}>
           <button type="button">Target</button>
         </ContextMenu>,
       );
@@ -31956,7 +32102,7 @@ if (import.meta.vitest) {
       const selectAll = vi.fn();
       const items = buildTextSelectionContextMenuItems(
         { editable: true, hasSelection: false },
-        { cut: "Cut", copy: "Copy", paste: "Paste", selectAll: "Select All" },
+        { cut: uiDataLabel("Cut"), copy: uiDataLabel("Copy"), paste: uiDataLabel("Paste"), selectAll: uiDataLabel("Select All") },
         { cut, copy, paste, selectAll },
       );
       const copyItem = items.find((item) => item.id === "text-copy");
@@ -32014,7 +32160,7 @@ if (import.meta.vitest) {
 
     it("opens the custom menu when items are registered", async () => {
       render(
-        <ContextMenu items={[{ id: "demo", label: "Demo action" }]}>
+        <ContextMenu title={uiDataLabel("Menu")} items={[{ id: "demo", label: uiDataLabel("Demo action") }]}>
           <button type="button">Target</button>
         </ContextMenu>,
       );
@@ -32026,7 +32172,7 @@ if (import.meta.vitest) {
 
     it("anchors the menu title chip bottom-left at the pointer coordinates", async () => {
       render(
-        <ContextMenu items={[{ id: "demo", label: "Demo action" }]}>
+        <ContextMenu title={uiDataLabel("Menu")} items={[{ id: "demo", label: uiDataLabel("Demo action") }]}>
           <button type="button">Target</button>
         </ContextMenu>,
       );
@@ -32042,7 +32188,7 @@ if (import.meta.vitest) {
 
     it("wraps context menu rows in window chrome with a title chip and no enlarge control", async () => {
       render(
-        <ContextMenu items={[{ id: "demo", label: "Demo action" }]} title="Actions">
+        <ContextMenu items={[{ id: "demo", label: uiDataLabel("Demo action") }]} title={uiDataLabel("Actions")}>
           <button type="button">Target</button>
         </ContextMenu>,
       );
@@ -32065,7 +32211,7 @@ if (import.meta.vitest) {
       expect(css).toContain('[data-window-silhouette-gap]');
       expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
       render(
-        <ContextMenu items={[{ id: "demo", label: "Demo action" }]} title="Actions">
+        <ContextMenu items={[{ id: "demo", label: uiDataLabel("Demo action") }]} title={uiDataLabel("Actions")}>
           <button type="button">Target</button>
         </ContextMenu>,
       );
@@ -32087,11 +32233,11 @@ if (import.meta.vitest) {
 
     it("renders catalog and shortcode menu icons instead of raw labels", async () => {
       render(
-        <ContextMenu
+        <ContextMenu title={uiDataLabel("Menu")}
           items={[
-            { id: "delete", label: "Delete", icon: "trash" },
-            { id: "suggest", label: "Suggest", icon: "sparkles" },
-            { id: "copy", label: "Copy", icon: "copy" },
+            { id: "delete", label: uiDataLabel("Delete"), icon: "trash" },
+            { id: "suggest", label: uiDataLabel("Suggest"), icon: "sparkles" },
+            { id: "copy", label: uiDataLabel("Copy"), icon: "copy" },
           ]}
         >
           <button type="button">Target</button>
@@ -32110,7 +32256,7 @@ if (import.meta.vitest) {
     it("renders a color swatch and fires hover callbacks on controller items", async () => {
       const onHover = vi.fn();
       const onHoverEnd = vi.fn();
-      render(<ContextMenuController open position={{ x: 12, y: 24 }} items={[{ id: "kind", label: "Capsule", icon: "box", color: "#aabbcc", onHover, onHoverEnd }]} onOpenChange={vi.fn()} />);
+      render(<ContextMenuController title={uiDataLabel("Menu")} open position={{ x: 12, y: 24 }} items={[{ id: "kind", label: uiDataLabel("Capsule"), icon: "box", color: "#aabbcc", onHover, onHoverEnd }]} onOpenChange={vi.fn()} />);
       const item = await waitFor(() => screen.getByRole("menuitem", { name: "Capsule" }));
       const swatch = Array.from(item.querySelectorAll("[aria-hidden]")).find((node) => {
         const style = (node as HTMLElement).getAttribute("style") ?? "";
@@ -32125,12 +32271,12 @@ if (import.meta.vitest) {
 
     it("highlights checked items without a tick or checkmark", async () => {
       render(
-        <ContextMenuController
+        <ContextMenuController title={uiDataLabel("Menu")}
           open
           position={{ x: 8, y: 16 }}
           items={[
-            { id: "a", label: "Capsule · port", icon: "box", color: "#112233", checked: true },
-            { id: "b", label: "Box · port", icon: "box", color: "#445566", checked: false },
+            { id: "a", label: uiDataLabel("Capsule · port"), icon: "box", color: "#112233", checked: true },
+            { id: "b", label: uiDataLabel("Box · port"), icon: "box", color: "#445566", checked: false },
           ]}
           onOpenChange={vi.fn()}
         />,
@@ -32150,12 +32296,12 @@ if (import.meta.vitest) {
 
     it("omits the color swatch when suggestion-style rows have icon only", async () => {
       render(
-        <ContextMenuController
+        <ContextMenuController title={uiDataLabel("Menu")}
           open
           position={{ x: 8, y: 16 }}
           items={[
-            { id: "suggestion-0", label: "Capsule · vortex 0", icon: "box", checked: true },
-            { id: "suggestion-1", label: "Box · vortex 1", icon: "box", checked: false },
+            { id: "suggestion-0", label: uiDataLabel("Capsule · vortex 0"), icon: "box", checked: true },
+            { id: "suggestion-1", label: uiDataLabel("Box · vortex 1"), icon: "box", checked: false },
           ]}
           onOpenChange={vi.fn()}
         />,
@@ -32179,7 +32325,7 @@ if (import.meta.vitest) {
       const onOpenChange = vi.fn();
       render(
         <>
-          <ContextMenuController open position={{ x: 10, y: 10 }} items={[{ id: "a", label: "Alpha", onSelect: vi.fn() }]} onOpenChange={onOpenChange} />
+          <ContextMenuController title={uiDataLabel("Menu")} open position={{ x: 10, y: 10 }} items={[{ id: "a", label: uiDataLabel("Alpha"), onSelect: vi.fn() }]} onOpenChange={onOpenChange} />
           <div role="menu" data-testid="sibling-menu">
             <button type="button">Sibling</button>
           </div>
@@ -32198,13 +32344,13 @@ if (import.meta.vitest) {
       const onSelect = vi.fn();
       const onOpenChange = vi.fn();
       render(
-        <ContextMenuController
+        <ContextMenuController title={uiDataLabel("Menu")}
           open
           closeOnSelect={false}
           position={{ x: 8, y: 16 }}
           items={[
-            { id: "suggestion-0", label: "Capsule · port", icon: "box", checked: true, onSelect, onHover },
-            { id: "suggestion-1", label: "Box · port", icon: "box", checked: false, onSelect, onHover },
+            { id: "suggestion-0", label: uiDataLabel("Capsule · port"), icon: "box", checked: true, onSelect, onHover },
+            { id: "suggestion-1", label: uiDataLabel("Box · port"), icon: "box", checked: false, onSelect, onHover },
           ]}
           onOpenChange={onOpenChange}
         />,
@@ -32220,14 +32366,14 @@ if (import.meta.vitest) {
 
     it("renders ordinal badges for the first nine enabled rows", async () => {
       render(
-        <ContextMenuController
+        <ContextMenuController title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
           items={[
-            { id: "a", label: "Alpha" },
-            { id: "b", label: "Beta" },
-            { id: "sep", label: "", separator: true },
-            { id: "c", label: "Gamma" },
+            { id: "a", label: uiDataLabel("Alpha") },
+            { id: "b", label: uiDataLabel("Beta") },
+            { id: "sep", label: uiDataLabel(""), separator: true },
+            { id: "c", label: uiDataLabel("Gamma") },
           ]}
           onOpenChange={vi.fn()}
         />,
@@ -32242,12 +32388,12 @@ if (import.meta.vitest) {
       const onHover = vi.fn();
       const onHoverEnd = vi.fn();
       render(
-        <ContextMenuController
+        <ContextMenuController title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
           items={[
-            { id: "a", label: "Alpha", onHover, onHoverEnd },
-            { id: "b", label: "Beta", onHover, onHoverEnd },
+            { id: "a", label: uiDataLabel("Alpha"), onHover, onHoverEnd },
+            { id: "b", label: uiDataLabel("Beta"), onHover, onHoverEnd },
           ]}
           onOpenChange={vi.fn()}
         />,
@@ -32265,19 +32411,19 @@ if (import.meta.vitest) {
 
     it("opens nested submenus with ArrowRight and closes with ArrowLeft", async () => {
       render(
-        <ContextMenuController
+        <ContextMenuController title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
           items={[
             {
               id: "transform",
-              label: "Transform",
+              label: uiDataLabel("Transform"),
               children: [
-                { id: "move", label: "Move" },
-                { id: "rotate", label: "Rotate" },
+                { id: "move", label: uiDataLabel("Move") },
+                { id: "rotate", label: uiDataLabel("Rotate") },
               ],
             },
-            { id: "delete", label: "Delete" },
+            { id: "delete", label: uiDataLabel("Delete") },
           ]}
           onOpenChange={vi.fn()}
         />,
@@ -32293,7 +32439,7 @@ if (import.meta.vitest) {
     it("does not close on select when closeOnSelect is false", async () => {
       const onOpenChange = vi.fn();
       const onSelect = vi.fn();
-      render(<ContextMenuController open closeOnSelect={false} position={{ x: 4, y: 4 }} items={[{ id: "place", label: "Place", onSelect }]} onOpenChange={onOpenChange} />);
+      render(<ContextMenuController title={uiDataLabel("Menu")} open closeOnSelect={false} position={{ x: 4, y: 4 }} items={[{ id: "place", label: uiDataLabel("Place"), onSelect }]} onOpenChange={onOpenChange} />);
       fireEvent.click(await waitFor(() => screen.getByRole("menuitem", { name: "Place" })));
       expect(onSelect).toHaveBeenCalled();
       expect(onOpenChange).not.toHaveBeenCalled();
@@ -32312,14 +32458,14 @@ if (import.meta.vitest) {
 
     it("renders a non-interactive header row for a labeled separator, leaving a bare separator unlabeled", async () => {
       render(
-        <ContextMenuController
+        <ContextMenuController title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
           items={[
-            { id: "recent-header", label: "Recent", separator: true },
-            { id: "a", label: "Alpha" },
-            { id: "sep", label: "", separator: true },
-            { id: "b", label: "Beta" },
+            { id: "recent-header", label: uiDataLabel("Recent"), separator: true },
+            { id: "a", label: uiDataLabel("Alpha") },
+            { id: "sep", label: uiDataLabel(""), separator: true },
+            { id: "b", label: uiDataLabel("Beta") },
           ]}
           onOpenChange={vi.fn()}
         />,
@@ -32334,10 +32480,10 @@ if (import.meta.vitest) {
 
     it("toggles a parent row's submenu open and closed on click", async () => {
       render(
-        <ContextMenuController
+        <ContextMenuController title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
-          items={[{ id: "transform", label: "Transform", children: [{ id: "move", label: "Move" }] }]}
+          items={[{ id: "transform", label: uiDataLabel("Transform"), children: [{ id: "move", label: uiDataLabel("Move") }] }]}
           onOpenChange={vi.fn()}
         />,
       );
@@ -32351,10 +32497,10 @@ if (import.meta.vitest) {
 
     it("renders a parent row's shortcut before the submenu chevron", async () => {
       render(
-        <ContextMenuController
+        <ContextMenuController title={uiDataLabel("Menu")}
           open
           position={{ x: 4, y: 4 }}
-          items={[{ id: "transform", label: "Transform", shortcut: "⌘️T", children: [{ id: "move", label: "Move" }] }]}
+          items={[{ id: "transform", label: uiDataLabel("Transform"), shortcut: "⌘️T", children: [{ id: "move", label: uiDataLabel("Move") }] }]}
           onOpenChange={vi.fn()}
         />,
       );
@@ -32363,7 +32509,7 @@ if (import.meta.vitest) {
     });
 
     it("caps the menu surface height with a scrolling overflow class", async () => {
-      render(<ContextMenuController open position={{ x: 4, y: 4 }} items={[{ id: "a", label: "Alpha" }]} onOpenChange={vi.fn()} />);
+      render(<ContextMenuController title={uiDataLabel("Menu")} open position={{ x: 4, y: 4 }} items={[{ id: "a", label: uiDataLabel("Alpha") }]} onOpenChange={vi.fn()} />);
       const menu = await waitFor(() => screen.getByRole("menu"));
       const chrome = menu.closest<HTMLElement>('[data-slot="context-menu-content"]');
       expect(chrome?.className).toContain("max-h-layout-command");
@@ -32428,8 +32574,8 @@ if (import.meta.vitest) {
       render(
         <Ui
           apps={[
-            { id: "editor", label: "Editor", children: <div>Editor Body</div> },
-            { id: "dashboard", label: "Dashboard", children: <div>Dashboard Body</div> },
+            { id: "editor", label: uiDataLabel("Editor"), children: <div>Editor Body</div> },
+            { id: "dashboard", label: uiDataLabel("Dashboard"), children: <div>Dashboard Body</div> },
           ]}
           activeAppId="dashboard"
           onActiveAppChange={() => {}}
@@ -32442,8 +32588,8 @@ if (import.meta.vitest) {
       render(
         <App
           modes={[
-            { id: "edit", label: "Edit", children: <div>Edit Mode</div> },
-            { id: "review", label: "Review", children: <div>Review Mode</div> },
+            { id: "edit", label: uiDataLabel("Edit"), children: <div>Edit Mode</div> },
+            { id: "review", label: uiDataLabel("Review"), children: <div>Review Mode</div> },
           ]}
           activeModeId="review"
           onActiveModeChange={() => {}}
@@ -33510,7 +33656,7 @@ if (import.meta.vitest) {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
-            windows={[{ id: "main", title: "Main", iconId: "app-window", children: <div>Main Body</div> }]}
+            windows={[{ id: "main", title: uiDataLabel("Main"), iconId: "app-window", children: <div>Main Body</div> }]}
             layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
             activeWindowId="main"
             onActiveWindowChange={() => {}}
@@ -33556,8 +33702,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "left", title: "Left", iconId: "app-window", children: <div>Left Pane</div> },
-              { id: "right", title: "Right", iconId: "app-window", children: <div>Right Pane</div> },
+              { id: "left", title: uiDataLabel("Left"), iconId: "app-window", children: <div>Left Pane</div> },
+              { id: "right", title: uiDataLabel("Right"), iconId: "app-window", children: <div>Right Pane</div> },
             ]}
             layout={{
               kind: "row",
@@ -33630,8 +33776,8 @@ if (import.meta.vitest) {
         return (
           <Mode
             windows={[
-              { id: "left", title: "Left", iconId: "app-window", children: <div>Left Body</div> },
-              { id: "right", title: "Right", iconId: "app-window", children: <div data-testid="under-cutout-canvas" onPointerDown={onCanvasPointerDown}>Right Body</div> },
+              { id: "left", title: uiDataLabel("Left"), iconId: "app-window", children: <div>Left Body</div> },
+              { id: "right", title: uiDataLabel("Right"), iconId: "app-window", children: <div data-testid="under-cutout-canvas" onPointerDown={onCanvasPointerDown}>Right Body</div> },
             ]}
             layout={{
               kind: "stack",
@@ -33673,7 +33819,7 @@ if (import.meta.vitest) {
           <Layout
             canvas={
               <Mode
-                windows={[{ id: "main", title: "Main", iconId: "app-window", children: <div>Main Body</div> }]}
+                windows={[{ id: "main", title: uiDataLabel("Main"), iconId: "app-window", children: <div>Main Body</div> }]}
                 layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
                 activeWindowId="main"
                 onActiveWindowChange={() => {}}
@@ -33702,10 +33848,10 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-lg">
           <Mode
             windows={[
-              { id: "a1", title: "A1", iconId: "app-window", children: <div>A1 Body</div> },
-              { id: "a2", title: "A2", iconId: "app-window", children: <div>A2 Body</div> },
-              { id: "b1", title: "B1", iconId: "app-window", children: <div>B1 Body</div> },
-              { id: "b2", title: "B2", iconId: "app-window", children: <div>B2 Body</div> },
+              { id: "a1", title: uiDataLabel("A1"), iconId: "app-window", children: <div>A1 Body</div> },
+              { id: "a2", title: uiDataLabel("A2"), iconId: "app-window", children: <div>A2 Body</div> },
+              { id: "b1", title: uiDataLabel("B1"), iconId: "app-window", children: <div>B1 Body</div> },
+              { id: "b2", title: uiDataLabel("B2"), iconId: "app-window", children: <div>B2 Body</div> },
             ]}
             layout={{
               kind: "row",
@@ -33772,8 +33918,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "left", title: "Left", iconId: "app-window", children: <div>Left Pane</div> },
-              { id: "right", title: "Right", iconId: "app-window", children: <div>Right Pane</div> },
+              { id: "left", title: uiDataLabel("Left"), iconId: "app-window", children: <div>Left Pane</div> },
+              { id: "right", title: uiDataLabel("Right"), iconId: "app-window", children: <div>Right Pane</div> },
             ]}
             layout={{
               kind: "row",
@@ -33809,8 +33955,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "top", title: "Top", iconId: "app-window", children: <div>Top Pane</div> },
-              { id: "bottom", title: "Bottom", iconId: "app-window", children: <div>Bottom Pane</div> },
+              { id: "top", title: uiDataLabel("Top"), iconId: "app-window", children: <div>Top Pane</div> },
+              { id: "bottom", title: uiDataLabel("Bottom"), iconId: "app-window", children: <div>Bottom Pane</div> },
             ]}
             layout={{
               kind: "column",
@@ -33840,10 +33986,10 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "lt", title: "Left Top", iconId: "app-window", children: <div>Left Top</div> },
-              { id: "lb", title: "Left Bottom", iconId: "app-window", children: <div>Left Bottom</div> },
-              { id: "rt", title: "Right Top", iconId: "app-window", children: <div>Right Top</div> },
-              { id: "rb", title: "Right Bottom", iconId: "app-window", children: <div>Right Bottom</div> },
+              { id: "lt", title: uiDataLabel("Left Top"), iconId: "app-window", children: <div>Left Top</div> },
+              { id: "lb", title: uiDataLabel("Left Bottom"), iconId: "app-window", children: <div>Left Bottom</div> },
+              { id: "rt", title: uiDataLabel("Right Top"), iconId: "app-window", children: <div>Right Top</div> },
+              { id: "rb", title: uiDataLabel("Right Bottom"), iconId: "app-window", children: <div>Right Bottom</div> },
             ]}
             layout={{
               kind: "row",
@@ -33879,8 +34025,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "a", title: "Alpha", iconId: "app-window", children: <div>Alpha Body</div> },
-              { id: "b", title: "Beta", iconId: "app-window", children: <div>Beta Body</div> },
+              { id: "a", title: uiDataLabel("Alpha"), iconId: "app-window", children: <div>Alpha Body</div> },
+              { id: "b", title: uiDataLabel("Beta"), iconId: "app-window", children: <div>Beta Body</div> },
             ]}
             layout={{
               kind: "stack",
@@ -33943,8 +34089,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "shape", title: "Shape", iconId: "app-window", children: <div>Shape Body</div> },
-              { id: "energy", title: "Energy", iconId: "app-window", children: <div>Energy Body</div> },
+              { id: "shape", title: uiDataLabel("Shape"), iconId: "app-window", children: <div>Shape Body</div> },
+              { id: "energy", title: uiDataLabel("Energy"), iconId: "app-window", children: <div>Energy Body</div> },
             ]}
             layout={{
               kind: "stack",
@@ -34010,8 +34156,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "solo", title: "Solo", iconId: "app-window", children: <div>Solo Body</div> },
-              { id: "peer", title: "Peer", iconId: "app-window", children: <div>Peer Body</div> },
+              { id: "solo", title: uiDataLabel("Solo"), iconId: "app-window", children: <div>Solo Body</div> },
+              { id: "peer", title: uiDataLabel("Peer"), iconId: "app-window", children: <div>Peer Body</div> },
             ]}
             layout={{
               kind: "row",
@@ -34342,10 +34488,10 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "lt", title: "Left Top", iconId: "app-window", children: <div>Left Top</div> },
-              { id: "lb", title: "Left Bottom", iconId: "app-window", children: <div>Left Bottom</div> },
-              { id: "rt", title: "Right Top", iconId: "app-window", children: <div>Right Top</div> },
-              { id: "rb", title: "Right Bottom", iconId: "app-window", children: <div>Right Bottom</div> },
+              { id: "lt", title: uiDataLabel("Left Top"), iconId: "app-window", children: <div>Left Top</div> },
+              { id: "lb", title: uiDataLabel("Left Bottom"), iconId: "app-window", children: <div>Left Bottom</div> },
+              { id: "rt", title: uiDataLabel("Right Top"), iconId: "app-window", children: <div>Right Top</div> },
+              { id: "rb", title: uiDataLabel("Right Bottom"), iconId: "app-window", children: <div>Right Bottom</div> },
             ]}
             layout={{
               kind: "row",
@@ -34622,8 +34768,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "a", title: "A", iconId: "app-window", children: <div>A Body</div> },
-              { id: "b", title: "B", iconId: "app-window", children: <div>B Body</div> },
+              { id: "a", title: uiDataLabel("A"), iconId: "app-window", children: <div>A Body</div> },
+              { id: "b", title: uiDataLabel("B"), iconId: "app-window", children: <div>B Body</div> },
             ]}
             layout={{
               kind: "row",
@@ -34646,7 +34792,7 @@ if (import.meta.vitest) {
     it("Mode hides the Focus enlarge control when only one window is on the canvas", () => {
       const { container, rerender } = render(
         <div className="h-layout-story w-layout-story-md">
-          <Mode windows={[{ id: "solo", title: "Solo", iconId: "app-window", children: <div>Solo Body</div> }]} activeWindowId="solo" onActiveWindowChange={() => {}} />
+          <Mode windows={[{ id: "solo", title: uiDataLabel("Solo"), iconId: "app-window", children: <div>Solo Body</div> }]} activeWindowId="solo" onActiveWindowChange={() => {}} />
         </div>,
       );
       expect(container.querySelector('[data-slot="mode-dock-maximize"]')).toBeNull();
@@ -34655,8 +34801,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "solo", title: "Solo", iconId: "app-window", children: <div>Solo Body</div> },
-              { id: "peer", title: "Peer", iconId: "app-window", children: <div>Peer Body</div> },
+              { id: "solo", title: uiDataLabel("Solo"), iconId: "app-window", children: <div>Solo Body</div> },
+              { id: "peer", title: uiDataLabel("Peer"), iconId: "app-window", children: <div>Peer Body</div> },
             ]}
             layout={{
               kind: "row",
@@ -34676,8 +34822,8 @@ if (import.meta.vitest) {
     it("Engagement renders options and status lines; Search renders the input", () => {
       const { container } = render(
         <>
-          <Engagement options={[{ id: "opt-a", label: "Option A", icon: "circle-dot", onPress: () => {} }]} status={[{ id: "status-a", content: "Ready" }]} />
-          <Search input={{ placeholder: "Type here" }} />
+          <Engagement options={[{ id: "opt-a", label: uiDataLabel("Option A"), icon: "circle-dot", onPress: () => {} }]} status={[{ id: "status-a", content: "Ready" }]} />
+          <Search input={{ placeholder: uiDataLabel("Type here") }} />
         </>,
       );
       expect(screen.getByRole("button", { name: "OptionA" })).toBeTruthy();
@@ -34688,7 +34834,7 @@ if (import.meta.vitest) {
     });
 
     it("Engagement option buttons size to label text without clipping", () => {
-      const longLabel = "C Confirm selection";
+      const longLabel = uiDataLabel("C Confirm selection");
       const { container } = render(<Engagement options={[{ id: "engagement-transition-confirm-c", label: longLabel, icon: "circle-dot", onPress: () => {} }]} />);
       const item = container.querySelector('[data-slot="button-group-item"]') as HTMLElement;
       expect(item?.textContent).toContain("CConfirmSelection");
@@ -34697,16 +34843,16 @@ if (import.meta.vitest) {
     });
 
     it("Search focuses its input when active", async () => {
-      const { rerender } = render(<Search active={false} input={{ id: "search-input", placeholder: "Action" }} />);
+      const { rerender } = render(<Search active={false} input={{ id: "search-input", placeholder: uiDataLabel("Action") }} />);
       const field = () => screen.getByPlaceholderText("Action") as HTMLInputElement;
       expect(document.activeElement).not.toBe(field());
-      rerender(<Search active input={{ id: "search-input", placeholder: "Action" }} />);
+      rerender(<Search active input={{ id: "search-input", placeholder: uiDataLabel("Action") }} />);
       await waitFor(() => expect(document.activeElement).toBe(field()));
       expect(field().tabIndex).toBe(0);
     });
 
     it("Search input is removed from tab order when inactive", () => {
-      render(<Search active={false} input={{ placeholder: "Action" }} />);
+      render(<Search active={false} input={{ placeholder: uiDataLabel("Action") }} />);
       expect((screen.getByPlaceholderText("Action") as HTMLInputElement).tabIndex).toBe(-1);
     });
 
@@ -34760,7 +34906,7 @@ if (import.meta.vitest) {
       render(
         <Search
           active
-          input={{ placeholder: "Action" }}
+          input={{ placeholder: uiDataLabel("Action") }}
           possibles={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
@@ -34787,7 +34933,7 @@ if (import.meta.vitest) {
       render(
         <Search
           active
-          input={{ placeholder: "Action" }}
+          input={{ placeholder: uiDataLabel("Action") }}
           possibles={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
@@ -34833,7 +34979,7 @@ if (import.meta.vitest) {
       render(
         <Search
           active
-          input={{ placeholder: "Action", value: "Extr", onChange: () => {} }}
+          input={{ placeholder: uiDataLabel("Action"), value: "Extr", onChange: () => {} }}
           possibles={[
             { id: "feature.extrudeWire", label: "ExtrudeWire", detail: "e", onSelect: () => selected.push("feature.extrudeWire") },
             { id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e", onSelect: () => selected.push("surface.extrudeCrv") },
@@ -34859,7 +35005,7 @@ if (import.meta.vitest) {
           control={{
             kind: "toggleGroup",
             id: "engagement-utility-group",
-            label: "Utility",
+            label: uiDataLabel("Utility"),
             value: "brush",
             options: [
               { id: "select", label: "Select", icon: "mouse-pointer" },
@@ -34870,7 +35016,7 @@ if (import.meta.vitest) {
             {
               kind: "select",
               id: "engagement-placement",
-              label: "Placement",
+              label: uiDataLabel("Placement"),
               value: "a",
               items: [
                 { id: "a", value: "a", label: "A" },
@@ -34952,7 +35098,7 @@ if (import.meta.vitest) {
             active
             input={{
               value,
-              placeholder: "Action",
+              placeholder: uiDataLabel("Action"),
               onChange: setValue,
               onSubmit: (draft) => submitted.push(draft),
               onRepeatLast: () => repeated.push("last"),
@@ -34975,7 +35121,7 @@ if (import.meta.vitest) {
         <Search
           active
           input={{
-            placeholder: "Action",
+            placeholder: uiDataLabel("Action"),
             onSubmit: () => submitted.push("submit"),
             onRepeatLast: () => repeated.push("last"),
           }}
@@ -34999,9 +35145,9 @@ if (import.meta.vitest) {
                   windows={[
                     {
                       id: "engagement-window",
-                      title: "Viewport",
+                      title: uiDataLabel("Viewport"),
                       active: true,
-                      search: { input: { id: "search-input", value, placeholder: "Action", onChange: setValue } },
+                      search: { input: { id: "search-input", value, placeholder: uiDataLabel("Action"), onChange: setValue } },
                       children: <div data-testid="window-body">Body</div>,
                     },
                   ]}
@@ -35086,7 +35232,7 @@ if (import.meta.vitest) {
 
     it("Window keeps bodies edgeless and chrome-aware scroll hosts start below the dead line", () => {
       const { container } = render(
-        <Window id="chrome-aware-window" active search={{ input: { placeholder: "Action" } }} measures={<div>LOD</div>}>
+        <Window id="chrome-aware-window" active search={{ input: { placeholder: uiDataLabel("Action") } }} measures={<div>LOD</div>}>
           <div data-window-content-layout="chrome-aware" className="flex min-h-0 flex-1 flex-col">
             <Scrollable className="h-40">
               <div style={{ height: 240 }}>Line one</div>
@@ -35103,7 +35249,7 @@ if (import.meta.vitest) {
 
     it("Window edgeless bodies do not apply a dead-line scroll offset", () => {
       const { container } = render(
-        <Window id="edgeless-window" active search={{ input: { placeholder: "Action" } }}>
+        <Window id="edgeless-window" active search={{ input: { placeholder: uiDataLabel("Action") } }}>
           <div data-window-content-layout="edgeless" className="h-40">
             <Scrollable className="h-full">
               <div style={{ height: 240 }}>Canvas</div>
@@ -35117,7 +35263,7 @@ if (import.meta.vitest) {
 
     it("Window dead-line hosts skip offset when content fits", () => {
       const { container } = render(
-        <Window id="fits-window" active search={{ input: { placeholder: "Action" } }}>
+        <Window id="fits-window" active search={{ input: { placeholder: uiDataLabel("Action") } }}>
           <Scrollable className="h-40">
             <div style={{ height: 40 }}>Short</div>
           </Scrollable>
@@ -35133,7 +35279,7 @@ if (import.meta.vitest) {
       const Harness = ({ active }: { active: boolean }) => (
         <>
           <Input id="other-input" placeholder="Other" />
-          <Search active={active} input={{ placeholder: "Action" }} />
+          <Search active={active} input={{ placeholder: uiDataLabel("Action") }} />
         </>
       );
       const { rerender } = render(<Harness active={false} />);
@@ -35145,7 +35291,7 @@ if (import.meta.vitest) {
 
     it("Search Escape calls onAbort when possibles list is closed", () => {
       const aborted: string[] = [];
-      render(<Search active input={{ placeholder: "Action", onAbort: () => aborted.push("abort") }} possibles={[{ id: "a", label: "A", onSelect: () => {} }]} />);
+      render(<Search active input={{ placeholder: uiDataLabel("Action"), onAbort: () => aborted.push("abort") }} possibles={[{ id: "a", label: "A", onSelect: () => {} }]} />);
       const field = screen.getByPlaceholderText("Action");
       fireEvent.keyDown(field, { key: "Escape" });
       expect(aborted).toEqual(["abort"]);
@@ -35155,7 +35301,7 @@ if (import.meta.vitest) {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const aborted: string[] = [];
-      render(<Search active input={{ placeholder: "Action", onAbort: () => aborted.push("abort") }} possibles={[{ id: "a", label: "A", onSelect: () => {} }]} />);
+      render(<Search active input={{ placeholder: uiDataLabel("Action"), onAbort: () => aborted.push("abort") }} possibles={[{ id: "a", label: "A", onSelect: () => {} }]} />);
       fireEvent.click(document.querySelector('[data-slot="search-possibles-toggle"]')!);
       const field = screen.getByPlaceholderText("Action");
       fireEvent.keyDown(field, { key: "Escape" });
@@ -35170,7 +35316,7 @@ if (import.meta.vitest) {
       const aborted: string[] = [];
       const search: SearchSpec = {
         sessionActive: true,
-        input: { value: "", placeholder: "Brush", onAbort: () => aborted.push("abort") },
+        input: { value: "", placeholder: uiDataLabel("Brush"), onAbort: () => aborted.push("abort") },
       };
       const handled = routeWindowSearchEscape(search, { key: "Escape", defaultPrevented: false, isComposing: false, target: document.body }, { chromeVisible: false, actionActive: false });
       expect(handled).toBe(true);
@@ -35188,10 +35334,10 @@ if (import.meta.vitest) {
                 windows={[
                   {
                     id: "engagement-window",
-                    title: "Viewport",
+                    title: uiDataLabel("Viewport"),
                     active: true,
                     search: {
-                      input: { value: "Box", placeholder: "Action", onChange: () => {}, onAbort: () => aborted.push("abort") },
+                      input: { value: "Box", placeholder: uiDataLabel("Action"), onChange: () => {}, onAbort: () => aborted.push("abort") },
                     },
                     children: <div data-testid="window-body">Body</div>,
                   },
@@ -35211,7 +35357,7 @@ if (import.meta.vitest) {
 
     it("Window shows engagement and search as folded strips by default, same U-cutout surface as window options", () => {
       const { container } = render(
-        <Window id="engagement-window" active engagement={{ sessionActive: true, status: [{ id: "s", content: "Idle" }] }} search={{ sessionActive: true, input: { value: "Box", placeholder: "Action" } }}>
+        <Window id="engagement-window" active engagement={{ sessionActive: true, status: [{ id: "s", content: "Idle" }] }} search={{ sessionActive: true, input: { value: "Box", placeholder: uiDataLabel("Action") } }}>
           <div>Body</div>
         </Window>,
       );
@@ -35269,7 +35415,7 @@ if (import.meta.vitest) {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
-          <Window id="engagement-window" active search={{ input: { id: "search-input", value, placeholder: "Action", onChange: setValue } }}>
+          <Window id="engagement-window" active search={{ input: { id: "search-input", value, placeholder: uiDataLabel("Action"), onChange: setValue } }}>
             <div data-testid="window-body">Body</div>
           </Window>
         );
@@ -35294,7 +35440,7 @@ if (import.meta.vitest) {
 
     it("Search onChange PascalCases spaced action without window routing", () => {
       const changed: string[] = [];
-      render(<Search input={{ value: "", onChange: (next) => changed.push(next), placeholder: "Action" }} />);
+      render(<Search input={{ value: "", onChange: (next) => changed.push(next), placeholder: uiDataLabel("Action") }} />);
       fireEvent.change(screen.getByPlaceholderText("Action"), { target: { value: "set height" } });
       expect(changed).toEqual(["SetHeight"]);
     });
@@ -35329,7 +35475,7 @@ if (import.meta.vitest) {
             input={{
               id: "search-input",
               value,
-              placeholder: "Action",
+              placeholder: uiDataLabel("Action"),
               onChange: setValue,
               onSubmit: (next) => submitted.push(next),
             }}
@@ -35367,7 +35513,7 @@ if (import.meta.vitest) {
 
     it("Window search action row spans the sized search zone", () => {
       const { container } = render(
-        <Window id="engagement-window" active search={{ input: { placeholder: "Action" } }}>
+        <Window id="engagement-window" active search={{ input: { placeholder: uiDataLabel("Action") } }}>
           <div>Body</div>
         </Window>,
       );
@@ -35439,7 +35585,7 @@ if (import.meta.vitest) {
 
     it("Window search pane uses the same default width as panels when unfolded", () => {
       const { container } = render(
-        <Window id="layout-window" active search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
+        <Window id="layout-window" active search={{ input: { placeholder: uiDataLabel("Action") } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div data-testid="window-body">Body</div>
         </Window>,
       );
@@ -35452,7 +35598,7 @@ if (import.meta.vitest) {
     it("Window engagement and measures overlays pass pointer hits through to the canvas body", () => {
       const bodyDown = vi.fn();
       const { container } = render(
-        <Window id="canvas-window" active fill engagement={{ options: [{ id: "opt-a", label: "Alpha", icon: "circle-dot", onPress: () => {} }] }} measures={<div data-testid="measure-slot">LOD</div>}>
+        <Window id="canvas-window" active fill engagement={{ options: [{ id: "opt-a", label: uiDataLabel("Alpha"), icon: "circle-dot", onPress: () => {} }] }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div data-testid="window-body" className="size-full" onPointerDown={bodyDown}>
             Body
           </div>
@@ -35468,7 +35614,7 @@ if (import.meta.vitest) {
 
     it("Window hides search overlay when measures are fullscreen", () => {
       const { container } = render(
-        <Window id="measures-engagement-window" active search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
+        <Window id="measures-engagement-window" active search={{ input: { placeholder: uiDataLabel("Action") } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div>Body</div>
         </Window>,
       );
@@ -35485,7 +35631,7 @@ if (import.meta.vitest) {
 
     it("Window keeps engagement and search pane toggles visible while inactive, like window options", () => {
       const { container } = render(
-        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
+        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: uiDataLabel("Action") } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div>Body</div>
         </Window>,
       );
@@ -35507,7 +35653,7 @@ if (import.meta.vitest) {
 
     it("Window pane chrome uses semantic icons in U-cutout chips, never fold chevrons", () => {
       const { container } = render(
-        <Window id="pane-chrome-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>} utilityBar={<button type="button">Utility</button>}>
+        <Window id="pane-chrome-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: uiDataLabel("Action") } }} measures={<div data-testid="measure-slot">LOD</div>} utilityBar={<button type="button">Utility</button>}>
           <div>Body</div>
         </Window>,
       );
@@ -35640,7 +35786,7 @@ if (import.meta.vitest) {
           measures={
             <WindowMeasuresTree>
               <WindowMeasureTreeGroup id="group-a" label="Group A" defaultOpen={false}>
-                <WindowMeasureTreeLeaf label="Alpha">
+                <WindowMeasureTreeLeaf label={uiDataLabel("Alpha")}>
                   <span>Alpha value</span>
                 </WindowMeasureTreeLeaf>
               </WindowMeasureTreeGroup>
@@ -35743,7 +35889,7 @@ if (import.meta.vitest) {
       it("Pane defaults open width to the panel default (300px)", () => {
         const { container } = render(
           <PaneHost>
-            <Pane id="default-width-pane" anchor="top-left" icon="box" label="Pane">
+            <Pane id="default-width-pane" anchor="top-left" icon="box" label={uiDataLabel("Pane")}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35756,7 +35902,7 @@ if (import.meta.vitest) {
       it("Pane positions itself via the same anchorPositionStyle math as Panel and folds to a chip", () => {
         const { container, rerender } = render(
           <PaneHost>
-            <Pane id="test-pane" anchor="top-right" icon="box" label="Test">
+            <Pane id="test-pane" anchor="top-right" icon="box" label={uiDataLabel("Test")}>
               <div data-testid="pane-content">Content</div>
             </Pane>
           </PaneHost>,
@@ -35768,7 +35914,7 @@ if (import.meta.vitest) {
         expect(screen.getByTestId("pane-content")).toBeTruthy();
         rerender(
           <PaneHost>
-            <Pane id="test-pane" anchor="top-right" icon="box" label="Test" folded>
+            <Pane id="test-pane" anchor="top-right" icon="box" label={uiDataLabel("Test")} folded>
               <div data-testid="pane-content">Content</div>
             </Pane>
           </PaneHost>,
@@ -35779,7 +35925,7 @@ if (import.meta.vitest) {
       it("Pane opens its own pane level and stamps ui-glass chrome (same fill as the pane body)", () => {
         const { container } = render(
           <PaneHost>
-            <Pane id="level-pane" anchor="top-right" icon="box" label="Test">
+            <Pane id="level-pane" anchor="top-right" icon="box" label={uiDataLabel("Test")}>
               <div data-testid="pane-level-content">{"placeholder"}</div>
             </Pane>
           </PaneHost>,
@@ -35797,7 +35943,7 @@ if (import.meta.vitest) {
       it("Pane grows down from top anchors, up from bottom anchors, and symmetrically around middle anchors within responsive bounds", () => {
         const { container, rerender } = render(
           <PaneHost>
-            <Pane id="direction-pane" anchor="top-left" icon="box" label="Direction">
+            <Pane id="direction-pane" anchor="top-left" icon="box" label={uiDataLabel("Direction")}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35811,7 +35957,7 @@ if (import.meta.vitest) {
 
         rerender(
           <PaneHost>
-            <Pane id="direction-pane" anchor="bottom-left" icon="box" label="Direction">
+            <Pane id="direction-pane" anchor="bottom-left" icon="box" label={uiDataLabel("Direction")}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35821,7 +35967,7 @@ if (import.meta.vitest) {
 
         rerender(
           <PaneHost>
-            <Pane id="direction-pane" anchor="bottom-middle" icon="box" label="Direction">
+            <Pane id="direction-pane" anchor="bottom-middle" icon="box" label={uiDataLabel("Direction")}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35834,7 +35980,7 @@ if (import.meta.vitest) {
 
         rerender(
           <PaneHost>
-            <Pane id="direction-pane" anchor="left-middle" icon="box" label="Direction">
+            <Pane id="direction-pane" anchor="left-middle" icon="box" label={uiDataLabel("Direction")}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35850,7 +35996,7 @@ if (import.meta.vitest) {
         });
         const { container, rerender } = render(
           <PaneHost>
-            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
+            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label={uiDataLabel("Projection")} folded={folded} onFoldToggle={onFoldToggle}>
               <div data-testid="fold-pane-content">Modes</div>
             </Pane>
           </PaneHost>,
@@ -35861,7 +36007,7 @@ if (import.meta.vitest) {
         expect(onFoldToggle).toHaveBeenCalledTimes(1);
         rerender(
           <PaneHost>
-            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
+            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label={uiDataLabel("Projection")} folded={folded} onFoldToggle={onFoldToggle}>
               <div data-testid="fold-pane-content">Modes</div>
             </Pane>
           </PaneHost>,
@@ -35878,7 +36024,7 @@ if (import.meta.vitest) {
           <UiDriverProvider driver={COMPACT_UI_DRIVER}>
             <div onPointerDown={hostPointerDown}>
               <PaneHost>
-                <Pane id="projection-pane" anchor="bottom-right" icon="camera" label="Projection" folded onFoldToggle={onFoldToggle}>
+                <Pane id="projection-pane" anchor="bottom-right" icon="camera" label={uiDataLabel("Projection")} folded onFoldToggle={onFoldToggle}>
                   <div>Modes</div>
                 </Pane>
               </PaneHost>
@@ -35900,7 +36046,7 @@ if (import.meta.vitest) {
         });
         const { container, rerender } = render(
           <PaneHost>
-            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
+            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35914,7 +36060,7 @@ if (import.meta.vitest) {
         fireEvent.pointerUp(handle, { pointerId: 1, clientX: 290, clientY: 290 });
         rerender(
           <PaneHost>
-            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
+            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35925,7 +36071,7 @@ if (import.meta.vitest) {
       it("Pane without onAnchorChange still renders a drag-handle affordance like panel toggles", () => {
         const { container } = render(
           <PaneHost>
-            <Pane id="fixed-pane" anchor="bottom-left" icon="box" label="Fixed">
+            <Pane id="fixed-pane" anchor="bottom-left" icon="box" label={uiDataLabel("Fixed")}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35942,7 +36088,7 @@ if (import.meta.vitest) {
         const { container } = render(
           <UiDriverProvider driver={COMPACT_UI_DRIVER}>
             <PaneHost>
-              <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
+              <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label={uiDataLabel("Drag")}>
                 <div>Content</div>
               </Pane>
             </PaneHost>
@@ -35966,7 +36112,7 @@ if (import.meta.vitest) {
         });
         const { container, rerender } = render(
           <PaneHost>
-            <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+            <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35978,7 +36124,7 @@ if (import.meta.vitest) {
         expect(onSizeChange).toHaveBeenCalledWith(350);
         rerender(
           <PaneHost>
-            <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+            <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -35989,7 +36135,7 @@ if (import.meta.vitest) {
       it("usePaneSlot portals its pane into the nearest PaneHost and renders nothing outside one", () => {
         function DeepChild() {
           return usePaneSlot(
-            <Pane id="slotted-pane" anchor="bottom-right" icon="box" label="Slotted">
+            <Pane id="slotted-pane" anchor="bottom-right" icon="box" label={uiDataLabel("Slotted")}>
               <div data-testid="slotted-content">Slotted</div>
             </Pane>,
           );
@@ -36017,7 +36163,7 @@ if (import.meta.vitest) {
         const { container } = render(
           <UiMobileProvider mobile>
             <PaneHost>
-              <Pane id="mobile-pane" anchor="bottom-right" icon="box" label="Mobile" onAnchorChange={vi.fn()} resizable size={300} onSizeChange={vi.fn()} folded>
+              <Pane id="mobile-pane" anchor="bottom-right" icon="box" label={uiDataLabel("Mobile")} onAnchorChange={vi.fn()} resizable size={300} onSizeChange={vi.fn()} folded>
                 <div data-testid="mobile-pane-content">Content</div>
               </Pane>
             </PaneHost>
@@ -36031,7 +36177,7 @@ if (import.meta.vitest) {
       it("mirrors dir=rtl for right anchors with a fixed semantic icon and trailing drag handle, while the body carries no dir override", () => {
         const { container: leftContainer } = render(
           <PaneHost>
-            <Pane id="left-pane" anchor="top-left" icon="box" label="Left">
+            <Pane id="left-pane" anchor="top-left" icon="box" label={uiDataLabel("Left")}>
               <div data-testid="left-pane-content">Content</div>
             </Pane>
           </PaneHost>,
@@ -36045,7 +36191,7 @@ if (import.meta.vitest) {
 
         const { container: rightContainer } = render(
           <PaneHost>
-            <Pane id="right-pane" anchor="top-right" icon="camera" label="Right">
+            <Pane id="right-pane" anchor="top-right" icon="camera" label={uiDataLabel("Right")}>
               <div data-testid="right-pane-content">Content</div>
             </Pane>
           </PaneHost>,
@@ -36061,7 +36207,7 @@ if (import.meta.vitest) {
       it("centers a middle anchor with items-center instead of items-start", () => {
         const { container } = render(
           <PaneHost>
-            <Pane id="middle-pane" anchor="top-middle" icon="box" label="Middle">
+            <Pane id="middle-pane" anchor="top-middle" icon="box" label={uiDataLabel("Middle")}>
               <div>Content</div>
             </Pane>
           </PaneHost>,
@@ -36447,7 +36593,7 @@ if (treeVitest) {
         <GhostProvider>
           <GhostRegionShell>
             <PaneHost>
-              <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={300} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+              <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={300} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
                 <div>Content</div>
               </Pane>
             </PaneHost>
@@ -36537,10 +36683,10 @@ if (treeVitest) {
           <GhostRegionShell>
             <div id="canvas" />
             <PaneHost>
-              <Pane id="open-pane" anchor="top-left" icon="box" label="Open" folded={false}>
+              <Pane id="open-pane" anchor="top-left" icon="box" label={uiDataLabel("Open")} folded={false}>
                 <div>Open body</div>
               </Pane>
-              <Pane id="folded-pane" anchor="top-right" icon="box" label="Folded" folded />
+              <Pane id="folded-pane" anchor="top-right" icon="box" label={uiDataLabel("Folded")} folded />
             </PaneHost>
           </GhostRegionShell>
         </GhostProvider>,
@@ -37587,7 +37733,7 @@ if (treeVitest) {
                 kind: "checkbox",
                 id: "tree-checkbox-action",
                 checked: true,
-                title: "Toggle item",
+                title: uiDataLabel("Toggle item"),
                 onCheckedChange: () => undefined,
               },
             ]}
@@ -37714,7 +37860,7 @@ if (treeVitest) {
           ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
           root: {
             ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root,
-            descriptors: [...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root.descriptors, { id: "updated", descriptorKindId: "time", label: "Updated" }, { id: "createdBy", descriptorKindId: "avatar", label: "Created by" }],
+            descriptors: [...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root.descriptors, { id: "updated", descriptorKindId: "time", label: uiDataLabel("Updated") }, { id: "createdBy", descriptorKindId: "avatar", label: uiDataLabel("Created by") }],
           },
         },
       };
@@ -38140,29 +38286,31 @@ if (treeVitest) {
   });
 
   describe("UiChromeLayout storage", () => {
+    const storage = createBrowserStoragePort();
+
     it("defaults to desktop when nothing is stored", () => {
       localStorage.removeItem(UI_CHROME_LAYOUT_STORAGE_KEY);
-      expect(readStoredUiChromeLayout()).toBe("desktop");
+      expect(readStoredUiChromeLayout(storage)).toBe("desktop");
     });
 
     it("round-trips a written tablet preference", () => {
-      writeStoredUiChromeLayout("tablet");
-      expect(readStoredUiChromeLayout()).toBe("tablet");
-      writeStoredUiChromeLayout("desktop");
-      expect(readStoredUiChromeLayout()).toBe("desktop");
+      writeStoredUiChromeLayout(storage, "tablet");
+      expect(readStoredUiChromeLayout(storage)).toBe("tablet");
+      writeStoredUiChromeLayout(storage, "desktop");
+      expect(readStoredUiChromeLayout(storage)).toBe("desktop");
     });
 
     it("falls back to desktop for a garbage stored value", () => {
       localStorage.setItem(UI_CHROME_LAYOUT_STORAGE_KEY, "giant-monitor");
-      expect(readStoredUiChromeLayout()).toBe("desktop");
+      expect(readStoredUiChromeLayout(storage)).toBe("desktop");
       localStorage.removeItem(UI_CHROME_LAYOUT_STORAGE_KEY);
     });
   });
 
   describe("Mode mobile", () => {
     const windows: ModeWindowDescriptor[] = [
-      { id: "a", title: "A", iconId: "app-window", children: <div>A body</div> },
-      { id: "b", title: "B", iconId: "app-window", children: <div>B body</div> },
+      { id: "a", title: uiDataLabel("A"), iconId: "app-window", children: <div>A body</div> },
+      { id: "b", title: uiDataLabel("B"), iconId: "app-window", children: <div>B body</div> },
     ];
     const splitLayout: WindowLayoutNode = {
       kind: "row",
@@ -38190,7 +38338,7 @@ if (treeVitest) {
     });
 
     it("drops the Focus control out of the unshrinkable per-tab chrome grid even with many windows — windows always take the full space on mobile", () => {
-      const manyWindows: ModeWindowDescriptor[] = ["a", "b", "c", "d"].map((id) => ({ id, title: `semio · cad · ${id}`, iconId: "app-window", children: <div>{id} body</div> }));
+      const manyWindows: ModeWindowDescriptor[] = ["a", "b", "c", "d"].map((id) => ({ id, title: uiDataLabel(`semio · cad · ${id}`), iconId: "app-window", children: <div>{id} body</div> }));
       const manyLayout: WindowLayoutNode = {
         kind: "row",
         children: manyWindows.map((window) => ({ kind: "stack", children: [{ kind: "window", id: window.id }], activeId: window.id })),
@@ -38213,7 +38361,7 @@ if (treeVitest) {
     it("renders inline label and control on one measure row", () => {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
-          <WindowMeasureTreeLeaf label="LOD">
+          <WindowMeasureTreeLeaf label={uiDataLabel("LOD")}>
             <Select id="lod-mode.select" defaultValue="automatic">
               <SelectTrigger id="lod-mode">
                 <SelectValue />
@@ -38236,8 +38384,8 @@ if (treeVitest) {
     it("puts the toggle icon before the label and a checkbox on the right", () => {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
-          <WindowMeasureTreeLeaf label="Grid" icon={<Icon icon="layout-grid" size={12} />}>
-            <TreeCheckbox id="grid-visible" checked title="Grid" onCheckedChange={() => undefined} />
+          <WindowMeasureTreeLeaf label={uiDataLabel("Grid")} icon={<Icon icon="layout-grid" size={12} />}>
+            <TreeCheckbox id="grid-visible" checked title={uiDataLabel("Grid")} onCheckedChange={() => undefined} />
           </WindowMeasureTreeLeaf>
         </WindowMeasuresTree>,
       );
@@ -38260,7 +38408,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
           <WindowMeasureTreeGroup id="fill" label="Fill" defaultOpen>
-            <WindowMeasureTreeLeaf label="Count">
+            <WindowMeasureTreeLeaf label={uiDataLabel("Count")}>
               <Slider id="puzzle3d-fill-count" value={[0]} min={0} max={1000} ready={120} loading />
             </WindowMeasureTreeLeaf>
           </WindowMeasureTreeGroup>
@@ -38282,7 +38430,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
           <WindowMeasureTreeGroup id="fill" label="Fill" defaultOpen>
-            <WindowMeasureTreeLeaf label="Count" waiting>
+            <WindowMeasureTreeLeaf label={uiDataLabel("Count")} waiting>
               <span>0</span>
             </WindowMeasureTreeLeaf>
           </WindowMeasureTreeGroup>
@@ -38296,7 +38444,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
           <WindowMeasureTreeGroup id="display" label="Display" defaultOpen={true}>
-            <WindowMeasureTreeLeaf label="LOD">
+            <WindowMeasureTreeLeaf label={uiDataLabel("LOD")}>
               <span>Auto</span>
             </WindowMeasureTreeLeaf>
           </WindowMeasureTreeGroup>
@@ -38312,10 +38460,10 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree direction="up">
           <WindowMeasureTreeGroup id="fill" label="Fill" defaultOpen>
-            <WindowMeasureTreeLeaf label="Count">
+            <WindowMeasureTreeLeaf label={uiDataLabel("Count")}>
               <span>1000</span>
             </WindowMeasureTreeLeaf>
-            <WindowMeasureTreeLeaf label="Mode">
+            <WindowMeasureTreeLeaf label={uiDataLabel("Mode")}>
               <span>Voxel</span>
             </WindowMeasureTreeLeaf>
           </WindowMeasureTreeGroup>
@@ -38697,7 +38845,7 @@ if (treeVitest) {
       expect(panelMarkup).toMatch(/panel-tabs[^>]*z-40/);
       const paneMarkup = renderToStaticMarkup(
         <PaneHost>
-          <Pane id="hover-pane" anchor="top-left" icon="box" label="Pane">
+          <Pane id="hover-pane" anchor="top-left" icon="box" label={uiDataLabel("Pane")}>
             <div>Content</div>
           </Pane>
         </PaneHost>,
@@ -38766,7 +38914,7 @@ if (treeVitest) {
 
       const { container: paneContainer } = render(
         <PaneHost>
-          <Pane id="focus-pane" anchor="top-right" icon="box" label="Pane" onFoldToggle={onFoldToggle}>
+          <Pane id="focus-pane" anchor="top-right" icon="box" label={uiDataLabel("Pane")} onFoldToggle={onFoldToggle}>
             <div>Pane body</div>
           </Pane>
         </PaneHost>,
@@ -38788,7 +38936,7 @@ if (treeVitest) {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
-            windows={[{ id: "main", title: "Main", iconId: "app-window", children: <div id="framework.window.main">Main Body</div> }]}
+            windows={[{ id: "main", title: uiDataLabel("Main"), iconId: "app-window", children: <div id="framework.window.main">Main Body</div> }]}
             layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
             activeWindowId="main"
             onActiveWindowChange={() => {}}
@@ -39466,7 +39614,7 @@ if (treeVitest) {
     it("renders search suggestions toggle without internal-id humanized labels", () => {
       const markup = renderToStaticMarkup(
         <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
-          <Search input={{ placeholder: "Action" }} possibles={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]} />
+          <Search input={{ placeholder: uiDataLabel("Action") }} possibles={[{ id: "primitive.box", label: uiDataLabel("Box"), detail: "b", onSelect: () => {} }]} />
         </UiDriverProvider>,
       );
       expect(markup).toContain('id="ui.windowSearch.suggestions"');

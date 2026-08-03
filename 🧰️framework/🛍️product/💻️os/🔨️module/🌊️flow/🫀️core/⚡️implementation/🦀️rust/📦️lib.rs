@@ -9,8 +9,7 @@ use std::sync::OnceLock;
 
 use dag::{
     computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
-    slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle,
-    IoPortSpec,
+    slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec,
 };
 use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 use neural::{
@@ -123,7 +122,7 @@ pub enum NodeChrome {
     Variable {
         name: String,
         schema: String,
-    }
+    },
 }
 
 /// 👁️ GUI-only preview binding.
@@ -245,7 +244,7 @@ pub enum Widget {
         tree: Tree,
         #[serde(default)]
         flow: FlowGui,
-    }
+    },
 }
 
 /// 🧩️ Legacy fixture format still used by {@link FlowHost} retained state.
@@ -989,7 +988,7 @@ enum WidgetDescriptor {
         name: Option<String>,
         #[serde(default)]
         schema: Option<String>,
-    }
+    },
 }
 
 fn descriptor_explicit_id(descriptor: &WidgetDescriptor) -> Option<String> {
@@ -1146,7 +1145,9 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
             title: "Contract".into(),
             groups: vec![],
             items: vec![
-                CatalogueItem { kind: "neuron".into(), neuron_kind: Some(INPUT_KIND.into()), action: None, format: None, name: "Input".into(), abbreviation: "In".into(), icon: "emoji:📥️".into(), summary: "Cluster input contract channel".into() },
+                CatalogueItem {
+                    kind: "neuron".into(), neuron_kind: Some(INPUT_KIND.into()), action: None, format: None, name: "Input".into(), abbreviation: "In".into(), icon: "emoji:📥️".into(), summary: "Cluster input contract channel".into()
+                },
                 CatalogueItem {
                     kind: "neuron".into(), neuron_kind: Some(OUTPUT_KIND.into()), action: None, format: None, name: "Output".into(), abbreviation: "Out".into(), icon: "emoji:📤️".into(), summary: "Cluster output contract channel".into()
                 },
@@ -1288,15 +1289,7 @@ fn node_graph_operator_record_to_operator_info(record: &ui_wgpu::NodeGraphOperat
 
 /// 🌊️ Builds shared NodeGraphScene fields for flow-backed plugins. `driver`, when set, contributes
 /// `eval_json`/`computing_json` from an off-main-thread `flowEvalTick` chain (see [`FlowEvalDriver`]).
-pub fn flow_backed_node_graph_extras(
-    fixture: &FlowFixture,
-    lod_mode: &str,
-    proximity_distance: f64,
-    grid_visible: bool,
-    grid_snap_enabled: bool,
-    grid_factor: f64,
-    driver: Option<&FlowEvalDriver>,
-) -> FlowBackedNodeGraphExtras {
+pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, proximity_distance: f64, grid_visible: bool, grid_snap_enabled: bool, grid_factor: f64, driver: Option<&FlowEvalDriver>) -> FlowBackedNodeGraphExtras {
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
     FlowBackedNodeGraphExtras {
         fixture_json: serde_json::to_string(fixture).ok(),
@@ -2602,7 +2595,6 @@ impl FlowHost {
         }
     }
 
-
     fn build_tree(&self) -> Tree {
         let fixture = self.build_dag_fixture_v1();
         let (nodes, edges) = dag_fixture_execution_rows(&fixture);
@@ -3745,10 +3737,7 @@ impl FlowSession {
     #[wasm_bindgen(js_name = selectedEdgeIds)]
     pub fn selected_edge_ids(&self) -> String {
         let domains: serde_json::Value = serde_json::from_str(&self.state.borrow().host.selection_domains_json()).unwrap_or_default();
-        domains
-            .get("edges")
-            .and_then(|value| serde_json::to_string(value).ok())
-            .unwrap_or_else(|| "[]".into())
+        domains.get("edges").and_then(|value| serde_json::to_string(value).ok()).unwrap_or_else(|| "[]".into())
     }
 
     #[wasm_bindgen(js_name = selectionDomainsJson)]
@@ -4272,10 +4261,10 @@ pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
 // 🧾️ `create_document_envelope`/`DocumentCommand` are unconditional (not test/wasm-only)
 // because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖️History` region) dispatches through
 // them in every build.
+use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 use store::create_document_envelope;
 use store::DocumentCommand;
 use store::{DocumentEnvelope, DocumentStore};
-use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
 
@@ -4379,7 +4368,7 @@ pub enum FlowOperation {
     Widgets(CollectionOperation<String, Widget, Widget>),
     Synapses(CollectionOperation<String, SynapseSpec, SynapseSpec>),
     SetLayout { entries: Vec<FlowLayoutEntry> },
-    SetFixture { fixture: FlowFixture }
+    SetFixture { fixture: FlowFixture },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -4614,7 +4603,7 @@ enum NeuronNodeDsl {
         params: Option<BTreeMap<String, ValueDsl>>,
         #[dsl(block)]
         tree: Option<TreeDsl>,
-    }
+    },
 }
 
 /// 🔌️ DSL-only mirror of `SynapseSpec` (and of `neural::Synapse`, its foreign twin embedded in
@@ -4690,24 +4679,46 @@ enum WidgetDsl {
         output_ports: Vec<String>,
         preview: bool,
     },
-    InputSlider { id: String, value: f64, min: f64, max: f64, step: f64 },
-    InputNote { id: String, text: String },
-    InputImage { id: String, src: String },
-    Variable { id: String, name: String, schema: String },
+    InputSlider {
+        id: String,
+        value: f64,
+        min: f64,
+        max: f64,
+        step: f64,
+    },
+    InputNote {
+        id: String,
+        text: String,
+    },
+    InputImage {
+        id: String,
+        src: String,
+    },
+    Variable {
+        id: String,
+        name: String,
+        schema: String,
+    },
     OutputPreview {
         id: String,
         preview: Option<BTreeMap<String, ValueDsl>>,
         expanded: Vec<String>,
     },
-    OutputAction { id: String, action: String },
-    OutputExport { id: String, format: String },
+    OutputAction {
+        id: String,
+        action: String,
+    },
+    OutputExport {
+        id: String,
+        format: String,
+    },
     Cluster {
         id: String,
         name: String,
         #[dsl(block)]
         tree: TreeDsl,
         flow: dsl::DslValue,
-    }
+    },
 }
 
 /// 🌉️ `#[derive(dsl::DslEnum)]` only gives `WidgetDsl` a `dsl::DslVariants` binding, not
@@ -4749,9 +4760,7 @@ fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
 
 fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
     Ok(match widget {
-        WidgetDsl::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
-            Widget::Neuron { id, neuron_kind, params: option_dsl_map_to_dictionary(params), input_ports, output_ports, preview }
-        }
+        WidgetDsl::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => Widget::Neuron { id, neuron_kind, params: option_dsl_map_to_dictionary(params), input_ports, output_ports, preview },
         WidgetDsl::InputSlider { id, value, min, max, step } => Widget::InputSlider { id, value, min, max, step },
         WidgetDsl::InputNote { id, text } => Widget::InputNote { id, text },
         WidgetDsl::InputImage { id, src } => Widget::InputImage { id, src },
@@ -4783,7 +4792,13 @@ struct FlowFixtureDsl {
 }
 
 fn flow_fixture_to_dsl(fixture: &FlowFixture) -> FlowFixtureDsl {
-    FlowFixtureDsl { schema: fixture.schema.clone(), camera: fixture.camera.clone(), widgets: fixture.widgets.iter().map(widget_to_widget_dsl).collect(), synapses: fixture.synapses.iter().map(synapse_to_dsl).collect(), layout: fixture.layout.clone() }
+    FlowFixtureDsl {
+        schema: fixture.schema.clone(),
+        camera: fixture.camera.clone(),
+        widgets: fixture.widgets.iter().map(widget_to_widget_dsl).collect(),
+        synapses: fixture.synapses.iter().map(synapse_to_dsl).collect(),
+        layout: fixture.layout.clone(),
+    }
 }
 
 fn flow_fixture_dsl_to_fixture(fixture: FlowFixtureDsl) -> Result<FlowFixture, String> {
@@ -4842,7 +4857,9 @@ enum FlowOperationDsl {
         #[dsl(block)]
         item: WidgetDsl,
     },
-    WidgetsRemove { id: String },
+    WidgetsRemove {
+        id: String,
+    },
     WidgetsMove {
         id: String,
         #[dsl(key = "to")]
@@ -4858,7 +4875,9 @@ enum FlowOperationDsl {
         #[dsl(block)]
         item: SynapseDsl,
     },
-    SynapsesRemove { id: String },
+    SynapsesRemove {
+        id: String,
+    },
     SynapsesMove {
         id: String,
         #[dsl(key = "to")]
@@ -4870,12 +4889,14 @@ enum FlowOperationDsl {
         patch: SynapseDsl,
     },
     #[dsl(key = "layout")]
-    SetLayout { entries: Vec<FlowLayoutEntry> },
+    SetLayout {
+        entries: Vec<FlowLayoutEntry>,
+    },
     #[dsl(key = "fixture")]
     SetFixture {
         #[dsl(block)]
         fixture: FlowFixtureDsl,
-    }
+    },
 }
 
 fn flow_operation_to_dsl(operation: &FlowOperation) -> FlowOperationDsl {
@@ -4950,7 +4971,6 @@ pub fn empty_flow_projection() -> FlowFixture {
 mod flow_vcs_wasm {
     use super::*;
     use std::cell::RefCell;
-    
 
     #[wasm_bindgen]
     pub struct FlowDocumentVcs {
@@ -5298,11 +5318,7 @@ mod flow_vcs_tests {
             },
             flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: BTreeMap::new(), previews: Vec::new() },
         });
-        fixture.widgets.push(Widget::OutputPreview {
-            id: "preview2".into(),
-            preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))),
-            expanded: BTreeSet::from(["a".to_string(), "b".to_string()]),
-        });
+        fixture.widgets.push(Widget::OutputPreview { id: "preview2".into(), preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))), expanded: BTreeSet::from(["a".to_string(), "b".to_string()]) });
         store::test_support::assert_dsl_round_trip(&fixture);
         store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
@@ -6151,13 +6167,7 @@ mod tests {
     fn replace_fixture_preserves_live_camera() {
         let mut host = host_with_test_bridge();
         host.set_camera(120.0, -45.0, 1.75);
-        host.replace_fixture(FlowFixture {
-            schema: "flow.fixture".into(),
-            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
-            widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }],
-            synapses: vec![],
-            layout: BTreeMap::new(),
-        });
+        host.replace_fixture(FlowFixture { schema: "flow.fixture".into(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }], synapses: vec![], layout: BTreeMap::new() });
         assert_eq!(host.fixture.camera.x, 120.0);
         assert_eq!(host.fixture.camera.y, -45.0);
         assert!((host.fixture.camera.zoom - 1.75).abs() < 1e-9);
@@ -6765,7 +6775,6 @@ mod tests {
         assert!(host.fixture.synapses.len() < before);
         assert!(!host.fixture.synapses.iter().any(|synapse| synapse.id == "s1"));
     }
-
 
     #[test]
     fn align_selection_left_aligns_selected_widget_layout() {

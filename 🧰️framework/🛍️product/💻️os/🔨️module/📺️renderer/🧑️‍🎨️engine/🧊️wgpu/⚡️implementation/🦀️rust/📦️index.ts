@@ -2,7 +2,7 @@
 /** @emoji 🧊️ `@semio-tech/framework-renderer-wgpu` — raw wgpu WASM renderer boot for declarative Rust program UI trees. */
 // #endregion 🧲️Header
 
-import { ICON_NAMES, ICONS } from "@semio-tech/ui-asset";
+import { ICON_NAMES, ICONS } from "@semio-tech/asset";
 import { acquirePluginModule, pluginHandleForBridge } from "@semio-tech/framework-core";
 
 export type FrameworkOsWgpuBootOptions = {
@@ -98,19 +98,32 @@ export async function buildIconAtlas(): Promise<{
 }
 
 /**
- * 🧊️ Boots the real wgpu renderer WASM, mirroring `framework/os/renderer/wgpu/js/🟦️boot.ts` (the Trunk dev
- * entry) exactly: `semioRendererBoot(handles, pluginFilter)` takes no canvas — the Rust side
- * (`#[wasm_bindgen(js_name = semioRendererBoot)]` in `framework/os/renderer/wgpu/rs/lib.rs`) always looks up
- * `document.getElementById("root")` itself, clears it, and creates+appends its own `#semio-wgpu-canvas`.
- * Returns a dispose callback for hosts (e.g. Storybook) that need to unmount cleanly — it detaches the
- * DOM the Rust side built and releases this call's `acquirePluginModule` leases; the underlying wasm
- * event loop has no JS-visible stop handle, so this is a best-effort cleanup, not a full runtime
- * teardown.
+ * 🧊️ Boots the real wgpu renderer WASM into `options.rootId`'s container (default `"root"`, kept as a
+ * single-app-per-page convenience default, not a hardcoded assumption). Unlike the old
+ * `semioRendererBoot` (which always looked up `#root` itself, cleared it via `set_inner_html("")`, and
+ * created+appended its own fixed `#semio-wgpu-canvas` — a second boot call would wipe the first mount's
+ * canvas), this side now owns creating and placing the canvas and hands it to the Rust
+ * `semioWgpuMount(canvas, plugins, pluginFilter)` entry point, so several independently-rooted mounts can
+ * coexist on one page.
+ *
+ * Returns a dispose callback for hosts (e.g. Storybook, the multi-shell harness) that need to unmount —
+ * it detaches the canvas and releases this call's `acquirePluginModule` leases. The underlying wasm event
+ * loop still has no JS-visible stop handle (see the doc comment on `semio_wgpu_mount` in `📦️lib.rs` for
+ * why a real one isn't wired up yet), so this remains a best-effort cleanup, not a full runtime teardown:
+ * the mount keeps rendering into a detached canvas until the page unloads.
  */
 export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}): Promise<() => void> {
   const rootId = options.rootId ?? "root";
   const root = document.getElementById(rootId);
   if (!root) throw new Error(`missing #${rootId}`);
+
+  const canvas = document.createElement("canvas");
+  canvas.style.display = "block";
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.touchAction = "none";
+  canvas.style.outline = "none";
+  root.replaceChildren(canvas);
 
   const pluginEntries = options.plugins ?? [];
   const [leases, iconAtlas] = await Promise.all([
@@ -122,14 +135,14 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   const rendererUrl = options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL;
   const rendererModule = (await import(/* @vite-ignore */ rendererUrl)) as {
     default?: (input?: WebAssembly.Module | BufferSource | Response) => Promise<void>;
-    semioRendererBoot?: (plugins: { pluginId: string; handle: ReturnType<typeof pluginHandleForBridge> }[], pluginFilter: string) => Promise<void>;
+    semioWgpuMount?: (canvas: HTMLCanvasElement, plugins: { pluginId: string; handle: ReturnType<typeof pluginHandleForBridge> }[], pluginFilter: string) => void;
     uploadIconAtlas?: (width: number, height: number, pixels: Uint8Array, entriesJson: string) => void;
   };
   if (rendererModule.default) await rendererModule.default();
-  if (!rendererModule.semioRendererBoot) {
-    throw new Error("wgpu renderer module missing semioRendererBoot");
+  if (!rendererModule.semioWgpuMount) {
+    throw new Error("wgpu renderer module missing semioWgpuMount");
   }
-  await rendererModule.semioRendererBoot(handles, options.plugin ?? "s");
+  rendererModule.semioWgpuMount(canvas, handles, options.plugin ?? "s");
   if (rendererModule.uploadIconAtlas) {
     rendererModule.uploadIconAtlas(iconAtlas.width, iconAtlas.height, iconAtlas.pixels, JSON.stringify(iconAtlas.entries));
   }

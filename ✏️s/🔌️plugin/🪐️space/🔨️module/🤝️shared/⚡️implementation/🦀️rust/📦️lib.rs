@@ -40,14 +40,7 @@ pub fn ensure_space_fixtures_registered() {
 pub fn parse_demo_space_document() -> OsDocument {
     let initial_projection = <OsProjection as store::DocumentDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid OsProjection DSL text");
     let envelope = create_document_envelope(OS_SPACE_SCHEMA, DEMO_STUDIO_ID, initial_projection, None);
-    OsDocument {
-        schema: OS_SPACE_SCHEMA.into(),
-        id: DEMO_STUDIO_ID.into(),
-        name: DEMO_STUDIO_NAME.into(),
-        vcs: envelope.vcs,
-        applied_edit_ids: Vec::new(),
-        backbone: None,
-    }
+    OsDocument { schema: OS_SPACE_SCHEMA.into(), id: DEMO_STUDIO_ID.into(), name: DEMO_STUDIO_NAME.into(), vcs: envelope.vcs, applied_edit_ids: Vec::new(), backbone: None }
 }
 
 pub fn demo_os_document() -> OsDocument {

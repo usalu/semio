@@ -11,16 +11,16 @@
 //! recorded in each app document's own VCS envelope, so a later UI open sees it as normal history.
 
 //#region 🔖️Types
+use dsl::{from_dsl_value, to_dsl_value};
 /// 🎞️ The exact binary channel a live UI speaks — re-exported so an `AppChannelHost` implementor
 /// never needs a direct `protocol` dependency just to name these types.
 pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
 use semio_framework_core::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PortMultiplicity};
-use workflow::{MediaContract, Workflow, WorkflowEdge, WorkflowNode};
-use dsl::{from_dsl_value, to_dsl_value};
-use store::BlobStore;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock, Mutex};
+use store::BlobStore;
+use workflow::{MediaContract, Workflow, WorkflowEdge, WorkflowNode};
 
 /// 🚧️ A failure computing a studio's workflow headlessly.
 #[derive(Debug, thiserror::Error)]
@@ -233,8 +233,7 @@ pub fn media_to_artifact(media: &Media, blob_store: &dyn BlobStore) -> Result<(V
 /// whatever `blob_hash` the artifact's own descriptor claimed.
 pub fn media_from_artifact(descriptor: &[u8], data: Vec<u8>, blob_store: &dyn BlobStore) -> Result<Media, RunError> {
     let value = store::pack_rt::decode_wire_value(descriptor).map_err(|error| RunError::Host(error.to_string()))?;
-    let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor =
-        from_dsl_value(value).map_err(|error| RunError::Host(error))?;
+    let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor = from_dsl_value(value).map_err(|error| RunError::Host(error))?;
     let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
     let payload = match descriptor.wire {
         MediaWireFormat::Document { schema } => MediaPayload::Structured { schema, json: String::from_utf8(data).map_err(|error| RunError::Host(error.to_string()))? },
@@ -304,10 +303,7 @@ fn vector_to_raster(media: &Media) -> Result<Media, RunError> {
         return Err(RunError::Media(MediaError::Payload("vector-to-raster".into(), "expected a Structured (SVG text) payload".into())));
     };
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(svg, 0, 0).map_err(RunError::Host)?;
-    Ok(Media {
-        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
-        payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 },
-    })
+    Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
 
 /// 🔌️ Registers every framework-builtin media converter this crate ships a real body for — called
@@ -603,16 +599,8 @@ fn validate_edge_kinds(graph: &Workflow) -> Result<(), RunError> {
     for edge in &graph.edges {
         let source_node = *node_by_id.get(edge.source_node_id.as_str()).ok_or_else(|| RunError::UnknownNode(edge.source_node_id.clone()))?;
         let target_node = *node_by_id.get(edge.target_node_id.as_str()).ok_or_else(|| RunError::UnknownNode(edge.target_node_id.clone()))?;
-        let source_port = source_node
-            .outputs
-            .iter()
-            .find(|port| port.id == edge.source_port_id)
-            .ok_or_else(|| RunError::UnknownPort { edge_id: edge.id.clone(), node_id: edge.source_node_id.clone(), port_id: edge.source_port_id.clone() })?;
-        let target_port = target_node
-            .inputs
-            .iter()
-            .find(|port| port.id == edge.target_port_id)
-            .ok_or_else(|| RunError::UnknownPort { edge_id: edge.id.clone(), node_id: edge.target_node_id.clone(), port_id: edge.target_port_id.clone() })?;
+        let source_port = source_node.outputs.iter().find(|port| port.id == edge.source_port_id).ok_or_else(|| RunError::UnknownPort { edge_id: edge.id.clone(), node_id: edge.source_node_id.clone(), port_id: edge.source_port_id.clone() })?;
+        let target_port = target_node.inputs.iter().find(|port| port.id == edge.target_port_id).ok_or_else(|| RunError::UnknownPort { edge_id: edge.id.clone(), node_id: edge.target_node_id.clone(), port_id: edge.target_port_id.clone() })?;
 
         if matches!(media_types_compatible(&source_port.spec.media_type, &target_port.spec.media_type), MediaCompat::Reject) {
             return Err(RunError::Incompatible { edge_id: edge.id.clone(), produced: source_port.spec.media_type, accepted: target_port.spec.media_type });
@@ -779,9 +767,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
             return Err(RunError::Host(format!("`{}` rejected the handshake ({code}): {message}", node.app_id)));
         }
 
-        let reply_to = |seq: u64| -> Result<&AppFrame, RunError> {
-            frames.iter().find(|frame| frame_in_reply_to(frame) == Some(seq)).ok_or_else(|| RunError::Host(format!("`{}` sent no reply to seq {seq}", node.app_id)))
-        };
+        let reply_to = |seq: u64| -> Result<&AppFrame, RunError> { frames.iter().find(|frame| frame_in_reply_to(frame) == Some(seq)).ok_or_else(|| RunError::Host(format!("`{}` sent no reply to seq {seq}", node.app_id))) };
         let expect_done = |seq: u64, frame: &AppFrame| -> Result<(), RunError> {
             match frame {
                 AppFrame::Done { .. } => Ok(()),
@@ -894,10 +880,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
                         let source_document = documents_out.get(&source_node.document_ref).cloned().unwrap_or_default();
                         let source_config = configs_out.get(&source_node.config_ref).cloned().unwrap_or_default();
                         let (_source_document, _source_config, source_outputs) = self.compute_node(&mut live, source_node, &source_document, &source_config, &BTreeMap::new())?;
-                        let (media, _fresh_fingerprint) = source_outputs
-                            .get(&edge.source_port_id)
-                            .cloned()
-                            .ok_or_else(|| RunError::Host(format!("upstream node `{}` produced no output on port `{}`", edge.source_node_id, edge.source_port_id)))?;
+                        let (media, _fresh_fingerprint) = source_outputs.get(&edge.source_port_id).cloned().ok_or_else(|| RunError::Host(format!("upstream node `{}` produced no output on port `{}`", edge.source_node_id, edge.source_port_id)))?;
                         cache.put(&fingerprint, &media);
                         media
                     }
@@ -1089,10 +1072,7 @@ mod tests {
             MediaPortDirection::In => "in",
             MediaPortDirection::Out => "out",
         };
-        WorkflowMediaPort {
-            id: format!("{node_id}:{spec_id}:{direction_word}"),
-            spec: MediaPortSpec { id: spec_id.into(), label: spec_id.into(), direction, media_type: fake_media_type(), kind_id: Some(kind_id.into()), required, multiplicity },
-        }
+        WorkflowMediaPort { id: format!("{node_id}:{spec_id}:{direction_word}"), spec: MediaPortSpec { id: spec_id.into(), label: spec_id.into(), direction, media_type: fake_media_type(), kind_id: Some(kind_id.into()), required, multiplicity } }
     }
 
     fn workflow_node(id: &str, outputs: Vec<WorkflowMediaPort>, inputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
@@ -1116,7 +1096,8 @@ mod tests {
     fn two_node_graph() -> Workflow {
         let source = workflow_node("node-a", vec![media_port("node-a", "out", MediaPortDirection::Out, "data.value", PortMultiplicity::One, true)], Vec::new());
         let target = workflow_node("node-b", Vec::new(), vec![media_port("node-b", "in", MediaPortDirection::In, "data.value", PortMultiplicity::One, true)]);
-        let edge = WorkflowEdge { id: "edge-1".into(), source_node_id: "node-a".into(), source_port_id: "node-a:out:out".into(), target_node_id: "node-b".into(), target_port_id: "node-b:in:in".into(), contract: placeholder_media_contract("data.value") };
+        let edge =
+            WorkflowEdge { id: "edge-1".into(), source_node_id: "node-a".into(), source_port_id: "node-a:out:out".into(), target_node_id: "node-b".into(), target_port_id: "node-b:in:in".into(), contract: placeholder_media_contract("data.value") };
         Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: vec![source, target], edges: vec![edge] }
     }
 
@@ -1278,9 +1259,7 @@ mod tests {
     fn media_converter_registry_applies_registered_converter() {
         // 🧪️ A `(class, from, to)` triple unique to this test (see `validate_rejects_unregistered_
         // conversion`'s note on the shared global table).
-        register_media_converter(MediaClass::Kit, MediaForm::Design, MediaForm::Sequence, |media| {
-            Ok(Media { media_type: media.media_type, payload: MediaPayload::Structured { schema: "converted".into(), json: "\"converted\"".into() } })
-        });
+        register_media_converter(MediaClass::Kit, MediaForm::Design, MediaForm::Sequence, |media| Ok(Media { media_type: media.media_type, payload: MediaPayload::Structured { schema: "converted".into(), json: "\"converted\"".into() } }));
         let mut contract = placeholder_media_contract("kit.design");
         contract.media_type = MediaType { class: MediaClass::Kit, form: MediaForm::Sequence };
         contract.conversion = Some((MediaForm::Design, MediaForm::Sequence));

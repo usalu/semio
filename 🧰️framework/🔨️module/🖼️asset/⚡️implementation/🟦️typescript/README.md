@@ -1,40 +1,261 @@
-# Summary
+# UI assets
 
-Shared assets including badges, fonts, icons, logo, representations, and kit fixtures.
-
-# Docs
-
-## Badges
-
-Each badge is created with [shields.io](https://shields.io) with style `flat-square` and semio colors.
-
-1. Copy the `*.shields` file of an existing badge 📄️
-1. Open and download the `*.svg` file ⬇️
-
-## Fonts
-
-1. Search font on [fontsource.org](https://fontsource.org) 🔍️
-1. Hit `Download` and extract zip file 📂️
-1. Use kebaberized font name as folder name and remove everything else (such as version numbers) ➖️
-1. Merge all types in one folder (`ttf`, `webfonts`, …) - they won't collide due to different extensions 🗃️
-1. Remove all parts that repeat everywhere (such as common name prefix, single weighted fonts, …) 💯️
+Shared fonts, cursors, lists, and UI chrome icons served at `/asset/*`.
 
 ## Icons
 
-1. Open [favicongenerator.net](https://www.favicongenerator.io) 🔍️
-1. Select `Circle` as `Background Shape` ⏺️
-1. Select `Anta` as `Font Family` 📃️
-1. Enter the `Code` that you find in the [dictionary](https://github.com/usalu/semio/tree/main/meta/dictionary.csv)
-1. Adjust the `Font Size` to the largest so that the space to the side is the same as the thickness of the stroke 🖊️
-1. Toggle `Enable SVG` on 🔳️
-1. Hit `Generate Favicon` and download the zip file to `assets/icon/temp/NAME.zip` where `NAME` is the lowercase name and verb of the icon 📂️
-1. Repeat the process for all icons 🔁️
-1. Run `build icons` in the debugger of vscode 🔨️
+Chrome icons are committed SVGs under `icon/`. Many were originally derived from [Lucide](https://lucide.dev) (**ISC License**); source: https://github.com/lucide-icons/lucide
 
-## Kits
+Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./📜️script.ts generate all`).
 
-`assets/index.ts` is the shared entry point for `asset`. It re-exports the icon layer plus the Metabolism kit fixtures and helper constants. The kit fixtures are available as `MetabolismKit`, `MetabolismKitDiff`, `MetabolismKitDiffed`, `MetabolismKitDiffInverted`, `InvalidKit`, and `InvalidKitValidation`, while each kit entity list is exposed through `MetabolismKitTypes`, `MetabolismKitDesigns`, `MetabolismKitPorts`, `MetabolismKitQualities`, `MetabolismKitFiles`, `MetabolismKitFolders`, `MetabolismKitAuthors`, `MetabolismKitTags`, `MetabolismKitConcepts`, `MetabolismKitAttributes`, and the dedicated `MetabolismKitNakaginCapsuleTowerDesigns`.
+### Catalog icon ids
 
-Lookup tables `MetabolismKitTypesById`, `MetabolismKitTypesByName`, `MetabolismKitDesignsById`, `MetabolismKitDesignsByName`, `MetabolismKitPortsById`, and `MetabolismKitPortsByName` provide direct access to every type, design, and port without filtering.
-
-# 💯️Requirements
+- `alert-circle`
+- `align-left`
+- `animate`
+- `app-window`
+- `architect`
+- `architect-graph`
+- `arrow-down`
+- `arrow-left`
+- `arrow-right`
+- `arrow-right-left`
+- `arrow-up`
+- `award`
+- `bar-chart-3`
+- `beam`
+- `bell`
+- `book-open`
+- `box`
+- `building`
+- `cad-shape`
+- `calendar`
+- `calendar-days`
+- `camera`
+- `check`
+- `check-circle-2`
+- `chevron-down`
+- `chevron-left`
+- `chevron-right`
+- `chevron-up`
+- `chevrons-up-down`
+- `circle`
+- `circle-dot`
+- `clipboard`
+- `clipboard-list`
+- `clock`
+- `cloud`
+- `code`
+- `columns`
+- `combine`
+- `component`
+- `copy`
+- `cpu`
+- `crosshair`
+- `cylinder`
+- `dag`
+- `display-windows`
+- `document-jack`
+- `document-report`
+- `download`
+- `draw`
+- `edit`
+- `edit-3`
+- `eraser`
+- `export`
+- `external-link`
+- `eye`
+- `eye-off`
+- `fem-app`
+- `fem-model`
+- `file`
+- `file-archive`
+- `file-code`
+- `file-image`
+- `file-json`
+- `file-spreadsheet`
+- `file-text`
+- `file-type`
+- `file-video`
+- `filter`
+- `flip-horizontal`
+- `flip-vertical`
+- `flow`
+- `flow-graph`
+- `focus`
+- `folder`
+- `folder-open`
+- `folder-plus`
+- `forms`
+- `gis2d`
+- `gis3d`
+- `git-branch`
+- `git-commit`
+- `git-merge`
+- `globe`
+- `graduation-cap`
+- `graph-dag`
+- `graph-media`
+- `grid-3x3`
+- `grip-vertical`
+- `hammer`
+- `hand`
+- `hard-drive`
+- `hash`
+- `help-circle`
+- `hexagon`
+- `home`
+- `hud-overlay`
+- `image`
+- `image-plus`
+- `image-up`
+- `imperative`
+- `import`
+- `info`
+- `landmark`
+- `lasso`
+- `layers`
+- `layout`
+- `layout-grid`
+- `library`
+- `lightbulb`
+- `link`
+- `link-2-off`
+- `list`
+- `list-checks`
+- `list-ordered`
+- `list-tree`
+- `loader-2`
+- `lock`
+- `lock-open`
+- `lod-depth`
+- `lowpoly-model`
+- `magnet`
+- `map`
+- `math-app`
+- `math-graph`
+- `maximize-2`
+- `message-circle`
+- `message-square`
+- `minimize-2`
+- `minus`
+- `monitor`
+- `moon`
+- `more-horizontal`
+- `mouse-pointer`
+- `mouse-pointer-2`
+- `move`
+- `move-3d`
+- `network`
+- `note`
+- `note-math`
+- `paint-bucket`
+- `paintbrush`
+- `palette`
+- `panel-catalogue`
+- `panel-inspection`
+- `panel-left`
+- `panel-parameters`
+- `panel-right`
+- `panel-top`
+- `pause`
+- `pen-tool`
+- `pencil`
+- `pipette`
+- `play`
+- `play-circle`
+- `plug`
+- `plus`
+- `preview`
+- `procedural2d`
+- `process-workpiece`
+- `projection-axonometric`
+- `projection-curvilinear`
+- `projection-dimetric`
+- `projection-isometric`
+- `projection-oblique`
+- `projection-oblique-cabinet`
+- `projection-oblique-cavalier`
+- `projection-oblique-military`
+- `projection-one-point`
+- `projection-orthographic`
+- `projection-parallel`
+- `projection-perspective`
+- `projection-three-point`
+- `projection-trimetric`
+- `projection-two-point`
+- `puzzle`
+- `puzzle5d-3d`
+- `raster`
+- `reasoning-wires`
+- `rectangle-tool`
+- `redo`
+- `redo-2`
+- `relocate-3d`
+- `remodel-app`
+- `remodel-model`
+- `rotate-ccw`
+- `rotate-cw`
+- `s`
+- `save`
+- `scaling`
+- `scan`
+- `scan-line`
+- `scene-3d`
+- `scissors`
+- `search`
+- `select-all`
+- `sequence`
+- `settings`
+- `settings-2`
+- `shapes`
+- `shooting-scene`
+- `sigma`
+- `skip-back`
+- `skip-forward`
+- `slab`
+- `sliders-horizontal`
+- `smartphone`
+- `smile`
+- `sparkles`
+- `square`
+- `square-arrow-down-left`
+- `square-arrow-down-right`
+- `square-arrow-up-left`
+- `square-arrow-up-right`
+- `square-dashed`
+- `sticky-note`
+- `sun`
+- `table-2`
+- `tablet`
+- `tags`
+- `terrain-3d`
+- `text-cursor`
+- `text-search`
+- `toggle-left`
+- `transform-3d`
+- `trash`
+- `trash-2`
+- `triangle`
+- `triangle-alert`
+- `trinity`
+- `trinity-lhs`
+- `trinity-rewrite`
+- `trinity-rhs`
+- `type`
+- `typography`
+- `undo`
+- `undo-2`
+- `unlink`
+- `unlock`
+- `user`
+- `users`
+- `volume-brush`
+- `window`
+- `workbench`
+- `workflow`
+- `wrench`
+- `writer`
+- `x`
+- `zoom-in`
+- `zoom-out`

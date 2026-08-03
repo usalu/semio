@@ -51,14 +51,7 @@ pub struct ProtocolLimits {
 
 impl Default for ProtocolLimits {
     fn default() -> Self {
-        Self {
-            max_file_len: 64 * 1024 * 1024 * 1024,
-            max_frame_len: 2 * 1024 * 1024 * 1024,
-            max_record_count: 256_000_000,
-            max_dict_entries: 1_000_000,
-            max_op_count_per_edit: 100_000,
-            max_total_alloc: 4 * 1024 * 1024 * 1024,
-        }
+        Self { max_file_len: 64 * 1024 * 1024 * 1024, max_frame_len: 2 * 1024 * 1024 * 1024, max_record_count: 256_000_000, max_dict_entries: 1_000_000, max_op_count_per_edit: 100_000, max_total_alloc: 4 * 1024 * 1024 * 1024 }
     }
 }
 //#endregion 🔖️Limits
@@ -112,10 +105,7 @@ pub const REC_PADDING: u8 = 0x7F;
 /// @emoji ❗️ True iff an unrecognized `kind` byte with this value must abort the reader rather
 /// than being skipped (see `protocol_format`'s skip-unknown rule).
 pub fn is_critical_kind(kind: u8) -> bool {
-    matches!(
-        kind,
-        REC_DOC | REC_EDIT | REC_CHANGE | REC_CHECKPOINT | REC_ALTERNATIVE | REC_ACTIVE | REC_COMMIT | REC_ACTOR_DICT | REC_STR_DICT
-    )
+    matches!(kind, REC_DOC | REC_EDIT | REC_CHANGE | REC_CHECKPOINT | REC_ALTERNATIVE | REC_ACTIVE | REC_COMMIT | REC_ACTOR_DICT | REC_STR_DICT)
 }
 //#endregion 🔖️RecordKinds
 
@@ -215,9 +205,7 @@ pub mod scalar {
             2 => {
                 let prev = prev_epoch_ms.ok_or_else(|| malformed("timestamp", input.position() as u64, "tag 2 delta with no previous timestamp in scope"))?;
                 let delta = input.read_varint_i64()?;
-                let epoch_ms = prev
-                    .checked_add(delta)
-                    .ok_or_else(|| malformed("timestamp", input.position() as u64, "epoch_ms overflow"))?;
+                let epoch_ms = prev.checked_add(delta).ok_or_else(|| malformed("timestamp", input.position() as u64, "epoch_ms overflow"))?;
                 Ok((format_rfc3339_ms(epoch_ms), Some(epoch_ms)))
             }
             other => Err(malformed("timestamp tag", input.position() as u64, &format!("unknown timestamp tag {other:#x}"))),
@@ -1027,7 +1015,16 @@ mod tests {
         fn id_round_trips_via_prefix_uuid_tag() {
             let id = "actor-3fa85f64-5717-4562-b3fc-2c963f66afa6";
             let mut out = ByteWriter::new();
-            write_id(&mut out, id, |s| { assert_eq!(s, "actor"); 0 }, |_| None).unwrap();
+            write_id(
+                &mut out,
+                id,
+                |s| {
+                    assert_eq!(s, "actor");
+                    0
+                },
+                |_| None,
+            )
+            .unwrap();
             let bytes = out.into_bytes();
             assert_eq!(bytes[0], 2, "tag byte must be 2 (prefix+uuid)");
             let mut reader = ByteReader::new(&bytes);
@@ -1038,7 +1035,16 @@ mod tests {
         #[test]
         fn id_falls_back_to_dictref_tag_for_plain_strings() {
             let mut out = ByteWriter::new();
-            write_id(&mut out, "hello-world", |s| { assert_eq!(s, "hello-world"); 42 }, |_| None).unwrap();
+            write_id(
+                &mut out,
+                "hello-world",
+                |s| {
+                    assert_eq!(s, "hello-world");
+                    42
+                },
+                |_| None,
+            )
+            .unwrap();
             let bytes = out.into_bytes();
             assert_eq!(bytes[0], 1, "tag byte must be 1 (dictref)");
             let mut reader = ByteReader::new(&bytes);

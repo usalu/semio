@@ -39,13 +39,7 @@ mod tests {
     /// ✍️ Hand-built representative document exercising the multiline/quoted-text path
     /// (verbatim from the original file's `🔖️DslAndOpText` test region).
     fn jack_projection() -> WriterProjection {
-        WriterProjection {
-            schema: "writer.document".into(),
-            id: "jack".into(),
-            language_id: "jack".into(),
-            uri: "writer://jack".into(),
-            text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into(),
-        }
+        WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into() }
     }
 
     #[test]
@@ -66,9 +60,7 @@ mod tests {
         // `#[dsl(lang = "jack")]` prints `text` as a fenced ```jack verbatim block (`Shape::Embed`)
         // instead of an escaped-quoted string, so the embedded query keeps its raw newlines and its
         // own `"` needs no backslash-escaping.
-        assert!(printed.contains(
-            "text=```jack\nMATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name\n```"
-        ));
+        assert!(printed.contains("text=```jack\nMATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name\n```"));
     }
 }
 //#endregion 🧪️Tests

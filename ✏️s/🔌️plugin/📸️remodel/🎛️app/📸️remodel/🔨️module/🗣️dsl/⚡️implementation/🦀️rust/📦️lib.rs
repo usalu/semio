@@ -22,8 +22,8 @@ pub fn print_dsl(scene: &RemodelScene) -> String {
 mod tests {
     use super::*;
     use remodel::{
-        CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, MotionTrackSummary,
-        PackedF32, PackedU8, QcReportSnapshot, ReconstructionStage, RemodelMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot, default_remodel_scene,
+        default_remodel_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, MotionTrackSummary, PackedF32, PackedU8,
+        QcReportSnapshot, ReconstructionStage, RemodelMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
     };
 
     /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder — see that
@@ -38,15 +38,7 @@ mod tests {
             sync_offset_ms: 12.5,
             fps_hint: 30.0,
             frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: "asset-1".into() }],
-            source: Some(VideoSource {
-                name: "front.mp4".into(),
-                container: "mp4".into(),
-                codec: VideoCodec::Avc,
-                duration_ms: 6633.3,
-                frame_count: 199,
-                width: 1920,
-                height: 1080,
-            }),
+            source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
         });
         scene.assets.insert("asset-1".into(), ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 });
         scene.calibration.cameras.push(CameraCalibration {
@@ -63,12 +55,7 @@ mod tests {
             locked: false,
         });
         scene.calibration.rig.push(RigExtrinsic::default());
-        scene.gcps.push(GroundControlPoint {
-            id: "gcp-1".into(),
-            name: "Corner".into(),
-            world_position: [1.0, 2.0, 3.0],
-            observations: vec![GcpObservation { stream_id: "stream-1".into(), frame_index: 0, pixel: [10.0, 20.0] }],
-        });
+        scene.gcps.push(GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [1.0, 2.0, 3.0], observations: vec![GcpObservation { stream_id: "stream-1".into(), frame_index: 0, pixel: [10.0, 20.0] }] });
         scene.params.ingest.min_sharpness = 0.4;
         scene.params.mesh.texture_size = 4096;
         scene.job.stage = ReconstructionStage::BundleAdjusting;
@@ -77,16 +64,9 @@ mod tests {
         scene.job.error = Some("retry needed".into());
         scene.job.camera_poses_preview.push(CameraPosePreview { camera_id: "cam-1".into(), ..CameraPosePreview::default() });
         scene.job.sparse_point_cloud_preview = PackedF32::from_f32_slice(&[0.1, 0.2, 0.3]);
-        scene.results.sparse = Some(SparseCloud {
-            points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]),
-            colors: Some(PackedU8::from_u8_slice(&[255, 0, 0, 0, 255, 0])),
-        });
-        scene.results.dense = Some(DenseCloud {
-            positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]),
-            colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])),
-            confidence: Some(PackedF32::from_f32_slice(&[0.9])),
-            classification: Some(PackedU8::from_u8_slice(&[2])),
-        });
+        scene.results.sparse = Some(SparseCloud { points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]), colors: Some(PackedU8::from_u8_slice(&[255, 0, 0, 0, 255, 0])) });
+        scene.results.dense =
+            Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
         scene.results.mesh = RemodelMesh {
             mesh: semio_framework_core::mesh_from_kind("box"),
             source: MeshSource::Reconstructed,
@@ -117,11 +97,7 @@ mod tests {
             ],
         });
         scene.results.tracks.push(MotionTrackSummary { id: "track-1".into(), length: 42, class: TrackClass::Moving, mean_speed_m_s: 1.2 });
-        scene.results.geo = Some(remodel::GeoProducts {
-            dsm_asset_id: Some("asset-dsm".into()),
-            dtm_asset_id: Some("asset-dtm".into()),
-            ortho_asset_id: Some("asset-ortho".into()),
-        });
+        scene.results.geo = Some(remodel::GeoProducts { dsm_asset_id: Some("asset-dsm".into()), dtm_asset_id: Some("asset-dtm".into()), ortho_asset_id: Some("asset-ortho".into()) });
         scene.results.qc = Some(QcReportSnapshot {
             reprojection_rms_px: 0.5,
             gcp_checkpoint_rmse: Some(0.02),

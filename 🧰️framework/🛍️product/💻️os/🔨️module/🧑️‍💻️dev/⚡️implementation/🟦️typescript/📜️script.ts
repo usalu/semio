@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { createWriteStream, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
+import { createWriteStream, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -38,6 +38,11 @@ const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️product/💻️o
 const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🤖️generated/🟦️session.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
+/** @emoji 🪶️ Cargo profile plugin crates build under (see root `Cargo.toml`'s `[profile.wasm-release]`).
+ * `SEMIO_PLUGIN_PROFILE=release` is a fast hot-swap-iteration escape hatch — it trades away the
+ * `os run` native-runner path (`emitRustArtifacts` hardwires `wasm-release`'s output dir; rebuild with
+ * the default profile before an `os run` if this escape hatch was used). */
+const PLUGIN_WASM_PROFILE = process.env.SEMIO_PLUGIN_PROFILE ?? "wasm-release";
 
 //#region 🔖️PlaygroundVariantResolution
 /** @emoji 📚️ Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🟦️playgrounds.ts`). */
@@ -735,11 +740,74 @@ function rewriteExistingPluginShimImports(): void {
   }
 }
 
+/** @emoji 🪶️ wasm-opt flags for the post-jco-transpile pass — `-Oz`/`--low-memory-unused`/`--strip-*`
+ * mirror jco's own `jco opt` defaults, plus explicit `--enable-*` matching this component's verified
+ * WASI-P2 core-module `target_features` section exactly (bulk-memory, multivalue, reference-types,
+ * etc.), so wasm-opt neither trips over a feature gap nor silently reintroduces one during rewriting. */
+const WASM_OPT_ARGS: readonly string[] = [
+  "-Oz",
+  "--low-memory-unused",
+  "--strip-debug",
+  "--strip-producers",
+  "--enable-bulk-memory",
+  "--enable-bulk-memory-opt",
+  "--enable-call-indirect-overlong",
+  "--enable-extended-const",
+  "--enable-multivalue",
+  "--enable-mutable-globals",
+  "--enable-nontrapping-float-to-int",
+  "--enable-reference-types",
+  "--enable-sign-ext",
+];
+
+/** @emoji 🪶️ Runs binaryen's `wasm-opt` in place on every jco-extracted core wasm module in `outDir`
+ * (`${componentBase}.core*.wasm`) — component binaries themselves aren't parseable by binaryen; this
+ * is exactly what upstream `jco opt` does under the hood. `binaryen` ships an Emscripten JS+wasm build
+ * of `wasm-opt` (already a transitive dep of `@bytecodealliance/jco`; pinned as an explicit
+ * devDependency here so a future jco upgrade can't silently drop it), so this runs under `bun` with no
+ * native binary and no per-platform setup. `SEMIO_WASM_OPT=0` skips the pass entirely;
+ * `SEMIO_WASM_OPT_BIN` points at a native `wasm-opt` binary instead, for iteration speed. */
+function optimizePluginCoreModules(outDir: string, componentBase: string): void {
+  if (process.env.SEMIO_WASM_OPT === "0") return;
+  const wasmOptBin = process.env.SEMIO_WASM_OPT_BIN ?? join(repoRoot, "node_modules/binaryen/bin/wasm-opt");
+  for (const file of readdirSync(outDir)) {
+    if (!file.startsWith(`${componentBase}.core`) || !file.endsWith(".wasm")) continue;
+    const coreWasm = join(outDir, file);
+    const optimized = `${coreWasm}.opt`;
+    if (runCmdStatus("bun", [wasmOptBin, coreWasm, ...WASM_OPT_ARGS, "-o", optimized], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+      throw new Error(`wasm-opt failed for ${coreWasm}`);
+    }
+    renameSync(optimized, coreWasm);
+  }
+}
+
 function transpilePluginComponent(artifact: string, outDir: string, componentBase: string): void {
   if (runCmdStatus("bunx", ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./🟨️host-shim.js"], { cwd: repoRoot }) !== 0) {
     throw new Error(`jco transpile failed for ${artifact}`);
   }
+  optimizePluginCoreModules(outDir, componentBase);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`));
+}
+
+/** @emoji 🧹️ Removes build outputs left behind by an outdated package/component naming scheme — a
+ * plugin crate renamed since its last build (measured: `procedural_plugin.*` alongside the current
+ * `semio_s_plugin_procedural.*`) used to leave both generations on disk forever, each a full ~60MB
+ * copy. Also removes the pre-dedup full-component `.wasm` copy this directory no longer receives (see
+ * `buildPlugin`) once a fresh build supersedes it. Keeps the host shim, worker glue, this build's own
+ * bridge file, every `${componentBase}.*` jco output, and any subdirectory (e.g. `interfaces/`, which
+ * jco owns and isn't touched by this dedup pass). Must run before writing this build's own outputs so
+ * a same-named fresh write is never mistaken for stale. */
+function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: string): void {
+  if (!existsSync(outDir)) return;
+  const keepFiles = new Set(["🟨️host-shim.js", "🟨️plugin-worker.js"]);
+  const currentBridgeFile = `${jsBase}.js`;
+  for (const entry of readdirSync(outDir, { withFileTypes: true })) {
+    if (entry.isDirectory()) continue;
+    if (keepFiles.has(entry.name)) continue;
+    if (entry.name === currentBridgeFile) continue;
+    if (entry.name.startsWith(`${componentBase}.`)) continue;
+    rmSync(join(outDir, entry.name), { force: true });
+  }
 }
 
 /** @emoji 🗄️ JS implementation of the `semio:framework/host` component import. The backbone imports are
@@ -861,27 +929,30 @@ async function readPackageName(cratePath: string): Promise<string> {
 
 async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   const packageName = await readPackageName(target.cratePath);
-  if (runCmdStatus("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--release"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+  if (runCmdStatus("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", PLUGIN_WASM_PROFILE], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`plugin build failed: ${target.pluginId}`);
   }
-  const artifact = join(repoRoot, "target", PLUGIN_WASM_TARGET, "release", `${packageName.replace(/-/g, "_")}.wasm`);
+  const artifact = join(repoRoot, "target", PLUGIN_WASM_TARGET, PLUGIN_WASM_PROFILE, `${packageName.replace(/-/g, "_")}.wasm`);
   const outDir = join(pluginOutRoot, target.pluginId);
   mkdirSync(outDir, { recursive: true });
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
-  const wasmOut = join(outDir, target.wasmOut);
   const componentBase = `${jsBase}_component`;
-  copyFileSync(artifact, wasmOut);
+  cleanStalePluginOutputs(outDir, jsBase, componentBase);
   writeFileSync(join(outDir, "🟨️host-shim.js"), hostShimSource());
-  transpilePluginComponent(wasmOut, outDir, componentBase);
+  // 🪶️ Transpile straight from cargo's own build output — plugin-modules never receives a copy of the
+  // full component `.wasm` (see `emitRustArtifacts`'s doc comment). The browser only ever fetches
+  // jco's extracted `${componentBase}.core.wasm`, so shipping the untranspiled component alongside it
+  // was pure duplicate ~60MB-class weight per plugin; native `os run` now reads straight from `target/`.
+  transpilePluginComponent(artifact, outDir, componentBase);
   const jsOut = join(outDir, `${jsBase}.js`);
   writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
   writeFileSync(join(outDir, "🟨️plugin-worker.js"), pluginWorkerSource());
   const hotSwapMarker = join(pluginOutRoot, ".hot-swap");
   writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
-  console.log(`[DEBUG] built program ${target.pluginId} (${PLUGIN_WASM_TARGET}) -> ${outDir}`);
+  console.log(`[DEBUG] built program ${target.pluginId} (${PLUGIN_WASM_TARGET}, ${PLUGIN_WASM_PROFILE}) -> ${outDir}`);
 }
 
-async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
+export async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
   const registryScript = join(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/📜️script.ts");
   if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
   const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
@@ -896,7 +967,11 @@ function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filt
   return entries;
 }
 
-async function buildPlugins(filterPlugin?: string): Promise<void> {
+/** @emoji 🎪️ Exported so a multi-variant host (e.g. the mit-bestand demonstrator, which needs every one
+ * of its six panes' plugin crates built into the SAME shared `🔌️plugin-modules/` dir rather than one
+ * variant's own isolated dev/build) can call this directly per variant instead of shelling out to this
+ * script's own CLI once per variant. */
+export async function buildPlugins(filterPlugin?: string): Promise<void> {
   ensureWasmTarget();
   await ensurePluginRegistry(filterPlugin);
   const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
@@ -925,6 +1000,151 @@ class PluginBuildScript extends BundleScript {
     await buildPlugins(filterPlugin || undefined);
   }
 }
+
+//#region 🪶️PluginSizeMeasurement
+/** @emoji 📏️ One built plugin's jco-extracted core wasm module, section-walked byte-for-byte — no
+ * external tooling (`wasm-tools`/`twiggy`) required, so this runs anywhere `bun` runs. */
+type PluginWasmSizeBreakdown = {
+  readonly totalBytes: number;
+  readonly codeBytes: number;
+  readonly dataBytes: number;
+  readonly nameBytes: number;
+  readonly otherCustomBytes: number;
+  readonly functionCount: number;
+  readonly memoryInitialPages: number | null;
+  readonly memoryMaxPages: number | null;
+};
+
+type PluginWasmSizeRow = PluginWasmSizeBreakdown & { readonly pluginId: string; readonly file: string };
+
+/** @emoji 🔢️ Reads one unsigned LEB128 varint starting at `offset`; returns the decoded value and the
+ * offset just past it. Values here (section sizes, function/page counts) never approach 2^53, so a
+ * bigint accumulator collapsed to `Number` is safe and simpler than juggling two code paths. */
+function readULEB128(buf: Buffer, offset: number): { readonly value: number; readonly next: number } {
+  let result = 0n;
+  let shift = 0n;
+  let pos = offset;
+  for (;;) {
+    const byte = buf[pos]!;
+    pos += 1;
+    result |= BigInt(byte & 0x7f) << shift;
+    if ((byte & 0x80) === 0) break;
+    shift += 7n;
+  }
+  return { value: Number(result), next: pos };
+}
+
+/** @emoji 📏️ Byte-level breakdown of one core wasm module's sections. Section ids per the wasm binary
+ * format: 0=custom (name-prefixed — the "name" custom section is pure debug/dev-tooling weight, see
+ * `[profile.wasm-release]`'s `strip = "symbols"`), 5=memory, 10=code, 11=data. Reports only the first
+ * declared memory's limits — every plugin here declares exactly one. */
+function analyzePluginWasmModule(filePath: string): PluginWasmSizeBreakdown {
+  const buf = readFileSync(filePath);
+  const totalBytes = buf.byteLength;
+  if (buf.length < 8 || buf.readUInt32LE(0) !== 0x6d736100) {
+    throw new Error(`not a wasm module: ${filePath}`);
+  }
+  let offset = 8;
+  let codeBytes = 0;
+  let dataBytes = 0;
+  let nameBytes = 0;
+  let otherCustomBytes = 0;
+  let functionCount = 0;
+  let memoryInitialPages: number | null = null;
+  let memoryMaxPages: number | null = null;
+  while (offset < buf.length) {
+    const sectionId = buf[offset]!;
+    offset += 1;
+    const sectionSizeRead = readULEB128(buf, offset);
+    const sectionSize = sectionSizeRead.value;
+    const sectionStart = sectionSizeRead.next;
+    const sectionEnd = sectionStart + sectionSize;
+    if (sectionId === 10) {
+      codeBytes += sectionSize;
+      functionCount += readULEB128(buf, sectionStart).value;
+    } else if (sectionId === 11) {
+      dataBytes += sectionSize;
+    } else if (sectionId === 5) {
+      const countRead = readULEB128(buf, sectionStart);
+      if (countRead.value > 0) {
+        const flagsRead = readULEB128(buf, countRead.next);
+        const hasMax = (flagsRead.value & 0x01) !== 0;
+        const minRead = readULEB128(buf, flagsRead.next);
+        memoryInitialPages = minRead.value;
+        memoryMaxPages = hasMax ? readULEB128(buf, minRead.next).value : null;
+      }
+    } else if (sectionId === 0) {
+      const nameLenRead = readULEB128(buf, sectionStart);
+      const customName = buf.toString("utf8", nameLenRead.next, nameLenRead.next + nameLenRead.value);
+      if (customName === "name") nameBytes += sectionSize;
+      else otherCustomBytes += sectionSize;
+    }
+    offset = sectionEnd;
+  }
+  return { totalBytes, codeBytes, dataBytes, nameBytes, otherCustomBytes, functionCount, memoryInitialPages, memoryMaxPages };
+}
+
+const PLUGIN_SIZE_REPORT_PATH = join(pluginOutRoot, ".size-report.json");
+
+/** @emoji 📏️ Every jco-extracted core wasm module currently on disk under `plugin-modules/`, largest
+ * first. `_vendor` and other non-plugin dirs are skipped the same way `rewriteExistingPluginShimImports`
+ * skips them. */
+function collectPluginWasmSizeRows(): PluginWasmSizeRow[] {
+  if (!existsSync(pluginOutRoot)) return [];
+  const rows: PluginWasmSizeRow[] = [];
+  for (const entry of readdirSync(pluginOutRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name.startsWith("_")) continue;
+    const pluginDir = join(pluginOutRoot, entry.name);
+    for (const file of readdirSync(pluginDir)) {
+      if (!/\.core\d*\.wasm$/.test(file)) continue;
+      rows.push({ pluginId: entry.name, file, ...analyzePluginWasmModule(join(pluginDir, file)) });
+    }
+  }
+  return rows.sort((a, b) => b.totalBytes - a.totalBytes);
+}
+
+function formatPluginSizeBytes(n: number): string {
+  return `${(n / (1024 * 1024)).toFixed(2)}MB`;
+}
+
+/** @emoji 📏️`plugin size` — measures every built plugin's core wasm (total/code/data/name bytes,
+ * function count, memory initial/max pages), prints a per-plugin + total report, and persists
+ * `.size-report.json` so the next run prints deltas — makes wasm-release/wasm-opt/dedup regressions
+ * visible without re-deriving byte counts by hand. */
+class PluginSizeScript extends BundleScript {
+  async run(_segments: string[]): Promise<void> {
+    const rows = collectPluginWasmSizeRows();
+    if (rows.length === 0) {
+      console.log("[DEBUG] no built plugin core wasm modules found under plugin-modules/ — run `plugin` (build) first");
+      return;
+    }
+    const previousRows: readonly PluginWasmSizeRow[] = existsSync(PLUGIN_SIZE_REPORT_PATH) ? (JSON.parse(readFileSync(PLUGIN_SIZE_REPORT_PATH, "utf8")) as PluginWasmSizeRow[]) : [];
+    const previousByKey = new Map(previousRows.map((row) => [`${row.pluginId}/${row.file}`, row]));
+    let totalBytes = 0;
+    let totalCode = 0;
+    let totalData = 0;
+    let totalName = 0;
+    let totalFunctions = 0;
+    console.log(`[DEBUG] plugin wasm size report (${rows.length} modules)`);
+    for (const row of rows) {
+      totalBytes += row.totalBytes;
+      totalCode += row.codeBytes;
+      totalData += row.dataBytes;
+      totalName += row.nameBytes;
+      totalFunctions += row.functionCount;
+      const previousRow = previousByKey.get(`${row.pluginId}/${row.file}`);
+      const delta = previousRow ? row.totalBytes - previousRow.totalBytes : null;
+      const deltaLabel = delta === null ? "(new)" : delta === 0 ? "(=)" : `(${delta > 0 ? "+" : ""}${formatPluginSizeBytes(delta)})`;
+      const maxLabel = row.memoryMaxPages === null ? "unbounded" : `${row.memoryMaxPages}pg`;
+      console.log(
+        `[DEBUG]   ${row.pluginId.padEnd(16)} total=${formatPluginSizeBytes(row.totalBytes)} code=${formatPluginSizeBytes(row.codeBytes)} data=${formatPluginSizeBytes(row.dataBytes)} name=${formatPluginSizeBytes(row.nameBytes)} fns=${row.functionCount} mem=${row.memoryInitialPages ?? "?"}/${maxLabel} ${deltaLabel}`,
+      );
+    }
+    console.log(`[DEBUG] total: ${formatPluginSizeBytes(totalBytes)} (code ${formatPluginSizeBytes(totalCode)}, data ${formatPluginSizeBytes(totalData)}, name ${formatPluginSizeBytes(totalName)}, ${totalFunctions} functions across ${rows.length} modules)`);
+    writeFileSync(PLUGIN_SIZE_REPORT_PATH, `${JSON.stringify(rows, null, 2)}\n`);
+  }
+}
+//#endregion 🪶️PluginSizeMeasurement
 
 /** @emoji 👀️ A plugin crate's edits alone don't cover every source that feeds its build: multi-crate
  * app families (e.g. `fem/plugin/rs` depending on `fem/2d/rs`/`fem/3d/rs`/`fem/core/rs`, or an
@@ -981,7 +1201,7 @@ function engineWasmScriptPath(cratePath: string): string {
  * editor host engines unconditionally (shared studio chrome, not any one app), then whatever the
  * active playground variant declares via `engines = […]` on its `[[…playground]]` Cargo.toml row —
  * replaces the previous hardcoded `if (pluginId === "flow" | "gis2d" | "gis3d" | "raster" | "puzzle2d")` branches. */
-async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
+export async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
   // Each recurses into a crate's own `wasm` script (wasm-pack/cargo build under the hood) — budgeted at
   // the build class rather than the generic command default since those inner builds can legitimately
@@ -1538,7 +1758,7 @@ async function dumpReactStructure(page: import("playwright").Page): Promise<Pari
 /** 🧊️Calls the wasm-bindgen introspection hooks exposed by `framework/os/renderer/wgpu/rs/lib.rs` region
  * `🔬️Introspection`. Reachable at `window.wasmBindings.dumpStructure()`/`dumpFrameStats()` — Trunk's
  * dev-server boot glue (`framework/os/renderer/wgpu/js/🟦️boot.ts`) attaches the wasm module's exports there
- * (the same path `semioRendererBoot`/`uploadIconAtlas` already use), NOT a bespoke global. Returns an
+ * (the same path `semioWgpuMount`/`uploadIconAtlas` already use), NOT a bespoke global. Returns an
  * empty dump (never throws) when the hooks aren't present yet, so triage can distinguish "not booted"
  * from "no hooks" via `DUMP-EMPTY`. */
 async function dumpWgpuStructure(page: import("playwright").Page): Promise<ParityDump> {
@@ -2218,6 +2438,7 @@ const router = new ScriptRouter(import.meta.dir)
           await ensurePluginRegistry(segments[1] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND);
           return;
         }
+        if (sub === "size") return new PluginSizeScript(this.root).run(segments.slice(1));
         // 🐛️`sub` here is the variant filter itself (e.g. `plugin cad`), not a subcommand to strip —
         // slicing it off silently dropped the filter and fell back to building the entire 33-crate
         // catalog for every `bun ./📜️script.ts program <variant>` invocation.

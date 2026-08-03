@@ -13,12 +13,12 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-use protocol::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, OperationEnvelope, ServerFrame, decode_server_frame, encode_client_frame};
+use protocol::{decode_server_frame, encode_client_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, OperationEnvelope, ServerFrame};
 use semio_framework_core::{ActorId, OperationId, PresencePeer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tokio::sync::{broadcast, mpsc};
 use store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentPackFiles, DocumentStore, DocumentTextFiles, SpaceConflict};
+use tokio::sync::{broadcast, mpsc};
 
 //#region 🔖️Errors
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -96,7 +96,7 @@ pub enum PersistenceBinding {
         space_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         token: Option<String>,
-    }
+    },
 }
 
 /// @emoji 🧾️ Everything {@link DocumentHost::open} needs to spawn one document's actor.
@@ -142,7 +142,7 @@ pub enum RemoteState {
     Detached,
     Connecting,
     Live { peer_count: usize },
-    Backoff { retry_in_ms: u64 }
+    Backoff { retry_in_ms: u64 },
 }
 
 /// @emoji 🚦️ Snapshot of a document's sync health for status badges.
@@ -223,8 +223,13 @@ pub mod backbone_worker_wire {
             watch_external: Option<bool>,
             actor: String,
         },
-        Close { document_id: String },
-        Send { document_id: String, message: DocumentActorMsg },
+        Close {
+            document_id: String,
+        },
+        Send {
+            document_id: String,
+            message: DocumentActorMsg,
+        },
     }
 
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -239,13 +244,7 @@ pub mod backbone_worker_wire {
             let Self::Open { document_id, schema, bindings, watch_external, actor } = self else {
                 return None;
             };
-            Some(DocumentActorConfig {
-                document_id: document_id.clone(),
-                schema: schema.clone(),
-                bindings: bindings.clone(),
-                watch_external: watch_external.unwrap_or(true),
-                actor: actor.clone(),
-            })
+            Some(DocumentActorConfig { document_id: document_id.clone(), schema: schema.clone(), bindings: bindings.clone(), watch_external: watch_external.unwrap_or(true), actor: actor.clone() })
         }
     }
 
@@ -342,10 +341,7 @@ fn envelopes_from_history_edit(edit: &protocol::HistoryEdit, document_id: &str, 
         let meta = edit.meta.as_ref().and_then(|metas| metas.get(index));
         let dependencies = meta.map(|m| m.dependencies.iter().cloned().map(OperationId).collect()).unwrap_or_default();
         let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| edit.actor.clone()).unwrap_or_else(|| "unknown".to_string());
-        let timestamp = meta
-            .and_then(|m| m.hlt)
-            .map(|(actor, physical_ms, logical)| protocol::HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical })
-            .unwrap_or_else(|| protocol::HybridLogicalTimestamp::new(0, 0));
+        let timestamp = meta.and_then(|m| m.hlt).map(|(actor, physical_ms, logical)| protocol::HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical }).unwrap_or_else(|| protocol::HybridLogicalTimestamp::new(0, 0));
         let inverse_payload = edit.backwards.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
         envelopes.push(OperationEnvelope {
             operation_id: OperationId(op_ids[index].clone()),
@@ -1279,12 +1275,7 @@ mod native_actor {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some(extension) => {
                 let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
-                FolderEndpoint::Pack {
-                    storage: FolderTextStorage::new(folder),
-                    document_id: document_id.to_string(),
-                    extension: extension.to_string(),
-                    schema: schema.to_string(),
-                }
+                FolderEndpoint::Pack { storage: FolderTextStorage::new(folder), document_id: document_id.to_string(), extension: extension.to_string(), schema: schema.to_string() }
             }
             None => FolderEndpoint::Sqlite { storage: FolderSqliteStorage::new(path.to_path_buf()), document_id: document_id.to_string(), schema: schema.to_string() },
         }
@@ -1665,7 +1656,7 @@ pub enum FixtureInbound {
 enum RawFixtureInbound {
     HubFrame { frame_bytes: Vec<u8> },
     ExternalEdits { ops_file: String },
-    ReplaceDocument { dsl_file: String, ops_file: String }
+    ReplaceDocument { dsl_file: String, ops_file: String },
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1731,11 +1722,7 @@ fn parse_fixture_dsl_manifest(text: &str) -> Option<FixtureManifest> {
                 RawFixtureInbound::ReplaceDocument { dsl_file, ops_file }
             }
             "hubFrame" => {
-                let frame_bytes = inbound_fields
-                    .get(&(index, "frameBytes".into()))?
-                    .split(',')
-                    .filter_map(|part| part.trim().parse::<u8>().ok())
-                    .collect();
+                let frame_bytes = inbound_fields.get(&(index, "frameBytes".into()))?.split(',').filter_map(|part| part.trim().parse::<u8>().ok()).collect();
                 RawFixtureInbound::HubFrame { frame_bytes }
             }
             _ => return None,
@@ -1743,14 +1730,7 @@ fn parse_fixture_dsl_manifest(text: &str) -> Option<FixtureManifest> {
         inbound.push(raw);
     }
 
-    Some(FixtureManifest {
-        name: name?,
-        schema: schema?,
-        document_id: document_id?,
-        inbound,
-        expected_events,
-        expected_edit_ids,
-    })
+    Some(FixtureManifest { name: name?, schema: schema?, document_id: document_id?, inbound, expected_events, expected_edit_ids })
 }
 
 /// @emoji 📂️ Loads every `<name>/🔣️fixture.dsl` manifest directory under `dir`, resolving each
@@ -1792,7 +1772,6 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
     fixtures
 }
 //#endregion 🔖️Fixtures
-
 
 //#region 🔖️FolderStorage
 /// @emoji 🗄️ Pure multi-document sqlite persistence (`folder://`), the canonical local store. Rows
@@ -1847,9 +1826,7 @@ impl FolderSqliteStorage {
     pub fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, vcs::VcsError> {
         use rusqlite::OptionalExtension;
         let conn = self.connection()?;
-        conn.query_row("SELECT pack, spr FROM document WHERE id = ?1", [document_id], |row| Ok((row.get::<_, Vec<u8>>(0)?, row.get::<_, Vec<u8>>(1)?)))
-            .optional()
-            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+        conn.query_row("SELECT pack, spr FROM document WHERE id = ?1", [document_id], |row| Ok((row.get::<_, Vec<u8>>(0)?, row.get::<_, Vec<u8>>(1)?))).optional().map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
     /// @emoji ✍️ Upserts `document_id`'s `(pack, spr)` bytes together (schema id, `updated_at` stamp)
@@ -1868,14 +1845,8 @@ impl FolderSqliteStorage {
     /// @emoji 📇️ Lists every stored document id (newest write first), for a folder-wide index.
     pub fn document_ids(&self) -> Result<Vec<String>, vcs::VcsError> {
         let conn = self.connection()?;
-        let mut statement = conn
-            .prepare("SELECT id FROM document ORDER BY updated_at DESC")
-            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        let ids = statement
-            .query_map([], |row| row.get::<_, String>(0))
-            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        let mut statement = conn.prepare("SELECT id FROM document ORDER BY updated_at DESC").map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        let ids = statement.query_map([], |row| row.get::<_, String>(0)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?.collect::<Result<Vec<_>, _>>().map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(ids)
     }
 }
@@ -1982,11 +1953,7 @@ impl FolderTextStorage {
     pub fn append_ops(&self, document_id: &str, extension: &str, lines: &str) -> Result<(), vcs::VcsError> {
         use std::io::Write;
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        let mut file = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(self.ops_path(document_id, extension))
-            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.ops_path(document_id, extension)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         file.write_all(lines.as_bytes()).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
@@ -2023,34 +1990,25 @@ impl store::BlobStore for FolderSqliteStorage {
     fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, vcs::VcsError> {
         let hash = semio_framework_hash::hash_bytes(bytes);
         let conn = self.connection()?;
-        conn.execute(
-            "INSERT OR IGNORE INTO blobs (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)",
-            rusqlite::params![hash, media_type, bytes.len() as i64, bytes],
-        )
-        .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        conn.execute("INSERT OR IGNORE INTO blobs (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![hash, media_type, bytes.len() as i64, bytes]).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
     }
 
     fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
         use rusqlite::OptionalExtension;
         let conn = self.connection()?;
-        conn.query_row("SELECT bytes FROM blobs WHERE hash = ?1", [hash], |row| row.get(0))
-            .optional()
-            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+        conn.query_row("SELECT bytes FROM blobs WHERE hash = ?1", [hash], |row| row.get(0)).optional().map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
     fn has(&self, hash: &str) -> Result<bool, vcs::VcsError> {
         let conn = self.connection()?;
-        let count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM blobs WHERE hash = ?1", [hash], |row| row.get(0))
-            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        let count: i64 = conn.query_row("SELECT COUNT(*) FROM blobs WHERE hash = ?1", [hash], |row| row.get(0)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(count > 0)
     }
 
     fn delete(&self, hash: &str) -> Result<(), vcs::VcsError> {
         let conn = self.connection()?;
-        conn.execute("DELETE FROM blobs WHERE hash = ?1", [hash])
-            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        conn.execute("DELETE FROM blobs WHERE hash = ?1", [hash]).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(())
     }
 }
@@ -2059,12 +2017,9 @@ impl store::BlobStore for FolderSqliteStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde::{Deserialize, Serialize};
-    use store::{
-        create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, DocumentCodec,
-        DocumentCommand, DocumentDsl, ParsedDocumentText,
-    };
     use protocol::{Edit, OpBinary, OpText, Operation, OperationDiff};
+    use serde::{Deserialize, Serialize};
+    use store::{create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, DocumentCodec, DocumentCommand, DocumentDsl, ParsedDocumentText};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
     #[dsl(extension = "demo")]
@@ -2262,31 +2217,16 @@ mod tests {
         //#endregion 🔖️ClientFrame
 
         //#region 🔖️ServerFrame
-        write_server(
-            &fixtures_dir,
-            "📦️server-welcome-tail.bin",
-            &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail },
-            Lane::Command,
-        );
+        write_server(&fixtures_dir, "📦️server-welcome-tail.bin", &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail }, Lane::Command);
         write_server(
             &fixtures_dir,
             "📦️server-welcome-snapshot-inline.bin",
-            &ServerFrame::Welcome {
-                session_id: "session-2".to_string(),
-                resume_token: "resume-2".to_string(),
-                server_frontier: frontier.clone(),
-                bootstrap: Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9, 9]) },
-            },
+            &ServerFrame::Welcome { session_id: "session-2".to_string(), resume_token: "resume-2".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9, 9]) } },
             Lane::Command,
         );
         write_server(&fixtures_dir, "📦️server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command);
         write_server(&fixtures_dir, "📦️server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command);
-        write_server(
-            &fixtures_dir,
-            "📦️server-commands.bin",
-            &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: protocol::ActorId("actor-1".to_string()), frontier: frontier.clone() },
-            Lane::Command,
-        );
+        write_server(&fixtures_dir, "📦️server-commands.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: protocol::ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command);
         write_server(
             &fixtures_dir,
             "📦️server-ack-accepted.bin",
@@ -2428,7 +2368,11 @@ mod tests {
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
             let (pack, spr) = wait_until_value("persisted edit on disk", || {
                 let (pack, spr) = storage.read("doc-a").expect("read")?;
-                if spr_op_ids(&spr).ok()?.is_empty() { None } else { Some((pack, spr)) }
+                if spr_op_ids(&spr).ok()?.is_empty() {
+                    None
+                } else {
+                    Some((pack, spr))
+                }
             })
             .await;
 
@@ -2747,8 +2691,13 @@ mod tests {
             let base_url = format!("ws://{addr}");
 
             let host_a = DocumentHost::new();
-            let channels_a =
-                host_a.open(DocumentActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+            let channels_a = host_a.open(DocumentActorConfig {
+                document_id: "preview".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
+                watch_external: false,
+                actor: "A".into(),
+            });
 
             let host_b = DocumentHost::new();
             host_b.open(DocumentActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
@@ -2937,8 +2886,7 @@ mod tests {
         storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
 
         let reloaded = storage.read("demo", "demo").expect("read").expect("some");
-        let parsed: ParsedDocumentText<DemoProjection, DemoOperation> =
-            parse_document_text(&reloaded.dsl, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
+        let parsed: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_text(&reloaded.dsl, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
         assert_eq!(parsed.projection.n, 2, "write + append reconstructs every edit in order");
 
         assert_eq!(storage.document_ids("demo").expect("document ids"), vec!["demo".to_string()]);
@@ -2975,15 +2923,13 @@ mod tests {
 
         // Text mirror is current (both edits landed via append_ops).
         let reloaded_text = storage.read("demo", "demo").expect("read text").expect("some text");
-        let parsed_text: ParsedDocumentText<DemoProjection, DemoOperation> =
-            parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).unwrap_or_else(|error| panic!("parse text: {error}"));
+        let parsed_text: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).unwrap_or_else(|error| panic!("parse text: {error}"));
         assert_eq!(parsed_text.projection.n, 2, "the .ops text mirror reflects every appended edit");
 
         // pack+spr are unaffected by ops-text-only appends — still the zero-edit snapshot from
         // the initial write_pack, proving read_pack/parse_document_pack never reads .ops.
         let reloaded_pack = storage.read_pack("demo", "demo").expect("read pack").expect("some pack");
-        let parsed_pack: ParsedDocumentText<DemoProjection, DemoOperation> =
-            parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).unwrap_or_else(|error| panic!("parse pack: {error}"));
+        let parsed_pack: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).unwrap_or_else(|error| panic!("parse pack: {error}"));
         assert_eq!(parsed_pack.projection.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
 
         // A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
@@ -2992,8 +2938,7 @@ mod tests {
         let dsl_mirror2 = store.envelope().vcs.initial_projection.print_dsl();
         storage.write_pack("demo", "demo", &files2, &dsl_mirror2).expect("write pack 2");
         let reloaded_pack2 = storage.read_pack("demo", "demo").expect("read pack 2").expect("some pack 2");
-        let parsed_pack2: ParsedDocumentText<DemoProjection, DemoOperation> =
-            parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).unwrap_or_else(|error| panic!("parse pack 2: {error}"));
+        let parsed_pack2: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).unwrap_or_else(|error| panic!("parse pack 2: {error}"));
         assert_eq!(parsed_pack2.projection.n, 2, "a fresh write_pack brings pack+spr current with the live store");
 
         // The always-written DSL mirror must also be on disk and agree with the initial-projection.

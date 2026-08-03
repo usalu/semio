@@ -60,9 +60,24 @@ pub struct GradientStop {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FillStyle {
-    Solid { color: [f64; 4] },
-    LinearGradient { x1: f64, y1: f64, x2: f64, y2: f64, #[dsl(table)] stops: Vec<GradientStop> },
-    RadialGradient { cx: f64, cy: f64, r: f64, #[dsl(table)] stops: Vec<GradientStop> },
+    Solid {
+        color: [f64; 4],
+    },
+    LinearGradient {
+        x1: f64,
+        y1: f64,
+        x2: f64,
+        y2: f64,
+        #[dsl(table)]
+        stops: Vec<GradientStop>,
+    },
+    RadialGradient {
+        cx: f64,
+        cy: f64,
+        r: f64,
+        #[dsl(table)]
+        stops: Vec<GradientStop>,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -364,7 +379,6 @@ pub struct DrawDocument {
     #[dsl(block)]
     pub artboard: Option<DrawArtboard>,
 }
-
 
 pub fn default_draw_transform() -> DrawTransform {
     DrawTransform { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }

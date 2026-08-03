@@ -3,8 +3,8 @@
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{apply_generation_operation, invert_generation_operation, GenerationOperation};
 use procedural_3d::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_id, widget_to_dsl,
-    CameraJsonDsl, FormGenerationDsl, Procedural3dDocument, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl,
+    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_id, widget_to_dsl, CameraJsonDsl, FormGenerationDsl,
+    Procedural3dDocument, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl,
 };
 use procedural_3d_engine::Procedural3dConfig;
 use protocol::{Operation, OperationDiff};
@@ -243,35 +243,48 @@ enum Procedural3dOperationDsl {
         #[dsl(statements)]
         widget: Box<WidgetDsl>,
     },
-    RemoveWidget { id: String },
+    RemoveWidget {
+        id: String,
+    },
     SetSynapse {
         index: usize,
         #[dsl(block)]
         synapse: SynapseSpecDsl,
     },
-    RemoveSynapse { id: String },
+    RemoveSynapse {
+        id: String,
+    },
     SetLayout {
         id: String,
         #[dsl(block)]
         layout: WidgetLayoutDsl,
     },
-    RemoveLayout { id: String },
+    RemoveLayout {
+        id: String,
+    },
     SetCamera {
         #[dsl(block)]
         camera: CameraJsonDsl,
     },
-    SetSchema { schema: String },
+    SetSchema {
+        schema: String,
+    },
     GenerationAdd {
         #[dsl(block)]
         generation: FormGenerationDsl,
     },
-    GenerationRemove { id: String },
-    GenerationRename { id: String, name: String },
+    GenerationRemove {
+        id: String,
+    },
+    GenerationRename {
+        id: String,
+        name: String,
+    },
     GenerationUpdateValues {
         id: String,
         question_id: String,
         value: dsl::DslValue,
-    }
+    },
 }
 
 fn procedural3d_operation_to_dsl(operation: &Procedural3dOperation) -> Procedural3dOperationDsl {
@@ -288,11 +301,7 @@ fn procedural3d_operation_to_dsl(operation: &Procedural3dOperation) -> Procedura
         Procedural3dOperation::Generation(GenerationOperation::Remove { id }) => Procedural3dOperationDsl::GenerationRemove { id: id.clone() },
         Procedural3dOperation::Generation(GenerationOperation::Rename { id, name }) => Procedural3dOperationDsl::GenerationRename { id: id.clone(), name: name.clone() },
         Procedural3dOperation::Generation(GenerationOperation::UpdateValues { id, question_id, value }) => {
-            Procedural3dOperationDsl::GenerationUpdateValues {
-                id: id.clone(),
-                question_id: question_id.clone(),
-                value: dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null),
-            }
+            Procedural3dOperationDsl::GenerationUpdateValues { id: id.clone(), question_id: question_id.clone(), value: dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null) }
         }
     }
 }
@@ -310,11 +319,7 @@ fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) -> Resul
         Procedural3dOperationDsl::GenerationAdd { generation } => Procedural3dOperation::Generation(GenerationOperation::Add { generation: form_generation_from_dsl(generation) }),
         Procedural3dOperationDsl::GenerationRemove { id } => Procedural3dOperation::Generation(GenerationOperation::Remove { id }),
         Procedural3dOperationDsl::GenerationRename { id, name } => Procedural3dOperation::Generation(GenerationOperation::Rename { id, name }),
-        Procedural3dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural3dOperation::Generation(GenerationOperation::UpdateValues {
-            id,
-            question_id,
-            value: dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null),
-        }),
+        Procedural3dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural3dOperation::Generation(GenerationOperation::UpdateValues { id, question_id, value: dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null) }),
     })
 }
 
@@ -429,8 +434,8 @@ mod tests {
     use super::*;
     use procedural_3d::PROCEDURAL_3D_SCHEMA;
     use procedural_3d_engine::empty_procedural3d_projection;
-    use store::{create_document_envelope, test_support, DocumentCommand};
     use protocol::OpText;
+    use store::{create_document_envelope, test_support, DocumentCommand};
     use vcs::apply_operation;
 
     fn round_trip(projection: &Procedural3dDocument, operation: &Procedural3dOperation) -> Procedural3dDocument {
@@ -478,10 +483,7 @@ mod tests {
     fn procedural3d_fixture_operations_detects_widget_synapse_layout_schema_changes() {
         let mut before = FlowFixture::default();
         before.schema = "old-schema".into();
-        before.widgets = vec![
-            Widget::InputNote { id: "w-gone".into(), text: String::new() },
-            Widget::InputNote { id: "w-keep".into(), text: "old".into() },
-        ];
+        before.widgets = vec![Widget::InputNote { id: "w-gone".into(), text: String::new() }, Widget::InputNote { id: "w-keep".into(), text: "old".into() }];
         before.synapses = vec![
             SynapseSpec { id: "s-gone".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() },
             SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "old".into() },
@@ -491,10 +493,7 @@ mod tests {
 
         let mut after = FlowFixture::default();
         after.schema = "new-schema".into();
-        after.widgets = vec![
-            Widget::InputNote { id: "w-keep".into(), text: "new".into() },
-            Widget::InputNote { id: "w-new".into(), text: String::new() },
-        ];
+        after.widgets = vec![Widget::InputNote { id: "w-keep".into(), text: "new".into() }, Widget::InputNote { id: "w-new".into(), text: String::new() }];
         after.synapses = vec![
             SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "new".into() },
             SynapseSpec { id: "s-new".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() },
@@ -507,10 +506,8 @@ mod tests {
         assert!(operations.contains(&Procedural3dOperation::SetWidget { index: 0, widget: Widget::InputNote { id: "w-keep".into(), text: "new".into() } }));
         assert!(operations.contains(&Procedural3dOperation::SetWidget { index: 1, widget: Widget::InputNote { id: "w-new".into(), text: String::new() } }));
         assert!(operations.contains(&Procedural3dOperation::RemoveSynapse { id: "s-gone".into() }));
-        assert!(operations
-            .contains(&Procedural3dOperation::SetSynapse { index: 0, synapse: SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "new".into() } }));
-        assert!(operations
-            .contains(&Procedural3dOperation::SetSynapse { index: 1, synapse: SynapseSpec { id: "s-new".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } }));
+        assert!(operations.contains(&Procedural3dOperation::SetSynapse { index: 0, synapse: SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "new".into() } }));
+        assert!(operations.contains(&Procedural3dOperation::SetSynapse { index: 1, synapse: SynapseSpec { id: "s-new".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } }));
         assert!(operations.contains(&Procedural3dOperation::RemoveLayout { id: "l-gone".into() }));
         assert!(operations.contains(&Procedural3dOperation::SetLayout { id: "l-keep".into(), layout: WidgetLayout { x: 2.0, y: 2.0 } }));
         assert!(operations.contains(&Procedural3dOperation::SetLayout { id: "l-new".into(), layout: WidgetLayout { x: 3.0, y: 3.0 } }));
@@ -534,10 +531,7 @@ mod tests {
             assert_eq!(widget_id(widget), &widget_id(widget).to_string());
         }
         let ids: Vec<&str> = widgets.iter().map(widget_id).collect();
-        assert_eq!(
-            ids,
-            vec!["neuron-1", "slider-1", "note-1", "image-1", "variable-1", "preview-1", "action-1", "export-1", "cluster-1"]
-        );
+        assert_eq!(ids, vec!["neuron-1", "slider-1", "note-1", "image-1", "variable-1", "preview-1", "action-1", "export-1", "cluster-1"]);
     }
     //#endregion 🔖️WidgetIdTests
 
@@ -569,10 +563,7 @@ mod tests {
         // test above for why a clean slate is needed before asserting an exact post-replace length.
         before.fixture.synapses.clear();
         before.fixture.synapses.push(SynapseSpec { id: "e1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() });
-        let after = round_trip(
-            &before,
-            &Procedural3dOperation::SetSynapse { index: 0, synapse: SynapseSpec { id: "e1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() } },
-        );
+        let after = round_trip(&before, &Procedural3dOperation::SetSynapse { index: 0, synapse: SynapseSpec { id: "e1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() } });
         assert_eq!(after.fixture.synapses.len(), 1);
         assert_eq!(after.fixture.synapses[0].to, "c");
     }
@@ -602,10 +593,7 @@ mod tests {
     fn remove_layout_backwards_present_restores_set_layout_missing_returns_empty() {
         let mut projection = empty_procedural3d_projection();
         projection.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
-        assert_eq!(
-            Procedural3dOperation::RemoveLayout { id: "extrude".into() }.backwards(&projection),
-            vec![Procedural3dOperation::SetLayout { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }]
-        );
+        assert_eq!(Procedural3dOperation::RemoveLayout { id: "extrude".into() }.backwards(&projection), vec![Procedural3dOperation::SetLayout { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }]);
         assert!(Procedural3dOperation::RemoveLayout { id: "ghost".into() }.backwards(&projection).is_empty());
     }
 
@@ -669,10 +657,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_set_synapse() {
-        test_support::assert_op_line_round_trip(&Procedural3dOperation::SetSynapse {
-            index: 1,
-            synapse: SynapseSpec { id: "e1".into(), from: "height".into(), to: "extrude".into(), from_port: "number".into(), to_port: String::new() },
-        });
+        test_support::assert_op_line_round_trip(&Procedural3dOperation::SetSynapse { index: 1, synapse: SynapseSpec { id: "e1".into(), from: "height".into(), to: "extrude".into(), from_port: "number".into(), to_port: String::new() } });
     }
 
     #[test]
@@ -706,7 +691,6 @@ mod tests {
         test_support::assert_op_line_round_trip(&Procedural3dOperation::Generation(GenerationOperation::Add { generation }));
     }
     //#endregion 🔖️OpTextTests
-
 
     #[test]
     fn op_text_parse_rejects_unknown_operation() {
@@ -762,10 +746,7 @@ mod tests {
     #[test]
     fn config_set_generation_round_trips() {
         let base = Procedural3dConfig::default();
-        let next = config_round_trip(
-            &base,
-            &Procedural3dConfigOperation::SetGeneration { selected_generation_id: Some("generation-1".into()), generation_preview_text: Some("42".into()) },
-        );
+        let next = config_round_trip(&base, &Procedural3dConfigOperation::SetGeneration { selected_generation_id: Some("generation-1".into()), generation_preview_text: Some("42".into()) });
         assert_eq!(next.selected_generation_id, Some("generation-1".to_string()));
         assert_eq!(next.generation_preview_text, Some("42".to_string()));
     }
@@ -787,9 +768,7 @@ mod tests {
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetLodMode { value: "coarse".into() });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetShowMode { value: "wireframe".into() });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
-        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetPreviewCamera {
-            camera: procedural_3d_engine::Procedural3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 },
-        });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetPreviewCamera { camera: procedural_3d_engine::Procedural3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetSun { json: "{}".into() });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
         test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetEvalDriver { json: "{}".into() });

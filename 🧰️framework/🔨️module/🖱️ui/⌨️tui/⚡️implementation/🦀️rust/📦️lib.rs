@@ -2748,7 +2748,7 @@ pub mod host {
 mod tests {
     use crate::ansi::{emit_runs, setup_sequence, teardown_sequence, AnsiParser, AnsiPatch};
     use crate::cell::{attr, diff, Cell, CellBuffer, DiffRun};
-    use crate::chrome::{shell, ChromeState, FooterState, KeyHint, NavbarState, NavItem, WindowState};
+    use crate::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
     use crate::event::{Event, Key, KeyEvent, MouseEvent, MouseKind};
     use crate::geometry::{Pos, Rect, Size};
     use crate::layout::{create_default_layout, even_window_layout, solve, solve_window_layout, Constraint, Dimension, Direction, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};

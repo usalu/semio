@@ -84,7 +84,10 @@ pub enum NoteCommand {
     // 👁️ Config-only (was ephemeral `NotePlayRuntime`/`ViewState` state) — emit `config_operations`,
     // never document operations.
     #[dsl(key = "camera")]
-    SetCamera { #[dsl(block)] camera: NoteCamera },
+    SetCamera {
+        #[dsl(block)]
+        camera: NoteCamera,
+    },
     #[dsl(key = "camera-zoom")]
     SetCameraZoom { value: f64 },
     #[dsl(key = "active-utility")]
@@ -129,19 +132,9 @@ mod tests {
     fn note_document_text_round_trips_store_with_applied_operation() {
         use note::NoteDocument;
 
-        let envelope = store::create_document_envelope::<NoteDocument, NoteOperation>(
-            "note.document",
-            "doc-text-test",
-            note_engine::empty_note_document(),
-            None,
-        );
+        let envelope = store::create_document_envelope::<NoteDocument, NoteOperation>("note.document", "doc-text-test", note_engine::empty_note_document(), None);
         let mut doc_store = store::DocumentStore::new(envelope);
-        doc_store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![NoteOperation::SetGridSpacing { spacing: Some(48.0) }],
-                description: None,
-            })
-            .expect("apply");
+        doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![NoteOperation::SetGridSpacing { spacing: Some(48.0) }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&doc_store);
         store::test_support::assert_document_pack_round_trip(&doc_store);
     }

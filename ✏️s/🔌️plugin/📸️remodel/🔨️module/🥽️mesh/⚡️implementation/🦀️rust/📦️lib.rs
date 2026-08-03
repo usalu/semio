@@ -836,10 +836,7 @@ fn group_faces_by_manifold_connectivity(mesh: &TriMesh, seed_faces: &[u32], edge
     let mut roots: Vec<u32> = seed_faces.iter().map(|&f| dsu.find(f)).collect();
     roots.sort_unstable();
     roots.dedup();
-    let mut groups: Vec<Vec<u32>> = roots
-        .iter()
-        .map(|&root| (0..mesh.triangles.len() as u32).filter(|&f| dsu.find(f) == root && (mesh.triangles[f as usize].contains(&a) || mesh.triangles[f as usize].contains(&b))).collect())
-        .collect();
+    let mut groups: Vec<Vec<u32>> = roots.iter().map(|&root| (0..mesh.triangles.len() as u32).filter(|&f| dsu.find(f) == root && (mesh.triangles[f as usize].contains(&a) || mesh.triangles[f as usize].contains(&b))).collect()).collect();
     groups.sort_by_key(|g| g[0]);
     groups
 }
@@ -2202,11 +2199,14 @@ fn lscm_chart(mesh: &TriMesh, chart: &Chart) -> HashMap<u32, [f64; 2]> {
     verts.sort_unstable();
     verts.dedup();
     let pin_a = verts[0];
-    let pin_b = *verts.iter().max_by(|&&x, &&y| {
-        let da = norm3(sub3(mesh.positions[x as usize], mesh.positions[pin_a as usize]));
-        let db = norm3(sub3(mesh.positions[y as usize], mesh.positions[pin_a as usize]));
-        da.partial_cmp(&db).expect("finite distance")
-    }).expect("nonempty chart");
+    let pin_b = *verts
+        .iter()
+        .max_by(|&&x, &&y| {
+            let da = norm3(sub3(mesh.positions[x as usize], mesh.positions[pin_a as usize]));
+            let db = norm3(sub3(mesh.positions[y as usize], mesh.positions[pin_a as usize]));
+            da.partial_cmp(&db).expect("finite distance")
+        })
+        .expect("nonempty chart");
     if pin_a == pin_b {
         return fallback_unwrap_chart(mesh, chart);
     }
@@ -2473,11 +2473,7 @@ fn graph_cut_view_labels(mesh: &TriMesh, views: &[TextureView], visible: &[Vec<u
             data_cost[f].insert(vi, -score);
         }
     }
-    let mut labels: Vec<Option<usize>> = (0..n)
-        .map(|f| {
-            data_cost[f].iter().min_by(|a, b| a.1.partial_cmp(b.1).expect("finite data cost")).map(|(&vi, _)| vi)
-        })
-        .collect();
+    let mut labels: Vec<Option<usize>> = (0..n).map(|f| data_cost[f].iter().min_by(|a, b| a.1.partial_cmp(b.1).expect("finite data cost")).map(|(&vi, _)| vi)).collect();
     let edges = mesh.edge_map();
     let mut face_adjacency: Vec<Vec<u32>> = vec![Vec::new(); n];
     for faces in edges.values() {
@@ -3145,10 +3141,7 @@ mod tests {
 
     #[test]
     fn halfedge_topology_build_rejects_non_manifold_edge() {
-        let mesh = TriMesh {
-            positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 1.0]],
-            triangles: vec![[0, 1, 2], [0, 1, 3], [0, 1, 4]],
-        };
+        let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 1.0]], triangles: vec![[0, 1, 2], [0, 1, 3], [0, 1, 4]] };
         let err = HalfedgeTopology::build(&mesh).err().expect("edge shared by 3 faces must be rejected");
         assert!(matches!(err, TopologyError::NonManifoldEdge { a: 0, b: 1, face_count: 3 }), "unexpected error: {err:?}");
     }
@@ -3518,10 +3511,7 @@ mod tests {
 
     #[test]
     fn segment_charts_cuts_at_sharp_dihedral_angle() {
-        let mesh = TriMesh {
-            positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 1.0]],
-            triangles: vec![[0, 1, 2], [0, 2, 3], [0, 3, 5], [0, 5, 4]],
-        };
+        let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 1.0]], triangles: vec![[0, 1, 2], [0, 2, 3], [0, 3, 5], [0, 5, 4]] };
         let charts = segment_charts(&mesh, 45.0);
         assert_eq!(charts.len(), 2, "a 90-degree fold above a 45-degree threshold should split into two charts");
         for chart in &charts {
@@ -3562,20 +3552,14 @@ mod tests {
     // #region 🔖️SelfIntersectionTests
     #[test]
     fn validate_watertight_detects_self_intersections_when_requested() {
-        let mesh = TriMesh {
-            positions: vec![[-1.0, 0.0, -1.0], [1.0, 0.0, -1.0], [0.0, 0.0, 2.0], [0.0, -1.0, -0.5], [0.0, 1.0, -0.5], [0.0, 0.0, 1.0]],
-            triangles: vec![[0, 1, 2], [3, 4, 5]],
-        };
+        let mesh = TriMesh { positions: vec![[-1.0, 0.0, -1.0], [1.0, 0.0, -1.0], [0.0, 0.0, 2.0], [0.0, -1.0, -0.5], [0.0, 1.0, -0.5], [0.0, 0.0, 1.0]], triangles: vec![[0, 1, 2], [3, 4, 5]] };
         let report = validate_watertight(&mesh, true);
         assert_eq!(report.self_intersection_pairs, Some(1), "report: {report:?}");
     }
 
     #[test]
     fn validate_watertight_reports_no_self_intersections_for_disjoint_triangles() {
-        let mesh = TriMesh {
-            positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [10.0, 10.0, 10.0], [11.0, 10.0, 10.0], [10.0, 11.0, 10.0]],
-            triangles: vec![[0, 1, 2], [3, 4, 5]],
-        };
+        let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [10.0, 10.0, 10.0], [11.0, 10.0, 10.0], [10.0, 11.0, 10.0]], triangles: vec![[0, 1, 2], [3, 4, 5]] };
         let report = validate_watertight(&mesh, true);
         assert_eq!(report.self_intersection_pairs, Some(0), "report: {report:?}");
     }

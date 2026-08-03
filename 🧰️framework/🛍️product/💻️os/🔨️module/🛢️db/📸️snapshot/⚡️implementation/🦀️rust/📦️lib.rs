@@ -40,7 +40,7 @@
 //! to `db_compact`'s "online compaction with manifest CAS + fencing" — `retain_from` here is the
 //! safe, mechanical pruning primitive that caller is expected to call after fencing itself.
 
-use db_core::{DbError, DocumentId, EpochFence, check_len};
+use db_core::{check_len, DbError, DocumentId, EpochFence};
 use db_state::Page;
 use db_storage::{LeaseInfo, LeaseStorage, SnapshotStorage};
 
@@ -85,13 +85,7 @@ pub struct SnapshotDescriptor {
 impl SnapshotDescriptor {
     /// @emoji 🧭️ Reconstructs the `db_core::Frontier` this generation was taken at.
     pub fn frontier(&self) -> db_core::Frontier {
-        db_core::Frontier {
-            document: self.document.clone(),
-            head_seq: self.head_seq,
-            commit_seq: self.commit_seq,
-            chain_hash: self.chain_hash,
-            epoch: self.epoch,
-        }
+        db_core::Frontier { document: self.document.clone(), head_seq: self.head_seq, commit_seq: self.commit_seq, chain_hash: self.chain_hash, epoch: self.epoch }
     }
 
     /// @emoji ✍️ Serializes this descriptor to the exact bytes written into the `KIND_SNAPSHOT`
@@ -158,21 +152,7 @@ impl SnapshotDescriptor {
         let roots = read_hash_list(&mut r)?;
         let new_pages = read_hash_list(&mut r)?;
         let created_at_ms = r.read_varint_u64()?;
-        Ok(SnapshotDescriptor {
-            document,
-            generation,
-            parent_generation,
-            head_seq,
-            commit_seq,
-            epoch,
-            chain_hash,
-            protocol_version,
-            vcs_head,
-            base_pack_hash,
-            roots,
-            new_pages,
-            created_at_ms,
-        })
+        Ok(SnapshotDescriptor { document, generation, parent_generation, head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, new_pages, created_at_ms })
     }
 }
 
@@ -391,13 +371,7 @@ fn open_generation_at(combined: &[u8], base: u64, len: u64, footer: &pack::Foote
     let sub = SubSource { inner: combined, base, len };
     let descriptor_bytes = decode_snapshot_segment(&sub)?;
     let descriptor = SnapshotDescriptor::decode(&descriptor_bytes)?;
-    Ok(GenerationHandle {
-        descriptor,
-        base,
-        len,
-        footer_required_flags: footer.required_flags,
-        footer_prev_offset: footer.prev_footer_offset,
-    })
+    Ok(GenerationHandle { descriptor, base, len, footer_required_flags: footer.required_flags, footer_prev_offset: footer.prev_footer_offset })
 }
 
 /// @emoji 🔚️ Opens the LAST generation physically present in `combined` (the one whose footer sits
@@ -419,9 +393,7 @@ pub fn open_latest(combined: &[u8]) -> Result<GenerationHandle, DbError> {
 /// `file_len`, from which its base offset is derived (`footer_offset + FOOTER_SIZE - file_len`) —
 /// no `pack_format` private footer-parsing internals needed.
 pub fn open_ancestor(combined: &[u8], footer_offset: u64) -> Result<GenerationHandle, DbError> {
-    let footer_end = footer_offset
-        .checked_add(pack::FOOTER_SIZE as u64)
-        .ok_or_else(|| DbError::Corrupt("snapshot chain footer offset overflow".to_string()))?;
+    let footer_end = footer_offset.checked_add(pack::FOOTER_SIZE as u64).ok_or_else(|| DbError::Corrupt("snapshot chain footer offset overflow".to_string()))?;
     if footer_end > combined.len() as u64 {
         return Err(DbError::Corrupt("snapshot chain prev_footer_offset points past end of buffer".to_string()));
     }
@@ -489,9 +461,7 @@ pub struct SnapshotPolicy {
 
 impl SnapshotPolicy {
     pub fn should_snapshot(&self, ops_since_last: u64, bytes_since_last: u64, ms_since_last: u64) -> bool {
-        ops_since_last >= self.max_ops_since_last
-            || bytes_since_last >= self.max_bytes_since_last
-            || ms_since_last >= self.max_ms_since_last
+        ops_since_last >= self.max_ops_since_last || bytes_since_last >= self.max_bytes_since_last || ms_since_last >= self.max_ms_since_last
     }
 }
 
@@ -515,8 +485,7 @@ impl<'storage> SnapshotManager<'storage> {
         let (generation, parent_generation, parent_footer_position) = match origin {
             SnapshotOrigin::FullBaseline => (latest.map_or(0, |g| g + 1), None, None),
             SnapshotOrigin::Incremental => {
-                let parent_generation = latest
-                    .ok_or_else(|| DbError::InvalidArgument("cannot publish an incremental snapshot with no prior generation".to_string()))?;
+                let parent_generation = latest.ok_or_else(|| DbError::InvalidArgument("cannot publish an incremental snapshot with no prior generation".to_string()))?;
                 let combined = self.materialize_chain(document, parent_generation)?;
                 let parent_footer_position = combined.len() as u64 - pack::FOOTER_SIZE as u64;
                 (parent_generation + 1, Some(parent_generation), Some(parent_footer_position))
@@ -850,17 +819,7 @@ mod tests {
 
     //#region 🔖️Manager
     fn body(head_seq: u64) -> SnapshotBody {
-        SnapshotBody {
-            head_seq,
-            commit_seq: head_seq,
-            epoch: 0,
-            chain_hash: [0u8; 32],
-            protocol_version: 1,
-            vcs_head: None,
-            base_pack_hash: None,
-            roots: vec![],
-            created_at_ms: head_seq * 1000,
-        }
+        SnapshotBody { head_seq, commit_seq: head_seq, epoch: 0, chain_hash: [0u8; 32], protocol_version: 1, vcs_head: None, base_pack_hash: None, roots: vec![], created_at_ms: head_seq * 1000 }
     }
 
     #[test]

@@ -128,7 +128,7 @@ pub enum StepNodeDsl {
         kind: String,
         params: Option<BTreeMap<String, ValueDsl>>,
         bodies: BTreeMap<String, PathDsl>,
-    }
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
@@ -138,12 +138,7 @@ pub struct PathDsl {
 }
 
 pub fn step_to_step_node_dsl(step: &Step) -> StepNodeDsl {
-    StepNodeDsl::Step {
-        id: step.id.clone(),
-        kind: step.kind.clone(),
-        params: dictionary_to_option_dsl_map(&step.params),
-        bodies: step.bodies.iter().map(|(slot, path)| (slot.clone(), path_to_path_dsl(path))).collect(),
-    }
+    StepNodeDsl::Step { id: step.id.clone(), kind: step.kind.clone(), params: dictionary_to_option_dsl_map(&step.params), bodies: step.bodies.iter().map(|(slot, path)| (slot.clone(), path_to_path_dsl(path))).collect() }
 }
 
 pub fn step_node_dsl_to_step(node: StepNodeDsl) -> Step {
@@ -176,19 +171,11 @@ impl store::DocumentDsl for ImperativeDocument {
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let parsed = <ImperativeDocumentDsl as store::DocumentDsl>::parse_dsl(text)?;
-        Ok(ImperativeDocument {
-            schema: parsed.schema,
-            path: Path { steps: parsed.steps.into_iter().map(step_node_dsl_to_step).collect() },
-            seed: option_dsl_map_to_dictionary(parsed.seed),
-        })
+        Ok(ImperativeDocument { schema: parsed.schema, path: Path { steps: parsed.steps.into_iter().map(step_node_dsl_to_step).collect() }, seed: option_dsl_map_to_dictionary(parsed.seed) })
     }
 
     fn print_dsl(&self) -> String {
-        let mirror = ImperativeDocumentDsl {
-            schema: self.schema.clone(),
-            seed: dictionary_to_option_dsl_map(&self.seed),
-            steps: self.path.steps.iter().map(step_to_step_node_dsl).collect(),
-        };
+        let mirror = ImperativeDocumentDsl { schema: self.schema.clone(), seed: dictionary_to_option_dsl_map(&self.seed), steps: self.path.steps.iter().map(step_to_step_node_dsl).collect() };
         <ImperativeDocumentDsl as store::DocumentDsl>::print_dsl(&mirror)
     }
 }
@@ -202,22 +189,14 @@ impl store::DocumentDsl for ImperativeDocument {
 /// the same mirror-struct conversion `parse_dsl`/`print_dsl` already use.
 impl store::DocumentPack for ImperativeDocument {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let mirror = ImperativeDocumentDsl {
-            schema: self.schema.clone(),
-            seed: dictionary_to_option_dsl_map(&self.seed),
-            steps: self.path.steps.iter().map(step_to_step_node_dsl).collect(),
-        };
+        let mirror = ImperativeDocumentDsl { schema: self.schema.clone(), seed: dictionary_to_option_dsl_map(&self.seed), steps: self.path.steps.iter().map(step_to_step_node_dsl).collect() };
         store::pack_rt::encode_document(&ImperativeDocumentDsl::__dsl_spec(), &mirror.__dsl_to_record(), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (record, _report) = store::pack_rt::decode_document(bytes, &ImperativeDocumentDsl::__dsl_spec(), options)?;
         let parsed = ImperativeDocumentDsl::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
-        Ok(ImperativeDocument {
-            schema: parsed.schema,
-            path: Path { steps: parsed.steps.into_iter().map(step_node_dsl_to_step).collect() },
-            seed: option_dsl_map_to_dictionary(parsed.seed),
-        })
+        Ok(ImperativeDocument { schema: parsed.schema, path: Path { steps: parsed.steps.into_iter().map(step_node_dsl_to_step).collect() }, seed: option_dsl_map_to_dictionary(parsed.seed) })
     }
 }
 //#endregion 🔖️Pack

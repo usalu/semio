@@ -14,14 +14,8 @@ mod native {
 
     use pack_core::{CodecId, PackSource};
     use protocol_core::{DictBuilder, ProtocolError, ProtocolLimits, RecordHasher};
-    use protocol_format::{
-        Blake3Hasher, COMMIT_FRAME_LEN, FrameCursor, HEADER_SIZE, RecoveryMode, SprWriter, VerificationLevel, WriteOptions, parse_commit_payload,
-        read_header, recover as recover_records,
-    };
-    use protocol_history::{
-        DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader, decode_history, encode_active, encode_alternative, encode_change, encode_checkpoint,
-        encode_doc, encode_edit,
-    };
+    use protocol_format::{parse_commit_payload, read_header, recover as recover_records, Blake3Hasher, FrameCursor, RecoveryMode, SprWriter, VerificationLevel, WriteOptions, COMMIT_FRAME_LEN, HEADER_SIZE};
+    use protocol_history::{decode_history, encode_active, encode_alternative, encode_change, encode_checkpoint, encode_doc, encode_edit, DecodeOptions, HistoryAppender, HistoryEdit, HistoryReader};
 
     /// @emoji 🚨️ Wraps a `std::io::Error` into the crate-wide `ProtocolError::Io` variant — the
     /// only place `std::io::Error` is allowed to appear, per the family's no-`std::io::Error`-in-
@@ -58,11 +52,7 @@ mod native {
         // `start_offset` must be 0 here (the local offset within `commit_bytes`), not the file's
         // absolute `last_commit_offset` — see protocol_format::FrameCursor::new's doc.
         let mut cursor = FrameCursor::new(&commit_bytes, 0);
-        let frame = cursor.next_frame()?.ok_or_else(|| ProtocolError::Malformed {
-            what: "resume commit frame",
-            offset: recovery.last_commit_offset,
-            detail: "expected a REC_COMMIT frame at the recovered commit offset".to_string(),
-        })?;
+        let frame = cursor.next_frame()?.ok_or_else(|| ProtocolError::Malformed { what: "resume commit frame", offset: recovery.last_commit_offset, detail: "expected a REC_COMMIT frame at the recovered commit offset".to_string() })?;
         let commit = parse_commit_payload(frame.payload())?;
         Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: commit.commit_seq, chain_hash: commit.chain_hash })
     }
@@ -589,19 +579,8 @@ mod native {
             let mut file = HistoryFile::create(&path, "doc-1", "schema-1", &WriteOptions::default()).unwrap();
             file.appender().append_edit(&sample_edit("edit-1")).unwrap();
             file.appender().append_edit(&sample_edit("edit-2")).unwrap();
-            file.appender()
-                .append_change(&HistoryChange { id: "change-1".to_string(), saved_at: "2026-07-27T00:00:02Z".to_string(), edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], description: None })
-                .unwrap();
-            file.appender()
-                .append_checkpoint(&HistoryCheckpoint {
-                    id: "ck-1".to_string(),
-                    timestamp: "2026-07-27T00:00:03Z".to_string(),
-                    change_ids: vec!["change-1".to_string()],
-                    parent_id: None,
-                    authors: vec![],
-                    message: None,
-                })
-                .unwrap();
+            file.appender().append_change(&HistoryChange { id: "change-1".to_string(), saved_at: "2026-07-27T00:00:02Z".to_string(), edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], description: None }).unwrap();
+            file.appender().append_checkpoint(&HistoryCheckpoint { id: "ck-1".to_string(), timestamp: "2026-07-27T00:00:03Z".to_string(), change_ids: vec!["change-1".to_string()], parent_id: None, authors: vec![], message: None }).unwrap();
             file.appender().append_alternative(&HistoryAlternative { id: "alt-1".to_string(), name: "main".to_string(), checkpoint_ids: vec!["ck-1".to_string()] }).unwrap();
             file.appender().set_active(Some("alt-1")).unwrap();
             file.appender().commit().unwrap();

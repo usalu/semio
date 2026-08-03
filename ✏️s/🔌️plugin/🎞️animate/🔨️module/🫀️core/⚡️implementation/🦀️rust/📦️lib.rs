@@ -3219,12 +3219,7 @@ mod config {
 
         #[test]
         fn config_builder_methods_apply() {
-            let cfg = AnimateConfig::from_quality(QualityPreset::Low)
-                .with_resolution(0, 0)
-                .with_output_dir("out")
-                .with_media_dir("media2")
-                .with_audio_track("track.wav")
-                .with_subtitles_path("subs.srt");
+            let cfg = AnimateConfig::from_quality(QualityPreset::Low).with_resolution(0, 0).with_output_dir("out").with_media_dir("media2").with_audio_track("track.wav").with_subtitles_path("subs.srt");
             assert_eq!(cfg.width, 1);
             assert_eq!(cfg.height, 1);
             assert_eq!(cfg.output_dir, PathBuf::from("out"));

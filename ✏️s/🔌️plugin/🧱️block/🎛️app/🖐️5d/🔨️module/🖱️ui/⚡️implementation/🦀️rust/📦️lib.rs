@@ -10,9 +10,8 @@ use block_5d_engine::Block5dConfig;
 use block_5d_op::{Block5dConfigOperation, Block5dOperation};
 use block_5d_protocol::Block5dCommand;
 use semio_framework_plugin::{
-    create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor,
-    App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
-    SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiInputNode, UiNode, UiPresence, UiTreeItemNode,
+    create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale,
+    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode,
 };
 use serde_json::{json, Value};
 
@@ -37,7 +36,11 @@ const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 /// app is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag, lenient-parsed the same way
 /// `detectShellLocale` does on the TS side — see `home_ui`'s identical pair.
 fn block5d_locale(cfg: &Block5dConfig) -> Locale {
-    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
+    if cfg.locale.starts_with("de") {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &Block5dConfig) -> &'static L {
@@ -72,14 +75,14 @@ fn build_document_tree(definition: &Block5dDefinition, selected: &[String], labe
     let grip_kind_items: Vec<UiTreeItemNode> = definition
         .grip_kinds
         .iter()
-        .map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), menu: None,
-            ..tree_item_with_action(builder.item_id("grip-kind", &kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()), block5d_action("setSelection", None))
-        })
+        .map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), menu: None, ..tree_item_with_action(builder.item_id("grip-kind", &kind.id), Label::data(kind.label.clone()), Some(kind.color.clone()), block5d_action("setSelection", None)) })
         .collect();
     let grip_items: Vec<UiTreeItemNode> = definition
         .grips
         .iter()
-        .map(|grip| UiTreeItemNode { icon_id: Some("circle-dot".into()), menu: None,
+        .map(|grip| UiTreeItemNode {
+            icon_id: Some("circle-dot".into()),
+            menu: None,
             ..tree_item_with_action(builder.item_id("grip", &grip.id), Label::data(grip.grip_kind.clone()), Some(format!("{:.2}", grip.angle)), block5d_action("setSelection", None))
         })
         .collect();
@@ -190,12 +193,7 @@ impl DocumentApp for Block5dPlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &Block5dCommand,
-        doc: &DocumentView<'_, Block5dDefinition>,
-        _cfg: &ConfigView<'_, Block5dConfig>,
-    ) -> Emit<Block5dOperation, Block5dConfigOperation> {
+    fn handle(&self, command: &Block5dCommand, doc: &DocumentView<'_, Block5dDefinition>, _cfg: &ConfigView<'_, Block5dConfig>) -> Emit<Block5dOperation, Block5dConfigOperation> {
         match command {
             Block5dCommand::PatchPartKind { field, value } => {
                 let mut part_kind = doc.projection.part_kind.clone();
@@ -270,10 +268,7 @@ impl DocumentApp for Block5dPlayApp {
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = block_5d_engine::puzzle5d_catalog_fragment(doc.projection);
-        Ok(Media {
-            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-            payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() },
-        })
+        Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
 //#endregion 🔖️Block5dPlayApp
@@ -327,8 +322,18 @@ pub fn create_block5d_app() -> App {
             .default_layout(create_default_layout(&[BLOCK5D_WINDOW_BOARD.into(), BLOCK5D_WINDOW_WORLD.into()], "row", Some(&[50.0, 50.0]), Some(&["Board".into(), "World".into()])))
             .io(block_5d_engine::block5d_io()),
     )
-    .example(BLOCK5D_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"), serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
-    .example(BLOCK5D_EXAMPLE_CAPSULE, LocalizedLabel::native("Nakagin Capsule", "Nakagin Capsule"), serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "building")
+    .example(
+        BLOCK5D_EXAMPLE_FOREST_LEFT,
+        LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"),
+        serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
+        "list-tree",
+    )
+    .example(
+        BLOCK5D_EXAMPLE_CAPSULE,
+        LocalizedLabel::native("Nakagin Capsule", "Nakagin Capsule"),
+        serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
+        "building",
+    )
     .workflow("block5d", "Block 5D", "model")
 }
 //#endregion 🔖️Manifest

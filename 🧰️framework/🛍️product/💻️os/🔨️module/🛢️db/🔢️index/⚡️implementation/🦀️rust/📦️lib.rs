@@ -61,18 +61,7 @@ pub enum IndexKind {
 impl IndexKind {
     /// @emoji 📋️ Every kind, for tests and for callers that want to enumerate/verify a document's
     /// whole index (e.g. `db_cli verify`).
-    pub const ALL: [IndexKind; 10] = [
-        IndexKind::Command,
-        IndexKind::ActorSeq,
-        IndexKind::Frontier,
-        IndexKind::TouchedRegion,
-        IndexKind::Inverse,
-        IndexKind::Commit,
-        IndexKind::Conflict,
-        IndexKind::Projection,
-        IndexKind::FullText,
-        IndexKind::Preview,
-    ];
+    pub const ALL: [IndexKind; 10] = [IndexKind::Command, IndexKind::ActorSeq, IndexKind::Frontier, IndexKind::TouchedRegion, IndexKind::Inverse, IndexKind::Commit, IndexKind::Conflict, IndexKind::Projection, IndexKind::FullText, IndexKind::Preview];
 
     /// @emoji 🏷️ The one-byte tag stamped in every run's header and packed into the high byte of
     /// its `run_id`s (see `make_run_id`) — this crate's own on-disk representation, not part of the
@@ -142,8 +131,7 @@ pub struct RunEntry {
 /// caller can hand `put_batch` a batch containing both an old and a newer write for the same key
 /// and get the newer one, matching ordinary write-then-overwrite semantics within one batch).
 pub fn build_run(entries: Vec<(Vec<u8>, RunValue)>) -> Vec<RunEntry> {
-    let mut indexed: Vec<(usize, Vec<u8>, RunValue)> =
-        entries.into_iter().enumerate().map(|(index, (key, value))| (index, key, value)).collect();
+    let mut indexed: Vec<(usize, Vec<u8>, RunValue)> = entries.into_iter().enumerate().map(|(index, (key, value))| (index, key, value)).collect();
     indexed.sort_by(|a, b| a.1.cmp(&b.1).then(a.0.cmp(&b.0)));
     let mut out: Vec<RunEntry> = Vec::with_capacity(indexed.len());
     for (_, key, value) in indexed {
@@ -186,10 +174,7 @@ fn read_run_header(body: &[u8], expected_kind: IndexKind) -> Result<RunHeader, D
     }
     let kind_tag = body[RUN_MAGIC.len() + 1];
     if kind_tag != expected_kind.tag() {
-        return Err(DbError::Corrupt(format!(
-            "index run kind mismatch: expected {expected_kind:?} (tag {}), found tag {kind_tag}",
-            expected_kind.tag()
-        )));
+        return Err(DbError::Corrupt(format!("index run kind mismatch: expected {expected_kind:?} (tag {}), found tag {kind_tag}", expected_kind.tag())));
     }
     let mut reader = ByteReader::new(&body[RUN_MAGIC.len() + 2..]);
     let entry_count = reader.read_varint_u64()?;
@@ -224,9 +209,7 @@ fn encode_run(kind: IndexKind, entries: &[RunEntry]) -> Result<Vec<u8>, DbError>
     for entry in entries {
         if let Some(previous) = previous_key {
             if entry.key.as_slice() <= previous {
-                return Err(DbError::InvalidArgument(
-                    "db_index run entries must be strictly ascending and unique by key".to_string(),
-                ));
+                return Err(DbError::InvalidArgument("db_index run entries must be strictly ascending and unique by key".to_string()));
             }
         }
         previous_key = Some(entry.key.as_slice());
@@ -686,8 +669,7 @@ fn actor_seq_key(actor: &ActorId, actor_seq: u64) -> Result<Vec<u8>, DbError> {
 }
 
 fn decode_u64_le(bytes: &[u8]) -> Result<u64, DbError> {
-    let array: [u8; 8] =
-        bytes.try_into().map_err(|_| DbError::Corrupt("expected an 8-byte little-endian u64 index value".to_string()))?;
+    let array: [u8; 8] = bytes.try_into().map_err(|_| DbError::Corrupt("expected an 8-byte little-endian u64 index value".to_string()))?;
     Ok(u64::from_le_bytes(array))
 }
 
@@ -715,9 +697,7 @@ impl<'a> ActorSeqIndex<'a> {
             .into_iter()
             .last()
             .map(|(key, value)| {
-                let actor_seq_bytes: [u8; 8] = key[prefix.len()..]
-                    .try_into()
-                    .map_err(|_| DbError::Corrupt("actor-seq index key has a malformed suffix".to_string()))?;
+                let actor_seq_bytes: [u8; 8] = key[prefix.len()..].try_into().map_err(|_| DbError::Corrupt("actor-seq index key has a malformed suffix".to_string()))?;
                 Ok((u64::from_be_bytes(actor_seq_bytes), decode_u64_le(&value)?))
             })
             .transpose()
@@ -750,9 +730,7 @@ fn decode_frontier(bytes: &[u8]) -> Result<Frontier, DbError> {
     let document_len = reader.read_varint_u64()?;
     check_len(document_len, MAX_KEY_LEN, "db_index::frontier_document")?;
     let document_bytes = reader.read_bytes(document_len as usize)?.to_vec();
-    let document = DocumentId(
-        String::from_utf8(document_bytes).map_err(|_| DbError::Corrupt("frontier document id is not valid utf-8".to_string()))?,
-    );
+    let document = DocumentId(String::from_utf8(document_bytes).map_err(|_| DbError::Corrupt("frontier document id is not valid utf-8".to_string()))?);
     let head_seq = reader.read_varint_u64()?;
     let commit_seq = reader.read_varint_u64()?;
     let chain_hash = reader.read_array32()?;
@@ -866,10 +844,7 @@ pub struct FullTextIndex<'a> {
 }
 
 fn tokenize(text: &str) -> Vec<String> {
-    text.split(|character: char| !character.is_alphanumeric())
-        .filter(|term| !term.is_empty())
-        .map(str::to_lowercase)
-        .collect()
+    text.split(|character: char| !character.is_alphanumeric()).filter(|term| !term.is_empty()).map(str::to_lowercase).collect()
 }
 
 impl<'a> FullTextIndex<'a> {
@@ -1031,8 +1006,7 @@ impl<'a> ProjectionIndex<'a> {
         let entries = self.handle.scan_prefix(&prefix)?;
         let mut result = None;
         for (key, value) in entries {
-            let seq_bytes: [u8; 8] =
-                key[prefix.len()..].try_into().map_err(|_| DbError::Corrupt("projection index key has a malformed suffix".to_string()))?;
+            let seq_bytes: [u8; 8] = key[prefix.len()..].try_into().map_err(|_| DbError::Corrupt("projection index key has a malformed suffix".to_string()))?;
             let seq = u64::from_be_bytes(seq_bytes);
             if seq > frontier_seq {
                 break; // entries are ascending by key, i.e. ascending by seq within this prefix
@@ -1099,8 +1073,7 @@ impl<'a> PreviewIndex<'a> {
             .scan_prefix(&prefix)?
             .into_iter()
             .map(|(key, value)| {
-                let preview_key = String::from_utf8(key[prefix.len()..].to_vec())
-                    .map_err(|_| DbError::Corrupt("preview index key suffix is not valid utf-8".to_string()))?;
+                let preview_key = String::from_utf8(key[prefix.len()..].to_vec()).map_err(|_| DbError::Corrupt("preview index key suffix is not valid utf-8".to_string()))?;
                 Ok((preview_key, value))
             })
             .collect()
@@ -1179,11 +1152,7 @@ mod tests {
 
     #[test]
     fn build_run_sorts_and_last_write_wins_on_duplicate_keys() {
-        let built = build_run(vec![
-            (b"b".to_vec(), RunValue::Put(b"1".to_vec())),
-            (b"a".to_vec(), RunValue::Put(b"2".to_vec())),
-            (b"b".to_vec(), RunValue::Put(b"3".to_vec())),
-        ]);
+        let built = build_run(vec![(b"b".to_vec(), RunValue::Put(b"1".to_vec())), (b"a".to_vec(), RunValue::Put(b"2".to_vec())), (b"b".to_vec(), RunValue::Put(b"3".to_vec()))]);
         assert_eq!(built, vec![entry(b"a", b"2"), entry(b"b", b"3")]);
     }
     //#endregion 🔖️SortedRun

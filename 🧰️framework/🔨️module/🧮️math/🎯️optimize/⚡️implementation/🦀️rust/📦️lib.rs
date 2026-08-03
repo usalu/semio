@@ -372,7 +372,10 @@ fn accumulate_bipartite(problem: &impl BipartiteResiduals, a_params: &[VecD], b_
 /// 🧮️ One damped Schur-complement LM step: eliminates every B block analytically (each `Hbb` is small
 /// and block-diagonal, coupling only to the A blocks it touches), solves the dense reduced camera-only
 /// system, then back-substitutes for the B-block updates. Returns `None` if any linear solve fails.
-#[allow(clippy::too_many_arguments, reason = "each argument is a distinct accumulator (per-block Hessian/gradient pieces plus the damping scalar) produced by accumulate_bipartite; bundling them into a struct would just rename this same data without reducing what the function needs")]
+#[allow(
+    clippy::too_many_arguments,
+    reason = "each argument is a distinct accumulator (per-block Hessian/gradient pieces plus the damping scalar) produced by accumulate_bipartite; bundling them into a struct would just rename this same data without reducing what the function needs"
+)]
 fn schur_step(ad: usize, num_a: usize, haa: &[MatD], hbb: &[MatD], hab: &HashMap<(usize, usize), MatD>, ga: &[VecD], gb: &[VecD], lambda: f64) -> Option<(Vec<VecD>, Vec<VecD>, MatD)> {
     let num_b = hbb.len();
     let total_a = num_a * ad;

@@ -11,9 +11,9 @@ use block_3d_op::{Block3dConfigOperation, Block3dOperation};
 use block_3d_protocol::Block3dCommand;
 use block_shared::BlockRepresentation;
 use semio_framework_plugin::{
-    tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App,
-    AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup,
-    UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiTreeItemNode,
+    tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
+    UiTreeItemNode,
 };
 use serde_json::{json, Value};
 
@@ -40,7 +40,11 @@ fn block3d_is_de_locale(cfg: &Block3dConfig) -> bool {
 /// 🗣️ `Block3dConfig.locale` (a BCP-47 tag, was shell-provided `ViewState.locale` pre-B1) mapped onto
 /// the SDK's exhaustive `Locale` enum.
 fn block3d_locale(cfg: &Block3dConfig) -> Locale {
-    if block3d_is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if block3d_is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🗣️ Resolves the active `Block3dLabels` cell from the config-carried locale (was shell-provided
@@ -79,22 +83,15 @@ fn build_document_tree(definition: &Block3dDefinition, selected: &[String], labe
     let representation_items: Vec<UiTreeItemNode> = definition
         .representations
         .iter()
-        .map(|representation| {
-            UiTreeItemNode {
-                icon_id: Some("box".into()),
-                ..tree_item_with_action(builder.item_id("representation", &representation.id), Label::data(representation.name.clone()), representation.mesh_url.clone(), block3d_action("setSelection", None))
-            }
+        .map(|representation| UiTreeItemNode {
+            icon_id: Some("box".into()),
+            ..tree_item_with_action(builder.item_id("representation", &representation.id), Label::data(representation.name.clone()), representation.mesh_url.clone(), block3d_action("setSelection", None))
         })
         .collect();
     let vortex_items: Vec<UiTreeItemNode> = definition
         .vortices
         .iter()
-        .map(|vortex| {
-            UiTreeItemNode {
-                icon_id: Some("circle-dot".into()),
-                ..tree_item_with_action(builder.item_id("vortex", &vortex.id), Label::data(vortex.vortex_kind.clone()), None, block3d_action("setSelection", None))
-            }
-        })
+        .map(|vortex| UiTreeItemNode { icon_id: Some("circle-dot".into()), ..tree_item_with_action(builder.item_id("vortex", &vortex.id), Label::data(vortex.vortex_kind.clone()), None, block3d_action("setSelection", None)) })
         .collect();
     builder
         .section_or_placeholder("block3d-play-document.representations", Some(labels.representations.into()), true, representation_items, labels.no_representations)
@@ -134,8 +131,7 @@ fn build_inspection_tree(definition: &Block3dDefinition, active_representation_i
     let representation_select = UiNode::Select(UiSelectNode {
         id: "block3d-play-inspector.representation".into(),
         value: active_representation_id.unwrap_or_default().into(),
-        items: definition.representations.iter().map(|representation| UiSelectItem { value: representation.id.clone(), label: Label::data(representation.name.clone()),
-        }).collect(),
+        items: definition.representations.iter().map(|representation| UiSelectItem { value: representation.id.clone(), label: Label::data(representation.name.clone()) }).collect(),
         placeholder: None,
         on_change: block3d_action("setActiveRepresentation", None),
         presence: UiPresence::default(),
@@ -149,7 +145,14 @@ fn build_inspection_tree(definition: &Block3dDefinition, active_representation_i
         fields: vec![
             text_field("block3d-play-inspector.name", labels.name, &definition.object_kind.name, "name"),
             text_field("block3d-play-inspector.label", labels.label, &definition.object_kind.label, "label"),
-            UiNode::Field(UiFieldNode { presence: UiPresence::default(), id: "block3d-play-inspector.representation-field".into(), label: labels.representation.into(), child: Box::new(representation_select), description: None, required: None, error: None,
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
+                id: "block3d-play-inspector.representation-field".into(),
+                label: labels.representation.into(),
+                child: Box::new(representation_select),
+                description: None,
+                required: None,
+                error: None,
                 menu: None,
             }),
             ui_inspector_readonly_field("block3d-play-inspector.vortex-count", labels.vortices, definition.vortices.len().to_string()),
@@ -219,12 +222,7 @@ impl DocumentApp for Block3dPlayApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &Block3dCommand,
-        doc: &DocumentView<'_, Block3dDefinition>,
-        _cfg: &ConfigView<'_, Block3dConfig>,
-    ) -> Emit<Block3dOperation, Block3dConfigOperation> {
+    fn handle(&self, command: &Block3dCommand, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Emit<Block3dOperation, Block3dConfigOperation> {
         match command {
             Block3dCommand::PatchObjectKind { field, value } => {
                 let mut object_kind = doc.projection.object_kind.clone();
@@ -309,10 +307,7 @@ impl DocumentApp for Block3dPlayApp {
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = block_3d_engine::puzzle3d_catalog_fragment(doc.projection, &[]);
-        Ok(Media {
-            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-            payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() },
-        })
+        Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
 //#endregion 🔖️Block3dPlayApp
@@ -368,8 +363,18 @@ pub fn create_block3d_app() -> App {
             .view_action("setActiveRepresentation", LocalizedLabel::native("Set Active Representation", "Aktive Darstellung festlegen"))
             .io(block_3d_engine::block3d_io()),
     )
-    .example(BLOCK3D_EXAMPLE_CAPSULE, LocalizedLabel::native("Nakagin Capsule", "Nakagin Capsule"), serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "building")
-    .example(BLOCK3D_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links"), serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
+    .example(
+        BLOCK3D_EXAMPLE_CAPSULE,
+        LocalizedLabel::native("Nakagin Capsule", "Nakagin Capsule"),
+        serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
+        "building",
+    )
+    .example(
+        BLOCK3D_EXAMPLE_FOREST_LEFT,
+        LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links"),
+        serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(),
+        "list-tree",
+    )
     .workflow("block3d", "Block 3D", "model")
 }
 //#endregion 🔖️Manifest

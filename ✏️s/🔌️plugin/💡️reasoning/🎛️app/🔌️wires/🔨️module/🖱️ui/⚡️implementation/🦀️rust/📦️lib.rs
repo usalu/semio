@@ -5,19 +5,17 @@
 //! `RefCell`); every action dispatches through the single typed
 //! `reasoning_wires_protocol::WiresCommand` channel via `DocumentApp::handle`.
 
+use dsl::{from_dsl_value, to_dsl_value, DslValue};
 use reasoning_wires::MindmapWiresDocument;
 use reasoning_wires_engine::{empty_mindmap_wires_document, find_board_node, metabolism_wires_example_document, DefaultWiresExtension, WiresConfig};
 use reasoning_wires_op::{MindmapWiresOperation, WiresConfigOperation};
 use reasoning_wires_protocol::WiresCommand;
 use semio_framework_plugin::{
-    app_labels, build_canvas_2d_scene, create_default_layout,
-    tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, Emit, ActionDescriptor, App,
-    AppLabels, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Label, Locale, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability,
-    PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, Terminology, UiNode, UiTreeItemNode,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    app_labels, build_canvas_2d_scene, create_default_layout, tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView,
+    Emit, Label, Locale, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::{json, Value};
-use dsl::{from_dsl_value, to_dsl_value, DslValue};
 use std::collections::BTreeMap;
 
 //#region 🔖️Constants
@@ -47,7 +45,11 @@ fn is_de_locale(cfg: &WiresConfig) -> bool {
 
 /// 🗣️ `WiresConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
 fn wires_locale(cfg: &WiresConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
@@ -59,11 +61,7 @@ fn resolve_labels<L: AppLabels>(cfg: &WiresConfig) -> &'static L {
 
 //#region 🔖️DocumentHelpers
 fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: WIRES_PLAY_CONTROLLER_ID.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: WIRES_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn dsl_to_json(value: &DslValue) -> Value {
@@ -84,31 +82,19 @@ fn fixture_camera(fixture: &DslValue) -> (f64, f64, f64) {
 }
 
 fn fixture_nodes(fixture: &DslValue) -> &[DslValue] {
-    fixture
-        .get("nodes")
-        .and_then(|value| value.as_array())
-        .unwrap_or(&[])
+    fixture.get("nodes").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
 fn fixture_edges(fixture: &DslValue) -> &[DslValue] {
-    fixture
-        .get("edges")
-        .and_then(|value| value.as_array())
-        .unwrap_or(&[])
+    fixture.get("edges").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
 fn wires_identities(wires: &DslValue) -> &[DslValue] {
-    wires
-        .get("identities")
-        .and_then(|value| value.as_array())
-        .unwrap_or(&[])
+    wires.get("identities").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
 fn wires_relationships(wires: &DslValue) -> &[DslValue] {
-    wires
-        .get("relationships")
-        .and_then(|value| value.as_array())
-        .unwrap_or(&[])
+    wires.get("relationships").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
 /// 🔢️ `identityId`/`sourceIdentityId`/`targetIdentityId` read as a whole `u64` regardless of whether
@@ -123,11 +109,7 @@ fn dsl_id(value: Option<&DslValue>) -> Option<u64> {
 }
 
 fn identity_label(wires: &DslValue, identity_id: u64) -> Option<String> {
-    wires_identities(wires)
-        .iter()
-        .find(|identity| dsl_id(identity.get("identityId")) == Some(identity_id))
-        .and_then(|identity| identity.get("label").and_then(|value| value.as_str()))
-        .map(str::to_string)
+    wires_identities(wires).iter().find(|identity| dsl_id(identity.get("identityId")) == Some(identity_id)).and_then(|identity| identity.get("label").and_then(|value| value.as_str())).map(str::to_string)
 }
 
 fn relationship_kind_display_name(kind: &str, labels: &WiresLabels) -> String {
@@ -141,18 +123,13 @@ fn relationship_kind_display_name(kind: &str, labels: &WiresLabels) -> String {
 }
 
 fn wires_relationship_document_label(wires: &DslValue, edge_id: &str, labels: &WiresLabels) -> Option<String> {
-    let relationship = wires_relationships(wires).iter().find(|row| {
-        row.get("edgeId").and_then(|value| value.as_str()) == Some(edge_id)
-    })?;
+    let relationship = wires_relationships(wires).iter().find(|row| row.get("edgeId").and_then(|value| value.as_str()) == Some(edge_id))?;
     let kind = relationship.get("kind")?.as_str()?;
     let source_id = dsl_id(relationship.get("sourceIdentityId"))?;
     let target_id = dsl_id(relationship.get("targetIdentityId"))?;
     let source = identity_label(wires, source_id)?;
     let target = identity_label(wires, target_id)?;
-    Some(format!(
-        "{}: {source} → {target}",
-        relationship_kind_display_name(kind, labels)
-    ))
+    Some(format!("{}: {source} → {target}", relationship_kind_display_name(kind, labels)))
 }
 
 fn wires_identity_kind_name(wires: &DslValue, identity_kind_id: &str) -> Option<String> {
@@ -162,16 +139,7 @@ fn wires_identity_kind_name(wires: &DslValue, identity_kind_id: &str) -> Option<
         .and_then(|value| value.as_array())
         .into_iter()
         .flatten()
-        .chain(
-            wires
-                .get("board")
-                .and_then(|value| value.get("meta"))
-                .and_then(|value| value.get("kindCatalogs"))
-                .and_then(|value| value.get("identityKinds"))
-                .and_then(|value| value.as_array())
-                .into_iter()
-                .flatten(),
-        )
+        .chain(wires.get("board").and_then(|value| value.get("meta")).and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get("identityKinds")).and_then(|value| value.as_array()).into_iter().flatten())
         .find(|row| row.get("id").and_then(|value| value.as_str()) == Some(identity_kind_id))
         .and_then(|row| row.get("name").and_then(|value| value.as_str()))
         .map(str::to_string)
@@ -183,15 +151,7 @@ fn wires_kind_catalog_entries(wires: &DslValue, key: &str) -> Vec<DslValue> {
         .and_then(|value| value.get(key))
         .and_then(|value| value.as_array())
         .map(|values| values.to_vec())
-        .or_else(|| {
-            wires
-                .get("board")
-                .and_then(|value| value.get("meta"))
-                .and_then(|value| value.get("kindCatalogs"))
-                .and_then(|value| value.get(key))
-                .and_then(|value| value.as_array())
-                .map(|values| values.to_vec())
-        })
+        .or_else(|| wires.get("board").and_then(|value| value.get("meta")).and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get(key)).and_then(|value| value.as_array()).map(|values| values.to_vec()))
         .unwrap_or_default()
 }
 
@@ -200,16 +160,10 @@ fn document_tree_selected_ids(board: &DslValue, selected: &[String]) -> Vec<Stri
     selected
         .iter()
         .filter_map(|id| {
-            if fixture_nodes(board)
-                .iter()
-                .any(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
-            {
+            if fixture_nodes(board).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
                 return Some(namespace.item_id("identity", id));
             }
-            if fixture_edges(board)
-                .iter()
-                .any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
-            {
+            if fixture_edges(board).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
                 return Some(namespace.item_id("relationship", id));
             }
             None
@@ -254,10 +208,7 @@ fn force_layout_board(board: &mut DslValue) {
 
 /// 📐️ A JSON node's position, defaulting missing coordinates to the origin.
 fn node_position(node: &DslValue) -> (f64, f64) {
-    (
-        node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0),
-        node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0),
-    )
+    (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0))
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -289,15 +240,8 @@ fn render_document_panel(document: &MindmapWiresDocument, selected: &[String], l
             let node_id = identity.get("nodeId")?.as_str()?;
             let label = identity.get("label")?.as_str()?;
             let identity_kind = identity.get("identityKind").and_then(|value| value.as_str());
-            let description = identity_kind
-                .and_then(|kind| wires_identity_kind_name(wires, kind))
-                .filter(|kind_name| kind_name != label);
-            Some(tree_item_with_action(
-                format!("{WIRES_DOCUMENT_IDENTITY_PREFIX}{node_id}"),
-                Label::data(label),
-                description,
-                wires_action("setSelection", Some(json!({ "ids": [node_id] }))),
-            ))
+            let description = identity_kind.and_then(|kind| wires_identity_kind_name(wires, kind)).filter(|kind_name| kind_name != label);
+            Some(tree_item_with_action(format!("{WIRES_DOCUMENT_IDENTITY_PREFIX}{node_id}"), Label::data(label), description, wires_action("setSelection", Some(json!({ "ids": [node_id] })))))
         })
         .collect();
     let relationship_items: Vec<UiTreeItemNode> = fixture_edges(board)
@@ -321,13 +265,7 @@ fn render_document_panel(document: &MindmapWiresDocument, selected: &[String], l
 }
 
 fn catalog_kind_label(entry: &DslValue) -> String {
-    entry
-        .get("name")
-        .and_then(|value| value.as_str())
-        .filter(|value| !value.is_empty())
-        .or_else(|| entry.get("id").and_then(|value| value.as_str()))
-        .unwrap_or("kind")
-        .into()
+    entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
 fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> Vec<UiTreeItemNode> {
@@ -341,12 +279,7 @@ fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslVa
                 "relationship-kinds" => wires_action("addRelationship", Some(json!({ "kind": kind_id }))),
                 _ => wires_action("addNode", Some(json!({ "kind": kind_id }))),
             };
-            tree_item_with_action(
-                namespace.item_id(kind, &format!("{index}.{kind_id}")),
-                Label::data(catalog_kind_label(entry)),
-                Some(kind_id.into()),
-                action,
-            )
+            tree_item_with_action(namespace.item_id(kind, &format!("{index}.{kind_id}")), Label::data(catalog_kind_label(entry)), Some(kind_id.into()), action)
         })
         .collect()
 }
@@ -364,75 +297,24 @@ fn render_catalogue_panel(wires: &DslValue, labels: &WiresLabels) -> UiNode {
 }
 
 fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String]) -> UiNode {
-    let selected_nodes: Vec<&DslValue> = selected
-        .iter()
-        .filter_map(|id| {
-            fixture_nodes(&document.board_fixture)
-                .iter()
-                .find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
-        })
-        .collect();
+    let selected_nodes: Vec<&DslValue> = selected.iter().filter_map(|id| fixture_nodes(&document.board_fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).collect();
     if selected_nodes.is_empty() {
         let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
         return ui_stack_vertical(vec![
             ui_text(Label::data(format!("Schema: {WIRES_FIXTURE_SCHEMA}"))),
-            ui_text(Label::data(format!(
-                "Identities: {}",
-                extension.as_ref().map(|ext| ext.mindmap.topics.len()).unwrap_or(0)
-            ))),
-            ui_text(Label::data(format!(
-                "Relationships: {}",
-                extension.as_ref().map(|ext| ext.relationships.len()).unwrap_or(0)
-            ))),
+            ui_text(Label::data(format!("Identities: {}", extension.as_ref().map(|ext| ext.mindmap.topics.len()).unwrap_or(0)))),
+            ui_text(Label::data(format!("Relationships: {}", extension.as_ref().map(|ext| ext.relationships.len()).unwrap_or(0)))),
             ui_text(Label::data(format!("Board nodes: {}", fixture_nodes(&document.board_fixture).len()))),
         ]);
     }
     let node = selected_nodes[0];
-    let identity = wires_identities(&document.wires_fixture)
-        .iter()
-        .find(|identity| identity.get("nodeId").and_then(|value| value.as_str()) == node.get("id").and_then(|value| value.as_str()));
+    let identity = wires_identities(&document.wires_fixture).iter().find(|identity| identity.get("nodeId").and_then(|value| value.as_str()) == node.get("id").and_then(|value| value.as_str()));
     ui_stack_vertical(vec![
-        ui_inspector_readonly_field(
-            "wires-play-inspector.id",
-            Label::data("Id"),
-            node.get("id")
-                .and_then(|value| value.as_str())
-                .unwrap_or("")
-                .to_string(),
-        ),
-        ui_inspector_readonly_field(
-            "wires-play-inspector.identity-label",
-            Label::data("Identity"),
-            identity
-                .and_then(|row| row.get("label"))
-                .and_then(|value| value.as_str())
-                .unwrap_or("—")
-                .to_string(),
-        ),
-        ui_inspector_readonly_field(
-            "wires-play-inspector.node-kind",
-            Label::data("Identity Kind"),
-            node.get("nodeKind")
-                .and_then(|value| value.as_str())
-                .unwrap_or("—")
-                .to_string(),
-        ),
-        ui_inspector_readonly_field(
-            "wires-play-inspector.x",
-            Label::data("X"),
-            node.get("x")
-                .and_then(|value| value.as_f64())
-                .map(|value| value.to_string())
-                .unwrap_or_else(|| "—".into()),
-        ),
-        ui_inspector_readonly_field(
-            "wires-play-inspector.y",
-            Label::data("Y"),
-            node.get("y")
-                .and_then(|value| value.as_f64())
-                .map(|value| value.to_string())
-                .unwrap_or_else(|| "—".into()),
-        ),
+        ui_inspector_readonly_field("wires-play-inspector.id", Label::data("Id"), node.get("id").and_then(|value| value.as_str()).unwrap_or("").to_string()),
+        ui_inspector_readonly_field("wires-play-inspector.identity-label", Label::data("Identity"), identity.and_then(|row| row.get("label")).and_then(|value| value.as_str()).unwrap_or("—").to_string()),
+        ui_inspector_readonly_field("wires-play-inspector.node-kind", Label::data("Identity Kind"), node.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("—").to_string()),
+        ui_inspector_readonly_field("wires-play-inspector.x", Label::data("X"), node.get("x").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
+        ui_inspector_readonly_field("wires-play-inspector.y", Label::data("Y"), node.get("y").and_then(|value| value.as_f64()).map(|value| value.to_string()).unwrap_or_else(|| "—".into())),
     ])
 }
 //#endregion 🔖️Panels
@@ -443,16 +325,7 @@ fn render_canvas(board: &DslValue, wires: &DslValue) -> UiNode {
     let mut layers: Vec<Value> = fixture_nodes(board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(board).iter().map(dsl_to_json));
     layers.extend(relationship_edge_layers(wires, board));
-    build_canvas_2d_scene(
-        WIRES_PLAY_SURFACE_ID,
-        WIRES_PLAY_CONTROLLER_ID,
-        Canvas2dScene {
-            camera_x,
-            camera_y,
-            zoom,
-            layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()),
-        },
-    )
+    build_canvas_2d_scene(WIRES_PLAY_SURFACE_ID, WIRES_PLAY_CONTROLLER_ID, Canvas2dScene { camera_x, camera_y, zoom, layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()) })
 }
 //#endregion 🔖️Render
 
@@ -507,31 +380,19 @@ impl DocumentApp for ReasoningWiresPlayApp {
         let config = cfg.projection;
         match command {
             // 👁️ Config-only — mutate ephemeral selection/drag state, emit no document operations.
-            WiresCommand::SetSelection { ids } | WiresCommand::DocumentSelect { ids } => {
-                Emit::config(vec![WiresConfigOperation::SetSelection { ids: ids.clone() }])
-            }
+            WiresCommand::SetSelection { ids } | WiresCommand::DocumentSelect { ids } => Emit::config(vec![WiresConfigOperation::SetSelection { ids: ids.clone() }]),
             WiresCommand::CanvasPointerDown { id, x, y } => match id.as_deref().filter(|id| find_board_node(document, id).is_some()) {
-                Some(id) => Emit::config(vec![
-                    WiresConfigOperation::SetSelection { ids: vec![id.to_string()] },
-                    WiresConfigOperation::SetDrag { node_id: Some(id.to_string()), last_x: *x, last_y: *y },
-                ]),
+                Some(id) => Emit::config(vec![WiresConfigOperation::SetSelection { ids: vec![id.to_string()] }, WiresConfigOperation::SetDrag { node_id: Some(id.to_string()), last_x: *x, last_y: *y }]),
                 None => Emit::default(),
             },
             WiresCommand::CanvasPointerUp => Emit::config(vec![WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }]),
             WiresCommand::SetLocale { value } => Emit::config(vec![WiresConfigOperation::SetLocale { value: value.clone() }]),
             // ✏️ Operations — dispatched as VCS operations with a true inverse.
             WiresCommand::SetActiveExample { example_id } => {
-                let next = if example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
-                    metabolism_wires_example_document()
-                } else {
-                    empty_mindmap_wires_document()
-                };
+                let next = if example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID { metabolism_wires_example_document() } else { empty_mindmap_wires_document() };
                 Emit {
                     document_operations: vec![MindmapWiresOperation::ReplaceDocument { wires_fixture: next.wires_fixture, board_fixture: next.board_fixture }],
-                    config_operations: vec![
-                        WiresConfigOperation::SetSelection { ids: Vec::new() },
-                        WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 },
-                    ],
+                    config_operations: vec![WiresConfigOperation::SetSelection { ids: Vec::new() }, WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }],
                     ..Default::default()
                 }
             }
@@ -549,11 +410,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     "handles": []
                 }))
                 .expect("node serializes");
-                Emit {
-                    document_operations: vec![MindmapWiresOperation::AddNode { node }],
-                    config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![id] }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![MindmapWiresOperation::AddNode { node }], config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![id] }], ..Default::default() }
             }
             WiresCommand::AddRelationship { kind } => {
                 let kind = if kind.is_empty() { "owns" } else { kind.as_str() };
@@ -572,21 +429,14 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     "targetIdentityId": 2
                 }))
                 .expect("relationship serializes");
-                Emit {
-                    document_operations: vec![MindmapWiresOperation::AddRelationship { edge, relationship }],
-                    config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![edge_id] }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![MindmapWiresOperation::AddRelationship { edge, relationship }], config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![edge_id] }], ..Default::default() }
             }
             WiresCommand::DeleteSelection => {
                 let mut operations = Vec::new();
                 for id in &config.selected_ids {
                     if find_board_node(document, id).is_some() {
                         operations.push(MindmapWiresOperation::RemoveNode { node_id: id.clone() });
-                    } else if fixture_edges(&document.board_fixture)
-                        .iter()
-                        .any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
-                    {
+                    } else if fixture_edges(&document.board_fixture).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
                         operations.push(MindmapWiresOperation::RemoveEdge { edge_id: id.clone() });
                     }
                 }
@@ -693,12 +543,7 @@ pub fn create_wires_app() -> App {
             // user-visible settings, they're ephemeral view state) reused here rather than duplicated.
             .config(ReasoningWiresPlayApp::default().config_spec()),
     )
-    .example(
-        WIRES_PLAY_EXAMPLE_METABOLISM_ID,
-        LocalizedLabel::native("Metabolism", "Stoffwechsel"),
-        serde_json::to_string(&metabolism_wires_example_document()).unwrap(),
-        "network",
-    )
+    .example(WIRES_PLAY_EXAMPLE_METABOLISM_ID, LocalizedLabel::native("Metabolism", "Stoffwechsel"), serde_json::to_string(&metabolism_wires_example_document()).unwrap(), "network")
     .workflow("reasoning-wires", "Mindmap Wires", "graph")
 }
 //#endregion 🔖️Manifest
@@ -816,13 +661,9 @@ mod tests {
     #[test]
     fn force_layout_action_repositions_metabolism_nodes() {
         let mut app = metabolism_app();
-        let before: Vec<(f64, f64)> = fixture_nodes(&app.projection().expect("projection").board_fixture)
-            .iter()
-            .map(node_position)
-            .collect();
+        let before: Vec<(f64, f64)> = fixture_nodes(&app.projection().expect("projection").board_fixture).iter().map(node_position).collect();
         app.dispatch_typed(WiresCommand::ForceLayout, &testkit::meta("local")).expect("force layout");
-        let after: Vec<(f64, f64)> =
-            fixture_nodes(&app.projection().expect("projection").board_fixture).iter().map(node_position).collect();
+        let after: Vec<(f64, f64)> = fixture_nodes(&app.projection().expect("projection").board_fixture).iter().map(node_position).collect();
         assert_eq!(before.len(), after.len());
         assert_ne!(before, after, "force layout should move at least one node");
     }
@@ -837,13 +678,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            WiresCommand::AddNode { kind: "identity".into() },
-            |app| fixture_nodes(&app.projection().expect("projection").board_fixture).len(),
-            0,
-            1,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, WiresCommand::AddNode { kind: "identity".into() }, |app| fixture_nodes(&app.projection().expect("projection").board_fixture).len(), 0, 1);
     }
 
     /// 🧪️ The definitional merge proof: A adds a node while B renames another node — disjoint edits
@@ -854,10 +689,7 @@ mod tests {
         let mut instance_b = new_app();
         // Seed both from an identical base projection carrying node-1/node-2 (as initial state, not
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
-        let seed_node = |id: &str| {
-            to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] }))
-                .expect("seed node")
-        };
+        let seed_node = |id: &str| to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
         let mut base = empty_mindmap_wires_document();
         base = store::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-1") });
         base = store::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-2") });
@@ -891,10 +723,7 @@ mod tests {
 
     #[test]
     fn ingest_operations_is_idempotent() {
-        testkit::assert_ingest_idempotent::<ReasoningWiresPlayApp, usize>(
-            WiresCommand::AddNode { kind: "identity".into() },
-            |app| fixture_nodes(&app.projection().expect("projection").board_fixture).len(),
-        );
+        testkit::assert_ingest_idempotent::<ReasoningWiresPlayApp, usize>(WiresCommand::AddNode { kind: "identity".into() }, |app| fixture_nodes(&app.projection().expect("projection").board_fixture).len());
     }
 }
 //#endregion 🧪️Tests

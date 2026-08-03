@@ -197,13 +197,7 @@ pub enum ReplicationOutcome {
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
-pub fn replicate_document(
-    leader: &dyn db_storage::DbStorage,
-    follower: &dyn db_storage::DbStorage,
-    document: db_core::DocumentId,
-    policy: db_wal::GroupCommitPolicy,
-    now_ms: u64,
-) -> Result<ReplicationOutcome, db_core::DbError> {
+pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: db_core::DocumentId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, db_core::DbError> {
     let follower_state = db_sync::replay_sync_state(follower.wal(), document.clone())?;
     let leader_state = db_sync::replay_sync_state(leader.wal(), document.clone())?;
     if follower_state.frontier.head_seq >= leader_state.frontier.head_seq {
@@ -313,11 +307,9 @@ pub struct ReplicaStatus {
 /// `BoundedStaleness`'s floor, or an empty replica set).
 pub fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Result<NodeId, db_core::DbError> {
     match intent {
-        ReadIntent::Canonical | ReadIntent::Preview => replicas
-            .iter()
-            .find(|status| status.is_leader)
-            .map(|status| status.node.clone())
-            .ok_or_else(|| db_core::DbError::Unavailable("no leader available to serve a canonical/preview read".to_string())),
+        ReadIntent::Canonical | ReadIntent::Preview => {
+            replicas.iter().find(|status| status.is_leader).map(|status| status.node.clone()).ok_or_else(|| db_core::DbError::Unavailable("no leader available to serve a canonical/preview read".to_string()))
+        }
         ReadIntent::BoundedStaleness { at_least } => {
             // 🎯️ A document-mismatched frontier can never dominate `at_least` — treated as
             // non-qualifying (`unwrap_or(false)`) rather than propagating the error, since a
@@ -330,11 +322,7 @@ pub fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Result<Nod
             candidates.sort_by(|a, b| a.is_leader.cmp(&b.is_leader).then_with(|| a.node.cmp(&b.node)));
             candidates.first().map(|status| status.node.clone()).ok_or_else(|| db_core::DbError::Unavailable("no replica meets the requested staleness bound".to_string()))
         }
-        ReadIntent::AnyReplica => replicas
-            .iter()
-            .max_by_key(|status| status.frontier.head_seq)
-            .map(|status| status.node.clone())
-            .ok_or_else(|| db_core::DbError::Unavailable("no replica available".to_string())),
+        ReadIntent::AnyReplica => replicas.iter().max_by_key(|status| status.frontier.head_seq).map(|status| status.node.clone()).ok_or_else(|| db_core::DbError::Unavailable("no replica available".to_string())),
     }
 }
 //#endregion 🔖️ReadRouting
@@ -483,10 +471,7 @@ mod tests {
         assert!(owner.validate(db_core::EpochFence::INITIAL.next()).is_err());
 
         owner.renew(&storage, 1_000, 500).unwrap();
-        assert_eq!(
-            ownership_status(&storage, "shard-0", 500).unwrap(),
-            OwnershipStatus::Held { holder: NodeId::from("node-a"), fence: db_core::EpochFence::INITIAL, expires_at_ms: 1_500 }
-        );
+        assert_eq!(ownership_status(&storage, "shard-0", 500).unwrap(), OwnershipStatus::Held { holder: NodeId::from("node-a"), fence: db_core::EpochFence::INITIAL, expires_at_ms: 1_500 });
     }
 
     #[test]
@@ -628,11 +613,7 @@ mod tests {
 
     //#region 🔖️ReadRouting
     fn replica(node: &str, head_seq: u64, is_leader: bool) -> ReplicaStatus {
-        ReplicaStatus {
-            node: NodeId::from(node),
-            frontier: db_core::Frontier { document: "doc-1".into(), head_seq, commit_seq: head_seq, chain_hash: [0u8; 32], epoch: 0 },
-            is_leader,
-        }
+        ReplicaStatus { node: NodeId::from(node), frontier: db_core::Frontier { document: "doc-1".into(), head_seq, commit_seq: head_seq, chain_hash: [0u8; 32], epoch: 0 }, is_leader }
     }
 
     #[test]

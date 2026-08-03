@@ -80,16 +80,7 @@ fn media_class_from_ordinal(ordinal: u32) -> Result<MediaClass, String> {
 }
 
 fn media_class_variants() -> Vec<(String, u32)> {
-    vec![
-        ("twoD".to_string(), 0),
-        ("threeD".to_string(), 1),
-        ("text".to_string(), 2),
-        ("data".to_string(), 3),
-        ("graph".to_string(), 4),
-        ("kit".to_string(), 5),
-        ("computation".to_string(), 6),
-        ("presentation".to_string(), 7),
-    ]
+    vec![("twoD".to_string(), 0), ("threeD".to_string(), 1), ("text".to_string(), 2), ("data".to_string(), 3), ("graph".to_string(), 4), ("kit".to_string(), 5), ("computation".to_string(), 6), ("presentation".to_string(), 7)]
 }
 
 fn media_form_ordinal(form: MediaForm) -> u32 {
@@ -607,13 +598,7 @@ pub fn plan_workflow(graph: &Workflow, dirty_node_ids: &HashSet<String>) -> Vec<
         }
         for edge in edges_by_source.get(node_id.as_str()).into_iter().flatten() {
             let Some(target_node) = node_by_id.get(edge.target_node_id.as_str()) else { continue };
-            deliveries.push(WorkflowDelivery {
-                edge_id: edge.id.clone(),
-                producer_node_id: node.id.clone(),
-                producer_port_id: edge.source_port_id.clone(),
-                consumer_node_id: target_node.id.clone(),
-                consumer_port_id: edge.target_port_id.clone(),
-            });
+            deliveries.push(WorkflowDelivery { edge_id: edge.id.clone(), producer_node_id: node.id.clone(), producer_port_id: edge.source_port_id.clone(), consumer_node_id: target_node.id.clone(), consumer_port_id: edge.target_port_id.clone() });
             dirty.insert(target_node.id.clone());
         }
     }
@@ -655,7 +640,21 @@ mod tests {
     }
 
     fn workflow_node(id: &str, outputs: Vec<WorkflowMediaPort>, inputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
-        WorkflowNode { id: id.into(), plugin_id: "plugin".into(), app_id: "app".into(), label: id.into(), yields: String::new(), document_ref: format!("documents/{id}"), config_ref: format!("config/{id}"), x: 0.0, y: 0.0, width: 220.0, height: 100.0, inputs, outputs }
+        WorkflowNode {
+            id: id.into(),
+            plugin_id: "plugin".into(),
+            app_id: "app".into(),
+            label: id.into(),
+            yields: String::new(),
+            document_ref: format!("documents/{id}"),
+            config_ref: format!("config/{id}"),
+            x: 0.0,
+            y: 0.0,
+            width: 220.0,
+            height: 100.0,
+            inputs,
+            outputs,
+        }
     }
 
     fn workflow_edge(id: &str, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> WorkflowEdge {
@@ -676,7 +675,12 @@ mod tests {
 
     #[test]
     fn media_contract_dsl_round_trips() {
-        let contract = MediaContract { kind_id: "puzzle.2d.fixture".into(), media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, wire: MediaWireFormat::Binary { format: OsMediaFormat::Svg }, conversion: Some((MediaForm::Brep, MediaForm::Mesh)) };
+        let contract = MediaContract {
+            kind_id: "puzzle.2d.fixture".into(),
+            media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+            wire: MediaWireFormat::Binary { format: OsMediaFormat::Svg },
+            conversion: Some((MediaForm::Brep, MediaForm::Mesh)),
+        };
         let record = media_contract_to_record(&contract);
         let round_tripped = media_contract_from_record(&record).expect("decode");
         assert_eq!(round_tripped, contract);
@@ -708,8 +712,16 @@ mod tests {
 
     #[test]
     fn validate_workflow_flags_cycle() {
-        let node_a = workflow_node("a", vec![WorkflowMediaPort { id: "a:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, None) }], vec![WorkflowMediaPort { id: "a:in:in".into(), spec: media_port_spec("in", MediaPortDirection::In, None) }]);
-        let node_b = workflow_node("b", vec![WorkflowMediaPort { id: "b:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, None) }], vec![WorkflowMediaPort { id: "b:in:in".into(), spec: media_port_spec("in", MediaPortDirection::In, None) }]);
+        let node_a = workflow_node(
+            "a",
+            vec![WorkflowMediaPort { id: "a:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, None) }],
+            vec![WorkflowMediaPort { id: "a:in:in".into(), spec: media_port_spec("in", MediaPortDirection::In, None) }],
+        );
+        let node_b = workflow_node(
+            "b",
+            vec![WorkflowMediaPort { id: "b:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, None) }],
+            vec![WorkflowMediaPort { id: "b:in:in".into(), spec: media_port_spec("in", MediaPortDirection::In, None) }],
+        );
         let graph = Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: vec![node_a, node_b], edges: vec![workflow_edge("e1", "a", "out", "b", "in"), workflow_edge("e2", "b", "out", "a", "in")] };
         let validation = validate_workflow(&graph);
         assert!(!validation.ok);
@@ -729,7 +741,11 @@ mod tests {
     #[test]
     fn plan_workflow_propagates_dirtiness_across_multi_hop_chain() {
         let node_a = workflow_node("a", vec![WorkflowMediaPort { id: "a:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, None) }], vec![]);
-        let node_b = workflow_node("b", vec![WorkflowMediaPort { id: "b:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, None) }], vec![WorkflowMediaPort { id: "b:in:in".into(), spec: media_port_spec("in", MediaPortDirection::In, None) }]);
+        let node_b = workflow_node(
+            "b",
+            vec![WorkflowMediaPort { id: "b:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, None) }],
+            vec![WorkflowMediaPort { id: "b:in:in".into(), spec: media_port_spec("in", MediaPortDirection::In, None) }],
+        );
         let node_c = workflow_node("c", vec![], vec![WorkflowMediaPort { id: "c:in:in".into(), spec: media_port_spec("in", MediaPortDirection::In, None) }]);
         let graph = Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: vec![node_a, node_b, node_c], edges: vec![workflow_edge("e1", "a", "out", "b", "in"), workflow_edge("e2", "b", "out", "c", "in")] };
 

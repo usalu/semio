@@ -46,20 +46,72 @@ pub struct CadReferencePatch {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum CadOperation {
-    AddObject { pane: CadPaneId, #[dsl(block)] object: CadObject },
-    RemoveObject { pane: CadPaneId, object_id: String },
-    PatchObject { pane: CadPaneId, object_id: String, #[dsl(block)] patch: CadObjectPatch },
-    TranslateObjects { object_ids: Vec<String>, dx: f64, dy: f64, dz: f64 },
-    RotateObjects { object_ids: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64 },
-    ScaleObjects { object_ids: Vec<String>, sx: f64, sy: f64, sz: f64 },
-    SetPaneObjects { pane: CadPaneId, objects: Vec<CadObject> },
-    AddNode { #[dsl(block)] node: CadNode },
-    RemoveNode { node_id: String },
-    RenameNode { node_id: String, label: String },
-    PatchReference { model_definition_id: String, reference_id: String, #[dsl(block)] patch: CadReferencePatch },
-    SetReferences { model_definition_id: String, references: Vec<CadReference> },
-    SetActiveModelDefinition { model_definition_id: String },
-    SetScene { #[dsl(block)] scene: Box<CadScene> },
+    AddObject {
+        pane: CadPaneId,
+        #[dsl(block)]
+        object: CadObject,
+    },
+    RemoveObject {
+        pane: CadPaneId,
+        object_id: String,
+    },
+    PatchObject {
+        pane: CadPaneId,
+        object_id: String,
+        #[dsl(block)]
+        patch: CadObjectPatch,
+    },
+    TranslateObjects {
+        object_ids: Vec<String>,
+        dx: f64,
+        dy: f64,
+        dz: f64,
+    },
+    RotateObjects {
+        object_ids: Vec<String>,
+        ax: f64,
+        ay: f64,
+        az: f64,
+        angle: f64,
+    },
+    ScaleObjects {
+        object_ids: Vec<String>,
+        sx: f64,
+        sy: f64,
+        sz: f64,
+    },
+    SetPaneObjects {
+        pane: CadPaneId,
+        objects: Vec<CadObject>,
+    },
+    AddNode {
+        #[dsl(block)]
+        node: CadNode,
+    },
+    RemoveNode {
+        node_id: String,
+    },
+    RenameNode {
+        node_id: String,
+        label: String,
+    },
+    PatchReference {
+        model_definition_id: String,
+        reference_id: String,
+        #[dsl(block)]
+        patch: CadReferencePatch,
+    },
+    SetReferences {
+        model_definition_id: String,
+        references: Vec<CadReference>,
+    },
+    SetActiveModelDefinition {
+        model_definition_id: String,
+    },
+    SetScene {
+        #[dsl(block)]
+        scene: Box<CadScene>,
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -282,7 +334,9 @@ impl Operation<CadScene> for CadOperation {
                 structure_classic_objects: pane_collection_diff_for_patch(*pane, CadPaneId::StructureClassic, object_id, patch),
                 ..Default::default()
             },
-            CadOperation::TranslateObjects { object_ids, dx, dy, dz } => transform_objects_diff(projection, object_ids, |object| CadObjectPatch { origin: Some([object.origin[0] + dx, object.origin[1] + dy, object.origin[2] + dz]), ..Default::default() }),
+            CadOperation::TranslateObjects { object_ids, dx, dy, dz } => {
+                transform_objects_diff(projection, object_ids, |object| CadObjectPatch { origin: Some([object.origin[0] + dx, object.origin[1] + dy, object.origin[2] + dz]), ..Default::default() })
+            }
             CadOperation::RotateObjects { object_ids, ax, ay, az, angle } => {
                 let delta = quat_from_axis_angle(*ax, *ay, *az, *angle);
                 transform_objects_diff(projection, object_ids, |object| {
@@ -327,9 +381,11 @@ impl Operation<CadScene> for CadOperation {
         match self {
             CadOperation::AddObject { pane, object } => vec![CadOperation::RemoveObject { pane: *pane, object_id: object.id.clone() }],
             CadOperation::RemoveObject { pane, object_id } => cad_pane_objects(projection, *pane).iter().find(|object| object.id == *object_id).map(|object| vec![CadOperation::AddObject { pane: *pane, object: object.clone() }]).unwrap_or_default(),
-            CadOperation::PatchObject { pane, object_id, patch } => {
-                cad_pane_objects(projection, *pane).iter().find(|object| object.id == *object_id).map(|before| vec![CadOperation::PatchObject { pane: *pane, object_id: object_id.clone(), patch: reverse_object_patch(before, patch) }]).unwrap_or_default()
-            }
+            CadOperation::PatchObject { pane, object_id, patch } => cad_pane_objects(projection, *pane)
+                .iter()
+                .find(|object| object.id == *object_id)
+                .map(|before| vec![CadOperation::PatchObject { pane: *pane, object_id: object_id.clone(), patch: reverse_object_patch(before, patch) }])
+                .unwrap_or_default(),
             CadOperation::TranslateObjects { object_ids, dx, dy, dz } => vec![CadOperation::TranslateObjects { object_ids: object_ids.clone(), dx: -dx, dy: -dy, dz: -dz }],
             CadOperation::RotateObjects { object_ids, ax, ay, az, angle } => vec![CadOperation::RotateObjects { object_ids: object_ids.clone(), ax: *ax, ay: *ay, az: *az, angle: -angle }],
             CadOperation::ScaleObjects { object_ids, sx, sy, sz } => {

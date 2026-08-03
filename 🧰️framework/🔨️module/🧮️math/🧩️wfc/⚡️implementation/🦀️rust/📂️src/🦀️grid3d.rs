@@ -3,7 +3,7 @@
 //! per-axis semantics — reused directly rather than duplicated). `NodeId(z * width * height + y * width + x)`.
 
 use crate::error::{ModelError, TopologyError};
-use crate::grid2d::{Boundary, resolve_coord};
+use crate::grid2d::{resolve_coord, Boundary};
 use crate::ids::{NodeId, PatternId, RegionId, RelationId};
 use crate::model::ModelBuilder;
 use crate::tiled::TiledModelBuilder;

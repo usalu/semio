@@ -5,19 +5,15 @@ use home::SHomeDocument;
 use home_engine::HomeConfig;
 use home_op::{HomeConfigOperation, SHomeOperation};
 use home_protocol::HomeCommand;
-use space_shared::{ensure_space_fixtures_registered, parse_demo_space_document};
 use semio_framework_os::{
-    create_ephemeral_os_space, create_os_space, delete_os_space, document_backbone_ref, encode_os_space_payload, export_os_space_pack, import_os_space_from_dsl,
-    list_os_space_catalog_entries, load_os_space_document,
-    seed_os_space_catalog_if_empty, MemoryBackbonePort, OsBackbonePort, OsDocument, OS_HOME_VFS_ROOT_ID,
-    OS_SPACE_BACKBONE_URI_PREFIX, VcsError,
+    create_ephemeral_os_space, create_os_space, delete_os_space, document_backbone_ref, encode_os_space_payload, export_os_space_pack, import_os_space_from_dsl, list_os_space_catalog_entries, load_os_space_document, seed_os_space_catalog_if_empty,
+    MemoryBackbonePort, OsBackbonePort, OsDocument, VcsError, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
 use semio_framework_plugin::{
-    app_labels, build_virtual_file_system_scene, create_tab_stack_layout,
-    App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit,
-    HostEffect, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, VirtualFileSystemScene,
+    app_labels, build_virtual_file_system_scene, create_tab_stack_layout, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, VirtualFileSystemScene,
 };
 use serde_json::{json, Value};
+use space_shared::{ensure_space_fixtures_registered, parse_demo_space_document};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 use store::LocalStorageBackbonePort;
@@ -37,7 +33,11 @@ const OS_BOOT_STUDIO_ID: &str = "default";
 /// is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag (e.g. "en-US"), lenient-parsed the
 /// same way `detectShellLocale` does on the TS side — see `shooting_ui`'s identical pair.
 fn home_locale(cfg: &HomeConfig) -> Locale {
-    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
+    if cfg.locale.starts_with("de") {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &HomeConfig) -> &'static L {
@@ -49,30 +49,20 @@ fn resolve_labels<L: AppLabels>(cfg: &HomeConfig) -> &'static L {
 static CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
     ensure_space_fixtures_registered();
     let port: Arc<dyn OsBackbonePort> = Arc::new(LocalStorageBackbonePort::new());
-    if list_os_space_catalog_entries(port.clone())
-        .map(|entries| entries.is_empty())
-        .unwrap_or(true)
-    {
+    if list_os_space_catalog_entries(port.clone()).map(|entries| entries.is_empty()).unwrap_or(true) {
         let mut demo = parse_demo_space_document();
         demo.id = OS_BOOT_STUDIO_ID.into();
-        demo.name = if demo.name.trim().is_empty() {
-            "Demo Studio".into()
-        } else {
-            demo.name
-        };
+        demo.name = if demo.name.trim().is_empty() { "Demo Studio".into() } else { demo.name };
         let _ = seed_os_space_catalog_if_empty(demo, port.clone());
     }
     port
 });
 
-static TEMP_CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> =
-    LazyLock::new(|| Arc::new(MemoryBackbonePort::new()));
+static TEMP_CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| Arc::new(MemoryBackbonePort::new()));
 
-static STUDIO_PORTS: LazyLock<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+static STUDIO_PORTS: LazyLock<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-static EPHEMERAL_STUDIOS: LazyLock<Mutex<HashMap<String, OsDocument>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+static EPHEMERAL_STUDIOS: LazyLock<Mutex<HashMap<String, OsDocument>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// 🌉️ `pub` (not `pub(crate)`): `app_space` (a sibling crate, `semio-s-app-space-space-ui`) resolves
 /// studios through the Home launcher's own catalog port — see `app_space`'s `openSpace`/
@@ -180,18 +170,11 @@ fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpaceCatalogEnt
 /// @emoji 🧭️ Builds the typed emit for a freshly-created studio: bump the catalog counter (operation) and
 /// navigate the shell to the new studio route (host effect).
 fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeOperation, HomeConfigOperation> {
-    Emit {
-        document_operations: vec![SHomeOperation::SetCatalogGeneration { value: catalog_generation + 1 }],
-        effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }],
-        ..Default::default()
-    }
+    Emit { document_operations: vec![SHomeOperation::SetCatalogGeneration { value: catalog_generation + 1 }], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn create_folder_studio(
-    name: &str,
-    folder_path: &str,
-) -> Result<semio_framework_os::OsSpaceCatalogEntry, VcsError> {
+fn create_folder_studio(name: &str, folder_path: &str) -> Result<semio_framework_os::OsSpaceCatalogEntry, VcsError> {
     let port = semio_framework_os::open_folder_space_backbone(folder_path)?;
     let entry = create_os_space(name, port.clone())?;
     register_studio_port(&entry.id, port);
@@ -211,11 +194,7 @@ fn bind_studio_file(space_id: &str, file_path: &str) -> Result<(), VcsError> {
     Ok(())
 }
 
-fn sync_os_space_document_helper(
-    document: &OsDocument,
-    backbone_uri: &str,
-    port: &Arc<dyn OsBackbonePort>,
-) -> Result<(), VcsError> {
+fn sync_os_space_document_helper(document: &OsDocument, backbone_uri: &str, port: &Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
     let mut synced = document.clone();
     synced.backbone = Some(document_backbone_ref(backbone_uri));
     port.write(backbone_uri, &encode_os_space_payload(&synced)?)
@@ -337,12 +316,7 @@ impl DocumentApp for HomeApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &HomeCommand,
-        doc: &DocumentView<'_, SHomeDocument>,
-        _cfg: &ConfigView<'_, HomeConfig>,
-    ) -> Emit<SHomeOperation, HomeConfigOperation> {
+    fn handle(&self, command: &HomeCommand, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Emit<SHomeOperation, HomeConfigOperation> {
         let generation = doc.projection.catalog_generation;
         let bump = |value: u64| Emit::operations(vec![SHomeOperation::SetCatalogGeneration { value }]);
         let port = catalog_port();
@@ -389,12 +363,7 @@ impl DocumentApp for HomeApp {
                         Emit::default()
                     }
                 }
-                None => Emit::effect(HostEffect::RequestFileOpen {
-                    accept: ".os".into(),
-                    read_as: None,
-                    import_action: "importSpace".into(),
-                    multiple: false,
-                }),
+                None => Emit::effect(HostEffect::RequestFileOpen { accept: ".os".into(), read_as: None, import_action: "importSpace".into(), multiple: false }),
             },
             HomeCommand::OpenSpace { space_id } => Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }),
             HomeCommand::NavigateVirtualFileSystemNode { node_id } => {
@@ -429,15 +398,13 @@ impl DocumentApp for HomeApp {
 //#region 🔖️HomeManifest
 pub fn create_home_app() -> App {
     let mut app = App::from_builder(
-        App::builder(S_HOME_APP_ID, LocalizedLabel::native("Home", "Startseite")).document(["semio", "s", "home"])
+        App::builder(S_HOME_APP_ID, LocalizedLabel::native("Home", "Startseite"))
+            .document(["semio", "s", "home"])
             .icon_id("home")
             .mode("explore", LocalizedLabel::native("Explore", "Erkunden"), "focus")
             .default_mode_id("explore")
             .window_kind(S_HOME_WINDOW, LocalizedLabel::native("Studios", "Studios"), S_HOME_BODY, SurfaceKind::Canvas2d, "home")
-            .default_layout(create_tab_stack_layout(
-                &[S_HOME_WINDOW.into()],
-                Some(&["Studios".into()]),
-            ))
+            .default_layout(create_tab_stack_layout(&[S_HOME_WINDOW.into()], Some(&["Studios".into()])))
             .operation("createStudio", LocalizedLabel::native("Create Studio", "Studio erstellen"))
             .shell_action("bindSpaceFile", LocalizedLabel::native("Bind Studio File", "Studio-Datei verknüpfen"))
             .operation("importSpace", LocalizedLabel::native("Import Studio", "Studio importieren"))
@@ -482,8 +449,7 @@ mod tests {
         let port = catalog_port();
         let before = list_os_space_catalog_entries(port.clone()).expect("list").len();
         let mut home = VcsDocumentApp::new(HomeApp);
-        home.dispatch_typed(HomeCommand::CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }, &testkit::meta("local"))
-            .expect("create");
+        home.dispatch_typed(HomeCommand::CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }, &testkit::meta("local")).expect("create");
         let after = list_os_space_catalog_entries(port).expect("list").len();
         assert!(after >= before);
     }
@@ -504,10 +470,7 @@ mod tests {
         let cfg = ConfigView { projection: &config };
         let emit = home.handle(&HomeCommand::CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg);
         assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
-        assert!(
-            !emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })),
-            "ephemeral create must not download"
-        );
+        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "ephemeral create must not download");
         let persistent = list_os_space_catalog_entries(catalog_port()).expect("list");
         assert!(!persistent.iter().any(|entry| entry.name == "Temp Studio"));
         let ephemeral_catalog = list_os_space_catalog_entries(temp_catalog_port()).expect("list");

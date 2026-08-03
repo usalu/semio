@@ -12,6 +12,7 @@ import {
   type ShellLocale,
   type TutorialDefinition,
 } from "../../🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts";
+import type { IconName } from "@semio-tech/ui-react";
 
 //#region 🏷️DemonstratorShared
 /** @emoji 🇩🇪️ The whole demonstrator is German-locked (every brand's `locks.locale` below) — the
@@ -89,7 +90,6 @@ export const ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION: IntroductionDefinition 
   ],
 };
 
-const DEMONSTRATOR_DIST_STAGING = "♻️mit-bestand/🧺️demonstrator/dist-staging";
 //#endregion 🏷️DemonstratorShared
 
 //#region 🎬️EntwerfenMitBestandTutorial
@@ -353,7 +353,6 @@ export const ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND: ShellBrand = {
   replayIntroductionOnLoad: true,
   tutorials: [ENTWERFEN_MIT_BESTAND_TUTORIAL],
   assetsDir: DEMONSTRATOR_ASSETS_DIR,
-  distDir: `${DEMONSTRATOR_DIST_STAGING}/aggregator`,
   introduction: {
     title: "Willkommen beim Aggregator",
     steps: [
@@ -511,7 +510,6 @@ export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
   ephemeral: true,
   replayIntroductionOnLoad: true,
   assetsDir: DEMONSTRATOR_ASSETS_DIR,
-  distDir: `${DEMONSTRATOR_DIST_STAGING}/generator`,
   introduction: {
     title: "Willkommen beim Generator",
     steps: [
@@ -561,7 +559,6 @@ export const ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND: ShellBrand = {
   ephemeral: true,
   replayIntroductionOnLoad: true,
   assetsDir: DEMONSTRATOR_ASSETS_DIR,
-  distDir: `${DEMONSTRATOR_DIST_STAGING}/koordinator`,
   introduction: {
     title: "Willkommen beim Koordinator",
     steps: [
@@ -615,7 +612,6 @@ export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
   ephemeral: true,
   replayIntroductionOnLoad: true,
   assetsDir: DEMONSTRATOR_ASSETS_DIR,
-  distDir: `${DEMONSTRATOR_DIST_STAGING}/aussuchen`,
   introduction: {
     title: "Willkommen bei Aussuchen",
     steps: [
@@ -659,7 +655,6 @@ export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
   ephemeral: true,
   replayIntroductionOnLoad: true,
   assetsDir: DEMONSTRATOR_ASSETS_DIR,
-  distDir: `${DEMONSTRATOR_DIST_STAGING}/bearbeiten`,
   introduction: {
     title: "Willkommen bei Bearbeiten",
     steps: [
@@ -709,7 +704,6 @@ export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
   ephemeral: true,
   replayIntroductionOnLoad: true,
   assetsDir: DEMONSTRATOR_ASSETS_DIR,
-  distDir: `${DEMONSTRATOR_DIST_STAGING}/verfolgen`,
   introduction: {
     title: "Willkommen bei Verfolgen",
     steps: [
@@ -747,5 +741,26 @@ export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
 };
 //#endregion 🏷️EntwerfenMitBestandVerfolgenBrand
 
-/** @emoji 🏷️ Legacy export name — the Aggregator brand after the demonstrator split. */
-export const ENTWERFEN_MIT_BESTAND_BRAND = ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND;
+//#region 🎪️DemonstratorPanes
+/** @emoji 🎪️ One live pane in the demonstrator's 3×2 grid — order here IS grid order (row-major: index
+ * 0-2 top row, 3-5 bottom row). `variant` is the same playground alias `bun ./📜️script.ts dev <variant>`
+ * already resolves (see `resolveFrameworkOsPlaygroundPlugin`), so `resolvePlaygroundBoot(variant)` finds
+ * the right plugin/app without a separate mapping table. */
+export type DemonstratorPaneSpec = {
+  readonly id: string;
+  readonly variant: string;
+  readonly brand: ShellBrand;
+  readonly label: string;
+  readonly tagline: string;
+  readonly icon: IconName;
+};
+
+export const DEMONSTRATOR_PANES: readonly DemonstratorPaneSpec[] = [
+  { id: "generator", variant: "generator", brand: ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND, label: "Generator", tagline: "Parametrische Abläufe", icon: "workflow" },
+  { id: "koordinator", variant: "koordinator", brand: ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND, label: "Koordinator", tagline: "Modelle koordinieren", icon: "cad-shape" },
+  { id: "aggregator", variant: "aggregator", brand: ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND, label: "Aggregator", tagline: "Bestand zusammensetzen", icon: "puzzle" },
+  { id: "aussuchen", variant: "aussuchen", brand: ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND, label: "Aussuchen", tagline: "Bestand sichten", icon: "library" },
+  { id: "bearbeiten", variant: "bearbeiten", brand: ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND, label: "Bearbeiten", tagline: "Bauteile anpassen", icon: "hammer" },
+  { id: "verfolgen", variant: "verfolgen", brand: ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND, label: "Verfolgen", tagline: "Herkunft verfolgen", icon: "gis2d" },
+];
+//#endregion 🎪️DemonstratorPanes

@@ -24,16 +24,7 @@ type Mat2 = (i32, i32, i32, i32);
 
 impl Transform2d {
     /// 🔄️ All 8 elements, identity first.
-    pub const ALL: [Transform2d; 8] = [
-        Transform2d::Identity,
-        Transform2d::Rot90,
-        Transform2d::Rot180,
-        Transform2d::Rot270,
-        Transform2d::FlipH,
-        Transform2d::FlipV,
-        Transform2d::FlipDiag,
-        Transform2d::FlipAntiDiag,
-    ];
+    pub const ALL: [Transform2d; 8] = [Transform2d::Identity, Transform2d::Rot90, Transform2d::Rot180, Transform2d::Rot270, Transform2d::FlipH, Transform2d::FlipV, Transform2d::FlipDiag, Transform2d::FlipAntiDiag];
 
     fn matrix(self) -> Mat2 {
         match self {

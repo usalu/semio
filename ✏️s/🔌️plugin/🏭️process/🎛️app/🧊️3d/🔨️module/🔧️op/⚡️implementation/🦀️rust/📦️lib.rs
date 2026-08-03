@@ -1,7 +1,7 @@
 //! ⚡️ Process 3d app — operation enum + laws (constitutional: op).
 
-use process_3d::{Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, Stock, StepOrigin, WorkshopMachine, WorkshopMachinePatch};
-use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Operation, OperationDiff, OpText};
+use process_3d::{Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, StepOrigin, Stock, WorkshopMachine, WorkshopMachinePatch};
+use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, OpText, Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Operations
@@ -26,7 +26,7 @@ pub enum Process3dOperation {
     /// exact prior document, mirroring `ShootingOperation::SetFixture`.
     SetDocument {
         document: Process3dDocument,
-    }
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -133,7 +133,7 @@ enum StepOriginPatch {
     Set {
         #[dsl(block)]
         origin: StepOrigin,
-    }
+    },
 }
 
 /// 🩹️ Local DSL-only mirror of `ProcessStepPatch` — the real type's `origin: Option<Option<StepOrigin>>`
@@ -191,7 +191,9 @@ enum Process3dOperationDsl {
         #[dsl(block)]
         item: ProcessStep,
     },
-    StepsRemove { id: String },
+    StepsRemove {
+        id: String,
+    },
     StepsMove {
         id: String,
         #[dsl(key = "to")]
@@ -207,7 +209,9 @@ enum Process3dOperationDsl {
         #[dsl(block)]
         item: WorkshopMachine,
     },
-    MachinesRemove { id: String },
+    MachinesRemove {
+        id: String,
+    },
     MachinesMove {
         id: String,
         #[dsl(key = "to")]
@@ -224,12 +228,14 @@ enum Process3dOperationDsl {
         stock: Stock,
     },
     #[dsl(key = "cursor")]
-    SetCursor { value: Option<usize> },
+    SetCursor {
+        value: Option<usize>,
+    },
     #[dsl(key = "document")]
     SetDocument {
         #[dsl(block)]
         document: Process3dDocument,
-    }
+    },
 }
 
 fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperationDsl {
@@ -237,9 +243,7 @@ fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperat
         Process3dOperation::Steps { collection: CollectionOperation::Add { id: _id, item, at } } => Process3dOperationDsl::StepsAdd { index: *at, item: item.clone() },
         Process3dOperation::Steps { collection: CollectionOperation::Remove { id } } => Process3dOperationDsl::StepsRemove { id: id.clone() },
         Process3dOperation::Steps { collection: CollectionOperation::Move { id, to } } => Process3dOperationDsl::StepsMove { id: id.clone(), to_index: *to },
-        Process3dOperation::Steps { collection: CollectionOperation::Patch { id, patch } } => {
-            Process3dOperationDsl::StepsPatch { id: id.clone(), patch: process_step_patch_to_dsl(patch) }
-        }
+        Process3dOperation::Steps { collection: CollectionOperation::Patch { id, patch } } => Process3dOperationDsl::StepsPatch { id: id.clone(), patch: process_step_patch_to_dsl(patch) },
         Process3dOperation::Machines { collection: CollectionOperation::Add { id: _id, item, at } } => Process3dOperationDsl::MachinesAdd { index: *at, item: item.clone() },
         Process3dOperation::Machines { collection: CollectionOperation::Remove { id } } => Process3dOperationDsl::MachinesRemove { id: id.clone() },
         Process3dOperation::Machines { collection: CollectionOperation::Move { id, to } } => Process3dOperationDsl::MachinesMove { id: id.clone(), to_index: *to },
@@ -377,11 +381,23 @@ mod tests {
     }
 
     fn drill_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }), measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() } }
+        ProcessStep {
+            id: id.into(),
+            label: "Drill".into(),
+            enabled: true,
+            origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }),
+            measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() },
+        }
     }
 
     fn attach_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Attach".into(), enabled: false, origin: None, measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.05 }, pose: Pose { position: [0.1, -0.2, 0.3], axis: [0.0, 1.0, 0.0], angle: 1.2 } } }
+        ProcessStep {
+            id: id.into(),
+            label: "Attach".into(),
+            enabled: false,
+            origin: None,
+            measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.05 }, pose: Pose { position: [0.1, -0.2, 0.3], axis: [0.0, 1.0, 0.0], angle: 1.2 } },
+        }
     }
 
     fn circular_saw_machine() -> WorkshopMachine {

@@ -4,7 +4,7 @@
 
 use crate::beam::{self, BeamConfig};
 use crate::bitset::PatternSet;
-use crate::constraint::{AdjacencyView, Constraint, ConstraintSet, build_adjacency_view};
+use crate::constraint::{build_adjacency_view, AdjacencyView, Constraint, ConstraintSet};
 use crate::error::SolveError;
 use crate::ids::{NodeId, PatternId};
 use crate::model::CompiledModel;
@@ -83,7 +83,11 @@ pub struct GraphSolver {
 
 impl GraphSolver {
     fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
-        if self.constraints.is_empty() { None } else { Some(ConstraintSet { constraints: &self.constraints, adjacency: &self.adjacency }) }
+        if self.constraints.is_empty() {
+            None
+        } else {
+            Some(ConstraintSet { constraints: &self.constraints, adjacency: &self.adjacency })
+        }
     }
 
     pub fn solve(&mut self, seed: u64) -> SolveOutcome {

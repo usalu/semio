@@ -82,7 +82,11 @@ fn luby(i: u64) -> u64 {
     while (1u64 << k) - 1 < i {
         k += 1;
     }
-    if i == (1u64 << k) - 1 { 1u64 << (k - 1) } else { luby(i - (1u64 << (k - 1)) + 1) }
+    if i == (1u64 << k) - 1 {
+        1u64 << (k - 1)
+    } else {
+        luby(i - (1u64 << (k - 1)) + 1)
+    }
 }
 
 /// 🌳️ A shareable, thread-safe flag a caller can set to stop a solve early.
@@ -471,12 +475,30 @@ pub(crate) fn solve_cancellable<T: Topology>(model: &CompiledModel, topo: &T, co
 /// 🌳️ Like [`solve`], but also applies every constraint's initial restriction and rejects (via an
 /// ordinary backtrack) any complete assignment a constraint does not accept.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn solve_with_constraints<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>, constraints: &ConstraintSet<'_>) -> SolveOutcome {
+pub(crate) fn solve_with_constraints<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    seed: u64,
+    init_domains: Option<&[PatternSet]>,
+    fixed: &[(NodeId, PatternId)],
+    cancel: Option<&CancelToken>,
+    constraints: &ConstraintSet<'_>,
+) -> SolveOutcome {
     solve_inner(model, topo, config, seed, init_domains, fixed, cancel, Some(constraints))
 }
 
 #[allow(clippy::too_many_arguments)]
-fn solve_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>, constraints: Option<&ConstraintSet<'_>>) -> SolveOutcome {
+fn solve_inner<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    seed: u64,
+    init_domains: Option<&[PatternSet]>,
+    fixed: &[(NodeId, PatternId)],
+    cancel: Option<&CancelToken>,
+    constraints: Option<&ConstraintSet<'_>>,
+) -> SolveOutcome {
     let start = std::time::Instant::now();
     let mut rng = Rng::from_seed(seed);
     let mut restarts = 0u64;
@@ -549,7 +571,16 @@ pub(crate) fn solve_all<T: Topology>(model: &CompiledModel, topo: &T, config: &S
 /// 🌳️ Like [`solve_all`], but also applies every constraint's initial restriction and excludes any
 /// complete assignment a constraint does not accept.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn solve_all_with_constraints<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize, constraints: &ConstraintSet<'_>) -> (Vec<Solution>, bool) {
+pub(crate) fn solve_all_with_constraints<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    config: &SearchConfig,
+    seed: u64,
+    init_domains: Option<&[PatternSet]>,
+    fixed: &[(NodeId, PatternId)],
+    limit: usize,
+    constraints: &ConstraintSet<'_>,
+) -> (Vec<Solution>, bool) {
     solve_all_inner(model, topo, config, seed, init_domains, fixed, limit, Some(constraints))
 }
 
@@ -580,10 +611,7 @@ fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &Search
     // remember its own trail-position range, which isn't worth the bookkeeping until a caller
     // actually needs per-solution replay for `solve_all`.
     let events = sink.into_events();
-    let solutions: Vec<Solution> = raw_solutions
-        .into_iter()
-        .map(|assignment| Solution { assignment, report: RunReport { metrics: init.metrics, model_fingerprint: fingerprint, seed, events: events.clone() } })
-        .collect();
+    let solutions: Vec<Solution> = raw_solutions.into_iter().map(|assignment| Solution { assignment, report: RunReport { metrics: init.metrics, model_fingerprint: fingerprint, seed, events: events.clone() } }).collect();
     (solutions, complete)
 }
 
@@ -921,13 +949,7 @@ mod tests {
     fn nogood_learning_survives_restarts_and_still_proves_unsat() {
         use crate::nogood::NogoodConfig;
         let (model, topo, _arcs) = k_graph(5, 4);
-        let config = SearchConfig {
-            mode: SearchMode::RestartOnly,
-            max_restarts: Some(20),
-            restart_schedule: RestartSchedule::Fixed(10),
-            nogood: NogoodConfig { enabled: true, ..Default::default() },
-            ..Default::default()
-        };
+        let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(20), restart_schedule: RestartSchedule::Fixed(10), nogood: NogoodConfig { enabled: true, ..Default::default() }, ..Default::default() };
         // RestartOnly never proves unsat by itself (it just gives up) — this exercises nogoods
         // persisting and being re-watched across every restart without ever panicking or
         // corrupting the search, over many independent seeds.

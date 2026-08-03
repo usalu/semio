@@ -27,10 +27,7 @@ mod tests {
     /// prevent reuse of a `#[cfg(test)]`-only fn across crates).
     fn representative_raster_document() -> RasterProjection {
         let mut assets = BTreeMap::new();
-        assets.insert(
-            "asset-1".into(),
-            RasterImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into() },
-        );
+        assets.insert("asset-1".into(), RasterImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into() });
         let mut params = BTreeMap::new();
         params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
         params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));
@@ -77,28 +74,10 @@ mod tests {
                             height: None,
                             image_key: None,
                         },
-                        RasterLayerNode::Group {
-                            id: "group-2".into(),
-                            name: "Nested Group".into(),
-                            visible: true,
-                            opacity: 1.0,
-                            blend_mode: "normal".into(),
-                            transform: RasterTransform::default(),
-                            mask: None,
-                            children: Vec::new(),
-                        },
+                        RasterLayerNode::Group { id: "group-2".into(), name: "Nested Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() },
                     ],
                 },
-                RasterLayerNode::Adjustment {
-                    id: "adjust-1".into(),
-                    name: "Curves & Co".into(),
-                    visible: true,
-                    opacity: 1.0,
-                    blend_mode: "normal".into(),
-                    transform: RasterTransform::default(),
-                    adjustment_kind: "curves".into(),
-                    params,
-                },
+                RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
             ],
         }
     }

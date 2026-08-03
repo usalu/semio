@@ -196,14 +196,46 @@ pub enum WidgetDsl {
         #[dsl(table)]
         params: Vec<DictEntryDsl>,
     },
-    InputSlider { id: String, value: f64, min: f64, max: f64, step: f64 },
-    InputNote { id: String, text: String },
-    InputImage { id: String, src: String },
-    Variable { id: String, name: String, schema: String },
-    OutputPreview { id: String, #[dsl(table)] preview: Vec<DictEntryDsl>, expanded: Vec<String> },
-    OutputAction { id: String, action: String },
-    OutputExport { id: String, format: String },
-    Cluster { id: String, name: String, tree: dsl::DslValue, flow: dsl::DslValue },
+    InputSlider {
+        id: String,
+        value: f64,
+        min: f64,
+        max: f64,
+        step: f64,
+    },
+    InputNote {
+        id: String,
+        text: String,
+    },
+    InputImage {
+        id: String,
+        src: String,
+    },
+    Variable {
+        id: String,
+        name: String,
+        schema: String,
+    },
+    OutputPreview {
+        id: String,
+        #[dsl(table)]
+        preview: Vec<DictEntryDsl>,
+        expanded: Vec<String>,
+    },
+    OutputAction {
+        id: String,
+        action: String,
+    },
+    OutputExport {
+        id: String,
+        format: String,
+    },
+    Cluster {
+        id: String,
+        name: String,
+        tree: dsl::DslValue,
+        flow: dsl::DslValue,
+    },
 }
 
 pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
@@ -218,9 +250,7 @@ pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
         Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_value_dsl_entries(preview), expanded: expanded.iter().cloned().collect() },
         Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
         Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
-        Widget::Cluster { id, name, tree, flow } => {
-            WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: dsl::to_dsl_value(tree).unwrap_or(dsl::DslValue::Null), flow: dsl::to_dsl_value(flow).unwrap_or(dsl::DslValue::Null) }
-        }
+        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: dsl::to_dsl_value(tree).unwrap_or(dsl::DslValue::Null), flow: dsl::to_dsl_value(flow).unwrap_or(dsl::DslValue::Null) },
     }
 }
 
@@ -254,19 +284,11 @@ pub struct FormGenerationDsl {
 }
 
 pub fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
-    FormGenerationDsl {
-        id: generation.id.clone(),
-        name: generation.name.clone(),
-        values: generation.values.iter().map(|(key, value)| (key.clone(), dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))).collect(),
-    }
+    FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.iter().map(|(key, value)| (key.clone(), dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))).collect() }
 }
 
 pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration {
-    FormGeneration {
-        id: generation.id,
-        name: generation.name,
-        values: generation.values.into_iter().filter_map(|(key, value)| dsl::from_dsl_value(value).ok().map(|json| (key, json))).collect(),
-    }
+    FormGeneration { id: generation.id, name: generation.name, values: generation.values.into_iter().filter_map(|(key, value)| dsl::from_dsl_value(value).ok().map(|json| (key, json))).collect() }
 }
 
 /// 🧾️ Local twin of `Procedural2dDocument`, flattening `FlowFixture`/`GenerationPlayState`'s fields

@@ -1,9 +1,5 @@
-@import "../ui/🎨️globals.css";
-@source "../../elements/ui";
+@import "../../../🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/🎨️globals.css";
+@source "../../../🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript";
 @source "../ui";
 @source "../sketchpad";
 @source "../js";
-
-/* #navbar {
-  -webkit-app-region: window-drag;
-} */

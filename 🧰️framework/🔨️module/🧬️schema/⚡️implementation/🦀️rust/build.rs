@@ -11,16 +11,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed={}", manifest_dir.join("🔣️entity-kinds.json").display());
     println!("cargo:rerun-if-changed={}", manifest_dir.join("📜️script.ts").display());
     if !generated.is_file() {
-        let status = std::process::Command::new("bun")
-            .args(["./📜️script.ts", "generate"])
-            .current_dir(&manifest_dir)
-            .status()?;
+        let status = std::process::Command::new("bun").args(["./📜️script.ts", "generate"]).current_dir(&manifest_dir).status()?;
         if !status.success() || !generated.is_file() {
-            return Err(format!(
-                "missing {} — run `bun nx run @semio-tech/framework-schema:generate` first",
-                generated.display()
-            )
-            .into());
+            return Err(format!("missing {} — run `bun nx run @semio-tech/framework-schema:generate` first", generated.display()).into());
         }
     }
     Ok(())

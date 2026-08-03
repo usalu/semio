@@ -47,11 +47,7 @@ pub fn puzzle5d_catalog_fragment(definition: &Block5dDefinition) -> Value {
         "meshUrl": mesh_url,
         "grips": grips,
     });
-    let grip_kinds: Vec<Value> = definition
-        .grip_kinds
-        .iter()
-        .map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.label, "color": kind.color, "defaultRopeKind": kind.default_rope_kind }))
-        .collect();
+    let grip_kinds: Vec<Value> = definition.grip_kinds.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.label, "color": kind.color, "defaultRopeKind": kind.default_rope_kind })).collect();
     json!({
         "schema": "manifest",
         "parts": [part],

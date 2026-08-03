@@ -1,14 +1,14 @@
 //! 📏️ Norm plugin — one WASM DocumentApp per norm family with headless NormHost-backed compliance.
 
 use norm_core::{CheckReport, NormFamily, NormHost, SetDocumentOperation};
+use protocol::{Operation, OperationDiff};
 #[cfg(test)]
 use semio_framework_plugin::testkit;
 use semio_framework_plugin::{
-    create_default_layout, ui_stack_vertical, ui_text, App, AppIo, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec,
-    MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, PortMultiplicity, SurfaceKind, UiNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    create_default_layout, ui_stack_vertical, ui_text, App, AppIo, ArtifactKindSpec, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    MediaPortDirection, MediaPortSpec, MediaType, OsMediaCapability, PanelGroup, PortMultiplicity, SurfaceKind, UiNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
@@ -135,8 +135,8 @@ macro_rules! define_norm_family_app {
         pub mod $module {
             use super::*;
             use ::$doc_crate as doc_crate;
-            use ::$op_crate as op_crate;
             use ::$family_crate as family_crate;
+            use ::$op_crate as op_crate;
 
             type Family = family_crate::$family_ty;
             type Document = doc_crate::Document;
@@ -253,10 +253,7 @@ macro_rules! define_norm_family_app {
                         return Err(MediaError::NotImplemented);
                     }
                     let bytes = store::DocumentPack::encode_pack(doc.projection);
-                    Ok(Media {
-                        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-                        payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                    })
+                    Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
                 }
 
                 /// 🎞️ `"model:in"` is an honest generic pass-through: a payload that happens to decode as

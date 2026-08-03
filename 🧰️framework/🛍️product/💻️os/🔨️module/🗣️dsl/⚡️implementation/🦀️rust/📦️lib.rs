@@ -324,10 +324,7 @@ pub mod op_rt {
     pub fn encode_op<T: DslVariants>(op: &T) -> Result<Vec<u8>, ProtocolError> {
         let (keyword, record) = op.to_named_record();
         let variants = T::variants();
-        let ordinal = variants
-            .iter()
-            .position(|(k, _)| *k == keyword)
-            .ok_or(ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
         let body = pack::encode_record_body(&spec, &record, &pack::EncodeOptions::default())?;
         let mut out = Vec::with_capacity(body.len() + 3);
@@ -346,14 +343,11 @@ pub mod op_rt {
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = T::variants();
-        let (keyword, spec_fn) = variants
-            .get(ordinal as usize)
-            .ok_or(ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = pack::decode_record_body(body, &spec, &pack::DecodeOptions::default())?;
-        T::from_named_record(keyword, &record)
-            .map_err(|error| ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        T::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpRt
@@ -411,12 +405,7 @@ pub struct IdiomHooks {
 /// @emoji 🏗️ Derives an `IdiomHooks` vtable from a `DslIdiom` impl — the one place `Self::Ast`
 /// needs to be named, so every other caller works with the type-erased `IdiomHooks` instead.
 pub fn hooks_for<I: DslIdiom>() -> IdiomHooks {
-    IdiomHooks {
-        lang: I::LANG,
-        canonicalize: |text| I::parse(text).map(|ast| I::print(&ast)),
-        classify: I::classify,
-        complete: I::complete,
-    }
+    IdiomHooks { lang: I::LANG, canonicalize: |text| I::parse(text).map(|ast| I::print(&ast)), classify: I::classify, complete: I::complete }
 }
 
 static IDIOM_REGISTRY: OnceLock<Mutex<HashMap<&'static str, IdiomHooks>>> = OnceLock::new();
@@ -515,9 +504,7 @@ mod tests {
         type Ast = GreetAst;
 
         fn parse(text: &str) -> Result<Self::Ast, TextError> {
-            text.strip_prefix("hello ")
-                .map(|name| GreetAst { name: name.trim().to_string() })
-                .ok_or_else(|| TextError::new("expected 'hello <name>'", TextSpan::at(1, 1)))
+            text.strip_prefix("hello ").map(|name| GreetAst { name: name.trim().to_string() }).ok_or_else(|| TextError::new("expected 'hello <name>'", TextSpan::at(1, 1)))
         }
 
         fn print(ast: &Self::Ast) -> String {
@@ -550,19 +537,10 @@ mod tests {
 
     #[test]
     fn dsl_value_dsl_field_round_trips_through_record_value() {
-        let value = DslValue::object([
-            ("a".into(), DslValue::Number(1.0)),
-            ("b".into(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null, DslValue::String("x".into())])),
-        ]);
+        let value = DslValue::object([("a".into(), DslValue::Number(1.0)), ("b".into(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null, DslValue::String("x".into())]))]);
         assert_eq!(DslValue::from_value(&value.to_value()), Ok(value));
 
-        let map = DslValue::object([(
-            "curves".into(),
-            DslValue::Array(vec![
-                DslValue::Array(vec![DslValue::Number(0.0), DslValue::Number(0.0)]),
-                DslValue::Array(vec![DslValue::Number(1.0), DslValue::Number(1.0)]),
-            ]),
-        )]);
+        let map = DslValue::object([("curves".into(), DslValue::Array(vec![DslValue::Array(vec![DslValue::Number(0.0), DslValue::Number(0.0)]), DslValue::Array(vec![DslValue::Number(1.0), DslValue::Number(1.0)])]))]);
         assert_eq!(DslValue::from_value(&map.to_value()), Ok(map));
     }
 
@@ -616,11 +594,7 @@ mod tests {
 
     #[test]
     fn derived_op_text_round_trips_every_variant_as_one_line() {
-        let ops = vec![
-            DerivedOperation::SetCategory { category: "roof".to_string() },
-            DerivedOperation::SetAirtightness { n50: 0.9 },
-            DerivedOperation::Reset,
-        ];
+        let ops = vec![DerivedOperation::SetCategory { category: "roof".to_string() }, DerivedOperation::SetAirtightness { n50: 0.9 }, DerivedOperation::Reset];
         for op in ops {
             let printed = <DerivedOperation as protocol::OpText>::print_op(&op);
             assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
@@ -643,11 +617,7 @@ mod tests {
 
     #[test]
     fn derived_op_binary_round_trips_every_variant_and_matches_text() {
-        let ops = vec![
-            DerivedOperation::SetCategory { category: "roof".to_string() },
-            DerivedOperation::SetAirtightness { n50: 0.9 },
-            DerivedOperation::Reset,
-        ];
+        let ops = vec![DerivedOperation::SetCategory { category: "roof".to_string() }, DerivedOperation::SetAirtightness { n50: 0.9 }, DerivedOperation::Reset];
         for op in ops {
             store::test_support::assert_op_text_binary_equivalence(&op);
         }
@@ -694,11 +664,7 @@ mod tests {
     fn derived_enum_recursive_block_tree_and_map_and_nested_collections_round_trip() {
         let doc = SceneDocument {
             camera: SceneCamera { x: 1.0, y: 2.0 },
-            nodes: vec![
-                SceneNode::Point { pos: [1.0, 2.0, 3.0] },
-                SceneNode::Grid { rows: vec![vec![1, 2], vec![3, 4, 5]] },
-                SceneNode::Group { id: "g1".to_string(), children: vec![SceneNode::Point { pos: [0.0, 0.0, 0.0] }] },
-            ],
+            nodes: vec![SceneNode::Point { pos: [1.0, 2.0, 3.0] }, SceneNode::Grid { rows: vec![vec![1, 2], vec![3, 4, 5]] }, SceneNode::Group { id: "g1".to_string(), children: vec![SceneNode::Point { pos: [0.0, 0.0, 0.0] }] }],
             tags: std::collections::BTreeMap::from([("author".to_string(), "semio".to_string()), ("version".to_string(), "1".to_string())]),
         };
         let printed = <SceneDocument as store::DocumentDsl>::print_dsl(&doc);
@@ -743,12 +709,7 @@ mod tests {
 
     #[test]
     fn derived_newtype_tuple_variants_round_trip() {
-        let doc = ShapeDocument {
-            shapes: vec![
-                ShapeNode::Circle(CircleBody { id: "c1".to_string(), r: 2.0 }),
-                ShapeNode::Square(SquareBody { id: "s1".to_string(), side: 3.0 }),
-            ],
-        };
+        let doc = ShapeDocument { shapes: vec![ShapeNode::Circle(CircleBody { id: "c1".to_string(), r: 2.0 }), ShapeNode::Square(SquareBody { id: "s1".to_string(), side: 3.0 })] };
         let printed = <ShapeDocument as store::DocumentDsl>::print_dsl(&doc);
         // `"c1"` is bare-ident-shaped, so the unified "strings bare-preferred" law prints it
         // unquoted (`circle c1 r=2`, not `circle "c1" r=2`) — see `dsl_core::is_bare_ident`.
@@ -792,8 +753,7 @@ mod tests {
 
         let no_fill = PaintDocument { attributes: PaintAttributes { fill: None } };
         let printed_none = <PaintDocument as store::DocumentDsl>::print_dsl(&no_fill);
-        let parsed_none =
-            <PaintDocument as store::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
+        let parsed_none = <PaintDocument as store::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
         assert_eq!(parsed_none, no_fill, "None round trip diverged;\nprinted:\n{printed_none}");
         store::test_support::assert_dsl_pack_equivalence(&no_fill);
     }
@@ -826,8 +786,7 @@ mod tests {
         let no_brush = BrushDocument { brush: None };
         let printed_none = <BrushDocument as store::DocumentDsl>::print_dsl(&no_brush);
         assert!(!printed_none.contains("brush"), "an absent block-wrapped Option<Record> must be omitted entirely, not printed as empty braces: {printed_none:?}");
-        let parsed_none =
-            <BrushDocument as store::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
+        let parsed_none = <BrushDocument as store::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
         assert_eq!(parsed_none, no_brush, "None round trip diverged;\nprinted:\n{printed_none:?}");
         store::test_support::assert_dsl_pack_equivalence(&no_brush);
     }
@@ -882,10 +841,7 @@ mod tests {
         let doc = SelfRefDocument {
             root: SelfRefValue {
                 number: None,
-                dictionary: Some(std::collections::BTreeMap::from([(
-                    "a".to_string(),
-                    SelfRefValue { number: Some(1), dictionary: Some(std::collections::BTreeMap::from([("b".to_string(), SelfRefValue { number: Some(2), dictionary: None })])) },
-                )])),
+                dictionary: Some(std::collections::BTreeMap::from([("a".to_string(), SelfRefValue { number: Some(1), dictionary: Some(std::collections::BTreeMap::from([("b".to_string(), SelfRefValue { number: Some(2), dictionary: None })])) })])),
             },
         };
         let printed = <SelfRefDocument as store::DocumentDsl>::print_dsl(&doc);
@@ -912,9 +868,7 @@ mod tests {
 
     #[test]
     fn derived_table_field_prints_compact_soa_and_round_trips() {
-        let doc = TableDocument {
-            nodes: vec![TableNodeRow { id: "a".to_string(), x: 1.0, y: 2.0 }, TableNodeRow { id: "b".to_string(), x: 3.0, y: 4.0 }],
-        };
+        let doc = TableDocument { nodes: vec![TableNodeRow { id: "a".to_string(), x: 1.0, y: 2.0 }, TableNodeRow { id: "b".to_string(), x: 3.0, y: 4.0 }] };
         let printed = <TableDocument as store::DocumentDsl>::print_dsl(&doc);
         assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM]"), "#[dsl(table)] field must print compact SoA: {printed}");
         let parsed = <TableDocument as store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));

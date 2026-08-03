@@ -14,47 +14,31 @@
 //! documents through the Home launcher's own catalog port (`openSpace`, `exportStudioPack`,
 //! `exportStudioDsl`, `importSpacePackPayload`) — a real, non-test dependency, not just a test fixture.
 
+use protocol::Operation;
+use semio_framework_os::host::{export_os_space_dsl, export_os_space_pack, import_os_space_from_pack};
+use semio_framework_os::{
+    apply_flow_fixture_to_os_workflow, build_os_workflow_operator_infos, create_empty_os_document, create_os_id, default_os_projection, materialize_os_app_instance_document_json, materialize_os_projection, os_app_primary_output_kind,
+    os_app_registration, os_document_to_json, os_parameter_types_compatible, os_parameter_value, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, os_workflow_vfs_schema, workflow_palette, MediaContract, OsOperation, OsParameter,
+    OsParameterFieldBinding, OsParameterType, OsProjection, OsWorkflowCamera, WorkflowEdge, WorkflowNode, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID,
+};
+use semio_framework_plugin::optional_json_to_dsl;
+use semio_framework_plugin::{
+    app_labels, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene, create_default_layout, host_now_ms, tree_item_desc, ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, ActionArgDef, ActionArgOption,
+    ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, IconName, Label, Locale, LocalizedLabel, MeasureSelectItem, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover,
+    NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence,
+    UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode, VirtualFileSystemScene, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowMeasure,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+};
+use serde::Serialize;
+use serde_json::{json, Value};
 use space::{
-    S_PLAY_APP_ID, S_PLAY_BODY_COMPILED_DAG, S_PLAY_BODY_MEDIA_VFS, S_PLAY_BODY_WORKFLOW,
-    S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_CATALOGUE_DRAG_MIME, S_PLAY_CATALOGUE_TAB_ID, S_PLAY_CONTROLLER_ID,
-    S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID, S_PLAY_PARAMETERS_BODY_KEY, S_PLAY_PARAMETERS_TAB_ID,
-    S_PLAY_SURFACE_COMPILED_DAG, S_PLAY_SURFACE_MEDIA_VFS, S_PLAY_SURFACE_WORKFLOW, S_PLAY_WINDOW_COMPILED_DAG,
-    S_PLAY_WINDOW_MEDIA_VFS, S_PLAY_WINDOW_WORKFLOW, S_STUDIO_EXAMPLES,
+    S_PLAY_APP_ID, S_PLAY_BODY_COMPILED_DAG, S_PLAY_BODY_MEDIA_VFS, S_PLAY_BODY_WORKFLOW, S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_CATALOGUE_DRAG_MIME, S_PLAY_CATALOGUE_TAB_ID, S_PLAY_CONTROLLER_ID, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID,
+    S_PLAY_PARAMETERS_BODY_KEY, S_PLAY_PARAMETERS_TAB_ID, S_PLAY_SURFACE_COMPILED_DAG, S_PLAY_SURFACE_MEDIA_VFS, S_PLAY_SURFACE_WORKFLOW, S_PLAY_WINDOW_COMPILED_DAG, S_PLAY_WINDOW_MEDIA_VFS, S_PLAY_WINDOW_WORKFLOW, S_STUDIO_EXAMPLES,
 };
-use space_engine::{
-    add_parameter_operation, add_workflow_node_operation, compiled_dag_wire_literal, flatten_media_vfs_rows,
-    negotiate_media_connect, parameter_entity_id, patch_parameter_operation,
-    OsParameterId, SpaceConfig,
-};
+use space_engine::{add_parameter_operation, add_workflow_node_operation, compiled_dag_wire_literal, flatten_media_vfs_rows, negotiate_media_connect, parameter_entity_id, patch_parameter_operation, OsParameterId, SpaceConfig};
 use space_op::SpaceConfigOperation;
 use space_protocol::SpaceCommand;
 use space_shared::{demo_space_projection, ensure_space_fixtures_registered, parse_demo_space_document};
-use semio_framework_os::{
-    apply_flow_fixture_to_os_workflow, build_os_workflow_operator_infos, create_empty_os_document,
-    create_os_id, default_os_projection, materialize_os_app_instance_document_json, materialize_os_projection,
-    os_app_primary_output_kind, os_app_registration, os_document_to_json, os_workflow_to_flow_fixture,
-    os_workflow_to_node_graph_payload, os_workflow_vfs_schema, os_parameter_types_compatible, os_parameter_value,
-    workflow_palette, MediaContract, OsOperation, OsParameter, OsParameterFieldBinding, OsParameterType,
-    OsProjection, OsWorkflowCamera, WorkflowEdge, WorkflowNode, OS_WORKFLOW_VFS_ROOT_ID, OS_SPACE_SCHEMA,
-};
-use semio_framework_os::host::{export_os_space_dsl, export_os_space_pack, import_os_space_from_pack};
-use semio_framework_plugin::{
-    app_labels, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
-    create_default_layout, host_now_ms, tree_item_desc,
-    ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, IconName, MeasureSelectItem, WindowEngagementStatus,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
-    AppLabels, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel,
-    NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphOperatorRecord, NodeGraphViewport, PanelGroup,
-    PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
-    UiNumberStepperNode, UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode,
-    VirtualFileSystemScene, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowLayout,
-    WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
-};
-use semio_framework_plugin::optional_json_to_dsl;
-use protocol::Operation;
-use serde::Serialize;
-use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{LazyLock, Mutex};
 
@@ -68,7 +52,11 @@ fn is_de_locale(cfg: &SpaceConfig) -> bool {
 /// 🗣️ `SpaceConfig.locale` (a BCP-47 tag, was shell-provided `ViewState.locale` pre-B1) mapped onto
 /// the SDK's exhaustive `Locale` enum.
 fn space_locale(cfg: &SpaceConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🗣️ Resolves the active label-struct cell from the config-carried locale (was shell-provided
@@ -81,11 +69,7 @@ fn resolve_labels<L: AppLabels>(cfg: &SpaceConfig) -> &'static L {
 
 //#region 🔖️DocumentHelpers
 fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: S_PLAY_CONTROLLER_ID.into(),
-        action: action.into(),
-        args: optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: S_PLAY_CONTROLLER_ID.into(), action: action.into(), args: optional_json_to_dsl(args) }
 }
 
 /// 🖱️ On-demand space workflow context menu from hit-test and selection snapshot.
@@ -106,13 +90,7 @@ fn space_workflow_context_menu_items(
         // 🗂️ Empty-canvas menu: paste/select-all stay top-level (the two most frequent verbs here),
         // reorganize is a rarer layout action so it moves into its own taxonomy group.
         menu = menu
-            .item(ContextMenuItemSpec {
-                id: "paste-instance".into(),
-                label: Some(labels.context_paste.into()),
-                icon: Some("clipboard".into()),
-                action: Some("pasteAppInstance".into()),
-                ..Default::default()
-            })
+            .item(ContextMenuItemSpec { id: "paste-instance".into(), label: Some(labels.context_paste.into()), icon: Some("clipboard".into()), action: Some("pasteAppInstance".into()), ..Default::default() })
             .item(ContextMenuItemSpec {
                 id: "select-all".into(),
                 label: Some(labels.context_select_all.into()),
@@ -121,15 +99,7 @@ fn space_workflow_context_menu_items(
                 args: optional_json_to_dsl(Some(json!({ "selectAll": true }))),
                 ..Default::default()
             })
-            .group("transform", |m| {
-                m.item(ContextMenuItemSpec {
-                    id: "reorganize".into(),
-                    label: Some(labels.context_reorganize.into()),
-                    icon: Some("layout-grid".into()),
-                    action: Some("reorganizeWorkflow".into()),
-                    ..Default::default()
-                })
-            });
+            .group("transform", |m| m.item(ContextMenuItemSpec { id: "reorganize".into(), label: Some(labels.context_reorganize.into()), icon: Some("layout-grid".into()), action: Some("reorganizeWorkflow".into()), ..Default::default() }));
     }
     if hit_node.is_some() || !nodes.is_empty() {
         // 🗂️ Node menu: open/duplicate stay top-level (the two most frequent verbs); copy moves into
@@ -137,38 +107,10 @@ fn space_workflow_context_menu_items(
         // trailing destructive leaf — `organize_context_menu` (run automatically at the
         // `VcsDocumentApp::context_menu` funnel) inserts the pre-destructive separator itself.
         menu = menu
-            .item(ContextMenuItemSpec {
-                id: "open-instance".into(),
-                label: Some(labels.context_open_instance.into()),
-                icon: Some("external-link".into()),
-                action: Some("openInstance".into()),
-                ..Default::default()
-            })
-            .item(ContextMenuItemSpec {
-                id: "duplicate-instance".into(),
-                label: Some(labels.context_duplicate.into()),
-                icon: Some("copy".into()),
-                action: Some("duplicateAppInstance".into()),
-                ..Default::default()
-            })
-            .group("transfer", |m| {
-                m.item(ContextMenuItemSpec {
-                    id: "copy-instance".into(),
-                    label: Some(labels.context_copy.into()),
-                    icon: Some("clipboard-copy".into()),
-                    action: Some("copyAppInstance".into()),
-                    ..Default::default()
-                })
-            })
-            .group("settings", |m| {
-                m.item(ContextMenuItemSpec {
-                    id: "rename-instance".into(),
-                    label: Some(labels.context_rename_label.into()),
-                    icon: Some("edit-3".into()),
-                    action: Some("renameAppInstance".into()),
-                    ..Default::default()
-                })
-            });
+            .item(ContextMenuItemSpec { id: "open-instance".into(), label: Some(labels.context_open_instance.into()), icon: Some("external-link".into()), action: Some("openInstance".into()), ..Default::default() })
+            .item(ContextMenuItemSpec { id: "duplicate-instance".into(), label: Some(labels.context_duplicate.into()), icon: Some("copy".into()), action: Some("duplicateAppInstance".into()), ..Default::default() })
+            .group("transfer", |m| m.item(ContextMenuItemSpec { id: "copy-instance".into(), label: Some(labels.context_copy.into()), icon: Some("clipboard-copy".into()), action: Some("copyAppInstance".into()), ..Default::default() }))
+            .group("settings", |m| m.item(ContextMenuItemSpec { id: "rename-instance".into(), label: Some(labels.context_rename_label.into()), icon: Some("edit-3".into()), action: Some("renameAppInstance".into()), ..Default::default() }));
         if !nodes.is_empty() {
             menu = menu.group("selection", |m| {
                 m.item(ContextMenuItemSpec {
@@ -181,25 +123,11 @@ fn space_workflow_context_menu_items(
                 })
             });
         }
-        let phrase = selection_count_phrase(
-            is_de,
-            &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })],
-        );
-        let remove_label = if phrase.is_empty() {
-            labels.context_remove.as_str().to_string()
-        } else {
-            format!("{} ({phrase})", labels.context_remove.as_str())
-        };
+        let phrase = selection_count_phrase(is_de, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })]);
+        let remove_label = if phrase.is_empty() { labels.context_remove.as_str().to_string() } else { format!("{} ({phrase})", labels.context_remove.as_str()) };
         // 🎯️ Destructive tail always comes last — kept unconditionally after the "selection" group so
         // remove-instance is the final row regardless of whether clear-selection was appended above.
-        menu = menu.item(ContextMenuItemSpec {
-            id: "remove-instance".into(),
-            label: Some(remove_label),
-            icon: Some("trash".into()),
-            action: Some("removeAppInstance".into()),
-            destructive: Some(true),
-            ..Default::default()
-        });
+        menu = menu.item(ContextMenuItemSpec { id: "remove-instance".into(), label: Some(remove_label), icon: Some("trash".into()), action: Some("removeAppInstance".into()), destructive: Some(true), ..Default::default() });
     }
     menu.build()
 }
@@ -221,8 +149,7 @@ struct SPresencePeerLocal {
 
 const S_PRESENCE_STALE_MS: f64 = 15_000.0;
 
-static PRESENCE_PEERS: LazyLock<Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+static PRESENCE_PEERS: LazyLock<Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 fn config_space_id(config: &SpaceConfig) -> String {
     config.space_id.clone().unwrap_or_else(|| "default".into())
@@ -259,15 +186,7 @@ fn publish_presence(config: &SpaceConfig) {
     if let Ok(mut registry) = PRESENCE_PEERS.lock() {
         let peers = registry.entry(space_id).or_default();
         peers.retain(|_, entry| now_ms - entry.updated_at_ms <= S_PRESENCE_STALE_MS);
-        peers.insert(
-            client_id.clone(),
-            SPresencePeerLocal {
-                client_id: client_id.clone(),
-                name: client_name.clone(),
-                selection: config.selected_node_ids.clone(),
-                updated_at_ms: now_ms,
-            },
-        );
+        peers.insert(client_id.clone(), SPresencePeerLocal { client_id: client_id.clone(), name: client_name.clone(), selection: config.selected_node_ids.clone(), updated_at_ms: now_ms });
     }
 }
 
@@ -374,10 +293,7 @@ fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> U
     item.default_open = (!children.is_empty()).then_some(true);
     if let Some(app) = &app {
         let mut drag_data = HashMap::new();
-        drag_data.insert(
-            S_PLAY_CATALOGUE_DRAG_MIME.into(),
-            json!({ "pluginId": app.plugin_id, "appId": app.app_id, "label": app.label }).to_string(),
-        );
+        drag_data.insert(S_PLAY_CATALOGUE_DRAG_MIME.into(), json!({ "pluginId": app.plugin_id, "appId": app.app_id, "label": app.label }).to_string());
         item.draggable = Some(true);
         item.drag_data = Some(drag_data);
     }
@@ -409,48 +325,29 @@ fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale) -> UiNode {
         let label = entry.label.resolve(Terminology::Native, locale).to_string();
         node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label, yields });
     }
-    let items = document
-        .children
-        .into_iter()
-        .map(|(segment, node)| app_catalogue_item(&[segment.clone()], &segment, node))
-        .collect();
-    PanelTreeBuilder::new(S_PLAY_CATALOGUE_TAB_ID)
-        .section(S_PLAY_CATALOGUE_TAB_ID, Some(labels.apps_section.into()), true, items)
-        .build()
+    let items = document.children.into_iter().map(|(segment, node)| app_catalogue_item(&[segment.clone()], &segment, node)).collect();
+    PanelTreeBuilder::new(S_PLAY_CATALOGUE_TAB_ID).section(S_PLAY_CATALOGUE_TAB_ID, Some(labels.apps_section.into()), true, items).build()
 }
 
 fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> UiNode {
     match parameter {
-        OsParameter::Numeric { id, value, step, .. } => UiNode::NumberStepper(UiNumberStepperNode {presence: UiPresence::default(),
+        OsParameter::Numeric { id, value, step, .. } => UiNode::NumberStepper(UiNumberStepperNode {
+            presence: UiPresence::default(),
             id: format!("s-play-parameters.{id}.value"),
             value: *value,
             step: step.unwrap_or(1.0),
             uniform: true,
-            on_absolute: s_play_action(
-                "patchParameter",
-                Some(json!({ "parameterId": id, "field": "value" })),
-            ),
-            on_delta: s_play_action(
-                "patchParameter",
-                Some(json!({ "parameterId": id, "field": "value" })),
-            ),
+            on_absolute: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
+            on_delta: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
             menu: None,
         }),
-        OsParameter::Categorical { id, value, options, .. } => UiNode::Select(UiSelectNode {presence: UiPresence::default(),
+        OsParameter::Categorical { id, value, options, .. } => UiNode::Select(UiSelectNode {
+            presence: UiPresence::default(),
             id: format!("s-play-parameters.{id}.value"),
             value: value.clone(),
-            items: options
-                .iter()
-                .map(|option| UiSelectItem {
-                    value: option.clone(),
-                    label: Label::data(option.clone()),
-                })
-                .collect(),
+            items: options.iter().map(|option| UiSelectItem { value: option.clone(), label: Label::data(option.clone()) }).collect(),
             placeholder: None,
-            on_change: s_play_action(
-                "patchParameter",
-                Some(json!({ "parameterId": id, "field": "value" })),
-            ),
+            on_change: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
             menu: None,
         }),
         OsParameter::Toggle { id, value, .. } => UiNode::Toggle(UiToggleNode {
@@ -458,22 +355,17 @@ fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> U
             icon_id: "toggle-left".into(),
             presence: UiPresence::selected(*value),
             text: Some(if *value { labels.toggle_on.into() } else { labels.toggle_off.into() }),
-            on_change: s_play_action(
-                "patchParameter",
-                Some(json!({ "parameterId": id, "field": "value" })),
-            ),
+            on_change: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
             menu: None,
         }),
-        OsParameter::Text { id, value, .. } => UiNode::Input(UiInputNode {presence: UiPresence::default(),
+        OsParameter::Text { id, value, .. } => UiNode::Input(UiInputNode {
+            presence: UiPresence::default(),
             id: format!("s-play-parameters.{id}.value"),
             input_kind: "text".into(),
             value: value.clone(),
             placeholder: None,
             commit: None,
-            on_change: s_play_action(
-                "patchParameter",
-                Some(json!({ "parameterId": id, "field": "value" })),
-            ),
+            on_change: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "value" }))),
             min: None,
             max: None,
             step: None,
@@ -485,29 +377,19 @@ fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> U
 
 fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) -> Vec<UiNode> {
     match parameter {
-        OsParameter::Numeric {
-            id,
-            min,
-            max,
-            step,
-            ..
-        } => vec![
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+        OsParameter::Numeric { id, min, max, step, .. } => vec![
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: format!("s-play-parameters.{id}.min"),
                 label: labels.min.into(),
-                child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+                    presence: UiPresence::default(),
                     id: format!("s-play-parameters.{id}.min.stepper"),
                     value: min.unwrap_or(0.0),
                     step: 1.0,
                     uniform: true,
-                    on_absolute: s_play_action(
-                        "patchParameter",
-                        Some(json!({ "parameterId": id, "field": "min" })),
-                    ),
-                    on_delta: s_play_action(
-                        "patchParameter",
-                        Some(json!({ "parameterId": id, "field": "min" })),
-                    ),
+                    on_absolute: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "min" }))),
+                    on_delta: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "min" }))),
                     menu: None,
                 })),
                 description: None,
@@ -515,22 +397,18 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                 error: None,
                 menu: None,
             }),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: format!("s-play-parameters.{id}.max"),
                 label: labels.max.into(),
-                child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+                    presence: UiPresence::default(),
                     id: format!("s-play-parameters.{id}.max.stepper"),
                     value: max.unwrap_or(0.0),
                     step: 1.0,
                     uniform: true,
-                    on_absolute: s_play_action(
-                        "patchParameter",
-                        Some(json!({ "parameterId": id, "field": "max" })),
-                    ),
-                    on_delta: s_play_action(
-                        "patchParameter",
-                        Some(json!({ "parameterId": id, "field": "max" })),
-                    ),
+                    on_absolute: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "max" }))),
+                    on_delta: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "max" }))),
                     menu: None,
                 })),
                 description: None,
@@ -538,22 +416,18 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                 error: None,
                 menu: None,
             }),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: format!("s-play-parameters.{id}.step"),
                 label: labels.step.into(),
-                child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+                    presence: UiPresence::default(),
                     id: format!("s-play-parameters.{id}.step.stepper"),
                     value: step.unwrap_or(0.0),
                     step: 0.1,
                     uniform: true,
-                    on_absolute: s_play_action(
-                        "patchParameter",
-                        Some(json!({ "parameterId": id, "field": "step" })),
-                    ),
-                    on_delta: s_play_action(
-                        "patchParameter",
-                        Some(json!({ "parameterId": id, "field": "step" })),
-                    ),
+                    on_absolute: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "step" }))),
+                    on_delta: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "step" }))),
                     menu: None,
                 })),
                 description: None,
@@ -574,10 +448,7 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                             id: Some(format!("s-play-parameters.{id}.option.{option}.remove")),
                             icon_id: "trash-2".into(),
                             label: labels.remove.into(),
-                            action: s_play_action(
-                                "patchParameter",
-                                Some(json!({ "parameterId": id, "field": "removeOption", "value": option })),
-                            ),
+                            action: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "removeOption", "value": option }))),
                             style: None,
                             presence: UiPresence::default(),
                             menu: None,
@@ -589,19 +460,18 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                     })
                 })
                 .collect();
-            fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            fields.push(UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: format!("s-play-parameters.{id}.add-option"),
                 label: labels.add_option.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: format!("s-play-parameters.{id}.add-option.input"),
                     input_kind: "text".into(),
                     value: String::new(),
                     placeholder: Some(labels.new_option_placeholder.into()),
                     commit: None,
-                    on_change: s_play_action(
-                        "patchParameter",
-                        Some(json!({ "parameterId": id, "field": "addOption" })),
-                    ),
+                    on_change: s_play_action("patchParameter", Some(json!({ "parameterId": id, "field": "addOption" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -642,24 +512,20 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
     for parameter in &projection.parameters {
         let parameter_id = parameter_entity_id(parameter).to_string();
         let mut parameter_children = vec![
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: format!("s-play-parameters.{parameter_id}.name"),
                 label: labels.name.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: format!("s-play-parameters.{parameter_id}.name.input"),
                     input_kind: "text".into(),
                     value: match parameter {
-                        OsParameter::Numeric { name, .. }
-                        | OsParameter::Categorical { name, .. }
-                        | OsParameter::Toggle { name, .. }
-                        | OsParameter::Text { name, .. } => name.clone(),
+                        OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => name.clone(),
                     },
                     placeholder: None,
                     commit: None,
-                    on_change: s_play_action(
-                        "patchParameter",
-                        Some(json!({ "parameterId": parameter_id, "field": "name" })),
-                    ),
+                    on_change: s_play_action("patchParameter", Some(json!({ "parameterId": parameter_id, "field": "name" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -671,7 +537,8 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
                 error: None,
                 menu: None,
             }),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: format!("s-play-parameters.{parameter_id}.value-field"),
                 label: labels.value.into(),
                 child: Box::new(parameter_value_control(parameter, labels)),
@@ -686,10 +553,7 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
             id: Some(format!("s-play-parameters.{parameter_id}.remove")),
             icon_id: "trash-2".into(),
             label: labels.remove.into(),
-            action: s_play_action(
-                "removeParameter",
-                Some(json!({ "parameterId": parameter_id })),
-            ),
+            action: s_play_action("removeParameter", Some(json!({ "parameterId": parameter_id }))),
             style: None,
             presence: UiPresence::default(),
             menu: None,
@@ -697,10 +561,7 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
         children.push(UiSectionNode {
             id: format!("s-play-parameters.{parameter_id}"),
             label: Some(Label::data(match parameter {
-                OsParameter::Numeric { name, .. }
-                | OsParameter::Categorical { name, .. }
-                | OsParameter::Toggle { name, .. }
-                | OsParameter::Text { name, .. } => name.clone(),
+                OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => name.clone(),
             })),
             default_open: Some(true),
             presence: UiPresence::default(),
@@ -724,10 +585,7 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
         children: vec![ui_text(Label::data(format!("{} {}", selected_node_ids.len(), term_labels.media_node_count_label.as_str())))],
         menu: None,
     }];
-    let nodes: Vec<&WorkflowNode> = selected_node_ids
-        .iter()
-        .filter_map(|node_id| projection.workflow.nodes.iter().find(|node| &node.id == node_id))
-        .collect();
+    let nodes: Vec<&WorkflowNode> = selected_node_ids.iter().filter_map(|node_id| projection.workflow.nodes.iter().find(|node| &node.id == node_id)).collect();
     if !nodes.is_empty() {
         let xs: Vec<_> = nodes.iter().map(|node| node.x).collect();
         let ys: Vec<_> = nodes.iter().map(|node| node.y).collect();
@@ -735,10 +593,12 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
         let y_uniform = ui_inspector_all_equal(&ys.iter().map(|v| v.to_string()).collect::<Vec<_>>());
         let mut node_fields = Vec::new();
         if selected_node_ids.len() == 1 {
-            node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            node_fields.push(UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "s-play-inspector.media-node.id".into(),
                 label: term_labels.node_id.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: "s-play-inspector.media-node.id.input".into(),
                     input_kind: "text".into(),
                     value: selected_node_ids[0].clone(),
@@ -757,25 +617,20 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
                 menu: None,
             }));
         }
-        node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+        node_fields.push(UiNode::Field(UiFieldNode {
+            presence: UiPresence::default(),
             id: "s-play-inspector.media-node.x".into(),
             // 📊️ Coordinate-axis notation, identical in every locale — genuine runtime/technical data,
             // not translatable prose (see `Label::data` doc comment).
             label: Label::data("X"),
-            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+            child: Box::new(UiNode::Input(UiInputNode {
+                presence: UiPresence::default(),
                 id: "s-play-inspector.media-node.x.input".into(),
                 input_kind: "number".into(),
-                value: if x_uniform {
-                    xs.first().map(|v| v.to_string()).unwrap_or_default()
-                } else {
-                    String::new()
-                },
+                value: if x_uniform { xs.first().map(|v| v.to_string()).unwrap_or_default() } else { String::new() },
                 placeholder: if x_uniform { None } else { Some(term_labels.mixed_placeholder.into()) },
                 commit: None,
-                on_change: s_play_action(
-                    "patchMediaNodes",
-                    Some(json!({ "nodeIds": selected_node_ids, "field": "position", "axis": "x" })),
-                ),
+                on_change: s_play_action("patchMediaNodes", Some(json!({ "nodeIds": selected_node_ids, "field": "position", "axis": "x" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -787,23 +642,18 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
             error: None,
             menu: None,
         }));
-        node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+        node_fields.push(UiNode::Field(UiFieldNode {
+            presence: UiPresence::default(),
             id: "s-play-inspector.media-node.y".into(),
             label: Label::data("Y"),
-            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+            child: Box::new(UiNode::Input(UiInputNode {
+                presence: UiPresence::default(),
                 id: "s-play-inspector.media-node.y.input".into(),
                 input_kind: "number".into(),
-                value: if y_uniform {
-                    ys.first().map(|v| v.to_string()).unwrap_or_default()
-                } else {
-                    String::new()
-                },
+                value: if y_uniform { ys.first().map(|v| v.to_string()).unwrap_or_default() } else { String::new() },
                 placeholder: if y_uniform { None } else { Some(term_labels.mixed_placeholder.into()) },
                 commit: None,
-                on_change: s_play_action(
-                    "patchMediaNodes",
-                    Some(json!({ "nodeIds": selected_node_ids, "field": "position", "axis": "y" })),
-                ),
+                on_change: s_play_action("patchMediaNodes", Some(json!({ "nodeIds": selected_node_ids, "field": "position", "axis": "y" }))),
                 min: None,
                 max: None,
                 step: None,
@@ -817,11 +667,7 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
         }));
         children.push(UiSectionNode {
             id: "s-play-inspector.media-nodes".into(),
-            label: Some(if selected_node_ids.len() == 1 {
-                term_labels.workflow_node.into()
-            } else {
-                Label::data(format!("{} ({})", term_labels.workflow_nodes.as_str(), selected_node_ids.len()))
-            }),
+            label: Some(if selected_node_ids.len() == 1 { term_labels.workflow_node.into() } else { Label::data(format!("{} ({})", term_labels.workflow_nodes.as_str(), selected_node_ids.len())) }),
             default_open: Some(true),
             presence: UiPresence::default(),
             children: node_fields,
@@ -835,41 +681,20 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
         let program_uniform = ui_inspector_all_equal(&programs);
         let app_uniform = ui_inspector_all_equal(&apps);
         let mut instance_fields = vec![
-            ui_text(Label::data(format!(
-                "{}: {}",
-                term_labels.program_prefix.as_str(),
-                if program_uniform {
-                    programs.first().cloned().unwrap_or_default()
-                } else {
-                    term_labels.mixed_placeholder.as_str().to_string()
-                }
-            ))),
-            ui_text(Label::data(format!(
-                "{}: {}",
-                term_labels.app_prefix.as_str(),
-                if app_uniform {
-                    apps.first().cloned().unwrap_or_default()
-                } else {
-                    term_labels.mixed_placeholder.as_str().to_string()
-                }
-            ))),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            ui_text(Label::data(format!("{}: {}", term_labels.program_prefix.as_str(), if program_uniform { programs.first().cloned().unwrap_or_default() } else { term_labels.mixed_placeholder.as_str().to_string() }))),
+            ui_text(Label::data(format!("{}: {}", term_labels.app_prefix.as_str(), if app_uniform { apps.first().cloned().unwrap_or_default() } else { term_labels.mixed_placeholder.as_str().to_string() }))),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "s-play-inspector.app-instance.label".into(),
                 label: term_labels.label.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: "s-play-inspector.app-instance.label.input".into(),
                     input_kind: "text".into(),
-                    value: if label_uniform {
-                        labels.first().cloned().unwrap_or_default()
-                    } else {
-                        String::new()
-                    },
+                    value: if label_uniform { labels.first().cloned().unwrap_or_default() } else { String::new() },
                     placeholder: if label_uniform { None } else { Some(term_labels.mixed_placeholder.into()) },
                     commit: None,
-                    on_change: s_play_action(
-                        "patchAppInstances",
-                        Some(json!({ "nodeIds": selected_node_ids, "field": "label" })),
-                    ),
+                    on_change: s_play_action("patchAppInstances", Some(json!({ "nodeIds": selected_node_ids, "field": "label" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -889,9 +714,7 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
             if let Some(node) = nodes.first() {
                 if let Some(registration) = os_app_registration(&node.plugin_id, &node.app_id) {
                     for field_spec in &registration.parameter_fields {
-                        let binding = projection.parameter_bindings.iter().find(|entry| {
-                            entry.node_id == node.id && entry.field_path == field_spec.field_path
-                        });
+                        let binding = projection.parameter_bindings.iter().find(|entry| entry.node_id == node.id && entry.field_path == field_spec.field_path);
                         let compatible: Vec<_> = projection
                             .parameters
                             .iter()
@@ -907,32 +730,23 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
                                 )
                             })
                             .collect();
-                        let mut items = vec![UiSelectItem {
-                            value: "__direct__".into(),
-                            label: term_labels.direct_value.into(),
-                        }];
+                        let mut items = vec![UiSelectItem { value: "__direct__".into(), label: term_labels.direct_value.into() }];
                         for parameter in compatible {
                             items.push(UiSelectItem {
                                 value: parameter_entity_id(parameter).into(),
                                 label: Label::data(match parameter {
-                                    OsParameter::Numeric { name, .. }
-                                    | OsParameter::Categorical { name, .. }
-                                    | OsParameter::Toggle { name, .. }
-                                    | OsParameter::Text { name, .. } => name.clone(),
+                                    OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => name.clone(),
                                 }),
                             });
                         }
-                        instance_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+                        instance_fields.push(UiNode::Field(UiFieldNode {
+                            presence: UiPresence::default(),
                             id: format!("s-play-inspector.app-parameter.{}", field_spec.field_path),
                             label: Label::data(field_spec.label.clone()),
-                            child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(),
-                                id: format!(
-                                    "s-play-inspector.app-parameter.{}.select",
-                                    field_spec.field_path
-                                ),
-                                value: binding
-                                    .map(|entry| entry.parameter_id.clone())
-                                    .unwrap_or_else(|| "__direct__".into()),
+                            child: Box::new(UiNode::Select(UiSelectNode {
+                                presence: UiPresence::default(),
+                                id: format!("s-play-inspector.app-parameter.{}.select", field_spec.field_path),
+                                value: binding.map(|entry| entry.parameter_id.clone()).unwrap_or_else(|| "__direct__".into()),
                                 items,
                                 placeholder: None,
                                 on_change: s_play_action(
@@ -950,16 +764,8 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
                             menu: None,
                         }));
                         if let Some(binding) = binding {
-                            if let Some(parameter) = projection
-                                .parameters
-                                .iter()
-                                .find(|entry| entry.id() == binding.parameter_id)
-                            {
-                                instance_fields.push(ui_text(Label::data(format!(
-                                    "{}: {}",
-                                    term_labels.bound_value_prefix.as_str(),
-                                    os_parameter_value(parameter)
-                                ))));
+                            if let Some(parameter) = projection.parameters.iter().find(|entry| entry.id() == binding.parameter_id) {
+                                instance_fields.push(ui_text(Label::data(format!("{}: {}", term_labels.bound_value_prefix.as_str(), os_parameter_value(parameter)))));
                             }
                         }
                     }
@@ -968,11 +774,7 @@ fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_la
         }
         children.push(UiSectionNode {
             id: "s-play-inspector.app-instances".into(),
-            label: Some(if selected_node_ids.len() == 1 {
-                term_labels.app_instance.into()
-            } else {
-                Label::data(format!("{} ({})", term_labels.app_instances.as_str(), selected_node_ids.len()))
-            }),
+            label: Some(if selected_node_ids.len() == 1 { term_labels.app_instance.into() } else { Label::data(format!("{} ({})", term_labels.app_instances.as_str(), selected_node_ids.len())) }),
             default_open: Some(true),
             presence: UiPresence::default(),
             children: instance_fields,
@@ -1032,22 +834,14 @@ fn render_workflow(projection: &OsProjection, config: &SpaceConfig, labels: &SSt
             capabilities_json: Some(r#"{"engine":"flow","spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
             fixture_json: Some(fixture.to_string()),
             presence_peers_json: Some(presence_peers_json(config)),
-            ..NodeGraphScene::base(
-                json_array_to_node_graph_nodes(&graph_payload.nodes_json),
-                json_array_to_node_graph_edges(&graph_payload.edges_json),
-                NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom },
-            )
+            ..NodeGraphScene::base(json_array_to_node_graph_nodes(&graph_payload.nodes_json), json_array_to_node_graph_edges(&graph_payload.edges_json), NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom })
         },
     )
 }
 
 fn render_compiled_dag(projection: &OsProjection) -> UiNode {
     let wire = compiled_dag_wire_literal(projection);
-    build_text_editor_scene(
-        S_PLAY_SURFACE_COMPILED_DAG,
-        S_PLAY_CONTROLLER_ID,
-        TextEditorScene::base(wire, Some("wire".into()), None),
-    )
+    build_text_editor_scene(S_PLAY_SURFACE_COMPILED_DAG, S_PLAY_CONTROLLER_ID, TextEditorScene::base(wire, Some("wire".into()), None))
 }
 
 fn render_media_vfs(projection: &OsProjection, labels: &SStudioLabels) -> UiNode {
@@ -1060,13 +854,7 @@ fn render_media_vfs(projection: &OsProjection, labels: &SStudioLabels) -> UiNode
         "hasChildren": true,
         "descriptorValues": {}
     })];
-    flatten_media_vfs_rows(
-        OS_WORKFLOW_VFS_ROOT_ID,
-        &projection.workflow,
-        &projection.parameter_bindings,
-        &projection.parameters,
-        &mut rows,
-    );
+    flatten_media_vfs_rows(OS_WORKFLOW_VFS_ROOT_ID, &projection.workflow, &projection.parameter_bindings, &projection.parameters, &mut rows);
     let schema = os_workflow_vfs_schema();
     build_virtual_file_system_scene(
         S_PLAY_SURFACE_MEDIA_VFS,
@@ -1101,14 +889,7 @@ fn negotiate_connect_or_notify(projection: &OsProjection, source_node_id: &str, 
 
 fn connect_edge_operation(source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str, contract: MediaContract) -> OsOperation {
     OsOperation::ConnectWorkflowPorts {
-        edge: WorkflowEdge {
-            id: create_os_id("edge"),
-            source_node_id: source_node_id.into(),
-            source_port_id: source_port_id.into(),
-            target_node_id: target_node_id.into(),
-            target_port_id: target_port_id.into(),
-            contract,
-        },
+        edge: WorkflowEdge { id: create_os_id("edge"), source_node_id: source_node_id.into(), source_port_id: source_port_id.into(), target_node_id: target_node_id.into(), target_port_id: target_port_id.into(), contract },
     }
 }
 
@@ -1183,12 +964,7 @@ impl DocumentApp for SpaceApp {
         }
     }
 
-    fn handle(
-        &self,
-        command: &SpaceCommand,
-        doc: &DocumentView<'_, OsProjection>,
-        cfg: &ConfigView<'_, SpaceConfig>,
-    ) -> Emit<OsOperation, SpaceConfigOperation> {
+    fn handle(&self, command: &SpaceCommand, doc: &DocumentView<'_, OsProjection>, cfg: &ConfigView<'_, SpaceConfig>) -> Emit<OsOperation, SpaceConfigOperation> {
         let projection = doc.projection;
         let config = cfg.projection;
         match command {
@@ -1237,20 +1013,14 @@ impl DocumentApp for SpaceApp {
             }
             SpaceCommand::RemoveParameter { parameter_id } => Emit::operations(vec![OsOperation::RemoveParameter { parameter_id: parameter_id.clone() }]),
             SpaceCommand::SpawnApp { plugin_id, app_id, x, y } => match add_workflow_node_operation(plugin_id, app_id, None, *x, *y) {
-                Some((operation, node_id)) => Emit {
-                    document_operations: vec![operation],
-                    config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }],
-                    ..Default::default()
-                },
+                Some((operation, node_id)) => Emit { document_operations: vec![operation], config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() },
                 None => Emit::default(),
             },
             SpaceCommand::MoveMediaNode { node_id, x, y } => Emit::amend(vec![OsOperation::MoveWorkflowNode { node_id: node_id.clone(), x: *x, y: *y }], format!("moveMediaNode:{node_id}")),
-            SpaceCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => {
-                match negotiate_connect_or_notify(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
-                    Ok(contract) => Emit::operations(vec![connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract)]),
-                    Err(effect) => Emit::effect(effect),
-                }
-            }
+            SpaceCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => match negotiate_connect_or_notify(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
+                Ok(contract) => Emit::operations(vec![connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract)]),
+                Err(effect) => Emit::effect(effect),
+            },
             SpaceCommand::DisconnectMediaEdge { edge_id } => Emit::operations(vec![OsOperation::DisconnectWorkflowEdge { edge_id: edge_id.clone() }]),
             SpaceCommand::RemoveAppInstance { node_id } => match node_id.clone().or_else(|| primary_selected_node_id(config)) {
                 Some(node_id) => {
@@ -1269,11 +1039,7 @@ impl DocumentApp for SpaceApp {
                 let document_operations = config.selected_node_ids.iter().cloned().map(|node_id| OsOperation::RemoveWorkflowNode { node_id }).collect();
                 Emit {
                     document_operations,
-                    config_operations: vec![
-                        SpaceConfigOperation::SetSelection { node_ids: Vec::new() },
-                        SpaceConfigOperation::SetActiveNode { node_id: None },
-                        SpaceConfigOperation::SetFocusedNode { node_id: None },
-                    ],
+                    config_operations: vec![SpaceConfigOperation::SetSelection { node_ids: Vec::new() }, SpaceConfigOperation::SetActiveNode { node_id: None }, SpaceConfigOperation::SetFocusedNode { node_id: None }],
                     ..Default::default()
                 }
             }
@@ -1354,11 +1120,7 @@ impl DocumentApp for SpaceApp {
                 let mut parts = raw.split_whitespace();
                 match (parts.next(), parts.next()) {
                     (Some(plugin_id), Some(app_id)) => match add_workflow_node_operation(plugin_id, app_id, None, 80.0, 80.0) {
-                        Some((operation, node_id)) => Emit {
-                            document_operations: vec![operation],
-                            config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }],
-                            ..Default::default()
-                        },
+                        Some((operation, node_id)) => Emit { document_operations: vec![operation], config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() },
                         None => Emit::default(),
                     },
                     _ => Emit::default(),
@@ -1430,9 +1192,7 @@ impl DocumentApp for SpaceApp {
                 Emit::config(config_operations)
             }
             SpaceCommand::NodeGraphHover { hover_json } | SpaceCommand::TextHover { hover_json } => {
-                let node_id = hover_json.as_deref().and_then(|text| {
-                    serde_json::from_str::<Value>(text).ok().and_then(|parsed| parsed.get("nodeId").and_then(|id| id.as_str().map(str::to_string))).or_else(|| Some(text.to_string()))
-                });
+                let node_id = hover_json.as_deref().and_then(|text| serde_json::from_str::<Value>(text).ok().and_then(|parsed| parsed.get("nodeId").and_then(|id| id.as_str().map(str::to_string))).or_else(|| Some(text.to_string())));
                 Emit::config(vec![SpaceConfigOperation::SetHover { node_id }])
             }
             SpaceCommand::NodeGraphViewport { viewport_json } => match serde_json::from_str::<OsWorkflowCamera>(viewport_json) {
@@ -1454,22 +1214,20 @@ impl DocumentApp for SpaceApp {
                     Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{example_id}") })
                 }
             }
-            SpaceCommand::ExportMedia { node_id, format } => {
-                match projection.workflow.nodes.iter().find(|row| &row.id == node_id) {
-                    Some(node) => {
-                        ensure_space_fixtures_registered();
-                        let schema = os_app_registration(&node.plugin_id, &node.app_id).map(|row| row.source_format).unwrap_or_default();
-                        let document_json = materialize_os_app_instance_document_json(&json!({ "schema": schema }).to_string(), &node.id, &projection.parameter_bindings, &projection.parameters);
-                        let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
-                        let export_format = semio_framework_os::OsMediaFormat::parse(format).unwrap_or(semio_framework_os::OsMediaFormat::Svg);
-                        match semio_framework_os::export_os_app_instance_media(node, &document_value, export_format) {
-                            Ok(result) => Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding }),
-                            Err(_) => Emit::default(),
-                        }
+            SpaceCommand::ExportMedia { node_id, format } => match projection.workflow.nodes.iter().find(|row| &row.id == node_id) {
+                Some(node) => {
+                    ensure_space_fixtures_registered();
+                    let schema = os_app_registration(&node.plugin_id, &node.app_id).map(|row| row.source_format).unwrap_or_default();
+                    let document_json = materialize_os_app_instance_document_json(&json!({ "schema": schema }).to_string(), &node.id, &projection.parameter_bindings, &projection.parameters);
+                    let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
+                    let export_format = semio_framework_os::OsMediaFormat::parse(format).unwrap_or(semio_framework_os::OsMediaFormat::Svg);
+                    match semio_framework_os::export_os_app_instance_media(node, &document_value, export_format) {
+                        Ok(result) => Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding }),
+                        Err(_) => Emit::default(),
                     }
-                    None => Emit::default(),
                 }
-            }
+                None => Emit::default(),
+            },
             SpaceCommand::ImportMedia { node_id, format } => Emit {
                 config_operations: vec![SpaceConfigOperation::SetPendingImport { node_id: Some(node_id.clone()), format: Some(format.clone()) }],
                 effects: vec![HostEffect::RequestFileOpen { accept: format!(".{format}"), read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
@@ -1503,7 +1261,12 @@ impl DocumentApp for SpaceApp {
                             use base64::Engine;
                             Emit {
                                 effects: vec![
-                                    HostEffect::DownloadMediaExport { filename: format!("{space_id}.pack"), mime_type: "application/octet-stream".into(), data: base64::engine::general_purpose::STANDARD.encode(&pack_files.pack), encoding: Some("base64".into()) },
+                                    HostEffect::DownloadMediaExport {
+                                        filename: format!("{space_id}.pack"),
+                                        mime_type: "application/octet-stream".into(),
+                                        data: base64::engine::general_purpose::STANDARD.encode(&pack_files.pack),
+                                        encoding: Some("base64".into()),
+                                    },
                                     HostEffect::DownloadMediaExport { filename: format!("{space_id}.ops"), mime_type: "text/plain".into(), data: pack_files.ops, encoding: None },
                                 ],
                                 ..Default::default()
@@ -1539,9 +1302,7 @@ impl DocumentApp for SpaceApp {
                 Emit::default()
             }
             SpaceCommand::OpenSpace { space_id } => {
-                let document = home_ui::resolve_studio_document(space_id)
-                    .or_else(|| if space_id == "demo" { Some(parse_demo_space_document()) } else { None })
-                    .unwrap_or_else(|| create_empty_os_document(space_id, "Untitled Studio"));
+                let document = home_ui::resolve_studio_document(space_id).or_else(|| if space_id == "demo" { Some(parse_demo_space_document()) } else { None }).unwrap_or_else(|| create_empty_os_document(space_id, "Untitled Studio"));
                 let mut config_operations = vec![
                     SpaceConfigOperation::SetSpaceId { space_id: Some(space_id.clone()) },
                     SpaceConfigOperation::SetFocusedNode { node_id: None },
@@ -1552,12 +1313,7 @@ impl DocumentApp for SpaceApp {
                     Some(files) => {
                         let active_node_id = materialize_os_projection(&document, &[]).ok().and_then(|projection| projection.workflow.nodes.first().map(|node| node.id.clone()));
                         config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: active_node_id });
-                        eprintln!(
-                            "[DEBUG] openSpace id={} nodes={} backbone={:?}",
-                            space_id,
-                            document.vcs.initial_projection.workflow.nodes.len(),
-                            document.backbone.as_ref().map(|row| row.uri.clone())
-                        );
+                        eprintln!("[DEBUG] openSpace id={} nodes={} backbone={:?}", space_id, document.vcs.initial_projection.workflow.nodes.len(), document.backbone.as_ref().map(|row| row.uri.clone()));
                         Emit { config_operations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() }
                     }
                     None => {
@@ -1632,20 +1388,7 @@ fn apply_config_operations(config: &SpaceConfig, operations: &[SpaceConfigOperat
 
 //#region 🔖️SpaceManifest
 fn space_play_layout() -> WindowLayout {
-    create_default_layout(
-        &[
-            S_PLAY_WINDOW_WORKFLOW.into(),
-            S_PLAY_WINDOW_MEDIA_VFS.into(),
-            S_PLAY_WINDOW_COMPILED_DAG.into(),
-        ],
-        "row",
-        Some(&[40.0, 30.0, 30.0]),
-        Some(&[
-            "Workflow".into(),
-            "Media VFS".into(),
-            "Compiled DAG".into(),
-        ]),
-    )
+    create_default_layout(&[S_PLAY_WINDOW_WORKFLOW.into(), S_PLAY_WINDOW_MEDIA_VFS.into(), S_PLAY_WINDOW_COMPILED_DAG.into()], "row", Some(&[40.0, 30.0, 30.0]), Some(&["Workflow".into(), "Media VFS".into(), "Compiled DAG".into()]))
 }
 
 fn workflow_engagement(config: &SpaceConfig, node_count: usize) -> WindowEngagement {
@@ -1664,10 +1407,7 @@ fn workflow_engagement(config: &SpaceConfig, node_count: usize) -> WindowEngagem
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus {
-            id: "s-media-count".into(),
-            text: format!("{node_count} nodes"),
-        }]),
+        status: Some(vec![WindowEngagementStatus { id: "s-media-count".into(), text: format!("{node_count} nodes") }]),
         possible_engagements: None,
     }
 }
@@ -1677,14 +1417,7 @@ fn workflow_measures(config: &SpaceConfig, nodes: &[WorkflowNode], labels: &SStu
         id: "s-media-active-instance".into(),
         label: Some(labels.active_app.into()),
         value: config.active_node_id.clone().unwrap_or_default(),
-        items: nodes
-            .iter()
-            .map(|node| MeasureSelectItem {
-                id: node.id.clone(),
-                value: node.id.clone(),
-                label: node.label.clone(),
-            })
-            .collect(),
+        items: nodes.iter().map(|node| MeasureSelectItem { id: node.id.clone(), value: node.id.clone(), label: node.label.clone() }).collect(),
         on_change: s_play_action("selectInstance", None),
     }]
 }
@@ -1697,10 +1430,7 @@ fn compiled_dag_engagement(projection: &OsProjection) -> WindowEngagement {
         input: None,
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus {
-            id: "s-compiled-dag-status".into(),
-            text: if wire.trim().is_empty() { "Empty".into() } else { "Compiled".into() },
-        }]),
+        status: Some(vec![WindowEngagementStatus { id: "s-compiled-dag-status".into(), text: if wire.trim().is_empty() { "Empty".into() } else { "Compiled".into() } }]),
         possible_engagements: None,
     }
 }
@@ -1823,20 +1553,12 @@ pub fn create_space_app() -> App {
         .keybinding("mod+shift+z", "redo")
         .keybinding("mod+s", "commitCheckpoint");
     let mut definition = builder.build_definition();
-    if let Some(window) = definition
-        .window_kinds
-        .iter_mut()
-        .find(|window| window.id == S_PLAY_WINDOW_WORKFLOW)
-    {
+    if let Some(window) = definition.window_kinds.iter_mut().find(|window| window.id == S_PLAY_WINDOW_WORKFLOW) {
         window.options.measures = measures;
         window.options.engagement = WindowEngagementSlot::Some(engagement);
     }
     let compiled_engagement = compiled_dag_engagement(&demo_space_projection());
-    if let Some(window) = definition
-        .window_kinds
-        .iter_mut()
-        .find(|window| window.id == S_PLAY_WINDOW_COMPILED_DAG)
-    {
+    if let Some(window) = definition.window_kinds.iter_mut().find(|window| window.id == S_PLAY_WINDOW_COMPILED_DAG) {
         window.options.engagement = WindowEngagementSlot::Some(compiled_engagement);
     }
     let mut app = App { definition, examples: Vec::new() };
@@ -1858,8 +1580,8 @@ pub fn create_space_app() -> App {
 mod tests {
     use super::*;
     use semio_framework_os::{
-        apply_os_operation, register_app_io, register_artifact_descriptor, validate_workflow, ArtifactKindSpec, ArtifactPresentation, AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat,
-        OsMediaFormat, PortMultiplicity,
+        apply_os_operation, register_app_io, register_artifact_descriptor, validate_workflow, AppDefinition, ArtifactKindSpec, ArtifactPresentation, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat, OsMediaFormat,
+        PortMultiplicity,
     };
     use semio_framework_plugin::{testkit, AppIo, HistoryView, PluginApp, UiControlNode, UiNode, VcsDocumentApp, ViewState};
     use std::collections::HashSet;
@@ -1898,7 +1620,8 @@ mod tests {
             .document(document.iter().map(|segment| segment.to_string()))
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .window_kind("main", LocalizedLabel::native("Main", "Hauptansicht"), format!("{app_id}.main"), SurfaceKind::Canvas2d, "square-pen")
-            .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() }).with_ports(ports))
+            .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() })
+                .with_ports(ports))
             .build_definition();
         register_app_io(plugin_id, &definition);
         definition
@@ -1915,13 +1638,45 @@ mod tests {
 
     fn seed_multi_port_plugins() {
         let puzzle_ports = vec![
-            MediaPortSpec { id: "in-a".into(), label: "In A".into(), direction: MediaPortDirection::In, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: Some("topology".into()), required: false, multiplicity: PortMultiplicity::One },
-            MediaPortSpec { id: "out-a".into(), label: "Out A".into(), direction: MediaPortDirection::Out, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: Some("topology".into()), required: false, multiplicity: PortMultiplicity::One },
-            MediaPortSpec { id: "out-b".into(), label: "Out B".into(), direction: MediaPortDirection::Out, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: Some("topology".into()), required: false, multiplicity: PortMultiplicity::One },
+            MediaPortSpec {
+                id: "in-a".into(),
+                label: "In A".into(),
+                direction: MediaPortDirection::In,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("topology".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+            MediaPortSpec {
+                id: "out-a".into(),
+                label: "Out A".into(),
+                direction: MediaPortDirection::Out,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("topology".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+            MediaPortSpec {
+                id: "out-b".into(),
+                label: "Out B".into(),
+                direction: MediaPortDirection::Out,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("topology".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
         ];
         seed_app("puzzle.5d", "puzzle5d", "Puzzle 5D", &["semio", "puzzle", "5d"], "puzzle5d.document", puzzle_ports);
 
-        let shooting_ports = vec![MediaPortSpec { id: "scene-in".into(), label: "Scene".into(), direction: MediaPortDirection::In, media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, kind_id: Some("2d.shooting".into()), required: true, multiplicity: PortMultiplicity::One }];
+        let shooting_ports = vec![MediaPortSpec {
+            id: "scene-in".into(),
+            label: "Scene".into(),
+            direction: MediaPortDirection::In,
+            media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+            kind_id: Some("2d.shooting".into()),
+            required: true,
+            multiplicity: PortMultiplicity::One,
+        }];
         seed_app("shooting", "shooting", "Shooting", &["semio", "shooting"], "shooting.document", shooting_ports);
     }
 
@@ -2057,10 +1812,7 @@ mod tests {
         let definition = create_space_app().definition;
         let resolve = |window_id: &str| -> Vec<String> {
             let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
-            semio_framework_plugin::resolve_window_actions(&definition, window)
-                .into_iter()
-                .map(|action| action.id.clone())
-                .collect()
+            semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
         };
         let graph = resolve(S_PLAY_WINDOW_WORKFLOW);
         let vfs = resolve(S_PLAY_WINDOW_MEDIA_VFS);
@@ -2103,12 +1855,7 @@ mod tests {
         let node_id = projection.workflow.nodes.first().expect("node").id.clone();
         let emit = studio_emit(&projection, &config, SpaceCommand::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 });
         assert_eq!(emit.coalesce_key.as_deref(), Some(format!("moveMediaNode:{node_id}").as_str()));
-        let node = apply_operations(&projection, &emit.document_operations)
-            .workflow
-            .nodes
-            .into_iter()
-            .find(|row| row.id == node_id)
-            .expect("node");
+        let node = apply_operations(&projection, &emit.document_operations).workflow.nodes.into_iter().find(|row| row.id == node_id).expect("node");
         assert!((node.x - 120.0).abs() < 0.01);
         assert!((node.y - 160.0).abs() < 0.01);
     }
@@ -2262,12 +2009,7 @@ mod tests {
         semio_framework_os::register_os_media_export_handler("2d.drawing", OsMediaFormat::Dwg, |_doc| {
             let drawing = semio_framework_os::DwgDrawing::default();
             let bytes = semio_framework_os::dwg_to_bytes(&drawing)?;
-            Ok(semio_framework_os::OsMediaExportResult {
-                data: base64::engine::general_purpose::STANDARD.encode(bytes),
-                mime_type: OsMediaFormat::Dwg.mime_type().into(),
-                file_name: "draw.dwg".into(),
-                encoding: Some("base64".into()),
-            })
+            Ok(semio_framework_os::OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: OsMediaFormat::Dwg.mime_type().into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
         });
         semio_framework_os::register_dwg_import_handler("2d.drawing", |_drawing| Ok(json!({ "schema": "draw.document", "imported": true })));
 
@@ -2326,13 +2068,7 @@ mod tests {
         seed_draw_plugin();
         let mut app = VcsDocumentApp::new(SpaceApp);
         let before = app.projection().expect("projection").workflow.nodes.len();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 },
-            |app| app.projection().expect("projection").workflow.nodes.len(),
-            before,
-            before + 1,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }, |app| app.projection().expect("projection").workflow.nodes.len(), before, before + 1);
     }
 
     #[test]
@@ -2379,16 +2115,8 @@ mod tests {
         let UiNode::Tree(tree_node) = tree else {
             panic!("expected tree");
         };
-        let section = tree_node
-            .sections
-            .iter()
-            .find(|section| section.id == "s-play-inspector.app-instances")
-            .expect("instances section");
-        let label_field = section
-            .items
-            .iter()
-            .find(|item| item.id == "s-play-inspector.app-instance.label")
-            .expect("label field");
+        let section = tree_node.sections.iter().find(|section| section.id == "s-play-inspector.app-instances").expect("instances section");
+        let label_field = section.items.iter().find(|item| item.id == "s-play-inspector.app-instance.label").expect("label field");
         let control = label_field.control.as_ref().expect("label control");
         let UiControlNode::Input(input) = control else {
             panic!("expected input control");
@@ -2496,12 +2224,7 @@ mod tests {
         fixture["layout"][&node.id] = json!({ "x": 500.0 + node.width / 2.0, "y": 300.0 + node.height / 2.0 });
         let operations_json = json!({ "operations": [{ "operation": "setFixture", "fixtureJson": fixture.to_string() }] }).to_string();
         let emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphEdit { operations_json });
-        let moved = apply_operations(&projection, &emit.document_operations)
-            .workflow
-            .nodes
-            .into_iter()
-            .find(|row| row.id == node.id)
-            .expect("node");
+        let moved = apply_operations(&projection, &emit.document_operations).workflow.nodes.into_iter().find(|row| row.id == node.id).expect("node");
         assert!((moved.x - 500.0).abs() < 0.01);
         assert!((moved.y - 300.0).abs() < 0.01);
         assert_eq!(emit.config_operations, vec![SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }]);
@@ -2591,10 +2314,7 @@ mod tests {
         let home_config = home_engine::HomeConfig::default();
         let home_cfg = ConfigView { projection: &home_config };
         let emit = home.handle(&home_protocol::HomeCommand::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg);
-        assert!(
-            !emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })),
-            "create must not download a file"
-        );
+        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "create must not download a file");
         let uri = emit
             .effects
             .iter()

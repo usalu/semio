@@ -32,8 +32,8 @@
 use crate::domain::{DomainStore, RestrictResult};
 use crate::ids::{NodeId, PatternId};
 use crate::model::CompiledModel;
-use crate::propagate::PropQueue;
 use crate::prop_ac3;
+use crate::propagate::PropQueue;
 use crate::topology::Topology;
 use crate::trail::Trail;
 use crate::weights::WeightTable;
@@ -275,7 +275,17 @@ fn is_false(domains: &DomainStore, (node, pattern): (NodeId, PatternId)) -> bool
 /// what any other propagation-causing mutation in this crate does, so a nogood-forced exclusion
 /// can never leave the domain store arc-inconsistent. Returns the first node this drives empty.
 #[allow(clippy::too_many_arguments)]
-fn force_exclude_and_propagate<T: Topology>(model: &CompiledModel, topo: &T, domains: &mut DomainStore, queue: &mut PropQueue, trail: &mut Trail, metrics: &mut crate::diag::Metrics, node: NodeId, pattern: PatternId, w: &WeightTable) -> Option<NodeId> {
+fn force_exclude_and_propagate<T: Topology>(
+    model: &CompiledModel,
+    topo: &T,
+    domains: &mut DomainStore,
+    queue: &mut PropQueue,
+    trail: &mut Trail,
+    metrics: &mut crate::diag::Metrics,
+    node: NodeId,
+    pattern: PatternId,
+    w: &WeightTable,
+) -> Option<NodeId> {
     let result = domains.get_mut(node).remove(pattern, w);
     trail.record_removed(node, pattern);
     if matches!(result, RestrictResult::Wipeout) {

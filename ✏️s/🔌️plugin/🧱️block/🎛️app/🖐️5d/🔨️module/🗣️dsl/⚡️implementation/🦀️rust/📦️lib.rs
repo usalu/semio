@@ -34,7 +34,15 @@ mod tests {
             camera3d: BlockCamera3d { position: [30.0, -30.0, 20.0], target: [7.0, 0.0, 3.0], zoom: 3.0 },
             ..Block5dDefinition::default()
         };
-        definition.representations.push(BlockRepresentation { id: "r0".into(), name: "default".into(), mesh_url: Some("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb".into()), tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() });
+        definition.representations.push(BlockRepresentation {
+            id: "r0".into(),
+            name: "default".into(),
+            mesh_url: Some("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb".into()),
+            tags: Vec::new(),
+            lod: None,
+            description: String::new(),
+            attributes: Vec::new(),
+        });
         definition.grip_kinds.push(Block5dGripKind { id: "b-l".into(), name: "b-l".into(), label: "b-l".into(), color: "hsl(206 52% 48%)".into(), default_rope_kind: "rope.link".into() });
         definition.grips.push(Block5dGripTemplate { id: "g0".into(), grip_kind: "b-l".into(), angle: -0.1, radius_2d: 3.0, position: [4.05, 4.68, 3.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.36 });
         definition

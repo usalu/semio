@@ -1,7 +1,7 @@
 //! ⚡️ Puzzle 3d app — operation enum + laws (constitutional: op).
 
-use puzzle_3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dProjection, Puzzle3dReference, Puzzle3dTargetVolume};
 use protocol::{Operation, OperationDiff};
+use puzzle_3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dProjection, Puzzle3dReference, Puzzle3dTargetVolume};
 use serde::{Deserialize, Serialize};
 
 pub type Puzzle3dEnvelope = store::DocumentEnvelope<Puzzle3dProjection, Puzzle3dOperation>;
@@ -136,26 +136,48 @@ impl OperationDiff<Puzzle3dProjection> for Puzzle3dDiff {
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Puzzle3dOperation {
     #[dsl(key = "setObject")]
-    SetObject { index: usize, #[dsl(block)] object: Puzzle3dObject },
+    SetObject {
+        index: usize,
+        #[dsl(block)]
+        object: Puzzle3dObject,
+    },
     #[dsl(key = "removeObject")]
     RemoveObject { id: String },
     #[dsl(key = "setAttraction")]
-    SetAttraction { index: usize, #[dsl(block)] attraction: Puzzle3dAttraction },
+    SetAttraction {
+        index: usize,
+        #[dsl(block)]
+        attraction: Puzzle3dAttraction,
+    },
     #[dsl(key = "removeAttraction")]
     RemoveAttraction { id: String },
     #[dsl(key = "setTargetVolume")]
-    SetTargetVolume { index: usize, #[dsl(block)] target_volume: Puzzle3dTargetVolume },
+    SetTargetVolume {
+        index: usize,
+        #[dsl(block)]
+        target_volume: Puzzle3dTargetVolume,
+    },
     #[dsl(key = "removeTargetVolume")]
     RemoveTargetVolume { id: String },
     #[dsl(key = "setReference")]
-    SetReference { index: usize, #[dsl(block)] reference: Puzzle3dReference },
+    SetReference {
+        index: usize,
+        #[dsl(block)]
+        reference: Puzzle3dReference,
+    },
     #[dsl(key = "removeReference")]
     RemoveReference { id: String },
     #[dsl(key = "setMeta")]
-    SetMeta { #[dsl(block)] meta: Puzzle3dMeta },
+    SetMeta {
+        #[dsl(block)]
+        meta: Puzzle3dMeta,
+    },
     /// 🌍️ Replaces the whole document (example import / reset / engine fill).
     #[dsl(key = "setDocument")]
-    SetDocument { #[dsl(block)] document: Puzzle3dProjection },
+    SetDocument {
+        #[dsl(block)]
+        document: Puzzle3dProjection,
+    },
 }
 
 fn puzzle3d_operation_diff(operation: &Puzzle3dOperation) -> Puzzle3dDiff {
@@ -349,9 +371,7 @@ impl Operation<serde_json::Value> for Puzzle3dOperation {
                 Some((index, previous)) => vec![Puzzle3dOperation::SetReference { index, reference: previous }],
                 None => vec![Puzzle3dOperation::RemoveReference { id: reference.id.clone() }],
             },
-            Puzzle3dOperation::RemoveReference { id } => {
-                puzzle3d_value_item_index::<Puzzle3dReference>(projection, "references", id).map(|(index, previous)| vec![Puzzle3dOperation::SetReference { index, reference: previous }]).unwrap_or_default()
-            }
+            Puzzle3dOperation::RemoveReference { id } => puzzle3d_value_item_index::<Puzzle3dReference>(projection, "references", id).map(|(index, previous)| vec![Puzzle3dOperation::SetReference { index, reference: previous }]).unwrap_or_default(),
             Puzzle3dOperation::SetMeta { .. } => {
                 let meta: Puzzle3dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 vec![Puzzle3dOperation::SetMeta { meta }]
@@ -481,16 +501,12 @@ impl store::DocumentDsl for Puzzle3dPlayProjection {
 
 impl store::DocumentPack for Puzzle3dPlayProjection {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::to_dsl_value(&self.0)
-            .map_err(store::PackError::Schema)?
-            .encode_pack_with(options)
+        dsl::to_dsl_value(&self.0).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        dsl::from_dsl_value(value)
-            .map(Puzzle3dPlayProjection)
-            .map_err(store::PackError::Schema)
+        dsl::from_dsl_value(value).map(Puzzle3dPlayProjection).map_err(store::PackError::Schema)
     }
 }
 
@@ -526,10 +542,8 @@ mod tests {
 
     #[test]
     fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
-        let before =
-            serde_json::json!({ "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o1", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o2", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
-        let after =
-            serde_json::json!({ "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o2", "origin": [9.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o3", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
+        let before = serde_json::json!({ "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o1", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o2", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
+        let after = serde_json::json!({ "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o2", "origin": [9.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o3", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
         let operations = puzzle3d_document_delta_operations(&before, &after);
         assert!(!operations.iter().any(|operation| matches!(operation, Puzzle3dOperation::SetDocument { .. })));
         let mut forward = before.clone();

@@ -7,9 +7,8 @@ use forms::{FormSpec, FormStep, FORMS_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 
 pub use playbook::{
-    can_advance, default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location,
-    flatten_playbook_blocks as flatten_form_questions, initial_values as initial_try_values, is_block_visible as is_question_visible, is_extension_block_kind as is_extension_question_kind,
-    step_errors, visible_blocks as visible_questions,
+    can_advance, default_value_for_block as default_value_for_question, eval_playbook_expr as eval_form_expr, find_block_location as find_question_location, flatten_playbook_blocks as flatten_form_questions, initial_values as initial_try_values,
+    is_block_visible as is_question_visible, is_extension_block_kind as is_extension_question_kind, step_errors, visible_blocks as visible_questions,
 };
 
 //#region 🔖️Config
@@ -75,30 +74,19 @@ impl protocol::OperationDiff<FormsConfig> for FormsConfig {
 pub fn forms_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: FORMS_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::Data,
-            form: semio_framework_plugin::MediaForm::Value,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "dictionary:out".into(),
             label: "Dictionary".into(),
             direction: semio_framework_plugin::MediaPortDirection::Out,
-            media_type: semio_framework_plugin::MediaType {
-                class: semio_framework_plugin::MediaClass::Data,
-                form: semio_framework_plugin::MediaForm::Value,
-            },
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
             kind_id: Some("form.dictionary".into()),
             required: false,
             multiplicity: semio_framework_core::PortMultiplicity::Many,
         }],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "form.dictionary".into(),
-            name: "Form".into(),
-            dimension: "data".into(),
-            component_kind: "forms".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "form.dictionary".into(), name: "Form".into(), dimension: "data".into(), component_kind: "forms".into() },
     }
 }
 //#endregion 🔖️Io
@@ -157,13 +145,7 @@ mod tests {
 
     #[test]
     fn forms_config_dsl_and_pack_round_trip() {
-        let config = FormsConfig {
-            selected_ids: vec!["q1".into(), "q2".into()],
-            current_step_index: 2,
-            try_values_json: r#"{"name":"Ada"}"#.into(),
-            locale: "de-DE".into(),
-            contributions_json: "[]".into(),
-        };
+        let config = FormsConfig { selected_ids: vec!["q1".into(), "q2".into()], current_step_index: 2, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
         store::test_support::assert_dsl_round_trip(&config);
         store::test_support::assert_dsl_pack_equivalence(&config);
     }

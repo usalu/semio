@@ -121,17 +121,8 @@ impl ser::Serializer for ValueSerializer {
         value.serialize(self)
     }
 
-    fn serialize_newtype_variant<T: ?Sized + Serialize>(
-        self,
-        _name: &'static str,
-        _variant_index: u32,
-        variant: &'static str,
-        value: &T,
-    ) -> Result<Self::Ok, Self::Error> {
-        Ok(DslValue::object([
-            ("kind".to_owned(), DslValue::String(variant.to_owned())),
-            ("value".to_owned(), value.serialize(ValueSerializer)?),
-        ]))
+    fn serialize_newtype_variant<T: ?Sized + Serialize>(self, _name: &'static str, _variant_index: u32, variant: &'static str, value: &T) -> Result<Self::Ok, Self::Error> {
+        Ok(DslValue::object([("kind".to_owned(), DslValue::String(variant.to_owned())), ("value".to_owned(), value.serialize(ValueSerializer)?)]))
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
@@ -146,13 +137,7 @@ impl ser::Serializer for ValueSerializer {
         Ok(SeqSerializer { vec: Vec::with_capacity(len) })
     }
 
-    fn serialize_tuple_variant(
-        self,
-        _name: &'static str,
-        _variant_index: u32,
-        variant: &'static str,
-        len: usize,
-    ) -> Result<Self::SerializeTupleVariant, Self::Error> {
+    fn serialize_tuple_variant(self, _name: &'static str, _variant_index: u32, variant: &'static str, len: usize) -> Result<Self::SerializeTupleVariant, Self::Error> {
         Ok(TupleVariantSerializer { variant, vec: Vec::with_capacity(len) })
     }
 
@@ -164,13 +149,7 @@ impl ser::Serializer for ValueSerializer {
         Ok(MapSerializer { entries: Vec::with_capacity(len), pending_key: None })
     }
 
-    fn serialize_struct_variant(
-        self,
-        _name: &'static str,
-        _variant_index: u32,
-        variant: &'static str,
-        len: usize,
-    ) -> Result<Self::SerializeStructVariant, Self::Error> {
+    fn serialize_struct_variant(self, _name: &'static str, _variant_index: u32, variant: &'static str, len: usize) -> Result<Self::SerializeStructVariant, Self::Error> {
         Ok(StructVariantSerializer { variant, entries: Vec::with_capacity(len) })
     }
 }
@@ -234,10 +213,7 @@ impl ser::SerializeTupleVariant for TupleVariantSerializer {
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        Ok(DslValue::object([
-            ("kind".to_owned(), DslValue::String(self.variant.to_owned())),
-            ("fields".to_owned(), DslValue::Array(self.vec)),
-        ]))
+        Ok(DslValue::object([("kind".to_owned(), DslValue::String(self.variant.to_owned())), ("fields".to_owned(), DslValue::Array(self.vec))]))
     }
 }
 
@@ -297,10 +273,7 @@ impl ser::SerializeStructVariant for StructVariantSerializer {
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        Ok(DslValue::object([
-            ("kind".to_owned(), DslValue::String(self.variant.to_owned())),
-            ("value".to_owned(), DslValue::Object(self.entries)),
-        ]))
+        Ok(DslValue::object([("kind".to_owned(), DslValue::String(self.variant.to_owned())), ("value".to_owned(), DslValue::Object(self.entries))]))
     }
 }
 
@@ -325,7 +298,19 @@ impl<'de> de::Deserializer<'de> for &mut ValueDeserializer {
         match self.take() {
             DslValue::Null => visitor.visit_unit(),
             DslValue::Bool(b) => visitor.visit_bool(b),
-            DslValue::Number(n) => visitor.visit_f64(n),
+            DslValue::Number(n) => {
+                if n.fract() == 0.0 {
+                    if n >= 0.0 && n <= u64::MAX as f64 {
+                        visitor.visit_u64(n as u64)
+                    } else if n >= i64::MIN as f64 && n <= i64::MAX as f64 {
+                        visitor.visit_i64(n as i64)
+                    } else {
+                        visitor.visit_f64(n)
+                    }
+                } else {
+                    visitor.visit_f64(n)
+                }
+            }
             DslValue::String(s) => visitor.visit_string(s),
             DslValue::Array(items) => {
                 let mut seq = SeqAccessDeserializer::new(items);
@@ -346,19 +331,12 @@ impl<'de> de::Deserializer<'de> for &mut ValueDeserializer {
         }
     }
 
-    fn deserialize_enum<V: Visitor<'de>>(
-        self,
-        _name: &'static str,
-        _variants: &'static [&'static str],
-        visitor: V,
-    ) -> Result<V::Value, Self::Error> {
+    fn deserialize_enum<V: Visitor<'de>>(self, _name: &'static str, _variants: &'static [&'static str], visitor: V) -> Result<V::Value, Self::Error> {
         let value = self.take();
         match value {
             DslValue::String(variant) => visitor.visit_enum(EnumAccessUnit { variant }),
             DslValue::Object(entries) => visitor.visit_enum(EnumAccessTagged { entries }),
-            other => visitor.visit_enum(EnumAccessTagged {
-                entries: vec![("value".to_owned(), other)],
-            }),
+            other => visitor.visit_enum(EnumAccessTagged { entries: vec![("value".to_owned(), other)] }),
         }
     }
 
@@ -383,11 +361,7 @@ impl<'de> SeqAccess<'de> for SeqAccessDeserializer {
     type Error = SerdeError;
 
     fn next_element_seed<T: DeserializeSeed<'de>>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error> {
-        Ok(self
-            .iter
-            .next()
-            .map(|value| seed.deserialize(&mut ValueDeserializer::new(value)))
-            .transpose()?)
+        Ok(self.iter.next().map(|value| seed.deserialize(&mut ValueDeserializer::new(value))).transpose()?)
     }
 }
 
@@ -463,12 +437,7 @@ impl<'de> EnumAccess<'de> for EnumAccessTagged {
 
     fn variant_seed<V: DeserializeSeed<'de>>(self, seed: V) -> Result<(V::Value, Self::Variant), Self::Error> {
         if let Some((_kind, DslValue::String(variant))) = self.entries.iter().find(|(k, _)| k == "kind") {
-            let payload = self
-                .entries
-                .iter()
-                .find(|(k, _)| k == "value")
-                .map(|(_, v)| v.clone())
-                .unwrap_or(DslValue::Null);
+            let payload = self.entries.iter().find(|(k, _)| k == "value").map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
             return Ok((seed.deserialize(VariantNameDeserializer { variant: variant.clone() })?, VariantAccessNewtype(payload)));
         }
         let (variant, payload) = self.entries.into_iter().next().ok_or_else(|| SerdeError("empty enum object".to_string()))?;

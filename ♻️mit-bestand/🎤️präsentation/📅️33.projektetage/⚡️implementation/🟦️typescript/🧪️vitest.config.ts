@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { uiAssetsVitePlugin } from "../../../../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+import { semioAssetsVitePlugin } from "../../../../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
 // #endregion 🔌️Adapters
 
 const dir = dirname(fileURLToPath(import.meta.url));
@@ -14,7 +14,7 @@ const uiAssetsRoot = resolve(repoRoot, "./🧰️framework/🔨️module/🖱️
 /** @emoji 🧪️ Vitest for `@semio-tech/mit-bestand-praesentation-projektetage`. */
 export default defineConfig({
   root: dir,
-  plugins: [...uiAssetsVitePlugin(uiAssetsRoot), tailwindcss(), react()],
+  plugins: [...semioAssetsVitePlugin(repoRoot), tailwindcss(), react()],
   resolve: {
     alias: [
       { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx") },

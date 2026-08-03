@@ -7,11 +7,11 @@
 
 use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use semio_framework_plugin::{
-    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, AppIo, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabels, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
-    ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, DslValue, Emit, Label, Locale, LocalizedLabel, Media, MediaError, MediaPayload, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup,
-    PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, Terminology, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef,
+    ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, AppLabels, ArtifactKindSpec, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp,
+    DocumentView, DslValue, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, OsMediaCapability,
+    PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use sequence::{default_fixture, SequenceFixture, SequenceStep, SlotRef, StepParams, SEQUENCE_FIXTURE_SCHEMA};
 use sequence_engine::{control_slots, is_control_kind, sequence_example_json, SequenceConfig, SequenceHost};
@@ -41,7 +41,11 @@ const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";
 /// app is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag, lenient-parsed the same way
 /// `detectShellLocale` does on the TS side — see `home_ui`'s identical pair.
 fn sequence_locale(cfg: &SequenceConfig) -> Locale {
-    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
+    if cfg.locale.starts_with("de") {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &SequenceConfig) -> &'static L {
@@ -276,15 +280,7 @@ fn render_main_graph(fixture: &SequenceFixture, config: &SequenceConfig) -> UiNo
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let selection = config.selected_step_ids.clone();
-    build_node_graph_scene(
-        SEQUENCE_PLAY_SURFACE_MAIN,
-        SEQUENCE_PLAY_APP_ID,
-        NodeGraphScene {
-            editable: Some(true),
-            selection,
-            ..NodeGraphScene::base(nodes, edges, viewport)
-        },
-    )
+    build_node_graph_scene(SEQUENCE_PLAY_SURFACE_MAIN, SEQUENCE_PLAY_APP_ID, NodeGraphScene { editable: Some(true), selection, ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 
 fn render_script(fixture: &SequenceFixture, config: &SequenceConfig) -> UiNode {
@@ -547,11 +543,7 @@ impl DocumentApp for SequencePlayApp {
         let selected = cfg.projection.selected_step_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
 
-        let mut menu = Menu::of(registry)
-            .action("run")
-            .action("stop")
-            .action("addStep")
-            .group("transform", |m| m.action("reorganize"));
+        let mut menu = Menu::of(registry).action("run").action("stop").action("addStep").group("transform", |m| m.action("reorganize"));
 
         if nodes.len() == 1 {
             let id = nodes[0].clone();
@@ -675,7 +667,7 @@ pub fn create_sequence_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app() -> VcsDocumentApp<SequencePlayApp> {
         testkit::new_app::<SequencePlayApp>()
@@ -826,12 +818,7 @@ mod tests {
     fn context_menu_stays_within_nine_rows_and_ends_with_destructive_delete() {
         let mut app = new_app_with_registry();
         app.dispatch_typed(SequenceCommand::SetSelection { step_ids: vec!["step-1".into()] }, &testkit::meta("local")).expect("select");
-        let request = ContextMenuRequest {
-            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
-            surface: None,
-            window_instance_id: None,
-            point: None,
-        };
+        let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let items = app.context_menu(&request);
         assert!(items.len() <= 9, "expected <= 9 top-level rows, got {} ({items:?})", items.len());
         let last = items.last().expect("at least one row");

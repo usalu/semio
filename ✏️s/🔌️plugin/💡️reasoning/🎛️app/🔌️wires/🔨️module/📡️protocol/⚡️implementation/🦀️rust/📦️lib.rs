@@ -5,8 +5,8 @@
 //! `ReasoningWiresPlayApp`'s formerly stringly-typed `handle_action` match arm — see
 //! `reasoning_wires_ui::ReasoningWiresPlayApp::handle` for the dispatch.
 
-use reasoning_wires_op::MindmapWiresOperation;
 use protocol::OpBinary;
+use reasoning_wires_op::MindmapWiresOperation;
 use serde::{Deserialize, Serialize};
 
 /// 📦️ Encodes a `MindmapWiresOperation` to its binary command form.
@@ -80,37 +80,17 @@ mod tests {
 
     #[test]
     fn store_applies_node_add() {
-        let mut store = MindmapWiresStore::new(store::create_document_envelope(
-            reasoning_wires::MINDMAP_WIRES_SCHEMA,
-            "mindmap-wires",
-            reasoning_wires_engine::empty_mindmap_wires_document(),
-            None,
-        ));
+        let mut store = MindmapWiresStore::new(store::create_document_envelope(reasoning_wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", reasoning_wires_engine::empty_mindmap_wires_document(), None));
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
-        store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![MindmapWiresOperation::AddNode { node }],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![MindmapWiresOperation::AddNode { node }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     }
 
     #[test]
     fn document_text_round_trip_with_operation_applied() {
-        let mut store = MindmapWiresStore::new(store::create_document_envelope(
-            reasoning_wires::MINDMAP_WIRES_SCHEMA,
-            "mindmap-wires",
-            reasoning_wires_engine::empty_mindmap_wires_document(),
-            None,
-        ));
+        let mut store = MindmapWiresStore::new(store::create_document_envelope(reasoning_wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", reasoning_wires_engine::empty_mindmap_wires_document(), None));
         let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
-        store
-            .dispatch(store::DocumentCommand::Apply {
-                operations: vec![MindmapWiresOperation::AddNode { node }],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![MindmapWiresOperation::AddNode { node }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

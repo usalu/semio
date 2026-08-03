@@ -2691,6 +2691,17 @@
       }
     },
     {
+      "name": "🛠️dev🦀️os-plugins📏️size",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:plugin -- size",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.6
+      }
+    },
+    {
       "name": "🛠️dev🗄️os-hub",
       "type": "node-terminal",
       "request": "launch",
@@ -2986,6 +2997,28 @@
       "presentation": {
         "group": "3_dev",
         "order": 391.12
+      }
+    },
+    {
+      "name": "🧪️verify🧬️core-rs-bindings",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-core-rs:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.13
+      }
+    },
+    {
+      "name": "🧪️verify🗣️ui-axes",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-wgpu-rs:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.14
       }
     },
     {
@@ -4230,8 +4263,8 @@
       "name": "📦️build🖱️ui🏪️assets",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./📜️script.ts generate all",
-      "cwd": "${workspaceFolder}/ui/asset",
+      "command": "bun ./📜️script.ts build",
+      "cwd": "${workspaceFolder}/🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript",
       "presentation": {
         "group": "4_build",
         "order": 210

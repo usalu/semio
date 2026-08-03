@@ -31,8 +31,24 @@ mod tests {
             camera3d: BlockCamera3d { position: [10.0, -10.0, 6.0], target: [0.0, 0.0, 1.0], zoom: 1.0 },
             ..Block3dDefinition::default()
         };
-        definition.representations.push(BlockRepresentation { id: "r0".into(), name: "Full Detail".into(), mesh_url: Some("/mesh/🧊️capsule_J.glb".into()), tags: vec!["full".into()], lod: Some("full".into()), description: String::new(), attributes: Vec::new() });
-        definition.representations.push(BlockRepresentation { id: "r1".into(), name: "1:500".into(), mesh_url: Some("/mesh/capsule_J.1to500.glb".into()), tags: vec!["1to500".into()], lod: Some("low".into()), description: String::new(), attributes: Vec::new() });
+        definition.representations.push(BlockRepresentation {
+            id: "r0".into(),
+            name: "Full Detail".into(),
+            mesh_url: Some("/mesh/🧊️capsule_J.glb".into()),
+            tags: vec!["full".into()],
+            lod: Some("full".into()),
+            description: String::new(),
+            attributes: Vec::new(),
+        });
+        definition.representations.push(BlockRepresentation {
+            id: "r1".into(),
+            name: "1:500".into(),
+            mesh_url: Some("/mesh/capsule_J.1to500.glb".into()),
+            tags: vec!["1to500".into()],
+            lod: Some("low".into()),
+            description: String::new(),
+            attributes: Vec::new(),
+        });
         definition.vortex_kinds.push(Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() });
         definition.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "door".into(), position: [0.0, -1.6, 1.2], direction: [0.0, -1.0, 0.0], radius: 0.3, label: Some("door".into()) });
         definition

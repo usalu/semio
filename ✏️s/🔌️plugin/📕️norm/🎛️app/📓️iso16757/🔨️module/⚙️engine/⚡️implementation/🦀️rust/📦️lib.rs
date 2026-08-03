@@ -39,11 +39,7 @@ pub mod part_1 {
                 }
             }
             let variant = index.variant_id.as_ref().and_then(|vid| product.variants.iter().find(|v| &v.id == vid));
-            let properties: Vec<&PropertyValue> = product
-                .static_properties
-                .iter()
-                .chain(variant.into_iter().flat_map(|v| &v.property_values))
-                .collect();
+            let properties: Vec<&PropertyValue> = product.static_properties.iter().chain(variant.into_iter().flat_map(|v| &v.property_values)).collect();
             let mut passes = true;
             for constraint in &request.constraints {
                 let Some(pv) = properties.iter().find(|pv| pv.definition_id == constraint.property_id) else {
@@ -82,21 +78,9 @@ pub mod part_1 {
     }
 
     pub fn resolve_bim_embedding(catalogue: &Catalogue, index_id: &str, parameters: HashMap<String, CatalogueValue>) -> Result<BimEmbedding, NormError> {
-        let index = catalogue
-            .product_indexes
-            .iter()
-            .find(|i| i.id == index_id)
-            .ok_or_else(|| NormError::InvalidValue { field: "index_id".into(), reason: "unknown product index".into() })?;
-        let product = catalogue
-            .products
-            .iter()
-            .find(|p| p.id == index.product_id)
-            .ok_or_else(|| NormError::InvalidValue { field: "product_id".into(), reason: "unknown product".into() })?;
-        let variant = index
-            .variant_id
-            .as_ref()
-            .and_then(|vid| product.variants.iter().find(|v| &v.id == vid))
-            .ok_or_else(|| NormError::IncompleteInput { field: "variant_id".into() })?;
+        let index = catalogue.product_indexes.iter().find(|i| i.id == index_id).ok_or_else(|| NormError::InvalidValue { field: "index_id".into(), reason: "unknown product index".into() })?;
+        let product = catalogue.products.iter().find(|p| p.id == index.product_id).ok_or_else(|| NormError::InvalidValue { field: "product_id".into(), reason: "unknown product".into() })?;
+        let variant = index.variant_id.as_ref().and_then(|vid| product.variants.iter().find(|v| &v.id == vid)).ok_or_else(|| NormError::IncompleteInput { field: "variant_id".into() })?;
         for (param_id, value) in &parameters {
             let domain = product.parameter_domains.iter().find(|d| &d.parameter_id == param_id);
             if let Some(domain) = domain {
@@ -111,13 +95,7 @@ pub mod part_1 {
             selected_index_id: index_id.to_string(),
             frozen_parameters: parameters,
             resolved_article_number: variant.article_number.clone(),
-            resolved_geometry_id: variant.geometry_id.clone().or_else(|| {
-                catalogue
-                    .product_series
-                    .iter()
-                    .find(|s| s.id == product.series_id)
-                    .and_then(|s| s.geometry_id.clone())
-            }),
+            resolved_geometry_id: variant.geometry_id.clone().or_else(|| catalogue.product_series.iter().find(|s| s.id == product.series_id).and_then(|s| s.geometry_id.clone())),
             resolved_properties,
             catalogue_provenance: catalogue.id.clone(),
             dictionary_provenance: catalogue.dictionary.clone(),
@@ -161,11 +139,7 @@ pub mod part_2 {
                 }
                 GeometryNode::Primitive { kind: kind.clone(), parameters: resolved }
             }
-            GeometryNode::Transform { translation, rotation_deg, child } => GeometryNode::Transform {
-                translation: *translation,
-                rotation_deg: *rotation_deg,
-                child: Box::new(substitute_parameters(child, values)),
-            },
+            GeometryNode::Transform { translation, rotation_deg, child } => GeometryNode::Transform { translation: *translation, rotation_deg: *rotation_deg, child: Box::new(substitute_parameters(child, values)) },
             GeometryNode::Boolean { operator, children } => GeometryNode::Boolean { operator: *operator, children: children.iter().map(|c| substitute_parameters(c, values)).collect() },
             GeometryNode::Reference { geometry_id } => GeometryNode::Reference { geometry_id: geometry_id.clone() },
         }
@@ -216,12 +190,9 @@ pub mod part_2 {
                 }
                 Ok(acc)
             }
-            GeometryNode::Reference { geometry_id } => catalogue
-                .objects
-                .get(geometry_id)
-                .and_then(|obj| obj.shape.as_ref())
-                .map(|shape| evaluate_bounding_box(shape, catalogue))
-                .unwrap_or(Err(NormError::InvalidValue { field: "geometry_id".into(), reason: "unresolved reference".into() })),
+            GeometryNode::Reference { geometry_id } => {
+                catalogue.objects.get(geometry_id).and_then(|obj| obj.shape.as_ref()).map(|shape| evaluate_bounding_box(shape, catalogue)).unwrap_or(Err(NormError::InvalidValue { field: "geometry_id".into(), reason: "unresolved reference".into() }))
+            }
         }
     }
 
@@ -249,15 +220,7 @@ pub mod part_2 {
     }
 
     pub fn project_step_entity(_object: &GeometryObject, bbox: BoundingBox) -> String {
-        format!(
-            "#1=IFCCARTESIANPOINT(({:.3},{:.3},{:.3}));\n#2=IFCBOUNDINGBOX(#1,{:.3},{:.3},{:.3});",
-            bbox.min[0],
-            bbox.min[1],
-            bbox.min[2],
-            bbox.max[0] - bbox.min[0],
-            bbox.max[1] - bbox.min[1],
-            bbox.max[2] - bbox.min[2]
-        )
+        format!("#1=IFCCARTESIANPOINT(({:.3},{:.3},{:.3}));\n#2=IFCBOUNDINGBOX(#1,{:.3},{:.3},{:.3});", bbox.min[0], bbox.min[1], bbox.min[2], bbox.max[0] - bbox.min[0], bbox.max[1] - bbox.min[1], bbox.max[2] - bbox.min[2])
     }
 }
 // #endregion Part2
@@ -334,15 +297,7 @@ pub mod part_4 {
     }
 
     pub fn to_iso12006_mappings(dictionary: &Dictionary) -> Vec<Iso12006Mapping> {
-        dictionary
-            .subjects
-            .iter()
-            .map(|subject| Iso12006Mapping {
-                dictionary_object_id: subject.id.clone(),
-                iso12006_uri: format!("iso12006://subject/{}", subject.id),
-                object_kind: format!("{:?}", subject.kind),
-            })
-            .collect()
+        dictionary.subjects.iter().map(|subject| Iso12006Mapping { dictionary_object_id: subject.id.clone(), iso12006_uri: format!("iso12006://subject/{}", subject.id), object_kind: format!("{:?}", subject.kind) }).collect()
     }
 }
 // #endregion Part4
@@ -470,9 +425,7 @@ pub mod part_5 {
                         _ => None,
                     })
                     .collect();
-                let result = runtime
-                    .execute(source, &numeric, ScriptLimits::default())
-                    .map_err(|e| NormError::InvalidValue { field: "part_number_script".into(), reason: e.to_string() })?;
+                let result = runtime.execute(source, &numeric, ScriptLimits::default()).map_err(|e| NormError::InvalidValue { field: "part_number_script".into(), reason: e.to_string() })?;
                 Ok(format!("{:.0}", result.value))
             }
         }
@@ -483,22 +436,13 @@ pub mod part_5 {
             entity_type: "IfcBuildingServicesCatalogue".into(),
             global_id: catalogue.id.0.clone(),
             name: catalogue.metadata.names.preferred.text.clone(),
-            attributes: HashMap::from([
-                ("dictionaryId".into(), catalogue.dictionary.id.clone()),
-                ("dictionaryVersion".into(), catalogue.dictionary.version.clone()),
-            ]),
+            attributes: HashMap::from([("dictionaryId".into(), catalogue.dictionary.id.clone()), ("dictionaryVersion".into(), catalogue.dictionary.version.clone())]),
             children: Vec::new(),
         };
         let product_classes = catalogue
             .product_classes
             .iter()
-            .map(|class| IfcCatalogueNode {
-                entity_type: "IfcProductClass".into(),
-                global_id: class.id.clone(),
-                name: class.names.preferred.text.clone(),
-                attributes: HashMap::from([("groupId".into(), class.group_id.clone())]),
-                children: Vec::new(),
-            })
+            .map(|class| IfcCatalogueNode { entity_type: "IfcProductClass".into(), global_id: class.id.clone(), name: class.names.preferred.text.clone(), attributes: HashMap::from([("groupId".into(), class.group_id.clone())]), children: Vec::new() })
             .collect();
         let products = catalogue
             .products
@@ -520,15 +464,7 @@ pub mod part_5 {
         let write_node = |node: &IfcCatalogueNode, id: &mut u32| -> String {
             let current = *id;
             *id += 1;
-            format!(
-                "#{}={}('{}','{}','{}',({}));",
-                current,
-                node.entity_type,
-                node.global_id,
-                node.name,
-                node.name,
-                node.attributes.values().map(|v| format!("'{v}'")).collect::<Vec<_>>().join(",")
-            )
+            format!("#{}={}('{}','{}','{}',({}));", current, node.entity_type, node.global_id, node.name, node.name, node.attributes.values().map(|v| format!("'{v}'")).collect::<Vec<_>>().join(","))
         };
         lines.push(write_node(&catalogue.metadata, &mut id));
         for class in &catalogue.product_classes {
@@ -578,13 +514,7 @@ fn clause(part: &str, section: &str) -> ClauseId {
 }
 
 fn check_count(report: &mut CheckReport, clause: ClauseId, actual: f64, expected: f64, message: impl Into<String>) {
-    report.push(CheckResult::from_utilization(
-        clause,
-        Quantity::new(QuantityKind::Dimensionless, actual),
-        Quantity::new(QuantityKind::Dimensionless, expected),
-        message,
-        AnnexChoice::En,
-    ));
+    report.push(CheckResult::from_utilization(clause, Quantity::new(QuantityKind::Dimensionless, actual), Quantity::new(QuantityKind::Dimensionless, expected), message, AnnexChoice::En));
 }
 
 pub fn evaluate(document: &Document) -> CheckReport {
@@ -594,50 +524,22 @@ pub fn evaluate(document: &Document) -> CheckReport {
     let structure_issues = part_1::validate_catalogue_structure(&document.catalogue);
     check_count(&mut report, clause("1", "3.1"), if structure_issues.is_empty() { 1.0 } else { 2.0 }, 1.0, "catalogue structure");
     for issue in &structure_issues {
-        report.push(CheckResult::fail(
-            clause("1", "3.1"),
-            Quantity::new(QuantityKind::Dimensionless, 0.0),
-            Quantity::new(QuantityKind::Dimensionless, 1.0),
-            2.0,
-            issue.clone(),
-            annex,
-        ));
+        report.push(CheckResult::fail(clause("1", "3.1"), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 2.0, issue.clone(), annex));
     }
 
     let selection = part_1::select_products(&document.catalogue, &document.selection);
     let expected_matches: f64 = if document.selection.class_id == "class.valve" { 1.0 } else { 0.0 };
     check_count(&mut report, clause("1", "4.2"), selection.matches.len() as f64, expected_matches.max(1.0), "product selection");
     if selection.ambiguity {
-        report.push(CheckResult::fail(
-            clause("1", "4.2"),
-            Quantity::new(QuantityKind::Dimensionless, selection.matches.len() as f64),
-            Quantity::new(QuantityKind::Dimensionless, 1.0),
-            2.0,
-            String::from("ambiguous selection"),
-            annex,
-        ));
+        report.push(CheckResult::fail(clause("1", "4.2"), Quantity::new(QuantityKind::Dimensionless, selection.matches.len() as f64), Quantity::new(QuantityKind::Dimensionless, 1.0), 2.0, String::from("ambiguous selection"), annex));
     }
 
     if let Ok(embedding) = part_1::resolve_bim_embedding(&document.catalogue, "index.cv50", HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })])) {
         let has_geometry = embedding.resolved_geometry_id.is_some();
         report.push(if has_geometry {
-            CheckResult::pass(
-                clause("1", "10"),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
-                1.0,
-                "BIM embedding resolved geometry",
-                annex,
-            )
+            CheckResult::pass(clause("1", "10"), Quantity::new(QuantityKind::Dimensionless, 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 1.0, "BIM embedding resolved geometry", annex)
         } else {
-            CheckResult::fail(
-                clause("1", "10"),
-                Quantity::new(QuantityKind::Dimensionless, 0.0),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
-                0.0,
-                "missing geometry in BIM embedding",
-                annex,
-            )
+            CheckResult::fail(clause("1", "10"), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 0.0, "missing geometry in BIM embedding", annex)
         });
     }
 
@@ -646,34 +548,14 @@ pub fn evaluate(document: &Document) -> CheckReport {
             match part_2::evaluate_bounding_box(shape, &document.geometry) {
                 Ok(bbox) => {
                     let volume = bbox.volume_m3();
-                    report.push(CheckResult::from_utilization(
-                        clause("2", "7.1"),
-                        Quantity::new(QuantityKind::Volume, volume),
-                        Quantity::new(QuantityKind::Volume, 0.003),
-                        format!("primitive bbox volume {volume:.4} m3"),
-                        annex,
-                    ));
+                    report.push(CheckResult::from_utilization(clause("2", "7.1"), Quantity::new(QuantityKind::Volume, volume), Quantity::new(QuantityKind::Volume, 0.003), format!("primitive bbox volume {volume:.4} m3"), annex));
                     let step = part_2::project_step_entity(geom, bbox);
                     if step.contains("IFCBOUNDINGBOX") {
-                        report.push(CheckResult::pass(
-                            clause("2", "7.4"),
-                            Quantity::new(QuantityKind::Dimensionless, 1.0),
-                            Quantity::new(QuantityKind::Dimensionless, 1.0),
-                            1.0,
-                            "STEP/IFC geometry projection",
-                            annex,
-                        ));
+                        report.push(CheckResult::pass(clause("2", "7.4"), Quantity::new(QuantityKind::Dimensionless, 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 1.0, "STEP/IFC geometry projection", annex));
                     }
                 }
                 Err(err) => {
-                    report.push(CheckResult::fail(
-                        clause("2", "6.1"),
-                        Quantity::new(QuantityKind::Dimensionless, 0.0),
-                        Quantity::new(QuantityKind::Dimensionless, 1.0),
-                        2.0,
-                        err.to_string(),
-                        annex,
-                    ));
+                    report.push(CheckResult::fail(clause("2", "6.1"), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 2.0, err.to_string(), annex));
                 }
             }
         }
@@ -681,68 +563,29 @@ pub fn evaluate(document: &Document) -> CheckReport {
         let geom_issues = part_2::validate_geometry_graph(geom, &document.geometry, &mut visited);
         if !geom_issues.is_empty() {
             for issue in geom_issues {
-                report.push(CheckResult::fail(
-                    clause("2", "6.1"),
-                    Quantity::new(QuantityKind::Dimensionless, 0.0),
-                    Quantity::new(QuantityKind::Dimensionless, 1.0),
-                    2.0,
-                    issue,
-                    annex,
-                ));
+                report.push(CheckResult::fail(clause("2", "6.1"), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 2.0, issue, annex));
             }
         }
         if let Some(install_space) = geom.spaces.iter().find(|s| s.kind == iso16757::part_2::SpaceKind::Installation) {
             let product_bbox = iso16757::part_2::BoundingBox::from_size(0.15, 0.20, 0.10);
             let clearance_ok = !product_bbox.overlaps(install_space.bounds, 0.05);
             report.push(if clearance_ok {
-                CheckResult::pass(
-                    clause("2", "5.3.5"),
-                    Quantity::new(QuantityKind::Length, 0.05),
-                    Quantity::new(QuantityKind::Length, 0.05),
-                    1.0,
-                    "installation clearance",
-                    annex,
-                )
+                CheckResult::pass(clause("2", "5.3.5"), Quantity::new(QuantityKind::Length, 0.05), Quantity::new(QuantityKind::Length, 0.05), 1.0, "installation clearance", annex)
             } else {
-                CheckResult::fail(
-                    clause("2", "5.3.5"),
-                    Quantity::new(QuantityKind::Length, 0.0),
-                    Quantity::new(QuantityKind::Length, 0.05),
-                    0.0,
-                    "insufficient installation clearance",
-                    annex,
-                )
+                CheckResult::fail(clause("2", "5.3.5"), Quantity::new(QuantityKind::Length, 0.0), Quantity::new(QuantityKind::Length, 0.05), 0.0, "insufficient installation clearance", annex)
             });
         }
     }
 
     let dict_issues = part_4::validate_dictionary(&document.dictionary);
     check_count(&mut report, clause("4", "4.3"), if dict_issues.is_empty() { 1.0 } else { 2.0 }, 1.0, "dictionary structure");
-    let allowed = part_4::filter_controlled_values(
-        document.dictionary.controlled_lists.first().expect("fixture list"),
-        "subject.valve",
-        &document.dictionary,
-    );
+    let allowed = part_4::filter_controlled_values(document.dictionary.controlled_lists.first().expect("fixture list"), "subject.valve", &document.dictionary);
     if allowed.contains(&"50".to_string()) {
-        report.push(CheckResult::pass(
-            clause("4", "6.3.2"),
-            Quantity::new(QuantityKind::Dimensionless, 50.0),
-            Quantity::new(QuantityKind::Dimensionless, 50.0),
-            1.0,
-            "context-filtered controlled value",
-            annex,
-        ));
+        report.push(CheckResult::pass(clause("4", "6.3.2"), Quantity::new(QuantityKind::Dimensionless, 50.0), Quantity::new(QuantityKind::Dimensionless, 50.0), 1.0, "context-filtered controlled value", annex));
     }
     let mappings = part_4::to_iso12006_mappings(&document.dictionary);
     if !mappings.is_empty() {
-        report.push(CheckResult::pass(
-            clause("4", "5.1"),
-            Quantity::new(QuantityKind::Dimensionless, mappings.len() as f64),
-            Quantity::new(QuantityKind::Dimensionless, 1.0),
-            1.0,
-            "ISO 12006-3 mapping",
-            annex,
-        ));
+        report.push(CheckResult::pass(clause("4", "5.1"), Quantity::new(QuantityKind::Dimensionless, mappings.len() as f64), Quantity::new(QuantityKind::Dimensionless, 1.0), 1.0, "ISO 12006-3 mapping", annex));
     }
 
     let ifc = part_5::build_ifc_catalogue(&document.catalogue);
@@ -750,14 +593,7 @@ pub fn evaluate(document: &Document) -> CheckReport {
     check_count(&mut report, clause("5", "6.1"), if exchange_issues.is_empty() { 1.0 } else { 2.0 }, 1.0, "IFC catalogue structure");
     let step = part_5::export_ifc_step(&ifc);
     if step.contains("IFCPRODUCT") || step.contains("IfcProduct") {
-        report.push(CheckResult::pass(
-            clause("5", "6.1"),
-            Quantity::new(QuantityKind::Dimensionless, 1.0),
-            Quantity::new(QuantityKind::Dimensionless, 1.0),
-            1.0,
-            "IFC STEP export",
-            annex,
-        ));
+        report.push(CheckResult::pass(clause("5", "6.1"), Quantity::new(QuantityKind::Dimensionless, 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 1.0, "IFC STEP export", annex));
     }
 
     let runtime = part_5::DefaultScriptRuntime;
@@ -766,46 +602,19 @@ pub fn evaluate(document: &Document) -> CheckReport {
         Ok(part_no) => {
             let expected = 550.0;
             let actual: f64 = part_no.parse().unwrap_or(0.0);
-            report.push(CheckResult::from_utilization(
-                clause("5", "6.10"),
-                Quantity::new(QuantityKind::Dimensionless, actual),
-                Quantity::new(QuantityKind::Dimensionless, expected),
-                format!("part number script result {part_no}"),
-                annex,
-            ));
+            report.push(CheckResult::from_utilization(clause("5", "6.10"), Quantity::new(QuantityKind::Dimensionless, actual), Quantity::new(QuantityKind::Dimensionless, expected), format!("part number script result {part_no}"), annex));
         }
         Err(err) => {
-            report.push(CheckResult::fail(
-                clause("5", "6.10"),
-                Quantity::new(QuantityKind::Dimensionless, 0.0),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
-                2.0,
-                err.to_string(),
-                annex,
-            ));
+            report.push(CheckResult::fail(clause("5", "6.10"), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 2.0, err.to_string(), annex));
         }
     }
 
     match runtime.execute("1/(0)", &HashMap::new(), document.script_limits) {
         Err(iso16757::part_5::ScriptError::InvalidExpression(_)) => {
-            report.push(CheckResult::pass(
-                clause("5", "8"),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
-                1.0,
-                "script division-by-zero guard",
-                annex,
-            ));
+            report.push(CheckResult::pass(clause("5", "8"), Quantity::new(QuantityKind::Dimensionless, 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 1.0, "script division-by-zero guard", annex));
         }
         _ => {
-            report.push(CheckResult::fail(
-                clause("5", "8"),
-                Quantity::new(QuantityKind::Dimensionless, 0.0),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
-                2.0,
-                "script should reject division by zero",
-                annex,
-            ));
+            report.push(CheckResult::fail(clause("5", "8"), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 2.0, "script should reject division by zero", annex));
         }
     }
 
@@ -916,24 +725,14 @@ mod tests {
 
     #[test]
     fn evaluate_constraint_type_mismatch_returns_false() {
-        let constraint = iso16757::part_1::SelectionConstraint {
-            property_id: "p".into(),
-            operator: iso16757::part_1::ConstraintOperator::LessThan,
-            value: CatalogueValue::Text { value: "x".into() },
-        };
+        let constraint = iso16757::part_1::SelectionConstraint { property_id: "p".into(), operator: iso16757::part_1::ConstraintOperator::LessThan, value: CatalogueValue::Text { value: "x".into() } };
         assert!(!part_1::evaluate_constraint(&CatalogueValue::Decimal { value: 1.0 }, &constraint));
     }
 
     #[test]
     fn select_products_filters_by_series_id() {
         let mut doc = Document::default();
-        let other_series = iso16757::part_1::ProductSeries {
-            id: "series.other".into(),
-            class_id: "class.valve".into(),
-            names: doc.catalogue.product_series[0].names.clone(),
-            shared_property_values: BTreeMap::new(),
-            geometry_id: None,
-        };
+        let other_series = iso16757::part_1::ProductSeries { id: "series.other".into(), class_id: "class.valve".into(), names: doc.catalogue.product_series[0].names.clone(), shared_property_values: BTreeMap::new(), geometry_id: None };
         let other_product = iso16757::part_1::Product {
             id: "product.other".into(),
             series_id: "series.other".into(),
@@ -942,11 +741,7 @@ mod tests {
             variants: vec![iso16757::part_1::ProductVariant {
                 id: "variant.other".into(),
                 parameter_values: BTreeMap::new(),
-                property_values: vec![iso16757::part_1::PropertyValue {
-                    definition_id: "prop.dn".into(),
-                    value: CatalogueValue::Decimal { value: 50.0 },
-                    function_id: None,
-                }],
+                property_values: vec![iso16757::part_1::PropertyValue { definition_id: "prop.dn".into(), value: CatalogueValue::Decimal { value: 50.0 }, function_id: None }],
                 article_number: None,
                 geometry_id: None,
             }],
@@ -954,12 +749,7 @@ mod tests {
         };
         doc.catalogue.product_series.push(other_series);
         doc.catalogue.products.push(other_product);
-        doc.catalogue.product_indexes.push(iso16757::part_1::ProductIndex {
-            id: "index.other".into(),
-            product_id: "product.other".into(),
-            variant_id: Some("variant.other".into()),
-            search_tags: Vec::new(),
-        });
+        doc.catalogue.product_indexes.push(iso16757::part_1::ProductIndex { id: "index.other".into(), product_id: "product.other".into(), variant_id: Some("variant.other".into()), search_tags: Vec::new() });
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert_eq!(selection.matches.len(), 1);
         assert_eq!(selection.matches[0].id, "index.cv50");
@@ -968,21 +758,13 @@ mod tests {
     #[test]
     fn select_products_records_missing_property_and_constraint_failures() {
         let mut doc = Document::default();
-        doc.selection.constraints.push(iso16757::part_1::SelectionConstraint {
-            property_id: "prop.missing".into(),
-            operator: iso16757::part_1::ConstraintOperator::Equal,
-            value: CatalogueValue::Decimal { value: 1.0 },
-        });
+        doc.selection.constraints.push(iso16757::part_1::SelectionConstraint { property_id: "prop.missing".into(), operator: iso16757::part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 1.0 } });
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert!(selection.matches.is_empty());
         assert!(selection.explanations.iter().any(|e| e.contains("missing property")));
 
         doc.selection.constraints.clear();
-        doc.selection.constraints.push(iso16757::part_1::SelectionConstraint {
-            property_id: "prop.dn".into(),
-            operator: iso16757::part_1::ConstraintOperator::Equal,
-            value: CatalogueValue::Decimal { value: 999.0 },
-        });
+        doc.selection.constraints.push(iso16757::part_1::SelectionConstraint { property_id: "prop.dn".into(), operator: iso16757::part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 999.0 } });
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert!(selection.matches.is_empty());
         assert!(selection.explanations.iter().any(|e| e.contains("constraint failed")));
@@ -991,12 +773,7 @@ mod tests {
     #[test]
     fn select_products_flags_ambiguity_with_multiple_matches() {
         let mut doc = Document::default();
-        doc.catalogue.product_indexes.push(iso16757::part_1::ProductIndex {
-            id: "index.cv50.dup".into(),
-            product_id: "product.cv".into(),
-            variant_id: Some("variant.50".into()),
-            search_tags: Vec::new(),
-        });
+        doc.catalogue.product_indexes.push(iso16757::part_1::ProductIndex { id: "index.cv50.dup".into(), product_id: "product.cv".into(), variant_id: Some("variant.50".into()), search_tags: Vec::new() });
         let selection = part_1::select_products(&doc.catalogue, &doc.selection);
         assert_eq!(selection.matches.len(), 2);
         assert!(selection.ambiguity);
@@ -1018,11 +795,7 @@ mod tests {
         let missing_variant = part_1::resolve_bim_embedding(&catalogue_no_variant, "index.cv50", HashMap::new());
         assert!(matches!(missing_variant, Err(NormError::IncompleteInput { field }) if field == "variant_id"));
 
-        let out_of_domain = part_1::resolve_bim_embedding(
-            &doc.catalogue,
-            "index.cv50",
-            HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 12345.0 })]),
-        );
+        let out_of_domain = part_1::resolve_bim_embedding(&doc.catalogue, "index.cv50", HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 12345.0 })]));
         assert!(matches!(out_of_domain, Err(NormError::InvalidValue { field, .. }) if field == "dn"));
     }
 
@@ -1190,15 +963,7 @@ mod tests {
 
     #[test]
     fn validate_geometry_graph_empty_parameter_binding() {
-        let object = iso16757::part_2::GeometryObject {
-            id: "geom.bind".into(),
-            shape: None,
-            symbolic: None,
-            spaces: Vec::new(),
-            surfaces: Vec::new(),
-            ports: Vec::new(),
-            parameter_bindings: BTreeMap::from([("width".into(), String::new())]),
-        };
+        let object = iso16757::part_2::GeometryObject { id: "geom.bind".into(), shape: None, symbolic: None, spaces: Vec::new(), surfaces: Vec::new(), ports: Vec::new(), parameter_bindings: BTreeMap::from([("width".into(), String::new())]) };
         let catalogue = iso16757::part_2::GeometryCatalogue::default();
         let mut visited = HashSet::new();
         let issues = part_2::validate_geometry_graph(&object, &catalogue, &mut visited);
@@ -1307,10 +1072,7 @@ mod tests {
         let err = part_5::calculate_part_number(&rule, &no_match_inputs, &runtime).unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "part_number_table"));
 
-        let missing_output_rule = iso16757::part_5::PartNumberRule::Table {
-            rows: vec![BTreeMap::from([("dn".to_string(), "50".to_string())])],
-            output_column: "code".into(),
-        };
+        let missing_output_rule = iso16757::part_5::PartNumberRule::Table { rows: vec![BTreeMap::from([("dn".to_string(), "50".to_string())])], output_column: "code".into() };
         let err = part_5::calculate_part_number(&missing_output_rule, &inputs, &runtime).unwrap_err();
         assert!(matches!(err, NormError::IncompleteInput { field } if field == "code"));
 

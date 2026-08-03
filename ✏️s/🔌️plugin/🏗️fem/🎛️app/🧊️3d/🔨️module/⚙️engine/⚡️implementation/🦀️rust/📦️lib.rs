@@ -66,19 +66,11 @@ impl protocol::OperationDiff<Fem3dConfig> for Fem3dConfig {
 pub fn fem3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: fem3d::FEM_3D_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::ThreeD,
-            form: semio_framework_plugin::MediaForm::Any,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
         ports: vec![fem3d_geometry_in_port(), fem3d_results_out_port()],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "3d.fem".into(),
-            name: "FEM 3D".into(),
-            dimension: "3d".into(),
-            component_kind: "fem3d".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.fem".into(), name: "FEM 3D".into(), dimension: "3d".into(), component_kind: "fem3d".into() },
     }
 }
 
@@ -89,10 +81,7 @@ pub fn fem3d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
         id: "geometry:in".into(),
         label: "Geometry".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::ThreeD,
-            form: semio_framework_plugin::MediaForm::Any,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
         kind_id: None,
         required: true,
         multiplicity: semio_framework_core::PortMultiplicity::One,
@@ -106,10 +95,7 @@ pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
         id: "results:out".into(),
         label: "Results".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::Data,
-            form: semio_framework_plugin::MediaForm::Value,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
         kind_id: Some("computation.fem3d".into()),
         required: false,
         multiplicity: semio_framework_core::PortMultiplicity::One,
@@ -309,8 +295,7 @@ pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, fem_core::
         let (nodal_loads, member_loads) = translate_loads(&case.loads, &solids)?;
         cases.push(analyses::LoadCase { id: case.id.clone(), nodal_loads, member_loads, self_weight: case.self_weight });
     }
-    let combinations: Vec<analyses::Combination> =
-        doc.combinations.iter().map(|combination| analyses::Combination { id: combination.id.clone(), terms: combination.terms.iter().map(|(id, factor)| (id.clone(), *factor)).collect() }).collect();
+    let combinations: Vec<analyses::Combination> = doc.combinations.iter().map(|combination| analyses::Combination { id: combination.id.clone(), terms: combination.terms.iter().map(|(id, factor)| (id.clone(), *factor)).collect() }).collect();
     analyses::solve_multi_case(&model, &cases, &combinations, [0.0, 0.0, -9.81]).map_err(Fem3dError::from)
 }
 
@@ -430,7 +415,14 @@ pub fn fem3d_mesh_preview(doc: &Fem3dDocument) -> Result<Vec<SolidMesh>, Fem3dEr
                 None => format!("{}_m{}", solid.id, point_index),
             })
             .collect();
-        let tets: Vec<[u32; 4]> = tet_mesh.cells.iter().filter_map(|c| match c { fem_core::mesh::Cell::Tet4(t) => Some(*t), _ => None }).collect();
+        let tets: Vec<[u32; 4]> = tet_mesh
+            .cells
+            .iter()
+            .filter_map(|c| match c {
+                fem_core::mesh::Cell::Tet4(t) => Some(*t),
+                _ => None,
+            })
+            .collect();
         let boundary_mesh = fem_core::mesh::VolumeMesh { points: points.clone(), cells: tet_mesh.cells };
         let boundary_tris = fem_core::mesh::boundary_faces(&boundary_mesh);
         out.push(SolidMesh { solid_id: solid.id.clone(), points, tets, boundary_tris, node_ids });
@@ -565,12 +557,7 @@ mod tests {
     /// mirrors `fem_2d`'s `rectangle_region_doc` fixture pattern for `FemSolid`.
     fn solid_slab_doc() -> Fem3dDocument {
         Fem3dDocument {
-            nodes: vec![
-                FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 },
-                FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 },
-                FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 },
-                FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 },
-            ],
+            nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
             elements: vec![],
             materials: vec![FemMaterial { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
             sections: vec![],

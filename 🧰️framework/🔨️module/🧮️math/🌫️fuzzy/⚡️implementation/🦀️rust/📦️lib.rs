@@ -101,9 +101,17 @@ impl MembershipFunction {
                 if x <= *a || x >= *c {
                     0.0
                 } else if (*a - *b).abs() < 1e-12 {
-                    if x <= *b { 1.0 } else { (*c - x) / (*c - *b) }
+                    if x <= *b {
+                        1.0
+                    } else {
+                        (*c - x) / (*c - *b)
+                    }
                 } else if (*c - *b).abs() < 1e-12 {
-                    if x >= *b { 1.0 } else { (x - *a) / (*b - *a) }
+                    if x >= *b {
+                        1.0
+                    } else {
+                        (x - *a) / (*b - *a)
+                    }
                 } else if x <= *b {
                     (x - *a) / (*b - *a)
                 } else {
@@ -130,7 +138,13 @@ impl MembershipFunction {
                 1.0 / (1.0 + z)
             }
             Self::Sigmoid { a, c } => 1.0 / (1.0 + E.powf(-*a * (x - *c))),
-            Self::Singleton { value } => if (x - *value).abs() < 1e-12 { 1.0 } else { 0.0 },
+            Self::Singleton { value } => {
+                if (x - *value).abs() < 1e-12 {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
             Self::PiecewiseLinear { knots } => {
                 if knots.is_empty() {
                     return 0.0;
@@ -303,7 +317,11 @@ impl IntervalType2Set {
             num += x * mu;
             den += mu;
         }
-        if den.abs() < 1e-12 { universe[universe.len() / 2] } else { num / den }
+        if den.abs() < 1e-12 {
+            universe[universe.len() / 2]
+        } else {
+            num / den
+        }
     }
 }
 
@@ -349,7 +367,15 @@ impl TNorm {
             Self::Min => a.min(b),
             Self::Product => a * b,
             Self::Lukasiewicz => (a + b - 1.0).max(0.0),
-            Self::Drastic => if b == 1.0 { a } else if a == 1.0 { b } else { 0.0 },
+            Self::Drastic => {
+                if b == 1.0 {
+                    a
+                } else if a == 1.0 {
+                    b
+                } else {
+                    0.0
+                }
+            }
         }
     }
 
@@ -375,7 +401,13 @@ impl TConorm {
             Self::Max => a.max(b),
             Self::ProbSum => a + b - a * b,
             Self::Lukasiewicz => (a + b).min(1.0),
-            Self::NilpotentMax => if a + b < 1.0 { 0.0 } else { a.max(b) },
+            Self::NilpotentMax => {
+                if a + b < 1.0 {
+                    0.0
+                } else {
+                    a.max(b)
+                }
+            }
         }
     }
 
@@ -451,7 +483,11 @@ impl FuzzyNumber {
             num += x * mu;
             den += mu;
         }
-        if den.abs() < 1e-12 { self.b } else { num / den }
+        if den.abs() < 1e-12 {
+            self.b
+        } else {
+            num / den
+        }
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics add used pervasively as a plain method by fuzzy arithmetic callers")]
@@ -1210,12 +1246,7 @@ pub fn subtractive_cluster_centers(data: &[Vec<f64>], ra: f64, accept_ratio: f64
     let max_p = potentials.iter().copied().fold(0.0, f64::max);
     let accept = accept_ratio * max_p;
     let reject = reject_ratio * max_p;
-    while let Some((idx, p)) = potentials
-        .iter()
-        .enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(i, &p)| (i, p))
-    {
+    while let Some((idx, p)) = potentials.iter().enumerate().max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)).map(|(i, &p)| (i, p)) {
         if p < reject {
             break;
         }
@@ -1248,9 +1279,7 @@ impl GeneticOptimizer {
     pub fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
         let mut rng = Rng::from_seed(self.seed);
         let dim = self.bounds.len();
-        let mut population: Vec<Vec<f64>> = (0..self.population_size)
-            .map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect())
-            .collect();
+        let mut population: Vec<Vec<f64>> = (0..self.population_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
         let mut best = population[0].clone();
         let mut best_fit = fitness(&best);
         for _ in 0..self.generations {
@@ -1265,11 +1294,7 @@ impl GeneticOptimizer {
             while population.len() < self.population_size {
                 let p1 = &population[rng.next_range(0, population.len() as u64) as usize];
                 let p2 = &population[rng.next_range(0, population.len() as u64) as usize];
-                let mut child: Vec<f64> = if rng.next_bool(self.crossover_rate) {
-                    (0..dim).map(|d| if rng.next_bool(0.5) { p1[d] } else { p2[d] }).collect()
-                } else {
-                    p1.clone()
-                };
+                let mut child: Vec<f64> = if rng.next_bool(self.crossover_rate) { (0..dim).map(|d| if rng.next_bool(0.5) { p1[d] } else { p2[d] }).collect() } else { p1.clone() };
                 for d in 0..dim {
                     if rng.next_bool(self.mutation_rate) {
                         child[d] = self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0);
@@ -1297,9 +1322,7 @@ impl PsoOptimizer {
     pub fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
         let mut rng = Rng::from_seed(self.seed);
         let dim = self.bounds.len();
-        let mut positions: Vec<Vec<f64>> = (0..self.swarm_size)
-            .map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect())
-            .collect();
+        let mut positions: Vec<Vec<f64>> = (0..self.swarm_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
         let mut velocities = vec![vec![0.0; dim]; self.swarm_size];
         let mut personal_best = positions.clone();
         let mut personal_fit: Vec<f64> = positions.iter().map(|p| fitness(p)).collect();
@@ -1418,10 +1441,13 @@ pub fn fuzzy_c_means(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize, tol: 
         for i in 0..n {
             for j in 0..k {
                 let dist2: f64 = (0..dim).map(|d| (data[i][d] - centers[j][d]).powi(2)).sum::<f64>().max(1e-12);
-                membership[i][j] = 1.0 / (0..k).map(|c| {
-                    let dist2c: f64 = (0..dim).map(|d| (data[i][d] - centers[c][d]).powi(2)).sum::<f64>().max(1e-12);
-                    (dist2 / dist2c).powf(1.0 / (m - 1.0))
-                }).sum::<f64>();
+                membership[i][j] = 1.0
+                    / (0..k)
+                        .map(|c| {
+                            let dist2c: f64 = (0..dim).map(|d| (data[i][d] - centers[c][d]).powi(2)).sum::<f64>().max(1e-12);
+                            (dist2 / dist2c).powf(1.0 / (m - 1.0))
+                        })
+                        .sum::<f64>();
                 new_obj += membership[i][j].powf(m) * dist2;
             }
         }
@@ -1470,16 +1496,19 @@ pub fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize) ->
                         dist2 += diff[a] * covariances[j].get(a, b) * diff[b];
                     }
                 }
-                result.membership[i][j] = 1.0 / (0..k).map(|c| {
-                    let mut d2 = 0.0;
-                    let diff: Vec<f64> = (0..dim).map(|d| data[i][d] - result.centers[c][d]).collect();
-                    for a in 0..dim {
-                        for b in 0..dim {
-                            d2 += diff[a] * covariances[c].get(a, b) * diff[b];
-                        }
-                    }
-                    (dist2.max(1e-12) / d2.max(1e-12)).powf(1.0 / (m - 1.0))
-                }).sum::<f64>();
+                result.membership[i][j] = 1.0
+                    / (0..k)
+                        .map(|c| {
+                            let mut d2 = 0.0;
+                            let diff: Vec<f64> = (0..dim).map(|d| data[i][d] - result.centers[c][d]).collect();
+                            for a in 0..dim {
+                                for b in 0..dim {
+                                    d2 += diff[a] * covariances[c].get(a, b) * diff[b];
+                                }
+                            }
+                            (dist2.max(1e-12) / d2.max(1e-12)).powf(1.0 / (m - 1.0))
+                        })
+                        .sum::<f64>();
             }
         }
     }
@@ -1508,7 +1537,11 @@ impl FuzzyAhp {
             }
         }
         let sum: f64 = scores.iter().sum();
-        if sum.abs() < 1e-12 { vec![1.0 / n as f64; n] } else { scores.into_iter().map(|s| s / sum).collect() }
+        if sum.abs() < 1e-12 {
+            vec![1.0 / n as f64; n]
+        } else {
+            scores.into_iter().map(|s| s / sum).collect()
+        }
     }
 }
 
@@ -1539,24 +1572,8 @@ impl FuzzyTopsis {
                 norm[i][j] = crisp[i][j] / denom * self.weights[j];
             }
         }
-        let ideal_pos: Vec<f64> = (0..n)
-            .map(|j| {
-                if self.benefit[j] {
-                    (0..m).map(|i| norm[i][j]).fold(f64::NEG_INFINITY, f64::max)
-                } else {
-                    (0..m).map(|i| norm[i][j]).fold(f64::INFINITY, f64::min)
-                }
-            })
-            .collect();
-        let ideal_neg: Vec<f64> = (0..n)
-            .map(|j| {
-                if self.benefit[j] {
-                    (0..m).map(|i| norm[i][j]).fold(f64::INFINITY, f64::min)
-                } else {
-                    (0..m).map(|i| norm[i][j]).fold(f64::NEG_INFINITY, f64::max)
-                }
-            })
-            .collect();
+        let ideal_pos: Vec<f64> = (0..n).map(|j| if self.benefit[j] { (0..m).map(|i| norm[i][j]).fold(f64::NEG_INFINITY, f64::max) } else { (0..m).map(|i| norm[i][j]).fold(f64::INFINITY, f64::min) }).collect();
+        let ideal_neg: Vec<f64> = (0..n).map(|j| if self.benefit[j] { (0..m).map(|i| norm[i][j]).fold(f64::INFINITY, f64::min) } else { (0..m).map(|i| norm[i][j]).fold(f64::NEG_INFINITY, f64::max) }).collect();
         let mut scores = Vec::new();
         for i in 0..m {
             let d_pos: f64 = (0..n).map(|j| (norm[i][j] - ideal_pos[j]).powi(2)).sum::<f64>().sqrt();
@@ -1583,29 +1600,9 @@ impl FuzzyVikor {
     pub fn rank(&self) -> Vec<(usize, f64)> {
         let m = self.alternatives.len();
         let n = self.criteria.len();
-        let crisp = self
-            .decision_matrix
-            .iter()
-            .map(|row| row.iter().map(|cell| cell.defuzzify_centroid(32)).collect::<Vec<_>>())
-            .collect::<Vec<_>>();
-        let f_star: Vec<f64> = (0..n)
-            .map(|j| {
-                if self.benefit[j] {
-                    (0..m).map(|i| crisp[i][j]).fold(f64::NEG_INFINITY, f64::max)
-                } else {
-                    (0..m).map(|i| crisp[i][j]).fold(f64::INFINITY, f64::min)
-                }
-            })
-            .collect();
-        let _f_minus: Vec<f64> = (0..n)
-            .map(|j| {
-                if self.benefit[j] {
-                    (0..m).map(|i| crisp[i][j]).fold(f64::INFINITY, f64::min)
-                } else {
-                    (0..m).map(|i| crisp[i][j]).fold(f64::NEG_INFINITY, f64::max)
-                }
-            })
-            .collect();
+        let crisp = self.decision_matrix.iter().map(|row| row.iter().map(|cell| cell.defuzzify_centroid(32)).collect::<Vec<_>>()).collect::<Vec<_>>();
+        let f_star: Vec<f64> = (0..n).map(|j| if self.benefit[j] { (0..m).map(|i| crisp[i][j]).fold(f64::NEG_INFINITY, f64::max) } else { (0..m).map(|i| crisp[i][j]).fold(f64::INFINITY, f64::min) }).collect();
+        let _f_minus: Vec<f64> = (0..n).map(|j| if self.benefit[j] { (0..m).map(|i| crisp[i][j]).fold(f64::INFINITY, f64::min) } else { (0..m).map(|i| crisp[i][j]).fold(f64::NEG_INFINITY, f64::max) }).collect();
         let mut s = vec![0.0_f64; m];
         let mut r = vec![0.0_f64; m];
         for i in 0..m {
@@ -1715,49 +1712,14 @@ impl FanController {
         let mut high_adapt = AdaptiveMembership::new(high_mf, 0.01);
         high_adapt.fit(&high_samples, 20);
         high_mf = high_adapt.mf;
-        let temperature_var = LinguisticVariable::new(
-            "temperature",
-            temp_univ,
-            vec![FuzzySet::new("low", low_mf), FuzzySet::new("high", high_mf)],
-        );
-        let speed_var = LinguisticVariable::new(
-            "fan_speed",
-            speed_univ,
-            vec![
-                FuzzySet::new("slow", MembershipFunction::triangular(0.0, 0.0, s_max * 0.5)),
-                FuzzySet::new("fast", MembershipFunction::triangular(s_max * 0.4, s_max, s_max)),
-            ],
-        );
-        let sensor_uncertainty = IntervalType2Set::new(
-            "temperature_sensor",
-            MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.05),
-            MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.12),
-        );
+        let temperature_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("low", low_mf), FuzzySet::new("high", high_mf)]);
+        let speed_var = LinguisticVariable::new("fan_speed", speed_univ, vec![FuzzySet::new("slow", MembershipFunction::triangular(0.0, 0.0, s_max * 0.5)), FuzzySet::new("fast", MembershipFunction::triangular(s_max * 0.4, s_max, s_max))]);
+        let sensor_uncertainty = IntervalType2Set::new("temperature_sensor", MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.05), MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.12));
         let rules = RuleBase::new(vec![
-            Rule {
-                id: 0,
-                antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }],
-                consequent: Consequent::Mamdani { output: 0, term: 1 },
-                weight: 0.9,
-                confidence: 0.85,
-            },
-            Rule {
-                id: 1,
-                antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }],
-                consequent: Consequent::Mamdani { output: 0, term: 0 },
-                weight: 0.8,
-                confidence: 0.8,
-            },
+            Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }], consequent: Consequent::Mamdani { output: 0, term: 1 }, weight: 0.9, confidence: 0.85 },
+            Rule { id: 1, antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }], consequent: Consequent::Mamdani { output: 0, term: 0 }, weight: 0.8, confidence: 0.8 },
         ]);
-        let system = MimoSystem {
-            inputs: vec![temperature_var.clone()],
-            outputs: vec![speed_var.clone()],
-            rules,
-            model: InferenceModel::Mamdani,
-            tnorm: TNorm::Min,
-            tconorm: TConorm::Max,
-            defuzzifier: Defuzzifier::Centroid,
-        };
+        let system = MimoSystem { inputs: vec![temperature_var.clone()], outputs: vec![speed_var.clone()], rules, model: InferenceModel::Mamdani, tnorm: TNorm::Min, tconorm: TConorm::Max, defuzzifier: Defuzzifier::Centroid };
         let evolving = EvolvingFuzzySystem::new(system, 0.05, 0.1, 8);
         Ok(Self { temperature_var, speed_var, sensor_uncertainty, evolving })
     }
@@ -1780,40 +1742,14 @@ mod tests {
     fn temp_speed_system() -> MimoSystem {
         let temp_univ = Universe::new(0.0, 40.0, 41).unwrap();
         let speed_univ = Universe::new(0.0, 100.0, 41).unwrap();
-        let temp_var = LinguisticVariable::new(
-            "temperature",
-            temp_univ,
-            vec![
-                FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 20.0)),
-                FuzzySet::new("high", MembershipFunction::triangular(15.0, 40.0, 40.0)),
-            ],
-        );
-        let speed_var = LinguisticVariable::new(
-            "fan_speed",
-            speed_univ,
-            vec![
-                FuzzySet::new("slow", MembershipFunction::triangular(0.0, 0.0, 50.0)),
-                FuzzySet::new("fast", MembershipFunction::triangular(40.0, 100.0, 100.0)),
-            ],
-        );
+        let temp_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 20.0)), FuzzySet::new("high", MembershipFunction::triangular(15.0, 40.0, 40.0))]);
+        let speed_var = LinguisticVariable::new("fan_speed", speed_univ, vec![FuzzySet::new("slow", MembershipFunction::triangular(0.0, 0.0, 50.0)), FuzzySet::new("fast", MembershipFunction::triangular(40.0, 100.0, 100.0))]);
         MimoSystem {
             inputs: vec![temp_var],
             outputs: vec![speed_var],
             rules: RuleBase::new(vec![
-                Rule {
-                    id: 0,
-                    antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }],
-                    consequent: Consequent::Mamdani { output: 0, term: 1 },
-                    weight: 1.0,
-                    confidence: 1.0,
-                },
-                Rule {
-                    id: 1,
-                    antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }],
-                    consequent: Consequent::Mamdani { output: 0, term: 0 },
-                    weight: 1.0,
-                    confidence: 1.0,
-                },
+                Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }], consequent: Consequent::Mamdani { output: 0, term: 1 }, weight: 1.0, confidence: 1.0 },
+                Rule { id: 1, antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }], consequent: Consequent::Mamdani { output: 0, term: 0 }, weight: 1.0, confidence: 1.0 },
             ]),
             model: InferenceModel::Mamdani,
             tnorm: TNorm::Min,
@@ -1865,20 +1801,8 @@ mod tests {
         let mut system = temp_speed_system();
         system.model = InferenceModel::Sugeno;
         system.rules = RuleBase::new(vec![
-            Rule {
-                id: 0,
-                antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }],
-                consequent: Consequent::SugenoConstant { output: 0, value: 90.0 },
-                weight: 1.0,
-                confidence: 1.0,
-            },
-            Rule {
-                id: 1,
-                antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }],
-                consequent: Consequent::SugenoConstant { output: 0, value: 10.0 },
-                weight: 1.0,
-                confidence: 1.0,
-            },
+            Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }], consequent: Consequent::SugenoConstant { output: 0, value: 90.0 }, weight: 1.0, confidence: 1.0 },
+            Rule { id: 1, antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }], consequent: Consequent::SugenoConstant { output: 0, value: 10.0 }, weight: 1.0, confidence: 1.0 },
         ]);
         let (out, _) = system.infer(&[35.0]).unwrap();
         assert!(out[0] > 70.0);
@@ -1902,10 +1826,7 @@ mod tests {
 
     #[test]
     fn fuzzy_ahp_produces_normalized_weights() {
-        let matrix = vec![
-            vec![FuzzyNumber::triangular(1.0, 1.0, 1.0), FuzzyNumber::triangular(2.0, 3.0, 4.0)],
-            vec![FuzzyNumber::triangular(0.25, 0.33, 0.5), FuzzyNumber::triangular(1.0, 1.0, 1.0)],
-        ];
+        let matrix = vec![vec![FuzzyNumber::triangular(1.0, 1.0, 1.0), FuzzyNumber::triangular(2.0, 3.0, 4.0)], vec![FuzzyNumber::triangular(0.25, 0.33, 0.5), FuzzyNumber::triangular(1.0, 1.0, 1.0)]];
         let weights = FuzzyAhp::new(matrix).weights();
         assert!((weights.iter().sum::<f64>() - 1.0).abs() < 1e-6);
     }
@@ -1925,11 +1846,7 @@ mod tests {
 
     #[test]
     fn interval_type2_centroid_between_bounds() {
-        let it2 = IntervalType2Set::new(
-            "temp",
-            MembershipFunction::gaussian(20.0, 1.0),
-            MembershipFunction::gaussian(20.0, 3.0),
-        );
+        let it2 = IntervalType2Set::new("temp", MembershipFunction::gaussian(20.0, 1.0), MembershipFunction::gaussian(20.0, 3.0));
         let c = it2.type_reduced_centroid(&linspace(10.0, 30.0, 41));
         assert!((c - 20.0).abs() < 2.0);
     }
@@ -2205,11 +2122,7 @@ mod tests {
     #[test]
     fn linguistic_variable_fuzzify_and_term_index() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
-        let var = LinguisticVariable::new(
-            "x",
-            univ,
-            vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 5.0)), FuzzySet::new("high", MembershipFunction::triangular(5.0, 10.0, 10.0))],
-        );
+        let var = LinguisticVariable::new("x", univ, vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 5.0)), FuzzySet::new("high", MembershipFunction::triangular(5.0, 10.0, 10.0))]);
         assert_eq!(var.term_index("high"), Some(1));
         assert_eq!(var.term_index("missing"), None);
         let grades = var.fuzzify(2.5);
@@ -2221,13 +2134,7 @@ mod tests {
     fn rule_firing_strength_applies_hedge() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
         let var = LinguisticVariable::new("x", univ, vec![FuzzySet::new("mid", MembershipFunction::triangular(0.0, 5.0, 10.0))]);
-        let rule = Rule {
-            id: 0,
-            antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: Some(Hedge::Very) }],
-            consequent: Consequent::Mamdani { output: 0, term: 0 },
-            weight: 1.0,
-            confidence: 1.0,
-        };
+        let rule = Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: Some(Hedge::Very) }], consequent: Consequent::Mamdani { output: 0, term: 0 }, weight: 1.0, confidence: 1.0 };
         let strength = rule.firing_strength(&[var], &[2.5], TNorm::Min);
         assert!((strength - 0.25).abs() < 1e-9);
     }
@@ -2308,13 +2215,7 @@ mod tests {
         let system = MimoSystem {
             inputs: vec![temp_var],
             outputs: vec![out_var],
-            rules: RuleBase::new(vec![Rule {
-                id: 0,
-                antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }],
-                consequent: Consequent::Tsukamoto { output: 0, term: 0 },
-                weight: 1.0,
-                confidence: 1.0,
-            }]),
+            rules: RuleBase::new(vec![Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }], consequent: Consequent::Tsukamoto { output: 0, term: 0 }, weight: 1.0, confidence: 1.0 }]),
             model: InferenceModel::Tsukamoto,
             tnorm: TNorm::Min,
             tconorm: TConorm::Max,
@@ -2328,13 +2229,7 @@ mod tests {
     fn soft_constraint_consequent_scales_by_preference() {
         let system = temp_speed_system();
         let mut soft_system = system.clone();
-        soft_system.rules = RuleBase::new(vec![Rule {
-            id: 0,
-            antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }],
-            consequent: Consequent::SoftConstraint { output: 0, term: 1, preference: 0.5 },
-            weight: 1.0,
-            confidence: 1.0,
-        }]);
+        soft_system.rules = RuleBase::new(vec![Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }], consequent: Consequent::SoftConstraint { output: 0, term: 1, preference: 0.5 }, weight: 1.0, confidence: 1.0 }]);
         let (out, explanation) = soft_system.infer(&[35.0]).unwrap();
         assert!(out[0] >= 0.0);
         assert!(explanation.traces.iter().any(|t| t.description.contains("soft constraint")));
@@ -2351,7 +2246,12 @@ mod tests {
     #[test]
     fn adaptive_membership_fit_updates_parameters() {
         let mf = MembershipFunction::triangular(0.0, 3.0, 10.0);
-        let samples: Vec<(f64, f64)> = (0..10).map(|i| { let x = i as f64; (x, MembershipFunction::triangular(0.0, 5.0, 10.0).eval(x)) }).collect();
+        let samples: Vec<(f64, f64)> = (0..10)
+            .map(|i| {
+                let x = i as f64;
+                (x, MembershipFunction::triangular(0.0, 5.0, 10.0).eval(x))
+            })
+            .collect();
         let mut adaptive = AdaptiveMembership::new(mf, 0.05);
         let initial_params = adaptive.mf.parameters();
         let loss = adaptive.fit(&samples, 10);
@@ -2369,16 +2269,8 @@ mod tests {
     #[test]
     fn wang_mendel_rules_generates_one_rule_per_sample() {
         let univ = Universe::new(0.0, 10.0, 11).unwrap();
-        let input_var = LinguisticVariable::new(
-            "x",
-            univ.clone(),
-            vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0)), FuzzySet::new("high", MembershipFunction::triangular(0.0, 10.0, 10.0))],
-        );
-        let output_var = LinguisticVariable::new(
-            "y",
-            univ,
-            vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0)), FuzzySet::new("high", MembershipFunction::triangular(0.0, 10.0, 10.0))],
-        );
+        let input_var = LinguisticVariable::new("x", univ.clone(), vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0)), FuzzySet::new("high", MembershipFunction::triangular(0.0, 10.0, 10.0))]);
+        let output_var = LinguisticVariable::new("y", univ, vec![FuzzySet::new("low", MembershipFunction::triangular(0.0, 0.0, 10.0)), FuzzySet::new("high", MembershipFunction::triangular(0.0, 10.0, 10.0))]);
         let data = vec![(vec![1.0], 2.0), (vec![9.0], 8.0)];
         let rules = wang_mendel_rules(&[input_var], &output_var, &data, InferenceModel::Mamdani);
         assert_eq!(rules.rules.len(), 2);
@@ -2493,11 +2385,13 @@ mod tests {
         #[test]
         fn anfis_learns_nonlinear_surface() {
             let data: Vec<(Vec<f64>, f64)> = (0..30)
-                .flat_map(|i| (0..30).map(move |j| {
-                    let x = i as f64 / 10.0;
-                    let y = j as f64 / 10.0;
-                    (vec![x, y], (x * y).sin())
-                }))
+                .flat_map(|i| {
+                    (0..30).map(move |j| {
+                        let x = i as f64 / 10.0;
+                        let y = j as f64 / 10.0;
+                        (vec![x, y], (x * y).sin())
+                    })
+                })
                 .collect();
             let mut anfis = Anfis::new(2, 3, &[(0.0, 3.0), (0.0, 3.0)]);
             let loss = anfis.fit_hybrid(&data, 5);
@@ -2508,14 +2402,7 @@ mod tests {
 
         #[test]
         fn genetic_optimizer_improves_quadratic() {
-            let opt = GeneticOptimizer {
-                population_size: 20,
-                generations: 30,
-                mutation_rate: 0.2,
-                crossover_rate: 0.7,
-                bounds: vec![(-5.0, 5.0)],
-                seed: 42,
-            };
+            let opt = GeneticOptimizer { population_size: 20, generations: 30, mutation_rate: 0.2, crossover_rate: 0.7, bounds: vec![(-5.0, 5.0)], seed: 42 };
             let (best, fit) = opt.optimize(|x| (x[0] - 2.0).powi(2));
             assert!(fit < 1.0);
             assert!((best[0] - 2.0).abs() < 1.5);
@@ -2523,15 +2410,7 @@ mod tests {
 
         #[test]
         fn pso_optimizer_finds_minimum() {
-            let opt = PsoOptimizer {
-                swarm_size: 15,
-                iterations: 40,
-                inertia: 0.7,
-                cognitive: 1.4,
-                social: 1.4,
-                bounds: vec![(-3.0, 3.0), (-3.0, 3.0)],
-                seed: 7,
-            };
+            let opt = PsoOptimizer { swarm_size: 15, iterations: 40, inertia: 0.7, cognitive: 1.4, social: 1.4, bounds: vec![(-3.0, 3.0), (-3.0, 3.0)], seed: 7 };
             let (best, fit) = opt.optimize(|x| x[0] * x[0] + x[1] * x[1]);
             assert!(fit < 0.5);
             assert!(best[0].abs() < 1.0 && best[1].abs() < 1.0);
@@ -2542,23 +2421,9 @@ mod tests {
             let layer1 = temp_speed_system();
             let layer2_univ = Universe::new(0.0, 100.0, 21).unwrap();
             let layer2 = MimoSystem {
-                inputs: vec![LinguisticVariable::new(
-                    "fan_speed",
-                    layer2_univ,
-                    vec![FuzzySet::new("any", MembershipFunction::triangular(0.0, 50.0, 100.0))],
-                )],
-                outputs: vec![LinguisticVariable::new(
-                    "power",
-                    Universe::new(0.0, 1.0, 21).unwrap(),
-                    vec![FuzzySet::new("high", MembershipFunction::triangular(0.5, 1.0, 1.0))],
-                )],
-                rules: RuleBase::new(vec![Rule {
-                    id: 0,
-                    antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }],
-                    consequent: Consequent::SugenoConstant { output: 0, value: 0.9 },
-                    weight: 1.0,
-                    confidence: 1.0,
-                }]),
+                inputs: vec![LinguisticVariable::new("fan_speed", layer2_univ, vec![FuzzySet::new("any", MembershipFunction::triangular(0.0, 50.0, 100.0))])],
+                outputs: vec![LinguisticVariable::new("power", Universe::new(0.0, 1.0, 21).unwrap(), vec![FuzzySet::new("high", MembershipFunction::triangular(0.5, 1.0, 1.0))])],
+                rules: RuleBase::new(vec![Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }], consequent: Consequent::SugenoConstant { output: 0, value: 0.9 }, weight: 1.0, confidence: 1.0 }]),
                 model: InferenceModel::Sugeno,
                 tnorm: TNorm::Min,
                 tconorm: TConorm::Max,

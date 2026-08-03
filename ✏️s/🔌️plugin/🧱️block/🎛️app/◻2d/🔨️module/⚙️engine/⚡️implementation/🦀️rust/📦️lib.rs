@@ -31,11 +31,7 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 /// `default_wire_kind` only), so those arrays stay empty here — a merge keeps the puzzle manifest's
 /// existing rows.
 pub fn puzzle2d_manifest_fragment(definition: &Block2dDefinition) -> Value {
-    let port_kinds: Vec<Value> = definition
-        .handle_kinds
-        .iter()
-        .map(|kind| json!({ "id": kind.id, "name": kind.name, "presentation": { "color": kind.color, "defaultWireKind": kind.default_wire_kind } }))
-        .collect();
+    let port_kinds: Vec<Value> = definition.handle_kinds.iter().map(|kind| json!({ "id": kind.id, "name": kind.name, "presentation": { "color": kind.color, "defaultWireKind": kind.default_wire_kind } })).collect();
     let handles: Vec<Value> = definition.handles.iter().map(|handle| json!({ "handleKind": handle.handle_kind, "angle": handle.angle, "radius": handle.radius })).collect();
     let node_kind = json!({
         "id": definition.node_kind.id,
@@ -45,11 +41,7 @@ pub fn puzzle2d_manifest_fragment(definition: &Block2dDefinition) -> Value {
             "handles": handles,
         },
     });
-    let kind_compatibility: Vec<Value> = definition
-        .compatibility
-        .iter()
-        .map(|rule| json!({ "bidirectional": rule.bidirectional, "specificity": "handle", "source": rule.source, "target": rule.target }))
-        .collect();
+    let kind_compatibility: Vec<Value> = definition.compatibility.iter().map(|rule| json!({ "bidirectional": rule.bidirectional, "specificity": "handle", "source": rule.source, "target": rule.target })).collect();
     json!({
         "schema": "manifest",
         "id": definition.node_kind.id,

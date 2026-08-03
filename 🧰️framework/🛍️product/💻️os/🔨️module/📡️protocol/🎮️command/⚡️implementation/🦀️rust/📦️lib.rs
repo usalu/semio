@@ -427,13 +427,8 @@ mod tests {
             format!("add {}", self.delta)
         }
         fn parse_op(line: &str) -> Result<Self, dsl_core::TextError> {
-            let rest = line
-                .strip_prefix("add ")
-                .ok_or_else(|| dsl_core::TextError::new("expected 'add <n>'", dsl_core::TextSpan::at(1, 1)))?;
-            let delta: i64 = rest
-                .trim()
-                .parse()
-                .map_err(|_| dsl_core::TextError::new("invalid integer", dsl_core::TextSpan::at(1, 1)))?;
+            let rest = line.strip_prefix("add ").ok_or_else(|| dsl_core::TextError::new("expected 'add <n>'", dsl_core::TextSpan::at(1, 1)))?;
+            let delta: i64 = rest.trim().parse().map_err(|_| dsl_core::TextError::new("invalid integer", dsl_core::TextSpan::at(1, 1)))?;
             Ok(AddOp { delta })
         }
     }
@@ -641,12 +636,8 @@ mod tests {
     //#region 🧪️DescriptorLaws
     #[test]
     fn operation_descriptor_fingerprint_is_golden_pinned() {
-        let descriptor = OperationDescriptor::new(
-            protocol_core::SchemaId("note.append".into()),
-            protocol_core::SchemaVersion(1),
-            protocol_core::StateClass::Persistent,
-            protocol_core::ConflictRule::Merge(protocol_core::MergeStrategyKind::TextSequence),
-        );
+        let descriptor =
+            OperationDescriptor::new(protocol_core::SchemaId("note.append".into()), protocol_core::SchemaVersion(1), protocol_core::StateClass::Persistent, protocol_core::ConflictRule::Merge(protocol_core::MergeStrategyKind::TextSequence));
         let hex: String = descriptor.fingerprint.iter().map(|b| format!("{b:02x}")).collect();
         // Golden pin computed once from `descriptor_fingerprint`'s canonical-JSON+blake3 encoding;
         // any change to that encoding (or to serde's field order/derives on the id/enum types it
@@ -690,11 +681,7 @@ mod tests {
 
     #[test]
     fn operation_event_serde_round_trip() {
-        let event = OperationEvent {
-            operation_id: protocol_core::OperationId("op-1".into()),
-            state_class: protocol_core::StateClass::Effect,
-            payload: serde_json::json!({ "kind": "toast", "text": "saved" }),
-        };
+        let event = OperationEvent { operation_id: protocol_core::OperationId("op-1".into()), state_class: protocol_core::StateClass::Effect, payload: serde_json::json!({ "kind": "toast", "text": "saved" }) };
         let json = serde_json::to_string(&event).expect("serialize");
         let round_tripped: OperationEvent = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(round_tripped, event);

@@ -11,10 +11,10 @@ use imperative_op::{ImperativeConfigOperation, ImperativeOperation};
 use imperative_protocol::ImperativeCommand;
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
-    build_table_scene, build_text_editor_scene, create_stack_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
-    ActionArgDef, ActionArgOption, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, TableScene,
-    Terminology, TextEditorScene, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    build_table_scene, build_text_editor_scene, create_stack_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, App, AppLabels,
+    ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, TableScene,
+    Terminology, TextEditorScene, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -44,7 +44,11 @@ fn is_de_locale(cfg: &ImperativeConfig) -> bool {
 
 /// 🗣️ `ImperativeConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
 fn imperative_locale(cfg: &ImperativeConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🗣️ Resolves the active `ImperativeLabels` cell from the config-carried locale via the SDK's
@@ -314,11 +318,7 @@ impl DocumentApp for ImperativePlayApp {
                     let path_ref = path_ref_from(owner.as_deref(), slot.as_deref(), document);
                     let mut ids = config.selected_step_ids.clone();
                     ids.retain(|step_id| step_id != id);
-                    Emit {
-                        document_operations: vec![ImperativeOperation { path_ref, collection: CollectionOperation::Remove { id: id.clone() } }],
-                        config_operations: vec![ImperativeConfigOperation::SetSelectedSteps { ids }],
-                        ..Default::default()
-                    }
+                    Emit { document_operations: vec![ImperativeOperation { path_ref, collection: CollectionOperation::Remove { id: id.clone() } }], config_operations: vec![ImperativeConfigOperation::SetSelectedSteps { ids }], ..Default::default() }
                 } else {
                     Emit::default()
                 }

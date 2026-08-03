@@ -292,7 +292,7 @@ import {
   detectShellLocale,
   disposeShellI18nInstance,
 } from "@semio-tech/ui-react";
-import { isIconName } from "@semio-tech/ui-asset";
+import { isIconName } from "@semio-tech/asset";
 import {
   organizeContextMenu,
   type ActionDescriptor,
@@ -1014,7 +1014,6 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
           const items = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              viewState: {},
               menu: { id: "virtualFileSystem" },
               surface: {
                 surfaceId: node.surfaceId,
@@ -1430,7 +1429,7 @@ export function resolveShellLocks(locks: FrameworkOsLocks | undefined): Resolved
     }
   }
   if (locks.themeId !== undefined) {
-    const known = new Set([...builtinUiThemes().map((t) => t.id), ...Object.keys(readStoredUiCustomThemes())]);
+    const known = new Set([...builtinUiThemes().map((t) => t.id), ...Object.keys(readStoredUiCustomThemes(createBrowserStoragePort()))]);
     if (known.has(locks.themeId)) {
       resolved.themeId = locks.themeId;
     } else {
@@ -2983,12 +2982,25 @@ function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | Win
   };
 }
 
-/** @emoji 🗣️ Re-resolves every window's title from the current app-labels overlay in place, preserving the tree's structure/sizes/arrangement — used to react to a locale/terminology switch without discarding the user's live layout. */
-function retitleWindowLayoutNode(node: WindowLayoutNode, appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
+/** @emoji 🗣️ Re-resolves every window's title from the app manifest's windowKinds via resolveManifestLabel in place, preserving the tree's structure/sizes/arrangement — used to react to a locale/terminology switch without discarding the user's live layout. */
+export function retitleWindowLayoutNode(
+  node: WindowLayoutNode,
+  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
+  extraInstances: readonly ExtraWindowInstance[],
+  terminology: string,
+  locale: string,
+): WindowLayoutNode {
   if (node.kind === "window") {
-    return { ...node, title: resolveAppLabel(appLabelsOverlay, "windowKind", node.id, node.title ?? node.id) };
+    const extra = extraInstances.find((entry) => entry.id === node.id);
+    const windowKindId = extra ? extra.windowKindId : node.id;
+    const kind = windowKinds.find((entry) => entry.id === windowKindId);
+    const title = kind ? resolveManifestLabel(kind.label, terminology, locale) : (node.title ?? node.id);
+    return { ...node, title };
   }
-  return { ...node, children: node.children.map((child) => retitleWindowLayoutNode(child, appLabelsOverlay)) } as WindowLayoutNode;
+  return {
+    ...node,
+    children: node.children.map((child) => retitleWindowLayoutNode(child, windowKinds, extraInstances, terminology, locale)),
+  } as WindowLayoutNode;
 }
 
 /** @emoji 🪟️ Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
@@ -3601,6 +3613,15 @@ const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   groupLabels: {},
 };
 
+/** 🗺️ Synthesizes a full `LocalizedLabel` matrix from a user-authored string by broadcasting it across all cells (native/reuse × en/de), matching Rust's `LocalizedLabel::data(...)`. Also accepts an existing `LocalizedLabel` idempotently. */
+export function synthesizeLocalizedLabel(label: string | LocalizedLabel): LocalizedLabel {
+  if (typeof label !== "string") return label;
+  return {
+    native: { en: label, de: label },
+    reuse: { en: label, de: label },
+  };
+}
+
 /** 🗺️ Resolves a manifest label field for the active terminology/locale. Every app-manifest struct's
  * `label`/`title`/`body`/`submitLabel`/`cancelLabel`/`description`/`text` field is now Rust's
  * `LocalizedLabel` on the wire — a `{ native: { en, de }, reuse: { en, de } }` matrix — instead of the
@@ -3609,7 +3630,7 @@ const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
  * the ts-rs mirror for these fields is still `unknown`/stale (see `framework/core/rs/lib.rs`'s
  * `LocalizedLabel` follow-up notes) — some call sites may still see the pre-migration shape until that
  * typegen lands. */
-function resolveManifestLabel(label: LocalizedLabel | string | undefined, terminology: string, locale: string): string {
+export function resolveManifestLabel(label: LocalizedLabel | string | undefined, terminology: string, locale: string): string {
   if (label === undefined) return "";
   if (typeof label === "string") return label;
   const byTerminology = label[terminology as keyof LocalizedLabel] ?? label.native ?? label.reuse;
@@ -5504,7 +5525,7 @@ function tutorialCameraPoseEquals(a: TutorialCameraState, b: TutorialCameraState
  * (narration/video tracks default to empty). Document `Edit` operations are NOT captured (that would
  * require intercepting the plugin's internal vcs operation stream in per-op form, which isn't exposed to
  * this shell) — also a reported scope cut; UI/camera/events still replay faithfully. */
-class TutorialRecorder {
+export class TutorialRecorder {
   private readonly startedAtMs: number;
   private readonly baseUiSnapshot: TutorialUiSnapshot;
   private readonly baseDocumentJson: string | null;
@@ -5550,17 +5571,18 @@ class TutorialRecorder {
 
   /** 📖️ `ui.tutorial.addChapter` — marks the current elapsed time as a scrub-bar chapter with an
    * auto-numbered title (no naming-prompt UI in this scope; a recorded tutorial's authored titles can
-   * always be hand-edited in the downloaded JSON afterward). */
-  addChapter(): void {
+   * always be hand-edited in the downloaded JSON afterward). Synthesizes a `LocalizedLabel` matrix. */
+  addChapter(title?: string | LocalizedLabel): void {
     const index = this.chapters.length + 1;
-    this.chapters.push({ id: `chapter-${index}`, at: this.nowMs(), title: `Chapter ${index}` });
+    const rawTitle = title ?? `Chapter ${index}`;
+    this.chapters.push({ id: `chapter-${index}`, at: this.nowMs(), title: synthesizeLocalizedLabel(rawTitle) });
   }
 
-  build(id: string, title: string, exampleId?: string): TutorialDefinition {
+  build(id: string, title: string | LocalizedLabel, exampleId?: string): TutorialDefinition {
     const durationMs = Math.max(1000, this.nowMs());
     return {
       id,
-      title,
+      title: synthesizeLocalizedLabel(title),
       durationMs,
       chapters: this.chapters,
       base: { documentJson: this.baseDocumentJson ?? undefined, exampleId, ui: this.baseUiSnapshot, cameras: [] },
@@ -6161,18 +6183,10 @@ function FrameworkOsShellInner({
       if (!session) return [];
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
       if (!plugin?.contextMenu) return [];
-      const dispatchViewState = injectActiveUtility(
-        {
-          ...session.viewState,
-          windowId: activeWindowIdRef.current ?? undefined,
-          windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({
-            id: instance.id,
-            windowKindId: instance.windowKindId,
-          })),
-        },
-        activeWindowIdRef.current ?? undefined,
-      );
-      return plugin.contextMenu(session.instanceId, { ...request, viewState: dispatchViewState });
+      // 🖱️ No view state on the wire — the SDK's ContextMenuWireRequest dropped it (the plugin's
+      // own persisted selection/hover state already answers "what's selected", see AppActionRegistry
+      // funnel); sending one here would just be silently discarded on the Rust side.
+      return plugin.contextMenu(session.instanceId, request);
     },
     [loadedPlugins, session],
   );
@@ -6292,18 +6306,27 @@ function FrameworkOsShellInner({
     [appLabelsOverlay, injectActiveTool, loadedPlugins, uiLocale, uiTerminology],
   );
 
-  /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync with the app-labels overlay on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
+  /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
   useEffect(() => {
-    dispatch({ type: "SET_SHELL_LAYOUT", value: (current) => (current ? retitleWindowLayoutNode(current, appLabelsOverlay) : current) });
+    const windowKinds = session?.app.windowKinds;
+    if (!windowKinds) return;
+    dispatch({
+      type: "SET_SHELL_LAYOUT",
+      value: (current) => (current ? retitleWindowLayoutNode(current, windowKinds, extraWindowInstancesRef.current, uiTerminology, uiLocale) : current),
+    });
     dispatch({
       type: "SET_EXTRA_WINDOW_INSTANCES",
       value: (current) => {
-        const next = current.map((entry) => ({ ...entry, title: resolveAppLabel(appLabelsOverlay, "windowKind", entry.id, entry.title) }));
+        const next = current.map((entry) => {
+          const kind = windowKinds.find((k) => k.id === entry.windowKindId || k.id === entry.id);
+          const title = kind ? resolveManifestLabel(kind.label, uiTerminology, uiLocale) : entry.title;
+          return { ...entry, title };
+        });
         extraWindowInstancesRef.current = next;
         return next;
       },
     });
-  }, [appLabelsOverlay]);
+  }, [uiTerminology, uiLocale]);
 
   const refreshSpawnedUi = useCallback(
     async (spawned: SpawnedAppEntry, viewState: ViewState, scopeArg: UiDirtyScope = { kind: "full" }) => {
@@ -12541,7 +12564,6 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
         const items = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            viewState: {},
             menu: { id: "canvas2d" },
             surface: { surfaceId: node.surfaceId, kind: "canvas2d", hits: [], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,
@@ -13523,7 +13545,7 @@ export function mapContextMenuSpecs(
     const shortcut = spec.shortcut ?? (boundKeys ? formatKeybindingShortcut(boundKeys) : undefined);
     return {
       id: spec.id,
-      label: spec.label,
+      label: wireLabel(spec.label),
       icon: spec.icon,
       color: spec.color,
       shortcut,
@@ -15324,12 +15346,16 @@ export function worldSuggestionMenuOwnsWindow(
 }
 
 /** @emoji 🧭️ Floating per-vortex candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — a one-shot placement picker that does not switch the active utility into brush mode; hovering a row previews the ghost, clicking places it. Icon + active highlight only (no color swatch — object-kind color stays on the 3D ghost). */
-export function suggestionMenuItems(menu: WorldSuggestionMenuRecord, activeIndex: number): ContextMenuItemSpec[] {
+export function suggestionMenuItems(
+  menu: WorldSuggestionMenuRecord,
+  activeIndex: number,
+  labels: { readonly checkingPlacement: UiLabel; readonly noPlacement: UiLabel },
+): ContextMenuItemSpec[] {
   if (menu.pending) {
-    return [{ id: "pending", label: "Checking placement…", disabled: true }];
+    return [{ id: "pending", label: labels.checkingPlacement, disabled: true }];
   }
   if (menu.candidates.length === 0) {
-    return [{ id: "empty", label: "No placement", disabled: true }];
+    return [{ id: "empty", label: labels.noPlacement, disabled: true }];
   }
   return menu.candidates.map((candidate) => ({
     id: `suggestion-${candidate.index}`,
@@ -16276,6 +16302,8 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
   const suggestionMenuOpen = Boolean(interaction.suggestionMenu?.open);
   const suggestionMenuOwnsThisWindow = worldSuggestionMenuOwnsWindow(interaction.suggestionMenu, windowInstanceId);
+  const suggestionMenuCheckingPlacementLabel = useLabel("ui.host.checkingPlacement");
+  const suggestionMenuNoPlacementLabel = useLabel("ui.host.noPlacement");
   useEffect(() => {
     if (!brushPreview) return;
     console.log(`[DEBUG] brushPreview`, { color: brushPreview.color, objectKindId: brushPreview.objectKindId, meshUrl: brushPreview.meshUrl });
@@ -17261,7 +17289,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           const items = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              viewState: {},
               menu: { id: "world3d" },
               surface: { surfaceId: node.surfaceId, kind: "world3d", hits, selection: selectionGroups },
               windowInstanceId: windowInstanceId ?? undefined,
@@ -17480,7 +17507,12 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           open
           closeOnSelect={false}
           position={{ x: interaction.suggestionMenu!.x, y: interaction.suggestionMenu!.y }}
-          items={mapSuggestionContextMenuSpecs(suggestionMenuItems(interaction.suggestionMenu!, interaction.brushCandidateIndex ?? 0))}
+          items={mapSuggestionContextMenuSpecs(
+            suggestionMenuItems(interaction.suggestionMenu!, interaction.brushCandidateIndex ?? 0, {
+              checkingPlacement: suggestionMenuCheckingPlacementLabel,
+              noPlacement: suggestionMenuNoPlacementLabel,
+            }),
+          )}
           onOpenChange={(open) => {
             if (!open) handleSuggestionClose();
           }}
@@ -17698,6 +17730,10 @@ function FlowSpotlight({
   const hasMore = suggestions.length > 1;
   const activeItem = suggestions[activeIndex] ?? null;
   const shouldPreview = query.trim().length > 0 || previewArmed;
+  const typeToAddLabel = useLabel("ui.flowSpotlight.typeToAdd");
+  const collapseSuggestionsLabel = useLabel("ui.flowSpotlight.collapseSuggestions");
+  const showAllSuggestionsLabel = useLabel("ui.flowSpotlight.showAllSuggestions");
+  const noMatchesLabel = useLabel("ui.windowSearch.noMatches");
 
   useEffect(() => {
     setActiveIndex(0);
@@ -18163,7 +18199,6 @@ function WasmGraphSurface({
           const items = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              viewState: {},
               menu: { id: "nodeGraph" },
               surface: { surfaceId, kind: "nodeGraph", hits, selection: selectionGroupsFromDomains(domains) },
               windowInstanceId: windowInstanceId ?? undefined,
@@ -18338,7 +18373,6 @@ function DiagramGraphFallback({
           const items = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              viewState: {},
               menu: { id: "nodeGraph" },
               surface: { surfaceId: node.surfaceId, kind: "nodeGraph", hits: [], selection: [] },
               point: { x: event.clientX, y: event.clientY },
@@ -19649,7 +19683,6 @@ export function FlowGraphCanvasHost({
           const items = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              viewState: {},
               menu: { id: "nodeGraph" },
               surface: {
                 surfaceId,
@@ -20230,7 +20263,6 @@ function WasmEditorSurface({
           const items = await openSurfaceContextMenu(
             requestContextMenu,
             {
-              viewState: {},
               menu: { id: "textEditor" },
               surface: {
                 surfaceId,
@@ -20718,7 +20750,6 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
             const items = await openSurfaceContextMenu(
               requestContextMenu,
               {
-                viewState: {},
                 menu: { id: "table" },
                 surface: {
                   surfaceId: node.surfaceId,
@@ -21260,7 +21291,6 @@ function Paint2dCanvasSurface({
         const items = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            viewState: {},
             menu: { id: "paint2d" },
             surface: {
               surfaceId: node.surfaceId,
@@ -22344,7 +22374,6 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         const items = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            viewState: {},
             menu: { id: "tiledMap" },
             surface: { surfaceId: node.surfaceId, kind: "tiledMap", hits, selection: selectionGroups },
             point: { x: event.clientX, y: event.clientY },
@@ -23289,7 +23318,6 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         const items = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            viewState: {},
             menu: { id: "board2d" },
             surface: {
               surfaceId: node.surfaceId,
@@ -24790,7 +24818,6 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
         const items = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            viewState: {},
             menu: { id: "inkCanvas" },
             surface: {
               surfaceId: node.surfaceId,
@@ -25066,7 +25093,6 @@ export function GraphTimelineHost({ node, onAction, requestContextMenu }: Compon
         const items = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            viewState: {},
             menu: { id: "graphTimeline" },
             surface: { surfaceId: node.surfaceId, kind: "graphTimeline", hits: [], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,
@@ -25279,7 +25305,6 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
         const items = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            viewState: {},
             menu: { id: "blockList" },
             surface: { surfaceId: node.surfaceId, kind: "blockList", hits: [], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,
@@ -25487,7 +25512,6 @@ export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSc
         const items = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            viewState: {},
             menu: { id: "diffView" },
             surface: { surfaceId: node.surfaceId, kind: "diffView", hits: [], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,
@@ -25599,7 +25623,6 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
         const items = await openSurfaceContextMenu(
           requestContextMenu,
           {
-            viewState: {},
             menu: { id: "eventFeed" },
             surface: { surfaceId: node.surfaceId, kind: "eventFeed", hits: [{ domain: "entry", id: entryId }], selection: [] },
             windowInstanceId: windowInstanceId ?? undefined,

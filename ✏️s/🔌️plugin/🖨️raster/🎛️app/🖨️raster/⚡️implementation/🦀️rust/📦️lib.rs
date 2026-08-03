@@ -140,7 +140,7 @@ pub enum RasterLayerNode {
         adjustment_kind: String,
         #[serde(default)]
         params: std::collections::BTreeMap<String, dsl::DslValue>,
-    }
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]

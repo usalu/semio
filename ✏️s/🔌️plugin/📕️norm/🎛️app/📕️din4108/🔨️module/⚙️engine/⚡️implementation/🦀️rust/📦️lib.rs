@@ -589,13 +589,7 @@ pub mod bb_2 {
         }
         let actual = delta_u_wb_actual_w_m2k(psi_l_sum_w_k, envelope_area_m2);
         let limit = if details_conform { DELTA_U_WB_CONFORM_W_M2K } else { DELTA_U_WB_FLAT_RATE_W_M2K };
-        Ok(CheckResult::from_utilization(
-            ClauseId::new("DIN 4108 Bbl.2", "§5", "5.1"),
-            Quantity::u_value_w_m2k(actual),
-            Quantity::u_value_w_m2k(limit),
-            "thermal bridge surcharge ΔU_WB (Beiblatt 2 equivalence)",
-            AnnexChoice::De,
-        ))
+        Ok(CheckResult::from_utilization(ClauseId::new("DIN 4108 Bbl.2", "§5", "5.1"), Quantity::u_value_w_m2k(actual), Quantity::u_value_w_m2k(limit), "thermal bridge surcharge ΔU_WB (Beiblatt 2 equivalence)", AnnexChoice::De))
     }
 }
 // #endregion 🔖️BB2
@@ -645,26 +639,7 @@ fn parse_application_class(value: &str) -> part_10::ApplicationClass {
 
 /// 📋️ Opaque wall checks including thermal bridge correction ψ·l [W/(m²K)].
 pub fn check_opaque_wall_with_bridges(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64, psi_times_l_sum: f64) -> Result<CheckReport, NormError> {
-    check_full_envelope(
-        category,
-        layers,
-        climate,
-        airtightness_n50,
-        psi_times_l_sum,
-        0.5,
-        20.0,
-        0.6,
-        600.0,
-        15.0,
-        1.3,
-        "mineral_wool",
-        "AW-01",
-        "class2",
-        100.0,
-        true,
-        "DEO",
-        "dk",
-    )
+    check_full_envelope(category, layers, climate, airtightness_n50, psi_times_l_sum, 0.5, 20.0, 0.6, 600.0, 15.0, 1.3, "mineral_wool", "AW-01", "class2", 100.0, true, "DEO", "dk")
 }
 
 /// 📋️ Full DIN 4108 parts 1, 2–8, 10, and Beiblatt 2 envelope compliance check.

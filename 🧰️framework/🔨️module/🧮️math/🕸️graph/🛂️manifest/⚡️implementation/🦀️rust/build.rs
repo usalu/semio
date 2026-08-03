@@ -46,16 +46,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
     if !generated.is_file() {
-        let status = std::process::Command::new("bun")
-            .args(["./📜️script.ts", "generate"])
-            .current_dir(&manifest_dir)
-            .status()?;
+        let status = std::process::Command::new("bun").args(["./📜️script.ts", "generate"]).current_dir(&manifest_dir).status()?;
         if !status.success() || !generated.is_file() {
-            return Err(format!(
-                "missing {} — run `bun nx run @semio-tech/graph-manifest:generate` first",
-                generated.display()
-            )
-            .into());
+            return Err(format!("missing {} — run `bun nx run @semio-tech/graph-manifest:generate` first", generated.display()).into());
         }
     }
     Ok(())

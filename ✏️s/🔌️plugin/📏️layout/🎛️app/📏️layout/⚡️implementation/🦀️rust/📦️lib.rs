@@ -174,7 +174,7 @@ pub enum Frame {
         #[serde(rename = "linkId")]
         #[dsl(refs = "link")]
         link_id: String,
-    }
+    },
 }
 
 impl Frame {
@@ -568,7 +568,18 @@ mod tests {
         assert!(default_visible.visible());
         assert_eq!(default_visible.bounds().width, 10.0);
 
-        let text = Frame::Text { id: "frame-3".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 1.0, height: 1.0, rotation: 0.0 }, locked: None, visible: None, story_id: "story-1".into(), thread_next: None, columns: 1, inset: LayoutRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 }, wrap_mode: "box".into() };
+        let text = Frame::Text {
+            id: "frame-3".into(),
+            layer_id: "layer-1".into(),
+            bounds: LayoutBounds { x: 0.0, y: 0.0, width: 1.0, height: 1.0, rotation: 0.0 },
+            locked: None,
+            visible: None,
+            story_id: "story-1".into(),
+            thread_next: None,
+            columns: 1,
+            inset: LayoutRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 },
+            wrap_mode: "box".into(),
+        };
         assert_eq!(text.kind_str(), "text");
 
         let image = Frame::Image { id: "frame-4".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 1.0, height: 1.0, rotation: 0.0 }, locked: None, visible: Some(true), link_id: "link-1".into() };

@@ -1,7 +1,7 @@
 //! ⚖️ Puzzle 5d app — binary command protocol surface + laws (constitutional: protocol).
 
-use puzzle_5d_op::Puzzle5dOperation;
 use protocol::OpBinary;
+use puzzle_5d_op::Puzzle5dOperation;
 
 /// 📦️ Encodes a `Puzzle5dOperation` to its binary command form.
 pub fn encode_op(operation: &Puzzle5dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {

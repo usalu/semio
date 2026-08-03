@@ -1,7 +1,7 @@
 //! ⚖️ Trinity Rewrite app — binary command protocol surface + laws (constitutional: protocol).
 
-use rewrite_op::RewriteRuleOperation;
 use protocol::OpBinary;
+use rewrite_op::RewriteRuleOperation;
 use serde::{Deserialize, Serialize};
 
 /// 📦️ Encodes a `RewriteRuleOperation` to its binary command form.
@@ -66,10 +66,10 @@ pub enum TrinityRewriteCommand {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::OpText;
     use rewrite::{LayoutPoint, RewriteRuleState};
     use rewrite_op::{create_rewrite_rule_envelope, dispatch_rewrite_rule_state, RewriteRuleStore};
     use std::collections::BTreeMap;
-    use protocol::OpText;
     use store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
     use trinity_ram::PropertyValue;
 

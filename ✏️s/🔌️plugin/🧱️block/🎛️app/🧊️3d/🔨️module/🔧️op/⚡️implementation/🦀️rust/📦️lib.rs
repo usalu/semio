@@ -154,35 +154,67 @@ impl OperationDiff<Block3dDefinition> for Block3dDiff {
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Block3dOperation {
     #[dsl(key = "setObjectKind")]
-    SetObjectKind { #[dsl(block)] object_kind: BlockKindIdentity },
+    SetObjectKind {
+        #[dsl(block)]
+        object_kind: BlockKindIdentity,
+    },
     #[dsl(key = "setRepresentation")]
-    SetRepresentation { index: usize, #[dsl(block)] representation: BlockRepresentation },
+    SetRepresentation {
+        index: usize,
+        #[dsl(block)]
+        representation: BlockRepresentation,
+    },
     #[dsl(key = "removeRepresentation")]
     RemoveRepresentation { id: String },
     #[dsl(key = "setVortexKind")]
-    SetVortexKind { index: usize, #[dsl(block)] vortex_kind: Block3dVortexKind },
+    SetVortexKind {
+        index: usize,
+        #[dsl(block)]
+        vortex_kind: Block3dVortexKind,
+    },
     #[dsl(key = "removeVortexKind")]
     RemoveVortexKind { id: String },
     #[dsl(key = "setVortex")]
-    SetVortex { index: usize, #[dsl(block)] vortex: Block3dVortexTemplate },
+    SetVortex {
+        index: usize,
+        #[dsl(block)]
+        vortex: Block3dVortexTemplate,
+    },
     #[dsl(key = "removeVortex")]
     RemoveVortex { id: String },
     #[dsl(key = "setCompatibilityRule")]
-    SetCompatibilityRule { index: usize, #[dsl(block)] rule: BlockCompatibilityRule },
+    SetCompatibilityRule {
+        index: usize,
+        #[dsl(block)]
+        rule: BlockCompatibilityRule,
+    },
     #[dsl(key = "removeCompatibilityRule")]
     RemoveCompatibilityRule { id: String },
     #[dsl(key = "setAttribute")]
-    SetAttribute { index: usize, #[dsl(block)] attribute: BlockAttribute },
+    SetAttribute {
+        index: usize,
+        #[dsl(block)]
+        attribute: BlockAttribute,
+    },
     #[dsl(key = "removeAttribute")]
     RemoveAttribute { key: String },
     #[dsl(key = "setAuthors")]
     SetAuthors { authors: Vec<BlockAuthor> },
     #[dsl(key = "setCamera3d")]
-    SetCamera3d { #[dsl(block)] camera3d: BlockCamera3d },
+    SetCamera3d {
+        #[dsl(block)]
+        camera3d: BlockCamera3d,
+    },
     #[dsl(key = "setMeta")]
-    SetMeta { #[dsl(block)] meta: BlockMeta },
+    SetMeta {
+        #[dsl(block)]
+        meta: BlockMeta,
+    },
     #[dsl(key = "setDocument")]
-    SetDocument { #[dsl(block)] document: Block3dDefinition },
+    SetDocument {
+        #[dsl(block)]
+        document: Block3dDefinition,
+    },
 }
 
 fn block3d_operation_diff(operation: &Block3dOperation) -> Block3dDiff {
@@ -221,7 +253,9 @@ impl Operation<Block3dDefinition> for Block3dOperation {
                 Some(index) => vec![Block3dOperation::SetRepresentation { index, representation: projection.representations[index].clone() }],
                 None => vec![Block3dOperation::RemoveRepresentation { id: representation.id.clone() }],
             },
-            Block3dOperation::RemoveRepresentation { id } => block3d_index_of(&projection.representations, id).map(|index| vec![Block3dOperation::SetRepresentation { index, representation: projection.representations[index].clone() }]).unwrap_or_default(),
+            Block3dOperation::RemoveRepresentation { id } => {
+                block3d_index_of(&projection.representations, id).map(|index| vec![Block3dOperation::SetRepresentation { index, representation: projection.representations[index].clone() }]).unwrap_or_default()
+            }
             Block3dOperation::SetVortexKind { vortex_kind, .. } => match block3d_index_of(&projection.vortex_kinds, &vortex_kind.id) {
                 Some(index) => vec![Block3dOperation::SetVortexKind { index, vortex_kind: projection.vortex_kinds[index].clone() }],
                 None => vec![Block3dOperation::RemoveVortexKind { id: vortex_kind.id.clone() }],
@@ -259,7 +293,10 @@ impl Operation<Block3dDefinition> for Block3dOperation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum Block3dConfigOperation {
     #[dsl(key = "snapshot")]
-    Snapshot { #[dsl(block)] config: block_3d_engine::Block3dConfig },
+    Snapshot {
+        #[dsl(block)]
+        config: block_3d_engine::Block3dConfig,
+    },
     #[dsl(key = "selection")]
     SetSelection { ids: Vec<String> },
     #[dsl(key = "active-representation")]

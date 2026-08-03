@@ -312,7 +312,9 @@ pub mod part_3 {
         let clause = ClauseId::new("EN 1992-3", "Table 7.1N", "7.3.2");
         match tightness_crack_width_limit_mm(class, hd_over_h) {
             Some(limit) => CheckResult::from_utilization(clause, Quantity::length_m(w_k_mm / 1000.0), Quantity::length_m(limit / 1000.0), "liquid retaining tightness-class crack width", AnnexChoice::En),
-            None => CheckResult { clause, status: CheckStatus::NotApplicable, computed: Quantity::length_m(w_k_mm / 1000.0), limit: Quantity::length_m(0.0), utilization: 0.0, message: "TC0: no crack-width requirement".into(), annex: AnnexChoice::En },
+            None => {
+                CheckResult { clause, status: CheckStatus::NotApplicable, computed: Quantity::length_m(w_k_mm / 1000.0), limit: Quantity::length_m(0.0), utilization: 0.0, message: "TC0: no crack-width requirement".into(), annex: AnnexChoice::En }
+            }
         }
     }
 }
@@ -446,20 +448,7 @@ pub fn evaluate(document: &Document) -> CheckReport {
     let mut report = if document.use_fem {
         check_rc_beam_from_fem(document.span_m, document.udl_kn_m, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l, document.annex).unwrap_or_else(|_| CheckReport::default())
     } else {
-        check_full_rc_beam(
-            document.m_ed_knm,
-            document.v_ed_kn,
-            document.f_ck,
-            document.b_mm,
-            document.d_mm,
-            document.a_s_mm2,
-            document.f_yk,
-            document.rho_l,
-            document.n_ed_kn,
-            document.p_kn,
-            document.a_c_mm2,
-            document.annex,
-        )
+        check_full_rc_beam(document.m_ed_knm, document.v_ed_kn, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l, document.n_ed_kn, document.p_kn, document.a_c_mm2, document.annex)
     };
 
     report.push(part_1_2::check_fire_beam_axis_distance(document.b_mm, document.provided_axis_distance_mm, document.fire_rating));

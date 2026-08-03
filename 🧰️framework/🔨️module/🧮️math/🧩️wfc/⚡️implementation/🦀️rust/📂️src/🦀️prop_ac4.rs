@@ -13,8 +13,8 @@
 //! once with trail-recording gaps — better to land it deliberately, with its own rollback-soak
 //! tests, than to rush it into the hot path now.
 
-use crate::domain::{DomainStore, RestrictResult};
 use crate::diag::Metrics;
+use crate::domain::{DomainStore, RestrictResult};
 use crate::ids::{NodeId, PatternId};
 use crate::model::CompiledModel;
 use crate::topology::Topology;
@@ -23,7 +23,7 @@ use crate::topology::Topology;
 /// ⚡️ Dense support counters, indexed `[slot * pattern_count + pattern_index]` where `slot` comes
 /// from [`Topology::for_each_in_arc`].
 #[allow(dead_code)] // exercised by this module's own differential tests today; wired into
-// crate::search's runtime engine selection once trail-integrated rollback lands (see module docs)
+                    // crate::search's runtime engine selection once trail-integrated rollback lands (see module docs)
 pub(crate) struct Ac4Engine {
     counts: Vec<u32>,
     pattern_count: usize,

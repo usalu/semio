@@ -289,11 +289,7 @@ impl HalfedgeMesh {
         }
         let tri_count = indices.len() / 3;
         if face_ids.len() != tri_count {
-            return Err(MeshKernelError::InvalidInput(format!(
-                "face_ids length {} must equal triangle count {}",
-                face_ids.len(),
-                tri_count
-            )));
+            return Err(MeshKernelError::InvalidInput(format!("face_ids length {} must equal triangle count {}", face_ids.len(), tri_count)));
         }
         let mut groups: HashMap<u32, Vec<u32>> = HashMap::new();
         for (triangle_index, &face_id) in face_ids.iter().enumerate() {
@@ -1651,10 +1647,7 @@ fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: (f64, f64))
 fn triangulate_indexed_polygon_with_holes(positions: &[[f32; 3]], outer: &[u32], holes: &[Vec<u32>]) -> Vec<[u32; 3]> {
     if holes.is_empty() {
         let pts: Vec<Vec3> = outer.iter().map(|&i| Vec3(positions[i as usize])).collect();
-        return triangulate_polygon(&pts)
-            .into_iter()
-            .map(|[a, b, c]| [outer[a], outer[b], outer[c]])
-            .collect();
+        return triangulate_polygon(&pts).into_iter().map(|[a, b, c]| [outer[a], outer[b], outer[c]]).collect();
     }
     let mut combined: Vec<u32> = outer.to_vec();
     let mut remaining: Vec<Vec<u32>> = holes.to_vec();
@@ -1672,10 +1665,7 @@ fn triangulate_indexed_polygon_with_holes(positions: &[[f32; 3]], outer: &[u32],
         combined = spliced;
     }
     let pts: Vec<Vec3> = combined.iter().map(|&i| Vec3(positions[i as usize])).collect();
-    triangulate_polygon(&pts)
-        .into_iter()
-        .map(|[a, b, c]| [combined[a], combined[b], combined[c]])
-        .collect()
+    triangulate_polygon(&pts).into_iter().map(|[a, b, c]| [combined[a], combined[b], combined[c]]).collect()
 }
 
 fn find_closest_bridge(outer: &[u32], holes: &[Vec<u32>], positions: &[[f32; 3]]) -> Option<(usize, usize, usize)> {
@@ -2146,14 +2136,7 @@ mod tests {
     #[test]
     fn orient_faces_consistently_fixes_same_winding_neighbors() {
         // Two quads sharing edge 1-2, both wound CCW in XY — shared edge has the same directed sense.
-        let positions = [
-            [0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0],
-            [1.0, 1.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [2.0, 0.0, 0.0],
-            [2.0, 1.0, 0.0],
-        ];
+        let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [2.0, 0.0, 0.0], [2.0, 1.0, 0.0]];
         let faces = vec![vec![0, 1, 2, 3], vec![1, 2, 5, 4]];
         let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
         let open_before = {
@@ -2263,7 +2246,6 @@ mod tests {
         mesh.decimate(0.5).unwrap();
         assert!(mesh.vertex_count() <= before);
     }
-
 
     #[test]
     fn json_roundtrip() {

@@ -63,7 +63,7 @@ pub enum TrinityRamError {
     #[error("{path}/{name}: property type mismatch for {value_type}")]
     PropertyTypeMismatch { path: String, name: String, value_type: String },
     #[error("{path}/{key}: unknown property {key:?}")]
-    UnknownPropertyInBag { path: String, key: String }
+    UnknownPropertyInBag { path: String, key: String },
 }
 
 /// 🔀️ [`ManifestValidationError`] carries no `std::error::Error` impl of its own (plain path/message struct), so this is a manual conversion rather than `#[from]`.
@@ -423,8 +423,8 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
 
 // #region 🔖️GraphOperations
 use protocol::{Operation, OperationDiff};
-use vcs::{apply_operation, CollectionDiff, ItemPatch};
 use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore};
+use vcs::{apply_operation, CollectionDiff, ItemPatch};
 
 pub const TRINITY_GRAPH_SCHEMA: &str = GraphFixture::SCHEMA;
 
@@ -587,7 +587,7 @@ pub enum TrinityGraphOperation {
     /// 📦️ Replace the whole fixture (preset load, node-graph drag import); the inverse restores the prior fixture.
     SetFixture {
         fixture: GraphFixture,
-    }
+    },
 }
 
 pub type TrinityGraphEnvelope = DocumentEnvelope<GraphFixture, TrinityGraphOperation>;
@@ -672,7 +672,7 @@ pub fn dispatch_trinity_graph_operations(store: &mut TrinityGraphStore, operatio
         validate_trinity_graph_operation(operation, &projection)?;
         projection = apply_operation(&projection, operation);
     }
-    store.dispatch(DocumentCommand::Apply { operations: operations, description: None }).map_err(TrinityRamError::from)
+    store.dispatch(DocumentCommand::Apply { operations, description: None }).map_err(TrinityRamError::from)
 }
 
 fn validate_clear_data_property(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Result<(), TrinityRamError> {
@@ -886,7 +886,9 @@ impl Operation<GraphFixture> for TrinityGraphOperation {
                     (entity, None) => vec![TrinityGraphOperation::ClearDataProperty { entity: entity.clone(), key: key.clone() }],
                 }
             }
-            TrinityGraphOperation::ClearDataProperty { entity, key } => entity_property_value(projection, entity, key).map(|old| vec![TrinityGraphOperation::SetDataProperty { entity: entity.clone(), key: key.clone(), value: old }]).unwrap_or_default(),
+            TrinityGraphOperation::ClearDataProperty { entity, key } => {
+                entity_property_value(projection, entity, key).map(|old| vec![TrinityGraphOperation::SetDataProperty { entity: entity.clone(), key: key.clone(), value: old }]).unwrap_or_default()
+            }
             TrinityGraphOperation::SetFixture { .. } => vec![TrinityGraphOperation::SetFixture { fixture: projection.clone() }],
         }
     }
@@ -970,17 +972,7 @@ struct NodeDsl {
 }
 
 fn node_to_node_dsl(node: &Node) -> NodeDsl {
-    NodeDsl {
-        id: node.id.clone(),
-        kind: node.kind.clone(),
-        name: node.name.clone(),
-        x: node.x,
-        y: node.y,
-        width: node.width,
-        height: node.height,
-        properties: node.properties.clone(),
-        ports: node.ports.iter().map(port_to_port_dsl).collect(),
-    }
+    NodeDsl { id: node.id.clone(), kind: node.kind.clone(), name: node.name.clone(), x: node.x, y: node.y, width: node.width, height: node.height, properties: node.properties.clone(), ports: node.ports.iter().map(port_to_port_dsl).collect() }
 }
 
 fn node_dsl_to_node(node: NodeDsl) -> Node {
@@ -1089,15 +1081,51 @@ impl From<EntityRefDsl> for EntityRef {
 /// layout, satisfying `OpText::print_op`'s one-line law without any manual escaping.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum TrinityGraphOperationDsl {
-    CreateNode { id: String, kind: String, name: String, x: f64, y: f64, width: f64, height: f64, #[dsl(table)] ports: Vec<PortDsl> },
-    DeleteNode { id: String },
-    CreateEdge { id: String, kind: String, source: String, target: String, properties: PropertyBag },
-    DeleteEdge { id: String },
-    Rename { id: String, name: String },
-    Reposition { id: String, x: f64, y: f64 },
-    SetDataProperty { entity: EntityRefDsl, key: String, value: PropertyValue },
-    ClearDataProperty { entity: EntityRefDsl, key: String },
-    SetFixture { fixture: GraphFixture }
+    CreateNode {
+        id: String,
+        kind: String,
+        name: String,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        #[dsl(table)]
+        ports: Vec<PortDsl>,
+    },
+    DeleteNode {
+        id: String,
+    },
+    CreateEdge {
+        id: String,
+        kind: String,
+        source: String,
+        target: String,
+        properties: PropertyBag,
+    },
+    DeleteEdge {
+        id: String,
+    },
+    Rename {
+        id: String,
+        name: String,
+    },
+    Reposition {
+        id: String,
+        x: f64,
+        y: f64,
+    },
+    SetDataProperty {
+        entity: EntityRefDsl,
+        key: String,
+        value: PropertyValue,
+    },
+    ClearDataProperty {
+        entity: EntityRefDsl,
+        key: String,
+    },
+    SetFixture {
+        fixture: GraphFixture,
+    },
 }
 
 fn trinity_graph_operation_to_dsl(operation: &TrinityGraphOperation) -> TrinityGraphOperationDsl {
@@ -1106,9 +1134,7 @@ fn trinity_graph_operation_to_dsl(operation: &TrinityGraphOperation) -> TrinityG
             TrinityGraphOperationDsl::CreateNode { id: id.clone(), kind: kind.clone(), name: name.clone(), x: *x, y: *y, width: *width, height: *height, ports: ports.iter().map(port_to_port_dsl).collect() }
         }
         TrinityGraphOperation::DeleteNode { id } => TrinityGraphOperationDsl::DeleteNode { id: id.clone() },
-        TrinityGraphOperation::CreateEdge { id, kind, source, target, properties } => {
-            TrinityGraphOperationDsl::CreateEdge { id: id.clone(), kind: kind.clone(), source: source.clone(), target: target.clone(), properties: properties.clone() }
-        }
+        TrinityGraphOperation::CreateEdge { id, kind, source, target, properties } => TrinityGraphOperationDsl::CreateEdge { id: id.clone(), kind: kind.clone(), source: source.clone(), target: target.clone(), properties: properties.clone() },
         TrinityGraphOperation::DeleteEdge { id } => TrinityGraphOperationDsl::DeleteEdge { id: id.clone() },
         TrinityGraphOperation::Rename { id, name } => TrinityGraphOperationDsl::Rename { id: id.clone(), name: name.clone() },
         TrinityGraphOperation::Reposition { id, x, y } => TrinityGraphOperationDsl::Reposition { id: id.clone(), x: *x, y: *y },
@@ -1120,9 +1146,7 @@ fn trinity_graph_operation_to_dsl(operation: &TrinityGraphOperation) -> TrinityG
 
 fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphOperation {
     match operation {
-        TrinityGraphOperationDsl::CreateNode { id, kind, name, x, y, width, height, ports } => {
-            TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports: ports.into_iter().map(port_dsl_to_port).collect() }
-        }
+        TrinityGraphOperationDsl::CreateNode { id, kind, name, x, y, width, height, ports } => TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports: ports.into_iter().map(port_dsl_to_port).collect() },
         TrinityGraphOperationDsl::DeleteNode { id } => TrinityGraphOperation::DeleteNode { id },
         TrinityGraphOperationDsl::CreateEdge { id, kind, source, target, properties } => TrinityGraphOperation::CreateEdge { id, kind, source, target, properties },
         TrinityGraphOperationDsl::DeleteEdge { id } => TrinityGraphOperation::DeleteEdge { id },
@@ -1182,8 +1206,7 @@ impl DocumentPack for GraphFixture {
 
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let parsed = <GraphFixtureDsl as DocumentPack>::decode_pack_with(bytes, options)?;
-        graph_fixture_dsl_to_graph_fixture(parsed)
-            .map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
+        graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
     }
 }
 //#endregion 🔖️Pack
@@ -1537,7 +1560,7 @@ mod tests {
     }
 
     //#region 🔖️DslTests
-    use store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip, assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+    use store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_dsl_pack_equivalence, assert_dsl_round_trip, assert_op_line_round_trip};
 
     #[test]
     fn dsl_round_trip_mini_fixture() {
@@ -1748,11 +1771,42 @@ mod tests {
             camera: Camera::default(),
             root_node_id: Some("a".into()),
             nodes: vec![
-                Node { id: "a".into(), kind: "Piece".into(), name: "a".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
-                Node { id: "b".into(), kind: "Piece".into(), name: "b".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
+                Node {
+                    id: "a".into(),
+                    kind: "Piece".into(),
+                    name: "a".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 10.0,
+                    height: 10.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
+                Node {
+                    id: "b".into(),
+                    kind: "Piece".into(),
+                    name: "b".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    width: 10.0,
+                    height: 10.0,
+                    properties: PropertyBag::new(),
+                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+                },
             ],
             edges: vec![
-                Edge { id: "ab".into(), kind: "Connection".into(), source: "a@out".into(), target: "b@out".into(), properties: { let mut p = PropertyBag::new(); p.insert("u".into(), PropertyValue::Number(1.0)); p.insert("v".into(), PropertyValue::Number(0.0)); p } },
+                Edge {
+                    id: "ab".into(),
+                    kind: "Connection".into(),
+                    source: "a@out".into(),
+                    target: "b@out".into(),
+                    properties: {
+                        let mut p = PropertyBag::new();
+                        p.insert("u".into(), PropertyValue::Number(1.0));
+                        p.insert("v".into(), PropertyValue::Number(0.0));
+                        p
+                    },
+                },
                 Edge { id: "ba".into(), kind: "Connection".into(), source: "b@out".into(), target: "a@out".into(), properties: PropertyBag::new() },
             ],
         };
@@ -1789,7 +1843,16 @@ mod tests {
                 mathematical_graph_manifest::TrinityPortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
             ],
         };
-        let op = TrinityGraphOperation::CreateNode { id: "new".into(), kind: "Piece".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, ports: vec![Port { id: "p".into(), kind: "Other".into(), direction: PortDirection::In, properties: PropertyBag::new() }] };
+        let op = TrinityGraphOperation::CreateNode {
+            id: "new".into(),
+            kind: "Piece".into(),
+            name: "x".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 80.0,
+            height: 40.0,
+            ports: vec![Port { id: "p".into(), kind: "Other".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
+        };
         let err = validate_trinity_graph_operation(&op, &fixture).expect_err("bad port kind");
         assert!(matches!(err, TrinityRamError::PortKindNotDeclaredOnOperation { .. }));
     }

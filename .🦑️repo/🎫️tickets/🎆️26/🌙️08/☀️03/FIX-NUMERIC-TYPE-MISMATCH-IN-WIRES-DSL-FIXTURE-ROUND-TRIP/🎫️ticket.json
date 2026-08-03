@@ -1,0 +1,10 @@
+{
+  "title": "Fix Numeric Type Mismatch In Wires Dsl Fixture Round Trip",
+  "emoji": "🔌",
+  "status": "open",
+  "description": "Fix numeric type mismatch in wires DSL fixture round-trip",
+  "goal": "🎯architect",
+  "sessions": [
+    "⚪d40b2a8ed5994efc95596ad287d05edb"
+  ]
+}

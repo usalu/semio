@@ -166,23 +166,11 @@ pub struct MathGraphDsl {
 }
 
 pub fn math_graph_to_dsl(graph: &MathGraph) -> MathGraphDsl {
-    MathGraphDsl {
-        directed: graph.directed,
-        nodes: graph.nodes.clone(),
-        edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(),
-        algorithm: graph.algorithm.clone(),
-        algorithm_seed: graph.algorithm_seed.clone(),
-    }
+    MathGraphDsl { directed: graph.directed, nodes: graph.nodes.clone(), edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(), algorithm: graph.algorithm.clone(), algorithm_seed: graph.algorithm_seed.clone() }
 }
 
 pub fn math_graph_from_dsl(graph: MathGraphDsl) -> Result<MathGraph, String> {
-    Ok(MathGraph {
-        directed: graph.directed,
-        nodes: graph.nodes,
-        edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?,
-        algorithm: graph.algorithm,
-        algorithm_seed: graph.algorithm_seed,
-    })
+    Ok(MathGraph { directed: graph.directed, nodes: graph.nodes, edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?, algorithm: graph.algorithm, algorithm_seed: graph.algorithm_seed })
 }
 
 /// 📄️ DSL-only mirror of `MathProjection` — the actual `#[derive(dsl::DslDocument)]` root.

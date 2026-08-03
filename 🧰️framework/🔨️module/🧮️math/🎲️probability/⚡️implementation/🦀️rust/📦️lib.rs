@@ -22,7 +22,8 @@ pub enum ProbabilityError {
 /// Lanczos series in its region of validity. Numerical Recipes §6.1 `gammln`.
 pub fn ln_gamma(x: f64) -> f64 {
     const G: f64 = 7.0;
-    const COEFFS: [f64; 9] = [0.999_999_999_999_809_9, 676.520_368_121_885_1, -1_259.139_216_722_402_8, 771.323_428_777_653_1, -176.615_029_162_140_6, 12.507_343_278_686_905, -0.138_571_095_265_720_12, 9.984_369_578_019_572e-6, 1.505_632_735_149_311_6e-7];
+    const COEFFS: [f64; 9] =
+        [0.999_999_999_999_809_9, 676.520_368_121_885_1, -1_259.139_216_722_402_8, 771.323_428_777_653_1, -176.615_029_162_140_6, 12.507_343_278_686_905, -0.138_571_095_265_720_12, 9.984_369_578_019_572e-6, 1.505_632_735_149_311_6e-7];
     if x < 0.5 {
         let pi = std::f64::consts::PI;
         return (pi / (pi * x).sin()).ln() - ln_gamma(1.0 - x);
@@ -733,8 +734,20 @@ impl Discrete for Binomial {
         }
         let (n, k) = (self.n as f64, k as f64);
         let ln_coeff = ln_gamma(n + 1.0) - ln_gamma(k + 1.0) - ln_gamma(n - k + 1.0);
-        let log_p = if self.p > 0.0 { k * self.p.ln() } else if k == 0.0 { 0.0 } else { f64::NEG_INFINITY };
-        let log_q = if self.p < 1.0 { (n - k) * (1.0 - self.p).ln() } else if k == n { 0.0 } else { f64::NEG_INFINITY };
+        let log_p = if self.p > 0.0 {
+            k * self.p.ln()
+        } else if k == 0.0 {
+            0.0
+        } else {
+            f64::NEG_INFINITY
+        };
+        let log_q = if self.p < 1.0 {
+            (n - k) * (1.0 - self.p).ln()
+        } else if k == n {
+            0.0
+        } else {
+            f64::NEG_INFINITY
+        };
         ln_coeff + log_p + log_q
     }
 

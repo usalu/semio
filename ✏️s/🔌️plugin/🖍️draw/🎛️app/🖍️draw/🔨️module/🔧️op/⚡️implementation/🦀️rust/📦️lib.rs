@@ -1,10 +1,7 @@
 //! ⚡️ Draw app — operation enum + laws (constitutional: op).
 
-use draw::{DrawCamera, DrawDocument, DrawLayerNode, DrawTextBody, DrawTransform, DrawTraceParams, FillStyle, PathSegment, StrokeStyle};
-use draw_engine::{
-    clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba, insert_layer, layer_base, layer_base_mut, mutate_draw_layer,
-    remove_layer_from_tree, update_layer_in_tree, DrawConfig,
-};
+use draw::{DrawCamera, DrawDocument, DrawLayerNode, DrawTextBody, DrawTraceParams, DrawTransform, FillStyle, PathSegment, StrokeStyle};
+use draw_engine::{clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba, insert_layer, layer_base, layer_base_mut, mutate_draw_layer, remove_layer_from_tree, update_layer_in_tree, DrawConfig};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 
@@ -81,7 +78,7 @@ pub enum DrawOperation {
     SetDocument {
         #[dsl(block)]
         document: DrawDocument,
-    }
+    },
 }
 
 fn apply_draw_edit_operation(doc: &DrawDocument, edit: &DrawOperation) -> DrawDocument {
@@ -382,10 +379,9 @@ impl Operation<DrawConfig> for DrawConfigOperation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use draw::{DrawEllipse, DrawCircle, DrawLine, DrawPolygon, DrawShapeBody, DrawGroupBody, DrawImageAsset, DrawArtboard, GradientStop, DRAW_DOCUMENT_SCHEMA};
+    use draw::{DrawArtboard, DrawCircle, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawLine, DrawPolygon, DrawShapeBody, GradientStop, DRAW_DOCUMENT_SCHEMA};
     use draw_engine::{
-        create_draw_boolean_layer, create_draw_group_layer, create_draw_image_layer, create_draw_path_layer, create_draw_shape_layer_rect, create_draw_trace_layer,
-        default_draw_document, default_layer_base, empty_draw_projection, layer_id,
+        create_draw_boolean_layer, create_draw_group_layer, create_draw_image_layer, create_draw_path_layer, create_draw_shape_layer_rect, create_draw_trace_layer, default_draw_document, default_layer_base, empty_draw_projection, layer_id,
     };
 
     fn representative_draw_document() -> DrawDocument {
@@ -394,13 +390,7 @@ mod tests {
 
         let mut rect_shape = create_draw_shape_layer_rect("Rect");
         if let DrawLayerNode::Shape(shape) = &mut rect_shape {
-            shape.base.attributes.fill = Some(FillStyle::LinearGradient {
-                x1: 0.0,
-                y1: 0.0,
-                x2: 10.0,
-                y2: 10.0,
-                stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }],
-            });
+            shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 10.0, y2: 10.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }] });
             shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: "round".into(), join: "round".into(), dash: Some(vec![2.0, 4.0]) });
         }
         let rect_id = layer_id(&rect_shape).to_string();
@@ -408,7 +398,15 @@ mod tests {
         let line_shape = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawLine { x1: 0.0, y1: 0.0, x2: 5.0, y2: 5.0 }), polygon: None });
         let line_id = layer_id(&line_shape).to_string();
 
-        let polygon_shape = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Polygon"), shape_kind: "polygon".into(), rect: None, ellipse: None, circle: None, line: None, polygon: Some(DrawPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]] }) });
+        let polygon_shape = DrawLayerNode::Shape(DrawShapeBody {
+            base: default_layer_base("Polygon"),
+            shape_kind: "polygon".into(),
+            rect: None,
+            ellipse: None,
+            circle: None,
+            line: None,
+            polygon: Some(DrawPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]] }),
+        });
 
         let mut radial_circle = DrawShapeBody { base: default_layer_base("RadialCircle"), shape_kind: "circle".into(), rect: None, ellipse: None, circle: Some(DrawCircle { cx: 1.0, cy: 2.0, r: 3.0 }), line: None, polygon: None };
         radial_circle.base.attributes.fill = Some(FillStyle::RadialGradient { cx: 1.0, cy: 2.0, r: 3.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 0.0] }] });
@@ -431,7 +429,8 @@ mod tests {
         let trace_layer = create_draw_trace_layer("Trace", "src-1");
         let boolean_layer = create_draw_boolean_layer("Boolean", "xor", vec![rect_id.clone(), line_id]);
 
-        let ellipse_shape = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 }), circle: None, line: None, polygon: None });
+        let ellipse_shape =
+            DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 }), circle: None, line: None, polygon: None });
         let group_layer = DrawLayerNode::Group(DrawGroupBody { base: default_layer_base("Group \"nested\""), children: vec![ellipse_shape, radial_circle] });
 
         DrawDocument {
@@ -466,7 +465,10 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&DrawOperation::SetFill { layer_id: "layer-1".into(), fill: None });
         store::test_support::assert_op_line_round_trip(&DrawOperation::SetFill { layer_id: "layer-1".into(), fill: Some(FillStyle::Solid { color: [0.1, 0.2, 0.3, 1.0] }) });
         store::test_support::assert_op_line_round_trip(&DrawOperation::SetStroke { layer_id: "layer-1".into(), stroke: None });
-        store::test_support::assert_op_line_round_trip(&DrawOperation::SetStroke { layer_id: "layer-1".into(), stroke: Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: "butt".into(), join: "bevel".into(), dash: Some(vec![1.0, 2.0, 3.0]) }) });
+        store::test_support::assert_op_line_round_trip(&DrawOperation::SetStroke {
+            layer_id: "layer-1".into(),
+            stroke: Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: "butt".into(), join: "bevel".into(), dash: Some(vec![1.0, 2.0, 3.0]) }),
+        });
         store::test_support::assert_op_line_round_trip(&DrawOperation::SetBooleanOperation { layer_id: "layer-1".into(), boolean_operation: "intersection".into() });
         store::test_support::assert_op_line_round_trip(&DrawOperation::SetTraceParams { layer_id: "layer-1".into(), params: DrawTraceParams { threshold: 0.33, simplify_epsilon: 1.1 } });
         store::test_support::assert_op_line_round_trip(&DrawOperation::AddLayer { parent_id: None, index: None, layer: Box::new(create_draw_shape_layer_rect("Added")) });
@@ -641,10 +643,7 @@ mod tests {
         assert_eq!(backwards.len(), 1);
         assert!(matches!(&backwards[0], DrawOperation::SetDocument { document } if *document == doc));
 
-        let mut absorb_target = DrawDiff {
-            layer_patches: vec![DrawLayerTreePatch { layer_id: rect_id.clone(), base: DrawLayerBasePatch { visible: Some(false), ..Default::default() } }],
-            ..Default::default()
-        };
+        let mut absorb_target = DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: rect_id.clone(), base: DrawLayerBasePatch { visible: Some(false), ..Default::default() } }], ..Default::default() };
         let more_patches = DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: "other".into(), base: DrawLayerBasePatch { locked: Some(true), ..Default::default() } }], ..Default::default() };
         absorb_target.absorb(more_patches);
         assert_eq!(absorb_target.layer_patches.len(), 2);

@@ -6,24 +6,19 @@
 //! channel via `DocumentApp::handle`.
 
 use base64::Engine;
-use layout::{Frame, FramePatch, ImageLinkPatch, LayoutCamera, LayoutDocument, PagePatch, TextStoryPatch, LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins};
+use layout::{Frame, FramePatch, ImageLinkPatch, LayoutCamera, LayoutDocument, Page, PageColumns, PageMargins, PagePatch, TextStoryPatch, LAYOUT_FIXTURE_SCHEMA};
 use layout_engine::{build_display_list_for_page, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, parse_layout_document, resolve_page, DisplayList, LayoutConfig, LayoutDropPreviewState};
 use layout_op::{LayoutConfigOperation, LayoutOperation};
 use layout_protocol::LayoutCommand;
-use semio_framework_core::kernel::HostEffect;
-use semio_framework_plugin::{SurfaceKind,
-    build_canvas_2d_scene, create_default_layout, engagement_token_matches,
-    tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
-    ActionArgOption, ActionDefinition, ActionKind, App, AppLabels,
-    Canvas2dScene, ActionDescriptor, ConfigView, DocumentApp, DocumentView, Emit, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec,
-    IconName, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
-    WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
 use protocol::CollectionOperation;
+use semio_framework_core::kernel::HostEffect;
+use semio_framework_plugin::{
+    build_canvas_2d_scene, create_default_layout, engagement_token_matches, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
+    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, IconName, Label, LabelText,
+    Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
+    UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -67,11 +62,7 @@ struct PreflightIssue {
 
 //#region 🔖️DocumentHelpers
 fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: LAYOUT_PLAY_APP_ID.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: LAYOUT_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn active_page<'a>(doc: &'a LayoutDocument, config: &LayoutConfig) -> Option<&'a Page> {
@@ -145,9 +136,7 @@ fn link_path(doc: &LayoutDocument, link_id: &str) -> String {
 }
 
 fn rgba_to_text(color: &Option<[f32; 4]>) -> String {
-    color
-        .map(|channels| channels.iter().map(|channel| channel.to_string()).collect::<Vec<_>>().join(", "))
-        .unwrap_or_default()
+    color.map(|channels| channels.iter().map(|channel| channel.to_string()).collect::<Vec<_>>().join(", ")).unwrap_or_default()
 }
 
 fn text_to_rgba(text: &str) -> Option<[f32; 4]> {
@@ -215,11 +204,7 @@ fn display_list_to_host_layers(list: &DisplayList, blueprint: bool, drop_preview
     if blueprint {
         for guide in &list.guides {
             let color = guide_stroke_color(&guide.kind);
-            let segments = if guide.rect.height <= 0.0 {
-                line_segments(guide.rect.x, guide.rect.y, guide.rect.x + guide.rect.width, guide.rect.y)
-            } else {
-                rect_segments(guide.rect.x, guide.rect.y, guide.rect.width, guide.rect.height)
-            };
+            let segments = if guide.rect.height <= 0.0 { line_segments(guide.rect.x, guide.rect.y, guide.rect.x + guide.rect.width, guide.rect.y) } else { rect_segments(guide.rect.x, guide.rect.y, guide.rect.width, guide.rect.height) };
             layers.push(host_layer(format!("layout.guide.{}", guide.kind), segments, None, Some((color, 1.0, None))));
         }
     }
@@ -229,7 +214,13 @@ fn display_list_to_host_layers(list: &DisplayList, blueprint: bool, drop_preview
         let fill = rect.fill.as_ref().map(|color| color.0);
         let dash = (blueprint && rect.inherited).then_some([4.0, 3.0]);
         let stroke = if let Some(stroke_color) = &rect.stroke {
-            let width = if rect.selected { 2.5 } else if rect.hovered { 1.75 } else { 1.0 };
+            let width = if rect.selected {
+                2.5
+            } else if rect.hovered {
+                1.75
+            } else {
+                1.0
+            };
             Some((stroke_color.0, width, dash))
         } else if rect.selected && blueprint {
             Some(([0.1, 0.45, 0.95, 1.0], 2.0, None))
@@ -337,9 +328,7 @@ fn resolve_link_state(link: &layout::ImageLink) -> &str {
 }
 
 fn resolve_run_style(doc: &LayoutDocument, paragraph_style_id: Option<&str>, character_style_id: Option<&str>) -> (String, f64) {
-    let paragraph = paragraph_style_id
-        .and_then(|id| doc.paragraph_styles.iter().find(|style| style.id == id))
-        .or_else(|| doc.paragraph_styles.first());
+    let paragraph = paragraph_style_id.and_then(|id| doc.paragraph_styles.iter().find(|style| style.id == id)).or_else(|| doc.paragraph_styles.first());
     let (mut family, mut size) = paragraph.map(|style| (style.font_family.clone(), style.font_size)).unwrap_or_else(|| ("Layout Sans".into(), 12.0));
     if let Some(character_id) = character_style_id {
         if let Some(character) = doc.character_styles.iter().find(|style| style.id == character_id) {
@@ -421,15 +410,8 @@ fn run_layout_preflight(doc: &LayoutDocument, labels: &LayoutLabels) -> Vec<Pref
                         });
                         continue;
                     };
-                    let styles: Vec<(String, f64)> = if story.style_runs.is_empty() {
-                        vec![resolve_run_style(doc, None, None)]
-                    } else {
-                        story
-                            .style_runs
-                            .iter()
-                            .map(|run| resolve_run_style(doc, run.paragraph_style_id.as_deref(), run.character_style_id.as_deref()))
-                            .collect()
-                    };
+                    let styles: Vec<(String, f64)> =
+                        if story.style_runs.is_empty() { vec![resolve_run_style(doc, None, None)] } else { story.style_runs.iter().map(|run| resolve_run_style(doc, run.paragraph_style_id.as_deref(), run.character_style_id.as_deref())).collect() };
                     for (family, size) in &styles {
                         if *size < 8.0 {
                             issues.push(PreflightIssue {
@@ -452,13 +434,7 @@ fn run_layout_preflight(doc: &LayoutDocument, labels: &LayoutLabels) -> Vec<Pref
                         }
                     }
                     if thread_next.is_none() && story.content.len() > 400 {
-                        issues.push(PreflightIssue {
-                            severity: "error".into(),
-                            code: "text.overset".into(),
-                            message: preflight_msg(labels.preflight_text_overset, &[frame.id()]),
-                            object_id: Some(frame.id().into()),
-                            page_id: Some(page.id.clone()),
-                        });
+                        issues.push(PreflightIssue { severity: "error".into(), code: "text.overset".into(), message: preflight_msg(labels.preflight_text_overset, &[frame.id()]), object_id: Some(frame.id().into()), page_id: Some(page.id.clone()) });
                     }
                 }
                 Frame::Rect { .. } => {}
@@ -468,13 +444,7 @@ fn run_layout_preflight(doc: &LayoutDocument, labels: &LayoutLabels) -> Vec<Pref
     if doc.print_target.as_deref() == Some("print") {
         for link in &doc.links {
             if link.color_profile.as_deref() == Some("RGB") {
-                issues.push(PreflightIssue {
-                    severity: "warning".into(),
-                    code: "asset.rgb_in_print".into(),
-                    message: preflight_msg(labels.preflight_asset_rgb_in_print, &[&link.id]),
-                    object_id: Some(link.id.clone()),
-                    page_id: None,
-                });
+                issues.push(PreflightIssue { severity: "warning".into(), code: "asset.rgb_in_print".into(), message: preflight_msg(labels.preflight_asset_rgb_in_print, &[&link.id]), object_id: Some(link.id.clone()), page_id: None });
             }
         }
     }
@@ -558,7 +528,11 @@ fn is_de_locale(cfg: &LayoutConfig) -> bool {
 /// 🌐️ `LayoutConfig` carries no terminology axis (unlike `CadConfig::terminology`) — layout has no
 /// native/reuse vocabulary split, so every cell resolves `Terminology::Native`.
 fn layout_locale(cfg: &LayoutConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
@@ -596,13 +570,7 @@ fn preflight_msg(template: LabelText, args: &[&str]) -> String {
 /// 🌳️ Layout's row shape (id/label/description/icon/optional-action) over the SDK's
 /// `tree_item_desc`/`tree_item_with_action` — the icon assignment is the only bit the SDK helpers
 /// don't cover, since not every plugin's rows carry one.
-fn layout_tree_item(
-    id: impl Into<String>,
-    label: impl Into<Label>,
-    description: Option<String>,
-    icon_id: Option<String>,
-    action: Option<ActionDescriptor>,
-) -> UiTreeItemNode {
+fn layout_tree_item(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<ActionDescriptor>) -> UiTreeItemNode {
     let mut item = match action {
         Some(action) => tree_item_with_action(id, label, description, action),
         None => tree_item_desc(id, label, description),
@@ -613,14 +581,7 @@ fn layout_tree_item(
 
 /// 🌳️ A `layout_tree_item` that additionally dispatches `setHover`/clear-hover on hover/unhover —
 /// used by the document tree's page and frame rows to drive canvas hover highlighting.
-fn layout_tree_item_hoverable(
-    id: impl Into<String>,
-    label: impl Into<Label>,
-    description: Option<String>,
-    icon_id: Option<String>,
-    action: Option<ActionDescriptor>,
-    hover_id: &str,
-) -> UiTreeItemNode {
+fn layout_tree_item_hoverable(id: impl Into<String>, label: impl Into<Label>, description: Option<String>, icon_id: Option<String>, action: Option<ActionDescriptor>, hover_id: &str) -> UiTreeItemNode {
     let mut item = layout_tree_item(id, label, description, icon_id, action);
     item.hover_action = Some(layout_action("setHover", Some(json!({ "id": hover_id }))));
     item.unhover_action = Some(layout_action("setHover", Some(json!({ "id": Value::Null }))));
@@ -628,12 +589,7 @@ fn layout_tree_item_hoverable(
 }
 
 fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
-
-    let spread_items: Vec<UiTreeItemNode> = doc
-        .spreads
-        .iter()
-        .map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None))
-        .collect();
+    let spread_items: Vec<UiTreeItemNode> = doc.spreads.iter().map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None)).collect();
 
     let page_items: Vec<UiTreeItemNode> = doc
         .pages
@@ -666,47 +622,23 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
             })
         })
         .collect();
-    let frame_items = if frame_items.is_empty() {
-        vec![layout_tree_item("layout-document.frames.empty", labels.drop_here, None, Some("inbox".into()), None)]
-    } else {
-        frame_items
-    };
+    let frame_items = if frame_items.is_empty() { vec![layout_tree_item("layout-document.frames.empty", labels.drop_here, None, Some("inbox".into()), None)] } else { frame_items };
 
-    let parent_page_items: Vec<UiTreeItemNode> = doc
-        .parent_pages
-        .iter()
-        .map(|parent| {
-            layout_tree_item(
-                parent_page_row_id(&parent.id),
-                Label::data(parent.name.clone()),
-                Some(format!("{}×{}", parent.width as i64, parent.height as i64)),
-                Some("copy".into()),
-                None,
-            )
-        })
-        .collect();
+    let parent_page_items: Vec<UiTreeItemNode> =
+        doc.parent_pages.iter().map(|parent| layout_tree_item(parent_page_row_id(&parent.id), Label::data(parent.name.clone()), Some(format!("{}×{}", parent.width as i64, parent.height as i64)), Some("copy".into()), None)).collect();
 
     let layer_items: Vec<UiTreeItemNode> = doc
         .pages
         .iter()
         .flat_map(|page| {
-            page.layers.iter().map(move |layer| {
-                layout_tree_item(
-                    layer_row_id(&page.id, &layer.id),
-                    Label::data(format!("{} · {}", page.name, layer.name)),
-                    Some(format!("{} {}", layer.object_ids.len(), labels.objects.as_str())),
-                    Some("layers".into()),
-                    None,
-                )
-            })
+            page.layers
+                .iter()
+                .map(move |layer| layout_tree_item(layer_row_id(&page.id, &layer.id), Label::data(format!("{} · {}", page.name, layer.name)), Some(format!("{} {}", layer.object_ids.len(), labels.objects.as_str())), Some("layers".into()), None))
         })
         .collect();
 
-    let story_items: Vec<UiTreeItemNode> = doc
-        .stories
-        .iter()
-        .map(|story| layout_tree_item(story_row_id(&story.id), Label::data(story.id.clone()), Some(format!("{} {}", story.content.chars().count(), labels.chars.as_str())), Some("file-text".into()), None))
-        .collect();
+    let story_items: Vec<UiTreeItemNode> =
+        doc.stories.iter().map(|story| layout_tree_item(story_row_id(&story.id), Label::data(story.id.clone()), Some(format!("{} {}", story.content.chars().count(), labels.chars.as_str())), Some("file-text".into()), None)).collect();
 
     let link_items: Vec<UiTreeItemNode> = doc
         .links
@@ -731,19 +663,8 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
         })
         .collect();
 
-    let mut style_items: Vec<UiTreeItemNode> = doc
-        .paragraph_styles
-        .iter()
-        .map(|style| {
-            layout_tree_item(
-                style_row_id(&style.id),
-                Label::data(style.name.clone()),
-                Some(format!("{} · {}pt", style.font_family, style.font_size as i64)),
-                Some("type".into()),
-                None,
-            )
-        })
-        .collect();
+    let mut style_items: Vec<UiTreeItemNode> =
+        doc.paragraph_styles.iter().map(|style| layout_tree_item(style_row_id(&style.id), Label::data(style.name.clone()), Some(format!("{} · {}pt", style.font_family, style.font_size as i64)), Some("type".into()), None)).collect();
     style_items.extend(doc.character_styles.iter().map(|style| {
         let name = style.name.clone().unwrap_or_else(|| style.id.clone());
         let font_family = style.font_family.as_deref().unwrap_or("—");
@@ -754,18 +675,9 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
         layout_tree_item(style_row_id(&style.id), Label::data(name), Some(description), Some("type".into()), None)
     }));
 
-    let highlighted_ids: Vec<String> = config
-        .hovered_id
-        .as_ref()
-        .map(|id| vec![page_row_id(id), frame_row_id(id)])
-        .unwrap_or_default();
+    let highlighted_ids: Vec<String> = config.hovered_id.as_ref().map(|id| vec![page_row_id(id), frame_row_id(id)]).unwrap_or_default();
     let mut builder = PanelTreeBuilder::new("layout-document")
-        .section(
-            "layout-document.document",
-            Some(labels.document.into()),
-            true,
-            vec![layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_FIXTURE_SCHEMA.into()), Some("file-text".into()), None)],
-        )
+        .section("layout-document.document", Some(labels.document.into()), true, vec![layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_FIXTURE_SCHEMA.into()), Some("file-text".into()), None)])
         .section("layout-document.spreads", Some(labels.spreads.into()), false, spread_items)
         .section("layout-document.pages", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, page_items)
         .section("layout-document.frames", Some(labels.frames.into()), true, frame_items)
@@ -796,9 +708,7 @@ fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> UiTre
 fn build_catalogue_tree(labels: &LayoutLabels) -> UiNode {
     let mut items = vec![catalogue_tree_item("page", labels.catalogue_page, "file")];
     items.extend(LAYOUT_CATALOGUE_KINDS.iter().map(|(kind, icon)| catalogue_tree_item(kind, catalogue_kind_label(kind, labels), icon)));
-    PanelTreeBuilder::new("layout-catalogue")
-        .section("layout-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)
-        .build()
+    PanelTreeBuilder::new("layout-catalogue").section("layout-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).build()
 }
 
 fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
@@ -821,10 +731,12 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
     if let Some(page) = doc.pages.iter().find(|page| page.id == *selected_id) {
         let mut fields = vec![
             ui_inspector_readonly_field("layout-play-inspector.page-id", labels.id, page.id.clone()),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "layout-play-inspector.page-name".into(),
                 label: labels.name.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: "layout-play-inspector.page-name.input".into(),
                     input_kind: "text".into(),
                     value: page.name.clone(),
@@ -852,10 +764,12 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
             ("marginLeft", labels.margin_left, page.margins.left),
             ("columnsGutter", labels.gutter, page.columns.gutter),
         ] {
-            fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            fields.push(UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: format!("layout-play-inspector.page-{field}"),
                 label: label.into(),
-                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(UiInputNode {
+                    presence: UiPresence::default(),
                     id: format!("layout-play-inspector.page-{field}.input"),
                     input_kind: "number".into(),
                     value: format!("{value}"),
@@ -874,10 +788,12 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
                 menu: None,
             }));
         }
-        fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+        fields.push(UiNode::Field(UiFieldNode {
+            presence: UiPresence::default(),
             id: "layout-play-inspector.page-columnsCount".into(),
             label: labels.columns.into(),
-            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+            child: Box::new(UiNode::Input(UiInputNode {
+                presence: UiPresence::default(),
                 id: "layout-play-inspector.page-columnsCount.input".into(),
                 input_kind: "number".into(),
                 value: format!("{}", page.columns.count),
@@ -895,12 +811,7 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
             error: None,
             menu: None,
         }));
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
-            id: "layout-play-inspector.page".into(),
-            label: labels.group_page.into(),
-            default_open: Some(true),
-            fields,
-        }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "layout-play-inspector.page".into(), label: labels.group_page.into(), default_open: Some(true), fields }]);
     }
     for page in &doc.pages {
         if let Some(frame) = page.frames.iter().find(|frame| frame.id() == selected_id) {
@@ -913,25 +824,19 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
                 ui_inspector_readonly_field("layout-play-inspector.frame-kind", labels.kind, frame.kind_str().to_string()),
                 ui_inspector_readonly_field("layout-play-inspector.frame-page", labels.page, page.name.clone()),
             ];
-            for (field, label, value) in [
-                ("x", labels.x, bounds.x),
-                ("y", labels.y, bounds.y),
-                ("width", labels.width, bounds.width),
-                ("height", labels.height, bounds.height),
-            ] {
-                fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            for (field, label, value) in [("x", labels.x, bounds.x), ("y", labels.y, bounds.y), ("width", labels.width, bounds.width), ("height", labels.height, bounds.height)] {
+                fields.push(UiNode::Field(UiFieldNode {
+                    presence: UiPresence::default(),
                     id: format!("layout-play-inspector.frame-{field}"),
                     label: label.into(),
-                    child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                    child: Box::new(UiNode::Input(UiInputNode {
+                        presence: UiPresence::default(),
                         id: format!("layout-play-inspector.frame-{field}.input"),
                         input_kind: "number".into(),
                         value: format!("{}", value as i64),
                         placeholder: None,
                         commit: Some("blur".into()),
-                        on_change: layout_action(
-                            "patchFrame",
-                            Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field })),
-                        ),
+                        on_change: layout_action("patchFrame", Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field }))),
                         min: None,
                         max: None,
                         step: None,
@@ -947,19 +852,18 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
             match frame {
                 Frame::Rect { fill, stroke, .. } => {
                     for (field, label, value) in [("fill", labels.fill, fill), ("stroke", labels.stroke, stroke)] {
-                        fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+                        fields.push(UiNode::Field(UiFieldNode {
+                            presence: UiPresence::default(),
                             id: format!("layout-play-inspector.frame-{field}"),
                             label: label.into(),
-                            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                            child: Box::new(UiNode::Input(UiInputNode {
+                                presence: UiPresence::default(),
                                 id: format!("layout-play-inspector.frame-{field}.input"),
                                 input_kind: "text".into(),
                                 value: rgba_to_text(value),
                                 placeholder: Some(Label::data("r, g, b, a")),
                                 commit: Some("blur".into()),
-                                on_change: layout_action(
-                                    "patchFrame",
-                                    Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field })),
-                                ),
+                                on_change: layout_action("patchFrame", Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field }))),
                                 min: None,
                                 max: None,
                                 step: None,
@@ -974,19 +878,18 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
                     }
                 }
                 Frame::Text { story_id, wrap_mode, columns, .. } => {
-                    fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+                    fields.push(UiNode::Field(UiFieldNode {
+                        presence: UiPresence::default(),
                         id: "layout-play-inspector.frame-story".into(),
                         label: labels.story.into(),
-                        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                        child: Box::new(UiNode::Input(UiInputNode {
+                            presence: UiPresence::default(),
                             id: "layout-play-inspector.frame-story.input".into(),
                             input_kind: "text".into(),
                             value: story_full_content(doc, story_id),
                             placeholder: None,
                             commit: Some("blur".into()),
-                            on_change: layout_action(
-                                "patchFrame",
-                                Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "storyContent" })),
-                            ),
+                            on_change: layout_action("patchFrame", Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "storyContent" }))),
                             min: None,
                             max: None,
                             step: None,
@@ -998,25 +901,21 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
                         error: None,
                         menu: None,
                     }));
-                    fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+                    fields.push(UiNode::Field(UiFieldNode {
+                        presence: UiPresence::default(),
                         id: "layout-play-inspector.frame-wrapMode".into(),
                         label: labels.wrap_mode.into(),
-                        child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(),
+                        child: Box::new(UiNode::Select(UiSelectNode {
+                            presence: UiPresence::default(),
                             id: "layout-play-inspector.frame-wrapMode.select".into(),
                             value: wrap_mode.clone(),
                             items: vec![
-                                UiSelectItem { value: "none".into(), label: labels.wrap_none.into(),
-        },
-                                UiSelectItem { value: "box".into(), label: labels.wrap_box.into(),
-        },
-                                UiSelectItem { value: "contour".into(), label: labels.wrap_contour.into(),
-        },
+                                UiSelectItem { value: "none".into(), label: labels.wrap_none.into() },
+                                UiSelectItem { value: "box".into(), label: labels.wrap_box.into() },
+                                UiSelectItem { value: "contour".into(), label: labels.wrap_contour.into() },
                             ],
                             placeholder: None,
-                            on_change: layout_action(
-                                "patchFrame",
-                                Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "wrapMode" })),
-                            ),
+                            on_change: layout_action("patchFrame", Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "wrapMode" }))),
                             menu: None,
                         })),
                         description: None,
@@ -1024,19 +923,18 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
                         error: None,
                         menu: None,
                     }));
-                    fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+                    fields.push(UiNode::Field(UiFieldNode {
+                        presence: UiPresence::default(),
                         id: "layout-play-inspector.frame-columns".into(),
                         label: labels.columns.into(),
-                        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                        child: Box::new(UiNode::Input(UiInputNode {
+                            presence: UiPresence::default(),
                             id: "layout-play-inspector.frame-columns.input".into(),
                             input_kind: "number".into(),
                             value: format!("{columns}"),
                             placeholder: None,
                             commit: Some("blur".into()),
-                            on_change: layout_action(
-                                "patchFrame",
-                                Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "columns" })),
-                            ),
+                            on_change: layout_action("patchFrame", Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "columns" }))),
                             min: None,
                             max: None,
                             step: None,
@@ -1050,19 +948,18 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
                     }));
                 }
                 Frame::Image { link_id, .. } => {
-                    fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+                    fields.push(UiNode::Field(UiFieldNode {
+                        presence: UiPresence::default(),
                         id: "layout-play-inspector.frame-linkPath".into(),
                         label: labels.link_path.into(),
-                        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
+                        child: Box::new(UiNode::Input(UiInputNode {
+                            presence: UiPresence::default(),
                             id: "layout-play-inspector.frame-linkPath.input".into(),
                             input_kind: "text".into(),
                             value: link_path(doc, link_id),
                             placeholder: None,
                             commit: Some("blur".into()),
-                            on_change: layout_action(
-                                "patchFrame",
-                                Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "linkPath" })),
-                            ),
+                            on_change: layout_action("patchFrame", Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "linkPath" }))),
                             min: None,
                             max: None,
                             step: None,
@@ -1077,12 +974,7 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
                 }
             }
             let _ = name_mixed;
-            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
-                id: "layout-play-inspector.frame".into(),
-                label: labels.group_frame.into(),
-                default_open: Some(true),
-                fields,
-            }]);
+            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "layout-play-inspector.frame".into(), label: labels.group_frame.into(), default_open: Some(true), fields }]);
         }
     }
     ui_declarative_sections_to_tree(&[UiSectionNode {
@@ -1104,26 +996,16 @@ fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {
             .iter()
             .map(|issue| {
                 layout_tree_item(
-                    format!(
-                        "layout-preflight.{}.{}",
-                        issue.code,
-                        issue.object_id.clone().unwrap_or_else(|| issue.message.clone())
-                    ),
+                    format!("layout-preflight.{}.{}", issue.code, issue.object_id.clone().unwrap_or_else(|| issue.message.clone())),
                     Label::data(issue.message.clone()),
                     Some(format!("{} · {}", issue.severity, issue.code)),
-                    Some(if issue.severity == "error" {
-                        "alert-circle"
-                    } else {
-                        "alert-triangle"
-                    }.into()),
+                    Some(if issue.severity == "error" { "alert-circle" } else { "alert-triangle" }.into()),
                     Some(layout_action("focusPreflightIssue", Some(json!({ "issue": issue })))),
                 )
             })
             .collect()
     };
-    PanelTreeBuilder::new("layout-preflight")
-        .section("layout-preflight.issues", Some(labels.preflight.into()), true, items)
-        .build()
+    PanelTreeBuilder::new("layout-preflight").section("layout-preflight.issues", Some(labels.preflight.into()), true, items).build()
 }
 
 fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutLabels) -> WindowEngagement {
@@ -1142,10 +1024,7 @@ fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutL
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus {
-            id: format!("layout-status-{label}"),
-            text: format!("{} {}", labels.page.as_str(), config.active_page_id),
-        }]),
+        status: Some(vec![WindowEngagementStatus { id: format!("layout-status-{label}"), text: format!("{} {}", labels.page.as_str(), config.active_page_id) }]),
         possible_engagements: Some(vec![
             WindowEngagementPossible { id: "layout.eng.undo".into(), label: labels.undo.into(), detail: None, action: Some(layout_action("undo", None)) },
             WindowEngagementPossible { id: "layout.eng.redo".into(), label: labels.redo.into(), detail: None, action: Some(layout_action("redo", None)) },
@@ -1158,30 +1037,12 @@ fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutL
 //#region 🔖️Render
 fn render_blueprint(doc: &LayoutDocument, config: &LayoutConfig) -> UiNode {
     let camera = &config.camera;
-    build_canvas_2d_scene(
-        LAYOUT_PLAY_SURFACE_BLUEPRINT,
-        LAYOUT_PLAY_APP_ID,
-        Canvas2dScene {
-            camera_x: camera.x,
-            camera_y: camera.y,
-            zoom: camera.zoom,
-            layers_json: canvas_layers(doc, config, true),
-        },
-    )
+    build_canvas_2d_scene(LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(doc, config, true) })
 }
 
 fn render_preview(doc: &LayoutDocument, config: &LayoutConfig) -> UiNode {
     let camera = &config.preview_camera;
-    build_canvas_2d_scene(
-        LAYOUT_PLAY_SURFACE_PREVIEW,
-        LAYOUT_PLAY_APP_ID,
-        Canvas2dScene {
-            camera_x: camera.x,
-            camera_y: camera.y,
-            zoom: camera.zoom,
-            layers_json: canvas_layers(doc, config, false),
-        },
-    )
+    build_canvas_2d_scene(LAYOUT_PLAY_SURFACE_PREVIEW, LAYOUT_PLAY_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(doc, config, false) })
 }
 //#endregion 🔖️Render
 
@@ -1351,17 +1212,18 @@ impl DocumentApp for LayoutPlayApp {
                         stroke: None,
                     },
                 };
-                Emit {
-                    document_operations: vec![LayoutOperation::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }],
-                    config_operations: vec![LayoutConfigOperation::SetSelection { ids: vec![frame_id] }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![LayoutOperation::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }], config_operations: vec![LayoutConfigOperation::SetSelection { ids: vec![frame_id] }], ..Default::default() }
             }
             LayoutCommand::AddPage => {
                 let template = document.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| document.pages.first());
-                let (width, height, spread_id, parent_page_id, margins, columns) = template
-                    .map(|page| (page.width, page.height, page.spread_id.clone(), page.parent_page_id.clone(), page.margins.clone(), page.columns.clone()))
-                    .unwrap_or((595.0, 842.0, "spread-1".into(), None, PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 }, PageColumns { count: 1, gutter: 0.0 }));
+                let (width, height, spread_id, parent_page_id, margins, columns) = template.map(|page| (page.width, page.height, page.spread_id.clone(), page.parent_page_id.clone(), page.margins.clone(), page.columns.clone())).unwrap_or((
+                    595.0,
+                    842.0,
+                    "spread-1".into(),
+                    None,
+                    PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 },
+                    PageColumns { count: 1, gutter: 0.0 },
+                ));
                 let page_id = format!("page-{}", document.pages.len() + 1);
                 let layer_id = format!("layer-{page_id}");
                 let page = Page {
@@ -1436,9 +1298,7 @@ impl DocumentApp for LayoutPlayApp {
                             _ => None,
                         };
                         match link_id {
-                            Some(link_id) if document.links.iter().any(|link| link.id == link_id) => {
-                                Emit::operations(vec![LayoutOperation::Links(CollectionOperation::Patch { id: link_id, patch: ImageLinkPatch { path: Some(value.clone()) } })])
-                            }
+                            Some(link_id) if document.links.iter().any(|link| link.id == link_id) => Emit::operations(vec![LayoutOperation::Links(CollectionOperation::Patch { id: link_id, patch: ImageLinkPatch { path: Some(value.clone()) } })]),
                             _ => Emit::default(),
                         }
                     }
@@ -1452,11 +1312,7 @@ impl DocumentApp for LayoutPlayApp {
                     return clear_preview;
                 }
                 let (wx, wy) = screen_to_world_for_surface(config, blueprint, *x, *y, *width, *height);
-                let mut emitted = if kind == "page" {
-                    self.handle(&LayoutCommand::AddPage, doc, cfg)
-                } else {
-                    self.handle(&LayoutCommand::AddFrame { kind: kind.clone(), x: Some(wx), y: Some(wy) }, doc, cfg)
-                };
+                let mut emitted = if kind == "page" { self.handle(&LayoutCommand::AddPage, doc, cfg) } else { self.handle(&LayoutCommand::AddFrame { kind: kind.clone(), x: Some(wx), y: Some(wy) }, doc, cfg) };
                 emitted.config_operations.push(LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState::default() });
                 emitted
             }
@@ -1479,7 +1335,9 @@ impl DocumentApp for LayoutPlayApp {
             LayoutCommand::ExportPdf { page_id } => {
                 let page_id = page_id.clone().unwrap_or_else(|| config.active_page_id.clone());
                 match export_document_pdf(document, &page_id) {
-                    Ok(bytes) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.pdf"), mime_type: "application/pdf".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) }),
+                    Ok(bytes) => {
+                        Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.pdf"), mime_type: "application/pdf".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) })
+                    }
                     Err(_) => Emit::default(),
                 }
             }
@@ -1487,7 +1345,12 @@ impl DocumentApp for LayoutPlayApp {
                 let preflight_json = serde_json::to_string(&run_layout_preflight(document, layout_labels(config))).unwrap_or_else(|_| "[]".into());
                 let doc_json = serde_json::to_string(document).unwrap_or_default();
                 match export_package_zip(&doc_json, &preflight_json) {
-                    Ok(bytes) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{}.layout-package.zip", document.name), mime_type: "application/zip".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) }),
+                    Ok(bytes) => Emit::effect(HostEffect::DownloadMediaExport {
+                        filename: format!("{}.layout-package.zip", document.name),
+                        mime_type: "application/zip".into(),
+                        data: base64::engine::general_purpose::STANDARD.encode(bytes),
+                        encoding: Some("base64".into()),
+                    }),
                     Err(_) => Emit::default(),
                 }
             }
@@ -1508,8 +1371,7 @@ impl DocumentApp for LayoutPlayApp {
                     Some(export) => self.handle(&export, doc, cfg),
                     None => Emit::default(),
                 }
-            }
-            //#endregion 🐚️Shell
+            } //#endregion 🐚️Shell
         }
     }
 
@@ -1523,10 +1385,7 @@ impl DocumentApp for LayoutPlayApp {
         match port {
             "document:out" => {
                 let bytes = store::DocumentPack::encode_pack(doc.projection);
-                Ok(Media {
-                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                    payload: MediaPayload::Structured { schema: LAYOUT_FIXTURE_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: LAYOUT_FIXTURE_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "layout:out" => {
                 let document = doc.projection;
@@ -1574,12 +1433,8 @@ impl DocumentApp for LayoutPlayApp {
     fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
         let labels = layout_labels(config);
-        HashMap::from([
-            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(config, "blueprint", labels)),
-            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(config, "preview", labels)),
-        ])
+        HashMap::from([(LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(config, "blueprint", labels)), (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(config, "preview", labels))])
     }
-
 }
 //#endregion 🔖️LayoutPlayApp
 
@@ -1934,7 +1789,7 @@ pub use wasm_session::LayoutSession;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app() -> VcsDocumentApp<LayoutPlayApp> {
         testkit::new_app::<LayoutPlayApp>()
@@ -1984,10 +1839,7 @@ mod tests {
         let definition = create_layout_app().definition;
         let resolve = |window_id: &str| -> Vec<String> {
             let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
-            semio_framework_plugin::resolve_window_actions(&definition, window)
-                .into_iter()
-                .map(|action| action.id.clone())
-                .collect()
+            semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
         };
         let blueprint = resolve(LAYOUT_PLAY_WINDOW_BLUEPRINT);
         let preview = resolve(LAYOUT_PLAY_WINDOW_PREVIEW);
@@ -2075,28 +1927,14 @@ mod tests {
     fn undo_redo_round_trips_add_frame() {
         let mut app = new_app();
         let before = app.projection().expect("projection").pages[0].frames.len();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            LayoutCommand::AddFrame { kind: "rect".into(), x: None, y: None },
-            |app| app.projection().expect("projection").pages[0].frames.len(),
-            before,
-            before + 1,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, LayoutCommand::AddFrame { kind: "rect".into(), x: None, y: None }, |app| app.projection().expect("projection").pages[0].frames.len(), before, before + 1);
     }
 
     #[test]
     fn patch_page_supports_margins_and_columns() {
         let mut app = new_app();
-        for (field, value) in [
-            ("marginTop", 60.0),
-            ("marginRight", 40.0),
-            ("marginBottom", 60.0),
-            ("marginLeft", 40.0),
-            ("columnsGutter", 18.0),
-        ] {
-            let result = app
-                .dispatch_typed(LayoutCommand::PatchPage { page_id: Some("page-1".into()), field: field.into(), value: value.to_string() }, &testkit::meta("local"))
-                .expect("patch");
+        for (field, value) in [("marginTop", 60.0), ("marginRight", 40.0), ("marginBottom", 60.0), ("marginLeft", 40.0), ("columnsGutter", 18.0)] {
+            let result = app.dispatch_typed(LayoutCommand::PatchPage { page_id: Some("page-1".into()), field: field.into(), value: value.to_string() }, &testkit::meta("local")).expect("patch");
             assert_eq!(result.operations.len(), 1, "field {field} should apply");
         }
         app.dispatch_typed(LayoutCommand::PatchPage { page_id: Some("page-1".into()), field: "columnsCount".into(), value: "3".into() }, &testkit::meta("local")).expect("cols");
@@ -2110,12 +1948,7 @@ mod tests {
         let before = app.projection().expect("projection").pages[0].frames.len();
         app.dispatch_typed(LayoutCommand::AddFrame { kind: "rect".into(), x: None, y: None }, &testkit::meta("local")).expect("add");
         let frame_id = format!("frame-{}", before + 1);
-        let result = app
-            .dispatch_typed(
-                LayoutCommand::PatchFrame { frame_id: frame_id.clone(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() },
-                &testkit::meta("local"),
-            )
-            .expect("patch");
+        let result = app.dispatch_typed(LayoutCommand::PatchFrame { frame_id: frame_id.clone(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() }, &testkit::meta("local")).expect("patch");
         assert_eq!(result.operations.len(), 1);
         let doc = app.projection().expect("projection");
         let frame = doc.pages[0].frames.iter().find(|frame| frame.id() == frame_id).unwrap();
@@ -2126,19 +1959,11 @@ mod tests {
     #[test]
     fn patch_frame_supports_text_story_content_and_wrap_mode() {
         let mut app = new_app();
-        app.dispatch_typed(
-            LayoutCommand::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "storyContent".into(), value: "Edited story body.".into() },
-            &testkit::meta("local"),
-        )
-        .expect("story");
+        app.dispatch_typed(LayoutCommand::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "storyContent".into(), value: "Edited story body.".into() }, &testkit::meta("local")).expect("story");
         let story = app.projection().expect("projection").stories.into_iter().find(|story| story.id == "story-1").unwrap();
         assert_eq!(story.content, "Edited story body.");
 
-        app.dispatch_typed(
-            LayoutCommand::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "wrapMode".into(), value: "contour".into() },
-            &testkit::meta("local"),
-        )
-        .expect("wrap");
+        app.dispatch_typed(LayoutCommand::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "wrapMode".into(), value: "contour".into() }, &testkit::meta("local")).expect("wrap");
         let doc = app.projection().expect("projection");
         let frame = doc.pages[0].frames.iter().find(|frame| frame.id() == "frame-text-1").unwrap();
         let Frame::Text { wrap_mode, .. } = frame else { panic!("expected text frame") };
@@ -2148,11 +1973,7 @@ mod tests {
     #[test]
     fn patch_frame_supports_image_link_path() {
         let mut app = new_app();
-        app.dispatch_typed(
-            LayoutCommand::PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "linkPath".into(), value: "assets/updated.png".into() },
-            &testkit::meta("local"),
-        )
-        .expect("link");
+        app.dispatch_typed(LayoutCommand::PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "linkPath".into(), value: "assets/updated.png".into() }, &testkit::meta("local")).expect("link");
         let link = app.projection().expect("projection").links.into_iter().find(|link| link.id == "link-missing").unwrap();
         assert_eq!(link.path, "assets/updated.png");
     }
@@ -2223,12 +2044,7 @@ mod tests {
     fn set_camera_mutates_config_and_emits_no_operations() {
         let mut app = new_app();
         let before = app.projection().expect("projection");
-        let result = app
-            .dispatch_typed(
-                LayoutCommand::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } },
-                &testkit::meta("local"),
-            )
-            .expect("camera");
+        let result = app.dispatch_typed(LayoutCommand::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } }, &testkit::meta("local")).expect("camera");
         assert!(result.operations.is_empty(), "camera is a config action and emits no operations");
         assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT);
@@ -2240,12 +2056,7 @@ mod tests {
     #[test]
     fn set_camera_preview_surface_updates_independently_of_blueprint() {
         let mut app = new_app();
-        let result = app
-            .dispatch_typed(
-                LayoutCommand::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } },
-                &testkit::meta("local"),
-            )
-            .expect("camera");
+        let result = app.dispatch_typed(LayoutCommand::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } }, &testkit::meta("local")).expect("camera");
         assert!(result.operations.is_empty(), "camera is a config action and emits no operations");
         let preview_json = render_json(&mut app, LAYOUT_PLAY_BODY_PREVIEW);
         assert!(preview_json.contains(r#""cameraX":3.0"#), "preview scene reflects config camera: {preview_json}");
@@ -2259,11 +2070,7 @@ mod tests {
     fn pointer_down_selects_frame_via_hit_test() {
         let mut app = new_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
-        app.dispatch_typed(
-            LayoutCommand::CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 },
-            &testkit::meta("local"),
-        )
-        .expect("pointer");
+        app.dispatch_typed(LayoutCommand::CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }, &testkit::meta("local")).expect("pointer");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.frame.frame-image-1"));
     }
@@ -2272,9 +2079,7 @@ mod tests {
     fn pointer_move_updates_hover_highlight() {
         let mut app = new_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
-        let result = app
-            .dispatch_typed(LayoutCommand::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }, &testkit::meta("local"))
-            .expect("move");
+        let result = app.dispatch_typed(LayoutCommand::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }, &testkit::meta("local")).expect("move");
         assert!(result.operations.is_empty(), "hover is a config action, not an operation");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.frame.frame-text-1"));
@@ -2287,12 +2092,7 @@ mod tests {
         // the screen point is computed against that same default (x=0 y=0 zoom=1.0), not the app's
         // former fixture-authored zoom=0.5.
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);
-        let result = app
-            .dispatch_typed(
-                LayoutCommand::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 },
-                &testkit::meta("local"),
-            )
-            .expect("drop");
+        let result = app.dispatch_typed(LayoutCommand::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 }, &testkit::meta("local")).expect("drop");
         assert_eq!(result.operations.len(), 1);
         let doc = app.projection().expect("projection");
         let frame = doc.pages[0].frames.last().unwrap();
@@ -2305,12 +2105,7 @@ mod tests {
     fn canvas_drop_page_kind_adds_page() {
         let mut app = new_app();
         let before = app.projection().expect("projection").pages.len();
-        let result = app
-            .dispatch_typed(
-                LayoutCommand::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 },
-                &testkit::meta("local"),
-            )
-            .expect("drop");
+        let result = app.dispatch_typed(LayoutCommand::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 }, &testkit::meta("local")).expect("drop");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(app.projection().expect("projection").pages.len(), before + 1);
     }
@@ -2318,11 +2113,7 @@ mod tests {
     #[test]
     fn drag_over_emits_ghost_and_leave_clears() {
         let mut app = new_app();
-        app.dispatch_typed(
-            LayoutCommand::CanvasDragOver { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 },
-            &testkit::meta("local"),
-        )
-        .expect("over");
+        app.dispatch_typed(LayoutCommand::CanvasDragOver { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 }, &testkit::meta("local")).expect("over");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
 
         app.dispatch_typed(LayoutCommand::CanvasDragLeave, &testkit::meta("local")).expect("leave");
@@ -2406,18 +2197,7 @@ mod tests {
         }
         let issues = run_layout_preflight(&doc, LayoutLabels::labels(Locale::En, Terminology::Native));
         let codes: Vec<&str> = issues.iter().map(|issue| issue.code.as_str()).collect();
-        for expected in [
-            "object.out_of_bounds",
-            "asset.missing",
-            "asset.modified",
-            "asset.low_resolution",
-            "image.empty_frame",
-            "text.missing_story",
-            "text.below_minimum_size",
-            "font.missing",
-            "text.overset",
-            "asset.rgb_in_print",
-        ] {
+        for expected in ["object.out_of_bounds", "asset.missing", "asset.modified", "asset.low_resolution", "image.empty_frame", "text.missing_story", "text.below_minimum_size", "font.missing", "text.overset", "asset.rgb_in_print"] {
             assert!(codes.contains(&expected), "missing preflight code: {expected}");
         }
     }
@@ -2439,9 +2219,7 @@ mod tests {
         // 🧬️ engagementSubmit is declared `Shell`: through the real registry the kind-discipline
         // check must accept it because its handler only routes an export `HostEffect`, never operations.
         let mut app = new_app_with_registry();
-        let result = app
-            .dispatch_typed(LayoutCommand::EngagementSubmit { value: "export png".into() }, &testkit::meta("local"))
-            .expect("engagementSubmit passes registry kind discipline");
+        let result = app.dispatch_typed(LayoutCommand::EngagementSubmit { value: "export png".into() }, &testkit::meta("local")).expect("engagementSubmit passes registry kind discipline");
         assert!(result.operations.is_empty(), "Shell action must not emit document operations");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
@@ -2450,9 +2228,7 @@ mod tests {
     fn registry_backed_add_frame_emits_operation() {
         // 🧬️ addFrame is declared `Operation`: the registry-backed wrapper must let its operations through.
         let mut app = new_app_with_registry();
-        let result = app
-            .dispatch_typed(LayoutCommand::AddFrame { kind: "rect".into(), x: None, y: None }, &testkit::meta("local"))
-            .expect("addFrame passes registry kind discipline");
+        let result = app.dispatch_typed(LayoutCommand::AddFrame { kind: "rect".into(), x: None, y: None }, &testkit::meta("local")).expect("addFrame passes registry kind discipline");
         assert_eq!(result.operations.len(), 1);
     }
 
@@ -2463,10 +2239,7 @@ mod tests {
         let mut app = new_app_with_registry();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
         let result = app
-            .dispatch_typed(
-                LayoutCommand::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 },
-                &testkit::meta("local"),
-            )
+            .dispatch_typed(LayoutCommand::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }, &testkit::meta("local"))
             .expect("canvasPointerMove passes registry kind discipline");
         assert!(result.operations.is_empty(), "View action must not emit document operations");
     }
@@ -2518,10 +2291,7 @@ mod tests {
     #[test]
     fn import_media_fields_in_sets_data_fields_json() {
         let mut app = new_app();
-        let media = Media {
-            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-            payload: MediaPayload::Structured { schema: "form.dictionary".into(), json: r#"{"name":"Ada"}"#.into() },
-        };
+        let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json: r#"{"name":"Ada"}"#.into() } };
         app.import_media("fields:in", &media, &testkit::meta("local")).expect("import fields:in");
         let document = app.projection().expect("projection");
         assert_eq!(document.data_fields_json.as_deref(), Some(r#"{"name":"Ada"}"#));

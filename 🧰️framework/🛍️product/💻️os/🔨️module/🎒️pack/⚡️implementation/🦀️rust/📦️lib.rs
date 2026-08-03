@@ -15,32 +15,28 @@
 
 //#region 🔖️Core
 pub use pack_core::{
-    ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, KIND_CHUNK, KIND_CHUNK_TABLE,
-    KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
-    NoCompression, PackError, PackLimits, PackSink, PackSource, SegmentKind, crc32c, is_minimal_varint, read_varint_i64,
-    read_varint_u64, write_varint_i64, write_varint_u64,
+    crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+    SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
 };
 //#endregion 🔖️Core
 
 //#region 🔖️Format
-pub use pack_format::{
-    FOOTER_MAGIC, FOOTER_SIZE, FORMAT_VERSION_MAJOR, FORMAT_VERSION_MINOR, Footer, HEADER_SIZE, Header, MAGIC, Manifest,
-    OPTIONAL_CANONICAL, OPTIONAL_HAS_SCHEMA, OPTIONAL_STREAMED, PackFile, PackWriter, REQUIRED_CHUNKED, REQUIRED_COMPRESSED,
-    REQUIRED_ENCRYPTED, REQUIRED_FOOTER_CHAIN, RecoveryReport, Superblock, VerificationLevel, WriteOptions, encode_symbols,
-    read_footer_only, recover,
-};
 #[cfg(feature = "deflate")]
 pub use pack_format::DeflateCodec;
+pub use pack_format::{
+    encode_symbols, read_footer_only, recover, Footer, Header, Manifest, PackFile, PackWriter, RecoveryReport, Superblock, VerificationLevel, WriteOptions, FOOTER_MAGIC, FOOTER_SIZE, FORMAT_VERSION_MAJOR, FORMAT_VERSION_MINOR, HEADER_SIZE, MAGIC,
+    OPTIONAL_CANONICAL, OPTIONAL_HAS_SCHEMA, OPTIONAL_STREAMED, REQUIRED_CHUNKED, REQUIRED_COMPRESSED, REQUIRED_ENCRYPTED, REQUIRED_FOOTER_CHAIN,
+};
 //#endregion 🔖️Format
 
 //#region 🔖️Value
-pub use pack_value::{DecodeOptions, DecodeReport, EncodeOptions, schema_hash};
+pub use pack_value::{schema_hash, DecodeOptions, DecodeReport, EncodeOptions};
 //#endregion 🔖️Value
 
 //#region 🔖️Io
 /// @emoji 🗄️ Native-only file I/O — absent from `wasm32` builds, mirroring `pack_io` itself.
 #[cfg(not(target_arch = "wasm32"))]
-pub use pack_io::{FilePackSink, FilePackSource, StreamingPackWriter, recover_file, write_atomic};
+pub use pack_io::{recover_file, write_atomic, FilePackSink, FilePackSource, StreamingPackWriter};
 //#endregion 🔖️Io
 
 //#region 🔖️Async
@@ -48,11 +44,11 @@ pub use pack_async::{AsyncPackSource, BoundedDemand, CancellationToken, DemandPe
 //#endregion 🔖️Async
 
 //#region 🔖️Http
-pub use pack_http::{ChunkLruCache, HttpPackSource, RangeRequest, RangeResponse, RangeTransport, RetryPolicy};
 /// @emoji 🌐️ Native `ureq`-backed `RangeTransport` — off by default so wasm builds of this
 /// facade stay lean; enable via `pack`'s own `ureq` feature (forwards to `pack_http/ureq`).
 #[cfg(feature = "ureq")]
 pub use pack_http::UreqRangeTransport;
+pub use pack_http::{ChunkLruCache, HttpPackSource, RangeRequest, RangeResponse, RangeTransport, RetryPolicy};
 //#endregion 🔖️Http
 
 //#region 🔖️Index
@@ -66,43 +62,27 @@ pub use pack_index::{FieldIndexBuilder, FieldIndexEntry, FieldIndexReader, Field
 /// bytes. Thin forward onto `pack_value::encode_document` — see there for the canonical-mode
 /// rules and the purity law (byte-identical output for a given `(spec, record)` regardless of
 /// `HashMap` iteration order).
-pub fn encode_document(
-    spec: &dsl_schema::RecordSpec,
-    record: &dsl_schema::RecordValue,
-    options: &EncodeOptions,
-) -> Result<Vec<u8>, PackError> {
+pub fn encode_document(spec: &dsl_schema::RecordSpec, record: &dsl_schema::RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackError> {
     pack_value::encode_document(spec, record, options)
 }
 
 /// @emoji 🚪️ Decodes a complete `.spk` pack file's bytes back into a `RecordValue`, plus a
 /// `DecodeReport` describing anything the caller's `spec` didn't account for. Thin forward onto
 /// `pack_value::decode_document`.
-pub fn decode_document(
-    bytes: &[u8],
-    spec: &dsl_schema::RecordSpec,
-    options: &DecodeOptions,
-) -> Result<(dsl_schema::RecordValue, DecodeReport), PackError> {
+pub fn decode_document(bytes: &[u8], spec: &dsl_schema::RecordSpec, options: &DecodeOptions) -> Result<(dsl_schema::RecordValue, DecodeReport), PackError> {
     pack_value::decode_document(bytes, spec, options)
 }
 
 /// @emoji 🎯️ Encodes one record as a container-less binary body (symbol table + fields, no
 /// header/manifest/footer, no chunking) — the payload form for operation/command records. Thin
 /// forward onto `pack_value::encode_record_body`; same determinism law as `encode_document`.
-pub fn encode_record_body(
-    spec: &dsl_schema::RecordSpec,
-    record: &dsl_schema::RecordValue,
-    options: &EncodeOptions,
-) -> Result<Vec<u8>, PackError> {
+pub fn encode_record_body(spec: &dsl_schema::RecordSpec, record: &dsl_schema::RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackError> {
     pack_value::encode_record_body(spec, record, options)
 }
 
 /// @emoji 🎯️ Decodes an `encode_record_body` payload back into a `RecordValue` plus its
 /// `DecodeReport`. Thin forward onto `pack_value::decode_record_body`.
-pub fn decode_record_body(
-    bytes: &[u8],
-    spec: &dsl_schema::RecordSpec,
-    options: &DecodeOptions,
-) -> Result<(dsl_schema::RecordValue, DecodeReport), PackError> {
+pub fn decode_record_body(bytes: &[u8], spec: &dsl_schema::RecordSpec, options: &DecodeOptions) -> Result<(dsl_schema::RecordValue, DecodeReport), PackError> {
     pack_value::decode_record_body(bytes, spec, options)
 }
 
@@ -127,15 +107,7 @@ mod tests {
     /// (`Text`, `UInt`, `Bool`) — enough to prove the facade's wiring end to end without
     /// duplicating `pack_value`'s own exhaustive wire-tag coverage.
     fn sample_spec() -> RecordSpec {
-        RecordSpec::new(
-            Some("sample"),
-            RecordLayout::Lines,
-            vec![
-                FieldSpec::new(1, "name", Shape::Text),
-                FieldSpec::new(2, "age", Shape::UInt),
-                FieldSpec::new(3, "active", Shape::Bool),
-            ],
-        )
+        RecordSpec::new(Some("sample"), RecordLayout::Lines, vec![FieldSpec::new(1, "name", Shape::Text), FieldSpec::new(2, "age", Shape::UInt), FieldSpec::new(3, "active", Shape::Bool)])
     }
 
     fn sample_record() -> RecordValue {

@@ -17,10 +17,23 @@ import {
   resolveElementFillKind,
   resolveElementState,
 } from "../../../🎨️styling/⚡️implementation/🟦️typescript/📦️index.ts";
-import { meshCollectionVitePlugin, type PlaygroundAssetSpec } from "../../../🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, type PlaygroundAssetSpec } from "../../../🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
 
-const repoRoot = resolve(import.meta.dir, "../../../../..");
+const repoRoot = resolve(import.meta.dir, "../../../../../..");
 const uiCss = readFileSync(resolve(import.meta.dir, "🎨️ui.css"), "utf8");
+const paletteCss = readFileSync(resolve(import.meta.dir, "🎨️palette.css"), "utf8");
+
+describe("palette asset urls", () => {
+  it("every @font-face url in palette.css resolves under SEMIO_ASSET_ROOT", () => {
+    const assetRoot = resolveSemioAssetRoot(repoRoot);
+    const urls = [...paletteCss.matchAll(/url\("(\/asset\/[^"]+)"\)/g)].map((m) => m[1]!);
+    expect(urls.length).toBeGreaterThan(0);
+    for (const url of urls) {
+      const rel = url.slice("/asset/".length);
+      expect(existsSync(resolve(assetRoot, rel))).toBe(true);
+    }
+  });
+});
 
 describe("styling resolve", () => {
   it("selection fill uses accent with emphasized text color so muted gray stays readable", () => {

@@ -656,15 +656,9 @@ pub fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<(u32, Vec<u8>)> 
 /// produced by `LowpolyDocument::tessellate_transfer_json`), attaching a composited paint texture when
 /// one is supplied. Shared by the app's live 3D scene builder and media export.
 pub fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<String>) -> MeshData {
-    let read_f32 = |key: &str| -> Vec<f32> {
-        transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
-    };
-    let read_u32 = |key: &str| -> Vec<u32> {
-        transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
-    };
-    let read_u8 = |key: &str| -> Vec<u8> {
-        transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
-    };
+    let read_f32 = |key: &str| -> Vec<f32> { transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
+    let read_u32 = |key: &str| -> Vec<u32> { transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
+    let read_u8 = |key: &str| -> Vec<u8> { transfer.get(key).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default() };
     MeshData {
         positions: read_f32("positions"),
         normals: read_f32("normals"),
@@ -687,12 +681,7 @@ pub fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<String>) 
 pub fn lowpoly_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
     let projection: LowpolyProjection = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     let loaded = LowpolyDocument::new(projection).map_err(|e| e.to_string())?;
-    Ok(loaded
-        .active_mesh()
-        .ok()
-        .and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok())
-        .map(|transfer| mesh_data_from_transfer(&transfer, None))
-        .unwrap_or_default())
+    Ok(loaded.active_mesh().ok().and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok()).map(|transfer| mesh_data_from_transfer(&transfer, None)).unwrap_or_default())
 }
 
 /// 🔺️ Rebuilds a fresh single-object lowpoly projection from a DWG-imported mesh.
@@ -710,11 +699,7 @@ pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
 }
 
 pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
-    doc.get("mesh")
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty())
-        .map(Ok)
-        .unwrap_or_else(|| Ok(semio_framework_plugin::mesh_from_kind("box")))
+    doc.get("mesh").and_then(|value| serde_json::from_value(value.clone()).ok()).filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty()).map(Ok).unwrap_or_else(|| Ok(semio_framework_plugin::mesh_from_kind("box")))
 }
 //#endregion 🔖️MediaExportImport
 
@@ -781,10 +766,7 @@ mod tests {
     fn default_concrete_forest_mesh_has_no_spanning_support_gap_faces() {
         let projection = default_projection();
         let mesh = HalfedgeMesh::from_json(&projection.objects[0].mesh_json).expect("default mesh");
-        assert!(
-            (0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) >= 8),
-            "expected coplanar-merged plate-side n-gon with >= 8 corners"
-        );
+        assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) >= 8), "expected coplanar-merged plate-side n-gon with >= 8 corners");
         for fi in 0..mesh.face_count() {
             let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
             let mut min_x = f32::MAX;
@@ -798,10 +780,7 @@ mod tests {
                 min_z = min_z.min(p.z());
                 max_z = max_z.max(p.z());
             }
-            assert!(
-                !((max_x - min_x) > 4.0 && (max_z - min_z) > 1.0),
-                "default mesh face {fi} spans the support gap — CAD wire rebuild regressed to fill_holes caps"
-            );
+            assert!(!((max_x - min_x) > 4.0 && (max_z - min_z) > 1.0), "default mesh face {fi} spans the support gap — CAD wire rebuild regressed to fill_holes caps");
         }
     }
 
@@ -1184,10 +1163,7 @@ mod export_concrete_forest_mesh_tests {
             }
             let dx = max_x - min_x;
             let dz = max_z - min_z;
-            assert!(
-                !(dx > 4.0 && dz > 1.0),
-                "face {fi} spans the support gap (dx={dx:.3}, dz={dz:.3}) — likely a filled hole, not a CAD face"
-            );
+            assert!(!(dx > 4.0 && dz > 1.0), "face {fi} spans the support gap (dx={dx:.3}, dz={dz:.3}) — likely a filled hole, not a CAD face");
         }
     }
 
@@ -1205,43 +1181,16 @@ mod export_concrete_forest_mesh_tests {
         let handle = GeometryHandle(imported[0].solid_handle.clone().expect("handle"));
         let (positions, face_loops) = kernel.solid_face_loops_sync(&handle).expect("CAD face loops");
         let holed = face_loops.iter().filter(|(_, holes)| !holes.is_empty()).count();
-        eprintln!(
-            "[DEBUG] CAD face loops: verts={} faces={} holed={}",
-            positions.len(),
-            face_loops.len(),
-            holed
-        );
+        eprintln!("[DEBUG] CAD face loops: verts={} faces={} holed={}", positions.len(), face_loops.len(), holed);
         let mut mesh = HalfedgeMesh::from_face_loops(&positions, &face_loops).expect("halfedge from CAD wires");
         let flips = mesh.orient_faces_consistently().expect("orient faces");
-        eprintln!(
-            "[DEBUG] after wire build+orient: verts={} faces={} flips={} open={}",
-            mesh.vertex_count(),
-            mesh.face_count(),
-            flips,
-            open_boundary_count(&mesh)
-        );
+        eprintln!("[DEBUG] after wire build+orient: verts={} faces={} flips={} open={}", mesh.vertex_count(), mesh.face_count(), flips, open_boundary_count(&mesh));
         let before_merge = mesh.face_count();
         let merges = mesh.merge_coplanar_faces().expect("merge coplanar faces");
-        eprintln!(
-            "[DEBUG] after coplanar merge: verts={} faces={} merges={} (was {}) open={}",
-            mesh.vertex_count(),
-            mesh.face_count(),
-            merges,
-            before_merge,
-            open_boundary_count(&mesh)
-        );
-        assert!(
-            mesh.face_count() <= before_merge,
-            "coplanar merge must not increase face count"
-        );
-        assert!(
-            merges > 0 || before_merge == mesh.face_count(),
-            "expected coplanar merge to join adjacent CAD faces on the plate/supports"
-        );
-        assert!(
-            (0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 3),
-            "expected at least one non-triangle CAD face"
-        );
+        eprintln!("[DEBUG] after coplanar merge: verts={} faces={} merges={} (was {}) open={}", mesh.vertex_count(), mesh.face_count(), merges, before_merge, open_boundary_count(&mesh));
+        assert!(mesh.face_count() <= before_merge, "coplanar merge must not increase face count");
+        assert!(merges > 0 || before_merge == mesh.face_count(), "expected coplanar merge to join adjacent CAD faces on the plate/supports");
+        assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 3), "expected at least one non-triangle CAD face");
         assert_watertight(&mesh);
         assert_no_spanning_face_across_support_gap(&mesh);
         let mut min = MeshVec3::new(f32::MAX, f32::MAX, f32::MAX);

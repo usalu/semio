@@ -20,7 +20,7 @@
 //! convention — it compiles to an effectively-empty module on a `wasm32-unknown-unknown` target
 //! check. `MemoryStorage` has no such gate and is always available.
 
-use db_core::{DbError, DocumentId, DurabilityClass, EpochFence, check_len};
+use db_core::{check_len, DbError, DocumentId, DurabilityClass, EpochFence};
 use pack::{ByteRange, ContentHash};
 
 //#region 🔖️Limits
@@ -293,10 +293,7 @@ impl WalStorage for MemoryStorage {
 
     fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
         let mut wal = lock(&self.wal);
-        let segment = wal
-            .get_mut(document)
-            .and_then(|segments| segments.get_mut(&index))
-            .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         if segment.sealed {
             return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
         }
@@ -311,10 +308,7 @@ impl WalStorage for MemoryStorage {
 
     fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
         let mut wal = lock(&self.wal);
-        let segment = wal
-            .get_mut(document)
-            .and_then(|segments| segments.get_mut(&index))
-            .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         segment.sealed = true;
         Ok(())
     }
@@ -322,14 +316,9 @@ impl WalStorage for MemoryStorage {
     fn read(&self, document: &DocumentId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
         check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
         let wal = lock(&self.wal);
-        let segment = wal
-            .get(document)
-            .and_then(|segments| segments.get(&index))
-            .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         let start = range.offset as usize;
-        let end = start
-            .checked_add(range.len as usize)
-            .ok_or_else(|| DbError::InvalidArgument("wal read range overflows usize".to_string()))?;
+        let end = start.checked_add(range.len as usize).ok_or_else(|| DbError::InvalidArgument("wal read range overflows usize".to_string()))?;
         if end > segment.bytes.len() {
             return Err(DbError::InvalidArgument(format!("wal read range {start}..{end} out of bounds (len {})", segment.bytes.len())));
         }
@@ -338,10 +327,7 @@ impl WalStorage for MemoryStorage {
 
     fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
         let wal = lock(&self.wal);
-        let segment = wal
-            .get(document)
-            .and_then(|segments| segments.get(&index))
-            .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        let segment = wal.get(document).and_then(|segments| segments.get(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         Ok(segment.bytes.len() as u64)
     }
 
@@ -354,10 +340,7 @@ impl WalStorage for MemoryStorage {
 
     fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
         let mut wal = lock(&self.wal);
-        let segment = wal
-            .get_mut(document)
-            .and_then(|segments| segments.get_mut(&index))
-            .ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
+        let segment = wal.get_mut(document).and_then(|segments| segments.get_mut(&index)).ok_or_else(|| DbError::NotFound(format!("wal segment {index} for {document} not found")))?;
         if segment.sealed {
             return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
         }
@@ -387,11 +370,7 @@ impl SnapshotStorage for MemoryStorage {
 
     fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
         let snapshots = lock(&self.snapshots);
-        snapshots
-            .get(document)
-            .and_then(|generations| generations.get(&generation))
-            .cloned()
-            .ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
+        snapshots.get(document).and_then(|generations| generations.get(&generation)).cloned().ok_or_else(|| DbError::NotFound(format!("snapshot generation {generation} for {document} not found")))
     }
 
     fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
@@ -469,10 +448,7 @@ impl IndexStorage for MemoryStorage {
 
     fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
         let runs = lock(&self.index_runs);
-        runs.get(document)
-            .and_then(|runs| runs.get(&run_id))
-            .cloned()
-            .ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
+        runs.get(document).and_then(|runs| runs.get(&run_id)).cloned().ok_or_else(|| DbError::NotFound(format!("index run {run_id} for {document} not found")))
     }
 
     fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
@@ -598,7 +574,11 @@ mod fs_storage {
     /// error, or `DbError::Io` otherwise — used everywhere an open/read/stat is expected to find a
     /// caller-addressed blob that might legitimately not exist yet.
     fn open_err(err: std::io::Error, missing: impl FnOnce() -> String) -> DbError {
-        if err.kind() == std::io::ErrorKind::NotFound { DbError::NotFound(missing()) } else { io_err(err) }
+        if err.kind() == std::io::ErrorKind::NotFound {
+            DbError::NotFound(missing())
+        } else {
+            io_err(err)
+        }
     }
 
     /// @emoji 🛡️ Rejects a path component that could escape `root` (empty, `.`, `..`, or
@@ -747,10 +727,7 @@ mod fs_storage {
                 return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
             }
             let path = segment_path(&dir, index);
-            let mut file = std::fs::OpenOptions::new()
-                .append(true)
-                .open(&path)
-                .map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
+            let mut file = std::fs::OpenOptions::new().append(true).open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
             file.write_all(bytes).map_err(io_err)?;
             file.metadata().map_err(io_err).map(|meta| meta.len())
         }
@@ -763,10 +740,7 @@ mod fs_storage {
             }
             let dir = self.wal_dir(document)?;
             let path = segment_path(&dir, index);
-            let file = std::fs::OpenOptions::new()
-                .write(true)
-                .open(&path)
-                .map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
+            let file = std::fs::OpenOptions::new().write(true).open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
             file.sync_all().map_err(io_err)
         }
 
@@ -784,13 +758,9 @@ mod fs_storage {
             check_len(range.len, MAX_READ_BYTES, "wal_storage::read")?;
             let dir = self.wal_dir(document)?;
             let path = segment_path(&dir, index);
-            let mut file =
-                std::fs::File::open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
+            let mut file = std::fs::File::open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
             let current_len = file.metadata().map_err(io_err)?.len();
-            let end = range
-                .offset
-                .checked_add(range.len)
-                .ok_or_else(|| DbError::InvalidArgument("wal read range overflows u64".to_string()))?;
+            let end = range.offset.checked_add(range.len).ok_or_else(|| DbError::InvalidArgument("wal read range overflows u64".to_string()))?;
             // 🎯️ Bounds-check against the file's actual length before seeking/reading, so a
             // too-long range reports `InvalidArgument` (matching `MemoryStorage`'s behavior)
             // rather than surfacing a raw `UnexpectedEof` as an opaque `DbError::Io`.
@@ -806,9 +776,7 @@ mod fs_storage {
         fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
             let dir = self.wal_dir(document)?;
             let path = segment_path(&dir, index);
-            std::fs::metadata(&path)
-                .map(|meta| meta.len())
-                .map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))
+            std::fs::metadata(&path).map(|meta| meta.len()).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))
         }
 
         fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
@@ -821,10 +789,7 @@ mod fs_storage {
                 return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
             }
             let path = segment_path(&dir, index);
-            let file = std::fs::OpenOptions::new()
-                .write(true)
-                .open(&path)
-                .map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
+            let file = std::fs::OpenOptions::new().write(true).open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
             let current_len = file.metadata().map_err(io_err)?.len();
             if new_len > current_len {
                 return Err(DbError::InvalidArgument("truncate_tail new_len exceeds current segment length".to_string()));
@@ -1009,8 +974,7 @@ mod fs_storage {
         fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
             let path = self.lease_path(resource)?;
             let _guard = self.lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let (current_fence, expires_at_ms, current_holder) =
-                read_lease_file(&path)?.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
+            let (current_fence, expires_at_ms, current_holder) = read_lease_file(&path)?.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
             if now_ms >= expires_at_ms {
                 return Err(DbError::Unavailable(format!("lease for {resource} already expired")));
             }
@@ -1025,8 +989,7 @@ mod fs_storage {
         fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
             let path = self.lease_path(resource)?;
             let _guard = self.lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            let (current_fence, _, current_holder) =
-                read_lease_file(&path)?.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
+            let (current_fence, _, current_holder) = read_lease_file(&path)?.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
             if current_holder != holder {
                 return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
             }
@@ -1041,9 +1004,7 @@ mod fs_storage {
             let path = self.lease_path(resource)?;
             let _guard = self.lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             match read_lease_file(&path)? {
-                Some((fence, expires_at_ms, holder)) if now_ms < expires_at_ms => {
-                    Ok(Some(LeaseInfo { resource: resource.to_string(), holder, fence, expires_at_ms }))
-                }
+                Some((fence, expires_at_ms, holder)) if now_ms < expires_at_ms => Ok(Some(LeaseInfo { resource: resource.to_string(), holder, fence, expires_at_ms })),
                 _ => Ok(None),
             }
         }

@@ -1,7 +1,7 @@
 //! ⚖️ Puzzle 2d app — binary command protocol surface + laws (constitutional: protocol).
 
-use puzzle_2d_op::Puzzle2dOperation;
 use protocol::OpBinary;
+use puzzle_2d_op::Puzzle2dOperation;
 
 /// 📦️ Encodes a `Puzzle2dOperation` to its binary command form.
 pub fn encode_op(operation: &Puzzle2dOperation) -> Result<Vec<u8>, protocol::ProtocolError> {

@@ -191,11 +191,8 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
         if is_leader {
             futures_lite::future::yield_now().await;
         }
-        let outcome: Result<Arc<Vec<u8>>, PackError> = if is_leader {
-            futures_lite::future::or(self.dispatch_leader(&group, request.priority), CancelWatch { token: cancel }).await
-        } else {
-            futures_lite::future::or(WaitForGroup { group: group.clone() }, CancelWatch { token: cancel }).await
-        };
+        let outcome: Result<Arc<Vec<u8>>, PackError> =
+            if is_leader { futures_lite::future::or(self.dispatch_leader(&group, request.priority), CancelWatch { token: cancel }).await } else { futures_lite::future::or(WaitForGroup { group: group.clone() }, CancelWatch { token: cancel }).await };
         if is_leader {
             self.finalize_group(&group, outcome.clone());
         }
@@ -253,11 +250,7 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
 /// final range starting at its own offset.
 fn slice_group_result(data: &Arc<Vec<u8>>, group: &Arc<Mutex<Group>>, caller_range: ByteRange) -> Result<Vec<u8>, PackError> {
     let group_range = group.lock().unwrap().range;
-    let start = caller_range.offset.checked_sub(group_range.offset).ok_or_else(|| PackError::Malformed {
-        what: "async_read_slice",
-        offset: caller_range.offset,
-        detail: "requested range precedes the coalesced group range".to_string(),
-    })? as usize;
+    let start = caller_range.offset.checked_sub(group_range.offset).ok_or_else(|| PackError::Malformed { what: "async_read_slice", offset: caller_range.offset, detail: "requested range precedes the coalesced group range".to_string() })? as usize;
     let end = start.checked_add(caller_range.len as usize).ok_or(PackError::LimitExceeded("async_read_slice length overflow"))?;
     if end > data.len() {
         return Err(PackError::Truncated(caller_range.offset + caller_range.len));
@@ -380,12 +373,7 @@ impl<'a> Future for AcquireFuture<'a> {
         }
         let seq = state.next_seq;
         state.next_seq += 1;
-        let waiter = Arc::new(DemandWaiter {
-            rank: self.priority.rank(),
-            seq,
-            waker: Mutex::new(Some(cx.waker().clone())),
-            granted: AtomicBool::new(false),
-        });
+        let waiter = Arc::new(DemandWaiter { rank: self.priority.rank(), seq, waker: Mutex::new(Some(cx.waker().clone())), granted: AtomicBool::new(false) });
         state.queue.push(waiter.clone());
         drop(state);
         self.waiter = Some(waiter);
@@ -468,18 +456,11 @@ mod tests {
         let request_a = ReadRequest { range: ByteRange { offset: 0, len: 50 }, priority: LoadPriority::Requested };
         let request_b = ReadRequest { range: ByteRange { offset: 30, len: 50 }, priority: LoadPriority::Requested };
 
-        let (result_a, result_b) = futures_lite::future::block_on(futures_lite::future::zip(
-            scheduler.read(request_a, &cancel),
-            scheduler.read(request_b, &cancel),
-        ));
+        let (result_a, result_b) = futures_lite::future::block_on(futures_lite::future::zip(scheduler.read(request_a, &cancel), scheduler.read(request_b, &cancel)));
 
         assert_eq!(result_a.unwrap(), data[0..50].to_vec());
         assert_eq!(result_b.unwrap(), data[30..80].to_vec());
-        assert_eq!(
-            scheduler.source.read_count.load(Ordering::SeqCst),
-            1,
-            "two overlapping ranges must coalesce into a single physical read"
-        );
+        assert_eq!(scheduler.source.read_count.load(Ordering::SeqCst), 1, "two overlapping ranges must coalesce into a single physical read");
     }
 
     #[test]
@@ -490,10 +471,7 @@ mod tests {
         let cancel = CancellationToken::new();
         let request = ReadRequest { range: ByteRange { offset: 5, len: 10 }, priority: LoadPriority::Visible };
 
-        let (result_a, result_b) = futures_lite::future::block_on(futures_lite::future::zip(
-            scheduler.read(request, &cancel),
-            scheduler.read(request, &cancel),
-        ));
+        let (result_a, result_b) = futures_lite::future::block_on(futures_lite::future::zip(scheduler.read(request, &cancel), scheduler.read(request, &cancel)));
 
         assert_eq!(result_a.unwrap(), data[5..15].to_vec());
         assert_eq!(result_b.unwrap(), data[5..15].to_vec());
@@ -510,10 +488,7 @@ mod tests {
         let far_apart_a = ReadRequest { range: ByteRange { offset: 0, len: 4 }, priority: LoadPriority::Visible };
         let far_apart_b = ReadRequest { range: ByteRange { offset: 30, len: 4 }, priority: LoadPriority::Visible };
 
-        let (result_a, result_b) = futures_lite::future::block_on(futures_lite::future::zip(
-            scheduler.read(far_apart_a, &cancel),
-            scheduler.read(far_apart_b, &cancel),
-        ));
+        let (result_a, result_b) = futures_lite::future::block_on(futures_lite::future::zip(scheduler.read(far_apart_a, &cancel), scheduler.read(far_apart_b, &cancel)));
 
         assert!(result_a.is_ok());
         assert!(result_b.is_ok());

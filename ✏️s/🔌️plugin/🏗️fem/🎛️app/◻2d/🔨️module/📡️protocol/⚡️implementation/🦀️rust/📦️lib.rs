@@ -103,9 +103,7 @@ mod tests {
     #[test]
     fn fem2d_document_text_round_trips_through_the_store() {
         let mut store = fem2d_op::Fem2dStore::new(create_document_envelope(fem2d::FEM_2D_SCHEMA, "fem2d", fem2d_engine::empty_fem2d_projection(), None));
-        store
-            .dispatch(DocumentCommand::Apply { operations: vec![Fem2dOperation::SetDocument { document: simply_supported_beam_doc() }], description: None })
-            .expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Fem2dOperation::SetDocument { document: simply_supported_beam_doc() }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

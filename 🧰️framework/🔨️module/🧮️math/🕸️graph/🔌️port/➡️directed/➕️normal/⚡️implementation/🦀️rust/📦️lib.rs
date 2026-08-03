@@ -2,10 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use mathematical_graph::{
-    AttrView, Directed, EdgeId, EdgeRef, EdgeWeights, GraphView, HandleId, NodeId, Normal, Ported, PropertyBag, PropertyValue, Storage,
-    Undirected,
-};
+use mathematical_graph::{AttrView, Directed, EdgeId, EdgeRef, EdgeWeights, GraphView, HandleId, NodeId, Normal, Ported, PropertyBag, PropertyValue, Storage, Undirected};
 
 // #region 🔖️PortDirectedGraph
 /// 🔀️ NetworkX `MultiDiGraph` parity facade: wraps `Storage<Ported, Directed>` and hides handle bookkeeping behind a

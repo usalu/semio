@@ -26,10 +26,7 @@ fn apply_step(wires: &mut DslValue, board: &mut DslValue, step: &MindmapWiresSte
             array_mut(board, "nodes").retain(|node| entity_id(node, "id") != Some(node_id.as_str()));
         }
         MindmapWiresStep::PatchNode { node_id, patch } => {
-            if let Some(node) = array_mut(board, "nodes")
-                .iter_mut()
-                .find(|node| entity_id(node, "id") == Some(node_id.as_str()))
-            {
+            if let Some(node) = array_mut(board, "nodes").iter_mut().find(|node| entity_id(node, "id") == Some(node_id.as_str())) {
                 if let DslValue::Object(entries) = node {
                     for (key, value) in patch {
                         if let Some((_, slot)) = entries.iter_mut().find(|(entry_key, _)| entry_key == key) {
@@ -105,31 +102,19 @@ impl Operation<MindmapWiresDocument> for MindmapWiresOperation {
         match self {
             MindmapWiresOperation::AddNode { node } => steps_diff(vec![MindmapWiresStep::AddNode { node: node.clone() }]),
             MindmapWiresOperation::RemoveNode { node_id } => steps_diff(vec![MindmapWiresStep::RemoveNode { node_id: node_id.clone() }]),
-            MindmapWiresOperation::PatchNode { node_id, patch } => {
-                steps_diff(vec![MindmapWiresStep::PatchNode { node_id: node_id.clone(), patch: patch.clone() }])
-            }
-            MindmapWiresOperation::AddRelationship { edge, relationship } => {
-                steps_diff(vec![MindmapWiresStep::AddEdge { edge: edge.clone(), relationship: relationship.clone() }])
-            }
+            MindmapWiresOperation::PatchNode { node_id, patch } => steps_diff(vec![MindmapWiresStep::PatchNode { node_id: node_id.clone(), patch: patch.clone() }]),
+            MindmapWiresOperation::AddRelationship { edge, relationship } => steps_diff(vec![MindmapWiresStep::AddEdge { edge: edge.clone(), relationship: relationship.clone() }]),
             MindmapWiresOperation::RemoveEdge { edge_id } => steps_diff(vec![MindmapWiresStep::RemoveEdge { edge_id: edge_id.clone() }]),
-            MindmapWiresOperation::ReplaceDocument { wires_fixture, board_fixture } => MindmapWiresDiff {
-                steps: Vec::new(),
-                replace: Some(Box::new(MindmapWiresDocument {
-                    wires_fixture: wires_fixture.clone(),
-                    board_fixture: board_fixture.clone(),
-                })),
-            },
+            MindmapWiresOperation::ReplaceDocument { wires_fixture, board_fixture } => {
+                MindmapWiresDiff { steps: Vec::new(), replace: Some(Box::new(MindmapWiresDocument { wires_fixture: wires_fixture.clone(), board_fixture: board_fixture.clone() })) }
+            }
         }
     }
 
     fn backwards(&self, projection: &MindmapWiresDocument) -> Vec<Self> {
         match self {
-            MindmapWiresOperation::AddNode { node } => entity_id(node, "id")
-                .map(|node_id| vec![MindmapWiresOperation::RemoveNode { node_id: node_id.to_string() }])
-                .unwrap_or_default(),
-            MindmapWiresOperation::RemoveNode { node_id } => find_board_node(projection, node_id)
-                .map(|node| vec![MindmapWiresOperation::AddNode { node: node.clone() }])
-                .unwrap_or_default(),
+            MindmapWiresOperation::AddNode { node } => entity_id(node, "id").map(|node_id| vec![MindmapWiresOperation::RemoveNode { node_id: node_id.to_string() }]).unwrap_or_default(),
+            MindmapWiresOperation::RemoveNode { node_id } => find_board_node(projection, node_id).map(|node| vec![MindmapWiresOperation::AddNode { node: node.clone() }]).unwrap_or_default(),
             MindmapWiresOperation::PatchNode { node_id, patch } => {
                 let node = find_board_node(projection, node_id);
                 let inverse: BTreeMap<String, DslValue> = patch
@@ -141,20 +126,11 @@ impl Operation<MindmapWiresDocument> for MindmapWiresOperation {
                     .collect();
                 vec![MindmapWiresOperation::PatchNode { node_id: node_id.clone(), patch: inverse }]
             }
-            MindmapWiresOperation::AddRelationship { edge, .. } => entity_id(edge, "id")
-                .map(|edge_id| vec![MindmapWiresOperation::RemoveEdge { edge_id: edge_id.to_string() }])
-                .unwrap_or_default(),
-            MindmapWiresOperation::RemoveEdge { edge_id } => find_board_edge(projection, edge_id)
-                .map(|edge| MindmapWiresOperation::AddRelationship {
-                    edge: edge.clone(),
-                    relationship: find_relationship(projection, edge_id).cloned().unwrap_or(DslValue::Null),
-                })
-                .into_iter()
-                .collect(),
-            MindmapWiresOperation::ReplaceDocument { .. } => vec![MindmapWiresOperation::ReplaceDocument {
-                wires_fixture: projection.wires_fixture.clone(),
-                board_fixture: projection.board_fixture.clone(),
-            }],
+            MindmapWiresOperation::AddRelationship { edge, .. } => entity_id(edge, "id").map(|edge_id| vec![MindmapWiresOperation::RemoveEdge { edge_id: edge_id.to_string() }]).unwrap_or_default(),
+            MindmapWiresOperation::RemoveEdge { edge_id } => {
+                find_board_edge(projection, edge_id).map(|edge| MindmapWiresOperation::AddRelationship { edge: edge.clone(), relationship: find_relationship(projection, edge_id).cloned().unwrap_or(DslValue::Null) }).into_iter().collect()
+            }
+            MindmapWiresOperation::ReplaceDocument { .. } => vec![MindmapWiresOperation::ReplaceDocument { wires_fixture: projection.wires_fixture.clone(), board_fixture: projection.board_fixture.clone() }],
         }
     }
 }
@@ -293,10 +269,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_replace_document() {
-        store::test_support::assert_op_line_round_trip(&MindmapWiresOperation::ReplaceDocument {
-            wires_fixture: reasoning_wires_engine::empty_wires_fixture(),
-            board_fixture: reasoning_wires_engine::empty_board_fixture(),
-        });
+        store::test_support::assert_op_line_round_trip(&MindmapWiresOperation::ReplaceDocument { wires_fixture: reasoning_wires_engine::empty_wires_fixture(), board_fixture: reasoning_wires_engine::empty_board_fixture() });
     }
     //#endregion 🔖️OpTextTests
 

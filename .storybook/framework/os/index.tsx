@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "../../../framework/product/os/module/renderer/js/react/index.tsx";
 import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../framework/product/os/module/plugin/registry/generated/plugins.ts";
 import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } from "@semio-tech/ui-react";
+import { createBrowserStoragePort } from "@semio-tech/framework-core";
 
 export { PLUGIN_BUILD_TARGETS };
 export type { PluginBuildTarget };
@@ -54,7 +55,7 @@ export function OsBootHost({ program, appId, locks }: OsBootHostProps) {
   const resolvedLocks = useMemo(() => resolveShellLocks(locks), [locks]);
 
   useEffect(() => {
-    bootstrapElementsSurfaceChromeDocument(resolvedLocks.appearance ?? readStoredUiChromeAppearance());
+    bootstrapElementsSurfaceChromeDocument(resolvedLocks.appearance ?? readStoredUiChromeAppearance(createBrowserStoragePort()));
   }, [resolvedLocks.appearance]);
 
   if (!target) {

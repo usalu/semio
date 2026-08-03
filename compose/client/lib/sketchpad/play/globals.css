@@ -1,5 +1,5 @@
-@import "../../../elements/ui/🎨️globals.css";
+@import "../../../../../🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/🎨️globals.css";
 @import "@xyflow/react/dist/style.css";
-@source "../../../elements/ui";
+@source "../../../../../🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript";
 @source "../../sketchpad";
 @source "../../js";

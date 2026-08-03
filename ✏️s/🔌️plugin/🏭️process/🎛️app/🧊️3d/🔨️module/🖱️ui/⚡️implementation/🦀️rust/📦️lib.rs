@@ -6,22 +6,22 @@
 //! `DocumentApp::handle`.
 
 use base64::Engine;
-use process_3d::{MeasureKind, Pose, Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin, WorkshopMachine, WorkshopMachinePatch};
+use process_3d::{MeasureKind, Pose, Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, StepOrigin, Stock, WorkshopMachine, WorkshopMachinePatch};
 use process_3d_engine::{
-    axis_angle_from_up_to, capability_for_measure_kind, catalog_machine, default_document, export_process3d_model, find_capability, import_process3d_model, installed_catalogs, measure_for_capability, next_step_id, plate_document,
-    processed_mesh, processed_volume, validate_capability, validation_context_for_stock, validation_reason, Process3dConfig,
+    axis_angle_from_up_to, capability_for_measure_kind, catalog_machine, default_document, export_process3d_model, find_capability, import_process3d_model, installed_catalogs, measure_for_capability, next_step_id, plate_document, processed_mesh,
+    processed_volume, validate_capability, validation_context_for_stock, validation_reason, Process3dConfig,
 };
 use process_3d_op::{Process3dConfigOperation, Process3dOperation};
 use process_3d_protocol::Process3dCommand;
 use protocol::CollectionOperation;
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{
-    app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
-    AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup,
-    PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
-    WindowEngagementStatus, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
+    app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json,
+    world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView,
+    Emit, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode,
+    UiInspectorFieldGroup, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus, WindowMeasure,
+    WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -58,7 +58,11 @@ fn is_de_locale(cfg: &Process3dConfig) -> bool {
 
 /// 🗣️ `cfg.locale` mapped onto the SDK's exhaustive `Locale` enum.
 fn process3d_locale(cfg: &Process3dConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 /// 🗣️ `Process3dConfig` has no terminology axis (process is never embedded/reused as a building
@@ -465,8 +469,7 @@ fn process3d_measure_label(measure: &ProcessMeasure, labels: &Process3dLabels) -
 /// 🎨️ `tree_item_with_action` (SDK) carries no icon slot, so this app-specific wrapper layers
 /// `icon_id` on top via struct-update syntax — the only piece of the item skeleton this app adds.
 fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None,
-    ..tree_item_with_action(id, label, None, action) }
+    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..tree_item_with_action(id, label, None, action) }
 }
 
 fn number_field(id: impl Into<String>, label: impl Into<Label>, value: f64, target: &str, field: &str) -> UiNode {
@@ -478,7 +481,8 @@ fn number_field(id: impl Into<String>, label: impl Into<Label>, value: f64, targ
         required: None,
         error: None,
         presence: UiPresence::default(),
-        child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
+        child: Box::new(UiNode::Input(UiInputNode {
+            presence: UiPresence::default(),
             id: format!("{id}.input"),
             input_kind: "number".into(),
             value: value.to_string(),
@@ -504,7 +508,8 @@ fn text_field(id: impl Into<String>, label: impl Into<Label>, value: &str, targe
         required: None,
         error: None,
         presence: UiPresence::default(),
-        child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
+        child: Box::new(UiNode::Input(UiInputNode {
+            presence: UiPresence::default(),
             id: format!("{id}.input"),
             input_kind: "text".into(),
             value: value.into(),
@@ -549,8 +554,7 @@ fn build_document_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, label
                     action: process3d_action("setStepEnabled", Some(json!({ "id": step.id, "enabled": !step.enabled }))),
                     placement: Some(UiTreeActionPlacement::Menu),
                 },
-                UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: process3d_action("removeStep", Some(json!({ "id": step.id }))), placement: Some(UiTreeActionPlacement::Menu),
-        },
+                UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: process3d_action("removeStep", Some(json!({ "id": step.id }))), placement: Some(UiTreeActionPlacement::Menu) },
             ]),
             dimmed: Some(!step.enabled),
             menu: None,
@@ -593,9 +597,7 @@ fn build_catalogue_tree(fixture: &Process3dDocument, labels: &Process3dLabels) -
                     if failures.is_empty() {
                         iconed_tree_item_with_action(id, label, &capability.icon_id, process3d_action("addStep", Some(json!({ "machineId": machine.id, "capabilityId": capability.id }))))
                     } else {
-                        UiTreeItemNode { icon_id: Some(capability.icon_id.as_str().into()), menu: None,
-        ..tree_item_desc(id, label, Some(validation_reason(&failures)))
-    }
+                        UiTreeItemNode { icon_id: Some(capability.icon_id.as_str().into()), menu: None, ..tree_item_desc(id, label, Some(validation_reason(&failures))) }
                     }
                 })
             })
@@ -628,7 +630,12 @@ fn build_workshop_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, label
                 icon_id: Some(machine.icon_id.as_str().into()),
                 presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(target.as_str())),
                 action: Some(process3d_action("setSelection", Some(json!({ "id": target })))),
-                actions: Some(vec![UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove_machine.into()), action: process3d_action("removeWorkshopMachine", Some(json!({ "id": machine.id }))), placement: Some(UiTreeActionPlacement::Menu) }]),
+                actions: Some(vec![UiTreeItemAction {
+                    icon_id: "trash".into(),
+                    label: Some(labels.remove_machine.into()),
+                    action: process3d_action("removeWorkshopMachine", Some(json!({ "id": machine.id }))),
+                    placement: Some(UiTreeActionPlacement::Menu),
+                }]),
                 menu: None,
                 ..UiTreeItemNode::base(format!("process3d-workshop.machine.{}", machine.id), Label::data(machine.label.clone()))
             }
@@ -996,22 +1003,16 @@ impl DocumentApp for Process3dPlayApp {
         let fixture = doc.projection;
         let config = cfg.projection;
         match command {
-            Process3dCommand::SetDocument { document } => Emit {
-                document_operations: vec![Process3dOperation::SetDocument { document: document.clone() }],
-                config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }],
-                ..Default::default()
-            },
+            Process3dCommand::SetDocument { document } => {
+                Emit { document_operations: vec![Process3dOperation::SetDocument { document: document.clone() }], config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() }
+            }
             Process3dCommand::SetActiveExample { example_id } => {
                 let document = match example_id.as_str() {
                     PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
                     "" => Process3dDocument::default(),
                     _ => default_document(),
                 };
-                Emit {
-                    document_operations: vec![Process3dOperation::SetDocument { document }],
-                    config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![Process3dOperation::SetDocument { document }], config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() }
             }
             Process3dCommand::AddStep { measure, machine_id, capability_id, position } => {
                 let resolved = if let (Some(machine_id), Some(capability_id)) = (machine_id.as_deref(), capability_id.as_deref()) {
@@ -1112,11 +1113,7 @@ impl DocumentApp for Process3dPlayApp {
                 };
                 let stock = Stock { id: fixture.stock.id.clone(), label: resolve_labels::<Process3dLabels>(config).stock.into(), solid, pose: Pose::default() };
                 let document = Process3dDocument { workshop: fixture.workshop.clone(), stock, steps: Vec::new(), resolved_up_to: None };
-                Emit {
-                    document_operations: vec![Process3dOperation::SetDocument { document }],
-                    config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }],
-                    ..Default::default()
-                }
+                Emit { document_operations: vec![Process3dOperation::SetDocument { document }], config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() }
             }
             Process3dCommand::PatchInspector { target, field, number, text } => {
                 let value = number.map(|n| json!(n)).or_else(|| text.clone().map(Value::String));
@@ -1144,13 +1141,9 @@ impl DocumentApp for Process3dPlayApp {
                 let current = fixture.resolved_up_to.unwrap_or(len) as i64;
                 Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + 1).clamp(0, len as i64) as usize) }])
             }
-            Process3dCommand::SetActiveUtility { utility_id } => {
-                Emit::config(vec![Process3dConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, Process3dConfigOperation::SetSelectedFaceId { value: None }])
-            }
+            Process3dCommand::SetActiveUtility { utility_id } => Emit::config(vec![Process3dConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, Process3dConfigOperation::SetSelectedFaceId { value: None }]),
             Process3dCommand::EngagementInput { value } => Emit::config(vec![Process3dConfigOperation::SetEngagementInput { value: value.clone() }]),
-            Process3dCommand::EngagementAbort => {
-                Emit { config_operations: vec![Process3dConfigOperation::SetEngagementInput { value: String::new() }], effects: vec![set_active_utility_effect("select")], ..Default::default() }
-            }
+            Process3dCommand::EngagementAbort => Emit { config_operations: vec![Process3dConfigOperation::SetEngagementInput { value: String::new() }], effects: vec![set_active_utility_effect("select")], ..Default::default() },
             Process3dCommand::EngagementSubmit => {
                 let command_word = config.engagement_input.trim().to_lowercase();
                 let len = fixture.steps.len();
@@ -1180,12 +1173,7 @@ impl DocumentApp for Process3dPlayApp {
                 let origin = StepOrigin { machine_id: machine.id.clone(), capability_id: capability.id.clone() };
                 let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: measure_for_capability(&capability, Some(*position)) };
                 let step_id = step.id.clone();
-                Emit {
-                    document_operations: insert_step_operations(fixture, step),
-                    config_operations: vec![Process3dConfigOperation::SetSelectedId { value: Some(step_id) }],
-                    effects: vec![set_active_utility_effect("select")],
-                    ..Default::default()
-                }
+                Emit { document_operations: insert_step_operations(fixture, step), config_operations: vec![Process3dConfigOperation::SetSelectedId { value: Some(step_id) }], effects: vec![set_active_utility_effect("select")], ..Default::default() }
             }
             Process3dCommand::WorldPick { granularity, id } => {
                 if granularity == "face" {
@@ -1224,11 +1212,7 @@ impl DocumentApp for Process3dPlayApp {
             },
             Process3dCommand::LoadModelRequest => Emit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }),
             Process3dCommand::ImportModelFile { name, payload } => match import_process3d_model(&name.to_ascii_lowercase(), payload) {
-                Some(document) => Emit {
-                    document_operations: vec![Process3dOperation::SetDocument { document }],
-                    config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }],
-                    ..Default::default()
-                },
+                Some(document) => Emit { document_operations: vec![Process3dOperation::SetDocument { document }], config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() },
                 None => Emit::default(),
             },
             Process3dCommand::ToggleSun => {
@@ -1267,13 +1251,7 @@ impl DocumentApp for Process3dPlayApp {
                 build_world_3d_scene(
                     PROCESS_3D_PLAY_SURFACE_MAIN,
                     PROCESS_3D_PLAY_APP_ID,
-                    world3d_scene(
-                        world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov),
-                        meshes_json,
-                        instances_json,
-                        process3d_selection_json(config, process3d_active_utility(config)),
-                        &config_sun(config),
-                    ),
+                    world3d_scene(world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov), meshes_json, instances_json, process3d_selection_json(config, process3d_active_utility(config)), &config_sun(config)),
                 )
             }
             PROCESS_3D_PLAY_BODY_DOCUMENT => build_document_tree(doc.projection, config, labels),
@@ -1298,7 +1276,11 @@ impl DocumentApp for Process3dPlayApp {
 /// `Process3dConfig::default().active_utility_id`, so the fallback only ever triggers if a config
 /// value somehow arrives empty).
 fn process3d_active_utility(cfg: &Process3dConfig) -> &str {
-    if cfg.active_utility_id.is_empty() { PROCESS3D_DEFAULT_UTILITY } else { cfg.active_utility_id.as_str() }
+    if cfg.active_utility_id.is_empty() {
+        PROCESS3D_DEFAULT_UTILITY
+    } else {
+        cfg.active_utility_id.as_str()
+    }
 }
 
 /// 🌞️ Reconstructs the shared framework `WorldSunConfig` shape from `Process3dConfig`'s flattened sun
@@ -1508,13 +1490,7 @@ mod tests {
     #[test]
     fn undo_after_add_step_restores_previous_step_count() {
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            Process3dCommand::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None },
-            |app| app.projection().expect("projection").steps.len(),
-            4,
-            5,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, Process3dCommand::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }, |app| app.projection().expect("projection").steps.len(), 4, 5);
     }
 
     #[test]
@@ -1605,9 +1581,7 @@ mod tests {
         let mut app = new_app();
         app.dispatch_typed(Process3dCommand::SetStock { kind: "box".into() }, &testkit::meta("local")).expect("set stock");
         let stock_volume = processed_volume(&app.projection().expect("projection")).expect("stock volume");
-        let result = app
-            .dispatch_typed(Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }, &testkit::meta("local"))
-            .expect("face drag");
+        let result = app.dispatch_typed(Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }, &testkit::meta("local")).expect("face drag");
         assert!(!result.operations.is_empty());
         let document = app.projection().expect("projection");
         assert_eq!(document.steps.len(), 1);
@@ -1621,9 +1595,7 @@ mod tests {
         let mut app = new_app();
         app.dispatch_typed(Process3dCommand::SetStock { kind: "box".into() }, &testkit::meta("local")).expect("set stock");
         let stock_volume = processed_volume(&app.projection().expect("projection")).expect("stock volume");
-        let result = app
-            .dispatch_typed(Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }, &testkit::meta("local"))
-            .expect("face drag");
+        let result = app.dispatch_typed(Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }, &testkit::meta("local")).expect("face drag");
         assert!(!result.operations.is_empty());
         let document = app.projection().expect("projection");
         assert_eq!(document.steps.len(), 1);
@@ -1636,9 +1608,7 @@ mod tests {
     fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
         let mut app = new_app();
         set_utility(&mut app, "cut");
-        let result = app
-            .dispatch_typed(Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: None }, &testkit::meta("local"))
-            .expect("face drag");
+        let result = app.dispatch_typed(Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: None }, &testkit::meta("local")).expect("face drag");
         assert!(result.operations.is_empty(), "worldFaceDragEnd should be a no-operation while a placement utility is active, not the select utility");
     }
 
@@ -1704,9 +1674,7 @@ mod tests {
     fn inspector_shows_validation_warning_after_stock_grows_above_step_requirement() {
         let mut app = new_app();
         app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }, &testkit::meta("local")).expect("shrink stock to fit circular saw");
-        let add_result = app
-            .dispatch_typed(Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }, &testkit::meta("local"))
-            .expect("add step");
+        let add_result = app.dispatch_typed(Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }, &testkit::meta("local")).expect("add step");
         assert!(!add_result.operations.is_empty());
         app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.5), text: None }, &testkit::meta("local")).expect("grow stock");
         let step_id = app.projection().expect("projection").steps.last().expect("step").id.clone();
@@ -1742,13 +1710,7 @@ mod tests {
     #[test]
     fn undo_after_add_workshop_machine_restores_previous_machine_count() {
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            Process3dCommand::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() },
-            |app| app.projection().expect("projection").workshop.machines.len(),
-            7,
-            8,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, Process3dCommand::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }, |app| app.projection().expect("projection").workshop.machines.len(), 7, 8);
     }
 
     #[test]
@@ -1769,8 +1731,7 @@ mod tests {
         let mut app = new_app();
         app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }, &testkit::meta("local")).expect("shrink stock to fit circular saw");
         app.dispatch_typed(Process3dCommand::PatchInspector { target: "machine:circularSaw".into(), field: "crosscut.bladeDiameter".into(), number: Some(0.4), text: None }, &testkit::meta("local")).expect("edit parameter");
-        let result =
-            app.dispatch_typed(Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }, &testkit::meta("local")).expect("add step");
+        let result = app.dispatch_typed(Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }, &testkit::meta("local")).expect("add step");
         assert!(!result.operations.is_empty());
         let document = app.projection().expect("projection");
         let last = document.steps.last().expect("inserted step");

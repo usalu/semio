@@ -31,10 +31,7 @@ mod tests {
     #[test]
     fn pack_round_trips_representative_document() {
         let mut assets = BTreeMap::new();
-        assets.insert(
-            "asset-1".into(),
-            NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) },
-        );
+        assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into(), width: Some(10.0), height: Some(20.0) });
         let document = NoteDocument {
             schema: NOTE_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),
@@ -59,9 +56,7 @@ mod tests {
                     rotation: 0.0,
                     visible: true,
                     locked: false,
-                    paragraphs: vec![NoteTextParagraph {
-                        runs: vec![NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None }],
-                    }],
+                    paragraphs: vec![NoteTextParagraph { runs: vec![NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None }] }],
                     font_size: 16.0,
                     font_weight: "bold".into(),
                     align: "center".into(),

@@ -8,13 +8,13 @@ use infinite_board_port_directed::{
 };
 use infinite_board_port_directed_normal::BoardHost;
 pub use infinite_canvas as canvas;
+use rewrite::TrinityRewriteError;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::collections::{BTreeMap, HashMap};
+use store::DocumentDsl as _;
 use trinity_jack::{execute, parse};
 use trinity_ram::{create_trinity_graph_envelope, dispatch_trinity_graph_operations, port_key, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TrinityGraphStore};
-use rewrite::TrinityRewriteError;
-use store::DocumentDsl as _;
 
 pub use trinity_jack::{complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack, Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan};
 pub use trinity_ram::{self, Camera, Manifest};
@@ -91,10 +91,7 @@ impl protocol::OperationDiff<RewriteConfig> for RewriteConfig {
 pub fn rewrite_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: rewrite::REWRITE_RULE_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::Computation,
-            form: semio_framework_plugin::MediaForm::Value,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Value },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
                 id: "graph:in".into(),
@@ -117,12 +114,7 @@ pub fn rewrite_io() -> semio_framework_plugin::AppIo {
         ],
         export_formats: vec![],
         import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "trinity.rewrite".into(),
-            name: "Trinity Rewrite Rule".into(),
-            dimension: "graph".into(),
-            component_kind: "trinity".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "trinity.rewrite".into(), name: "Trinity Rewrite Rule".into(), dimension: "graph".into(), component_kind: "trinity".into() },
     }
 }
 //#endregion 🔖️Io
@@ -1074,15 +1066,11 @@ mod wasm_session {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
             let dsl = include_str!("../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/📚️example/🔱️nakagin-capsule-tower.trinity");
-            let host = GraphFixture::parse_dsl(dsl)
-                .ok()
-                .and_then(|fixture| Graph::from_fixture(fixture).ok())
-                .map(TrinityHost::from_graph)
-                .unwrap_or_else(|| {
-                    let empty =
-                        GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
-                    TrinityHost::from_graph(Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
-                });
+            let host = GraphFixture::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(TrinityHost::from_graph).unwrap_or_else(|| {
+                let empty =
+                    GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
+                TrinityHost::from_graph(Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
+            });
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 
@@ -1427,7 +1415,14 @@ mod tests {
 
     #[test]
     fn pattern_to_match_clause_edge_variants() {
-        let base = |edge_var: Option<&str>, edge_kind: Option<&str>| PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: edge_var.map(String::from), edge_kind: edge_kind.map(String::from), right_var: Some("b".into()), right_kind: Some("Piece".into()) };
+        let base = |edge_var: Option<&str>, edge_kind: Option<&str>| PatternJson {
+            left_var: "a".into(),
+            left_kind: "Piece".into(),
+            edge_var: edge_var.map(String::from),
+            edge_kind: edge_kind.map(String::from),
+            right_var: Some("b".into()),
+            right_kind: Some("Piece".into()),
+        };
         assert_eq!(pattern_to_match_clause(&base(Some("e"), Some("Connection"))), "(a:Piece)-[e:Connection]->(b:Piece)");
         assert_eq!(pattern_to_match_clause(&base(Some("e"), None)), "(a:Piece)-[e]->(b:Piece)");
         assert_eq!(pattern_to_match_clause(&base(None, Some("Connection"))), "(a:Piece)-[:Connection]->(b:Piece)");

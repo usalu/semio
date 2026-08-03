@@ -1,7 +1,7 @@
 //! ➡️ The directed simple graph family — NetworkX `DiGraph` parity facade over `mathematical_graph::Storage<Normal, Directed>`.
 //! 📐️ Design notes: `reverse`/`to_undirected`/`subgraph`/`edge_subgraph` rebuild a fresh owned `Storage` (explicit copies, not aliasing borrowed views — see the core crate's `SubgraphView`/`ReversedView` doc) rather than wrapping `ReversedView`; `to_undirected` returns the raw `mathematical_graph::Storage<Normal, Undirected>` instead of the sibling facade type to avoid a circular crate dependency; `all_neighbors` chains predecessors then successors WITHOUT deduping, mirroring NetworkX's `all_neighbors` (`itertools.chain`, duplicates included when a node is both a predecessor and a successor).
 
-use mathematical_graph::{AttrView, Directed, EdgeId, EdgeRef, EdgeWeights, GraphView, Normal, NodeId, PropertyBag, PropertyValue, Storage, Undirected};
+use mathematical_graph::{AttrView, Directed, EdgeId, EdgeRef, EdgeWeights, GraphView, NodeId, Normal, PropertyBag, PropertyValue, Storage, Undirected};
 use std::collections::{BTreeMap, BTreeSet};
 
 // #region 🔖️DirectedGraph

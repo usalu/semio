@@ -1215,11 +1215,11 @@ pub mod gpu_session {
 #[path = "../../../../../../../🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🌱️metabolism/🔣️icon/🤖️generated/🦀️metabolism_icon_name.rs"]
 mod metabolism_icon_name_gen;
 
-#[path = "../../../../../../../🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript/🔣️icon/🤖️generated/🦀️icon_name.rs"]
+#[path = "../../../../../../../🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🔣️icon/🤖️generated/🦀️icon_name.rs"]
 mod catalog_icon_name_gen;
 
-pub use metabolism_icon_name_gen::MetabolismIconName;
 pub use catalog_icon_name_gen::IconName;
+pub use metabolism_icon_name_gen::MetabolismIconName;
 
 pub mod icon_codec {
     // #region icon_codec

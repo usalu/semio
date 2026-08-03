@@ -233,16 +233,8 @@ mod schema {
         CallTarget { name: "sessionEnd", kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall { session { end { ok errors { message } } } }" },
         CallTarget { name: "subscriptionSession", kind: super::transport::OpKind::Subscription, gql: "subscription ArchitectSub { session { id hash } }" },
         CallTarget { name: "subscriptionOperation", kind: super::transport::OpKind::Subscription, gql: "subscription ArchitectSub { operation { id hash } }" },
-        CallTarget {
-            name: "installProjection",
-            kind: super::transport::OpKind::Mutation,
-            gql: "mutation ArchitectCall($storeId: ID!, $json: String!) { session { store(id: $storeId) { installProjection(json: $json) { ok errors { message } } } } }",
-        },
-        CallTarget {
-            name: "startNewChange",
-            kind: super::transport::OpKind::Mutation,
-            gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange { ok errors { message } } } } } }",
-        },
+        CallTarget { name: "installProjection", kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($storeId: ID!, $json: String!) { session { store(id: $storeId) { installProjection(json: $json) { ok errors { message } } } } }" },
+        CallTarget { name: "startNewChange", kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange { ok errors { message } } } } } }" },
         CallTarget { name: "saveKit", kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { save { ok errors { message } } } } } }" },
     ];
 

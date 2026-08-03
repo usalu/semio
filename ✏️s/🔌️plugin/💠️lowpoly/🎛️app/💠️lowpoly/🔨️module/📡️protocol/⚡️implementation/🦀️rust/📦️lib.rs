@@ -167,11 +167,7 @@ mod tests {
         let object_id = projection.objects[0].id.clone();
         let envelope = store::create_document_envelope::<lowpoly::LowpolyProjection, LowpolyOperation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
         let mut doc_store = store::DocumentStore::new(envelope);
-        let operation = LowpolyOperation::PatchPaintLayer {
-            object_id,
-            index: 0,
-            patch: lowpoly_op::LowpolyPaintLayerPatch { name: Some("Renamed Layer".into()), visible: None, opacity: None, blend_mode: None },
-        };
+        let operation = LowpolyOperation::PatchPaintLayer { object_id, index: 0, patch: lowpoly_op::LowpolyPaintLayerPatch { name: Some("Renamed Layer".into()), visible: None, opacity: None, blend_mode: None } };
         doc_store.dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&doc_store);
         store::test_support::assert_document_pack_round_trip(&doc_store);

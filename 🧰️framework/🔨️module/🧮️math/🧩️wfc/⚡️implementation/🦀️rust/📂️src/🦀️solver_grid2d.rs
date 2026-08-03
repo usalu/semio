@@ -4,7 +4,7 @@
 
 use crate::bitset::PatternSet;
 use crate::chunk;
-use crate::constraint::{AdjacencyView, Constraint, ConstraintSet, build_adjacency_view};
+use crate::constraint::{build_adjacency_view, AdjacencyView, Constraint, ConstraintSet};
 use crate::error::SolveError;
 use crate::grid2d::Grid2dTopology;
 use crate::ids::PatternId;
@@ -88,7 +88,11 @@ pub struct Grid2dSolver {
 
 impl Grid2dSolver {
     fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
-        if self.constraints.is_empty() { None } else { Some(ConstraintSet { constraints: &self.constraints, adjacency: &self.adjacency }) }
+        if self.constraints.is_empty() {
+            None
+        } else {
+            Some(ConstraintSet { constraints: &self.constraints, adjacency: &self.adjacency })
+        }
     }
 
     pub fn solve(&mut self, seed: u64) -> SolveOutcome {
@@ -147,7 +151,7 @@ impl Grid2dSolver {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::grid2d::{Boundary, Stencil2d, declare_stencil_relations_tiled};
+    use crate::grid2d::{declare_stencil_relations_tiled, Boundary, Stencil2d};
     use crate::tiled::TiledModelBuilder;
 
     fn checkerboard(width: usize, height: usize, boundary: Boundary) -> (CompiledModel, Grid2dTopology) {

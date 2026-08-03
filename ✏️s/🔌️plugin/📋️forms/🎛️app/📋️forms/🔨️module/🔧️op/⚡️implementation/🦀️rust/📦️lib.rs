@@ -73,12 +73,7 @@ mod tests {
     #[test]
     fn apply_form_edit_op_roundtrip() {
         let spec = empty_forms_projection();
-        let step = FormStep {
-            id: "step-test".into(),
-            title: "Review".into(),
-            description: None,
-            blocks: Vec::new(),
-        };
+        let step = FormStep { id: "step-test".into(), title: "Review".into(), description: None, blocks: Vec::new() };
         let next = apply_form_edit_operation(&spec, &FormOperation::AddStep { step, index: None });
         assert_eq!(next.steps.len(), 2);
     }
@@ -107,13 +102,7 @@ mod tests {
 
     #[test]
     fn config_snapshot_op_text_round_trips() {
-        let config = forms_engine::FormsConfig {
-            selected_ids: vec!["q1".into(), "q2".into()],
-            current_step_index: 1,
-            try_values_json: r#"{"name":"Ada"}"#.into(),
-            locale: "de-DE".into(),
-            contributions_json: "[]".into(),
-        };
+        let config = forms_engine::FormsConfig { selected_ids: vec!["q1".into(), "q2".into()], current_step_index: 1, try_values_json: r#"{"name":"Ada"}"#.into(), locale: "de-DE".into(), contributions_json: "[]".into() };
         store::test_support::assert_op_line_round_trip(&FormsConfigOperation::Snapshot { config });
         store::test_support::assert_op_line_round_trip(&FormsConfigOperation::SetSelection { ids: vec!["a".into()] });
         store::test_support::assert_op_line_round_trip(&FormsConfigOperation::SetStepIndex { index: 3 });

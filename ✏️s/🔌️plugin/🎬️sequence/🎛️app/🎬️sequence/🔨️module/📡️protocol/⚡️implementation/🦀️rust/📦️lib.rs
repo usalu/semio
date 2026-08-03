@@ -96,10 +96,7 @@ mod tests {
         let mut doc_store = store::DocumentStore::new(envelope);
         doc_store
             .dispatch(store::DocumentCommand::Apply {
-                operations: vec![SequenceOperation::StepsAdd {
-                    index: 2,
-                    item: sequence::SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: sequence::StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false },
-                }],
+                operations: vec![SequenceOperation::StepsAdd { index: 2, item: sequence::SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: sequence::StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } }],
                 description: None,
             })
             .expect("apply");

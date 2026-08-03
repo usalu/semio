@@ -508,17 +508,7 @@ pub mod part_6 {
 // #endregion 🔖️Part6
 
 /// 📋️ Building seismic check generalized over DE zone-based or EN Type-1/2-spectrum annex selection.
-pub fn check_building_seismic_with_annex(
-    annex: AnnexParams,
-    importance: part_1::ImportanceClass,
-    system: part_1::StructuralSystem,
-    t1_s: f64,
-    mass_t: f64,
-    v_rd_kn: f64,
-    drift_mm: f64,
-    height_m: f64,
-    multiple_resisting_systems: bool,
-) -> CheckReport {
+pub fn check_building_seismic_with_annex(annex: AnnexParams, importance: part_1::ImportanceClass, system: part_1::StructuralSystem, t1_s: f64, mass_t: f64, v_rd_kn: f64, drift_mm: f64, height_m: f64, multiple_resisting_systems: bool) -> CheckReport {
     let choice = annex.choice();
     let gamma_i = importance.gamma_i();
     let q = system.q();

@@ -5,7 +5,7 @@
 //! to reveal where a cost curve goes superlinear, not just a single-point timing. Run via
 //! `nx run @protocol/testkit-rs:bench` (`bun ./📜️script.ts bench`).
 
-use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use protocol_testkit::{GenProfile, HistoryLogGen, OpDagGen};
 
 //#region 🔖️Fixtures
@@ -144,13 +144,9 @@ fn bench_crdt_merge(c: &mut Criterion) {
     let b = BenchDiff { field_a: Some(3), field_b: None };
     let ma = meta_at(1, 10);
     let mb = meta_at(2, 20);
-    for strategy in [
-        protocol::MergeStrategyKind::LwwRegister,
-        protocol::MergeStrategyKind::OrderedSequence,
-        protocol::MergeStrategyKind::TextSequence,
-        protocol::MergeStrategyKind::TombstonedGraphSet,
-        protocol::MergeStrategyKind::ContentAddressedBlob,
-    ] {
+    for strategy in
+        [protocol::MergeStrategyKind::LwwRegister, protocol::MergeStrategyKind::OrderedSequence, protocol::MergeStrategyKind::TextSequence, protocol::MergeStrategyKind::TombstonedGraphSet, protocol::MergeStrategyKind::ContentAddressedBlob]
+    {
         group.bench_with_input(BenchmarkId::new("merge_concurrent_diffs", format!("{strategy:?}")), &strategy, |bencher, &strategy| {
             bencher.iter(|| black_box(protocol::merge_concurrent_diffs(strategy, a.clone(), b.clone(), &ma, &mb)));
         });

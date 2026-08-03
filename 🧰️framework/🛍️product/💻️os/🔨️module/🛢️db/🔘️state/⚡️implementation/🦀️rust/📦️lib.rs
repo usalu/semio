@@ -150,23 +150,24 @@ fn hamt_index(hash: u64, depth: u8) -> u32 {
 
 enum HamtNode<K, V> {
     Empty,
-    Leaf { hash: u64, key: K, value: V },
+    Leaf {
+        hash: u64,
+        key: K,
+        value: V,
+    },
     /// @emoji 💥️ A bucket of entries that share a routing hash (or that ran out of depth to
     /// split further) — degrades to a linear scan, which is fine since real-world key
     /// distributions make this vanishingly rare.
-    Collision { entries: Vec<(u64, K, V)> },
-    Branch { bitmap: u32, children: Vec<Rc<HamtNode<K, V>>> },
+    Collision {
+        entries: Vec<(u64, K, V)>,
+    },
+    Branch {
+        bitmap: u32,
+        children: Vec<Rc<HamtNode<K, V>>>,
+    },
 }
 
-fn hamt_branch_from_two<K: Clone + Eq, V: Clone>(
-    depth: u8,
-    h1: u64,
-    k1: K,
-    v1: V,
-    h2: u64,
-    k2: K,
-    v2: V,
-) -> Rc<HamtNode<K, V>> {
+fn hamt_branch_from_two<K: Clone + Eq, V: Clone>(depth: u8, h1: u64, k1: K, v1: V, h2: u64, k2: K, v2: V) -> Rc<HamtNode<K, V>> {
     if depth >= HAMT_MAX_DEPTH {
         return Rc::new(HamtNode::Collision { entries: vec![(h1, k1, v1), (h2, k2, v2)] });
     }
@@ -184,13 +185,7 @@ fn hamt_branch_from_two<K: Clone + Eq, V: Clone>(
     }
 }
 
-fn hamt_insert<K: Clone + Eq, V: Clone>(
-    node: &Rc<HamtNode<K, V>>,
-    depth: u8,
-    hash: u64,
-    key: K,
-    value: V,
-) -> Rc<HamtNode<K, V>> {
+fn hamt_insert<K: Clone + Eq, V: Clone>(node: &Rc<HamtNode<K, V>>, depth: u8, hash: u64, key: K, value: V) -> Rc<HamtNode<K, V>> {
     match node.as_ref() {
         HamtNode::Empty => Rc::new(HamtNode::Leaf { hash, key, value }),
         HamtNode::Leaf { hash: h, key: k, value: v } => {
@@ -253,12 +248,7 @@ fn hamt_get<'a, K: Eq, V>(node: &'a HamtNode<K, V>, depth: u8, hash: u64, key: &
     }
 }
 
-fn hamt_remove<K: Clone + Eq, V: Clone>(
-    node: &Rc<HamtNode<K, V>>,
-    depth: u8,
-    hash: u64,
-    key: &K,
-) -> Option<Rc<HamtNode<K, V>>> {
+fn hamt_remove<K: Clone + Eq, V: Clone>(node: &Rc<HamtNode<K, V>>, depth: u8, hash: u64, key: &K) -> Option<Rc<HamtNode<K, V>>> {
     match node.as_ref() {
         HamtNode::Empty => None,
         HamtNode::Leaf { hash: h, key: k, .. } => {
@@ -268,23 +258,21 @@ fn hamt_remove<K: Clone + Eq, V: Clone>(
                 Some(node.clone())
             }
         }
-        HamtNode::Collision { entries } => {
-            match entries.iter().position(|(_, k, _)| k == key) {
-                None => Some(node.clone()),
-                Some(pos) => {
-                    let mut new_entries = entries.clone();
-                    new_entries.remove(pos);
-                    if new_entries.len() == 1 {
-                        let (h, k, v) = new_entries.into_iter().next().expect("checked len == 1 above");
-                        Some(Rc::new(HamtNode::Leaf { hash: h, key: k, value: v }))
-                    } else if new_entries.is_empty() {
-                        None
-                    } else {
-                        Some(Rc::new(HamtNode::Collision { entries: new_entries }))
-                    }
+        HamtNode::Collision { entries } => match entries.iter().position(|(_, k, _)| k == key) {
+            None => Some(node.clone()),
+            Some(pos) => {
+                let mut new_entries = entries.clone();
+                new_entries.remove(pos);
+                if new_entries.len() == 1 {
+                    let (h, k, v) = new_entries.into_iter().next().expect("checked len == 1 above");
+                    Some(Rc::new(HamtNode::Leaf { hash: h, key: k, value: v }))
+                } else if new_entries.is_empty() {
+                    None
+                } else {
+                    Some(Rc::new(HamtNode::Collision { entries: new_entries }))
                 }
             }
-        }
+        },
         HamtNode::Branch { bitmap, children } => {
             let i = hamt_index(hash, depth);
             let bit = 1u32 << i;
@@ -616,10 +604,7 @@ fn rope_split(node: &Rc<RopeNode>, at: usize) -> (Rc<RopeNode>, Rc<RopeNode>) {
             } else {
                 let byte_at = text.char_indices().nth(at).map(|(b, _)| b).expect("at < chars checked above");
                 let (l, r) = text.split_at(byte_at);
-                (
-                    Rc::new(RopeNode::Leaf { text: Rc::from(l), chars: at }),
-                    Rc::new(RopeNode::Leaf { text: Rc::from(r), chars: *chars - at }),
-                )
+                (Rc::new(RopeNode::Leaf { text: Rc::from(l), chars: at }), Rc::new(RopeNode::Leaf { text: Rc::from(r), chars: *chars - at }))
             }
         }
         RopeNode::Concat { left, right, .. } => {
@@ -669,10 +654,7 @@ impl PText {
 
     pub fn slice(&self, start: usize, end: usize) -> Result<PText, DbError> {
         if start > end || end > self.len() {
-            return Err(DbError::InvalidArgument(format!(
-                "PText::slice range {start}..{end} out of bounds (len {})",
-                self.len()
-            )));
+            return Err(DbError::InvalidArgument(format!("PText::slice range {start}..{end} out of bounds (len {})", self.len())));
         }
         let (_, suffix) = rope_split(&self.0, start);
         let (middle, _) = rope_split(&suffix, end - start);
@@ -689,10 +671,7 @@ impl PText {
 
     pub fn delete(&self, start: usize, end: usize) -> Result<PText, DbError> {
         if start > end || end > self.len() {
-            return Err(DbError::InvalidArgument(format!(
-                "PText::delete range {start}..{end} out of bounds (len {})",
-                self.len()
-            )));
+            return Err(DbError::InvalidArgument(format!("PText::delete range {start}..{end} out of bounds (len {})", self.len())));
         }
         let (left, _) = rope_split(&self.0, start);
         let (_, right) = rope_split(&self.0, end);
@@ -733,12 +712,7 @@ fn tree_height<K, V>(node: Option<&Rc<TreeNode<K, V>>>) -> u32 {
     node.map_or(0, |n| n.height)
 }
 
-fn tree_make<K: Clone, V: Clone>(
-    key: K,
-    value: V,
-    left: Option<Rc<TreeNode<K, V>>>,
-    right: Option<Rc<TreeNode<K, V>>>,
-) -> Rc<TreeNode<K, V>> {
+fn tree_make<K: Clone, V: Clone>(key: K, value: V, left: Option<Rc<TreeNode<K, V>>>, right: Option<Rc<TreeNode<K, V>>>) -> Rc<TreeNode<K, V>> {
     let height = 1 + tree_height(left.as_ref()).max(tree_height(right.as_ref()));
     Rc::new(TreeNode { key, value, left, right, height })
 }
@@ -1026,14 +1000,22 @@ impl<N: Clone + Eq + std::hash::Hash, ND: Clone, ED: Clone> PGraph<N, ND, ED> {
         let out_edges = match self.out_edges.get(from) {
             Some(out) => {
                 let updated = out.remove(to);
-                if updated.is_empty() { self.out_edges.remove(from) } else { self.out_edges.insert(from.clone(), updated) }
+                if updated.is_empty() {
+                    self.out_edges.remove(from)
+                } else {
+                    self.out_edges.insert(from.clone(), updated)
+                }
             }
             None => self.out_edges.clone(),
         };
         let in_edges = match self.in_edges.get(to) {
             Some(ins) => {
                 let updated = ins.remove(from);
-                if updated.is_empty() { self.in_edges.remove(to) } else { self.in_edges.insert(to.clone(), updated) }
+                if updated.is_empty() {
+                    self.in_edges.remove(to)
+                } else {
+                    self.in_edges.insert(to.clone(), updated)
+                }
             }
             None => self.in_edges.clone(),
         };
@@ -1057,9 +1039,7 @@ impl<N: Clone + Eq + std::hash::Hash, ND: Clone, ED: Clone> PGraph<N, ND, ED> {
     }
 }
 
-impl<N: Clone + Eq + std::hash::Hash + Ord + CanonicalEncode, ND: Clone + CanonicalEncode, ED: Clone + CanonicalEncode>
-    PGraph<N, ND, ED>
-{
+impl<N: Clone + Eq + std::hash::Hash + Ord + CanonicalEncode, ND: Clone + CanonicalEncode, ED: Clone + CanonicalEncode> PGraph<N, ND, ED> {
     /// @emoji 🔑️ Content hash over the node set (sorted, via `PMap::content_hash`) followed by
     /// the edge set sorted by `(from, to)`.
     pub fn content_hash(&self) -> pack_core::ContentHash {
@@ -1218,9 +1198,7 @@ impl TouchedSet {
     /// @emoji ⚔️ True iff any region in `self` and any region in `other` intersect with at least
     /// one side being a `Write` — read/read intersections never conflict.
     pub fn conflicts_with(&self, other: &TouchedSet) -> bool {
-        self.regions.iter().any(|a| {
-            other.regions.iter().any(|b| (a.kind == TouchKind::Write || b.kind == TouchKind::Write) && a.path_intersects(b))
-        })
+        self.regions.iter().any(|a| other.regions.iter().any(|b| (a.kind == TouchKind::Write || b.kind == TouchKind::Write) && a.path_intersects(b)))
     }
 }
 //#endregion 🔖️TouchedRegion
@@ -1275,10 +1253,8 @@ mod tests {
 
     #[test]
     fn pmap_content_hash_is_order_independent_and_content_sensitive() {
-        let forward: PMap<String, u64> =
-            PMap::new().insert("a".to_string(), 1).insert("b".to_string(), 2).insert("c".to_string(), 3);
-        let backward: PMap<String, u64> =
-            PMap::new().insert("c".to_string(), 3).insert("b".to_string(), 2).insert("a".to_string(), 1);
+        let forward: PMap<String, u64> = PMap::new().insert("a".to_string(), 1).insert("b".to_string(), 2).insert("c".to_string(), 3);
+        let backward: PMap<String, u64> = PMap::new().insert("c".to_string(), 3).insert("b".to_string(), 2).insert("a".to_string(), 1);
         assert_eq!(forward.content_hash(), backward.content_hash());
 
         let different = forward.insert("a".to_string(), 999);
@@ -1441,10 +1417,7 @@ mod tests {
     //#region 🔖️PGraph
     #[test]
     fn pgraph_add_and_query_edges() {
-        let graph: PGraph<String, (), &'static str> = PGraph::new()
-            .add_node("a".to_string(), ())
-            .add_node("b".to_string(), ())
-            .add_node("c".to_string(), ());
+        let graph: PGraph<String, (), &'static str> = PGraph::new().add_node("a".to_string(), ()).add_node("b".to_string(), ()).add_node("c".to_string(), ());
         let graph = graph.add_edge("a".to_string(), "b".to_string(), "ab").expect("nodes exist");
         let graph = graph.add_edge("a".to_string(), "c".to_string(), "ac").expect("nodes exist");
 
@@ -1465,10 +1438,7 @@ mod tests {
 
     #[test]
     fn pgraph_remove_node_cascades_edge_cleanup() {
-        let graph: PGraph<String, (), ()> = PGraph::new()
-            .add_node("a".to_string(), ())
-            .add_node("b".to_string(), ())
-            .add_node("c".to_string(), ());
+        let graph: PGraph<String, (), ()> = PGraph::new().add_node("a".to_string(), ()).add_node("b".to_string(), ()).add_node("c".to_string(), ());
         let graph = graph.add_edge("a".to_string(), "b".to_string(), ()).unwrap();
         let graph = graph.add_edge("b".to_string(), "c".to_string(), ()).unwrap();
 
@@ -1482,16 +1452,8 @@ mod tests {
 
     #[test]
     fn pgraph_content_hash_ignores_insertion_order() {
-        let g1: PGraph<String, u64, u64> = PGraph::new()
-            .add_node("a".to_string(), 1)
-            .add_node("b".to_string(), 2)
-            .add_edge("a".to_string(), "b".to_string(), 7)
-            .unwrap();
-        let g2: PGraph<String, u64, u64> = PGraph::new()
-            .add_node("b".to_string(), 2)
-            .add_node("a".to_string(), 1)
-            .add_edge("a".to_string(), "b".to_string(), 7)
-            .unwrap();
+        let g1: PGraph<String, u64, u64> = PGraph::new().add_node("a".to_string(), 1).add_node("b".to_string(), 2).add_edge("a".to_string(), "b".to_string(), 7).unwrap();
+        let g2: PGraph<String, u64, u64> = PGraph::new().add_node("b".to_string(), 2).add_node("a".to_string(), 1).add_edge("a".to_string(), "b".to_string(), 7).unwrap();
         assert_eq!(g1.content_hash(), g2.content_hash());
     }
     //#endregion 🔖️PGraph

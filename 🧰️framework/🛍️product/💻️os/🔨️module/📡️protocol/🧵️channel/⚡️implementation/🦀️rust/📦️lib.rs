@@ -120,74 +120,20 @@ pub enum AppCommand {
 /// @emoji 📬️ One frame the app engine sends to its client.
 #[derive(Clone, Debug, PartialEq)]
 pub enum AppFrame {
-    Welcome {
-        channel_version: u32,
-        instance: u32,
-        manifest: Vec<u8>,
-    },
-    Done {
-        in_reply_to: u64,
-    },
-    Invocation {
-        in_reply_to: u64,
-        output: Vec<u8>,
-        diagnostics: Vec<u8>,
-    },
-    UiSection {
-        in_reply_to: Option<u64>,
-        kind: u8,
-        key: String,
-        hash: u64,
-        body: Option<Vec<u8>>,
-    },
-    Effects {
-        in_reply_to: Option<u64>,
-        effects: Vec<Vec<u8>>,
-    },
-    Events {
-        in_reply_to: Option<u64>,
-        events: Vec<Vec<u8>>,
-    },
-    DocumentChanged {
-        envelopes: Vec<protocol_causal::OperationEnvelope>,
-        origin: String,
-    },
-    Document {
-        in_reply_to: u64,
-        pack: Vec<u8>,
-        spr: Vec<u8>,
-        ops: String,
-    },
-    Config {
-        in_reply_to: u64,
-        pack: Vec<u8>,
-        spr: Vec<u8>,
-        ops: String,
-    },
-    ConfigChanged {
-        envelopes: Vec<protocol_causal::OperationEnvelope>,
-        origin: String,
-    },
-    ContextMenu {
-        in_reply_to: u64,
-        items: Vec<u8>,
-    },
-    Media {
-        in_reply_to: u64,
-        port: String,
-        descriptor: Vec<u8>,
-        data: Vec<u8>,
-    },
-    MediaFingerprint {
-        in_reply_to: u64,
-        port: String,
-        fingerprint: Vec<u8>,
-    },
-    Error {
-        in_reply_to: Option<u64>,
-        code: String,
-        message: String,
-    },
+    Welcome { channel_version: u32, instance: u32, manifest: Vec<u8> },
+    Done { in_reply_to: u64 },
+    Invocation { in_reply_to: u64, output: Vec<u8>, diagnostics: Vec<u8> },
+    UiSection { in_reply_to: Option<u64>, kind: u8, key: String, hash: u64, body: Option<Vec<u8>> },
+    Effects { in_reply_to: Option<u64>, effects: Vec<Vec<u8>> },
+    Events { in_reply_to: Option<u64>, events: Vec<Vec<u8>> },
+    DocumentChanged { envelopes: Vec<protocol_causal::OperationEnvelope>, origin: String },
+    Document { in_reply_to: u64, pack: Vec<u8>, spr: Vec<u8>, ops: String },
+    Config { in_reply_to: u64, pack: Vec<u8>, spr: Vec<u8>, ops: String },
+    ConfigChanged { envelopes: Vec<protocol_causal::OperationEnvelope>, origin: String },
+    ContextMenu { in_reply_to: u64, items: Vec<u8> },
+    Media { in_reply_to: u64, port: String, descriptor: Vec<u8>, data: Vec<u8> },
+    MediaFingerprint { in_reply_to: u64, port: String, fingerprint: Vec<u8> },
+    Error { in_reply_to: Option<u64>, code: String, message: String },
 }
 //#endregion 🔖️AppFrame
 
@@ -209,7 +155,11 @@ fn write_opt_u64(out: &mut Vec<u8>, value: &Option<u64>) {
 }
 
 fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, protocol_core::ProtocolError> {
-    if protocol_core::read_bool(bytes, pos)? { Ok(Some(protocol_core::read_varint_u64(bytes, pos)?)) } else { Ok(None) }
+    if protocol_core::read_bool(bytes, pos)? {
+        Ok(Some(protocol_core::read_varint_u64(bytes, pos)?))
+    } else {
+        Ok(None)
+    }
 }
 
 fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
@@ -220,7 +170,11 @@ fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
 }
 
 fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, protocol_core::ProtocolError> {
-    if protocol_core::read_bool(bytes, pos)? { Ok(Some(protocol_core::read_bytes(bytes, pos)?)) } else { Ok(None) }
+    if protocol_core::read_bool(bytes, pos)? {
+        Ok(Some(protocol_core::read_bytes(bytes, pos)?))
+    } else {
+        Ok(None)
+    }
 }
 
 fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
@@ -386,40 +340,19 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, protocol_core::Pro
             config: protocol_core::read_bytes(bytes, &mut pos)?,
         },
         1 => AppCommand::ConfigCommand { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, command: protocol_core::read_bytes(bytes, &mut pos)? },
-        2 => AppCommand::Command {
-            seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            command: protocol_core::read_bytes(bytes, &mut pos)?,
-            view_state: protocol_core::read_bytes(bytes, &mut pos)?,
-        },
+        2 => AppCommand::Command { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, command: protocol_core::read_bytes(bytes, &mut pos)?, view_state: protocol_core::read_bytes(bytes, &mut pos)? },
         3 => AppCommand::CommandText { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, line: protocol_core::read_str(bytes, &mut pos)? },
-        4 => AppCommand::RefreshUi {
-            seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            sections: read_vec_section_probe(bytes, &mut pos)?,
-            view_state: protocol_core::read_bytes(bytes, &mut pos)?,
-        },
+        4 => AppCommand::RefreshUi { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, sections: read_vec_section_probe(bytes, &mut pos)?, view_state: protocol_core::read_bytes(bytes, &mut pos)? },
         5 => AppCommand::ContextMenu { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, request: protocol_core::read_bytes(bytes, &mut pos)? },
         6 => AppCommand::DocumentCommand { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, command: protocol_core::read_bytes(bytes, &mut pos)? },
         7 => AppCommand::ApplyEnvelopes { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
-        8 => AppCommand::LoadDocument {
-            seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            pack: protocol_core::read_bytes(bytes, &mut pos)?,
-            spr: protocol_core::read_bytes(bytes, &mut pos)?,
-        },
+        8 => AppCommand::LoadDocument { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, pack: protocol_core::read_bytes(bytes, &mut pos)?, spr: protocol_core::read_bytes(bytes, &mut pos)? },
         9 => AppCommand::ReadDocument { seq: protocol_core::read_varint_u64(bytes, &mut pos)? },
-        10 => AppCommand::LoadConfig {
-            seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            pack: protocol_core::read_bytes(bytes, &mut pos)?,
-            spr: protocol_core::read_bytes(bytes, &mut pos)?,
-        },
+        10 => AppCommand::LoadConfig { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, pack: protocol_core::read_bytes(bytes, &mut pos)?, spr: protocol_core::read_bytes(bytes, &mut pos)? },
         11 => AppCommand::ReadConfig { seq: protocol_core::read_varint_u64(bytes, &mut pos)? },
         12 => AppCommand::AttachBackbone { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, uri: protocol_core::read_str(bytes, &mut pos)? },
         13 => AppCommand::DetachBackbone { seq: protocol_core::read_varint_u64(bytes, &mut pos)? },
-        14 => AppCommand::MediaIn {
-            seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            port: protocol_core::read_str(bytes, &mut pos)?,
-            descriptor: protocol_core::read_bytes(bytes, &mut pos)?,
-            data: protocol_core::read_bytes(bytes, &mut pos)?,
-        },
+        14 => AppCommand::MediaIn { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)?, descriptor: protocol_core::read_bytes(bytes, &mut pos)?, data: protocol_core::read_bytes(bytes, &mut pos)? },
         15 => AppCommand::MediaOut { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)?, request: protocol_core::read_bytes(bytes, &mut pos)? },
         16 => AppCommand::MediaFingerprint { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)? },
         17 => AppCommand::Bye,
@@ -523,17 +456,9 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, protocol_core::Protoco
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-frame tag", 0, "empty frame"))?;
     let mut pos = 1usize;
     let frame = match tag {
-        0 => AppFrame::Welcome {
-            channel_version: protocol_core::read_varint_u64(bytes, &mut pos)? as u32,
-            instance: protocol_core::read_varint_u64(bytes, &mut pos)? as u32,
-            manifest: protocol_core::read_bytes(bytes, &mut pos)?,
-        },
+        0 => AppFrame::Welcome { channel_version: protocol_core::read_varint_u64(bytes, &mut pos)? as u32, instance: protocol_core::read_varint_u64(bytes, &mut pos)? as u32, manifest: protocol_core::read_bytes(bytes, &mut pos)? },
         1 => AppFrame::Done { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)? },
-        2 => AppFrame::Invocation {
-            in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            output: protocol_core::read_bytes(bytes, &mut pos)?,
-            diagnostics: protocol_core::read_bytes(bytes, &mut pos)?,
-        },
+        2 => AppFrame::Invocation { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, output: protocol_core::read_bytes(bytes, &mut pos)?, diagnostics: protocol_core::read_bytes(bytes, &mut pos)? },
         3 => {
             let in_reply_to = read_opt_u64(bytes, &mut pos)?;
             let kind = *bytes.get(pos).ok_or_else(|| malformed("channel ui-section kind", pos as u64, "truncated"))?;
@@ -546,31 +471,14 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, protocol_core::Protoco
         4 => AppFrame::Effects { in_reply_to: read_opt_u64(bytes, &mut pos)?, effects: read_vec_bytes(bytes, &mut pos)? },
         5 => AppFrame::Events { in_reply_to: read_opt_u64(bytes, &mut pos)?, events: read_vec_bytes(bytes, &mut pos)? },
         6 => AppFrame::DocumentChanged { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: protocol_core::read_str(bytes, &mut pos)? },
-        7 => AppFrame::Document {
-            in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            pack: protocol_core::read_bytes(bytes, &mut pos)?,
-            spr: protocol_core::read_bytes(bytes, &mut pos)?,
-            ops: protocol_core::read_str(bytes, &mut pos)?,
-        },
-        8 => AppFrame::Config {
-            in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            pack: protocol_core::read_bytes(bytes, &mut pos)?,
-            spr: protocol_core::read_bytes(bytes, &mut pos)?,
-            ops: protocol_core::read_str(bytes, &mut pos)?,
-        },
+        7 => AppFrame::Document { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, pack: protocol_core::read_bytes(bytes, &mut pos)?, spr: protocol_core::read_bytes(bytes, &mut pos)?, ops: protocol_core::read_str(bytes, &mut pos)? },
+        8 => AppFrame::Config { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, pack: protocol_core::read_bytes(bytes, &mut pos)?, spr: protocol_core::read_bytes(bytes, &mut pos)?, ops: protocol_core::read_str(bytes, &mut pos)? },
         9 => AppFrame::ConfigChanged { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: protocol_core::read_str(bytes, &mut pos)? },
         10 => AppFrame::ContextMenu { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, items: protocol_core::read_bytes(bytes, &mut pos)? },
-        11 => AppFrame::Media {
-            in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            port: protocol_core::read_str(bytes, &mut pos)?,
-            descriptor: protocol_core::read_bytes(bytes, &mut pos)?,
-            data: protocol_core::read_bytes(bytes, &mut pos)?,
-        },
-        12 => AppFrame::MediaFingerprint {
-            in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?,
-            port: protocol_core::read_str(bytes, &mut pos)?,
-            fingerprint: protocol_core::read_bytes(bytes, &mut pos)?,
-        },
+        11 => {
+            AppFrame::Media { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)?, descriptor: protocol_core::read_bytes(bytes, &mut pos)?, data: protocol_core::read_bytes(bytes, &mut pos)? }
+        }
+        12 => AppFrame::MediaFingerprint { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)?, fingerprint: protocol_core::read_bytes(bytes, &mut pos)? },
         13 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, code: protocol_core::read_str(bytes, &mut pos)?, message: protocol_core::read_str(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
@@ -638,11 +546,7 @@ mod tests {
 
     #[test]
     fn app_command_refresh_ui_round_trips() {
-        assert_command_round_trips(&AppCommand::RefreshUi {
-            seq: 4,
-            sections: vec![SectionProbe { kind: 1, key: "outline".to_string(), hash: Some(42) }, SectionProbe { kind: 2, key: "inspector".to_string(), hash: None }],
-            view_state: vec![],
-        });
+        assert_command_round_trips(&AppCommand::RefreshUi { seq: 4, sections: vec![SectionProbe { kind: 1, key: "outline".to_string(), hash: Some(42) }, SectionProbe { kind: 2, key: "inspector".to_string(), hash: None }], view_state: vec![] });
     }
 
     #[test]

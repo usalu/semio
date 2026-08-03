@@ -105,13 +105,7 @@ pub mod part_1 {
     pub fn check_pmv_comfort(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> CheckResult {
         let pmv = pmv_iso7730(t_op_c, rh_percent, air_speed_m_s);
         let limit = 0.5;
-        CheckResult::from_utilization(
-            ClauseId::new("EN 16798-1", "§7", "7.2.2"),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, pmv.abs()),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, limit),
-            "ISO 7730 PMV comfort",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 16798-1", "§7", "7.2.2"), Quantity::new(norm_core::QuantityKind::Dimensionless, pmv.abs()), Quantity::new(norm_core::QuantityKind::Dimensionless, limit), "ISO 7730 PMV comfort", AnnexChoice::De)
     }
 
     /// ✅️ Check operative temperature within band (EN 16798-1).
@@ -428,13 +422,7 @@ pub mod part_3 {
 
     /// 💧️ Humidification capacity check (folded TR EN 16798-9 humidification guidance).
     pub fn check_humidification_capacity(required_kg_h: f64, provided_kg_h: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 16798-3", "§7", "7.4"),
-            Quantity::new(norm_core::QuantityKind::Mass, provided_kg_h),
-            Quantity::new(norm_core::QuantityKind::Mass, required_kg_h),
-            "humidification capacity",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 16798-3", "§7", "7.4"), Quantity::new(norm_core::QuantityKind::Mass, provided_kg_h), Quantity::new(norm_core::QuantityKind::Mass, required_kg_h), "humidification capacity", AnnexChoice::De)
     }
 }
 // #endregion 🔖️Part3
@@ -472,13 +460,7 @@ pub mod part_5_1 {
     /// ✅️ Check that the night setback is deep enough to count as a building-level energy-saving measure.
     pub fn check_night_setback(occupancy: OccupancyType, configured_k: f64) -> CheckResult {
         let required = night_setback_k(occupancy);
-        CheckResult::from_minimum(
-            ClauseId::new("EN 16798-5-1", "§6", "6.2"),
-            Quantity::new(norm_core::QuantityKind::Temperature, configured_k),
-            Quantity::new(norm_core::QuantityKind::Temperature, required),
-            "night setback depth",
-            AnnexChoice::De,
-        )
+        CheckResult::from_minimum(ClauseId::new("EN 16798-5-1", "§6", "6.2"), Quantity::new(norm_core::QuantityKind::Temperature, configured_k), Quantity::new(norm_core::QuantityKind::Temperature, required), "night setback depth", AnnexChoice::De)
     }
 }
 // #endregion 🔖️Part5_1
@@ -570,13 +552,7 @@ pub mod part_9 {
     /// ✅️ Check net cooling energy need against a reference value.
     pub fn check_cooling_energy_need(h_tr_w_k: f64, h_ve_w_k: f64, theta_e_c: f64, theta_set_c: f64, delta_t_h: f64, gains_kwh: f64, utilization_factor: f64, reference_kwh: f64) -> CheckResult {
         let computed = cooling_energy_need_kwh(h_tr_w_k, h_ve_w_k, theta_e_c, theta_set_c, delta_t_h, gains_kwh, utilization_factor);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 16798-9", "§6", "6.1"),
-            Quantity::new(norm_core::QuantityKind::Energy, computed),
-            Quantity::new(norm_core::QuantityKind::Energy, reference_kwh),
-            "net cooling energy need",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 16798-9", "§6", "6.1"), Quantity::new(norm_core::QuantityKind::Energy, computed), Quantity::new(norm_core::QuantityKind::Energy, reference_kwh), "net cooling energy need", AnnexChoice::De)
     }
 }
 // #endregion 🔖️Part9
@@ -621,13 +597,7 @@ pub mod part_13 {
     /// ✅️ Check cooling generation energy against a reference value.
     pub fn check_generation_energy(q_c_kwh: f64, eer: f64, reference_kwh: f64) -> CheckResult {
         let computed = generation_energy_kwh(q_c_kwh, eer);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 16798-13", "§6", "6.2"),
-            Quantity::new(norm_core::QuantityKind::Energy, computed),
-            Quantity::new(norm_core::QuantityKind::Energy, reference_kwh),
-            "cooling generation energy",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 16798-13", "§6", "6.2"), Quantity::new(norm_core::QuantityKind::Energy, computed), Quantity::new(norm_core::QuantityKind::Energy, reference_kwh), "cooling generation energy", AnnexChoice::De)
     }
 
     /// 🖥️ Data center supply air temperature band [°C] (folded TR EN 16798-16).
@@ -665,13 +635,7 @@ pub mod part_15 {
     /// ✅️ Check storage losses against an allowance.
     pub fn check_storage_losses(h_st_w_k: f64, theta_st_c: f64, theta_amb_c: f64, t_h: f64, allowance_kwh: f64) -> CheckResult {
         let computed = storage_losses_kwh(h_st_w_k, theta_st_c, theta_amb_c, t_h);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 16798-15", "§6", "6.1"),
-            Quantity::new(norm_core::QuantityKind::Energy, computed),
-            Quantity::new(norm_core::QuantityKind::Energy, allowance_kwh),
-            "storage losses",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 16798-15", "§6", "6.1"), Quantity::new(norm_core::QuantityKind::Energy, computed), Quantity::new(norm_core::QuantityKind::Energy, allowance_kwh), "storage losses", AnnexChoice::De)
     }
 
     /// 🚿️ DHW delivery temperature band [°C] (folded TR EN 16798-14).

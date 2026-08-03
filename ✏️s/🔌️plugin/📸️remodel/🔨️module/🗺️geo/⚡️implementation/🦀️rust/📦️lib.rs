@@ -87,11 +87,7 @@ pub fn ecef_to_geodetic(ecef: [f64; 3]) -> (f64, f64, f64) {
 fn enu_rotation(ref_lat: f64, ref_lon: f64) -> [[f64; 3]; 3] {
     let (sin_lat, cos_lat) = (ref_lat.sin(), ref_lat.cos());
     let (sin_lon, cos_lon) = (ref_lon.sin(), ref_lon.cos());
-    [
-        [-sin_lon, cos_lon, 0.0],
-        [-sin_lat * cos_lon, -sin_lat * sin_lon, cos_lat],
-        [cos_lat * cos_lon, cos_lat * sin_lon, sin_lat],
-    ]
+    [[-sin_lon, cos_lon, 0.0], [-sin_lat * cos_lon, -sin_lat * sin_lon, cos_lat], [cos_lat * cos_lon, cos_lat * sin_lon, sin_lat]]
 }
 
 /// 🧭️ Converts an ECEF point into the local East-North-Up tangent plane centred at the given geodetic reference.
@@ -863,12 +859,7 @@ pub fn track_stats_from_observations(observations: &[(usize, usize, [f64; 2])], 
         return TrackStats::default();
     }
     let total: usize = observed.iter().sum();
-    TrackStats {
-        track_count: observed.len(),
-        mean_track_length: total as f64 / observed.len() as f64,
-        min_track_length: *observed.iter().min().unwrap_or(&0),
-        max_track_length: *observed.iter().max().unwrap_or(&0),
-    }
+    TrackStats { track_count: observed.len(), mean_track_length: total as f64 / observed.len() as f64, min_track_length: *observed.iter().min().unwrap_or(&0), max_track_length: *observed.iter().max().unwrap_or(&0) }
 }
 
 /// 🧮️ Per-camera marginal 6x6 covariance (flattened row-major), estimated by constructing a
@@ -944,14 +935,7 @@ pub fn estimate_per_point_sigma(recon: &Reconstruction, observations: &[(usize, 
 /// [`estimate_per_point_sigma`] internally; the georeferencing, coverage-raster and watertight-mesh
 /// fields are supplied by the caller (they depend on inputs — GCPs, cameras+images, a closed mesh — this
 /// function doesn't otherwise need).
-pub fn build_quality_report(
-    recon: &Reconstruction,
-    observations: &[(usize, usize, [f64; 2])],
-    gcp_checkpoint_rmse: Option<f64>,
-    density_map: Option<Raster>,
-    overlap_map: Option<Raster>,
-    watertight: Option<WatertightReport>,
-) -> QualityReport {
+pub fn build_quality_report(recon: &Reconstruction, observations: &[(usize, usize, [f64; 2])], gcp_checkpoint_rmse: Option<f64>, density_map: Option<Raster>, overlap_map: Option<Raster>, watertight: Option<WatertightReport>) -> QualityReport {
     let (reprojection_rms_px, per_camera_rms_px) = reprojection_stats(recon, observations);
     QualityReport {
         reprojection_rms_px,
@@ -976,13 +960,8 @@ mod tests {
     // #region 🔖️GeodesyTests
     #[test]
     fn ecef_enu_round_trip_sub_millimeter() {
-        let cases = [
-            (0.0_f64, 0.0_f64, 100.0_f64),
-            (89.9_f64.to_radians(), 45.0_f64.to_radians(), 10.0),
-            (-33.9_f64.to_radians(), 151.2_f64.to_radians(), 50.0),
-            (47.3769_f64.to_radians(), 8.5417_f64.to_radians(), 500.0),
-            (-90.0_f64.to_radians(), 0.0, 0.0),
-        ];
+        let cases =
+            [(0.0_f64, 0.0_f64, 100.0_f64), (89.9_f64.to_radians(), 45.0_f64.to_radians(), 10.0), (-33.9_f64.to_radians(), 151.2_f64.to_radians(), 50.0), (47.3769_f64.to_radians(), 8.5417_f64.to_radians(), 500.0), (-90.0_f64.to_radians(), 0.0, 0.0)];
         for &(lat, lon, h) in &cases {
             let ecef = geodetic_to_ecef(lat, lon, h);
             let (lat2, lon2, h2) = ecef_to_geodetic(ecef);
@@ -1001,14 +980,7 @@ mod tests {
 
     #[test]
     fn utm_round_trip_sub_millimeter() {
-        let cases = [
-            (47.3769_f64, 8.5417_f64),
-            (0.0001_f64, 5.9999_f64),
-            (0.0001_f64, 6.0001_f64),
-            (-33.9_f64, 151.2_f64),
-            (60.0_f64, -1.0_f64),
-            (10.0_f64, 100.0_f64),
-        ];
+        let cases = [(47.3769_f64, 8.5417_f64), (0.0001_f64, 5.9999_f64), (0.0001_f64, 6.0001_f64), (-33.9_f64, 151.2_f64), (60.0_f64, -1.0_f64), (10.0_f64, 100.0_f64)];
         for &(lat_deg, lon_deg) in &cases {
             let lat = lat_deg.to_radians();
             let lon = lon_deg.to_radians();
@@ -1037,11 +1009,8 @@ mod tests {
         let truth = Sim3 { s: 2.3, r: So3::exp([0.1, -0.2, 0.05]), t: [5.0, -3.0, 1.5] };
         let world_points: Vec<[f64; 3]> = points.iter().map(|&p| truth.act(p)).collect();
         let pos_noise_std = 0.02;
-        let noisy_scene_points: Vec<[f64; 3]> =
-            points.iter().map(|&p| [p[0] + normal(&mut rng, 0.0, pos_noise_std), p[1] + normal(&mut rng, 0.0, pos_noise_std), p[2] + normal(&mut rng, 0.0, pos_noise_std)]).collect();
-        let gcps: Vec<GroundControlPoint> = (0..points.len())
-            .map(|i| GroundControlPoint { id: format!("gcp{i}"), world_position_enu_or_local: world_points[i], observations: by_point[i].clone() })
-            .collect();
+        let noisy_scene_points: Vec<[f64; 3]> = points.iter().map(|&p| [p[0] + normal(&mut rng, 0.0, pos_noise_std), p[1] + normal(&mut rng, 0.0, pos_noise_std), p[2] + normal(&mut rng, 0.0, pos_noise_std)]).collect();
+        let gcps: Vec<GroundControlPoint> = (0..points.len()).map(|i| GroundControlPoint { id: format!("gcp{i}"), world_position_enu_or_local: world_points[i], observations: by_point[i].clone() }).collect();
 
         let (refined, sim3) = refine_gcp_scene_points(&noisy_scene_points, &gcps, &cameras);
         assert!((sim3.s - truth.s).abs() < 0.1, "scale err {} vs truth {}", sim3.s, truth.s);

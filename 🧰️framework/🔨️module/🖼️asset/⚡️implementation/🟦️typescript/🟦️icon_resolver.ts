@@ -1,9 +1,31 @@
 // #region 🧲️Header
-/** @emoji 🖼️ Theme-aware metabolism icon SVG resolution. */
+/** @emoji 🖼️ Theme-aware catalog and metabolism icon SVG resolution. */
 // #endregion 🧲️Header
 
-import { METABOLISM_ICONS, isMetabolismIconName, type MetabolismIconName } from "../../../../../🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🌱️metabolism/🔣️icon/🤖️generated/🟦️metabolism_icons.ts";
+//#region 🔖️CatalogIcons
+import { ICONS, isIconName, type IconName } from "./🔣️icon/🤖️generated/🟦️icons.ts";
 import type { UiThemeIcons } from "../../../🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementation/🟦️typescript/🟦️typescript/📦️index.ts";
+
+/** @emoji 🖼️ Resolves catalog icon SVG markup with optional theme aliases and variants. */
+export function resolveCatalogIconSvgFromTheme(name: IconName, icons: UiThemeIcons | undefined): string {
+  const variant = icons?.variants?.[name];
+  if (variant) {
+    return variant;
+  }
+  const alias = icons?.aliases?.[name];
+  const resolved = alias && isIconName(alias) ? alias : name;
+  return ICONS[resolved];
+}
+
+/** @emoji 🔍️ Resolves a catalog icon id through theme aliases to a compile-time {@link IconName}. */
+export function resolveCatalogIconNameFromTheme(name: IconName, icons: UiThemeIcons | undefined): IconName {
+  const alias = icons?.aliases?.[name];
+  return alias && isIconName(alias) ? alias : name;
+}
+//#endregion 🔖️CatalogIcons
+
+//#region 🔖️MetabolismIcons
+import { METABOLISM_ICONS, isMetabolismIconName, type MetabolismIconName } from "./🌱️metabolism/🔣️icon/🤖️generated/🟦️metabolism_icons.ts";
 
 /** @emoji 🖼️ Resolves metabolism icon SVG markup with optional theme aliases and variants. */
 export function resolveMetabolismIconSvgFromTheme(name: MetabolismIconName, icons: UiThemeIcons | undefined): string {
@@ -21,3 +43,4 @@ export function resolveMetabolismIconNameFromTheme(name: MetabolismIconName, ico
   const alias = icons?.themedAliases?.[name];
   return alias && isMetabolismIconName(alias) ? alias : name;
 }
+//#endregion 🔖️MetabolismIcons

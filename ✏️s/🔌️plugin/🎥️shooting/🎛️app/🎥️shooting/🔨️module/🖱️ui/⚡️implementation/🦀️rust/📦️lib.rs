@@ -5,32 +5,22 @@
 //! dispatches through the single typed `shooting_protocol::ShootingCommand` channel via
 //! `DocumentApp::handle`.
 
-use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    app_labels, build_icon_render_scene, build_world_3d_scene, create_default_layout,
-    merge_world_selection_ids, AppLabels, Locale, Terminology,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
-    ui_declarative_sections_to_tree, ui_text, tree_item_with_action, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
-    world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, Emit, ActionKind,
-    App, ActionDescriptor, AppIo, DocumentApp, DslValue,
-    DocumentView, ConfigView, HostEffect, IconRenderExportItem, IconRenderScene, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MeasureSelectItem, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
-    UiNode, UiPresence, UiTreeItemNode, WindowEngagement, WindowEngagementInput,
-    WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene,
-    WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+use protocol::CollectionOperation;
+use semio_framework_plugin::{
+    app_labels, build_icon_render_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
+    ui_inspector_readonly_field, ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels,
+    ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DslValue, Emit, HostEffect, IconRenderExportItem, IconRenderScene, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowEngagementInput,
+    WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
-use shooting::{
-    shooting_asset_scale, shooting_resolve_shot_camera, ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingFixture,
-    ShootingSavedCamera, ShootingScenePatch, ShootingShot, ShootingShotPatch,
-    SHOOTING_FIXTURE_SCHEMA,
-};
+use serde_json::{json, Value};
+use shooting::{shooting_asset_scale, shooting_resolve_shot_camera, ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingFixture, ShootingSavedCamera, ShootingScenePatch, ShootingShot, ShootingShotPatch, SHOOTING_FIXTURE_SCHEMA};
 use shooting_engine::{active_asset, active_shot, default_fixture, default_fixture_json, next_shooting_id, ShootingConfig};
 use shooting_op::{ShootingConfigOperation, ShootingOperation};
 use shooting_protocol::ShootingCommand;
-use protocol::CollectionOperation;
-use store::DocumentPack;
 use std::collections::{HashMap, HashSet};
-use serde_json::{json, Value};
+use store::DocumentPack;
 
 //#region 🔖️Constants
 const SHOOTING_PLAY_APP_ID: &str = "shooting-play";
@@ -58,7 +48,11 @@ fn is_de_locale(cfg: &ShootingConfig) -> bool {
 }
 
 fn shooting_locale(cfg: &ShootingConfig) -> Locale {
-    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+    if is_de_locale(cfg) {
+        Locale::De
+    } else {
+        Locale::En
+    }
 }
 
 fn resolve_labels<L: AppLabels>(cfg: &ShootingConfig) -> &'static L {
@@ -68,11 +62,7 @@ fn resolve_labels<L: AppLabels>(cfg: &ShootingConfig) -> &'static L {
 
 //#region 🔖️DocumentHelpers
 fn shooting_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: SHOOTING_PLAY_CONTROLLER_ID.into(),
-        action: action.into(),
-        args: semio_framework_plugin::optional_json_to_dsl(args),
-    }
+    ActionDescriptor { controller_id: SHOOTING_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn camera_json(camera: &ShootingCamera) -> String {
@@ -92,7 +82,11 @@ fn camera_json(camera: &ShootingCamera) -> String {
 /// 🎯️ B1: the typed-command counterpart of the pre-B1 `mesh_selection_ids` (JSON-args) — falls back
 /// to the current config selection when the command carries no explicit ids.
 fn mesh_selection_ids_typed(ids: &[String], fallback: &[String]) -> Vec<String> {
-    if ids.is_empty() { fallback.to_vec() } else { ids.to_vec() }
+    if ids.is_empty() {
+        fallback.to_vec()
+    } else {
+        ids.to_vec()
+    }
 }
 
 fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
@@ -118,13 +112,10 @@ fn world_instances_json(fixture: &ShootingFixture, cfg: &ShootingConfig) -> Stri
         .assets
         .iter()
         .map(|asset| {
-            let active = fixture.active_asset_id == asset.id
-                || (fixture.active_asset_id.is_empty() && fixture.assets.first().map(|entry| &entry.id) == Some(&asset.id));
+            let active = fixture.active_asset_id == asset.id || (fixture.active_asset_id.is_empty() && fixture.assets.first().map(|entry| &entry.id) == Some(&asset.id));
             let selected = cfg.selected_asset_ids.contains(&asset.id) || active;
             let hovered = cfg.hovered_asset_id.as_deref() == Some(asset.id.as_str());
-            let mesh_id = resolve_asset_mesh_url(asset)
-                .map(|url| world3d_mesh_id_from_url(&url))
-                .unwrap_or_else(|| SHOOTING_FALLBACK_MESH_KIND.into());
+            let mesh_id = resolve_asset_mesh_url(asset).map(|url| world3d_mesh_id_from_url(&url)).unwrap_or_else(|| SHOOTING_FALLBACK_MESH_KIND.into());
             json!({
                 "id": asset.id,
                 "meshId": mesh_id,
@@ -150,12 +141,7 @@ fn world_meshes_json(fixture: &ShootingFixture) -> String {
 }
 
 fn world_selection_json(fixture: &ShootingFixture, cfg: &ShootingConfig) -> String {
-    let mut value: Value = serde_json::from_str(&world3d_selection_json(
-        &cfg.selection_method,
-        &cfg.selected_asset_ids,
-        cfg.hovered_asset_id.as_deref(),
-    ))
-    .unwrap_or_else(|_| json!({}));
+    let mut value: Value = serde_json::from_str(&world3d_selection_json(&cfg.selection_method, &cfg.selected_asset_ids, cfg.hovered_asset_id.as_deref())).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
@@ -176,9 +162,7 @@ fn selection_centroid(fixture: &ShootingFixture, selected_ids: &[String]) -> Opt
         return None;
     }
     let count = selected.len() as f64;
-    let sum = selected.iter().fold([0.0f64; 3], |acc, asset| {
-        [acc[0] + asset.origin[0], acc[1] + asset.origin[1], acc[2] + asset.origin[2]]
-    });
+    let sum = selected.iter().fold([0.0f64; 3], |acc, asset| [acc[0] + asset.origin[0], acc[1] + asset.origin[1], acc[2] + asset.origin[2]]);
     Some([sum[0] / count, sum[1] / count, sum[2] / count])
 }
 
@@ -327,39 +311,15 @@ app_labels! {
 /// 🌳️ Layers an `icon_id` onto the SDK's `tree_item_with_action` skeleton — the SDK primitive's third
 /// parameter is `description`, not an icon, so the shooting-specific icon assignment stays local.
 fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None,
-    ..tree_item_with_action(id, label, None, action) }
+    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..tree_item_with_action(id, label, None, action) }
 }
 
 fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> UiNode {
-    let shot_items: Vec<UiTreeItemNode> = fixture
-        .shots
-        .iter()
-        .map(|shot| {
-            tree_item_with_icon(
-                format!("shooting-shot:{}", shot.id),
-                Label::data(shot.label.clone()),
-                "camera",
-                shooting_action("setSelection", Some(json!({ "shotIds": [shot.id], "assetIds": [] }))),
-            )
-        })
-        .collect();
-    let asset_items: Vec<UiTreeItemNode> = fixture
-        .assets
-        .iter()
-        .map(|asset| {
-            tree_item_with_icon(
-                format!("shooting-asset:{}", asset.id),
-                Label::data(asset.name.clone()),
-                "box",
-                shooting_action("setSelection", Some(json!({ "shotIds": [], "assetIds": [asset.id] }))),
-            )
-        })
-        .collect();
-    PanelTreeBuilder::new("shooting-play-document")
-        .section("shooting-play-document.shots", Some(labels.shots.into()), true, shot_items)
-        .section("shooting-play-document.assets", Some(labels.assets.into()), true, asset_items)
-        .build()
+    let shot_items: Vec<UiTreeItemNode> =
+        fixture.shots.iter().map(|shot| tree_item_with_icon(format!("shooting-shot:{}", shot.id), Label::data(shot.label.clone()), "camera", shooting_action("setSelection", Some(json!({ "shotIds": [shot.id], "assetIds": [] }))))).collect();
+    let asset_items: Vec<UiTreeItemNode> =
+        fixture.assets.iter().map(|asset| tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", shooting_action("setSelection", Some(json!({ "shotIds": [], "assetIds": [asset.id] }))))).collect();
+    PanelTreeBuilder::new("shooting-play-document").section("shooting-play-document.shots", Some(labels.shots.into()), true, shot_items).section("shooting-play-document.assets", Some(labels.assets.into()), true, asset_items).build()
 }
 
 fn build_catalogue_tree(labels: &ShootingLabels) -> UiNode {
@@ -369,25 +329,12 @@ fn build_catalogue_tree(labels: &ShootingLabels) -> UiNode {
         catalog_shot_item("svg-ellipse", labels.svg_ellipse, "svg", "ellipse"),
         catalog_shot_item("png-ellipse", labels.png_ellipse, "png", "ellipse"),
     ];
-    let asset_items = vec![tree_item_with_icon(
-        "shooting-play-catalogue.asset.glb",
-        labels.glb_asset,
-        "box",
-        shooting_action("addAsset", Some(json!({ "format": "glb" }))),
-    )];
-    PanelTreeBuilder::new("shooting-play-catalogue")
-        .section("shooting-play-catalogue.shots", Some(labels.add_shot.into()), true, shot_items)
-        .section("shooting-play-catalogue.assets", Some(labels.add_asset.into()), true, asset_items)
-        .build()
+    let asset_items = vec![tree_item_with_icon("shooting-play-catalogue.asset.glb", labels.glb_asset, "box", shooting_action("addAsset", Some(json!({ "format": "glb" }))))];
+    PanelTreeBuilder::new("shooting-play-catalogue").section("shooting-play-catalogue.shots", Some(labels.add_shot.into()), true, shot_items).section("shooting-play-catalogue.assets", Some(labels.add_asset.into()), true, asset_items).build()
 }
 
 fn catalog_shot_item(id: &str, label: impl Into<Label>, format: &str, shape: &str) -> UiTreeItemNode {
-    tree_item_with_icon(
-        format!("shooting-play-catalogue.{id}"),
-        label,
-        "camera",
-        shooting_action("addShot", Some(json!({ "format": format, "shape": shape }))),
-    )
+    tree_item_with_icon(format!("shooting-play-catalogue.{id}"), label, "camera", shooting_action("addShot", Some(json!({ "format": format, "shape": shape }))))
 }
 
 fn build_inspector_tree(fixture: &ShootingFixture, cfg: &ShootingConfig, labels: &ShootingLabels) -> UiNode {
@@ -410,11 +357,7 @@ fn build_inspector_tree(fixture: &ShootingFixture, cfg: &ShootingConfig, labels:
         id: "shooting-play-inspector.empty".into(),
         label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
         default_open: Some(true),
-        children: vec![
-            ui_text(Label::data(format!("Schema: {SHOOTING_FIXTURE_SCHEMA}"))),
-            ui_text(Label::data(format!("Shots: {}", fixture.shots.len()))),
-            ui_text(Label::data(format!("Assets: {}", fixture.assets.len()))),
-        ],
+        children: vec![ui_text(Label::data(format!("Schema: {SHOOTING_FIXTURE_SCHEMA}"))), ui_text(Label::data(format!("Shots: {}", fixture.shots.len()))), ui_text(Label::data(format!("Assets: {}", fixture.assets.len())))],
         presence: UiPresence::default(),
         menu: None,
     }])
@@ -429,19 +372,18 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
         default_open: None,
         presence: UiPresence::default(),
         fields: vec![
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "shooting-play-inspector.shot.label".into(),
                 label: labels.field_label.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                    presence: UiPresence::default(),
                     id: "shooting-play-inspector.shot.label.input".into(),
                     input_kind: "text".into(),
                     value: shot.label.clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_action(
-                        "patchShot",
-                        Some(json!({ "shotId": shot.id, "field": "label" })),
-                    ),
+                    on_change: shooting_action("patchShot", Some(json!({ "shotId": shot.id, "field": "label" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -455,19 +397,18 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
             }),
             ui_inspector_readonly_field("shooting-play-inspector.shot.format", labels.field_format, &shot.format),
             ui_inspector_readonly_field("shooting-play-inspector.shot.shape", labels.field_shape, &shot.shape),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "shooting-play-inspector.shot.width".into(),
                 label: labels.field_width.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                    presence: UiPresence::default(),
                     id: "shooting-play-inspector.shot.width.input".into(),
                     input_kind: "number".into(),
                     value: width_mixed.value.to_string(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_action(
-                        "patchShot",
-                        Some(json!({ "shotId": shot.id, "field": "width" })),
-                    ),
+                    on_change: shooting_action("patchShot", Some(json!({ "shotId": shot.id, "field": "width" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -479,19 +420,18 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
                 error: None,
                 menu: None,
             }),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "shooting-play-inspector.shot.height".into(),
                 label: labels.field_height.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                    presence: UiPresence::default(),
                     id: "shooting-play-inspector.shot.height.input".into(),
                     input_kind: "number".into(),
                     value: height_mixed.value.to_string(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_action(
-                        "patchShot",
-                        Some(json!({ "shotId": shot.id, "field": "height" })),
-                    ),
+                    on_change: shooting_action("patchShot", Some(json!({ "shotId": shot.id, "field": "height" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -514,19 +454,18 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
         default_open: None,
         presence: UiPresence::default(),
         fields: vec![
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "shooting-play-inspector.asset.name".into(),
                 label: labels.field_name.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                    presence: UiPresence::default(),
                     id: "shooting-play-inspector.asset.name.input".into(),
                     input_kind: "text".into(),
                     value: asset.name.clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_action(
-                        "patchAsset",
-                        Some(json!({ "assetId": asset.id, "field": "name" })),
-                    ),
+                    on_change: shooting_action("patchAsset", Some(json!({ "assetId": asset.id, "field": "name" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -538,19 +477,18 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
                 error: None,
                 menu: None,
             }),
-            UiNode::Field(UiFieldNode {presence: UiPresence::default(),
+            UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "shooting-play-inspector.asset.url".into(),
                 label: labels.field_url.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                    presence: UiPresence::default(),
                     id: "shooting-play-inspector.asset.url.input".into(),
                     input_kind: "text".into(),
                     value: asset.url.clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: shooting_action(
-                        "patchAsset",
-                        Some(json!({ "assetId": asset.id, "field": "url" })),
-                    ),
+                    on_change: shooting_action("patchAsset", Some(json!({ "assetId": asset.id, "field": "url" }))),
                     min: None,
                     max: None,
                     step: None,
@@ -577,34 +515,17 @@ fn render_model_scene(fixture: &ShootingFixture, cfg: &ShootingConfig) -> UiNode
             environment_json: Some(shooting_environment_json(fixture)),
             frame_json: active_shot(fixture).map(shooting_frame_json),
             fit_json: Some(shooting_fit_json(cfg)),
-            ..world3d_scene(
-                camera_json(&cfg.camera),
-                world_meshes_json(fixture),
-                world_instances_json(fixture, cfg),
-                world_selection_json(fixture, cfg),
-                &WorldSunConfig::default(),
-            )
+            ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(fixture), world_instances_json(fixture, cfg), world_selection_json(fixture, cfg), &WorldSunConfig::default())
         },
     )
 }
 
 fn render_icon_scene(fixture: &ShootingFixture, cfg: &ShootingConfig) -> UiNode {
     let (request_json, footer) = match (active_shot(fixture), active_asset(fixture)) {
-        (Some(shot), Some(asset)) => (
-            shooting_icon_render_request_json(fixture, shot, asset, &cfg.camera),
-            Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase())),
-        ),
+        (Some(shot), Some(asset)) => (shooting_icon_render_request_json(fixture, shot, asset, &cfg.camera), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
         _ => ("null".into(), None),
     };
-    build_icon_render_scene(
-        SHOOTING_PLAY_SURFACE_ICON,
-        SHOOTING_PLAY_APP_ID,
-        IconRenderScene {
-            request_json,
-            footer,
-            frame_json: None,
-        },
-    )
+    build_icon_render_scene(SHOOTING_PLAY_SURFACE_ICON, SHOOTING_PLAY_APP_ID, IconRenderScene { request_json, footer, frame_json: None })
 }
 //#endregion 🔖️Render
 
@@ -612,22 +533,8 @@ fn render_icon_scene(fixture: &ShootingFixture, cfg: &ShootingConfig) -> UiNode 
 fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -> Vec<WindowMeasure> {
     let scene = &fixture.scene;
     vec![
-        WindowMeasure::Toggle {
-            id: "shooting.measure.center-model".into(),
-            icon_id: "focus".into(),
-            label: Some(labels.measure_center_model.into()),
-            pressed: true,
-            text: None,
-            on_change: shooting_action("setCenterModel", None),
-        },
-        WindowMeasure::Toggle {
-            id: "shooting.measure.sun-enabled".into(),
-            icon_id: "sun".into(),
-            label: Some(labels.measure_sun.into()),
-            pressed: scene.sun.enabled,
-            text: None,
-            on_change: shooting_action("toggleSun", None),
-        },
+        WindowMeasure::Toggle { id: "shooting.measure.center-model".into(), icon_id: "focus".into(), label: Some(labels.measure_center_model.into()), pressed: true, text: None, on_change: shooting_action("setCenterModel", None) },
+        WindowMeasure::Toggle { id: "shooting.measure.sun-enabled".into(), icon_id: "sun".into(), label: Some(labels.measure_sun.into()), pressed: scene.sun.enabled, text: None, on_change: shooting_action("toggleSun", None) },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-azimuth".into(),
             label: Some(labels.measure_sun_azimuth.into()),
@@ -641,7 +548,7 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             disabled: None,
             reveal: None,
             on_change: shooting_action("setSunAzimuth", None),
-            },
+        },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-elevation".into(),
             label: Some(labels.measure_sun_elevation.into()),
@@ -655,7 +562,7 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             disabled: None,
             reveal: None,
             on_change: shooting_action("setSunElevation", None),
-            },
+        },
         WindowMeasure::Slider {
             id: "shooting.measure.sun-intensity".into(),
             label: Some(labels.measure_sun_intensity.into()),
@@ -669,7 +576,7 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             disabled: None,
             reveal: None,
             on_change: shooting_action("setSunIntensity", None),
-            },
+        },
         WindowMeasure::Slider {
             id: "shooting.measure.ambient".into(),
             label: Some(labels.measure_ambient.into()),
@@ -683,15 +590,8 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             disabled: None,
             reveal: None,
             on_change: shooting_action("setAmbientIntensity", None),
-            },
-        WindowMeasure::Toggle {
-            id: "shooting.measure.shadow".into(),
-            icon_id: "sun".into(),
-            label: Some(labels.measure_shadow.into()),
-            pressed: scene.shadow.enabled,
-            text: None,
-            on_change: shooting_action("setShadowEnabled", None),
         },
+        WindowMeasure::Toggle { id: "shooting.measure.shadow".into(), icon_id: "sun".into(), label: Some(labels.measure_shadow.into()), pressed: scene.shadow.enabled, text: None, on_change: shooting_action("setShadowEnabled", None) },
         WindowMeasure::Slider {
             id: "shooting.measure.roughness".into(),
             label: Some(labels.measure_roughness.into()),
@@ -705,7 +605,7 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             disabled: None,
             reveal: None,
             on_change: shooting_action("setMaterialRoughness", None),
-            },
+        },
     ]
 }
 
@@ -716,15 +616,7 @@ fn shooting_icon_measures(fixture: &ShootingFixture, labels: &ShootingLabels) ->
             id: "shooting.measure.shot".into(),
             label: Some(labels.shot.into()),
             value: shot.map(|entry| entry.id.clone()).unwrap_or_default(),
-            items: fixture
-                .shots
-                .iter()
-                .map(|entry| MeasureSelectItem {
-                    id: format!("shooting.measure.shot.{}", entry.id),
-                    value: entry.id.clone(),
-                    label: entry.label.clone(),
-                })
-                .collect(),
+            items: fixture.shots.iter().map(|entry| MeasureSelectItem { id: format!("shooting.measure.shot.{}", entry.id), value: entry.id.clone(), label: entry.label.clone() }).collect(),
             on_change: shooting_action("setActiveShot", None),
         },
         WindowMeasure::Select {
@@ -766,10 +658,7 @@ fn shooting_model_engagement(fixture: &ShootingFixture, cfg: &ShootingConfig, la
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus {
-            id: "shooting.status.model".into(),
-            text: format!("{} assets · {} shots", fixture.assets.len(), fixture.shots.len()),
-        }]),
+        status: Some(vec![WindowEngagementStatus { id: "shooting.status.model".into(), text: format!("{} assets · {} shots", fixture.assets.len(), fixture.shots.len()) }]),
         possible_engagements: Some(
             fixture
                 .saved_cameras
@@ -802,12 +691,7 @@ fn shooting_icon_engagement(fixture: &ShootingFixture, labels: &ShootingLabels) 
         }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus {
-            id: "shooting.status.icon".into(),
-            text: shot
-                .map(|entry| format!("{}×{} {}", entry.width, entry.height, entry.format.to_uppercase()))
-                .unwrap_or_else(|| labels.no_shot.into()),
-        }]),
+        status: Some(vec![WindowEngagementStatus { id: "shooting.status.icon".into(), text: shot.map(|entry| format!("{}×{} {}", entry.width, entry.height, entry.format.to_uppercase())).unwrap_or_else(|| labels.no_shot.into()) }]),
         possible_engagements: None,
     }
 }
@@ -853,10 +737,7 @@ impl DocumentApp for ShootingPlayApp {
             "document:out" => {
                 let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
                 let bytes = doc.projection.encode_pack();
-                Ok(Media {
-                    media_type,
-                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
-                })
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -912,16 +793,17 @@ impl DocumentApp for ShootingPlayApp {
             ShootingCommand::SaveDownload => "saveDownload",
             ShootingCommand::LoadRequest => "loadRequest",
             ShootingCommand::ImportAssetRequest => "importAssetRequest",
-            ShootingCommand::ExportShots { all } => if *all { "exportAllShots" } else { "exportActiveShot" },
+            ShootingCommand::ExportShots { all } => {
+                if *all {
+                    "exportAllShots"
+                } else {
+                    "exportActiveShot"
+                }
+            }
         }
     }
 
-    fn handle(
-        &self,
-        command: &ShootingCommand,
-        doc: &DocumentView<'_, ShootingFixture>,
-        cfg: &ConfigView<'_, ShootingConfig>,
-    ) -> Emit<ShootingOperation, ShootingConfigOperation> {
+    fn handle(&self, command: &ShootingCommand, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> Emit<ShootingOperation, ShootingConfigOperation> {
         let fixture = doc.projection;
         let config = cfg.projection;
         match command {
@@ -947,11 +829,9 @@ impl DocumentApp for ShootingPlayApp {
                 None => Emit::default(),
             },
             ShootingCommand::SetActiveAsset { asset_id } => match asset_id.as_deref().filter(|id| !id.is_empty()) {
-                Some(id) => Emit {
-                    document_operations: vec![ShootingOperation::SetActiveAsset { asset_id: Some(id.into()) }],
-                    config_operations: vec![ShootingConfigOperation::SetFitRevision { value: config.fit_revision + 1 }],
-                    ..Default::default()
-                },
+                Some(id) => {
+                    Emit { document_operations: vec![ShootingOperation::SetActiveAsset { asset_id: Some(id.into()) }], config_operations: vec![ShootingConfigOperation::SetFitRevision { value: config.fit_revision + 1 }], ..Default::default() }
+                }
                 None => Emit::default(),
             },
             // 🎥️ Config-only: the free/live viewport camera never touches the document.
@@ -967,11 +847,7 @@ impl DocumentApp for ShootingPlayApp {
                 let label = if draft.is_empty() { format!("Camera {}", fixture.saved_cameras.len() + 1) } else { draft };
                 let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: config.camera.clone() };
                 Emit {
-                    document_operations: vec![ShootingOperation::SavedCameras(CollectionOperation::Add {
-                        id: saved_camera.id.clone(),
-                        item: saved_camera,
-                        at: fixture.saved_cameras.len(),
-                    })],
+                    document_operations: vec![ShootingOperation::SavedCameras(CollectionOperation::Add { id: saved_camera.id.clone(), item: saved_camera, at: fixture.saved_cameras.len() })],
                     config_operations: vec![ShootingConfigOperation::SetCameraDraftLabel { value: String::new() }],
                     ..Default::default()
                 }
@@ -993,37 +869,17 @@ impl DocumentApp for ShootingPlayApp {
                 }
                 Emit::config(config_operations)
             }
-            ShootingCommand::SetActiveUtility { utility_id } => Emit::config(vec![
-                ShootingConfigOperation::SetActiveUtility { utility_id: utility_id.clone() },
-                ShootingConfigOperation::SetHoveredAsset { asset_id: None },
-            ]),
+            ShootingCommand::SetActiveUtility { utility_id } => Emit::config(vec![ShootingConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, ShootingConfigOperation::SetHoveredAsset { asset_id: None }]),
             ShootingCommand::SetLocale { value } => Emit::config(vec![ShootingConfigOperation::SetLocale { value: value.clone() }]),
-            ShootingCommand::SetSunAzimuth { value } => {
-                Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_azimuth: Some(*value), ..Default::default() } }])
-            }
-            ShootingCommand::SetSunElevation { value } => {
-                Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_elevation: Some(*value), ..Default::default() } }])
-            }
-            ShootingCommand::SetSunIntensity { value } => {
-                Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_intensity: Some(*value), ..Default::default() } }])
-            }
-            ShootingCommand::SetAmbientIntensity { value } => {
-                Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { ambient_intensity: Some(*value), ..Default::default() } }])
-            }
-            ShootingCommand::SetMaterialRoughness { value } => {
-                Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { material_roughness: Some(*value), ..Default::default() } }])
-            }
-            ShootingCommand::SetShadowEnabled { value } => {
-                Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { shadow_enabled: Some(*value), ..Default::default() } }])
-            }
-            ShootingCommand::ToggleSun { value } => {
-                Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_enabled: Some(*value), ..Default::default() } }])
-            }
+            ShootingCommand::SetSunAzimuth { value } => Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_azimuth: Some(*value), ..Default::default() } }]),
+            ShootingCommand::SetSunElevation { value } => Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_elevation: Some(*value), ..Default::default() } }]),
+            ShootingCommand::SetSunIntensity { value } => Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_intensity: Some(*value), ..Default::default() } }]),
+            ShootingCommand::SetAmbientIntensity { value } => Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { ambient_intensity: Some(*value), ..Default::default() } }]),
+            ShootingCommand::SetMaterialRoughness { value } => Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { material_roughness: Some(*value), ..Default::default() } }]),
+            ShootingCommand::SetShadowEnabled { value } => Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { shadow_enabled: Some(*value), ..Default::default() } }]),
+            ShootingCommand::ToggleSun { value } => Emit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_enabled: Some(*value), ..Default::default() } }]),
             ShootingCommand::SetActiveShotLabel { value } => match active_shot(fixture).map(|shot| shot.id.clone()) {
-                Some(shot_id) => Emit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch {
-                    id: shot_id,
-                    patch: ShootingShotPatch { label: Some(value.clone()), ..Default::default() },
-                })]),
+                Some(shot_id) => Emit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch { id: shot_id, patch: ShootingShotPatch { label: Some(value.clone()), ..Default::default() } })]),
                 None => Emit::default(),
             },
             ShootingCommand::SetActiveShotFormat { value } => match (active_shot(fixture).map(|shot| shot.id.clone()), shot_patch_for_field("format", &json!(value))) {
@@ -1036,51 +892,18 @@ impl DocumentApp for ShootingPlayApp {
             },
             ShootingCommand::ResetFixture => Emit::operations(vec![ShootingOperation::SetFixture { fixture: default_fixture() }]),
             ShootingCommand::SaveDownload => match serde_json::to_string_pretty(fixture) {
-                Ok(fixture_text) => Emit::effect(HostEffect::DownloadMediaExport {
-                    filename: "shooting.fixture.ops".into(),
-                    mime_type: "text/plain".into(),
-                    data: fixture_text,
-                    encoding: None,
-                }),
+                Ok(fixture_text) => Emit::effect(HostEffect::DownloadMediaExport { filename: "shooting.fixture.ops".into(), mime_type: "text/plain".into(), data: fixture_text, encoding: None }),
                 Err(_) => Emit::default(),
             },
-            ShootingCommand::LoadRequest => Emit::effect(HostEffect::RequestFileOpen {
-                accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(),
-                read_as: None,
-                import_action: "setFixtureJson".into(),
-                multiple: false,
-            }),
-            ShootingCommand::ImportAssetRequest => Emit::effect(HostEffect::RequestFileOpen {
-                accept: ".glb,model/gltf-binary".into(),
-                read_as: Some("dataUrl".into()),
-                import_action: "importAsset".into(),
-                multiple: false,
-            }),
+            ShootingCommand::LoadRequest => Emit::effect(HostEffect::RequestFileOpen { accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }),
+            ShootingCommand::ImportAssetRequest => Emit::effect(HostEffect::RequestFileOpen { accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }),
             ShootingCommand::ImportAsset { payload, name } => {
                 let id = next_shooting_id("asset");
-                let resolved_name = name
-                    .as_deref()
-                    .map(|name| name.trim_end_matches(".glb").to_string())
-                    .filter(|name| !name.is_empty())
-                    .unwrap_or_else(|| format!("Asset {}", fixture.assets.len() + 1));
-                let asset = ShootingAsset {
-                    id: id.clone(),
-                    name: resolved_name,
-                    url: payload.clone(),
-                    format: "glb".into(),
-                    origin: [0.0, 0.0, 0.0],
-                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                    scale: None,
-                };
+                let resolved_name = name.as_deref().map(|name| name.trim_end_matches(".glb").to_string()).filter(|name| !name.is_empty()).unwrap_or_else(|| format!("Asset {}", fixture.assets.len() + 1));
+                let asset = ShootingAsset { id: id.clone(), name: resolved_name, url: payload.clone(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
                 Emit {
-                    document_operations: vec![
-                        ShootingOperation::Assets(CollectionOperation::Add { id: id.clone(), item: asset, at: fixture.assets.len() }),
-                        ShootingOperation::SetActiveAsset { asset_id: Some(id.clone()) },
-                    ],
-                    config_operations: vec![
-                        ShootingConfigOperation::SetSelection { shot_ids: Vec::new(), asset_ids: vec![id] },
-                        ShootingConfigOperation::SetFitRevision { value: config.fit_revision + 1 },
-                    ],
+                    document_operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: id.clone(), item: asset, at: fixture.assets.len() }), ShootingOperation::SetActiveAsset { asset_id: Some(id.clone()) }],
+                    config_operations: vec![ShootingConfigOperation::SetSelection { shot_ids: Vec::new(), asset_ids: vec![id] }, ShootingConfigOperation::SetFitRevision { value: config.fit_revision + 1 }],
                     ..Default::default()
                 }
             }
@@ -1091,10 +914,7 @@ impl DocumentApp for ShootingPlayApp {
                         .iter()
                         .map(|shot| IconRenderExportItem {
                             filename: format!("{}.{}", shot.id, if shot.format == "png" { "png" } else { "svg" }),
-                            request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(fixture, shot, asset, &config.camera))
-                                .ok()
-                                .and_then(|value| semio_framework_plugin::to_dsl_value(&value).ok())
-                                .unwrap_or(DslValue::Null),
+                            request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(fixture, shot, asset, &config.camera)).ok().and_then(|value| semio_framework_plugin::to_dsl_value(&value).ok()).unwrap_or(DslValue::Null),
                         })
                         .collect();
                     if !items.is_empty() {
@@ -1105,45 +925,41 @@ impl DocumentApp for ShootingPlayApp {
             }
             ShootingCommand::TranslateSelection { asset_ids, dx, dy, dz } => {
                 let ids = mesh_selection_ids_typed(asset_ids, &config.selected_asset_ids);
-                if ids.is_empty() { Emit::default() } else { Emit::amend(vec![ShootingOperation::TranslateAssets { asset_ids: ids, dx: *dx, dy: *dy, dz: *dz }], "gumball-translate") }
+                if ids.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit::amend(vec![ShootingOperation::TranslateAssets { asset_ids: ids, dx: *dx, dy: *dy, dz: *dz }], "gumball-translate")
+                }
             }
             ShootingCommand::RotateSelection { asset_ids, ax, ay, az, angle } => {
                 let ids = mesh_selection_ids_typed(asset_ids, &config.selected_asset_ids);
-                if ids.is_empty() { Emit::default() } else { Emit::amend(vec![ShootingOperation::RotateAssets { asset_ids: ids, ax: *ax, ay: *ay, az: *az, angle: *angle }], "gumball-rotate") }
+                if ids.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit::amend(vec![ShootingOperation::RotateAssets { asset_ids: ids, ax: *ax, ay: *ay, az: *az, angle: *angle }], "gumball-rotate")
+                }
             }
             ShootingCommand::ScaleSelection { asset_ids, sx, sy, sz } => {
                 let ids = mesh_selection_ids_typed(asset_ids, &config.selected_asset_ids);
-                if ids.is_empty() { Emit::default() } else { Emit::amend(vec![ShootingOperation::ScaleAssets { asset_ids: ids, sx: *sx, sy: *sy, sz: *sz }], "gumball-scale") }
+                if ids.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit::amend(vec![ShootingOperation::ScaleAssets { asset_ids: ids, sx: *sx, sy: *sy, sz: *sz }], "gumball-scale")
+                }
             }
             ShootingCommand::PatchShots { shot_ids, field, value } => match shot_patch_for_field(field, &json!(value)) {
-                Some(patch) if !shot_ids.is_empty() => Emit::operations(
-                    shot_ids.iter().cloned().map(|id| ShootingOperation::Shots(CollectionOperation::Patch { id, patch: patch.clone() })).collect(),
-                ),
+                Some(patch) if !shot_ids.is_empty() => Emit::operations(shot_ids.iter().cloned().map(|id| ShootingOperation::Shots(CollectionOperation::Patch { id, patch: patch.clone() })).collect()),
                 _ => Emit::default(),
             },
             ShootingCommand::PatchAssets { asset_ids, field, value } => match asset_patch_for_field(field, &json!(value)) {
-                Some(patch) if !asset_ids.is_empty() => Emit::operations(
-                    asset_ids.iter().cloned().map(|id| ShootingOperation::Assets(CollectionOperation::Patch { id, patch: patch.clone() })).collect(),
-                ),
+                Some(patch) if !asset_ids.is_empty() => Emit::operations(asset_ids.iter().cloned().map(|id| ShootingOperation::Assets(CollectionOperation::Patch { id, patch: patch.clone() })).collect()),
                 _ => Emit::default(),
             },
             ShootingCommand::AddShot { format, shape } => {
                 let id = next_shooting_id("shot");
-                let shot = ShootingShot {
-                    id: id.clone(),
-                    label: format!("Shot {}", fixture.shots.len() + 1),
-                    width: 256,
-                    height: 256,
-                    format: format.clone(),
-                    shape: shape.clone(),
-                    background: None,
-                    camera_id: None,
-                };
+                let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", fixture.shots.len() + 1), width: 256, height: 256, format: format.clone(), shape: shape.clone(), background: None, camera_id: None };
                 Emit {
-                    document_operations: vec![
-                        ShootingOperation::Shots(CollectionOperation::Add { id: id.clone(), item: shot, at: fixture.shots.len() }),
-                        ShootingOperation::SetActiveShot { shot_id: Some(id.clone()) },
-                    ],
+                    document_operations: vec![ShootingOperation::Shots(CollectionOperation::Add { id: id.clone(), item: shot, at: fixture.shots.len() }), ShootingOperation::SetActiveShot { shot_id: Some(id.clone()) }],
                     config_operations: vec![ShootingConfigOperation::SetSelection { shot_ids: vec![id], asset_ids: Vec::new() }],
                     ..Default::default()
                 }
@@ -1160,17 +976,12 @@ impl DocumentApp for ShootingPlayApp {
                     scale: None,
                 };
                 Emit {
-                    document_operations: vec![
-                        ShootingOperation::Assets(CollectionOperation::Add { id: id.clone(), item: asset, at: fixture.assets.len() }),
-                        ShootingOperation::SetActiveAsset { asset_id: Some(id.clone()) },
-                    ],
+                    document_operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: id.clone(), item: asset, at: fixture.assets.len() }), ShootingOperation::SetActiveAsset { asset_id: Some(id.clone()) }],
                     config_operations: vec![ShootingConfigOperation::SetSelection { shot_ids: Vec::new(), asset_ids: vec![id] }],
                     ..Default::default()
                 }
             }
-            ShootingCommand::SetSelection { shot_ids, asset_ids } => {
-                Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: shot_ids.clone(), asset_ids: asset_ids.clone() }])
-            }
+            ShootingCommand::SetSelection { shot_ids, asset_ids } => Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: shot_ids.clone(), asset_ids: asset_ids.clone() }]),
             ShootingCommand::SetSelectionMethod { method } => Emit::config(vec![ShootingConfigOperation::SetSelectionMethod { method: method.clone() }]),
             ShootingCommand::WorldSelect { ids, merge } => {
                 let merged = merge_world_selection_ids(&semio_framework_plugin::SelectionSet::from_ids(config.selected_asset_ids.clone()), ids, merge).to_vec();
@@ -1178,10 +989,7 @@ impl DocumentApp for ShootingPlayApp {
             }
             ShootingCommand::SetHover { asset_id } => Emit::config(vec![ShootingConfigOperation::SetHoveredAsset { asset_id: asset_id.clone() }]),
             ShootingCommand::WorldPick { asset_id, asset_index, merge } => {
-                let resolved = asset_index
-                    .and_then(|index| fixture.assets.get(index as usize))
-                    .map(|asset| asset.id.clone())
-                    .or_else(|| asset_id.clone());
+                let resolved = asset_index.and_then(|index| fixture.assets.get(index as usize)).map(|asset| asset.id.clone()).or_else(|| asset_id.clone());
                 match resolved {
                     None if merge == "replace" => Emit::config(vec![ShootingConfigOperation::SetSelection { shot_ids: config.selected_shot_ids.clone(), asset_ids: Vec::new() }]),
                     None => Emit::default(),
@@ -1239,20 +1047,13 @@ impl DocumentApp for ShootingPlayApp {
 
     fn window_engagements(&self, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
         let labels = resolve_labels::<ShootingLabels>(cfg.projection);
-        HashMap::from([
-            (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_engagement(doc.projection, cfg.projection, labels)),
-            (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_engagement(doc.projection, labels)),
-        ])
+        HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_engagement(doc.projection, cfg.projection, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_engagement(doc.projection, labels))])
     }
 
     fn window_measures(&self, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<ShootingLabels>(cfg.projection);
-        HashMap::from([
-            (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(doc.projection, labels)),
-            (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_measures(doc.projection, labels)),
-        ])
+        HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(doc.projection, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_measures(doc.projection, labels))])
     }
-
 }
 //#endregion 🔖️ShootingPlayApp
 
@@ -1402,7 +1203,7 @@ pub fn create_shooting_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app() -> VcsDocumentApp<ShootingPlayApp> {
         testkit::new_app::<ShootingPlayApp>()
@@ -1518,9 +1319,7 @@ mod tests {
     fn world_pick_and_hover_drive_selection_protocol() {
         let mut app = new_app();
         // worldPick is a View command: it drives config selection only, emitting no document operations.
-        let result = app
-            .dispatch_typed(ShootingCommand::WorldPick { asset_id: None, asset_index: Some(0), merge: "replace".into() }, &testkit::meta("local"))
-            .expect("pick");
+        let result = app.dispatch_typed(ShootingCommand::WorldPick { asset_id: None, asset_index: Some(0), merge: "replace".into() }, &testkit::meta("local")).expect("pick");
         assert!(result.operations.is_empty(), "worldPick mutates only ephemeral selection, never the document");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
         let selection: Value = serde_json::from_str(serde_json::to_value(&node).unwrap()["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
@@ -1574,11 +1373,7 @@ mod tests {
             }
             other => panic!("expected RequestFileOpen, got {other:?}"),
         }
-        app.dispatch_typed(
-            ShootingCommand::ImportAsset { payload: "data:model/gltf-binary;base64,AAAA".into(), name: Some("chair.glb".into()) },
-            &testkit::meta("local"),
-        )
-        .expect("import asset");
+        app.dispatch_typed(ShootingCommand::ImportAsset { payload: "data:model/gltf-binary;base64,AAAA".into(), name: Some("chair.glb".into()) }, &testkit::meta("local")).expect("import asset");
         let projection = app.projection().expect("materialize projection");
         let imported = projection.assets.last().unwrap();
         assert_eq!(imported.name, "chair");
@@ -1712,13 +1507,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            ShootingCommand::AddShot { format: "png".into(), shape: "rectangle".into() },
-            |app| app.projection().expect("materialize projection").shots.len(),
-            2,
-            3,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, ShootingCommand::AddShot { format: "png".into(), shape: "rectangle".into() }, |app| app.projection().expect("materialize projection").shots.len(), 2, 3);
     }
 
     /// 🎥️ `SetCamera` is config-only — dragging the viewport camera through several ticks must never
@@ -1760,10 +1549,7 @@ mod tests {
 
     #[test]
     fn ingest_operations_is_idempotent_for_shooting() {
-        testkit::assert_ingest_idempotent::<ShootingPlayApp, String>(
-            ShootingCommand::SetActiveShotLabel { value: "Hero".into() },
-            |app| active_shot(&app.projection().expect("materialize projection")).unwrap().label.clone(),
-        );
+        testkit::assert_ingest_idempotent::<ShootingPlayApp, String>(ShootingCommand::SetActiveShotLabel { value: "Hero".into() }, |app| active_shot(&app.projection().expect("materialize projection")).unwrap().label.clone());
     }
 
     #[test]
@@ -1784,8 +1570,7 @@ mod tests {
         let mut app = new_app();
         let asset_id = app.projection().expect("materialize projection").assets[0].id.clone();
         for dx in [1.0, 2.0, 3.0] {
-            app.dispatch_typed(ShootingCommand::TranslateSelection { asset_ids: vec![asset_id.clone()], dx, dy: 0.0, dz: 0.0 }, &testkit::meta("local"))
-                .expect("drag tick");
+            app.dispatch_typed(ShootingCommand::TranslateSelection { asset_ids: vec![asset_id.clone()], dx, dy: 0.0, dz: 0.0 }, &testkit::meta("local")).expect("drag tick");
         }
         // A whole gumball drag (three ticks, same coalesce key) is ONE undo step, not one-operation-per-tick.
         app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
@@ -1800,9 +1585,7 @@ mod tests {
         let world_pick = definition.actions.iter().find(|action| action.id == "worldPick").expect("worldPick declared");
         assert!(matches!(world_pick.kind, ActionKind::View), "worldPick is a View action");
         let mut app = new_app_with_registry();
-        let result = app
-            .dispatch_typed(ShootingCommand::WorldPick { asset_id: None, asset_index: Some(0), merge: "replace".into() }, &testkit::meta("local"))
-            .expect("pick");
+        let result = app.dispatch_typed(ShootingCommand::WorldPick { asset_id: None, asset_index: Some(0), merge: "replace".into() }, &testkit::meta("local")).expect("pick");
         assert!(result.operations.is_empty(), "worldPick (View) emits no operations even under registry enforcement");
     }
 }

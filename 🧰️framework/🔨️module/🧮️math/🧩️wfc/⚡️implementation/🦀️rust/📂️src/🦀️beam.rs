@@ -82,7 +82,11 @@ fn build_root<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option
     if !wiped && prop_ac3::run_to_fixed_point(model, topo, &mut domains, &mut queue, &mut trail, metrics).is_err() {
         wiped = true;
     }
-    if wiped { None } else { Some(domains) }
+    if wiped {
+        None
+    } else {
+        Some(domains)
+    }
 }
 
 /// 🌊️🔦️ Runs beam search to either a solution or exhaustion of every beam / `max_steps`. See this

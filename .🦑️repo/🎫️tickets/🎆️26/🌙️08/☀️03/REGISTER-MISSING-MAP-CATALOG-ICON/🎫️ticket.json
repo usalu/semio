@@ -1,0 +1,11 @@
+{
+  "id": "2026/08/03/REGISTER-MISSING-MAP-CATALOG-ICON",
+  "title": "Register Missing Map Catalog Icon",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "status": "closed",
+  "description": "Register missing map icon in icon catalog and confirm semio-s-app-gis-2d-ui cargo tests pass.",
+  "summary": "Added missing map.svg icon source to icon catalog and regenerated multi-language icon codegen bindings, resolving icon resolution panics and restoring all 17 semio-s-app-gis-2d-ui tests to passing state.",
+  "files": [
+    "🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript/🔣️icon/🔣️map.svg"
+  ]
+}

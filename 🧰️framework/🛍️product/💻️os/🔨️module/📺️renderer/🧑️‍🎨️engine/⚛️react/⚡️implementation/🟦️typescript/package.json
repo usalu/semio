@@ -25,7 +25,7 @@
     "@semio-tech/framework-surface-paint-rs": "workspace:*",
     "@semio-tech/infinite-canvas-react-renderer": "workspace:*",
     "@semio-tech/infinite-world-r3f": "workspace:*",
-    "@semio-tech/ui-asset": "workspace:*",
+    "@semio-tech/asset": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*",
     "fuse.js": "^7.1.0",

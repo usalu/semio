@@ -29,13 +29,7 @@
 //#region 🔖️Merge
 /// @emoji 🧩️ Replaces `store::merge_concurrent_diffs` (`vcs/rs/lib.rs` L680), which collapsed every
 /// `MergeStrategyKind` to plain `absorb()`. Dispatches to a real per-strategy combinator instead.
-pub fn merge_concurrent_diffs<P, D: protocol_command::OperationDiff<P>>(
-    strategy: protocol_core::MergeStrategyKind,
-    existing: D,
-    incoming: D,
-    existing_meta: &protocol_command::OperationMeta,
-    incoming_meta: &protocol_command::OperationMeta,
-) -> D {
+pub fn merge_concurrent_diffs<P, D: protocol_command::OperationDiff<P>>(strategy: protocol_core::MergeStrategyKind, existing: D, incoming: D, existing_meta: &protocol_command::OperationMeta, incoming_meta: &protocol_command::OperationMeta) -> D {
     match strategy {
         protocol_core::MergeStrategyKind::LwwRegister => lww_merge(existing, incoming, existing_meta, incoming_meta),
         protocol_core::MergeStrategyKind::OrderedSequence => ordered_sequence_merge(existing, incoming, existing_meta, incoming_meta),

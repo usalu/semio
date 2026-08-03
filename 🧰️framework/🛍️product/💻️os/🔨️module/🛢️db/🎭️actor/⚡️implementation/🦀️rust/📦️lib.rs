@@ -744,14 +744,7 @@ enum ActorOutcome {
 /// poisoned incarnation can never take down the OS thread pool or a sibling actor, then reports
 /// its terminal `ActorOutcome` back to the owning `Supervisor` through a `Reply` oneshot.
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-fn run_actor_loop<A: Actor>(
-    mut actor: A,
-    receiver: &Receiver<A::Message>,
-    address: Address<A::Message>,
-    generation: GenerationId,
-    emit: &Arc<dyn db_core::Emit>,
-    outcome_tx: ReplySender<ActorOutcome>,
-) {
+fn run_actor_loop<A: Actor>(mut actor: A, receiver: &Receiver<A::Message>, address: Address<A::Message>, generation: GenerationId, emit: &Arc<dyn db_core::Emit>, outcome_tx: ReplySender<ActorOutcome>) {
     use std::panic::AssertUnwindSafe;
 
     let mut ctx = ActorContext { address, generation, emit: emit.clone() };
@@ -806,16 +799,8 @@ pub struct Supervisor<A: Actor> {
 impl<A: Actor> Supervisor<A> {
     /// @emoji 🆕️ Spawns `children` fresh incarnations of `factory()`'s actor at
     /// `GenerationId::INITIAL`, each with its own mailbox sized by `capacities`.
-    pub fn new(
-        strategy: RestartStrategy,
-        capacities: MailboxCapacities,
-        spawner: Arc<dyn ThreadSpawner>,
-        emit: Arc<dyn db_core::Emit>,
-        factory: impl Fn() -> A + Send + Sync + 'static,
-        children: usize,
-    ) -> Self {
-        let supervisor =
-            Supervisor { strategy, capacities, spawner, emit, factory: Box::new(factory), slots: Mutex::new(Vec::new()) };
+    pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, spawner: Arc<dyn ThreadSpawner>, emit: Arc<dyn db_core::Emit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
+        let supervisor = Supervisor { strategy, capacities, spawner, emit, factory: Box::new(factory), slots: Mutex::new(Vec::new()) };
         let mut slots = Vec::with_capacity(children);
         for _ in 0..children {
             slots.push(supervisor.spawn_slot(None));
@@ -842,10 +827,7 @@ impl<A: Actor> Supervisor<A> {
         let (outcome_tx, outcome_rx) = oneshot();
         let actor = (self.factory)();
         let emit = self.emit.clone();
-        let handle = self.spawner.spawn(
-            format!("db-actor-g{}", generation.0),
-            Box::new(move || run_actor_loop(actor, &receiver, ctx_address, generation, &emit, outcome_tx)),
-        );
+        let handle = self.spawner.spawn(format!("db-actor-g{}", generation.0), Box::new(move || run_actor_loop(actor, &receiver, ctx_address, generation, &emit, outcome_tx)));
         SupervisorSlot { mailbox, address, generation, outcome_rx, handle: Some(handle) }
     }
 
@@ -1088,8 +1070,7 @@ mod tests {
     #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
     #[test]
     fn ask_pattern_round_trips_through_a_real_actor_thread() {
-        let supervisor =
-            Supervisor::new(RestartStrategy::OneForOne, generous_capacities(), Arc::new(StdThreadSpawner), Arc::new(NullEmit), EchoActor::default, 1);
+        let supervisor = Supervisor::new(RestartStrategy::OneForOne, generous_capacities(), Arc::new(StdThreadSpawner), Arc::new(NullEmit), EchoActor::default, 1);
         let address = supervisor.address(0);
         let reply = address.ask_blocking(Priority::Command, |tx| EchoMessage::Double(21, tx));
         assert_eq!(reply, Ok(42));
@@ -1118,14 +1099,7 @@ mod tests {
     #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
     #[test]
     fn one_for_one_restarts_only_the_failed_child_and_bumps_only_its_generation() {
-        let supervisor = Supervisor::new(
-            RestartStrategy::OneForOne,
-            generous_capacities(),
-            Arc::new(StdThreadSpawner),
-            Arc::new(NullEmit),
-            EchoActor::default,
-            2,
-        );
+        let supervisor = Supervisor::new(RestartStrategy::OneForOne, generous_capacities(), Arc::new(StdThreadSpawner), Arc::new(NullEmit), EchoActor::default, 2);
         let stale_child0 = supervisor.address(0);
         let untouched_child1_generation = supervisor.generation(1);
 
@@ -1135,10 +1109,7 @@ mod tests {
         assert_eq!(decision, SupervisionDecision::RestartOne(0));
         assert_eq!(supervisor.generation(0), GenerationId::INITIAL.next());
         assert_eq!(supervisor.generation(1), untouched_child1_generation);
-        assert!(
-            matches!(stale_child0.try_send(Priority::Command, EchoMessage::Crash), Err(TrySendError::Stale(_, _, _))),
-            "an Address captured before the restart must fail loudly rather than talk to a dead incarnation"
-        );
+        assert!(matches!(stale_child0.try_send(Priority::Command, EchoMessage::Crash), Err(TrySendError::Stale(_, _, _))), "an Address captured before the restart must fail loudly rather than talk to a dead incarnation");
 
         let fresh_reply = supervisor.address(0).ask_blocking(Priority::Command, |tx| EchoMessage::Double(5, tx));
         assert_eq!(fresh_reply, Ok(10), "the restarted incarnation must be alive and answering");
@@ -1147,14 +1118,7 @@ mod tests {
     #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
     #[test]
     fn one_for_all_restarts_every_child_and_bumps_every_generation() {
-        let supervisor = Supervisor::new(
-            RestartStrategy::OneForAll,
-            generous_capacities(),
-            Arc::new(StdThreadSpawner),
-            Arc::new(NullEmit),
-            EchoActor::default,
-            3,
-        );
+        let supervisor = Supervisor::new(RestartStrategy::OneForAll, generous_capacities(), Arc::new(StdThreadSpawner), Arc::new(NullEmit), EchoActor::default, 3);
 
         supervisor.address(1).send_blocking(Priority::Command, EchoMessage::Crash).unwrap();
         let decision = reap_until_decided(&supervisor);
@@ -1168,14 +1132,7 @@ mod tests {
     #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
     #[test]
     fn escalate_reports_the_failure_without_restarting_anything() {
-        let supervisor = Supervisor::new(
-            RestartStrategy::Escalate,
-            generous_capacities(),
-            Arc::new(StdThreadSpawner),
-            Arc::new(NullEmit),
-            EchoActor::default,
-            1,
-        );
+        let supervisor = Supervisor::new(RestartStrategy::Escalate, generous_capacities(), Arc::new(StdThreadSpawner), Arc::new(NullEmit), EchoActor::default, 1);
 
         supervisor.address(0).send_blocking(Priority::Command, EchoMessage::Crash).unwrap();
         let decision = reap_until_decided(&supervisor);

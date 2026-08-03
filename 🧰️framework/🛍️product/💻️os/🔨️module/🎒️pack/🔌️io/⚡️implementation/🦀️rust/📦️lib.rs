@@ -14,8 +14,8 @@
 mod native {
     use std::io::Write;
     use std::path::Path;
-    use std::sync::Mutex;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Mutex;
 
     use pack_core::{ChunkId, PackError, PackLimits, PackSink, PackSource};
     use pack_format::{Manifest, PackWriter, RecoveryReport, WriteOptions};
@@ -256,10 +256,7 @@ mod native {
             let read_back = std::fs::read(&path).unwrap();
             assert_eq!(read_back, bytes);
 
-            let leftover_tmp = std::fs::read_dir(&dir)
-                .unwrap()
-                .filter_map(|entry| entry.ok())
-                .any(|entry| entry.file_name().to_string_lossy().contains(".tmp-"));
+            let leftover_tmp = std::fs::read_dir(&dir).unwrap().filter_map(|entry| entry.ok()).any(|entry| entry.file_name().to_string_lossy().contains(".tmp-"));
             assert!(!leftover_tmp, "no .tmp- file should remain after a successful write_atomic");
         }
 

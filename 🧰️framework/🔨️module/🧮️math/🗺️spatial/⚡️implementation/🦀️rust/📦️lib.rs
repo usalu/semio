@@ -566,12 +566,7 @@ mod tests {
             let mut got = Vec::new();
             tree.for_each_in_aabb(&lo, &hi, |id| got.push(id));
             got.sort_unstable();
-            let want: Vec<u32> = pts
-                .iter()
-                .enumerate()
-                .filter(|(_, p)| (0..D).all(|a| (lo[a]..=hi[a]).contains(&p[a])))
-                .map(|(i, _)| i as u32)
-                .collect();
+            let want: Vec<u32> = pts.iter().enumerate().filter(|(_, p)| (0..D).all(|a| (lo[a]..=hi[a]).contains(&p[a]))).map(|(i, _)| i as u32).collect();
             assert_eq!(got, want);
         }
     }
@@ -612,9 +607,7 @@ mod tests {
         let cell = 2.5;
         let mut grid = VoxelGrid3::new(cell);
         let mut state = 42u64;
-        let mut pts: Vec<[f64; 3]> = (0..300)
-            .map(|_| [rand_range(&mut state, -12.0, 12.0), rand_range(&mut state, -12.0, 12.0), rand_range(&mut state, -12.0, 12.0)])
-            .collect();
+        let mut pts: Vec<[f64; 3]> = (0..300).map(|_| [rand_range(&mut state, -12.0, 12.0), rand_range(&mut state, -12.0, 12.0), rand_range(&mut state, -12.0, 12.0)]).collect();
         for k in -2i32..=2 {
             for l in -2i32..=2 {
                 for m in -2i32..=2 {
@@ -625,9 +618,7 @@ mod tests {
         for (i, p) in pts.iter().enumerate() {
             grid.insert(*p, i as u32);
         }
-        let mut queries: Vec<[f64; 3]> = (0..40)
-            .map(|_| [rand_range(&mut state, -13.0, 13.0), rand_range(&mut state, -13.0, 13.0), rand_range(&mut state, -13.0, 13.0)])
-            .collect();
+        let mut queries: Vec<[f64; 3]> = (0..40).map(|_| [rand_range(&mut state, -13.0, 13.0), rand_range(&mut state, -13.0, 13.0), rand_range(&mut state, -13.0, 13.0)]).collect();
         queries.extend_from_slice(&pts[300..330]);
         for q in &queries {
             let qc = grid.cell_of(*q);
@@ -741,12 +732,7 @@ mod tests {
                     mx[a] = x.max(y);
                 }
                 let got = tree.range(mn, mx);
-                let want: Vec<u32> = pts
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, p)| (0..3).all(|a| (mn[a]..=mx[a]).contains(&p[a])))
-                    .map(|(i, _)| i as u32)
-                    .collect();
+                let want: Vec<u32> = pts.iter().enumerate().filter(|(_, p)| (0..3).all(|a| (mn[a]..=mx[a]).contains(&p[a]))).map(|(i, _)| i as u32).collect();
                 assert_eq!(got, want);
             }
             let all = tree.range([-1000.0; 3], [1000.0; 3]);

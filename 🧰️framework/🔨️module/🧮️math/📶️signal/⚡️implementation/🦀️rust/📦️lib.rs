@@ -443,8 +443,7 @@ mod tests {
         let mut re = time_re;
         let mut im = time_im;
         fft(&mut re, &mut im);
-        let freq_energy: f64 =
-            re.iter().zip(im.iter()).map(|(r, i)| (r * r + i * i) / n as f64).sum();
+        let freq_energy: f64 = re.iter().zip(im.iter()).map(|(r, i)| (r * r + i * i) / n as f64).sum();
         assert!((time_energy - freq_energy).abs() < 1e-9);
     }
 
@@ -476,8 +475,7 @@ mod tests {
     #[test]
     fn welch_psd_finds_planted_sinusoid() {
         let fs = 100.0;
-        let x: Vec<f64> =
-            (0..1000).map(|t| (2.0 * PI * 7.0 * t as f64 / fs).sin()).collect();
+        let x: Vec<f64> = (0..1000).map(|t| (2.0 * PI * 7.0 * t as f64 / fs).sin()).collect();
         let psd = welch_psd(&x, 256, 0.5);
         assert_eq!(psd.len(), 129);
         let mut peak_bin = 0;
@@ -495,8 +493,7 @@ mod tests {
         let cycles = 16.0;
         let delay = 3.0;
         let a: Vec<f64> = (0..600).map(|t| (2.0 * PI * cycles * t as f64 / 256.0).sin()).collect();
-        let b: Vec<f64> =
-            (0..600).map(|t| (2.0 * PI * cycles * (t as f64 - delay) / 256.0).sin()).collect();
+        let b: Vec<f64> = (0..600).map(|t| (2.0 * PI * cycles * (t as f64 - delay) / 256.0).sin()).collect();
         let (magnitude, phase) = cross_spectrum(&a, &b, 256, 0.5);
         let mut peak_bin = 0;
         for (k, v) in magnitude.iter().enumerate() {
@@ -528,11 +525,7 @@ mod tests {
 
     #[test]
     fn subsample_peak_recovers_fractional_lag() {
-        let pulse = |center: f64| -> Vec<f64> {
-            (0..128)
-                .map(|t| (-((t as f64 - center) * (t as f64 - center)) / (2.0 * 16.0)).exp())
-                .collect()
-        };
+        let pulse = |center: f64| -> Vec<f64> { (0..128).map(|t| (-((t as f64 - center) * (t as f64 - center)) / (2.0 * 16.0)).exp()).collect() };
         let a = pulse(50.0);
         let b = pulse(53.37);
         let c = xcorr_normalized(&a, &b, 10);
@@ -565,11 +558,7 @@ mod tests {
     #[test]
     fn smoothing_preserves_constant_signals() {
         let x = vec![4.2; 30];
-        for out in [
-            gaussian_smooth_1d(&x, 1.5),
-            moving_average(&x, 5),
-            savitzky_golay(&x, 7, 2, 0, 1.0),
-        ] {
+        for out in [gaussian_smooth_1d(&x, 1.5), moving_average(&x, 5), savitzky_golay(&x, 7, 2, 0, 1.0)] {
             for v in out {
                 assert!((v - 4.2).abs() < 1e-9);
             }
@@ -580,9 +569,7 @@ mod tests {
     fn find_peaks_ranks_two_bumps_by_prominence() {
         let x: Vec<f64> = (0..100)
             .map(|t| {
-                let bump = |center: f64, height: f64| {
-                    height * (-((t as f64 - center) * (t as f64 - center)) / 18.0).exp()
-                };
+                let bump = |center: f64, height: f64| height * (-((t as f64 - center) * (t as f64 - center)) / 18.0).exp();
                 bump(30.0, 1.0) + bump(70.0, 0.6)
             })
             .collect();

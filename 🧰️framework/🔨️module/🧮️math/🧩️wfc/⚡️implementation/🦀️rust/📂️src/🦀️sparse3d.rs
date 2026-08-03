@@ -89,7 +89,7 @@ impl SparseVolume {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::grid3d::{Stencil3d, declare_stencil_relations_3d};
+    use crate::grid3d::{declare_stencil_relations_3d, Stencil3d};
     use crate::model::ModelBuilder;
     use crate::topology::Topology;
 

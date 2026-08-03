@@ -5,8 +5,8 @@
 //! One variant per action `remodel_ui::create_remodel_app` declares; see `remodel_ui`'s
 //! `RemodelPlayApp::handle` for the dispatch.
 
-use remodel_op::RemodelOperation;
 use protocol::OpBinary;
+use remodel_op::RemodelOperation;
 use serde::{Deserialize, Serialize};
 
 /// 📦️ Encodes a `RemodelOperation` to its binary command form.
@@ -54,22 +54,7 @@ pub enum RemodelCommand {
 
     // 🎯️ Calibration / GCPs.
     #[dsl(key = "edit-calibration")]
-    EditCalibration {
-        camera_id: String,
-        label: String,
-        model: String,
-        fx: f64,
-        fy: f64,
-        cx: f64,
-        cy: f64,
-        skew: f64,
-        k1: f32,
-        k2: f32,
-        k3: f32,
-        p1: f32,
-        p2: f32,
-        locked: bool,
-    },
+    EditCalibration { camera_id: String, label: String, model: String, fx: f64, fy: f64, cx: f64, cy: f64, skew: f64, k1: f32, k2: f32, k3: f32, p1: f32, p2: f32, locked: bool },
     #[dsl(key = "calibrate-cameras")]
     CalibrateCameras,
     #[dsl(key = "add-gcp")]
@@ -140,7 +125,10 @@ pub enum RemodelCommand {
     #[dsl(key = "selection")]
     SetSelection { mode: String, ids: Vec<String> },
     #[dsl(key = "camera")]
-    SetCamera { #[dsl(block)] camera: remodel_engine::RemodelWorldCamera },
+    SetCamera {
+        #[dsl(block)]
+        camera: remodel_engine::RemodelWorldCamera,
+    },
     #[dsl(key = "layer-visibility")]
     SetLayerVisibility { layer: String, visible: bool },
     #[dsl(key = "frame-cursor")]
@@ -190,9 +178,7 @@ mod tests {
         let mut store = store::DocumentStore::new(envelope);
         let mut feature_params = store.projection().expect("initial projection").params.feature.clone();
         feature_params.target_count = 12345;
-        store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![RemodelOperation::SetFeatureParams { params: feature_params }], description: None })
-            .expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![RemodelOperation::SetFeatureParams { params: feature_params }], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

@@ -22,18 +22,30 @@ pub fn print_dsl(document: &Process3dDocument) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use process_3d::{empty_process3d_projection, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, SolidSpec, Stock, StepOrigin, StockQuantity, Workshop, WorkshopMachine};
+    use process_3d::{empty_process3d_projection, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, SolidSpec, StepOrigin, Stock, StockQuantity, Workshop, WorkshopMachine};
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
     fn drill_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Drill".into(), enabled: true, origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }), measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() } }
+        ProcessStep {
+            id: id.into(),
+            label: "Drill".into(),
+            enabled: true,
+            origin: Some(StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() }),
+            measure: ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() },
+        }
     }
 
     fn attach_step(id: &str) -> ProcessStep {
-        ProcessStep { id: id.into(), label: "Attach".into(), enabled: false, origin: None, measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.05 }, pose: Pose { position: [0.1, -0.2, 0.3], axis: [0.0, 1.0, 0.0], angle: 1.2 } } }
+        ProcessStep {
+            id: id.into(),
+            label: "Attach".into(),
+            enabled: false,
+            origin: None,
+            measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.05 }, pose: Pose { position: [0.1, -0.2, 0.3], axis: [0.0, 1.0, 0.0], angle: 1.2 } },
+        }
     }
 
     fn imported_mesh_stock() -> Stock {
@@ -78,7 +90,13 @@ mod tests {
     fn process3d_dsl_round_trips_imported_solid_shapes() {
         let mut document = sample_document();
         document.stock = imported_mesh_stock();
-        document.steps.push(ProcessStep { id: "imported-tool".into(), label: "Imported Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() } });
+        document.steps.push(ProcessStep {
+            id: "imported-tool".into(),
+            label: "Imported Cut".into(),
+            enabled: true,
+            origin: None,
+            measure: ProcessMeasure::Cut { tool: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() },
+        });
         store::test_support::assert_dsl_round_trip(&document);
     }
 

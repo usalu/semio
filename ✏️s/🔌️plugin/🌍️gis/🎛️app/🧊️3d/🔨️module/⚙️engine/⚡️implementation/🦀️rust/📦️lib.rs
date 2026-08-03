@@ -73,19 +73,11 @@ impl protocol::OperationDiff<Gis3dConfig> for Gis3dConfig {
 pub fn gis3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: gis3d::GIS_3D_TERRAIN_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::Data,
-            form: semio_framework_plugin::MediaForm::Value,
-        },
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
         ports: vec![gis3d_map_in_port(), gis3d_scene_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation {
-            id: "gis.terrain".into(),
-            name: "GIS Terrain".into(),
-            dimension: "3d".into(),
-            component_kind: "gisterrain".into(),
-        },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "gis.terrain".into(), name: "GIS Terrain".into(), dimension: "3d".into(), component_kind: "gisterrain".into() },
     }
 }
 
@@ -97,10 +89,7 @@ pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
         id: "map:in".into(),
         label: "Map".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::TwoD,
-            form: semio_framework_plugin::MediaForm::Vector,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
         kind_id: Some("2d.map".into()),
         required: false,
         multiplicity: semio_framework_core::PortMultiplicity::One,
@@ -115,10 +104,7 @@ pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
         id: "scene:out".into(),
         label: "Scene".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::ThreeD,
-            form: semio_framework_plugin::MediaForm::Mesh,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
         kind_id: Some("3d.mesh".into()),
         required: false,
         multiplicity: semio_framework_core::PortMultiplicity::Many,
@@ -132,10 +118,7 @@ pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// triangulated mesh — an honest placeholder for the day a tessellator lands, not a silent fake.
 pub fn gis3d_scene_media(document: &Gis3dTerrainDocument) -> semio_framework_plugin::Media {
     semio_framework_plugin::Media {
-        media_type: semio_framework_plugin::MediaType {
-            class: semio_framework_plugin::MediaClass::ThreeD,
-            form: semio_framework_plugin::MediaForm::Mesh,
-        },
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
         payload: semio_framework_plugin::MediaPayload::Structured {
             schema: "3d.mesh".into(),
             json: serde_json::json!({

@@ -20,10 +20,7 @@ fn register_s_exports() {
 //#region 🔖️Manifest
 fn bundle() -> semio_framework_plugin::PluginBundle {
     register_s_exports();
-    semio_framework_plugin::PluginBundle::new("s", "S Studio", "0.1.0")
-        .local_backbone_storage()
-        .register_document_app(home_ui::create_home_app(), || home_ui::HomeApp)
-        .register_document_app(space_ui::create_space_app(), || space_ui::SpaceApp)
+    semio_framework_plugin::PluginBundle::new("s", "S Studio", "0.1.0").local_backbone_storage().register_document_app(home_ui::create_home_app(), || home_ui::HomeApp).register_document_app(space_ui::create_space_app(), || space_ui::SpaceApp)
 }
 semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖️Manifest
