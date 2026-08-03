@@ -1,0 +1,38 @@
+{
+  "mobileOverview": {
+    "sectionCount": 6,
+    "hasSnapContainer": true,
+    "veilCount": 6,
+    "firstVeilOpacity": 0,
+    "scrollHeight": 3984,
+    "clientHeight": 664,
+    "sectionHeights": [
+      664,
+      664,
+      664,
+      664,
+      664,
+      664
+    ],
+    "sectionOffsets": [
+      0,
+      664,
+      1328,
+      1992,
+      2656,
+      3320
+    ],
+    "bodySnippet": "semio · procedural · 3d\nPanel\nWorkflow\nVorschau\nSchließen\nFensteroptionen\nFokussieren\nLOD\nMedium\nAktionen\nAnsicht\nAKTIONEN\nAktives Beispiel festlegen…\nGraph bearbeiten\nAuswahl löschen\nKnoten verschieb"
+  },
+  "mobileFocused": {
+    "hash": "#generator",
+    "hasOverview": false,
+    "bodySnippet": "semio · procedural · 3d\nPanel\nWorkflow\nVorschau\nSchließen\nFensteroptionen\nFokussieren\nLOD\nMedium\nAktionen\nAnsicht\nAKTIONEN\nAktives Beispiel festlegen…\nGraph bearbeiten\nAuswahl löschen\nKnoten verschieb"
+  },
+  "mobileReturnHash": "",
+  "desktop": {
+    "gridTransform": "grid-template-columns: repeat(3, 100vw); grid-template-rows: repeat(2, 100vh); width: 300vw; height: 200vh; transform: translate(0vw, 0vh);",
+    "sectionCount": 0,
+    "cardButtons": 78
+  }
+}

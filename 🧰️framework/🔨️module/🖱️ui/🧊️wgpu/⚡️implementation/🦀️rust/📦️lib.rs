@@ -3196,7 +3196,7 @@ pub mod component {
         #[serde(rename_all = "camelCase")]
         pub struct NodeGraphOperatorRecord {
             pub id: String,
-            pub module: String,
+            pub extension: String,
             pub name: String,
             pub abbreviation: String,
             pub icon: String,
@@ -5563,11 +5563,11 @@ pub mod reconcile {
         for nested in item.items.iter().flatten() {
             children.push(tree_item_row(tree_node, nested));
         }
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(item.id.clone()), presence: item.presence, activate: item.action.clone(), drop_action: None, drop_overlay: None, children, menu: None })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(item.id.clone()), presence: item.presence, activate: item.action.clone(), drop_action: None, drop_overlay: None, children, menu: item.menu.clone() })
     }
 
     /// 🌳️ Synthesizes one retained `Button` row per `UiTreeItemAction` (a `Tree` item's trailing/
-    /// hover-reveal action buttons). No stable id exists on `UiTreeItemAction` itself (unlike items/
+    /// row-placement action buttons). No stable id exists on `UiTreeItemAction` itself (unlike items/
     /// sections), so this leaves `UiButtonNode.id` unset — `node_key`'s positional fallback (keyed by the
     /// action's ordinal within its parent row's `actions` list) is already stable across re-renders for a
     /// fixed action set, matching every other id-less synthesized/leaf child in this module.
@@ -13455,7 +13455,7 @@ pub mod events {
         /// 🫧️ Every node currently in the hover bubble chain (leaf-to-root from `hovered`), so an
         /// ancestor container (e.g. a `Stack`-based tree-item row, which `hit_test` never itself returns
         /// as the match — see 🔖️HitTest's `is_plain_container`) still observes `NodeFlags::HOVERED` for
-        /// `paint`'s hover-reveal (React's `revealOnHover`) to key off of.
+        /// `paint`'s hover-reveal (React's `placement` / driver.chrome reveal) to key off of.
         hover_chain: Vec<NodeId>,
         /// 👇️ Pointer position at the start of the current `Press` capture, for `maybe_promote_to_drag`'s
         /// movement-threshold check.

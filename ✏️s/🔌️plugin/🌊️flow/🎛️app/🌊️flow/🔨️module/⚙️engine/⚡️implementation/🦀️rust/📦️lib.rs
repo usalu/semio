@@ -147,8 +147,8 @@ pub fn flow_play_neural_cache() -> Arc<NeuralCache> {
 }
 
 pub fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
-    let mut sections: Vec<Value> = serde_json::from_str(&flow_core::flow_operator_catalogue_json()).unwrap_or_default();
-    if let Ok(extra) = serde_json::from_str::<Vec<Value>>(extra_sections_json) {
+    let mut sections = flow_core::flow_catalogue_sections();
+    if let Ok(extra) = serde_json::from_str::<Vec<flow_core::CatalogueSection>>(extra_sections_json) {
         sections.extend(extra);
     }
     host.set_host_catalogue_json(&serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into()));

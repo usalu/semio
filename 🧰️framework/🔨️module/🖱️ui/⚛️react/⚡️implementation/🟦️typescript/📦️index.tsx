@@ -510,7 +510,7 @@ export const NULL_SHELL_ROOT_REF: { readonly current: HTMLElement | null } = { c
 
 // #region 🔖️IconRenderPort
 export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, ThemePaletteGroup, UiTheme } from "@semio-tech/ui-styling";
-export { activeUiTheme, builtinUiThemes, parseUiTheme, resolveThemeAppearancePalettes, semioTheme, serializeUiTheme, setActiveUiTheme, subscribeActiveUiTheme } from "@semio-tech/ui-styling";
+export { activeUiTheme, applyUiThemeToRoot, builtinUiThemes, clearUiThemeFromRoot, parseUiTheme, resolveThemeAppearancePalettes, semioTheme, serializeUiTheme, setActiveUiTheme, subscribeActiveUiTheme } from "@semio-tech/ui-styling";
 
 import type { IconRenderPort, IconRenderRequest, IconRenderResult, IconRenderShape } from "@semio-tech/ui-styling";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -9196,7 +9196,7 @@ const PanelTabButton: React.FC<{
             ) : null}
           </>
         )}
-        {draggable && !surfaceDrag ? <DragHandle onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} /> : null}
+        {draggable && !surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} /> : null}
       </button>
     </ChromeControlHint>
   );
@@ -18045,7 +18045,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     className,
   );
   const rowContentFillClassName = cn(treeRowChromeContentFillClasses(false, false, loading, waiting), isDropReady && dropZoneReadyFillClass);
-  const sectionDragHandle = showDragHandle && !driverSurfaceDrag ? <DragHandle onPointerDown={resolvedDragInitiation === "handle" ? armDrag : undefined} emphasized={isDropReady} /> : null;
+  const sectionDragHandle = showDragHandle && !driverSurfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" onPointerDown={resolvedDragInitiation === "handle" ? armDrag : undefined} emphasized={isDropReady} /> : null;
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier, direction }}>{children}</TreeContext.Provider>;
@@ -21262,7 +21262,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
               >
                 {UnitIcon ? <UnitIcon size={12} /> : null}
                 <span className="min-w-0 truncate">{unit.label}</span>
-                {unitDockDraggable ? <DragHandle className="ms-auto" emphasized={unitDragActive} /> : null}
+                {unitDockDraggable ? <DragHandle labelId="ui.tree.drag.sort" className="ms-auto" emphasized={unitDragActive} /> : null}
               </div>
             ) : null}
             <Tree
@@ -28353,7 +28353,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
             {tab.title}
           </span>
         </div>
-        <DragHandle onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
+        <DragHandle labelId="ui.tree.drag.sort" onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
       </div>
     );
   };
@@ -38270,7 +38270,33 @@ if (treeVitest) {
       expect(deriveTreeDragRoles({ draggable: true, dragData: { "application/x-test": "{}" }, isDragHandle: true }, true)).toEqual(["sort", "transfer"]);
     });
 
-    it("useControlInlineText hides labels only under an icons-only driver", () => {
+    
+
+    it("default driver keeps catalogue transfer on the move handle only", () => {
+      const markup = renderToStaticMarkup(
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem id="tooltip.manual" label="Kind" draggable dragRoles={["transfer"]} dragInitiation="handle" />
+          </TreeContext.Provider>
+        </UiDriverProvider>,
+      );
+      expect(markup).toContain('data-drag-role="transfer"');
+      expect(markup).not.toContain('data-drag-role="sort"');
+      expect(markup).not.toContain('draggable="true"');
+    });
+
+    it("compact driver collapses drag roles onto the row surface", () => {
+      const markup = renderToStaticMarkup(
+        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem id="tooltip.manual" label="Kind" draggable dragRoles={["sort", "transfer"]} dragInitiation="handle" />
+          </TreeContext.Provider>
+        </UiDriverProvider>,
+      );
+      expect(markup).not.toContain('data-slot="drag-handle"');
+      expect(markup).toContain('draggable="true"');
+    });
+it("useControlInlineText hides labels only under an icons-only driver", () => {
       const iconsMarkup = renderToStaticMarkup(
         <UiDriverProvider driver={COMPACT_UI_DRIVER}>
           <Button id="settings.driver.compact" icon={<CheckIcon />} />

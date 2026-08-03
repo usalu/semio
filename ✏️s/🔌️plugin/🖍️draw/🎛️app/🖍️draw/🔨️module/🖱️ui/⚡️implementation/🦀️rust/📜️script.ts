@@ -8,13 +8,13 @@ class WasmScript extends BundleScript {
       rsDir: this.root,
       skipEnvVar: "DRAW_UI_RS_SKIP_WASM_BUILD",
       logPrefix: "draw/app/draw/ui/rs",
-      wasmBaseName: "draw",
+      wasmBaseName: "semio_s_app_draw_ui",
       pkg: {
         name: "@semio-tech/draw-ui-rs",
-        files: ["draw_bg.wasm", "draw.js", "draw.d.ts", "draw_bg.wasm.d.ts"],
-        main: "draw.js",
-        module: "draw.js",
-        types: "draw.d.ts",
+        files: ["semio_s_app_draw_ui_bg.wasm", "semio_s_app_draw_ui.js", "semio_s_app_draw_ui.d.ts", "semio_s_app_draw_ui_bg.wasm.d.ts"],
+        main: "semio_s_app_draw_ui.js",
+        module: "semio_s_app_draw_ui.js",
+        types: "semio_s_app_draw_ui.d.ts",
       },
     });
   }

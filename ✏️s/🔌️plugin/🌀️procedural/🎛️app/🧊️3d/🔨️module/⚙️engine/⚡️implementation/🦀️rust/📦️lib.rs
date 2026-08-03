@@ -3,7 +3,7 @@
 use flow_core::dag::DagFixture;
 use flow_core::forms_bridge::apply_generation_values_to_fixture;
 use flow_core::{CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
-use flow_module_brep::tessellate_geometry;
+use flow_extension_brep::tessellate_geometry;
 use playbook::{selected_generation, GenerationPlayState};
 use procedural_3d::{widget_id, Procedural3dDocument};
 use serde::{Deserialize, Serialize};
@@ -21,13 +21,46 @@ pub const PROCEDURAL_EXAMPLE_RECTANGLE_WIRE: &str = "rectangle-wire-preview";
 pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
 //#endregion 🔖️Constants
 
+//#region 🔖️ExtensionContributions
+use semio_framework_core::Contribution;
+use std::sync::Mutex;
+
+/// 🧩️ One host-aggregated plugin contribution entry (`contributionsJson` wire shape).
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ProgramContributionEntry {
+    plugin_id: String,
+    contribution: Contribution,
+}
+
+/// 🔌️ Installs or refreshes contributed `flow.extension` manifests when the host pushes a new catalogue.
+pub fn sync_flow_extension_contributions(contributions_json: &str) {
+    static LAST: Mutex<String> = Mutex::new(String::new());
+    let mut last = LAST.lock().expect("flow contributions lock");
+    if *last == contributions_json {
+        return;
+    }
+    for info in flow_core::installed_flow_extensions() {
+        flow_core::uninstall_flow_extension(&info.id);
+    }
+    if let Ok(entries) = serde_json::from_str::<Vec<ProgramContributionEntry>>(contributions_json) {
+        for entry in entries {
+            if let Contribution::FlowExtension { manifest_json, .. } = entry.contribution {
+                flow_core::install_flow_extension_manifest(&entry.plugin_id, &manifest_json);
+            }
+        }
+    }
+    *last = contributions_json.to_string();
+}
+//#endregion 🔖️ExtensionContributions
+
 //#region 🔖️EvalCache
 /// 🧠️ Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions.
 ///
 /// `Procedural3dPlayApp` is a stateless unit struct rebuilt from `document_json`/config on every
 /// plugin dispatch, so a fresh `FlowHost::from_fixture` would otherwise discard per-node
-/// memoization (and the geometry handle stability that lets `flow_module_brep`'s mesh cache
-/// hit) on every single edit. Mirrors `flow_module_brep`'s single-instance `KERNEL`/`MESH_CACHE`
+/// memoization (and the geometry handle stability that lets `flow_extension_brep`'s mesh cache
+/// hit) on every single edit. Mirrors `flow_extension_brep`'s single-instance `KERNEL`/`MESH_CACHE`
 /// `OnceLock` pattern — one shared cache per WASM instance, which matches one editor session.
 static PROCEDURAL_NEURAL_CACHE: std::sync::OnceLock<std::sync::Arc<flow_core::neural::NeuralCache>> = std::sync::OnceLock::new();
 
@@ -95,7 +128,7 @@ pub fn default_sun_json() -> String {
 /// signature-keyed memoization layer has NO field here: a rendering memoization cache is neither
 /// undoable nor worth persisting/VCS-tracking, and `render`/`render_generate_preview` recompute
 /// `preview_payload_from_eval` fresh on every call instead (the actually expensive tessellation step
-/// already has its own internal handle-level cache in `flow_module_brep`, see `PROCEDURAL_NEURAL_CACHE`
+/// already has its own internal handle-level cache in `flow_extension_brep`, see `PROCEDURAL_NEURAL_CACHE`
 /// above, so this is not a real cost regression).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase", default)]
@@ -139,6 +172,13 @@ pub struct Procedural3dConfig {
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState::locale`.
     pub locale: String,
+    /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `flow.extension` hot-swap installs.
+    #[serde(default = "default_contributions_json")]
+    pub contributions_json: String,
+}
+
+fn default_contributions_json() -> String {
+    "[]".into()
 }
 
 impl Default for Procedural3dConfig {
@@ -157,6 +197,7 @@ impl Default for Procedural3dConfig {
             eval_driver_json: String::new(),
             active_utility_id: "move".into(),
             locale: "en-US".into(),
+            contributions_json: default_contributions_json(),
         }
     }
 }
@@ -470,7 +511,7 @@ pub fn preview_status_json(eval_json: &str, fixture: &FlowFixture) -> Option<Str
     }
 }
 
-/// 🧵️ Pure per-render tessellation: bounded-cost (`flow_module_brep::tessellate_geometry` already
+/// 🧵️ Pure per-render tessellation: bounded-cost (`flow_extension_brep::tessellate_geometry` already
 /// caches at the handle level, see `PROCEDURAL_NEURAL_CACHE`'s doc comment), so this is safe to call
 /// fresh on every `render`/`render_generate_preview` call instead of behind an outer memoization layer.
 pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {

@@ -9,7 +9,7 @@ todos:
    content: "Implement neural/engine (neural_engine): Dictionary/Atom, Neuron/Synapse/Tree, NeuronKind Function registry, topo Evaluator + Cargo.toml + tests."
    status: completed
  - id: math
-   content: "Implement flow/modules/math (flow_module_math): math NeuronKinds (add, ...), register() + Cargo.toml + tests."
+   content: "Implement flow/modules/math (flow_extension_math): math NeuronKinds (add, ...), register() + Cargo.toml + tests."
    status: completed
  - id: dag
    content: "Implement mathematical/graph/port/directed/dag crate: rect IO node model, layered layout, acyclicity, fixture + Cargo.toml; add to workspace members."
@@ -45,7 +45,7 @@ Build the three parts of `flow` following the established repo triple pattern (`
 flowchart TD
     subgraph p1 [1. Neural engine - headless]
       ENG["neural/engine (neural_engine, rlib, wasm-compatible)<br/>Dictionary/Kvp/Atom, Neuron/Synapse/Tree,<br/>NeuronKind registry, topo evaluator"]
-      MATH["flow/modules/math (flow_module_math, rlib)<br/>math NeuronKinds e.g. add"]
+      MATH["flow/modules/math (flow_extension_math, rlib)<br/>math NeuronKinds e.g. add"]
     end
     subgraph p2 [2. General-purpose DAG UI]
       DAG["mathematical/graph/port/directed/dag<br/>(mathematical_graph_port_directed_dag, rlib)<br/>rect IO node (inputs|name|outputs), layered layout, fixture"]
@@ -84,7 +84,7 @@ Repo MCP is not connected in this session. At execution start: read `repo://goal
 
 ## Part 1b - Math module (Rust)
 
-- `flow/modules/math/lib.rs` + new `flow/modules/math/Cargo.toml` (`name = "flow_module_math"`, rlib; dep `neural_engine = { path = "../../../neural/engine" }`). Provide `add` (and a couple more) `NeuronKind`s implementing `Function`, plus `register(registry: &mut Registry)`. Tests cover `add`.
+- `flow/modules/math/lib.rs` + new `flow/modules/math/Cargo.toml` (`name = "flow_extension_math"`, rlib; dep `neural_engine = { path = "../../../neural/engine" }`). Provide `add` (and a couple more) `NeuronKind`s implementing `Function`, plus `register(registry: &mut Registry)`. Tests cover `add`.
 
 ## Part 2 - General-purpose DAG UI (Rust)
 
@@ -97,7 +97,7 @@ Repo MCP is not connected in this session. At execution start: read `repo://goal
 
 ## Part 3 - Flow core (Rust cdylib -> wasm)
 
-- `flow/core/lib.rs` + new `flow/core/Cargo.toml` (`name = "flow_core"`, `crate-type = ["rlib","cdylib"]`; deps: `neural_engine`, `flow_module_math`, `mathematical_graph_port_directed_dag`, `infinite_canvas`, `serde`, `serde_json`; `[target.'cfg(target_arch="wasm32")'.dependencies]` `wasm-bindgen`, `serde-wasm-bindgen`, `js-sys`, `web-sys` like [puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml)).
+- `flow/core/lib.rs` + new `flow/core/Cargo.toml` (`name = "flow_core"`, `crate-type = ["rlib","cdylib"]`; deps: `neural_engine`, `flow_extension_math`, `mathematical_graph_port_directed_dag`, `infinite_canvas`, `serde`, `serde_json`; `[target.'cfg(target_arch="wasm32")'.dependencies]` `wasm-bindgen`, `serde-wasm-bindgen`, `js-sys`, `web-sys` like [puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml)).
   - Region `Widget`: `Widget = Neuron | Input(Slider|Note) | Output(Preview|Action)` (per [flow/AGENTS.md](flow/AGENTS.md)); maps each widget to a DAG rect node + neural tree node.
   - Region `FlowSession` (`#[wasm_bindgen]`, like `BoardSession`): load/serialize a `flow.fixture/v1`, build the DAG board scene (canvas `SceneDescriptorJson`), `attach_canvas`/`renderFrame`, pointer/camera input, and `evaluate()` running the neural engine (math registered) to fill `Preview` outputs.
   - `flow/core/script.ts` (new): `runWasmPackWebBuild({ wasmBaseName: "flow_core", pkg.name: "@semio-tech/flow-core", skipEnvVar: "FLOW_CORE_SKIP_WASM_BUILD" })` mirroring [puzzle/2d/rs/script.ts](puzzle/2d/rs/script.ts).
@@ -125,7 +125,7 @@ Repo MCP is not connected in this session. At execution start: read `repo://goal
 
 ## Validation (must confirm at runtime, no assumptions)
 
-- `cargo test -p neural_engine -p flow_module_math -p mathematical_graph_port_directed_dag -p flow_core` all pass.
+- `cargo test -p neural_engine -p flow_extension_math -p mathematical_graph_port_directed_dag -p flow_core` all pass.
 - `bun nx run @semio-tech/flow-core:wasm` produces `flow/core/pkg`.
 - `bun nx run @semio-tech/flow-react:test` and `@semio-tech/flow-play:test` pass.
 - `bun run dev:flow` serves on 6016; confirm via console logs (`[DEBUG]` prefixed, temporary) that the default slider->add->preview flow evaluates and the preview shows the computed number, and the DAG renders rectangle IO nodes.

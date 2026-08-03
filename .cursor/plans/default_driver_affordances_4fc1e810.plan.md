@@ -7,34 +7,34 @@ todos:
     status: completed
   - id: placement-model
     content: Replace revealOnHover/reveal_on_hover with a row-vs-menu placement axis in the TS TreeSectionAction, the Rust UiTreeItemAction and TreeItemAction, and the generated bindings
-    status: completed
+    status: in_progress
   - id: react-actions
     content: Render only row-placement actions in the tree header group, merge menu-placement actions into the row context menu, and delete treeHeaderRevealActionsClassName
-    status: completed
+    status: pending
   - id: driver-reveal
     content: Drive row-action reveal from driver.chrome via data-ui-reveal-region so default paints them and compact reveals on hover
-    status: completed
+    status: pending
   - id: drag-roles
     content: Add TreeDragRole sort/transfer, render one labelled DragHandle per role in TreeItem and SortableTreeItem, and collapse to surface drag under driver.drag === surface
-    status: completed
+    status: pending
   - id: catalogue-fix
     content: "Scope catalogue drag initiation to the transfer handle: fix dragInitiation in TreeDataItemView and move buildPalettePointerProps onPointerDown onto the handle"
-    status: completed
+    status: pending
   - id: i18n
     content: Add localized ui.tree.drag.sort and ui.tree.drag.transfer keys to the schema plus en and de bundles, and give DragHandle a required labelId via ChromeControlHint
-    status: completed
+    status: pending
   - id: wgpu-painter
     content: Update the wgpu tree painter to always paint and hit-test row actions and to append menu-placement actions to the row context menu
-    status: completed
+    status: pending
   - id: os-renderer
     content: Update the OS renderer tree and table mappings for placement and drag roles
-    status: completed
+    status: pending
   - id: plugin-audit
     content: Hand-classify all 15 plugin and framework call sites as row or menu placement, and localize playbook's raw Remove label
-    status: completed
+    status: pending
   - id: tests
     content: Extend the existing vitest and cargo test blocks plus the two Storybook stories, then verify runtime behaviour with [DEBUG] logs
-    status: completed
+    status: pending
 isProject: false
 ---
 

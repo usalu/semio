@@ -6,7 +6,7 @@ todos:
    content: Read repo://goals, associate, and open/reopen the draw technology ticket via repo MCP
    status: completed
  - id: kernel
-   content: "Extend + generalize geometry drawing kernel: add trace (autotrace) + xor/n-ary booleans in engine/rs, expose via flow_module_draw + flow_core WASM, extend geometry-drawing-js bridge"
+   content: "Extend + generalize geometry drawing kernel: add trace (autotrace) + xor/n-ary booleans in engine/rs, expose via flow_extension_draw + flow_core WASM, extend geometry-drawing-js bridge"
    status: completed
  - id: core
    content: "Create draw/core (@semio-tech/draw-core): draw.document/v1 schema, layer union incl. non-destructive boolean & trace nodes, edit ops, tree row IDs, hit-testing, flatten-to-scene, inline tests"

@@ -37,12 +37,12 @@ Each flow module compiles to its own `.wasm` with a standard extension ABI. A JS
 
 ## Architecture decisions
 
-- **Evaluation bridge over compile-time registry.** `flow/core` stops linking `flow_module_*`. Its evaluator dispatches each neuron kind through a JS callback (`(kindId, inputJson) -> outputJson`) routed by the host to the active module WASM. This is synchronous (wasm to JS to wasm), matching the existing synchronous `FlowSession.evaluate()`.
+- **Evaluation bridge over compile-time registry.** `flow/core` stops linking `flow_extension_*`. Its evaluator dispatches each neuron kind through a JS callback (`(kindId, inputJson) -> outputJson`) routed by the host to the active module WASM. This is synchronous (wasm to JS to wasm), matching the existing synchronous `FlowSession.evaluate()`.
 - **Single source of truth per module.** Each module keeps its canonical `register(&mut Registry)`; the new wasm wrapper builds a local `Registry` from it and serves `manifest()` + `evaluate()` from that. No metadata duplication.
 - **Catalogue from host, not core.** Neuron catalogue sections come from aggregated active manifests pushed into `FlowSession`; `flow/core` keeps only the static Inputs/Outputs sections.
 - **Send/Sync avoidance.** `js_sys::Function` is `!Send`, so instead of registering host functions into `neural::Registry` (whose `Function: Send + Sync`), add `Evaluator::evaluate_with(tree, seeds, dispatch)` taking a non-Send closure. The existing registry path delegates to it.
 
-## Manifest schema (`flow.module/v1`, returned by each module's `manifest()`)
+## Manifest schema (`flow.extension/v1`, returned by each module's `manifest()`)
 
 - `id`, `name`, `version`
 - `activationEvents`: e.g. `["onStartup"]`, `["onNeuronKind:math.add"]`
@@ -65,7 +65,7 @@ For each of `flow/modules/{math,text,logic,dictionary}`:
 
 - `Cargo.toml`: change `crate-type` to `["rlib", "cdylib"]`; add `wasm-bindgen`, `serde_json`, and `getrandom` (js feature) gated to wasm; keep `neural_engine` dep. Mirror `[flow/core/Cargo.toml](flow/core/Cargo.toml)` wasm setup.
 - `lib.rs`: add `#[cfg(target_arch = "wasm32")]` region exposing wasm-bindgen functions backed by a `Registry` built from the existing `register()`:
-  - `manifest() -> String` (builds `flow.module/v1` JSON from `registry.catalogue()` plus hand-authored commands/settings/activationEvents for that module)
+  - `manifest() -> String` (builds `flow.extension/v1` JSON from `registry.catalogue()` plus hand-authored commands/settings/activationEvents for that module)
   - `evaluate(kind_id: &str, input_json: &str) -> String` (parse `Dictionary`, dispatch via `registry.get(kind_id)`, serialize result or `{ "error": ... }`)
   - `command(command_id: &str, args_json: &str) -> String` (no-op/log stub returning JSON for v1)
   - `activate()` / `deactivate()` lifecycle stubs (console log)
@@ -77,7 +77,7 @@ For each of `flow/modules/{math,text,logic,dictionary}`:
 
 File: `[flow/core/lib.rs](flow/core/lib.rs)`
 
-- Remove `pub use flow_module_*` (lines 3-6) and the four `register(...)` calls in `build_registry()` (lines 163-170). Delete the neuron half of `build_catalogue()`; keep only Inputs/Outputs sections.
+- Remove `pub use flow_extension_*` (lines 3-6) and the four `register(...)` calls in `build_registry()` (lines 163-170). Delete the neuron half of `build_catalogue()`; keep only Inputs/Outputs sections.
 - `FlowHost`: add fields `eval_bridge: Option<EvalBridge>` and `host_catalogue_json: String`.
   - `evaluate_internal()` (lines 443-457): build tree+seeds, then `Evaluator::evaluate_with(&tree, &seeds, &mut |kind, input| self.eval_bridge dispatch)`. The dispatch serializes `input` to JSON, calls the JS function, parses the returned `Dictionary`.
   - `catalogue_json()` merges `host_catalogue_json` (neuron sections) with the static Inputs/Outputs sections.
@@ -85,7 +85,7 @@ File: `[flow/core/lib.rs](flow/core/lib.rs)`
   - `setEvalBridge(cb: js_sys::Function)` — stored as the dispatch source.
   - `setCatalogueJson(json: &str)` — host-aggregated neuron sections.
   - keep `evaluate()`, `catalogueJson()` signatures.
-- `Cargo.toml`: remove the four `flow_module_*` path deps.
+- `Cargo.toml`: remove the four `flow_extension_*` path deps.
 - Bridge type: a small wasm-only struct holding `js_sys::Function`, called with `(kindId, inputJson)`; non-wasm builds use a no-op so native cargo tests still compile (flow/core tests that rely on math.add move to host-driven react/play tests, or use a test bridge closure via `FlowHost` direct API).
 
 ## 4. flow/react — the extension host
@@ -114,7 +114,7 @@ Files: `[flow/react/script.ts](flow/react/script.ts)`, `[flow/play/script.ts](fl
 
 Files: `[ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts)` (`playgroundRendererResolveAliases`, lines 750-753), `[flow/play/vite.config.ts](flow/play/vite.config.ts)`, `[flow/react/vitest.config.ts](flow/react/vitest.config.ts)`, `[flow/play/vitest.config.ts](flow/play/vitest.config.ts)`
 
-- Add `@flow/module-<name>` to `flow/modules/<name>/pkg/flow_module_<name>.js` for each module.
+- Add `@flow/module-<name>` to `flow/modules/<name>/pkg/flow_extension_<name>.js` for each module.
 
 ## 7. VSCode-like Extensions panel (full extension UX)
 

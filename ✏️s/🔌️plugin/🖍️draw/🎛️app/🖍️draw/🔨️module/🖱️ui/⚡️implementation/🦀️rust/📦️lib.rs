@@ -6,6 +6,8 @@
 //! (real `backwards`, no ad hoc inverse). Every action dispatches through the single typed
 //! `draw_protocol::DrawCommand` channel via `DocumentApp::handle` — mirrors `shooting_ui`'s B1 pilot.
 
+#![feature(linkage)]
+
 use draw::{DrawArtboard, DrawDocument, DrawLayerNode, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPERATIONS, DRAW_DOCUMENT_SCHEMA};
 use draw_engine::{
     create_draw_boolean_layer, create_draw_path_layer, create_draw_trace_layer, create_layer_by_kind, default_draw_document, default_layer_base, draw_io, draw_layer_descendant_leaf_ids, draw_layer_world_bounds, draw_play_boolean_child_row_id,
@@ -26,6 +28,14 @@ use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use store::DocumentPack;
+
+//#region 🔗️StandaloneLinkage
+/// 🪶️ Satisfies the plugin runtime when this web-facing UI crate is linked as its own WASM module.
+#[cfg(target_arch = "wasm32")]
+#[unsafe(no_mangle)]
+#[linkage = "weak"]
+pub extern "C" fn semio_plugin_bundle_installer_link_shim() {}
+//#endregion 🔗️StandaloneLinkage
 
 //#region 🔖️Constants
 const DRAW_PLAY_APP_ID: &str = "draw-play";

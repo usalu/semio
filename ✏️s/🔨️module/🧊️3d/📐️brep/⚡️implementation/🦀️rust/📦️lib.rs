@@ -5695,6 +5695,7 @@ use semio_framework_core::{MeshExporter, MeshImporter};
 
 // #region Helpers
 const TOL: f64 = 1e-6;
+const VOLUME_MEASUREMENT_DEFLECTION: f64 = 0.01;
 
 fn p3(v: Vec3) -> Point3 {
     Point3::new(v[0], v[1], v[2])
@@ -6787,7 +6788,7 @@ impl BrepkitKernel {
         let solids = self.solid_ids_from_handle(shape)?;
         let mut total = 0.0;
         for solid in solids {
-            total += measure::solid_volume(&self.topo, solid, 0.1).map_err(Self::map_err)?;
+            total += measure::solid_volume(&self.topo, solid, VOLUME_MEASUREMENT_DEFLECTION).map_err(Self::map_err)?;
         }
         Ok(total)
     }

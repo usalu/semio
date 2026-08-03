@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./pkg/draw.js"
+    ".": "./pkg/semio_s_app_draw_ui.js"
   }
 }

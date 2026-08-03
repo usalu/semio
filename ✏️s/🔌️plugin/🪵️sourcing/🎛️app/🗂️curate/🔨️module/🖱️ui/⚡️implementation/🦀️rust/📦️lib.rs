@@ -255,7 +255,7 @@ fn build_curated_table(document: &CurateDocument, cfg: &SourcingCurateConfig, la
                     (
                         "actions",
                         TableCell::Buttons {
-                            buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), placement: Some(UiTreeActionPlacement::Menu) }],
+                            buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), placement: Some(UiTreeActionPlacement::Row) }],
                         },
                     ),
                 ],

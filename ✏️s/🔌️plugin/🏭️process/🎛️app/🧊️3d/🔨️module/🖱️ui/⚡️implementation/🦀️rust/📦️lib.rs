@@ -552,7 +552,7 @@ fn build_document_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, label
                     icon_id: if step.enabled { "eye".into() } else { "eye-off".into() },
                     label: Some(labels.enabled.into()),
                     action: process3d_action("setStepEnabled", Some(json!({ "id": step.id, "enabled": !step.enabled }))),
-                    placement: Some(UiTreeActionPlacement::Menu),
+                    placement: Some(UiTreeActionPlacement::Row),
                 },
                 UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: process3d_action("removeStep", Some(json!({ "id": step.id }))), placement: Some(UiTreeActionPlacement::Menu) },
             ]),

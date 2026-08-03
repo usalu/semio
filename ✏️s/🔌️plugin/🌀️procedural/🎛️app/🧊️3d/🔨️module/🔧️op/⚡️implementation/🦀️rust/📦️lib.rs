@@ -394,6 +394,8 @@ pub enum Procedural3dConfigOperation {
     SetActiveUtility { utility_id: String },
     #[dsl(key = "locale")]
     SetLocale { value: String },
+    #[dsl(key = "contributions")]
+    SetContributions { json: String },
 }
 
 impl Operation<Procedural3dConfig> for Procedural3dConfigOperation {
@@ -418,6 +420,10 @@ impl Operation<Procedural3dConfig> for Procedural3dConfigOperation {
             Procedural3dConfigOperation::SetEvalDriver { json } => next.eval_driver_json = json.clone(),
             Procedural3dConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
             Procedural3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            Procedural3dConfigOperation::SetContributions { json } => {
+                next.contributions_json = json.clone();
+                procedural_3d_engine::sync_flow_extension_contributions(json);
+            }
         }
         next
     }

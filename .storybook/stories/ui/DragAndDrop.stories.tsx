@@ -29,12 +29,22 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    labelId: "ui.tree.drag.sort",
+  },
 };
 
 export const Emphasized: Story = {
   args: {
+    labelId: "ui.tree.drag.sort",
     emphasized: true,
+  },
+};
+
+export const Transfer: Story = {
+  args: {
+    labelId: "ui.tree.drag.transfer",
+    iconKind: "move",
   },
 };
 
@@ -69,7 +79,8 @@ const ReorderableList = () => {
           onDrop={() => onDropOn(row)}
           className="flex items-center gap-single rounded-sm border p-single"
         >
-          <DragHandle />
+          <DragHandle labelId="ui.tree.drag.sort" />
+          <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" />
           <DraggableAvatar content={row.slice(0, 2).toUpperCase()} title={row} isSelected={draggedRow === row} />
           <span className="text-sm">{row}</span>
         </div>

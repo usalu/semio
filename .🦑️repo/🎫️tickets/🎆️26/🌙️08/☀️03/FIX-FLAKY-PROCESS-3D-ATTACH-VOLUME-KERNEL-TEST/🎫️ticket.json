@@ -1,0 +1,14 @@
+{
+  "title": "Fix Flaky Process 3D Attach Volume Kernel Test",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Investigate and fix the flaky process3d engine test tests::attach_increases_volume_above_stock. Determine whether the process-wide shared ProcessKernelSession memo cache reuses geometry across tests because its replay key is insufficiently isolated, or whether BrepkitKernel fuse has a real near-boundary precision bug. Implement the root fix with regression coverage and confirm cargo test -p semio-s-app-process-3d-engine --lib succeeds at least 10 consecutive times.",
+  "summary": "Investigated the flaky process3d attach-volume test and disproved the shared memo collision hypothesis: failing runs used the correct fresh stock and attach handles, while repeated volume reads of the same near-boundary fused solid varied at the B-rep measurement deflection of 0.1. Tightened public B-rep volume measurement deflection to 0.01 while leaving the internal boolean probe at 0.1 to avoid CSG performance regressions. Isolated every process replay-volume test with its own ProcessKernelSession and strengthened attach_increases_volume_above_stock to cover 32 fresh kernel sessions. Verification: focused attach regression passed 10 consecutive runs, B-rep volume subset passed 4 of 4, and cargo test -p semio-s-app-process-3d-engine --lib passed 10 consecutive full-suite runs with 14 of 14 tests each.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2423"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪15f5f222b19040989c9aba178a4b6721"
+  ]
+}

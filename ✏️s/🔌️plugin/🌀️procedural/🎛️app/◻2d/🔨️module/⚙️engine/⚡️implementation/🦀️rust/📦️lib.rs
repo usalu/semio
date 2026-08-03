@@ -3,7 +3,7 @@
 use flow_core::dag::DagFixture;
 use flow_core::forms_bridge::apply_generation_values_to_fixture;
 use flow_core::{flow_neuron_kind_infos_json, CameraJson, FlowEvalDriver, FlowFixture, FlowHost};
-use flow_module_draw::render_scene_json;
+use flow_extension_draw::render_scene_json;
 use playbook::{selected_generation, GenerationPlayState};
 use procedural_2d::Procedural2dDocument;
 use serde::{Deserialize, Serialize};

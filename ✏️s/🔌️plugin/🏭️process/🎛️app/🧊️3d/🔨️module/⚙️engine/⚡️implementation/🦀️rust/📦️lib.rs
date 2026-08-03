@@ -578,6 +578,11 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dDoc
 mod tests {
     use super::*;
 
+    fn session_volume(session: &mut ProcessKernelSession, fixture: &Process3dDocument) -> f64 {
+        let handle = replay_process(session, fixture).expect("replayed handle");
+        kernel_3d_engine::block_on(session.kernel.volume(&handle)).expect("replayed volume")
+    }
+
     //#region 🔖️ConfigCoverage
     #[test]
     fn process3d_config_default_matches_the_existing_runtime_defaults() {
@@ -646,9 +651,10 @@ mod tests {
 
     #[test]
     fn drill_reduces_volume_below_stock() {
+        let mut session = ProcessKernelSession::new();
         let mut fixture = Process3dDocument::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-        let stock_volume = processed_volume(&fixture).expect("stock volume");
+        let stock_volume = session_volume(&mut session, &fixture);
         fixture.steps.push(ProcessStep {
             id: "drill-1".into(),
             label: "Drill".into(),
@@ -656,44 +662,49 @@ mod tests {
             origin: None,
             measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose { position: [0.0, 0.0, 0.5], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
         });
-        let drilled_volume = processed_volume(&fixture).expect("drilled volume");
+        let drilled_volume = session_volume(&mut session, &fixture);
         assert!(drilled_volume < stock_volume, "drilled volume {drilled_volume} should be less than stock volume {stock_volume}");
     }
 
     #[test]
     fn attach_increases_volume_above_stock() {
-        let mut fixture = Process3dDocument::default();
-        fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-        let stock_volume = processed_volume(&fixture).expect("stock volume");
-        fixture.steps.push(ProcessStep {
-            id: "attach-1".into(),
-            label: "Attach".into(),
-            enabled: true,
-            origin: None,
-            measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.3 }, pose: Pose { position: [1.0, 0.0, 0.5], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
-        });
-        let attached_volume = processed_volume(&fixture).expect("attached volume");
-        assert!(attached_volume > stock_volume, "attached volume {attached_volume} should exceed stock volume {stock_volume}");
+        for _ in 0..32 {
+            let mut session = ProcessKernelSession::new();
+            let mut fixture = Process3dDocument::default();
+            fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
+            let stock_volume = session_volume(&mut session, &fixture);
+            fixture.steps.push(ProcessStep {
+                id: "attach-1".into(),
+                label: "Attach".into(),
+                enabled: true,
+                origin: None,
+                measure: ProcessMeasure::Attach { component: SolidSpec::Sphere { radius: 0.3 }, pose: Pose { position: [1.0, 0.0, 0.5], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
+            });
+            let attached_volume = session_volume(&mut session, &fixture);
+            assert!(attached_volume > stock_volume, "attached volume {attached_volume} should exceed stock volume {stock_volume}");
+        }
     }
 
     #[test]
     fn disabled_step_is_skipped_on_replay() {
+        let mut session = ProcessKernelSession::new();
         let mut fixture = Process3dDocument::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-        let stock_volume = processed_volume(&fixture).expect("stock volume");
+        let stock_volume = session_volume(&mut session, &fixture);
         fixture.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: false, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose::default() } });
-        let volume_with_disabled_step = processed_volume(&fixture).expect("volume");
+        let volume_with_disabled_step = session_volume(&mut session, &fixture);
         assert!((volume_with_disabled_step - stock_volume).abs() < 1e-6);
     }
 
     #[test]
     fn cursor_zero_yields_stock_volume() {
+        let mut session = ProcessKernelSession::new();
         let mut fixture = Process3dDocument::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
-        let stock_volume = processed_volume(&fixture).expect("stock volume");
+        let stock_volume = session_volume(&mut session, &fixture);
         fixture.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.2, depth: 1.0, pose: Pose::default() } });
         fixture.resolved_up_to = Some(0);
-        let volume_at_cursor_zero = processed_volume(&fixture).expect("volume");
+        let volume_at_cursor_zero = session_volume(&mut session, &fixture);
         assert!((volume_at_cursor_zero - stock_volume).abs() < 1e-6);
     }
 
@@ -729,12 +740,12 @@ mod tests {
 
     #[test]
     fn kernel_replay_memoizes_prefixes_across_cursor_scrub() {
+        let mut session = ProcessKernelSession::new();
         let mut fixture = Process3dDocument::default();
         fixture.stock.solid = SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 };
         fixture.steps.push(ProcessStep { id: "drill-1".into(), label: "Drill".into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.1, depth: 1.0, pose: Pose::default() } });
         fixture.resolved_up_to = Some(1);
-        processed_volume(&fixture).expect("volume at cursor 1");
-        let session = process_kernel_session().lock().expect("kernel session lock");
+        session_volume(&mut session, &fixture);
         assert!(session.memo.len() >= 2, "expected stock + drilled prefixes memoized, got {}", session.memo.len());
     }
 }

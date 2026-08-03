@@ -11,7 +11,7 @@ workspace = true
 wasm-opt = false
 
 [lib]
-crate-type = ["rlib", "cdylib"]
+crate-type = ["rlib"]
 path = "../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]

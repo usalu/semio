@@ -1642,7 +1642,7 @@ const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle/plugin/
  * these crates are neutral shared domain/library crates that also happen to ship their own minimal
  * playground app (documented via each crate's `AGENTS.md`) — depending on them is not app-to-app coupling.
  */
-const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow_module_draw", "flow_module_brep", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
+const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow_extension_draw", "flow_extension_brep", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
 
 /**
  * 🛡️Path prefixes (repo-relative) always allowed as plugin/rs dependency targets: generic shared

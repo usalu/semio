@@ -48,7 +48,7 @@ const PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM: &str = "procedural.play.generate-fo
 const PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW: &str = "procedural.play.generate-preview";
 const PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural.play.generate-preview";
 
-const WIDGET_CATALOG: &[(&str, &str)] = &[("neuron", "cpu"), ("inputSlider", "sliders-horizontal"), ("inputNote", "file-text"), ("outputPreview", "preview")];
+const WIDGET_CATALOG: &[(&str, &str)] = &[];
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
@@ -257,12 +257,26 @@ fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String], labe
     PanelTreeBuilder::new("procedural-play-document").section("procedural-play-document.widgets", Some(labels.widgets.into()), true, items).selected(selected_node_ids.iter().map(|id| format!("procedural-widget:{id}")).collect()).build()
 }
 
-fn build_catalogue_tree(labels: &Procedural3dLabels) -> UiNode {
-    let items: Vec<UiTreeItemNode> = WIDGET_CATALOG
+fn build_catalogue_tree(_labels: &Procedural3dLabels) -> UiNode {
+    let sections = flow_core::flow_palette_catalogue_sections();
+    let items: Vec<UiTreeItemNode> = sections
         .iter()
-        .map(|(kind, icon)| tree_item_with_icon(format!("procedural-play-catalogue.{kind}"), Label::data(procedural3d_catalog_label(*kind, labels)), Some(icon), procedural_action("addWidget", Some(json!({ "kind": kind })))))
+        .flat_map(|section| section.items.iter().map(|item| {
+            let action_kind = if item.kind == "neuron" {
+                format!("neuron|{}", item.neuron_kind.as_deref().unwrap_or("math.add"))
+            } else {
+                item.kind.clone()
+            };
+            let icon = item.icon.strip_prefix("emoji:").unwrap_or("box");
+            tree_item_with_icon(
+                format!("procedural-play-catalogue.{}", item.neuron_kind.as_deref().unwrap_or(&item.kind)),
+                Label::data(item.name.clone()),
+                Some(icon),
+                procedural_action("addWidget", Some(json!({ "kind": action_kind }))),
+            )
+        }))
         .collect();
-    PanelTreeBuilder::new("procedural-play-catalogue").section("procedural-play-catalogue.widgets", Some(labels.widgets.into()), true, items).build()
+    PanelTreeBuilder::new("procedural-play-catalogue").section("procedural-play-catalogue.widgets", Some("Elements".into()), true, items).build()
 }
 
 fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
@@ -319,8 +333,8 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], lab
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
-fn render_generate_generations(generation: &GenerationPlayState) -> UiNode {
-    render_generations_tree(PROCEDURAL_3D_PLAY_APP_ID, "procedural3d-play-generate", &generation.generations, generation.selected_generation_id.as_deref())
+fn render_generate_generations(generation: &GenerationPlayState, locale: Locale, terminology: Terminology) -> UiNode {
+    render_generations_tree(PROCEDURAL_3D_PLAY_APP_ID, "procedural3d-play-generate", &generation.generations, generation.selected_generation_id.as_deref(), locale, terminology)
 }
 
 fn render_generate_form(fixture: &FlowFixture, generation: &GenerationPlayState, labels: &Procedural3dLabels) -> UiNode {
@@ -468,6 +482,7 @@ impl DocumentApp for Procedural3dPlayApp {
             Procedural3dCommand::SelectGeneration { .. } => "selectGeneration",
             Procedural3dCommand::SetActiveUtility { .. } => SET_ACTIVE_UTILITY_ACTION_ID,
             Procedural3dCommand::SetLocale { .. } => "setLocale",
+            Procedural3dCommand::SetContributions { .. } => "setContributions",
             Procedural3dCommand::FlowEvalTick => "flowEvalTick",
         }
     }
@@ -552,9 +567,14 @@ impl DocumentApp for Procedural3dPlayApp {
                 }
             }
             Procedural3dCommand::AddWidget { kind, x, y } => {
-                let descriptor = match kind.as_str() {
-                    "neuron" => json!({ "kind": "neuron", "neuronKind": "math.add" }).to_string(),
-                    other => json!({ "kind": other }).to_string(),
+                let descriptor = if let Some((base, neuron)) = kind.split_once('|') {
+                    if base == "neuron" {
+                        json!({ "kind": "neuron", "neuronKind": neuron }).to_string()
+                    } else {
+                        json!({ "kind": kind }).to_string()
+                    }
+                } else {
+                    json!({ "kind": kind }).to_string()
                 };
                 let x = x.unwrap_or(120.0);
                 let y = y.unwrap_or(120.0);
@@ -688,6 +708,7 @@ impl DocumentApp for Procedural3dPlayApp {
             // 🧰️ Host-owned active-utility switch — clear in-progress hover scratch, never emit document operations.
             Procedural3dCommand::SetActiveUtility { utility_id } => Emit::config(vec![Procedural3dConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, Procedural3dConfigOperation::SetHover { node_id: None }]),
             Procedural3dCommand::SetLocale { value } => Emit::config(vec![Procedural3dConfigOperation::SetLocale { value: value.clone() }]),
+            Procedural3dCommand::SetContributions { json } => Emit::config(vec![Procedural3dConfigOperation::SetContributions { json: json.clone() }]),
 
             // 🧵️ One budgeted evaluation step (see `FlowEvalDriver::tick`), off the main thread —
             // the plugin worker runs this, never the renderer. Chains itself via `HostEffect::DispatchAction`
@@ -727,6 +748,7 @@ impl DocumentApp for Procedural3dPlayApp {
         let active_utility = config.active_utility_id.as_str();
         match body_key {
             PROCEDURAL_3D_PLAY_BODY_MAIN => {
+                procedural_3d_engine::sync_flow_extension_contributions(&cfg.projection.contributions_json);
                 let host = host_from_fixture(fixture);
                 let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
                 let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
@@ -739,6 +761,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     NodeGraphScene {
                         editable: Some(true),
                         operators: flow_extras.operators,
+                        catalogue_json: flow_extras.catalogue_json,
                         capabilities_json: flow_extras.capabilities_json,
                         lod_json: flow_extras.lod_json,
                         fixture_json: flow_extras.fixture_json,
@@ -765,7 +788,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     },
                 )
             }
-            PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&generation_view(doc.projection, config)),
+            PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&generation_view(doc.projection, config), view_state.locale, view_state.terminology),
             PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, &generation_view(doc.projection, config), labels),
             PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(fixture, &generation_view(doc.projection, config), config, labels, active_utility),
             PROCEDURAL_3D_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_node_ids, labels),

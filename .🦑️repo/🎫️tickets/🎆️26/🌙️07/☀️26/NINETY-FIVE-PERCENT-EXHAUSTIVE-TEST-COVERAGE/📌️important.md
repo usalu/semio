@@ -242,7 +242,7 @@ agents + 15 independent verify agents completed, 0 errors, all reported tests pa
 **Wave 2 launched** (`wf_fb99bd5c-33a`) immediately after, same pattern, next 15 items by uncovered-line count:
 `animate_core`, `framework_surface_tiled_map`, `animate-plugin`, `framework_surface_paint` (4 flagged as
 showing a suspicious 0% in the worklist — told to verify actual test presence, not assume a blank slate),
-`lowpoly_core`, `mathematical_graph`, `trinity_rewrite`, `vcs`, `fem-plugin`, `layout_rs`, `flow_module_draw`,
+`lowpoly_core`, `mathematical_graph`, `trinity_rewrite`, `vcs`, `fem-plugin`, `layout_rs`, `flow_extension_draw`,
 `compose_query`, `framework_surface_terrain`, `kernel_2d_rs`, `norm_iso_16757`.
 
 ---

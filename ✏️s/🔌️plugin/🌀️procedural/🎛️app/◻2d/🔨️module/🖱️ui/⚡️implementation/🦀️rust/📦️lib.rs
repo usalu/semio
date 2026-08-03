@@ -267,8 +267,8 @@ fn render_preview_canvas(play: &Procedural2dPlayView) -> UiNode {
     build_canvas_2d_scene(PROCEDURAL2D_PLAY_SURFACE_PREVIEW, PROCEDURAL2D_PLAY_APP_ID, Canvas2dScene { camera_x: play.config.camera.x, camera_y: play.config.camera.y, zoom: play.config.camera.zoom, layers_json: eval_preview_layers(play, true) })
 }
 
-fn render_generate_generations(play: &Procedural2dPlayView) -> UiNode {
-    render_generations_tree(PROCEDURAL2D_PLAY_APP_ID, "procedural2d-play-generate", &play.generation.generations, play.generation.selected_generation_id.as_deref())
+fn render_generate_generations(play: &Procedural2dPlayView, locale: Locale, terminology: Terminology) -> UiNode {
+    render_generations_tree(PROCEDURAL2D_PLAY_APP_ID, "procedural2d-play-generate", &play.generation.generations, play.generation.selected_generation_id.as_deref(), locale, terminology)
 }
 
 fn render_generate_form(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
@@ -525,7 +525,7 @@ impl DocumentApp for Procedural2dPlayApp {
         match body_key {
             PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play, labels),
             PROCEDURAL2D_PLAY_BODY_PREVIEW => render_preview_canvas(&play),
-            PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play),
+            PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play, view_state.locale, view_state.terminology),
             PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => render_generate_form(&play, labels),
             PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&play, labels),
             PROCEDURAL2D_PLAY_BODY_DOCUMENT => build_document_tree(&play, labels),

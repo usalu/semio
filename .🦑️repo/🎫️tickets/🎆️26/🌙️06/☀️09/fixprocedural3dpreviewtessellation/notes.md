@@ -7,7 +7,7 @@ Flow graph evaluation moved to in-WASM `flow_core` registry. Geometry handles we
 ## Fix
 
 1. Restored `session.setEvalBridge(createFlowEvalBridge(extensionHost))` in `FlowCanvas` so brep ops run through the same `@semio-tech/flow-module-brep` WASM used for tessellation.
-2. Added shared `tessellate_geometry_json` / `dispose_geometry` on `flow_module_brep` and wasm exports on `flow_core` for a future switch back to in-WASM eval without eval bridge.
+2. Added shared `tessellate_geometry_json` / `dispose_geometry` on `flow_extension_brep` and wasm exports on `flow_core` for a future switch back to in-WASM eval without eval bridge.
 
 ## Verify
 

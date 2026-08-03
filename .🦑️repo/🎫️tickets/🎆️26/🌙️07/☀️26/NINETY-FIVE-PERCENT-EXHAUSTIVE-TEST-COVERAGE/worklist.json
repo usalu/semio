@@ -322,12 +322,12 @@
       "attempts": 0
     },
     {
-      "id": "flow_module_draw___Users_ueli_Documents_semio_flow_module_draw_rs_lib_rs",
+      "id": "flow_extension_draw___Users_ueli_Documents_semio_flow_extension_draw_rs_lib_rs",
       "lang": "rust",
       "sourceFile": "/Users/ueli/Documents/semio/flow/module/draw/rs/lib.rs",
-      "groupKey": "flow_module_draw",
+      "groupKey": "flow_extension_draw",
       "scriptCwd": "flow/module/draw",
-      "cargoPackage": "flow_module_draw",
+      "cargoPackage": "flow_extension_draw",
       "totalLines": 673,
       "coveredLines": 401,
       "pct": 59.58395245170877,

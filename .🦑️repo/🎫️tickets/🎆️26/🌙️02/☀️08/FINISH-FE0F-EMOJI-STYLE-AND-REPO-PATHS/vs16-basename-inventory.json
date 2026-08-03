@@ -1926,7 +1926,7 @@
       "name": "🏗️bim",
       "plain": "🏗️bim",
       "count": 1,
-      "example": "./🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🏗️bim",
+      "example": "./🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🏗️bim",
       "hex": "f09f8f97efb88f62696d",
       "plain_hex": "f09f8f9762696d"
     },
@@ -1934,7 +1934,7 @@
       "name": "🕸️wasm",
       "plain": "🕸️wasm",
       "count": 1,
-      "example": "./🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🕸️wasm",
+      "example": "./🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🕸️wasm",
       "hex": "f09f95b8efb88f7761736d",
       "plain_hex": "f09f95b87761736d"
     },

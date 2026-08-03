@@ -549,7 +549,7 @@ pub mod generation_forms {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Map, Value};
     use ui_wgpu::{
-        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeActionPlacement,
+        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeActionPlacement,
         UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
 
@@ -745,16 +745,34 @@ pub mod generation_forms {
         ActionDescriptor { controller_id: controller_id.into(), action: action.into(), args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)) }
     }
 
-    pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, generations: &[FormGeneration], selected_id: Option<&str>) -> UiNode {
+    
+    /// 🗣️ Chrome labels for the generations tree — localized at the call site via {@link Locale}/{@link Terminology}.
+    fn generation_tree_label(key: &str, locale: Locale, terminology: Terminology) -> Label {
+        let localized = LocalizedLabel::from_fn(|_terminology, locale| match (key, locale) {
+            ("remove", Locale::De) => "Entfernen".into(),
+            ("remove", _) => "Remove".into(),
+            ("rename", Locale::De) => "Umbenennen".into(),
+            ("rename", _) => "Rename".into(),
+            ("generations", Locale::De) => "Generierungen".into(),
+            ("generations", _) => "Generations".into(),
+            ("add", Locale::De) => "Generierung hinzufügen".into(),
+            ("add", _) => "Add Generation".into(),
+            ("empty", Locale::De) => "(keine Generierungen)".into(),
+            ("empty", _) => "(no generations)".into(),
+            ("actions", Locale::De) => "Aktionen".into(),
+            ("actions", _) => "Actions".into(),
+            _ => key.into(),
+        });
+        Label::data(localized.resolve(terminology, locale).to_string())
+    }
+
+pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, generations: &[FormGeneration], selected_id: Option<&str>, locale: Locale, terminology: Terminology) -> UiNode {
         let items: Vec<UiTreeItemNode> = generations
             .iter()
             .map(|generation| {
-                // 🚧️ Chrome literals ("Remove"/"Rename"/etc below) — genuinely static app copy, not yet
-                // routed through app_labels! (this crate predates the two-axis macro); flagged as a
-                // follow-up rather than fixed in this pass. `Label::data` unblocks compilation.
                 let mut actions = vec![UiTreeItemAction {
                     icon_id: "trash-2".into(),
-                    label: Some(Label::data("Remove")),
+                    label: Some(generation_tree_label("remove", locale, terminology)),
                     action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))),
                     placement: Some(UiTreeActionPlacement::Menu),
                 }];
@@ -762,7 +780,7 @@ pub mod generation_forms {
                     0,
                     UiTreeItemAction {
                         icon_id: "pencil".into(),
-                        label: Some(Label::data("Rename")),
+                        label: Some(generation_tree_label("rename", locale, terminology)),
                         action: generation_action(controller_id, "renameGeneration", Some(json!({ "id": generation.id, "name": format!("{} copy", generation.name) }))),
                         placement: Some(UiTreeActionPlacement::Menu),
                     },
@@ -789,12 +807,12 @@ pub mod generation_forms {
             .collect();
         let mut sections = vec![UiTreeSectionNode {
             id: format!("{surface_prefix}.generations"),
-            label: Some(Label::data("Generations")),
+            label: Some(generation_tree_label("generations", locale, terminology)),
             default_open: Some(true),
             items: if items.is_empty() {
                 vec![UiTreeItemNode {
                     id: format!("{surface_prefix}.generations.empty"),
-                    label: Label::data("(no generations)"),
+                    label: generation_tree_label("empty", locale, terminology),
                     description: None,
                     icon_id: None,
                     presence: UiPresence::default(),
@@ -817,11 +835,11 @@ pub mod generation_forms {
         }];
         sections.push(UiTreeSectionNode {
             id: format!("{surface_prefix}.actions"),
-            label: Some(Label::data("Actions")),
+            label: Some(generation_tree_label("actions", locale, terminology)),
             default_open: Some(true),
             items: vec![UiTreeItemNode {
                 id: format!("{surface_prefix}.add-generation"),
-                label: Label::data("Add Generation"),
+                label: generation_tree_label("add", locale, terminology),
                 description: None,
                 icon_id: Some("plus".into()),
                 presence: UiPresence::default(),
@@ -1064,7 +1082,7 @@ pub mod generation_forms {
 
         #[test]
         fn render_generations_tree_contains_add_action() {
-            let json = serde_json::to_string(&render_generations_tree("flow-play", "flow-generate", &[], None)).unwrap();
+            let json = serde_json::to_string(&render_generations_tree("flow-play", "flow-generate", &[], None, Locale::En, Terminology::Native)).unwrap();
             assert!(json.contains("addGeneration"));
         }
     }

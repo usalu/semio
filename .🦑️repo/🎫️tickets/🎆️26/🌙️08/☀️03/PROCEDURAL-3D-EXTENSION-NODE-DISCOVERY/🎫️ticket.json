@@ -1,0 +1,9 @@
+{
+  "title": "Procedural 3D Extension Node Discovery",
+  "emoji": "🔦",
+  "status": "open",
+  "description": "Fix procedural 3D double-click spotlight to discover extension nodes; runtime-installable flow extensions with Contribution::FlowExtension and host-mediated eval.",
+  "summary": "",
+  "goal": "🎯️r2602",
+  "sessions": []
+}

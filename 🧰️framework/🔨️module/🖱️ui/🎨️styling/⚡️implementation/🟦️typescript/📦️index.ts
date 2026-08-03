@@ -926,7 +926,10 @@ export function builtinUiThemes(): readonly UiTheme[] {
 //#region 🔑️ActiveTheme
 let _activeUiTheme: UiTheme | undefined;
 const _activeUiThemeSubscribers = new Set<(theme: UiTheme) => void>();
-const _appliedThemeCssProps = new Set<string>();
+/** 🐚️ Per-root applied CSS var names — lets N co-mounted shells each carry their own theme's tokens
+ * without clobbering each other's `<div>` inline overrides (only `document.documentElement` is also
+ * "the page", for the single page-owning shell / `setActiveUiTheme` callers). */
+const _appliedThemeCssPropsByRoot = new Map<HTMLElement, Set<string>>();
 
 /** @emoji 🎨️ The currently active theme (defaults to semio before any theme is set). */
 export function activeUiTheme(): UiTheme {
@@ -939,46 +942,82 @@ export function subscribeActiveUiTheme(callback: (theme: UiTheme) => void): () =
   return () => _activeUiThemeSubscribers.delete(callback);
 }
 
-function setCssVar(root: HTMLElement, name: string, value: string): void {
+function setCssVar(root: HTMLElement, appliedNames: Set<string>, name: string, value: string): void {
   root.style.setProperty(name, value);
-  _appliedThemeCssProps.add(name);
+  appliedNames.add(name);
 }
 
-/** @emoji 🎨️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline `documentElement` CSS var overrides, clearing any previous overrides first. Applied unconditionally (even for a pristine semio theme, whose values equal the generated CSS defaults) so a semio-based *draft* with edits — which still carries `id: "semio"` until saved — is never mistaken for the untouched default. */
-export function applyUiThemeToDocument(theme: UiTheme): void {
-  if (typeof document === "undefined") {
-    return;
+/** @emoji 🎨️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline CSS var overrides on
+ * `root`, clearing any previous overrides *this function* applied to that same root first. Applied
+ * unconditionally (even for a pristine semio theme, whose values equal the generated CSS defaults) so a
+ * semio-based *draft* with edits — which still carries `id: "semio"` until saved — is never mistaken for
+ * the untouched default.
+ *
+ * Bounded scope: only the DOM chrome tokens below are per-root. `activeUiTheme().icons` (render-time icon
+ * defaults) and the `resolveColorHex`/`resolveBackgroundColorHex` canvas-paint caches stay page-level —
+ * they key off `currentStylingAppearanceName()` with no root, so a co-mounted shell's own theme correctly
+ * repaints its DOM chrome (CSS vars inherit from its own root) while any canvas/GPU paint that resolves a
+ * hex value still follows whichever theme was applied last, page-wide. */
+export function applyUiThemeToRoot(root: HTMLElement, theme: UiTheme): void {
+  let appliedNames = _appliedThemeCssPropsByRoot.get(root);
+  if (!appliedNames) {
+    appliedNames = new Set();
+    _appliedThemeCssPropsByRoot.set(root, appliedNames);
   }
-  const root = document.documentElement;
-  for (const name of _appliedThemeCssProps) {
+  for (const name of appliedNames) {
     root.style.removeProperty(name);
   }
-  _appliedThemeCssProps.clear();
+  appliedNames.clear();
   root.dataset.uiTheme = theme.id;
   for (const [key, hex] of Object.entries(theme.colors)) {
-    setCssVar(root, `--color-${key.replaceAll("_", "-")}`, hex);
+    setCssVar(root, appliedNames, `--color-${key.replaceAll("_", "-")}`, hex);
   }
   for (const [key, value] of Object.entries(theme.spacing)) {
-    setCssVar(root, `--spacing-${key.replaceAll("_", "-")}`, value);
+    setCssVar(root, appliedNames, `--spacing-${key.replaceAll("_", "-")}`, value);
   }
-  if (theme.fontStacks.sans) setCssVar(root, "--font-sans", theme.fontStacks.sans);
-  if (theme.fontStacks.serif) setCssVar(root, "--font-serif", theme.fontStacks.serif);
-  if (theme.fontStacks.mono) setCssVar(root, "--font-mono", theme.fontStacks.mono);
+  if (theme.fontStacks.sans) setCssVar(root, appliedNames, "--font-sans", theme.fontStacks.sans);
+  if (theme.fontStacks.serif) setCssVar(root, appliedNames, "--font-serif", theme.fontStacks.serif);
+  if (theme.fontStacks.mono) setCssVar(root, appliedNames, "--font-mono", theme.fontStacks.mono);
   const hairline = theme.strokes.chromeBorderHairline;
-  if (typeof hairline === "number") setCssVar(root, "--stroke-hairline", `${hairline}px`);
+  if (typeof hairline === "number") setCssVar(root, appliedNames, "--stroke-hairline", `${hairline}px`);
   const chrome = theme.metrics.chrome;
   if (chrome) {
-    if (typeof chrome.glassSaturate === "number") setCssVar(root, "--glass-saturate", `${chrome.glassSaturate}`);
-    if (typeof chrome.shadeStepPercent === "number") setCssVar(root, "--level-shade-step", `${chrome.shadeStepPercent}%`);
-    if (typeof chrome.elementStepPercent === "number") setCssVar(root, "--element-shade-step", `${chrome.elementStepPercent}%`);
-    if (typeof chrome.hoverStepPercent === "number") setCssVar(root, "--hover-shade-step", `${chrome.hoverStepPercent}%`);
-    if (typeof chrome.glassAlphaStep === "number") setCssVar(root, "--glass-alpha-step", `${chrome.glassAlphaStep}`);
-    if (typeof chrome.glassBlurStepPx === "number") setCssVar(root, "--glass-blur-step", `${chrome.glassBlurStepPx / 16}rem`);
+    if (typeof chrome.glassSaturate === "number") setCssVar(root, appliedNames, "--glass-saturate", `${chrome.glassSaturate}`);
+    if (typeof chrome.shadeStepPercent === "number") setCssVar(root, appliedNames, "--level-shade-step", `${chrome.shadeStepPercent}%`);
+    if (typeof chrome.elementStepPercent === "number") setCssVar(root, appliedNames, "--element-shade-step", `${chrome.elementStepPercent}%`);
+    if (typeof chrome.hoverStepPercent === "number") setCssVar(root, appliedNames, "--hover-shade-step", `${chrome.hoverStepPercent}%`);
+    if (typeof chrome.glassAlphaStep === "number") setCssVar(root, appliedNames, "--glass-alpha-step", `${chrome.glassAlphaStep}`);
+    if (typeof chrome.glassBlurStepPx === "number") setCssVar(root, appliedNames, "--glass-blur-step", `${chrome.glassBlurStepPx / 16}rem`);
   }
   clearColorResolveCache();
 }
 
-/** @emoji 🎨️ Sets the active theme, applies it to the document, and notifies subscribers. */
+/** @emoji 🎨️ Removes every CSS var {@link applyUiThemeToRoot} applied to `root` and forgets its registry
+ * entry — call on a shell's unmount so a later, unrelated element reused at the same DOM position never
+ * inherits a stale theme's inline overrides. */
+export function clearUiThemeFromRoot(root: HTMLElement): void {
+  const appliedNames = _appliedThemeCssPropsByRoot.get(root);
+  if (!appliedNames) return;
+  for (const name of appliedNames) {
+    root.style.removeProperty(name);
+  }
+  delete root.dataset.uiTheme;
+  _appliedThemeCssPropsByRoot.delete(root);
+}
+
+/** @emoji 🎨️ Applies a theme's colors/spacing/fonts/strokes/glass metrics as inline `documentElement` CSS
+ * var overrides — the page-owning case of {@link applyUiThemeToRoot}. */
+export function applyUiThemeToDocument(theme: UiTheme): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+  applyUiThemeToRoot(document.documentElement, theme);
+}
+
+/** @emoji 🎨️ Sets the *page-global* active theme, applies it to `document.documentElement`, and notifies
+ * subscribers — for the single page-owning shell (`ShellScope.ownsPage`) or a standalone (non-shell) host.
+ * A co-mounted, non-page-owning shell must call {@link applyUiThemeToRoot} on its own root instead, or it
+ * would fight every other mounted shell over the same document-wide tokens. */
 export function setActiveUiTheme(theme: UiTheme): void {
   _activeUiTheme = theme;
   applyUiThemeToDocument(theme);
@@ -995,12 +1034,11 @@ if (import.meta.vitest) {
   afterEach(() => {
     _activeUiTheme = undefined;
     if (typeof document !== "undefined") {
-      for (const name of [..._appliedThemeCssProps]) {
-        document.documentElement.style.removeProperty(name);
-      }
-      delete document.documentElement.dataset.uiTheme;
+      clearUiThemeFromRoot(document.documentElement);
     }
-    _appliedThemeCssProps.clear();
+    for (const root of [..._appliedThemeCssPropsByRoot.keys()]) {
+      clearUiThemeFromRoot(root);
+    }
   });
 
   describe("theme registry", () => {
@@ -1049,6 +1087,25 @@ if (import.meta.vitest) {
       for (const deleted of ["--glass-panel-blur", "--glass-panel-alpha", "--glass-menu-alpha", "--glass-window-options-blur", "--glass-window-options-alpha"]) {
         expect(root.style.getPropertyValue(deleted)).toBe("");
       }
+    });
+
+    it("applyUiThemeToRoot scopes tokens per root — two co-mounted shells never clobber each other", () => {
+      const mono = builtinUiThemes().find((t) => t.id === "mono");
+      if (!mono) throw new Error("mono premade not discovered by builtinUiThemes()");
+      const shellA = document.createElement("div");
+      const shellB = document.createElement("div");
+      applyUiThemeToRoot(shellA, semioTheme());
+      applyUiThemeToRoot(shellB, mono);
+      expect(shellA.dataset.uiTheme).toBe("semio");
+      expect(shellB.dataset.uiTheme).toBe("mono");
+      expect(shellA.style.getPropertyValue("--color-primary")).not.toBe("");
+      expect(shellA.style.getPropertyValue("--color-primary")).not.toBe(shellB.style.getPropertyValue("--color-primary"));
+      expect(document.documentElement.dataset.uiTheme).toBeUndefined();
+      clearUiThemeFromRoot(shellA);
+      expect(shellA.dataset.uiTheme).toBeUndefined();
+      expect(shellA.style.getPropertyValue("--color-primary")).toBe("");
+      expect(shellB.dataset.uiTheme).toBe("mono");
+      expect(shellB.style.getPropertyValue("--color-primary")).not.toBe("");
     });
   });
 }

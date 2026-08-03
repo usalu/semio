@@ -10,7 +10,7 @@ use semio_framework_plugin::{
     world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended,
     world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, App, AppIo, AppLabels, ArtifactKindSpec, ConfigView, DialogDefinition, DocumentApp, DocumentView, Emit,
     IconName, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LabelText, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPortDirection,
-    MediaPortSpec, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PortMultiplicity, SelectionSet, SurfaceKind, Terminology, ToolRef, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode,
+    MediaPortSpec, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PortMultiplicity, SelectionSet, SurfaceKind, Terminology, ToolRef, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig,
     WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -2473,13 +2473,13 @@ fn puzzle3d_hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabel
             icon_id: if hidden { "eye-off".into() } else { "eye".into() },
             label: Some(if hidden { labels.show.into() } else { labels.hide.into() }),
             action: puzzle3d_action("setSelectionFlag", Some(flag_args("hidden"))),
-            placement: None,
+            placement: Some(UiTreeActionPlacement::Row),
         },
         UiTreeItemAction {
             icon_id: if locked { "lock".into() } else { "lock-open".into() },
             label: Some(if locked { labels.unlock.into() } else { labels.lock.into() }),
             action: puzzle3d_action("setSelectionFlag", Some(flag_args("locked"))),
-            placement: None,
+            placement: Some(UiTreeActionPlacement::Row),
         },
     ]
 }

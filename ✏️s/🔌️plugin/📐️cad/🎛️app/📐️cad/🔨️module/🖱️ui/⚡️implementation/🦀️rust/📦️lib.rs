@@ -920,13 +920,13 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
             icon_id: if object.visible { "eye-off" } else { "eye" }.into(),
             label: Some(if object.visible { labels.hide } else { labels.show }.into()),
             action: cad_action("patchObject", Some(json!({ "objectId": object.id, "field": "hidden", "value": object.visible }))),
-            placement: Some(UiTreeActionPlacement::Menu),
+            placement: Some(UiTreeActionPlacement::Row),
         },
         UiTreeItemAction {
             icon_id: if object.locked { "unlock" } else { "lock" }.into(),
             label: Some(if object.locked { labels.unlock } else { labels.lock }.into()),
             action: cad_action("patchObject", Some(json!({ "objectId": object.id, "field": "locked", "value": !object.locked }))),
-            placement: Some(UiTreeActionPlacement::Menu),
+            placement: Some(UiTreeActionPlacement::Row),
         },
         UiTreeItemAction { icon_id: "copy".into(), label: Some(labels.duplicate.into()), action: cad_action("duplicateObject", Some(json!({ "objectId": object.id }))), placement: Some(UiTreeActionPlacement::Menu) },
         UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.delete.into()), action: cad_action("deleteObject", Some(json!({ "objectId": object.id }))), placement: Some(UiTreeActionPlacement::Menu) },
@@ -962,7 +962,7 @@ fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labe
                     "value": !reference.hidden,
                 })),
             ),
-            placement: Some(UiTreeActionPlacement::Menu),
+            placement: Some(UiTreeActionPlacement::Row),
         },
         UiTreeItemAction {
             icon_id: if reference.locked { "unlock" } else { "lock" }.into(),
@@ -976,7 +976,7 @@ fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labe
                     "value": !reference.locked,
                 })),
             ),
-            placement: Some(UiTreeActionPlacement::Menu),
+            placement: Some(UiTreeActionPlacement::Row),
         },
     ]);
     item

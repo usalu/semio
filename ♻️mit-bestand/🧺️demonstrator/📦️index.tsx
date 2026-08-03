@@ -13,7 +13,9 @@ import {
   readStoredUiChromeAppearance,
   readStoredUiChromeLayout,
   readStoredUiDriver,
+  UI_MOBILE_MEDIA_QUERY,
   useElementsSurfaceChrome,
+  useMediaQuery,
 } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework-core";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
@@ -29,6 +31,9 @@ bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(demonstrator
 // 🇩🇪️ The whole demonstrator is German-locked (see 🟦️brand.ts) — resolve synchronously before the
 // first render so the landing page's own chrome (Skip/Back/Next/Done) never flashes English.
 initUiLocaleSync(DEMONSTRATOR_LOCALE);
+
+/** @emoji 📱️ Touch-first viewports use the vertical snap list even when wider than {@link UI_MOBILE_MEDIA_QUERY}. */
+const DEMONSTRATOR_TOUCH_LIST_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
 
 //#region 🎪️DemonstratorGridGeometry
 /** @emoji 🔢️ Columns and rows of the demonstrator preview grid; the strip spans `columns * 100vw` by `rows * 100vh`. */
@@ -114,6 +119,17 @@ function demonstratorTintSegmentsPx(revealRect: RevealRectPx | null): readonly T
 }
 //#endregion 🎪️DemonstratorGridGeometry
 
+//#region 📱️DemonstratorMobileList
+/** @emoji 📱️ How far past a section's snap point the veil needs to reach full tint. */
+const DEMONSTRATOR_LIST_VEIL_RAMP = 0.35;
+
+/** @emoji 🌫️ Veil alpha for one section: transparent while settled, opaque once a neighbour takes over. */
+function demonstratorListVeilOpacity(distanceInSections: number): number {
+  const t = Math.min(1, Math.abs(distanceInSections) / DEMONSTRATOR_LIST_VEIL_RAMP);
+  return t * t * (3 - 2 * t);
+}
+//#endregion 📱️DemonstratorMobileList
+
 //#region 🎪️DemonstratorPaneBoot
 /** @emoji 🐢️ `requestIdleCallback` isn't universal (Safari); falls back to a short timeout so the warm-boot
  * queue still staggers instead of booting every pane synchronously back-to-back. */
@@ -130,10 +146,14 @@ function scheduleIdle(callback: () => void, timeoutMs: number): () => void {
 /** @emoji 🐢️ Boots panes one at a time (hash-target pane first, if any) instead of all six simultaneously —
  * six live WASM plugin boots at once would make the very first paint of the page janky. `promote` lets a
  * hover/focus jump a not-yet-booted pane to the front, since the user is about to look at it right now. */
-function useSequentialPaneBoot(initialFocusId: string | null): { readonly bootedIds: ReadonlySet<string>; readonly promote: (id: string) => void } {
+function useSequentialPaneBoot(
+  initialFocusId: string | null,
+  options?: { readonly skipIdleQueue?: boolean },
+): { readonly bootedIds: ReadonlySet<string>; readonly promote: (id: string) => void } {
   const [bootedIds, setBootedIds] = useState<ReadonlySet<string>>(() => new Set(initialFocusId ? [initialFocusId] : []));
   const queueRef = useRef<string[]>(DEMONSTRATOR_PANES.map((pane) => pane.id).filter((id) => id !== initialFocusId));
   const cancelRef = useRef<(() => void) | null>(null);
+  const skipIdleQueue = options?.skipIdleQueue ?? false;
 
   const boot = useCallback((id: string) => {
     setBootedIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
@@ -141,6 +161,7 @@ function useSequentialPaneBoot(initialFocusId: string | null): { readonly booted
   }, []);
 
   useEffect(() => {
+    if (skipIdleQueue) return;
     const bootNext = () => {
       const nextId = queueRef.current[0];
       if (!nextId) return;
@@ -149,7 +170,7 @@ function useSequentialPaneBoot(initialFocusId: string | null): { readonly booted
     };
     cancelRef.current = scheduleIdle(bootNext, 1500);
     return () => cancelRef.current?.();
-  }, [boot]);
+  }, [boot, skipIdleQueue]);
 
   const promote = useCallback((id: string) => boot(id), [boot]);
   return { bootedIds, promote };
@@ -220,20 +241,73 @@ function DemonstratorPane({ pane, booted, focused }: { readonly pane: Demonstrat
 }
 //#endregion 🎪️DemonstratorPane
 
+//#region 🎪️DemonstratorCard
+/** @emoji 🃏️ Shared glass card for desktop grid cells and mobile list sections. */
+function DemonstratorCard({
+  pane,
+  active,
+  onClick,
+  onMouseEnter,
+  onMouseLeave,
+  className,
+}: {
+  readonly pane: DemonstratorPaneSpec;
+  readonly active?: boolean;
+  readonly onClick: () => void;
+  readonly onMouseEnter?: () => void;
+  readonly onMouseLeave?: () => void;
+  readonly className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      className={cn(
+        "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col items-center justify-center gap-single",
+        "rounded-xl border border-border-normal px-double py-triple text-center",
+        "ui-glass shadow-md outline-none",
+        "transition-[transform,box-shadow,border-color,background-color] duration-200",
+        "hover:-translate-y-0.5 hover:border-border-emphasized hover:shadow-xl",
+        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        active && "-translate-y-0.5 border-border-emphasized shadow-xl",
+        className,
+      )}
+    >
+      <span className="flex size-workbench shrink-0 items-center justify-center rounded-md border border-border-normal/80 bg-background/50">
+        <Icon icon={pane.icon} size="large" className="text-muted-foreground group-hover:text-foreground" title={pane.label} />
+      </span>
+      <span className="flex flex-col gap-half">
+        <span className="text-2xl font-semibold tracking-tight text-foreground">{pane.label}</span>
+        <span className="text-sm text-muted-foreground">{pane.tagline}</span>
+      </span>
+      <span className="inline-flex items-center gap-single text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+        Demonstrator öffnen
+        <Icon icon="chevron-right" size="small" className="transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </button>
+  );
+}
+//#endregion 🎪️DemonstratorCard
+
 //#region 🎪️DemonstratorLanding
 function DemonstratorLanding() {
+  const viewportMobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
+  const touchListMode = useMediaQuery(DEMONSTRATOR_TOUCH_LIST_MEDIA_QUERY);
+
   const surfaceChrome = useMemo(
     () => ({
       appearance: readStoredUiChromeAppearance(demonstratorStorage),
-      device: (readStoredUiChromeLayout(demonstratorStorage) === "tablet" ? "tablet" : "desktop") as const,
+      device: (viewportMobile ? "mobile" : readStoredUiChromeLayout(demonstratorStorage) === "tablet" ? "tablet" : "desktop") as const,
       driver: readStoredUiDriver(demonstratorStorage),
     }),
-    [],
+    [viewportMobile],
   );
   useElementsSurfaceChrome(surfaceChrome);
 
   const initialFocusId = useMemo(() => paneIdFromLocationHash(), []);
-  const { bootedIds, promote } = useSequentialPaneBoot(initialFocusId);
+  const { bootedIds, promote } = useSequentialPaneBoot(initialFocusId, { skipIdleQueue: touchListMode });
 
   const [introductionStep, setIntroductionStep] = useState(0);
   const [showIntroduction, setShowIntroduction] = useState(!initialFocusId);
@@ -244,6 +318,10 @@ function DemonstratorLanding() {
   const scrollTargetRef = useRef<ScrollOffset>(initialFocusId ? scrollOffsetForPaneIndex(paneIndexById(initialFocusId)) : { x: 0, y: 0 });
   const scrollCurrentRef = useRef<ScrollOffset>(scrollTargetRef.current);
   const [scrollOffset, setScrollOffset] = useState<ScrollOffset>(scrollTargetRef.current);
+  const listScrollRef = useRef<HTMLDivElement>(null);
+  const listProgressRafRef = useRef<number | null>(null);
+  const [listProgress, setListProgress] = useState(0);
+  const [listScrollLocked, setListScrollLocked] = useState(Boolean(initialFocusId));
   // 🪶️ Easing loop is stopped once settled so an idle tab isn't animating forever;
   // `ensureEasingLoopRef` restarts it whenever a new scroll target arrives.
   const easingRunningRef = useRef(false);
@@ -255,6 +333,15 @@ function DemonstratorLanding() {
     ensureEasingLoopRef.current();
   }, []);
 
+  const scrollListToPaneIndex = useCallback((paneIndex: number) => {
+    const el = listScrollRef.current;
+    if (!el) return;
+    const height = el.clientHeight;
+    if (height <= 0) return;
+    el.scrollTop = paneIndex * height;
+    setListProgress(paneIndex);
+  }, []);
+
   const focusPane = useCallback(
     (id: string) => {
       promote(id);
@@ -263,16 +350,30 @@ function DemonstratorLanding() {
       hoveredPaneIdRef.current = null;
       setHoveredPaneId(null);
       setRevealRect(null);
-      applyPaneScroll(paneIndexById(id));
+      const paneIndex = paneIndexById(id);
+      if (touchListMode) {
+        scrollListToPaneIndex(paneIndex);
+        setListScrollLocked(true);
+      } else {
+        applyPaneScroll(paneIndex);
+      }
       window.history.replaceState(null, "", `#${id}`);
     },
-    [promote, applyPaneScroll],
+    [promote, applyPaneScroll, touchListMode, scrollListToPaneIndex],
   );
 
   const returnToOverview = useCallback(() => {
+    const previousFocus = focusedId;
     setFocusedId(null);
+    if (touchListMode) {
+      setListScrollLocked(false);
+      if (previousFocus) {
+        const paneIndex = paneIndexById(previousFocus);
+        if (paneIndex >= 0) requestAnimationFrame(() => scrollListToPaneIndex(paneIndex));
+      }
+    }
     window.history.replaceState(null, "", window.location.pathname + window.location.search);
-  }, []);
+  }, [touchListMode, focusedId, scrollListToPaneIndex]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -293,6 +394,33 @@ function DemonstratorLanding() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [focusedId, returnToOverview]);
 
+  useEffect(() => {
+    if (!touchListMode || !initialFocusId) return;
+    const paneIndex = paneIndexById(initialFocusId);
+    if (paneIndex < 0) return;
+    requestAnimationFrame(() => scrollListToPaneIndex(paneIndex));
+  }, [touchListMode, initialFocusId, scrollListToPaneIndex]);
+
+  const handleListScroll = useCallback(() => {
+    const el = listScrollRef.current;
+    if (!el || listScrollLocked) return;
+    if (listProgressRafRef.current != null) return;
+    listProgressRafRef.current = requestAnimationFrame(() => {
+      listProgressRafRef.current = null;
+      const height = el.clientHeight;
+      if (height > 0) setListProgress(el.scrollTop / height);
+    });
+  }, [listScrollLocked]);
+
+  useEffect(() => {
+    if (!touchListMode || focusedId) return;
+    const current = Math.round(listProgress);
+    const pane = DEMONSTRATOR_PANES[current];
+    if (pane) promote(pane.id);
+    const next = DEMONSTRATOR_PANES[current + 1];
+    if (next) promote(next.id);
+  }, [touchListMode, listProgress, focusedId, promote]);
+
   const refreshRevealRect = useCallback((paneId: string | null, offset: ScrollOffset) => {
     if (!paneId) {
       setRevealRect(null);
@@ -309,17 +437,18 @@ function DemonstratorLanding() {
   const tintSegments = useMemo(() => demonstratorTintSegmentsPx(revealRect), [revealRect]);
 
   useEffect(() => {
+    if (touchListMode) return;
     const onResize = () => {
       if (hoveredPaneId) refreshRevealRect(hoveredPaneId, scrollCurrentRef.current);
       else setRevealRect(null);
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [hoveredPaneId, refreshRevealRect]);
+  }, [touchListMode, hoveredPaneId, refreshRevealRect]);
 
   // 🖱️ Mouse-follow panning only makes sense in overview — a focused pane owns the mouse.
   useEffect(() => {
-    if (focusedId) return;
+    if (touchListMode || focusedId) return;
     const onMove = (event: MouseEvent) => {
       if (hoveredPaneIdRef.current) return;
       scrollTargetRef.current = {
@@ -330,9 +459,10 @@ function DemonstratorLanding() {
     };
     window.addEventListener("mousemove", onMove, { passive: true });
     return () => window.removeEventListener("mousemove", onMove);
-  }, [focusedId]);
+  }, [touchListMode, focusedId]);
 
   useEffect(() => {
+    if (touchListMode) return;
     const EASING_EPSILON = 0.01;
     let frame = 0;
     const tick = () => {
@@ -363,11 +493,89 @@ function DemonstratorLanding() {
       easingRunningRef.current = false;
       cancelAnimationFrame(frame);
     };
-  }, [refreshRevealRect]);
+  }, [touchListMode, refreshRevealRect]);
 
   const dismissIntroduction = useCallback((_completed: boolean) => {
     setShowIntroduction(false);
   }, []);
+
+  const overviewChrome = (
+    <>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex items-center justify-between gap-tiny px-double py-single">
+        <div className="pointer-events-auto">{aProjectOfLuhUdkFooterItem("landingProjectOf", "de", false).content}</div>
+        <div className="pointer-events-auto">{fundedByZukunftBauFooterItem("landingFundedBy", "de", false).content}</div>
+      </div>
+
+      {showIntroduction && (
+        <UIIntroduction
+          introduction={ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION}
+          stepIndex={introductionStep}
+          completedInteractionIndices={[]}
+          onStepIndexChange={setIntroductionStep}
+          onDismiss={dismissIntroduction}
+        />
+      )}
+
+      <div
+        className="pointer-events-none absolute left-double top-double z-20 size-workbench text-foreground [&_svg]:h-full [&_svg]:w-full"
+        dangerouslySetInnerHTML={{ __html: ENTWERFEN_MIT_BESTAND_LOGO_SVG }}
+        aria-hidden
+      />
+    </>
+  );
+
+  const overviewReturnButton = focusedId ? (
+    <button
+      type="button"
+      onClick={returnToOverview}
+      className="ui-glass absolute right-double top-double z-40 inline-flex items-center gap-single rounded-md border border-border-normal px-single py-half text-sm font-medium text-foreground shadow-md outline-none transition-colors hover:border-border-emphasized focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <Icon icon="layout-grid" size="small" />
+      Übersicht
+    </button>
+  ) : null;
+
+  if (touchListMode) {
+    return (
+      <div className="relative h-full w-full overflow-hidden bg-background text-foreground">
+        <div
+          ref={listScrollRef}
+          data-demonstrator-list-scroll=""
+          onScroll={handleListScroll}
+          className={cn(
+            "flex w-full flex-col overscroll-y-contain",
+            listScrollLocked ? "overflow-hidden" : "snap-y snap-mandatory overflow-y-auto",
+          )}
+          style={{ height: "100dvh" }}
+        >
+          {DEMONSTRATOR_PANES.map((pane, paneIndex) => {
+            const isFocused = focusedId === pane.id;
+            const showOverviewLayer = !focusedId;
+            const veilOpacity = showOverviewLayer ? demonstratorListVeilOpacity(listProgress - paneIndex) : 0;
+            return (
+              <section key={pane.id} className="relative w-full shrink-0 snap-start overflow-hidden" style={{ height: "100dvh", minHeight: "100dvh" }}>
+                <DemonstratorPane pane={pane} booted={bootedIds.has(pane.id)} focused={isFocused} />
+                {showOverviewLayer && (
+                  <>
+                    <div className="pointer-events-none absolute inset-0 z-30">
+                      <div className="ui-veil absolute inset-0" style={{ opacity: veilOpacity }} />
+                    </div>
+                    <div className="pointer-events-none absolute inset-0 z-[31] flex items-center justify-center px-double pb-[5.5rem]">
+                      <DemonstratorCard pane={pane} className="max-w-[18rem]" onClick={() => focusPane(pane.id)} />
+                    </div>
+                  </>
+                )}
+              </section>
+            );
+          })}
+        </div>
+
+        {!focusedId && overviewChrome}
+
+        {overviewReturnButton}
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-background text-foreground">
@@ -403,8 +611,9 @@ function DemonstratorLanding() {
               const active = hoveredPaneId === pane.id;
               return (
                 <div key={pane.id} className="flex justify-center px-double">
-                  <button
-                    type="button"
+                  <DemonstratorCard
+                    pane={pane}
+                    active={active}
                     onClick={() => focusPane(pane.id)}
                     onMouseEnter={() => {
                       hoveredPaneIdRef.current = pane.id;
@@ -420,66 +629,17 @@ function DemonstratorLanding() {
                         setRevealRect(null);
                       }
                     }}
-                    className={cn(
-                      "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col items-center justify-center gap-single",
-                      "rounded-xl border border-border-normal px-double py-triple text-center",
-                      "ui-glass shadow-md outline-none",
-                      "transition-[transform,box-shadow,border-color,background-color] duration-200",
-                      "hover:-translate-y-0.5 hover:border-border-emphasized hover:shadow-xl",
-                      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                      active && "-translate-y-0.5 border-border-emphasized shadow-xl",
-                    )}
-                  >
-                    <span className="flex size-workbench shrink-0 items-center justify-center rounded-md border border-border-normal/80 bg-background/50">
-                      <Icon icon={pane.icon} size="large" className="text-muted-foreground group-hover:text-foreground" title={pane.label} />
-                    </span>
-                    <span className="flex flex-col gap-half">
-                      <span className="text-2xl font-semibold tracking-tight text-foreground">{pane.label}</span>
-                      <span className="text-sm text-muted-foreground">{pane.tagline}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-single text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-                      Demonstrator öffnen
-                      <Icon icon="chevron-right" size="small" className="transition-transform group-hover:translate-x-0.5" />
-                    </span>
-                  </button>
+                  />
                 </div>
               );
             })}
           </div>
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex items-center justify-between gap-tiny px-double py-single">
-            <div className="pointer-events-auto">{aProjectOfLuhUdkFooterItem("landingProjectOf", "de", false).content}</div>
-            <div className="pointer-events-auto">{fundedByZukunftBauFooterItem("landingFundedBy", "de", false).content}</div>
-          </div>
-
-          {showIntroduction && (
-            <UIIntroduction
-              introduction={ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION}
-              stepIndex={introductionStep}
-              completedInteractionIndices={[]}
-              onStepIndexChange={setIntroductionStep}
-              onDismiss={dismissIntroduction}
-            />
-          )}
-
-          <div
-            className="pointer-events-none absolute left-double top-double z-20 size-workbench text-foreground [&_svg]:h-full [&_svg]:w-full"
-            dangerouslySetInnerHTML={{ __html: ENTWERFEN_MIT_BESTAND_LOGO_SVG }}
-            aria-hidden
-          />
+          {overviewChrome}
         </>
       )}
 
-      {focusedId && (
-        <button
-          type="button"
-          onClick={returnToOverview}
-          className="ui-glass absolute right-double top-double z-40 inline-flex items-center gap-single rounded-md border border-border-normal px-single py-half text-sm font-medium text-foreground shadow-md outline-none transition-colors hover:border-border-emphasized focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Icon icon="layout-grid" size="small" />
-          Übersicht
-        </button>
-      )}
+      {overviewReturnButton}
     </div>
   );
 }

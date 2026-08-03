@@ -1,7 +1,7 @@
 //! 🧩️ Playbook procedural block-kind module — flow-backed building component params + live 3D preview.
 
 use flow_core::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
-use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry};
+use flow_extension_brep::{export_solid_json, import_solid_json, tessellate_geometry};
 use playbook::{visible_blocks, PlaybookBlock};
 use protocol::{Operation, OperationDiff};
 use semio_framework_core::mesh_from_indexed;
@@ -379,7 +379,7 @@ fn evaluated_preview_geometry_handles(fixture: &FlowFixture, params: &Value) -> 
     handles
 }
 
-/// 📤️ Handles `Command::ExportSolid`: re-evaluates the active fixture, exports every preview geometry handle through `flow_module_brep`'s STEP/OBJ/STL kernel codecs (GLB bridges through mesh tessellation), and stashes the JSON result on `params.__solidExport` for the host shell to read back.
+/// 📤️ Handles `Command::ExportSolid`: re-evaluates the active fixture, exports every preview geometry handle through `flow_extension_brep`'s STEP/OBJ/STL kernel codecs (GLB bridges through mesh tessellation), and stashes the JSON result on `params.__solidExport` for the host shell to read back.
 fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
@@ -396,7 +396,7 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     payload.params = dsl::to_dsl_value(&object).expect("params object");
 }
 
-/// 📥️ Handles `Command::ImportSolid`: imports `data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `format` through `flow_module_brep`'s in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and stashes the resulting geometry handles on `params.__solidImport`.
+/// 📥️ Handles `Command::ImportSolid`: imports `data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `format` through `flow_extension_brep`'s in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and stashes the resulting geometry handles on `params.__solidImport`.
 fn handle_import_solid(payload: &mut ModuleRenderPayload, format: &str, data: &str) {
     let result_json = if data.is_empty() { json!({ "error": "no import data provided" }) } else { serde_json::from_str(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(json!({ "error": "import failed" })) };
     let mut object = params_as_json(&payload.params);

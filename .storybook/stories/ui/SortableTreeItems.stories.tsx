@@ -61,7 +61,7 @@ function SortableRowsDemo({ initialRows }: { readonly initialRows: { id: string;
                     })
                   }
                 >
-                  {(item) => <TreeItem key={item.id} id={item.id} label={item.label} icon={<File size={12} />} sortable sortableId={item.id} />}
+                  {(item) => <TreeItem key={item.id} id={item.id} label={item.label} icon={<File size={12} />} sortable sortableId={item.id} dragRoles={["sort"]} />}
                 </SortableTreeItems>
               ),
             },

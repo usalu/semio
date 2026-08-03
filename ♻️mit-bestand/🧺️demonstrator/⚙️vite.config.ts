@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, staticDirVitePlugin } from "../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts";
-import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_PANES } from "./🟦️brand.ts";
+import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_PANES } from "./🟦️brand.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(playDir, "../..");
@@ -54,6 +54,7 @@ export default defineConfig({
       title: "Entwerfen mit Bestand · Demonstrator",
       entry: "./📦️index.tsx",
       bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground",
+      cnameHost: DEMONSTRATOR_HOST,
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
     playgroundFlowWasmDevStubPlugin(repoRoot),

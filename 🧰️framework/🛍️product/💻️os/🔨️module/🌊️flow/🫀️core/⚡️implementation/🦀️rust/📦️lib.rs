@@ -5,7 +5,7 @@ pub use infinite_canvas as canvas;
 pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::sync::OnceLock;
+use std::sync::{Arc, LazyLock, Mutex};
 
 use dag::{
     computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
@@ -13,9 +13,10 @@ use dag::{
 };
 use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 use neural::{
-    channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
+    channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorImpl, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
     INPUT_KIND, OUTPUT_KIND,
 };
+use flow_extension_sdk::FlowExtensionManifest;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Document
@@ -1078,6 +1079,13 @@ pub struct CatalogueItem {
     pub summary: String,
 }
 
+/// 📚️ Extension plus static widget sections for side palettes (spotlight merges static in the host).
+pub fn flow_palette_catalogue_sections() -> Vec<CatalogueSection> {
+    let mut sections = flow_catalogue_sections();
+    sections.extend(static_catalogue_sections());
+    sections
+}
+
 fn static_catalogue_sections() -> Vec<CatalogueSection> {
     vec![
         CatalogueSection {
@@ -1173,10 +1181,10 @@ fn titleize_module(module: &str) -> String {
 /// 📚️ Serializes module-grouped operator catalogue sections for host catalogue seeding.
 pub fn flow_operator_catalogue_json() -> String {
     use std::collections::BTreeMap;
-    let operators = flow_registry().operator_catalogue();
+    let operators = flow_extension_registry().operator_catalogue();
     let mut by_module: BTreeMap<String, Vec<OperatorInfo>> = BTreeMap::new();
     for info in operators {
-        by_module.entry(info.module.clone()).or_default().push(info);
+        by_module.entry(info.extension.clone()).or_default().push(info);
     }
     let sections: Vec<CatalogueSection> = by_module
         .into_iter()
@@ -1192,7 +1200,7 @@ pub fn flow_operator_catalogue_json() -> String {
 
 /// 🧠️ Serializes operator catalogue entries for neuron port layout seeding.
 pub fn flow_neuron_kind_infos_json() -> String {
-    serde_json::to_string(&flow_registry().operator_catalogue()).unwrap_or_else(|_| "[]".into())
+    serde_json::to_string(&flow_extension_registry().operator_catalogue()).unwrap_or_else(|_| "[]".into())
 }
 
 /// 🌊️ Default LOD mode id for automatic camera-driven detail.
@@ -1203,6 +1211,7 @@ pub const FLOW_LOD_MODE_AUTOMATIC: &str = "automatic";
 pub struct FlowBackedNodeGraphExtras {
     pub fixture_json: Option<String>,
     pub operators: Vec<ui_wgpu::NodeGraphOperatorRecord>,
+    pub catalogue_json: Option<String>,
     pub capabilities_json: Option<String>,
     pub lod_json: Option<String>,
     pub eval_json: Option<String>,
@@ -1233,7 +1242,7 @@ fn channel_spec_to_node_graph_record(spec: &ChannelSpec) -> ui_wgpu::NodeGraphOp
 fn operator_info_to_node_graph_record(info: &OperatorInfo) -> ui_wgpu::NodeGraphOperatorRecord {
     ui_wgpu::NodeGraphOperatorRecord {
         id: info.id.clone(),
-        module: info.module.clone(),
+        extension: info.extension.clone(),
         name: info.name.clone(),
         abbreviation: info.abbreviation.clone(),
         icon: info.icon.clone(),
@@ -1248,7 +1257,7 @@ fn operator_info_to_node_graph_record(info: &OperatorInfo) -> ui_wgpu::NodeGraph
 
 /// 🌊️ Typed operator catalogue (module-grouped) for `NodeGraphScene.operators` seeding.
 pub fn flow_operator_catalogue_records() -> Vec<ui_wgpu::NodeGraphOperatorRecord> {
-    flow_registry().operator_catalogue().iter().map(operator_info_to_node_graph_record).collect()
+    flow_extension_registry().operator_catalogue().iter().map(operator_info_to_node_graph_record).collect()
 }
 
 /// 🌊️ Inverse of `variadic_spec_to_node_graph_record`.
@@ -1274,7 +1283,7 @@ fn node_graph_record_to_channel_spec(record: &ui_wgpu::NodeGraphOperatorChannelR
 fn node_graph_operator_record_to_operator_info(record: &ui_wgpu::NodeGraphOperatorRecord) -> OperatorInfo {
     OperatorInfo {
         id: record.id.clone(),
-        module: record.module.clone(),
+        extension: record.extension.clone(),
         name: record.name.clone(),
         abbreviation: record.abbreviation.clone(),
         icon: record.icon.clone(),
@@ -1294,6 +1303,7 @@ pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, prox
     FlowBackedNodeGraphExtras {
         fixture_json: serde_json::to_string(fixture).ok(),
         operators: flow_operator_catalogue_records(),
+        catalogue_json: serde_json::to_string(&flow_catalogue_sections()).ok(),
         capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
         lod_json: Some(
             serde_json::json!({
@@ -1312,24 +1322,185 @@ pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, prox
 }
 // #endregion 🔖️Catalogue
 
-// #region 🔖️ModuleRegistry
-fn flow_registry() -> &'static neural::Registry {
-    static REGISTRY: OnceLock<neural::Registry> = OnceLock::new();
-    REGISTRY.get_or_init(|| {
-        let mut registry = neural::Registry::new();
-        flow_module_core::register(&mut registry);
-        flow_module_math::register(&mut registry);
-        flow_module_text::register(&mut registry);
-        flow_module_logic::register(&mut registry);
-        flow_module_dictionary::register(&mut registry);
-        flow_module_list::register(&mut registry);
-        flow_module_brep::register(&mut registry);
-        flow_module_draw::register(&mut registry);
-        flow_module_bim::register(&mut registry);
-        registry
-    })
+// #region 🔖️ExtensionRegistry
+/// 🧩️ One installable flow extension (built-in or contributed).
+#[derive(Clone, Debug)]
+pub struct FlowExtensionSpec {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    pub install: fn(&mut neural::Registry),
 }
-// #endregion 🔖️ModuleRegistry
+
+/// 📋️ Installed extension metadata for host UI and debugging.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowExtensionInfo {
+    pub id: String,
+    pub name: String,
+    pub version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_id: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+struct ContributedFlowExtension {
+    plugin_id: String,
+    manifest_json: String,
+}
+
+struct FlowExtensionRegistryState {
+    contributed: BTreeMap<String, ContributedFlowExtension>,
+    registry: Arc<neural::Registry>,
+    generation: u64,
+}
+
+static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyLock::new(|| Mutex::new(FlowExtensionRegistryState {
+    contributed: BTreeMap::new(),
+    registry: Arc::new(build_flow_extension_registry(&BTreeMap::new())),
+    generation: 0,
+}));
+
+/// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
+pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
+    flow_extension_core::register(registry);
+    flow_extension_math::register(registry);
+    flow_extension_text::register(registry);
+    flow_extension_logic::register(registry);
+    flow_extension_dictionary::register(registry);
+    flow_extension_list::register(registry);
+    flow_extension_brep::register(registry);
+    flow_extension_draw::register(registry);
+    flow_extension_bim::register(registry);
+}
+
+struct ContributedExtensionStub {
+    extension_id: String,
+}
+
+impl neural::Operation for ContributedExtensionStub {
+    fn evaluate(&self, _input: &Dictionary) -> Result<Dictionary, EvalError> {
+        Err(EvalError::PendingExtension { extension_id: self.extension_id.clone() })
+    }
+}
+
+fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &str, manifest_json: &str) {
+    let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
+    for info in manifest.contributes.operators {
+        if registry.operator_info(&info.id).is_some() {
+            continue;
+        }
+        let stub = ContributedExtensionStub { extension_id: manifest.id.clone() };
+        registry.register_operator(
+            info,
+            vec![OperatorImpl { schemas: vec![], operation: Box::new(stub) }],
+            &[],
+        );
+    }
+    let _ = plugin_id;
+}
+
+fn build_flow_extension_registry(contributed: &BTreeMap<String, ContributedFlowExtension>) -> neural::Registry {
+    let mut registry = neural::Registry::new();
+    install_builtin_flow_extensions(&mut registry);
+    for entry in contributed.values() {
+        register_contributed_manifest(&mut registry, &entry.plugin_id, &entry.manifest_json);
+    }
+    registry
+}
+
+fn rebuild_flow_extension_registry(state: &mut FlowExtensionRegistryState) {
+    state.generation += 1;
+    state.registry = Arc::new(build_flow_extension_registry(&state.contributed));
+}
+
+/// 🔌️ Installs a built-in extension spec (idempotent on `id`).
+pub fn install_flow_extension(spec: FlowExtensionSpec) {
+    let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+    if state.contributed.contains_key(&spec.id) {
+        return;
+    }
+    let mut registry = neural::Registry::new();
+    (spec.install)(&mut registry);
+    let _ = (spec.name, spec.version);
+}
+
+/// 📥️ Merges a contributed `flow.extension` manifest from a hot-swapped plugin.
+pub fn install_flow_extension_manifest(plugin_id: &str, manifest_json: &str) {
+    let Ok(manifest) = serde_json::from_str::<FlowExtensionManifest>(manifest_json) else { return };
+    let id = manifest.id.clone();
+    let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+    state.contributed.insert(
+        id,
+        ContributedFlowExtension { plugin_id: plugin_id.to_string(), manifest_json: manifest_json.to_string() },
+    );
+    rebuild_flow_extension_registry(&mut state);
+}
+
+/// 🗑️ Removes a contributed extension and rebuilds the composed registry.
+pub fn uninstall_flow_extension(id: &str) {
+    let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+    if state.contributed.remove(id).is_some() {
+        rebuild_flow_extension_registry(&mut state);
+    }
+}
+
+/// 📜️ Lists installed contributed extensions (built-ins are implicit).
+pub fn installed_flow_extensions() -> Vec<FlowExtensionInfo> {
+    let state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+    state
+        .contributed
+        .values()
+        .filter_map(|entry| {
+            let manifest = serde_json::from_str::<FlowExtensionManifest>(&entry.manifest_json).ok()?;
+            Some(FlowExtensionInfo { id: manifest.id, name: manifest.name, version: manifest.version, plugin_id: Some(entry.plugin_id.clone()) })
+        })
+        .collect()
+}
+
+/// 🧠️ Shared composed operator registry for evaluation and catalogue derivation.
+pub fn flow_extension_registry() -> Arc<neural::Registry> {
+    FLOW_EXTENSION_STATE.lock().expect("flow extension registry").registry.clone()
+}
+
+fn flow_registry() -> Arc<neural::Registry> {
+    flow_extension_registry()
+}
+
+/// 📚️ Extension-grouped catalogue sections (static widget sections merged at host).
+pub fn flow_catalogue_sections() -> Vec<CatalogueSection> {
+    let operators = flow_extension_registry().operator_catalogue();
+    let mut by_extension: BTreeMap<String, Vec<OperatorInfo>> = BTreeMap::new();
+    for info in operators {
+        by_extension.entry(info.extension.clone()).or_default().push(info);
+    }
+    by_extension
+        .into_iter()
+        .map(|(extension, items)| CatalogueSection {
+            id: extension.clone(),
+            title: titleize_extension(&extension),
+            groups: vec![],
+            items: items
+                .into_iter()
+                .map(|info| CatalogueItem {
+                    kind: "neuron".into(),
+                    neuron_kind: Some(info.id),
+                    action: None,
+                    format: None,
+                    name: info.name,
+                    abbreviation: info.abbreviation,
+                    icon: info.icon,
+                    summary: info.summary,
+                })
+                .collect(),
+        })
+        .collect()
+}
+
+fn titleize_extension(extension: &str) -> String {
+    titleize_module(extension)
+}
+// #endregion 🔖️ExtensionRegistry
 
 // #region 🔖️EvalBridge
 #[cfg(target_arch = "wasm32")]
@@ -1490,7 +1661,7 @@ fn widget_operator_info(widget: &Widget, kind_infos: &HashMap<String, OperatorIn
             let (inputs, outputs) = variable_io_ports(name, schema);
             let info = OperatorInfo {
                 id: "core.variable".into(),
-                module: "core".into(),
+                extension: "core".into(),
                 name: name.clone(),
                 abbreviation: name.chars().take(3).collect(),
                 icon: "emoji:🔣️".into(),
@@ -2534,14 +2705,14 @@ impl FlowHost {
             return Vec::new();
         }
         let registry = flow_registry();
-        let evaluator = Evaluator::new(registry);
+        let evaluator = Evaluator::new(registry.as_ref());
         self.neural_cache.begin_epoch();
         let previous = self.previous_channels.as_ref();
         let budgeted = if let Some(bridge) = self.eval_bridge.as_ref() {
             let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
             evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
         } else {
-            let mut dispatch = |kind: &str, input: &Dictionary| registry.dispatch(kind, input);
+            let mut dispatch = |kind: &str, input: &Dictionary| registry.as_ref().dispatch(kind, input);
             evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
         };
         match budgeted {
@@ -2555,9 +2726,9 @@ impl FlowHost {
                 }
                 self.neural_cache.sweep();
                 let live_handles = collect_live_geometry_handles_from_channels(&channels);
-                flow_module_brep::retain_geometry_handles(&live_handles);
+                flow_extension_brep::retain_geometry_handles(&live_handles);
                 let live_drawing_handles = collect_live_drawing_handles_from_channels(&channels);
-                flow_module_draw::retain_drawing_handles(&live_drawing_handles);
+                flow_extension_draw::retain_drawing_handles(&live_drawing_handles);
                 // 🔒️ Only advance the snapshot/channels pair together, and only on success — a
                 // failed evaluation keeps diffing against the last known-good state next time,
                 // which is always a safe (never under-dirty) baseline.
@@ -2586,7 +2757,7 @@ impl FlowHost {
             return Vec::new();
         }
         let registry = flow_registry();
-        let evaluator = Evaluator::new(registry);
+        let evaluator = Evaluator::new(registry.as_ref());
         let previous = self.previous_channels.as_ref();
         let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("pending_eval_widget_ids probed a dispatch for {kind}"))) };
         match evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, &dirty, previous, 0) {
@@ -4162,7 +4333,7 @@ impl FlowSession {
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn tessellate(handle: &str, tolerance: f64) -> String {
-    match flow_module_brep::tessellate_geometry(handle, tolerance) {
+    match flow_extension_brep::tessellate_geometry(handle, tolerance) {
         Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| serde_json::json!({ "error": "mesh encode failed" }).to_string()),
         Err(error) => serde_json::json!({ "error": error }).to_string(),
     }
@@ -4171,55 +4342,55 @@ pub fn tessellate(handle: &str, tolerance: f64) -> String {
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn render_drawing_scene(handle: &str) -> String {
-    flow_module_draw::render_scene_json(handle)
+    flow_extension_draw::render_scene_json(handle)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn export_drawing_svg(handle: &str) -> String {
-    flow_module_draw::export_svg_json(handle)
+    flow_extension_draw::export_svg_json(handle)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn export_drawing_pdf(handle: &str) -> String {
-    flow_module_draw::export_pdf_json(handle)
+    flow_extension_draw::export_pdf_json(handle)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn export_drawing_dwg(handle: &str) -> String {
-    flow_module_draw::export_dwg_json(handle)
+    flow_extension_draw::export_dwg_json(handle)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn import_drawing_dwg(data_base64: &str) -> String {
-    flow_module_draw::import_dwg_json(data_base64)
+    flow_extension_draw::import_dwg_json(data_base64)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn dispose_drawing(handle: &str) {
-    flow_module_draw::dispose_drawing(handle);
+    flow_extension_draw::dispose_drawing(handle);
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn trace_drawing_bitmap(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {
-    flow_module_draw::trace_bitmap_json(width, height, mask, threshold, simplify_epsilon)
+    flow_extension_draw::trace_bitmap_json(width, height, mask, threshold, simplify_epsilon)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn boolean_drawing_segments(a_json: &str, b_json: &str, operation: &str) -> String {
-    flow_module_draw::boolean_segments_json(a_json, b_json, operation)
+    flow_extension_draw::boolean_segments_json(a_json, b_json, operation)
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn dispose(handle: &str) {
-    flow_module_brep::dispose_geometry(handle);
+    flow_extension_brep::dispose_geometry(handle);
 }
 
 /// 📐️ Encodes a `MeshData` JSON payload as base64 DWG bytes, for JS consumers holding a mesh but no drawing/geometry handle.
@@ -5409,9 +5580,9 @@ mod tests {
 
     fn fixture_kind_infos_json() -> String {
         let mut registry = Registry::new();
-        flow_module_core::register(&mut registry);
-        flow_module_math::register(&mut registry);
-        flow_module_brep::register(&mut registry);
+        flow_extension_core::register(&mut registry);
+        flow_extension_math::register(&mut registry);
+        flow_extension_brep::register(&mut registry);
         serde_json::to_string(&registry.operator_catalogue()).unwrap_or_else(|_| "[]".into())
     }
 
@@ -5419,7 +5590,7 @@ mod tests {
         serde_json::to_string(&[
             NeuronKindInfo {
                 id: "math.add".into(),
-                module: "math".into(),
+                extension: "math".into(),
                 name: "Add".into(),
                 abbreviation: "Add".into(),
                 icon: "emoji:➕️".into(),
@@ -5430,7 +5601,7 @@ mod tests {
             },
             NeuronKindInfo {
                 id: "math.passThrough".into(),
-                module: "math".into(),
+                extension: "math".into(),
                 name: "PassThrough".into(),
                 abbreviation: "Pass".into(),
                 icon: "emoji:➡️".into(),
@@ -6218,7 +6389,7 @@ mod tests {
         host.set_neuron_kind_infos_json(
             &serde_json::to_string(&[NeuronKindInfo {
                 id: "dictionary.merge".into(),
-                module: "dictionary".into(),
+                extension: "dictionary".into(),
                 name: "Merge".into(),
                 abbreviation: "Merge".into(),
                 icon: "emoji:🔀️".into(),
@@ -6405,7 +6576,7 @@ mod tests {
         host.set_neuron_kind_infos_json(
             &serde_json::to_string(&[NeuronKindInfo {
                 id: "brep.sketch2d.circle".into(),
-                module: "brep".into(),
+                extension: "brep".into(),
                 name: "Sketch Circle".into(),
                 abbreviation: "Circle".into(),
                 icon: "emoji:⚪️".into(),
@@ -6445,7 +6616,7 @@ mod tests {
         host.set_neuron_kind_infos_json(
             &serde_json::to_string(&[NeuronKindInfo {
                 id: "brep.sketch2d.circle".into(),
-                module: "brep".into(),
+                extension: "brep".into(),
                 name: "Sketch Circle".into(),
                 abbreviation: "Circle".into(),
                 icon: "emoji:⚪️".into(),
@@ -6496,7 +6667,7 @@ mod tests {
         host.set_neuron_kind_infos_json(
             &serde_json::to_string(&[NeuronKindInfo {
                 id: "brep.sketch2d.circle".into(),
-                module: "brep".into(),
+                extension: "brep".into(),
                 name: "Sketch Circle".into(),
                 abbreviation: "Circle".into(),
                 icon: "emoji:⚪️".into(),
@@ -6564,7 +6735,7 @@ mod tests {
         host.set_neuron_kind_infos_json(
             &serde_json::to_string(&[NeuronKindInfo {
                 id: "dictionary.merge".into(),
-                module: "dictionary".into(),
+                extension: "dictionary".into(),
                 name: "Merge".into(),
                 abbreviation: "Merge".into(),
                 icon: "emoji:🔀️".into(),
@@ -6638,7 +6809,7 @@ mod tests {
             &serde_json::to_string(&[
                 NeuronKindInfo {
                     id: "brep.prim3d.sphere".into(),
-                    module: "brep".into(),
+                    extension: "brep".into(),
                     name: "Sphere".into(),
                     abbreviation: "Sphere".into(),
                     icon: "emoji:⚪️".into(),
@@ -6649,7 +6820,7 @@ mod tests {
                 },
                 NeuronKindInfo {
                     id: "brep.prim3d.torus".into(),
-                    module: "brep".into(),
+                    extension: "brep".into(),
                     name: "Torus".into(),
                     abbreviation: "Torus".into(),
                     icon: "emoji:🛢️".into(),
@@ -6660,7 +6831,7 @@ mod tests {
                 },
                 NeuronKindInfo {
                     id: "brep.bool.cut".into(),
-                    module: "brep".into(),
+                    extension: "brep".into(),
                     name: "Cut".into(),
                     abbreviation: "Cut".into(),
                     icon: "emoji:🔗️".into(),
@@ -6709,7 +6880,7 @@ mod tests {
             &serde_json::to_string(&[
                 NeuronKindInfo {
                     id: "brep.solid.extrude".into(),
-                    module: "brep".into(),
+                    extension: "brep".into(),
                     name: "Extrude".into(),
                     abbreviation: "Extr".into(),
                     icon: "emoji:⬆️".into(),
@@ -6720,7 +6891,7 @@ mod tests {
                 },
                 NeuronKindInfo {
                     id: "brep.brep".into(),
-                    module: "brep".into(),
+                    extension: "brep".into(),
                     name: "Brep".into(),
                     abbreviation: "Brep".into(),
                     icon: "emoji:🧊️".into(),
@@ -6731,7 +6902,7 @@ mod tests {
                 },
                 NeuronKindInfo {
                     id: "list.get".into(),
-                    module: "list".into(),
+                    extension: "list".into(),
                     name: "Get".into(),
                     abbreviation: "Get".into(),
                     icon: "emoji:📋️".into(),
@@ -6798,7 +6969,7 @@ mod tests {
         host.set_neuron_kind_infos_json(
             &serde_json::to_string(&[NeuronKindInfo {
                 id: "dictionary.merge".into(),
-                module: "dictionary".into(),
+                extension: "dictionary".into(),
                 name: "Merge".into(),
                 abbreviation: "Merge".into(),
                 icon: "emoji:🔀️".into(),
@@ -6823,7 +6994,7 @@ mod tests {
         host.set_neuron_kind_infos_json(
             &serde_json::to_string(&[NeuronKindInfo {
                 id: "list.get".into(),
-                module: "list".into(),
+                extension: "list".into(),
                 name: "Get".into(),
                 abbreviation: "Get".into(),
                 icon: "emoji:📋️".into(),
@@ -7178,7 +7349,7 @@ mod tests {
         assert_eq!(solid.get("kind").and_then(serde_json::Value::as_str), Some("solid"));
         let handle = solid.get("handle").and_then(serde_json::Value::as_str).expect("solid handle");
         assert!(handle.starts_with("solid-"));
-        let mesh = flow_module_brep::tessellate_geometry(handle, 0.05).expect("solid mesh");
+        let mesh = flow_extension_brep::tessellate_geometry(handle, 0.05).expect("solid mesh");
         assert!(!mesh.positions.is_empty());
         assert!(mesh.indices.len() >= 3);
     }

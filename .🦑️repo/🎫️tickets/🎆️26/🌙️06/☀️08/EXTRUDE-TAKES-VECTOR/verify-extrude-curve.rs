@@ -1,8 +1,8 @@
 //! [DEBUG] One-off verification for brep.solid.extrude (Extrude Curve).
 
-use flow_module_wasm::evaluate_json;
+use flow_extension_sdk::evaluate_json;
 use neural_engine::{Atom, Dictionary, Registry, Value};
-use flow_module_brep::register;
+use flow_extension_brep::register;
 
 fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))

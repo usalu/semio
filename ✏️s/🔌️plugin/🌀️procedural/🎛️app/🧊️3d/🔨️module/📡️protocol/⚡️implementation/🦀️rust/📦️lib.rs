@@ -120,8 +120,10 @@ pub enum Procedural3dCommand {
     SetActiveUtility { utility_id: String },
     #[dsl(key = "locale")]
     SetLocale { value: String },
+    #[dsl(key = "contributions")]
+    SetContributions { json: String },
 
-    // 🧵️ Off-main-thread evaluation — self-chains via `HostEffect::DispatchAction` until the fixture's
+    // 🧵️ Off-main-thread evaluation
     // dirty set is empty (see `Procedural3dPlayApp::handle`/`pending_effects`).
     #[dsl(key = "flow-eval-tick")]
     FlowEvalTick,

@@ -7290,15 +7290,16 @@ dependencies = [
  "semio-framework-os-kernel-vcs",
  "semio-framework-ui-styling",
  "semio-framework-ui-wgpu",
- "semio-s-kernel-flow-module-bim",
- "semio-s-kernel-flow-module-brep",
- "semio-s-kernel-flow-module-core",
- "semio-s-kernel-flow-module-dictionary",
- "semio-s-kernel-flow-module-draw",
- "semio-s-kernel-flow-module-list",
- "semio-s-kernel-flow-module-logic",
- "semio-s-kernel-flow-module-math",
- "semio-s-kernel-flow-module-text",
+ "semio-s-kernel-flow-extension-bim",
+ "semio-s-kernel-flow-extension-brep",
+ "semio-s-kernel-flow-extension-core",
+ "semio-s-kernel-flow-extension-dictionary",
+ "semio-s-kernel-flow-extension-draw",
+ "semio-s-kernel-flow-extension-list",
+ "semio-s-kernel-flow-extension-logic",
+ "semio-s-kernel-flow-extension-math",
+ "semio-s-kernel-flow-extension-text",
+ "semio-s-kernel-flow-extension-wasm",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -11350,7 +11351,7 @@ dependencies = [
  "semio-framework-ui-wgpu",
  "semio-s-app-procedural-2d",
  "semio-s-app-procedural-2d-dsl",
- "semio-s-kernel-flow-module-draw",
+ "semio-s-kernel-flow-extension-draw",
  "serde",
  "serde_json",
 ]
@@ -11458,7 +11459,7 @@ dependencies = [
  "semio-framework-ui-wgpu",
  "semio-s-app-procedural-3d",
  "semio-s-app-procedural-3d-dsl",
- "semio-s-kernel-flow-module-brep",
+ "semio-s-kernel-flow-extension-brep",
  "serde",
  "serde_json",
 ]
@@ -12951,20 +12952,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-bim"
+name = "semio-s-kernel-flow-extension-bim"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "js-sys",
  "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-flow-extension-wasm",
  "serde",
  "serde_json",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-brep"
+name = "semio-s-kernel-flow-extension-brep"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -12974,7 +12975,7 @@ dependencies = [
  "semio-framework-os-kernel-3d-brep",
  "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-flow-extension-wasm",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -12982,33 +12983,33 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-core"
+name = "semio-s-kernel-flow-extension-core"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-flow-extension-wasm",
  "serde_json",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-dictionary"
+name = "semio-s-kernel-flow-extension-dictionary"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-flow-extension-wasm",
  "serde_json",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-draw"
+name = "semio-s-kernel-flow-extension-draw"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-flow-extension-wasm",
  "semio-s-kernel-geometry-2d",
  "semio-s-kernel-geometry-2d-engine",
  "serde",
@@ -13018,52 +13019,52 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-list"
+name = "semio-s-kernel-flow-extension-list"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-flow-extension-wasm",
  "serde_json",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-logic"
+name = "semio-s-kernel-flow-extension-logic"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-flow-extension-wasm",
  "serde_json",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-math"
+name = "semio-s-kernel-flow-extension-math"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "js-sys",
  "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-flow-extension-wasm",
  "serde_json",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-text"
+name = "semio-s-kernel-flow-extension-text"
 version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-flow-extension-wasm",
  "serde_json",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-module-wasm"
+name = "semio-s-kernel-flow-extension-wasm"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-neural-engine",
@@ -13519,7 +13520,7 @@ dependencies = [
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-framework-plugin",
- "semio-s-kernel-flow-module-brep",
+ "semio-s-kernel-flow-extension-brep",
  "serde",
  "serde_json",
 ]
@@ -13554,44 +13555,32 @@ dependencies = [
 name = "semio-s-plugin-process-concrete"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
- "semio-framework-plugin",
  "semio-s-app-process-3d",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
 name = "semio-s-plugin-process-metal"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
- "semio-framework-plugin",
  "semio-s-app-process-3d",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
 name = "semio-s-plugin-process-robotic"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
- "semio-framework-plugin",
  "semio-s-app-process-3d",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
 name = "semio-s-plugin-process-wood"
 version = "0.1.0"
 dependencies = [
- "semio-framework-core",
- "semio-framework-plugin",
  "semio-s-app-process-3d",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]

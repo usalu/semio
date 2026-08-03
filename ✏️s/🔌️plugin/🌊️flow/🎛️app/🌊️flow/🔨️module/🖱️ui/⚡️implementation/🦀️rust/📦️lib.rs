@@ -798,9 +798,9 @@ fn render_compiled_dag(fixture: &FlowFixture, config: &FlowConfig) -> UiNode {
     build_text_editor_scene(FLOW_PLAY_SURFACE_COMPILED, FLOW_PLAY_APP_ID, TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }
 
-fn render_generate_generations(config: &FlowConfig) -> UiNode {
+fn render_generate_generations(config: &FlowConfig, locale: Locale, terminology: Terminology) -> UiNode {
     let generation = config.generation();
-    render_generations_tree(FLOW_PLAY_APP_ID, "flow-play-generate", &generation.generations, generation.selected_generation_id.as_deref())
+    render_generations_tree(FLOW_PLAY_APP_ID, "flow-play-generate", &generation.generations, generation.selected_generation_id.as_deref(), locale, terminology)
 }
 
 fn render_generate_form(fixture: &FlowFixture, config: &FlowConfig) -> UiNode {
@@ -1109,7 +1109,7 @@ impl DocumentApp for FlowPlayApp {
         match body_key {
             FLOW_PLAY_BODY_MAIN => render_main_graph(fixture, config),
             FLOW_PLAY_BODY_COMPILED => render_compiled_dag(fixture, config),
-            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(config),
+            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(config, view_state.locale, view_state.terminology),
             FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, config),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(config),
             FLOW_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_node_ids, labels),

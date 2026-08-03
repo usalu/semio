@@ -15,13 +15,13 @@ todos:
    content: "Register bim in flow/react/index.tsx: VITEST init block, FLOW_MODULE_LOADERS, FLOW_DEFAULT_MODULE_IDS"
    status: completed
  - id: scripts
-   content: Add bim to flow/play, procedural/play, procedural/react build/test script module lists (+ flow_module_bim cargo -p)
+   content: Add bim to flow/play, procedural/play, procedural/react build/test script module lists (+ flow_extension_bim cargo -p)
    status: completed
  - id: aliases
    content: Add @semio-tech/flow-module-bim aliases to flow/react, procedural/react, procedural/play vitest configs and procedural/play vite config
    status: completed
  - id: launch
-   content: Add module-bim launch.json dev entry and include flow_module_bim in the flow cargo test command
+   content: Add module-bim launch.json dev entry and include flow_extension_bim in the flow cargo test command
    status: completed
  - id: validate
    content: Build wasm + run cargo and vitest suites; confirm bim.* catalogue + end-to-end evaluation, then close ticket
@@ -42,10 +42,10 @@ isProject: false
 
 Create mirroring `flow/modules/math/`:
 
-- `Cargo.toml`: package `flow_module_bim`, `crate-type = ["rlib","cdylib"]`, `default = ["standalone-wasm"]`; deps `flow_module_wasm`, `neural_engine`, `serde_json` (+ `serde` derive); wasm32 target dep `wasm-bindgen` (optional). No geometry/brep deps.
+- `Cargo.toml`: package `flow_extension_bim`, `crate-type = ["rlib","cdylib"]`, `default = ["standalone-wasm"]`; deps `flow_extension_sdk`, `neural_engine`, `serde_json` (+ `serde` derive); wasm32 target dep `wasm-bindgen` (optional). No geometry/brep deps.
 - `package.json`: name `@semio-tech/flow-module-bim`, `bundleKind: "library"`, `wasm` script `bun nx run @semio-tech/flow-module-bim:wasm`, directory `flow/modules/bim`.
 - `project.json`: nx `wasm` target running `bun ./📜️script.ts wasm` with `cwd flow/modules/bim`.
-- `script.ts`: `WasmScript` via `runWasmPackWebBuild` with `wasmBaseName: "flow_module_bim"`, pkg files `flow_module_bim*`.
+- `script.ts`: `WasmScript` via `runWasmPackWebBuild` with `wasmBaseName: "flow_extension_bim"`, pkg files `flow_extension_bim*`.
 - `lib.rs`: structured with regions (mirroring `flow/modules/math/lib.rs`):
   - `#region Schemas`: `Schema` for `material` (name/density/conductivity/strength), `space` (name/area/height), `wall` (length/height/thickness), `slab` (width/depth/thickness), `column`/`window`, `story` (elevation/height + nested `elements`/`spaces` list), `building` (name + nested `stories` list). Use `FieldSpec::new(..., ValueType::Text/Decimal)` and `ValueType::List(...)`/`ValueType::Schema(...)` for nested members.
   - `#region Elements`: `Operation` impls + constructors `bim.element.material/space/wall/slab/column/window`, each `produces` its schema + `"element"`.
@@ -57,34 +57,34 @@ Create mirroring `flow/modules/math/`:
 ## 2. Rust workspace + flow_core wiring
 
 - Root `[Cargo.toml](Cargo.toml)` `members`: add `"flow/modules/bim"`.
-- `[flow/core/Cargo.toml](flow/core/Cargo.toml)`: add `flow_module_bim = { path = "../modules/bim", default-features = false }`.
-- `[flow/core/lib.rs](flow/core/lib.rs)` `flow_registry()` (around line 1024): add `flow_module_bim::register(&mut registry);`.
+- `[flow/core/Cargo.toml](flow/core/Cargo.toml)`: add `flow_extension_bim = { path = "../modules/bim", default-features = false }`.
+- `[flow/core/lib.rs](flow/core/lib.rs)` `flow_registry()` (around line 1024): add `flow_extension_bim::register(&mut registry);`.
 
 ## 3. TS host wiring `flow/react/index.tsx`
 
-- VITEST init block (lines 20-43): add `initBimSync` import + `initBimSync({ module: readFileSync(.../flow_module_bim_bg.wasm) })`.
-- `FLOW_MODULE_LOADERS` (line 202): add `bim: () => loadFlowWasmModule(import("../modules/bim/pkg/flow_module_bim.js"), import("../modules/bim/pkg/flow_module_bim_bg.wasm?url"))`.
+- VITEST init block (lines 20-43): add `initBimSync` import + `initBimSync({ module: readFileSync(.../flow_extension_bim_bg.wasm) })`.
+- `FLOW_MODULE_LOADERS` (line 202): add `bim: () => loadFlowWasmModule(import("../modules/bim/pkg/flow_extension_bim.js"), import("../modules/bim/pkg/flow_extension_bim_bg.wasm?url"))`.
 - `FLOW_DEFAULT_MODULE_IDS` (line 213): append `"bim"` so it activates in flow + procedural (consistent with `brep`).
 
 ## 4. Build/test scripts (add `"bim"` to module lists)
 
-- `[flow/play/script.ts](flow/play/script.ts)`: `moduleWasmScripts` (line 17) + `TestScript` cargo `-p flow_module_bim` (line 60).
+- `[flow/play/script.ts](flow/play/script.ts)`: `moduleWasmScripts` (line 17) + `TestScript` cargo `-p flow_extension_bim` (line 60).
 - `[procedural/play/script.ts](procedural/play/script.ts)`: `moduleWasmScripts` (line 16).
 - `[procedural/react/script.ts](procedural/react/script.ts)`: `moduleWasmScripts` (line 7).
 
 ## 5. Vitest/Vite aliases (consistency with `@flow/module-*`)
 
-- `[flow/react/vitest.config.ts](flow/react/vitest.config.ts)`, `[procedural/react/vitest.config.ts](procedural/react/vitest.config.ts)`, `[procedural/play/vitest.config.ts](procedural/play/vitest.config.ts)`: add `@semio-tech/flow-module-bim` -> `flow/modules/bim/pkg/flow_module_bim.js`.
+- `[flow/react/vitest.config.ts](flow/react/vitest.config.ts)`, `[procedural/react/vitest.config.ts](procedural/react/vitest.config.ts)`, `[procedural/play/vitest.config.ts](procedural/play/vitest.config.ts)`: add `@semio-tech/flow-module-bim` -> `flow/modules/bim/pkg/flow_extension_bim.js`.
 - `[procedural/play/vite.config.ts](procedural/play/vite.config.ts)`: add `@semio-tech/flow-module-bim` alias.
 
 ## 6. launch.json
 
-- `[.vscode/launch.json](.vscode/launch.json)`: add `🛠️dev🌊️flow🦀️module-bim` entry (`bun nx run @semio-tech/flow-module-bim:wasm`, group `3_dev`, order `171.565` between brep `171.56` and test `171.6`); add `flow_module_bim` to the `🛠️dev🌊️flow🦀️test` cargo command (line 901).
+- `[.vscode/launch.json](.vscode/launch.json)`: add `🛠️dev🌊️flow🦀️module-bim` entry (`bun nx run @semio-tech/flow-module-bim:wasm`, group `3_dev`, order `171.565` between brep `171.56` and test `171.6`); add `flow_extension_bim` to the `🛠️dev🌊️flow🦀️test` cargo command (line 901).
 
 ## 7. Ticket + validation (implementation)
 
 - Open a repo MCP ticket (read `repo://goals` first, associate the best goal) before edits; keep temp files inside the ticket folder; close with summary at the end.
-- Validate: `cargo test -p flow_module_bim -p flow_core` and the procedural/flow vitest suites; confirm `bim.*` operators appear in `host.catalogueSections()` and evaluate end-to-end (build wall -> assemble story -> assemble building -> measure floorArea) with runtime output.
+- Validate: `cargo test -p flow_extension_bim -p flow_core` and the procedural/flow vitest suites; confirm `bim.*` operators appear in `host.catalogueSections()` and evaluate end-to-end (build wall -> assemble story -> assemble building -> measure floorArea) with runtime output.
 
 ## Data flow
 

@@ -492,52 +492,52 @@
   {
     "oldDir": "framework/os/kernel/flow/module/bim/rs",
     "newDir": "framework/product/os/module/flow/module/bim/rs",
-    "newPkg": "semio-s-kernel-flow-module-bim"
+    "newPkg": "semio-s-kernel-flow-extension-bim"
   },
   {
     "oldDir": "framework/os/kernel/flow/module/wasm/rs",
     "newDir": "framework/product/os/module/flow/module/wasm/rs",
-    "newPkg": "semio-s-kernel-flow-module-wasm"
+    "newPkg": "semio-s-kernel-flow-extension-wasm"
   },
   {
     "oldDir": "framework/os/kernel/flow/module/brep/rs",
     "newDir": "framework/product/os/module/flow/module/brep/rs",
-    "newPkg": "semio-s-kernel-flow-module-brep"
+    "newPkg": "semio-s-kernel-flow-extension-brep"
   },
   {
     "oldDir": "framework/os/kernel/flow/module/core/rs",
     "newDir": "framework/product/os/module/flow/module/core/rs",
-    "newPkg": "semio-s-kernel-flow-module-core"
+    "newPkg": "semio-s-kernel-flow-extension-core"
   },
   {
     "oldDir": "framework/os/kernel/flow/module/dictionary/rs",
     "newDir": "framework/product/os/module/flow/module/dictionary/rs",
-    "newPkg": "semio-s-kernel-flow-module-dictionary"
+    "newPkg": "semio-s-kernel-flow-extension-dictionary"
   },
   {
     "oldDir": "framework/os/kernel/flow/module/draw/rs",
     "newDir": "framework/product/os/module/flow/module/draw/rs",
-    "newPkg": "semio-s-kernel-flow-module-draw"
+    "newPkg": "semio-s-kernel-flow-extension-draw"
   },
   {
     "oldDir": "framework/os/kernel/flow/module/list/rs",
     "newDir": "framework/product/os/module/flow/module/list/rs",
-    "newPkg": "semio-s-kernel-flow-module-list"
+    "newPkg": "semio-s-kernel-flow-extension-list"
   },
   {
     "oldDir": "framework/os/kernel/flow/module/logic/rs",
     "newDir": "framework/product/os/module/flow/module/logic/rs",
-    "newPkg": "semio-s-kernel-flow-module-logic"
+    "newPkg": "semio-s-kernel-flow-extension-logic"
   },
   {
     "oldDir": "framework/os/kernel/flow/module/math/rs",
     "newDir": "framework/product/os/module/flow/module/math/rs",
-    "newPkg": "semio-s-kernel-flow-module-math"
+    "newPkg": "semio-s-kernel-flow-extension-math"
   },
   {
     "oldDir": "framework/os/kernel/flow/module/text/rs",
     "newDir": "framework/product/os/module/flow/module/text/rs",
-    "newPkg": "semio-s-kernel-flow-module-text"
+    "newPkg": "semio-s-kernel-flow-extension-text"
   },
   {
     "oldDir": "framework/os/kernel/infinite/board/port/directed/normal/rs",

@@ -1,7 +1,6 @@
 //! 🧱️ Process machine module — concrete-shop machines (saws, core drilling, anchors, grinding).
 
 use process_3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, StockQuantity, WorkshopMachine};
-use semio_framework_plugin::{Contribution, PluginBundle};
 
 //#region 🔖️Catalog
 pub struct ConcreteCatalog;
@@ -140,24 +139,6 @@ pub fn catalog() -> Box<dyn MachineCatalog> {
 }
 //#endregion 🔖️Catalog
 
-//#region 🔖️Bundle
-const MODULE_PLUGIN_ID: &str = "process-module-concrete";
-const HOST_APP_ID: &str = "process3d-play";
-
-fn bundle() -> PluginBundle {
-    let catalog = ConcreteCatalog;
-    PluginBundle::new(MODULE_PLUGIN_ID, "Process Module Concrete", "0.1.0").contributes(Contribution::ProcessMachines {
-        app_id: HOST_APP_ID.into(),
-        module_id: catalog.catalog_id().into(),
-        label: catalog.label().into(),
-        icon_id: catalog.icon_id().into(),
-        machines_json: serde_json::to_string(&catalog.machines()).unwrap_or_default(),
-    })
-}
-
-semio_framework_plugin::plugin_exports!(bundle);
-//#endregion 🔖️Bundle
-
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -213,15 +194,10 @@ mod tests {
     }
 
     #[test]
-    fn bundle_contributes_concrete_machines_for_process3d() {
-        let manifest = bundle().manifest;
-        assert_eq!(manifest.contributions.len(), 1);
-        let Contribution::ProcessMachines { app_id, module_id, machines_json, .. } = &manifest.contributions[0] else {
-            panic!("expected a ProcessMachines contribution");
-        };
-        assert_eq!(app_id, HOST_APP_ID);
-        assert_eq!(module_id, "concrete");
-        assert!(serde_json::from_str::<Vec<process_3d::WorkshopMachine>>(machines_json).is_ok());
+    fn catalog_has_concrete_identity() {
+        let catalog = ConcreteCatalog;
+        assert_eq!(catalog.catalog_id(), "concrete");
+        assert_eq!(catalog.label(), "Concrete");
     }
 }
 //#endregion 🧪️Tests

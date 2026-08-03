@@ -10,7 +10,7 @@ const schemaReplacements: [string, string][] = [
   ['"dag.fixture/v1"', '"dag.fixture"'],
   ['"flow.fixture/v1"', '"flow.fixture"'],
   ['"flow.document/v1"', '"flow.document"'],
-  ['"flow.module/v1"', '"flow.module"'],
+  ['"flow.extension/v1"', '"flow.extension"'],
   ['"flow.dag/v1"', '"flow.dag"'],
   ['"sequence.fixture/v1"', '"sequence.fixture"'],
   ['"puzzle.2d.fixture/v1"', '"puzzle.2d.fixture"'],

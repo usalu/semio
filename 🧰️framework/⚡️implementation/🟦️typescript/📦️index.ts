@@ -896,7 +896,7 @@ export type NodeGraphOperatorChannelRecord = {
 /** 🧠️ One operator catalogue entry offered to a flow-backed node-graph's spotlight/palette. */
 export type NodeGraphOperatorRecord = {
   readonly id: string;
-  readonly module: string;
+  readonly extension: string;
   readonly name: string;
   readonly abbreviation: string;
   readonly icon: string;

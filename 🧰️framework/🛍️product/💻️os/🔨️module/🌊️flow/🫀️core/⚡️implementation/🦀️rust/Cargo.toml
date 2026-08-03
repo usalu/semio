@@ -20,15 +20,16 @@ vcs = { path = "../../../../../../../../🧰️framework/🛍️product/💻️o
 store = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 dsl = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
-flow_module_brep = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep", default-features = false, package = "semio-s-kernel-flow-module-brep" }
-flow_module_draw = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🖍️draw", default-features = false, package = "semio-s-kernel-flow-module-draw" }
-flow_module_bim = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🏗️bim", default-features = false, package = "semio-s-kernel-flow-module-bim" }
-flow_module_core = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🫀️core", default-features = false, package = "semio-s-kernel-flow-module-core" }
-flow_module_dictionary = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📖️dictionary", default-features = false, package = "semio-s-kernel-flow-module-dictionary" }
-flow_module_list = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📃️list", default-features = false, package = "semio-s-kernel-flow-module-list" }
-flow_module_logic = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🧠️logic", default-features = false, package = "semio-s-kernel-flow-module-logic" }
-flow_module_math = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🧮️math", default-features = false, package = "semio-s-kernel-flow-module-math" }
-flow_module_text = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📝️text", default-features = false, package = "semio-s-kernel-flow-module-text" }
+flow_extension_brep = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep", default-features = false, package = "semio-s-kernel-flow-extension-brep" }
+flow_extension_draw = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw", default-features = false, package = "semio-s-kernel-flow-extension-draw" }
+flow_extension_bim = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🏗️bim", default-features = false, package = "semio-s-kernel-flow-extension-bim" }
+flow_extension_core = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core", default-features = false, package = "semio-s-kernel-flow-extension-core" }
+flow_extension_dictionary = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary", default-features = false, package = "semio-s-kernel-flow-extension-dictionary" }
+flow_extension_list = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list", default-features = false, package = "semio-s-kernel-flow-extension-list" }
+flow_extension_logic = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧠️logic", default-features = false, package = "semio-s-kernel-flow-extension-logic" }
+flow_extension_math = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧮️math", default-features = false, package = "semio-s-kernel-flow-extension-math" }
+flow_extension_text = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📝️text", default-features = false, package = "semio-s-kernel-flow-extension-text" }
+flow_extension_sdk = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🕸️wasm", package = "semio-s-kernel-flow-extension-wasm" }
 kernel_3d_engine = { path = "../../../../../../../../✏️s/🔨️module/🧊️3d/📐️brep/⚙️engine/⚡️implementation/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-3d-brep-engine" }
 semio-framework-core = { path = "../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 neural_engine = { path = "../../../../🧠️neural/⚙️engine/⚡️implementation/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-neural-engine" }

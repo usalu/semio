@@ -339,10 +339,10 @@ export async function ensureBrepWasmLoaded(): Promise<BrepWasmModule> {
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const here = dirname(fileURLToPath(import.meta.url));
-    const mod = (await import("../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/pkg/flow_module_brep.js")) as BrepWasmModule & {
+    const mod = (await import("../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/pkg/flow_extension_brep.js")) as BrepWasmModule & {
       initSync?: (input: { module: BufferSource }) => void;
     };
-    mod.initSync?.({ module: readFileSync(join(here, "../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/pkg/flow_module_brep_bg.wasm")) });
+    mod.initSync?.({ module: readFileSync(join(here, "../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/pkg/flow_extension_brep_bg.wasm")) });
     brepWasm = mod;
     return mod;
   }
@@ -377,15 +377,15 @@ export async function ensureBrepModuleWasmLoaded(): Promise<BrepModuleWasm> {
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const here = dirname(fileURLToPath(import.meta.url));
-    const mod = (await import("../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/pkg/flow_module_brep.js")) as BrepModuleWasm;
-    mod.initSync?.({ module: readFileSync(join(here, "../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/pkg/flow_module_brep_bg.wasm")) });
+    const mod = (await import("../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/pkg/flow_extension_brep.js")) as BrepModuleWasm;
+    mod.initSync?.({ module: readFileSync(join(here, "../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/pkg/flow_extension_brep_bg.wasm")) });
     mod.activate();
     brepModuleWasm = mod;
     return mod;
   }
-  const [{ default: initBrep, evaluate, activate }, { default: wasmUrl }] = await Promise.all([import("../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/pkg/flow_module_brep.js"), import("../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/pkg/flow_module_brep_bg.wasm?url")]);
+  const [{ default: initBrep, evaluate, activate }, { default: wasmUrl }] = await Promise.all([import("../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/pkg/flow_extension_brep.js"), import("../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/pkg/flow_extension_brep_bg.wasm?url")]);
   if (typeof evaluate !== "function" || typeof activate !== "function") {
-    throw new Error("flow_module_brep evaluate exports missing — rebuild flow/module/brep wasm");
+    throw new Error("flow_extension_brep evaluate exports missing — rebuild flow/module/brep wasm");
   }
   if (initBrep) await initBrep({ module_or_path: wasmUrl });
   activate();

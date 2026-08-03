@@ -162,7 +162,9 @@ import {
   writeStoredUiChromeThemeSnapshot,
   writeStoredUiCustomThemes,
   activeUiTheme,
+  applyUiThemeToRoot,
   builtinUiThemes,
+  clearUiThemeFromRoot,
   parseUiTheme,
   resolveThemeAppearancePalettes,
   semioTheme,
@@ -2969,10 +2971,39 @@ function collectFrameworkLayoutWindowSeeds(node: WindowLayoutAxisNode | WindowLa
   });
 }
 
-function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
+/** 🗣️ For a single, non-instanced window (`instanceId` unset — the common case, one window per kind),
+ * the `windowKind`'s own label is the single source of truth: a manifest-baked `WindowLayoutWindowNode.title`
+ * (from a plugin's `create_default_layout(..., titles)` call) is a plain, locale-invariant string that
+ * predates locale/terminology resolution entirely, so it must never win over a real `windowKinds` lookup —
+ * it only survives as a last-resort fallback for a window kind id that isn't declared in the manifest
+ * (mirrors {@link retitleWindowLayoutNode}'s already-correct precedence). For a multi-instance window
+ * (`instanceId` set — several views sharing one `windowKind`, e.g. "Top"/"Perspective" both backed by a
+ * single 3D-viewport kind), the shared kind label can't distinguish instances, so the baked per-instance
+ * title is the real title and must win instead. */
+function resolveFrameworkWindowTitle(
+  windowKindId: string,
+  instanceId: string | undefined,
+  bakedTitle: string | undefined,
+  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
+  terminology: string,
+  locale: string,
+): string {
+  if (instanceId) return bakedTitle ?? windowKindId;
+  const kind = windowKinds.find((entry) => entry.id === windowKindId);
+  return kind ? resolveManifestLabel(kind.label, terminology, locale) : (bakedTitle ?? windowKindId);
+}
+
+function convertFrameworkLayoutNodeToModeLayout(
+  node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode,
+  appLabelsOverlay: PluginAppLabelsOverlay,
+  windowKinds: readonly { readonly id: string; readonly label: LocalizedLabel | string }[],
+  terminology: string,
+  locale: string,
+): WindowLayoutNode {
   if (node.kind === "window") {
     const id = node.instanceId ?? node.windowKindId;
-    return { kind: "window", id, title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, node.title ?? node.windowKindId)) };
+    const title = resolveFrameworkWindowTitle(node.windowKindId, node.instanceId, node.title, windowKinds, terminology, locale);
+    return { kind: "window", id, title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, title)) };
   }
   if (node.kind === "stack") {
     return {
@@ -2980,10 +3011,11 @@ function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | Win
       size: node.size,
       children: node.children.map((child) => {
         const id = child.instanceId ?? child.windowKindId;
+        const title = resolveFrameworkWindowTitle(child.windowKindId, child.instanceId, child.title, windowKinds, terminology, locale);
         return {
           kind: "window" as const,
           id,
-          title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, child.title ?? child.windowKindId)),
+          title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, title)),
         };
       }),
     };
@@ -2991,7 +3023,7 @@ function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | Win
   return {
     kind: node.kind,
     size: node.size,
-    children: node.children.map((child) => convertFrameworkLayoutNodeToModeLayout(child, appLabelsOverlay)),
+    children: node.children.map((child) => convertFrameworkLayoutNodeToModeLayout(child, appLabelsOverlay, windowKinds, terminology, locale)),
   };
 }
 
@@ -3053,7 +3085,7 @@ export function resolveFrameworkLayoutSeed(
     if (seed.templateId) pendingProjections.push({ windowId: seed.windowId, templateId: seed.templateId });
   }
   return {
-    modeLayout: convertFrameworkLayoutNodeToModeLayout(layout.root, appLabelsOverlay),
+    modeLayout: convertFrameworkLayoutNodeToModeLayout(layout.root, appLabelsOverlay, windowKinds, terminology, locale),
     extraInstances,
     pendingProjections,
   };
@@ -7599,8 +7631,7 @@ function FrameworkOsShellInner({
 
   //#region 💾️ uiPrefs persistence (skips writes for any locked preference; an ephemeral brand's
   // `scope.storage` is already an in-memory port, so the writes below are harmless there too — no more
-  // `ephemeral` branch needed to skip them outright, only `setActiveUiTheme` stays unconditional since
-  // it remains a page-global singleton, not yet part of this wave's scoping)
+  // `ephemeral` branch needed to skip them outright)
   useEffect(() => {
     if (!locks.appearance) writeStoredUiChromeAppearance(scope.storage, uiAppearance);
     writeStoredUiChromeLayout(scope.storage, uiLayout);
@@ -7616,13 +7647,33 @@ function FrameworkOsShellInner({
       scope.rootRef.current.lang = uiLocale;
     }
     if (!locks.terminology) writeStoredUiChromeTerminology(scope.storage, uiTerminology);
-    setActiveUiTheme(uiTheme);
+    // 🐚️ `setActiveUiTheme` is page-global (writes `document.documentElement`'s CSS vars) — correct only
+    // for the page-owning shell. A co-mounted embedded shell paints its own theme tokens onto its own
+    // `.semio-scope` root instead, via `applyUiThemeToRoot`, so two shells with different `themeId` locks
+    // never fight over the same document-wide tokens.
+    if (scope.ownsPage) {
+      setActiveUiTheme(uiTheme);
+    } else if (scope.rootRef.current) {
+      applyUiThemeToRoot(scope.rootRef.current, uiTheme);
+    }
     if (!locks.themeId) {
       writeStoredUiChromeThemeSnapshot(scope.storage, uiTheme);
       writeStoredUiChromeThemeId(scope.storage, uiThemeId);
     }
     writeStoredUiCustomThemes(scope.storage, uiCustomThemes);
   }, [uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks, scope]);
+
+  // 🐚️ Unmount cleanup for the embedded (non-page-owning) case — a shell that painted its own root's
+  // theme tokens must remove them on unmount, or a later, unrelated element reused at the same DOM
+  // position (React/vite HMR reuse, or another shell's canvas-clone assets in a dev harness) would
+  // silently inherit a stale theme's inline overrides. The page-owning case is intentionally left alone:
+  // `document.documentElement` outlives any single shell's lifetime.
+  useEffect(() => {
+    if (scope.ownsPage) return;
+    return () => {
+      if (scope.rootRef.current) clearUiThemeFromRoot(scope.rootRef.current);
+    };
+  }, [scope]);
   //#endregion
 
   useActionHotkey(
@@ -19179,7 +19230,7 @@ function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: Node
   if (scene.selection) session.setSelection(JSON.stringify(scene.selection));
   applyNodeGraphHoverFromScene(session, scene.hover);
   if (scene.previewOffJson) session.setPreviewOff(scene.previewOffJson);
-  if (scene.catalogueJson) session.setCatalogueJson(scene.catalogueJson);
+  if (scene.catalogueJson != null) session.setCatalogueJson(scene.catalogueJson);
   if (scene.lodJson) {
     try {
       const lod = parseSceneJsonField<{ readonly automatic?: boolean; readonly forcedLabel?: string }>(scene.lodJson);
@@ -20669,7 +20720,9 @@ function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescrip
     case "buttons":
       return (
         <div className="flex min-w-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
-          {cell.buttons.map((button, index) => (
+          {cell.buttons
+            .filter((button) => (button.placement ?? "row") === "row")
+            .map((button, index) => (
             <Button key={index} className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, button.action, {})} title={button.label} type="button" variant="outline">
               <Icon icon={button.iconId} size="small" />
             </Button>

@@ -462,52 +462,52 @@
   {
     "oldDir": "framework/product/os/module/flow/module/bim/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/bim",
-    "newPkg": "semio-s-kernel-flow-module-bim"
+    "newPkg": "semio-s-kernel-flow-extension-bim"
   },
   {
     "oldDir": "framework/product/os/module/flow/module/brep/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/brep",
-    "newPkg": "semio-s-kernel-flow-module-brep"
+    "newPkg": "semio-s-kernel-flow-extension-brep"
   },
   {
     "oldDir": "framework/product/os/module/flow/module/core/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/core",
-    "newPkg": "semio-s-kernel-flow-module-core"
+    "newPkg": "semio-s-kernel-flow-extension-core"
   },
   {
     "oldDir": "framework/product/os/module/flow/module/dictionary/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/dictionary",
-    "newPkg": "semio-s-kernel-flow-module-dictionary"
+    "newPkg": "semio-s-kernel-flow-extension-dictionary"
   },
   {
     "oldDir": "framework/product/os/module/flow/module/draw/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/draw",
-    "newPkg": "semio-s-kernel-flow-module-draw"
+    "newPkg": "semio-s-kernel-flow-extension-draw"
   },
   {
     "oldDir": "framework/product/os/module/flow/module/list/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/list",
-    "newPkg": "semio-s-kernel-flow-module-list"
+    "newPkg": "semio-s-kernel-flow-extension-list"
   },
   {
     "oldDir": "framework/product/os/module/flow/module/logic/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/logic",
-    "newPkg": "semio-s-kernel-flow-module-logic"
+    "newPkg": "semio-s-kernel-flow-extension-logic"
   },
   {
     "oldDir": "framework/product/os/module/flow/module/math/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/math",
-    "newPkg": "semio-s-kernel-flow-module-math"
+    "newPkg": "semio-s-kernel-flow-extension-math"
   },
   {
     "oldDir": "framework/product/os/module/flow/module/text/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/text",
-    "newPkg": "semio-s-kernel-flow-module-text"
+    "newPkg": "semio-s-kernel-flow-extension-text"
   },
   {
     "oldDir": "framework/product/os/module/flow/module/wasm/rs",
     "newDir": "🧰️/🛍️/💻️/🔨️/flow/⚡️/🦀️/module/wasm",
-    "newPkg": "semio-s-kernel-flow-module-wasm"
+    "newPkg": "semio-s-kernel-flow-extension-wasm"
   },
   {
     "oldDir": "framework/product/os/module/infinite/board/normal/directed/rs",

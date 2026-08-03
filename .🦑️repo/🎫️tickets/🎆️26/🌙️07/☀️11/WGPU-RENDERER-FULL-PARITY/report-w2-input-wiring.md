@@ -47,7 +47,7 @@ narrow `handle_key`-body exception. Follow-up item.
 - `cargo check -p semio-framework-renderer-wgpu --lib`: clean, 0 errors (verified before the blocker below appeared).
 - `cargo test -p semio-framework-renderer-wgpu --lib`: **blocked** by an unrelated, actively-churning
   compile failure in `kernel_3d_brepkit` (missing `Deserialize` impls), reached transitively via
-  `flow_core → flow_module_brep → kernel_3d_brepkit`. Confirmed via `git status` as the concurrent
+  `flow_core → flow_extension_brep → kernel_3d_brepkit`. Confirmed via `git status` as the concurrent
   `NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT` ticket's in-progress work (untracked
   `kernel/3d/brep/rs/src/{arena,topo,history}.rs`); error count dropped 40→12 between retries a few
   minutes apart, confirming active fixing elsewhere. Not chased further, per instructions.

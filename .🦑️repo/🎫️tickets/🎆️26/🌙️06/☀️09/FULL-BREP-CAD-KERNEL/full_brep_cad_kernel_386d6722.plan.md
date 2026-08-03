@@ -115,7 +115,7 @@ In [flow/modules/brep/lib.rs](flow/modules/brep/lib.rs) register one operator pe
 
 - Extend Rust tests in-place: kernel tests in [geometry/brep/rs/lib.rs](geometry/brep/rs/lib.rs) (each category: construct->evaluate->tessellate, measure values, intersect counts, IO round-trip) and operator/dispatch tests in [flow/modules/brep/lib.rs](flow/modules/brep/lib.rs).
 - Build wasm: `nx run @semio-tech/flow-module-brep:wasm` and `nx run @semio-tech/flow-core:wasm` (browser uses `flow_core`).
-- Run `cargo test -p geometry_brep_brepkit -p flow_module_brep`.
+- Run `cargo test -p geometry_brep_brepkit -p flow_extension_brep`.
 - Add a demo `procedural/fixture/*.procedural.json` exercising a curve -> surface -> sweep -> measure chain and verify in the procedural play harness.
 - Register any new `launch.json` entries only if a new runnable target is introduced (existing brep targets already cover build/test).
 

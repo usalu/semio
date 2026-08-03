@@ -2,9 +2,18 @@
 
 ## Templates
 
+---
+
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for a workforce of agents /workflows.
 Everything end to end.
+
+---
+
+XXX is extremly adhoc. Make sure it has absolutely clean mechanisms, exhaustively feature complete and is battle-tested.
+Everything end to end.
+
+---
 
 # 🔍️ Research
 
@@ -353,6 +362,14 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+pack/spr and dsl/op are currently one way of structurally representing data.
+Instead of having one grammar for a dsl, protocol move to handcrafted document specific grammars for every app/artifact.
+e.g. graphlike data should represent data over arrows, such as <-, -e1-, -c:Connection> etc
+Reuse grammar across similar data and design the individual grammars consistently.
+Every single grammar must have a grammar file, language server protocol and be integrated to writer, etc
 
 ---
 

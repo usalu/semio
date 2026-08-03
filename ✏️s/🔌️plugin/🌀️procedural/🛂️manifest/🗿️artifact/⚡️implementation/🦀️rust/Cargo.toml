@@ -11,7 +11,7 @@ workspace = true
 package = "semio:procedural"
 
 [package.metadata.semio]
-consumes = ["forms.questionKind"]
+consumes = ["forms.questionKind", "flow.extension"]
 
 [[package.metadata.semio.playground]]
 variant = "procedural2d"

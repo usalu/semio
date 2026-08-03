@@ -350,7 +350,7 @@ pub fn schema_component_info(schema: &Schema) -> OperatorInfo {
     outputs.push(ChannelSpec::list_output("errors", vec![]));
     OperatorInfo {
         id: operator_id,
-        module: schema.module.clone(),
+        extension: schema.module.clone(),
         name: schema.name.clone(),
         abbreviation: schema.name.clone(),
         icon: schema.icon.clone(),
@@ -606,7 +606,7 @@ fn contract_channel(neuron: &Neuron) -> (String, Vec<String>) {
 /// 🧩️ Builds operator metadata for a cluster neuron from its inner contract.
 pub fn cluster_operator_info(id: &str, name: &str, tree: &Tree) -> OperatorInfo {
     let (inputs, outputs) = tree.contract();
-    OperatorInfo { id: id.into(), module: "flow".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:🧩️".into(), summary: "Nested tree operator".into(), inputs, outputs, ..Default::default() }
+    OperatorInfo { id: id.into(), extension: "flow".into(), name: name.into(), abbreviation: name.into(), icon: "emoji:🧩️".into(), summary: "Nested tree operator".into(), inputs, outputs, ..Default::default() }
 }
 // #endregion 🔖️Contract
 
@@ -620,6 +620,7 @@ pub enum EvalError {
     CardinalityViolation(String),
     HeterogeneousList(String),
     CycleDetected,
+    PendingExtension { extension_id: String },
 }
 
 impl std::fmt::Display for EvalError {
@@ -631,6 +632,7 @@ impl std::fmt::Display for EvalError {
             EvalError::CardinalityViolation(m) => write!(f, "cardinality violation: {m}"),
             EvalError::HeterogeneousList(m) => write!(f, "heterogeneous list: {m}"),
             EvalError::CycleDetected => write!(f, "cycle detected"),
+            EvalError::PendingExtension { extension_id } => write!(f, "pending extension: {extension_id}"),
         }
     }
 }
@@ -878,7 +880,7 @@ pub fn channel_output(name: &str, payload: Dictionary) -> Dictionary {
 #[serde(rename_all = "camelCase")]
 pub struct OperatorInfo {
     pub id: String,
-    pub module: String,
+    pub extension: String,
     pub name: String,
     pub abbreviation: String,
     pub icon: String,
@@ -1961,7 +1963,7 @@ mod tests {
     fn echo_info() -> OperatorInfo {
         OperatorInfo {
             id: "echo".into(),
-            module: "test".into(),
+            extension: "test".into(),
             name: "Echo".into(),
             abbreviation: "Echo".into(),
             icon: "emoji:📣️".into(),
@@ -1975,7 +1977,7 @@ mod tests {
     fn double_info() -> OperatorInfo {
         OperatorInfo {
             id: "double".into(),
-            module: "test".into(),
+            extension: "test".into(),
             name: "Double".into(),
             abbreviation: "Dbl".into(),
             icon: "emoji:✖️".into(),
@@ -2087,7 +2089,7 @@ mod tests {
     fn collect_routes_variadic_slots_in_order() {
         let operator = OperatorInfo {
             id: "dictionary.merge".into(),
-            module: "dictionary".into(),
+            extension: "dictionary".into(),
             name: "Merge".into(),
             abbreviation: "Merge".into(),
             icon: "emoji:🔀️".into(),
@@ -2126,7 +2128,7 @@ mod tests {
     fn add_info() -> OperatorInfo {
         OperatorInfo {
             id: "math.add".into(),
-            module: "math".into(),
+            extension: "math".into(),
             name: "Add".into(),
             abbreviation: "Add".into(),
             icon: "emoji:➕️".into(),
@@ -2226,7 +2228,7 @@ mod tests {
     fn collect_injects_declared_defaults_for_unconnected_inputs() {
         let operator = OperatorInfo {
             id: "list.get".into(),
-            module: "list".into(),
+            extension: "list".into(),
             name: "Get".into(),
             abbreviation: "Get".into(),
             icon: "emoji:🔍️".into(),
@@ -2440,7 +2442,7 @@ mod tests {
     fn heterogeneous_list_input_is_rejected() {
         let operator = OperatorInfo {
             id: "list.size".into(),
-            module: "list".into(),
+            extension: "list".into(),
             name: "Size".into(),
             abbreviation: "Size".into(),
             icon: "emoji:📋️".into(),
@@ -2462,7 +2464,7 @@ mod tests {
     fn point_schema() -> Schema {
         Schema {
             id: "point".into(),
-            module: "math".into(),
+            extension: "math".into(),
             name: "Point".into(),
             icon: "emoji:📍️".into(),
             summary: "Point with x, y, z".into(),

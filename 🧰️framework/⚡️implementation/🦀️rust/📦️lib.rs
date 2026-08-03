@@ -6151,7 +6151,19 @@ pub enum Contribution {
         icon_id: IconName,
         #[cfg_attr(feature = "typegen", ts(rename = "machinesJson"))]
         machines_json: String,
-    }
+    },
+    /// 🧩️ A flow extension manifest contributing operators to a flow-backed host app catalogue/registry.
+    FlowExtension {
+        #[cfg_attr(feature = "typegen", ts(rename = "appId"))]
+        app_id: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "extensionId"))]
+        extension_id: String,
+        label: String,
+        #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
+        icon_id: IconName,
+        #[cfg_attr(feature = "typegen", ts(rename = "manifestJson"))]
+        manifest_json: String,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

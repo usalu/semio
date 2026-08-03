@@ -75,7 +75,7 @@ fn string_channel(name: &str) -> ChannelSpec {
 }
 
 fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
-    OperatorInfo { id: id.into(), module: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:🧠️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
+    OperatorInfo { id: id.into(), extension: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:🧠️".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
 fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>) {

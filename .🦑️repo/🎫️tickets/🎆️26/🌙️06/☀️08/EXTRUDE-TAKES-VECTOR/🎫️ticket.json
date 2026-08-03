@@ -3,7 +3,7 @@
   "emoji": "📐️",
   "status": "open",
   "description": "procedural: extrude should take a vector.",
-  "summary": "Added brep.solid.extrude (Extrude Curve): takes closed wire + vector, uses vector magnitude as extrusion distance (no distance port). Kernel extrude_wire_sync builds planar face from wire then extrudes. Fixed preview routing: flow/core output_ports_json exposes named channels; neural synapse_source_value resolves legacy out port to single channel payloads. Updated hexagonal-mushroom-column fixture to wire polygon→wire and constructVector→vector. cargo test -p flow_module_brep: 9/9 pass including extrude_curve_wire_uses_vector_magnitude.",
+  "summary": "Added brep.solid.extrude (Extrude Curve): takes closed wire + vector, uses vector magnitude as extrusion distance (no distance port). Kernel extrude_wire_sync builds planar face from wire then extrudes. Fixed preview routing: flow/core output_ports_json exposes named channels; neural synapse_source_value resolves legacy out port to single channel payloads. Updated hexagonal-mushroom-column fixture to wire polygon→wire and constructVector→vector. cargo test -p flow_extension_brep: 9/9 pass including extrude_curve_wire_uses_vector_magnitude.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1621"
   },

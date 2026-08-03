@@ -1,0 +1,9 @@
+{
+  "title": "Mobile Demonstrator List",
+  "emoji": "📱",
+  "status": "closed",
+  "description": "Touch-only vertical snap list for the demonstrator landing with scroll-driven veil tint.",
+  "summary": "## Summary\nImplemented touch-only mobile mode for the Entwerfen mit Bestand demonstrator landing: six full-viewport snap sections in a vertical list, live app pane behind each card, scroll-driven `ui-veil` opacity (clear when settled, tinted between sections), lazy pane boot on scroll, and focus/return with scroll lock.\n\n### Changes\n- `DEMONSTRATOR_TOUCH_LIST_MEDIA_QUERY` = max-width 767px + hover:none + pointer:coarse; landing surface chrome uses `mobile` when `UI_MOBILE_MEDIA_QUERY` matches.\n- `DemonstratorCard` shared by desktop grid and mobile list.\n- `useSequentialPaneBoot({ skipIdleQueue })` for list mode; promote current + next section on scroll.\n- Desktop grid unchanged behind `touchListMode` guard on mouse/easing/reveal effects.\n\n### Verification\n- Playwright iPhone 14: 6 sections, snap container, veil opacity 0 on first pane, scroll stack offsets 0..3320, tap focus `#generator`, Übersicht clears hash; desktop still uses 3×2 grid (0 sections).\n- `SKIP_PLUGIN_BUILD=1 bun ./📜️script.ts build` failed on pre-existing vite worker path (unrelated to this change).\n\n### Files\n- ♻️mit-bestand/🧺️demonstrator/📦️index.tsx\n- Ticket probes: probe-mobile-list.mts, probe-mobile-list.json, screenshots\n",
+  "goal": "🎯️r2602",
+  "sessions": []
+}

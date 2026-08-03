@@ -3,7 +3,7 @@
   "emoji": "⚡️",
   "status": "closed",
   "description": "UI freezes on heavy brep ops; computing nodes need animated rotating active border.",
-  "summary": "Removed torus-specific boolean guards and SolidSource machinery from geometry/brep/rs. Boolean cut/fuse/intersect now routes through brepkit directly; when either operand has a torus surface, operands are copied and converted to NURBS via convert_to_bspline before boolean to avoid GFA hang on sphere+torus. Updated crate paths from geometry/brep/brepkit and infinite/canvas/vello to geometry/brep/rs and infinite/canvas/rs across workspace Cargo.toml files. Rebuilt flow/core WASM; sphere-cut-with-torus fixture eval completes in ~93ms with brep_bool_cut_5 producing solid-3. All 6 geometry_brep_brepkit tests, 6 flow_module_brep tests, and 42 procedural/play tests pass.",
+  "summary": "Removed torus-specific boolean guards and SolidSource machinery from geometry/brep/rs. Boolean cut/fuse/intersect now routes through brepkit directly; when either operand has a torus surface, operands are copied and converted to NURBS via convert_to_bspline before boolean to avoid GFA hang on sphere+torus. Updated crate paths from geometry/brep/brepkit and infinite/canvas/vello to geometry/brep/rs and infinite/canvas/rs across workspace Cargo.toml files. Rebuilt flow/core WASM; sphere-cut-with-torus fixture eval completes in ~93ms with brep_bool_cut_5 producing solid-3. All 6 geometry_brep_brepkit tests, 6 flow_extension_brep tests, and 42 procedural/play tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1638"
   },

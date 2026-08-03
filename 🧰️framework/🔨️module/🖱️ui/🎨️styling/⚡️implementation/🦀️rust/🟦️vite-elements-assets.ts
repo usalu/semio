@@ -731,6 +731,9 @@ export type SemioHostHtmlSpec = {
   readonly bodyClass?: string;
   readonly csp?: string;
   readonly loading?: { readonly title: string };
+  /** 🌐️ Custom domain this app's static build deploys to (e.g. GitHub Pages) — written verbatim into a
+   * `🌐️CNAME` file at the build root, alongside the always-written `.nojekyll` marker. */
+  readonly cnameHost?: string;
 };
 
 /** @emoji 🪧️ Pre-mount placeholder markup shown inside `#{rootId}` until the entry module mounts and
@@ -772,11 +775,14 @@ export function semioHostHtmlString(spec: SemioHostHtmlSpec): string {
 
 /** @emoji 🎬️ Vite: renders {@link semioHostHtmlString} as the app's `🌐️index.html` on every request/build
  * (full-document replace, `order: "pre"` so later plugins such as `@vitejs/plugin-react`'s HMR preamble
- * still layer on top) and bundles semio favicon serving ({@link semioFaviconVitePlugin}) — one call wires
- * an app's whole boot surface instead of a hand-authored `🌐️index.html`. */
+ * still layer on top), bundles semio favicon serving ({@link semioFaviconVitePlugin}), and writes the
+ * static-deploy markers ({@link staticDeployMarkerVitePlugins} — `.nojekyll` always, `🌐️CNAME` when
+ * `spec.cnameHost` is set) — one call wires an app's whole boot + deploy surface instead of a
+ * hand-authored `🌐️index.html` plus a separate build-output step. */
 export function semioHostHtmlVitePlugin(repoRoot: string, spec: SemioHostHtmlSpec): Plugin[] {
   return [
     ...semioFaviconVitePlugin(repoRoot),
+    ...staticDeployMarkerVitePlugins(spec.cnameHost),
     {
       name: "semio-host-html",
       transformIndexHtml: {
@@ -1854,9 +1860,9 @@ if (import.meta.vitest) {
   });
 
   describe("semioHostHtmlVitePlugin", () => {
-    it("bundles favicon serving plugins alongside the host html plugin", () => {
+    it("bundles favicon serving and static-deploy-marker plugins alongside the host html plugin", () => {
       const plugins = semioHostHtmlVitePlugin(repoRoot, { title: "Semio App", entry: "/js/index.tsx" });
-      expect(plugins.map((plugin) => plugin.name)).toEqual(["semio-favicon-serve", "semio-favicon-build", "semio-host-html"]);
+      expect(plugins.map((plugin) => plugin.name)).toEqual(["semio-favicon-serve", "semio-favicon-build", "static-deploy-markers", "semio-host-html"]);
     });
 
     it("renders the same document semioHostHtmlString produces", () => {
