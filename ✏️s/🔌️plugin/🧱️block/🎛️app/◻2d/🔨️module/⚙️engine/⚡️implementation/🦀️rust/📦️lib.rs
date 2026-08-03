@@ -1,6 +1,7 @@
 //! 🩻️ Block 2D app — headless compute (constitutional: engine).
 
-use block_2d::Block2dDefinition;
+use block_2d::{Block2dDefinition, BLOCK_2D_SCHEMA};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 //#region 🔖️DocumentHelpers
@@ -63,11 +64,69 @@ pub fn puzzle2d_manifest_fragment(definition: &Block2dDefinition) -> Value {
 }
 //#endregion 🔖️PuzzleCatalogFragment
 
+//#region 🔖️Config
+/// 🧮️ `Block2dPlayApp`'s real `DocumentApp::Config` — B1 pure-trait conversion. Absorbs the former
+/// `Block2dPlayApp::selected_ids` `RefCell` field plus the locale this app now resolves itself
+/// (mirrors `shooting_engine::ShootingConfig::locale`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "block2dcfg")]
+#[dsl(layout = "lines")]
+pub struct Block2dConfig {
+    /// 👁️ Multi-selected row ids in the document tree — was `Block2dPlayApp::selected_ids`.
+    pub selected_ids: Vec<String>,
+    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState.locale`.
+    pub locale: String,
+}
+
+impl Default for Block2dConfig {
+    fn default() -> Self {
+        Self { selected_ids: Vec::new(), locale: "en-US".into() }
+    }
+}
+
+impl store::ConfigRecord for Block2dConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `block_2d_op::Block2dConfigOperation` — lives here (not in
+/// `block_2d_op`) since `protocol::OperationDiff`/`Block2dConfig` are both foreign to that crate (the
+/// orphan rule needs one local type); mirrors `shooting_engine`'s identical pattern.
+impl protocol::OperationDiff<Block2dConfig> for Block2dConfig {
+    fn apply(&self, _base: &Block2dConfig) -> Block2dConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ `Block2dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
+/// (`Kit×Type`, matching the `"2d.block"` artifact kind) plus a `"catalog:out"` port giving
+/// `puzzle2d_manifest_fragment` a real caller (see `🖱️ui`'s `Block2dPlayApp::export_media`).
+pub fn block2d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo::from_document(
+        BLOCK_2D_SCHEMA,
+        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        semio_framework_plugin::ArtifactPresentation { id: "2d.block".into(), name: "Node Kind".into(), dimension: "2d".into(), component_kind: "block2d".into() },
+    )
+    .with_ports(vec![semio_framework_plugin::MediaPortSpec {
+        id: "catalog:out".into(),
+        label: "Kit Catalog".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        kind_id: Some("kit.catalog".into()),
+        required: false,
+        multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+    }])
+}
+//#endregion 🔖️Io
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use block_2d::{Block2dHandleKind, Block2dHandleTemplate, BLOCK_2D_SCHEMA};
+    use block_2d::{Block2dHandleKind, Block2dHandleTemplate};
     use block_shared::BlockKindIdentity;
 
     #[test]
@@ -91,6 +150,23 @@ mod tests {
         assert_eq!(fragment["nodeKinds"][0]["id"], "left");
         assert_eq!(fragment["nodeKinds"][0]["presentation"]["handles"][0]["handleKind"], "b-l");
         assert_eq!(fragment["portKinds"][0]["id"], "b-l");
+    }
+
+    #[test]
+    fn block2d_config_default_has_no_selection() {
+        let config = Block2dConfig::default();
+        assert!(config.selected_ids.is_empty());
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[test]
+    fn block2d_io_declares_the_catalog_out_port() {
+        let io = block2d_io();
+        assert_eq!(io.document_schema, BLOCK_2D_SCHEMA);
+        let ports = io.all_ports();
+        let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
+        assert_eq!(catalog.kind_id.as_deref(), Some("kit.catalog"));
+        assert_eq!(catalog.direction, semio_framework_plugin::MediaPortDirection::Out);
     }
 }
 //#endregion 🧪️Tests

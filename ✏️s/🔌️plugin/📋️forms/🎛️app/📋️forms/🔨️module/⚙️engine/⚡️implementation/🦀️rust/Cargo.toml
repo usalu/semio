@@ -15,4 +15,12 @@ forms = { path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/
 forms_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app/📋️forms/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-forms-dsl" }
 playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-playbook" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
+# 🔌️ `PortMultiplicity` isn't re-exported by `semio-framework-plugin` (WORKFLOWS-END-TO-END-TYPED-PORTS
+# port recipe) — a direct dependency on the core crate is the minimal fix, mirroring how the plugin
+# crate itself depends on it.
+semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
+serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

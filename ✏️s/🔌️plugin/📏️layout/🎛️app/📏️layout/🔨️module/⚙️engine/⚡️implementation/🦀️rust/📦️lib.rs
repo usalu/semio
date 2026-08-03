@@ -9,14 +9,146 @@ use image::{ImageBuffer, Rgba};
 use infinite_canvas::camera::{self, Camera, Viewport};
 use infinite_canvas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
 use layout::{
-    Frame, GridSettings, Layer, LayoutBounds, LayoutDocument, LayoutRect, Page, PageColumns, PageMargins, ParagraphStyle, Spread, TextStory,
+    Frame, GridSettings, Layer, LayoutBounds, LayoutCamera, LayoutDocument, LayoutRect, Page, PageColumns, PageMargins, ParagraphStyle, Spread, TextStory,
     LAYOUT_FIXTURE_SCHEMA,
 };
 use parley::{Alignment, AlignmentOptions, FontContext, FontStack, FontWeight, Layout, LayoutContext, LineHeight, PositionedLayoutItem, StyleProperty};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use zip::write::SimpleFileOptions;
 use zip::ZipWriter;
+
+//#region 🔖️Config
+/// @emoji 👻️ WORKFLOWS-END-TO-END-TYPED-PORTS Config recipe: ephemeral catalogue drag-ghost state
+/// (was `layout_ui::LayoutDropPreviewState`, a private UI-crate struct) — `kind.is_empty()` means "no
+/// live drop preview" (the B1 config idiom favors an always-present default record over `Option<Record>`
+/// so every field round-trips through the `dsl`/pack machinery uniformly, matching
+/// `shooting_engine::ShootingConfig::camera`'s "ever-present, session-only" shape). Named
+/// `LayoutDropPreviewState` (not `LayoutDropPreview`) to avoid colliding with the unrelated
+/// `LayoutDropPreview` already declared in the `🖼️ Display`/`⚙️ Scene` regions above (the CPU
+/// scene-builder's drop-ghost struct, a different shape/purpose).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase", default)]
+pub struct LayoutDropPreviewState {
+    pub kind: String,
+    pub x: f64,
+    pub y: f64,
+}
+
+/// 🧮️ B1: layout's real `DocumentApp::Config` — absorbs every field that used to live on
+/// `layout_ui::LayoutPlayApp`'s `RefCell<LayoutPlayRuntime>` (active page, selection, hover, drop-ghost,
+/// engagement draft, and the two independent blueprint/preview camera poses) plus `locale`, the one
+/// `ViewState` field the layout UI actually reads (`layout_labels`/`is_de_locale`) — session-only view
+/// state now round-trips through the config `DocumentStore` exactly like document content, with a real
+/// `backwards` per `layout_op::LayoutConfigOperation` instead of never being VCS'd at all.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "layoutcfg")]
+#[dsl(layout = "lines")]
+pub struct LayoutConfig {
+    /// 👁️ Active page shown/edited on the Blueprint surface — was `LayoutPlayRuntime::active_page_id`.
+    pub active_page_id: String,
+    /// 👁️ Selected page/frame ids — was `LayoutPlayRuntime::selected_ids`.
+    pub selected_ids: Vec<String>,
+    /// 👁️ Hovered page/frame id — was `LayoutPlayRuntime::hovered_id`.
+    pub hovered_id: Option<String>,
+    /// 👁️ Live catalogue drag-ghost — was `LayoutPlayRuntime::drop_preview` (`Option<LayoutDropPreviewState>`).
+    #[dsl(block)]
+    pub drop_preview: LayoutDropPreviewState,
+    /// 👁️ In-progress engagement-bar input draft — was `LayoutPlayRuntime::engagement_input`.
+    pub engagement_input: String,
+    /// 📷️ The Blueprint surface's ephemeral camera pose — was `LayoutPlayRuntime::camera`.
+    #[dsl(block)]
+    pub camera: LayoutCamera,
+    /// 📷️ The Preview surface's ephemeral camera pose — was `LayoutPlayRuntime::preview_camera`.
+    #[dsl(block)]
+    pub preview_camera: LayoutCamera,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+impl Default for LayoutConfig {
+    fn default() -> Self {
+        Self {
+            active_page_id: "page-1".into(),
+            selected_ids: Vec::new(),
+            hovered_id: None,
+            drop_preview: LayoutDropPreviewState::default(),
+            engagement_input: String::new(),
+            camera: LayoutCamera::default(),
+            preview_camera: LayoutCamera::default(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl store::ConfigRecord for LayoutConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `layout_op::LayoutConfigOperation` (lives here, not in `layout_op`,
+/// since `protocol::OperationDiff`/`LayoutConfig` are both foreign to that crate — the orphan rule
+/// requires at least one local type). Mirrors `LayoutOperation::SetDataFields`'s "whole-field replace"
+/// shape one level up: `apply` ignores `base` entirely.
+impl protocol::OperationDiff<LayoutConfig> for LayoutConfig {
+    fn apply(&self, _base: &LayoutConfig) -> LayoutConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ Layout's typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
+/// pair (keyed by the `2d.layout` artifact kind `create_layout_app` already declares) plus the two
+/// WORKFLOWS-END-TO-END-TYPED-PORTS ports: `fields:in` (a `form.dictionary` this layout binds as a new
+/// named data source — see `layout::LayoutDocument::data_fields_json`) and `layout:out` (the current
+/// layout re-exported as `2d.layout` vector/SVG for a downstream consumer).
+pub fn layout_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: "layout.fixture".into(),
+        document_media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::TwoD,
+            form: semio_framework_plugin::MediaForm::Vector,
+        },
+        ports: vec![
+            semio_framework_plugin::MediaPortSpec {
+                id: "fields:in".into(),
+                label: "Fields".into(),
+                direction: semio_framework_plugin::MediaPortDirection::In,
+                media_type: semio_framework_plugin::MediaType {
+                    class: semio_framework_plugin::MediaClass::Data,
+                    form: semio_framework_plugin::MediaForm::Value,
+                },
+                kind_id: Some("form.dictionary".into()),
+                required: false,
+                multiplicity: semio_framework_core::PortMultiplicity::One,
+            },
+            semio_framework_plugin::MediaPortSpec {
+                id: "layout:out".into(),
+                label: "Layout".into(),
+                direction: semio_framework_plugin::MediaPortDirection::Out,
+                media_type: semio_framework_plugin::MediaType {
+                    class: semio_framework_plugin::MediaClass::TwoD,
+                    form: semio_framework_plugin::MediaForm::Vector,
+                },
+                kind_id: Some("2d.layout".into()),
+                required: false,
+                multiplicity: semio_framework_core::PortMultiplicity::Many,
+            },
+        ],
+        export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        artifact: semio_framework_plugin::ArtifactPresentation {
+            id: "2d.layout".into(),
+            name: "2D Layout".into(),
+            dimension: "2d".into(),
+            component_kind: "layout".into(),
+        },
+    }
+}
+//#endregion 🔖️Io
 
 //#region ⚠️ Errors
 /// 🚧️ All fallible layout-engine operations funnel through this — document parsing, scene/hit-test
@@ -686,6 +818,7 @@ pub fn layout_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
         spreads: vec![Spread { id: "spread-1".into(), name: "Spread 1".into(), page_ids }],
         pages,
         print_target: None,
+            data_fields_json: None,
     };
     serde_json::to_value(document).map_err(|e| e.to_string())
 }
@@ -713,6 +846,7 @@ mod tests {
             spreads: Vec::new(),
             pages: Vec::new(),
             print_target: None,
+            data_fields_json: None,
         }
     }
 
@@ -1007,5 +1141,53 @@ mod tests {
         assert_eq!(document.pages[0].width, 200.0);
         assert_eq!(document.pages[0].height, 150.0);
     }
+
+    //#region 🧪️Config
+    #[test]
+    fn layout_config_default_matches_the_existing_runtime_defaults() {
+        let config = LayoutConfig::default();
+        assert_eq!(config.active_page_id, "page-1");
+        assert!(config.selected_ids.is_empty());
+        assert!(config.hovered_id.is_none());
+        assert_eq!(config.drop_preview, LayoutDropPreviewState::default());
+        assert_eq!(config.camera, LayoutCamera::default());
+        assert_eq!(config.preview_camera, LayoutCamera::default());
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[test]
+    fn layout_config_dsl_and_pack_round_trip() {
+        let config = LayoutConfig {
+            active_page_id: "page-2".into(),
+            selected_ids: vec!["frame-1".into(), "frame-2".into()],
+            hovered_id: Some("frame-3".into()),
+            drop_preview: LayoutDropPreviewState { kind: "text".into(), x: 12.0, y: 34.0 },
+            engagement_input: "export svg".into(),
+            camera: LayoutCamera { x: 5.0, y: 6.0, zoom: 1.25 },
+            preview_camera: LayoutCamera { x: 7.0, y: 8.0, zoom: 0.75 },
+            locale: "de-DE".into(),
+        };
+        store::test_support::assert_dsl_round_trip(&config);
+        store::test_support::assert_dsl_pack_equivalence(&config);
+    }
+
+    #[test]
+    fn layout_io_declares_fields_in_and_layout_out_ports() {
+        let io = layout_io();
+        assert_eq!(io.document_schema, "layout.fixture");
+        assert_eq!(io.artifact.id, "2d.layout");
+        let fields_in = io.ports.iter().find(|port| port.id == "fields:in").expect("fields:in declared");
+        assert_eq!(fields_in.direction, semio_framework_plugin::MediaPortDirection::In);
+        assert_eq!(fields_in.kind_id.as_deref(), Some("form.dictionary"));
+        assert_eq!(fields_in.multiplicity, semio_framework_core::PortMultiplicity::One);
+        let layout_out = io.ports.iter().find(|port| port.id == "layout:out").expect("layout:out declared");
+        assert_eq!(layout_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(layout_out.kind_id.as_deref(), Some("2d.layout"));
+        assert_eq!(layout_out.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        let all_ports = io.all_ports();
+        assert!(all_ports.iter().any(|port| port.id == "document:in"));
+        assert!(all_ports.iter().any(|port| port.id == "document:out"));
+    }
+    //#endregion 🧪️Config
 }
 //#endregion 🧪️ Tests

@@ -10157,6 +10157,15 @@ Keep the renderer isolated from native details
 
 ### demonstrator
 
+---
+
+Extend the demonstrator from a single long line of 3 apps into a grid of 2 rows with 3 columns.
+Basically extend the existing 
+The new row consists of: Aussuchen (sourcing), Bearbeiten (process), Verfolgen (gis 2d)
+Add the same effect which currently just works with x coordinate of cursor into 2d and do the same along the oter axis.
+
+---
+
 The current aggregator should be generalized into a demonstrator.
 The demonstrator consists of three apps:
 Generator (branded version of procedural 3d)
@@ -10164,6 +10173,8 @@ Coordinator (branded version of cad)
 Aggregator (branded version of puzzle 3d)
 
 The main page of the demonstrator (not considering the introduction) is a strip of all three demonstrators next to each other (display height and three times the display width). There is a glass overlay with the three names. The x coordinate of the mouse is used to scroll horizontally between the apps. When hovered over the name the demonstrator strip, the part is untinted. When clicking on the name then the site jumps to e.g. demonstrator.entwerfen.mit-bestand.de/generator with the actual app. The introdcution needs to be split into the general part and the app specific part.
+
+---
 
 
 ### 🟨️33.projekttage

@@ -345,6 +345,62 @@ impl protocol::OpBinary for Procedural2dOperation {
 }
 //#endregion 🔖️OpText
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ Wave-2: `procedural_2d_engine::Procedural2dConfig`'s operation enum — one variant per
+/// settled config write, plus a generic `Snapshot` every variant's `backwards()` returns (mirrors
+/// `shooting_op::ShootingConfigOperation`'s exact "whole-config-snapshot inverse" pattern: each config
+/// tick is its own distinct edit, so "undo this tick" is "restore the whole-config snapshot from just
+/// before it").
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Procedural2dConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: procedural_2d_engine::Procedural2dConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: CameraJson,
+    },
+    #[dsl(key = "show-mode")]
+    SetShowMode { value: String },
+    #[dsl(key = "eval-driver")]
+    SetEvalDriver { json: String },
+    #[dsl(key = "generation")]
+    SetGeneration { selected_generation_id: Option<String>, generation_preview_text: Option<String> },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<procedural_2d_engine::Procedural2dConfig> for Procedural2dConfigOperation {
+    type Diff = procedural_2d_engine::Procedural2dConfig;
+
+    fn diff(&self, base: &procedural_2d_engine::Procedural2dConfig) -> procedural_2d_engine::Procedural2dConfig {
+        let mut next = base.clone();
+        match self {
+            Procedural2dConfigOperation::Snapshot { config } => return config.clone(),
+            Procedural2dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            Procedural2dConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            Procedural2dConfigOperation::SetShowMode { value } => next.show_mode = value.clone(),
+            Procedural2dConfigOperation::SetEvalDriver { json } => next.eval_driver_json = json.clone(),
+            Procedural2dConfigOperation::SetGeneration { selected_generation_id, generation_preview_text } => {
+                next.selected_generation_id = selected_generation_id.clone();
+                next.generation_preview_text = generation_preview_text.clone();
+            }
+            Procedural2dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &procedural_2d_engine::Procedural2dConfig) -> Vec<Self> {
+        vec![Procedural2dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 pub type Procedural2dEnvelope = DocumentEnvelope<Procedural2dDocument, Procedural2dOperation>;
 pub type Procedural2dStore = DocumentStore<Procedural2dDocument, Procedural2dOperation>;
 
@@ -649,5 +705,59 @@ mod tests {
         assert!(error.message.contains("expected Int"), "unexpected error: {}", error.message);
     }
     //#endregion 🔖️OpTextErrorTests
+
+    //#region 🔖️ConfigOperationTests
+    fn round_trip_config(base: &procedural_2d_engine::Procedural2dConfig, operation: &Procedural2dConfigOperation) -> procedural_2d_engine::Procedural2dConfig {
+        let forward = operation.diff(base);
+        let backwards = operation.backwards(base);
+        let mut restored = forward.clone();
+        for back in &backwards {
+            restored = back.diff(&restored);
+        }
+        assert_eq!(&restored, base, "backwards() must exactly restore the pre-operation config");
+        forward
+    }
+
+    #[test]
+    fn config_set_selection_round_trips_and_restores() {
+        let base = procedural_2d_engine::Procedural2dConfig::default();
+        let next = round_trip_config(&base, &Procedural2dConfigOperation::SetSelection { ids: vec!["w1".into(), "w2".into()] });
+        assert_eq!(next.selected_ids, vec!["w1".to_string(), "w2".to_string()]);
+    }
+
+    #[test]
+    fn config_set_camera_round_trips_and_restores() {
+        let base = procedural_2d_engine::Procedural2dConfig::default();
+        let camera = CameraJson { x: 9.0, y: -3.0, zoom: 2.5 };
+        let next = round_trip_config(&base, &Procedural2dConfigOperation::SetCamera { camera: camera.clone() });
+        assert_eq!(next.camera, camera);
+    }
+
+    #[test]
+    fn config_set_show_mode_round_trips_and_restores() {
+        let base = procedural_2d_engine::Procedural2dConfig::default();
+        let next = round_trip_config(&base, &Procedural2dConfigOperation::SetShowMode { value: "wire".into() });
+        assert_eq!(next.show_mode, "wire");
+    }
+
+    #[test]
+    fn config_set_locale_round_trips_and_restores() {
+        let base = procedural_2d_engine::Procedural2dConfig::default();
+        let next = round_trip_config(&base, &Procedural2dConfigOperation::SetLocale { value: "de-DE".into() });
+        assert_eq!(next.locale, "de-DE");
+    }
+
+    #[test]
+    fn config_op_text_round_trips_every_variant() {
+        let config = procedural_2d_engine::Procedural2dConfig { selected_ids: vec!["a".into()], locale: "de-DE".into(), ..procedural_2d_engine::Procedural2dConfig::default() };
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::Snapshot { config });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetShowMode { value: "generate".into() });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetEvalDriver { json: "{}".into() });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
+        store::test_support::assert_op_line_round_trip(&Procedural2dConfigOperation::SetLocale { value: "en-US".into() });
+    }
+    //#endregion 🔖️ConfigOperationTests
 }
 //#endregion 🧪️Tests

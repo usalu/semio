@@ -17,4 +17,5 @@ store = { path = "../../../../../../../../../🧰️framework/🛍️product/�
 
 [dev-dependencies]
 gis2d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-gis-2d-dsl" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 serde_json = "1.0.140"

@@ -12,6 +12,9 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/�
 
 [dependencies]
 cad_document = { path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/⚡️implementation/🦀️rust", package = "semio-s-app-cad" }
+# 🧮️ `CadConfigOperation` (WORKFLOWS-END-TO-END-TYPED-PORTS config recipe) operates on
+# `cad_document_engine::CadConfig` — mirrors `shooting_op`'s dependency on `shooting_engine`.
+cad_document_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-cad-engine" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

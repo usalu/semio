@@ -31,12 +31,15 @@ mod tests {
         store::test_support::assert_dsl_pack_equivalence(&GisMapDocument::default());
     }
 
+    /// 🧬️ `MapFeature::data` is `dsl::DslValue` (deliberately untyped — see `gis2d::MapFeature`'s doc
+    /// comment) — this bridges a `serde_json::json!` literal into one for test-fixture ergonomics.
     #[test]
     fn gis_map_document_pack_agrees_with_dsl_for_synthetic_value_shapes() {
+        let dsl_of = |value: serde_json::Value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null);
         let document = GisMapDocument {
             positions: vec![MapFeature {
                 id: "p1".into(),
-                data: json!({
+                data: dsl_of(json!({
                     "id": "p1",
                     "lon": -0.1427,
                     "lat": 51.5142,
@@ -44,10 +47,10 @@ mod tests {
                     "missing": null,
                     "tags": ["a", "b"],
                     "meta": { "nested": { "depth": 2.0 } },
-                }),
+                })),
             }],
-            routes: vec![MapFeature { id: "r1".into(), data: json!({ "id": "r1", "points": [[1.0, 2.0], [3.0, 4.0]] }) }],
-            regions: vec![MapFeature { id: "g1".into(), data: json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] }) }],
+            routes: vec![MapFeature { id: "r1".into(), data: dsl_of(json!({ "id": "r1", "points": [[1.0, 2.0], [3.0, 4.0]] })) }],
+            regions: vec![MapFeature { id: "g1".into(), data: dsl_of(json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] })) }],
         };
         store::test_support::assert_dsl_pack_equivalence(&document);
     }

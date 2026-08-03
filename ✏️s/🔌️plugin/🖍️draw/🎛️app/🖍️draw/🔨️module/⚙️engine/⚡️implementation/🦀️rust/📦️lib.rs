@@ -2,7 +2,7 @@
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use draw::{
-    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawDocument,
+    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawCircle, DrawDocument,
     DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine, DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody,
     DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
@@ -1246,6 +1246,121 @@ pub fn draw_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -
 }
 //#endregion 🔖️MediaExport
 
+//#region 🔖️Config
+/// 🧮️ B1: draw's real `DocumentApp::Config` — absorbs every former `DrawInteractionState`
+/// (`ui`-crate `RefCell`) field (selection, hover, in-progress engagement-input text, the
+/// session-only free viewport camera) plus the two former `ViewState`-driven fields the draw UI
+/// actually reads (`active_utility_id`/`locale` — mirrors `shooting_engine::ShootingConfig`'s
+/// identical B1 migration) — session view state now round-trips through the config `DocumentStore`
+/// exactly like document content, with a real `backwards` per `draw_op::DrawConfigOperation`
+/// instead of never being VCS'd at all.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "drawcfg")]
+#[dsl(layout = "lines")]
+pub struct DrawConfig {
+    /// 👁️ Selected layer ids — was `DrawInteractionState::selected_ids`.
+    pub selected_ids: Vec<String>,
+    /// 👁️ Hovered layer id — was `DrawInteractionState::hovered_id`.
+    pub hovered_id: Option<String>,
+    /// 👁️ In-progress rename/engagement input text — was `DrawInteractionState::engagement_input`.
+    pub engagement_input: String,
+    /// 🎥️ The free/live canvas camera — session-only, never a document field. Was
+    /// `DrawInteractionState::camera`.
+    #[dsl(block)]
+    pub camera: draw::DrawCamera,
+    /// 🧰️ The active canvas utility — was read off `view_state.active_utility_id` (host-pushed
+    /// `ViewState`, deleted by B1). Default mirrors `ui`'s `DRAW_DEFAULT_UTILITY` (`"selectDirect"`).
+    pub active_utility_id: String,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+impl Default for DrawConfig {
+    fn default() -> Self {
+        Self {
+            selected_ids: Vec::new(),
+            hovered_id: None,
+            engagement_input: String::new(),
+            camera: draw::DrawCamera::default(),
+            active_utility_id: "selectDirect".into(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl store::ConfigRecord for DrawConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `draw_op::DrawConfigOperation` (lives here, not in `draw_op`,
+/// since `protocol::OperationDiff`/`DrawConfig` are both foreign to that crate — the orphan rule
+/// requires at least one local type). Mirrors `DrawOperation::backwards`'s existing "whole-document
+/// replace" pattern.
+impl protocol::OperationDiff<DrawConfig> for DrawConfig {
+    fn apply(&self, _base: &DrawConfig) -> DrawConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `2d.drawing`
+/// `ArtifactKindSpec` literal `create_draw_app` already declares via `.artifact_kind(...)`
+/// (schema/media type/export+import formats/presentation fields copied verbatim), plus the
+/// app-specific `vector:out` port (see `draw_vector_out_port` below).
+pub fn draw_io() -> semio_framework_core::AppIo {
+    semio_framework_core::AppIo {
+        document_schema: DRAW_DOCUMENT_SCHEMA.into(),
+        document_media_type: semio_framework_core::MediaType {
+            class: semio_framework_core::MediaClass::TwoD,
+            form: semio_framework_core::MediaForm::Vector,
+        },
+        ports: vec![draw_vector_out_port()],
+        export_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
+        import_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
+        artifact: semio_framework_core::ArtifactPresentation {
+            id: "2d.drawing".into(),
+            name: "2D Drawing".into(),
+            dimension: "2d".into(),
+            component_kind: "draw".into(),
+        },
+    }
+}
+
+/// 🔌️ `vector:out` — the draw document's current vector content, exported as SVG (workflow port
+/// surface; WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). Reuses the existing `2d.drawing`
+/// kind (already declared by `create_draw_app`'s `.artifact_kind(...)`) rather than minting a
+/// duplicate — `kind_id` just pins this port to that same catalog entry. `Many`/optional: a
+/// consumer (e.g. raster's Vector→Raster-converted `image:in`) may connect before the canvas has
+/// any content, or fan out to several consumers at once.
+pub fn draw_vector_out_port() -> semio_framework_core::MediaPortSpec {
+    semio_framework_core::MediaPortSpec {
+        id: "vector:out".into(),
+        label: "Vector".into(),
+        direction: semio_framework_core::MediaPortDirection::Out,
+        media_type: semio_framework_core::MediaType {
+            class: semio_framework_core::MediaClass::TwoD,
+            form: semio_framework_core::MediaForm::Vector,
+        },
+        kind_id: Some("2d.drawing".into()),
+        required: false,
+        multiplicity: semio_framework_core::PortMultiplicity::Many,
+    }
+}
+
+/// 🖼️ Exports the current draw document as an SVG `Media` payload for the `vector:out` port —
+/// reuses `draw_document_to_svg` (the same renderer the export-svg shell path uses), so there is
+/// exactly one SVG renderer.
+pub fn draw_vector_media(doc: &DrawDocument) -> Result<semio_framework_core::Media, semio_framework_core::MediaError> {
+    let (svg, _width, _height) = draw_document_to_svg(doc);
+    Ok(semio_framework_core::Media {
+        media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Vector },
+        payload: semio_framework_core::MediaPayload::Structured { schema: "2d.drawing".into(), json: svg },
+    })
+}
+//#endregion 🔖️Io
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -1869,5 +1984,45 @@ mod tests {
         assert_eq!(doc.artboard, Some(DrawArtboard { width: 1.0, height: 1.0 }));
     }
 
+    #[test]
+    fn draw_config_default_matches_ui_selectdirect_utility() {
+        let config = DrawConfig::default();
+        assert_eq!(config.active_utility_id, "selectDirect");
+        assert_eq!(config.locale, "en-US");
+        assert!(config.selected_ids.is_empty());
+    }
+
+    #[test]
+    fn draw_config_dsl_round_trips() {
+        let config = DrawConfig {
+            selected_ids: vec!["layer-1".into(), "layer-2".into()],
+            hovered_id: Some("layer-3".into()),
+            engagement_input: "Renaming \"layer\"".into(),
+            camera: draw::DrawCamera { x: 12.0, y: -4.0, zoom: 1.5 },
+            active_utility_id: "pen".into(),
+            locale: "de-DE".into(),
+        };
+        store::test_support::assert_dsl_round_trip(&config);
+    }
+
+    #[test]
+    fn draw_io_declares_vector_out_reusing_the_2d_drawing_kind() {
+        let io = draw_io();
+        assert_eq!(io.document_schema, DRAW_DOCUMENT_SCHEMA);
+        assert_eq!(io.artifact.id, "2d.drawing");
+        let port = draw_vector_out_port();
+        assert_eq!(port.id, "vector:out");
+        assert_eq!(port.kind_id.as_deref(), Some("2d.drawing"));
+        assert!(io.ports.iter().any(|p| p.id == "vector:out"));
+    }
+
+    #[test]
+    fn draw_vector_media_exports_svg_structured_payload() {
+        let doc = semio_draw_example_document();
+        let media = draw_vector_media(&doc).expect("export vector:out");
+        let semio_framework_core::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured svg payload") };
+        assert_eq!(schema, "2d.drawing");
+        assert!(json.starts_with("<svg"));
+    }
 }
 //#endregion 🧪️Tests

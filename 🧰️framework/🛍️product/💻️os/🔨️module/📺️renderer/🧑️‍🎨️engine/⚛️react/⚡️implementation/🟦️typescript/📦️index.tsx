@@ -358,6 +358,12 @@ import {
   type IconRenderScene,
   type NamedLayout,
   type NodeGraphScene,
+  type NodeGraphPortRecord,
+  type NodeGraphNodeRecord,
+  type NodeGraphEdgeRecord,
+  type NodeGraphViewport,
+  type NodeGraphFindItem,
+  type NodeGraphHover,
   type InkCanvasScene,
   type PluginAppLabelsOverlay,
   type ProgramHotSwapEvent,
@@ -16959,44 +16965,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
 //#region 🔖️NodeGraphHost
 //#region Types
-type WorkflowDiagramPort = {
-  readonly id: string;
-  readonly resourceKind?: string;
-  readonly direction?: string;
-  readonly label?: string;
-};
-
-type WorkflowNodeRecord = {
-  readonly id: string;
-  readonly instanceId?: string;
-  readonly label?: string;
-  readonly x?: number;
-  readonly y?: number;
-  readonly width?: number;
-  readonly height?: number;
-  readonly inputs?: readonly WorkflowDiagramPort[];
-  readonly outputs?: readonly WorkflowDiagramPort[];
-};
-
-type WorkflowEdgeRecord = {
-  readonly id: string;
-  readonly sourceNodeId: string;
-  readonly sourcePortId: string;
-  readonly targetNodeId: string;
-  readonly targetPortId: string;
-};
-
 type WorkflowNodeData = {
   readonly label: string;
-  readonly inputs: readonly WorkflowDiagramPort[];
-  readonly outputs: readonly WorkflowDiagramPort[];
+  readonly inputs: readonly NodeGraphPortRecord[];
+  readonly outputs: readonly NodeGraphPortRecord[];
   readonly width: number;
   readonly height: number;
 };
-
-type DiagramViewport = { readonly x: number; readonly y: number; readonly zoom: number };
-
-type GraphFindItem = { readonly id: string; readonly label: string; readonly category?: string };
 
 type GraphContextMenuItem = ContextMenuItemSpec;
 
@@ -17037,14 +17012,7 @@ export function nodeGraphViewportActionArgs(cameraJson: string): { readonly view
 //#endregion Viewport
 
 //#region Parsing
-function parseViewport(viewportJson: string): DiagramViewport {
-  try {
-    const parsed = JSON.parse(viewportJson) as Partial<DiagramViewport>;
-    return { x: Number(parsed.x ?? 0), y: Number(parsed.y ?? 0), zoom: Number(parsed.zoom ?? 1) };
-  } catch {
-    return { x: 0, y: 0, zoom: 1 };
-  }
-}
+const DEFAULT_NODE_GRAPH_VIEWPORT: NodeGraphViewport = { x: 0, y: 0, zoom: 1 };
 
 /** @emoji 🔎️ Resolves a flow fixture widget id to the workflow instance id it previews, used to open an app instance without depending on plugin-side selection state. */
 export function resolveFixtureWidgetInstanceId(fixtureJson: string | undefined, widgetId: string | undefined | null): string | undefined {
@@ -17323,37 +17291,37 @@ function FlowSpotlight({
 }
 //#endregion FlowCatalogueSpotlight
 
-function portLabel(port: WorkflowDiagramPort): string {
+function portLabel(port: NodeGraphPortRecord): string {
   if (port.label) return port.label;
   const segments = port.id.split("@");
   return segments[segments.length - 1] ?? port.id;
 }
 
-// 🩹️ `port.id` is the wire-level `nodeId@portId` key (see `WorkflowDiagramPortRecord`), but React Flow's
-// `Handle id` must match `sourceHandle`/`targetHandle`, which carry the bare port id (`WorkflowEdgeRecord.
+// 🩹️ `port.id` is the wire-level `nodeId@portId` key (see `NodeGraphPortRecord`), but React Flow's
+// `Handle id` must match `sourceHandle`/`targetHandle`, which carry the bare port id (`NodeGraphEdgeRecord.
 // sourcePortId`/`targetPortId`) — strip the node-id prefix here so per-port anchoring and onConnect's
 // round-trip back to `sourcePortId`/`targetPortId` both resolve against the same bare id.
-function portHandleId(port: WorkflowDiagramPort): string {
+function portHandleId(port: NodeGraphPortRecord): string {
   const segments = port.id.split("@");
   return segments[segments.length - 1] ?? port.id;
 }
 
-function workflowNodesToDiagramNodes(records: readonly WorkflowNodeRecord[]): Node<WorkflowNodeData>[] {
+function workflowNodesToDiagramNodes(records: readonly NodeGraphNodeRecord[]): Node<WorkflowNodeData>[] {
   return records.map((record) => ({
     id: record.id,
     type: "workflow",
-    position: { x: record.x ?? 0, y: record.y ?? 0 },
+    position: { x: record.x, y: record.y },
     data: {
       label: record.label?.trim() || record.instanceId || record.id,
-      inputs: record.inputs ?? [],
-      outputs: record.outputs ?? [],
-      width: record.width ?? 180,
-      height: record.height ?? 72,
+      inputs: record.inputs,
+      outputs: record.outputs,
+      width: record.width,
+      height: record.height,
     },
   }));
 }
 
-function workflowEdgesToDiagramEdges(records: readonly WorkflowEdgeRecord[]): Edge[] {
+function workflowEdgesToDiagramEdges(records: readonly NodeGraphEdgeRecord[]): Edge[] {
   return records.map((record) => ({
     id: record.id,
     source: record.sourceNodeId,
@@ -17373,7 +17341,7 @@ function isEditableGraphKeyTarget(target: EventTarget | null): boolean {
   return target.closest("[contenteditable='true'], [role='textbox']") != null;
 }
 
-function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, _parsedNodes: readonly WorkflowNodeRecord[], dispatch: (action: string, args?: Record<string, unknown>) => void) {
+function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, _parsedNodes: readonly NodeGraphNodeRecord[], dispatch: (action: string, args?: Record<string, unknown>) => void) {
   if (!editable || isEditableGraphKeyTarget(event.target)) return;
   if (event.key === "Escape") {
     event.preventDefault();
@@ -17550,7 +17518,7 @@ function WasmGraphSurface({
       selectedNodeIdsJson: () => "[]",
       hoveredNodeId: () => null,
       hoveredChannelJson: () => "{}",
-      cameraJson: () => scene.viewportJson,
+      cameraJson: () => JSON.stringify(scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT),
       pickTargetsAtScreenJson: () => "[]",
       setHover: () => {},
       setHoverChannel: () => {},
@@ -17558,7 +17526,7 @@ function WasmGraphSurface({
       fixtureJson: () => "{}",
       takePendingOpenInstanceId: () => null,
     } satisfies FrameworkGraphSession;
-  }, [scene.viewportJson, wasmSession]);
+  }, [scene.viewport, wasmSession]);
 
   const emitInteractionState = useCallback(() => {
     const session = sessionRef.current;
@@ -17768,13 +17736,13 @@ function DiagramGraphFallback({
   readonly scene: NodeGraphScene;
   readonly node: UiComponentSceneNode;
   readonly editable: boolean;
-  readonly parsedNodes: readonly WorkflowNodeRecord[];
-  readonly parsedEdges: readonly WorkflowEdgeRecord[];
-  readonly findItems: readonly GraphFindItem[];
+  readonly parsedNodes: readonly NodeGraphNodeRecord[];
+  readonly parsedEdges: readonly NodeGraphEdgeRecord[];
+  readonly findItems: readonly NodeGraphFindItem[];
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
-  const viewport = useMemo(() => parseViewport(scene.viewportJson ?? "{}"), [scene.viewportJson]);
+  const viewport = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
   const initialNodes = useMemo(() => workflowNodesToDiagramNodes(parsedNodes), [parsedNodes]);
   const initialEdges = useMemo(() => workflowEdgesToDiagramEdges(parsedEdges), [parsedEdges]);
   const [nodes, setNodes] = useState(initialNodes);
@@ -17936,9 +17904,9 @@ function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer
 export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.nodeGraph;
   const editable = scene?.editable ?? true;
-  const parsedNodes = useMemo(() => parseJsonArray<WorkflowNodeRecord>(scene?.nodesJson), [scene?.nodesJson]);
-  const parsedEdges = useMemo(() => parseJsonArray<WorkflowEdgeRecord>(scene?.edgesJson), [scene?.edgesJson]);
-  const findItems = useMemo(() => parseJsonArray<GraphFindItem>(scene?.findItemsJson), [scene?.findItemsJson]);
+  const parsedNodes = useMemo(() => scene?.nodes ?? [], [scene?.nodes]);
+  const parsedEdges = useMemo(() => scene?.edges ?? [], [scene?.edges]);
+  const findItems = useMemo(() => scene?.findItems ?? [], [scene?.findItems]);
   const presencePeers = useMemo(() => parseJsonArray<PresencePeer>(scene?.presencePeersJson), [scene?.presencePeersJson]);
   const isClient = useClient();
   const emptySceneLabel = useLabel("ui.host.emptyScene");
@@ -18543,29 +18511,12 @@ export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: Dag
 
 //#region Sync
 // @emoji 🎥️ `applyCamera` must stay false for every resync after the first: live pan/zoom lives in the
-// FlowWasmSession (and plugin runtime via `nodeGraphViewport`), while `scene.viewportJson` often lags.
+// FlowWasmSession (and plugin runtime via `nodeGraphViewport`), while `scene.viewport` often lags.
 // Applying it on hover/eval/edit-triggered resync would snap the camera; `loadFixtureJson` also
 // preserves the live camera so fixture content reloads never reset the view.
-function applyNodeGraphHoverFromScene(session: FlowWasmSession, hoverJson: string | undefined): void {
-  if (hoverJson === undefined) return;
-  try {
-    const value = JSON.parse(hoverJson) as { readonly nodeId?: string; readonly widgetId?: string; readonly port?: string; readonly portId?: string } | null;
-    if (value === null) {
-      session.setHover?.(null);
-      return;
-    }
-    const widgetId = value.widgetId ?? value.nodeId;
-    const portId = value.port ?? value.portId;
-    if (widgetId && portId) {
-      session.setHoverChannel?.(widgetId, portId);
-    } else if (widgetId) {
-      session.setHover?.(widgetId);
-    } else {
-      session.setHover?.(null);
-    }
-  } catch {
-    /* ignore */
-  }
+function applyNodeGraphHoverFromScene(session: FlowWasmSession, hover: NodeGraphHover | undefined): void {
+  if (hover === undefined) return;
+  session.setHover?.(hover.nodeId ?? null);
 }
 
 function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
@@ -18574,13 +18525,13 @@ function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraph
 }
 
 function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
-  if (scene.operatorsJson) session.setNeuronKindInfosJson(scene.operatorsJson);
+  if (scene.operators) session.setNeuronKindInfosJson(JSON.stringify(scene.operators));
   if (scene.fixtureJson) {
     if (session.resyncFixtureJson) session.resyncFixtureJson(scene.fixtureJson);
     else session.loadFixtureJson(scene.fixtureJson);
   }
-  if (scene.selectionJson) session.setSelection(scene.selectionJson);
-  applyNodeGraphHoverFromScene(session, scene.hoverJson);
+  if (scene.selection) session.setSelection(JSON.stringify(scene.selection));
+  applyNodeGraphHoverFromScene(session, scene.hover);
   if (scene.previewOffJson) session.setPreviewOff(scene.previewOffJson);
   if (scene.catalogueJson) session.setCatalogueJson(scene.catalogueJson);
   if (scene.lodJson) {
@@ -18593,12 +18544,8 @@ function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: Node
     }
   }
   if (!applyCamera) return;
-  try {
-    const viewport = parseSceneJsonField<{ readonly x?: number; readonly y?: number; readonly zoom?: number }>(scene.viewportJson);
-    session.setCamera(viewport.x ?? 0, viewport.y ?? 0, viewport.zoom ?? 1);
-  } catch {
-    /* ignore */
-  }
+  const viewport = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
+  session.setCamera(viewport.x, viewport.y, viewport.zoom);
 }
 
 function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {

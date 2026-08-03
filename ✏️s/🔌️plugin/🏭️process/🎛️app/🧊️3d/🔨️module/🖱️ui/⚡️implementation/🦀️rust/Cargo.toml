@@ -14,8 +14,12 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️a
 process_3d = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-process-3d" }
 process_3d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-process-3d-engine" }
 process_3d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-process-3d-op" }
+process_3d_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-process-3d-protocol" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+base64 = "0.22.1"

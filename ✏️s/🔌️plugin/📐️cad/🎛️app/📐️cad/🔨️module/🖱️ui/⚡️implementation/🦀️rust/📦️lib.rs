@@ -17,14 +17,15 @@ use cad_document_engine::{
 };
 use cad_document_engine::{
     cad_brep_kernel, cad_camera_distance, cad_camera_projection_config,
-    cad_camera_set_projection_config,
+    cad_camera_set_projection_config, cad_io, cad_sun_config_from_world, cad_sun_config_to_world,
     collect_mesh_urls, default_document, ensure_object_solid_handle,
     export_solids_as, forest_play_camera, forest_play_scene, import_cad_object_by_extension, next_cad_id, object_mesh_data,
     object_scale_json, primary_primitive_kind,
     resolve_object_mesh_url, scene_from_spatial_payload, unwrap_spatial_load_payload,
-    CadSolidExport,
+    CadComponentSelection, CadConfig, CadDislocateOptions, CadHoverTarget, CadSelectionTargets, CadSolidExport,
 };
-use cad_document_op::{CadObjectPatch, CadOperation, CadReferencePatch};
+use cad_document_op::{CadConfigOperation, CadObjectPatch, CadOperation, CadReferencePatch};
+use cad_document_protocol::CadCommand;
 use semio_framework_plugin::{
     apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene,
     merge_world_selection_ids, SelectionSet, mesh_from_kind, ui_inspector_groups_to_tree,
@@ -32,21 +33,23 @@ use semio_framework_plugin::{
     ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json,
     world3d_environment_json, world3d_mesh_id_from_url, world3d_projection_action_moves_pose,
     world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json,
-    world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay,
-    AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType,
+    world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabelsOverlay,
+    AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Media, MediaClass, MediaError, MediaForm,
+    MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, IconName, SET_ACTIVE_UTILITY_ACTION_ID,
     UiFieldNode, UiGroupNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
-    UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement,
+    UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement,
     AppActionRegistry, ContextMenuItemSpec, ContextMenuRequest, Menu,
     WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode,
     WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure,
     WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, is_de_locale, localized_label_map, selection_ids, tree_item,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, localized_label_map, tree_item,
 };
 use semio_framework_core::kernel::HostEffect;
 use kernel_3d_engine::{BrepKernel, GeometryHandle};
 use serde::{Deserialize, Serialize};
+use base64::Engine as _;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use ui_wgpu::SurfaceKind;
@@ -183,84 +186,13 @@ const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
     },
 ];
 
-/// @emoji 🎯️ Ephemeral World3d hover target — object + optional component (edge/face/vertex).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 //#endregion 🔖️Constants
 
 //#region 🔖️Document
-struct CadHoverTarget {
-    #[serde(default)]
-    object_id: Option<String>,
-    #[serde(default)]
-    mode: Option<String>,
-    #[serde(default)]
-    id: Option<u32>,
-}
-
-/// @emoji 🎯️ Which geometry kinds World3d may pick; edges stay enabled so B-rep lines hover/select.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct CadSelectionTargets {
-    mesh: bool,
-    vertex: bool,
-    edge: bool,
-    face: bool,
-}
-
-impl Default for CadSelectionTargets {
-    fn default() -> Self {
-        Self {
-            mesh: true,
-            vertex: false,
-            edge: true,
-            face: false,
-        }
-    }
-}
-
-/// @emoji 🧩️ Component-level selection for World3d edge/face/vertex overlays.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct CadComponentSelection {
-    #[serde(default)]
-    targets: CadSelectionTargets,
-    #[serde(default = "default_component_selection_mode")]
-    mode: String,
-    #[serde(default)]
-    ids: Vec<u32>,
-}
-
-//#region 🔖️Dislocate
-/// 🎛️ Per-window handle groups exposed by the Dislocate gumball utility.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct CadDislocateOptions {
-    move_enabled: bool,
-    rotate_enabled: bool,
-}
-
-impl Default for CadDislocateOptions {
-    fn default() -> Self {
-        Self { move_enabled: true, rotate_enabled: true }
-    }
-}
-//#endregion 🔖️Dislocate
-
-fn default_component_selection_mode() -> String {
-    "mesh".into()
-}
-
-impl Default for CadComponentSelection {
-    fn default() -> Self {
-        Self {
-            targets: CadSelectionTargets::default(),
-            mode: default_component_selection_mode(),
-            ids: Vec::new(),
-        }
-    }
-}
-
+/// @emoji 🎯️ `CadHoverTarget`/`CadSelectionTargets`/`CadComponentSelection`/`CadDislocateOptions` moved
+/// to `cad_document_engine` (WORKFLOWS-END-TO-END-TYPED-PORTS config recipe): `CadConfig` embeds them
+/// as `dsl::DslRecord` block fields, and `CadPlayRuntime` below reuses the exact same types (imported,
+/// not redefined) so the two structs stay field-for-field convertible with no shape drift.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CadPlayRuntime {
@@ -355,25 +287,88 @@ impl CadPlayRuntime {
     }
 }
 
-/// 🪟️ Resolves the utility owned by one window instance; a populated per-window map is authoritative.
-fn cad_window_active_utility<'a>(view_state: &'a ViewState, window_id: Option<&str>) -> Option<&'a str> {
-    if let Some(window_id) = window_id {
-        if !view_state.active_utility_by_window_id.is_empty() {
-            return view_state.active_utility_by_window_id.get(window_id).map(String::as_str);
-        }
+/// @emoji 🔀️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe boundary (in): unpacks `cfg.projection`
+/// (the persisted, VCS-tracked `CadConfig`) into the ergonomic `CadPlayRuntime` scratch shape every
+/// helper function below already works with — a pure, allocation-only conversion, never itself an
+/// operation. `dislocate_options_by_window_id` is seeded from the 4 fixed pane fields keyed by the 4
+/// constant window-kind ids (`CAD_PLAY_WINDOW_*`) — see `CadDislocateOptions`'s doc comment in
+/// `cad_document_engine` for why per-window-INSTANCE keying no longer applies.
+fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
+    CadPlayRuntime {
+        selected_object_ids: SelectionSet::from(cfg.selected_object_ids.clone()),
+        selected_node_ids: cfg.selected_node_ids.clone(),
+        selection_method: cfg.selection_method.clone(),
+        hovered_object_id: cfg.hovered_object_id.clone(),
+        hovered_target: cfg.hovered_target.clone(),
+        active_object_id: cfg.active_object_id.clone(),
+        component_selection: cfg.component_selection.clone(),
+        engagement_input: cfg.engagement_input.clone(),
+        engagement_step: cfg.engagement_step.clone(),
+        active_example_id: cfg.active_example_id.clone(),
+        selected_reference_model_definition_id: cfg.selected_reference_model_definition_id.clone(),
+        selected_reference_id: cfg.selected_reference_id.clone(),
+        selected_primitive_id: cfg.selected_primitive_id.clone(),
+        selected_primitive_kind: cfg.selected_primitive_kind.clone(),
+        engagement_pane: cfg.engagement_pane.clone(),
+        engagement_session: cfg.engagement_session_json.as_deref().and_then(|json| serde_json::from_str(json).ok()),
+        last_finalized_interaction_id: cfg.last_finalized_interaction_id.clone(),
+        sun: cad_sun_config_to_world(&cfg.sun),
+        camera: cfg.camera.clone(),
+        camera_building: cfg.camera_building.clone(),
+        camera_energy: cfg.camera_energy.clone(),
+        camera_structure_classic: cfg.camera_structure_classic.clone(),
+        dislocate_options_by_window_id: HashMap::from([
+            (CAD_PLAY_WINDOW_SHAPE.to_string(), cfg.dislocate_shape),
+            (CAD_PLAY_WINDOW_BUILDING.to_string(), cfg.dislocate_building),
+            (CAD_PLAY_WINDOW_ENERGY.to_string(), cfg.dislocate_energy),
+            (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(), cfg.dislocate_structure_classic),
+        ]),
     }
-    view_state.active_utility_id.as_deref()
 }
 
-/// 🪟️ Lists live instances of one window kind, with the kind id as the headless fallback.
-fn cad_window_instance_ids(view_state: &ViewState, window_kind_id: &str) -> Vec<String> {
-    let ids: Vec<String> = view_state
-        .window_instances
-        .iter()
-        .filter(|instance| instance.window_kind_id == window_kind_id)
-        .map(|instance| instance.id.clone())
-        .collect();
-    if ids.is_empty() { vec![window_kind_id.to_string()] } else { ids }
+/// @emoji 🔀️ The `cad_runtime_from_config` boundary's outbound twin: repacks the (possibly mutated)
+/// `CadPlayRuntime` scratch struct back into a real `CadConfig` snapshot for
+/// `CadConfigOperation::Snapshot`. `active_utility_id`/`locale` aren't part of `CadPlayRuntime` (they
+/// never had a runtime-side representation pre-B1 either — they were read straight off `ViewState`),
+/// so callers that need to change them patch the returned `CadConfig` directly instead of threading
+/// them through `CadPlayRuntime`.
+fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadConfig {
+    CadConfig {
+        selected_object_ids: runtime.selected_object_ids.to_vec(),
+        selected_node_ids: runtime.selected_node_ids.clone(),
+        selection_method: runtime.selection_method.clone(),
+        hovered_object_id: runtime.hovered_object_id.clone(),
+        hovered_target: runtime.hovered_target.clone(),
+        active_object_id: runtime.active_object_id.clone(),
+        component_selection: runtime.component_selection.clone(),
+        engagement_input: runtime.engagement_input.clone(),
+        engagement_step: runtime.engagement_step.clone(),
+        active_example_id: runtime.active_example_id.clone(),
+        selected_reference_model_definition_id: runtime.selected_reference_model_definition_id.clone(),
+        selected_reference_id: runtime.selected_reference_id.clone(),
+        selected_primitive_id: runtime.selected_primitive_id.clone(),
+        selected_primitive_kind: runtime.selected_primitive_kind.clone(),
+        engagement_pane: runtime.engagement_pane.clone(),
+        engagement_session_json: runtime.engagement_session.as_ref().map(|session| serde_json::to_string(session).unwrap_or_default()),
+        last_finalized_interaction_id: runtime.last_finalized_interaction_id.clone(),
+        sun: cad_sun_config_from_world(&runtime.sun),
+        camera: runtime.camera.clone(),
+        camera_building: runtime.camera_building.clone(),
+        camera_energy: runtime.camera_energy.clone(),
+        camera_structure_classic: runtime.camera_structure_classic.clone(),
+        dislocate_shape: runtime.dislocate_options(CAD_PLAY_WINDOW_SHAPE),
+        dislocate_building: runtime.dislocate_options(CAD_PLAY_WINDOW_BUILDING),
+        dislocate_energy: runtime.dislocate_options(CAD_PLAY_WINDOW_ENERGY),
+        dislocate_structure_classic: runtime.dislocate_options(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC),
+        active_utility_id: base.active_utility_id.clone(),
+        locale: base.locale.clone(),
+        terminology: base.terminology.clone(),
+    }
+}
+
+/// 🗣️ B1: `cfg.locale`-driven counterpart of the deleted `ViewState`-driven `is_de_locale`.
+fn cad_is_de_locale(cfg: &CadConfig) -> bool {
+    cfg.locale.starts_with("de")
 }
 
 /// 🎥️ Reads the runtime-owned camera for `pane` — the session-only replacement for the old
@@ -418,12 +413,6 @@ fn camera_json(camera: &CadCamera) -> String {
     world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(camera))
 }
 
-/// 🎯️ Wraps the SDK's `selection_ids` core `"ids"`-array extraction with a fallback-to-current-selection
-/// when the arg is absent/empty — cad's own addition on top of the shared core.
-fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
-    let ids = selection_ids(args);
-    if ids.is_empty() { fallback.to_vec() } else { ids }
-}
 
 fn cad_pane_id_from_suffix(id_suffix: &str) -> CadPaneId {
     match id_suffix {
@@ -1094,13 +1083,14 @@ const CAD_LABELS_REUSE_DE: CadLabels = CadLabels {
     ..CAD_LABELS_NATIVE_DE
 };
 
-/// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
-/// Two-dimensional (locale × terminology) label selection doesn't fit the SDK's `LocaleLabels`/`app_labels!`
-/// (locale-only, one struct type per resolution), so this stays hand-rolled — reusing `is_de_locale` for
-/// the locale half instead of duplicating its `starts_with("de")` check.
-fn cad_labels(view_state: &ViewState) -> &'static CadLabels {
-    let terminology = view_state.terminology.as_deref().unwrap_or("native");
-    let is_de = is_de_locale(view_state);
+/// 🗣️ Resolves the active label set from the config-carried locale/terminology (was shell-provided
+/// `ViewState`, deleted by B1); unknown terminology ids fall back to native. Two-dimensional (locale ×
+/// terminology) label selection doesn't fit the SDK's `LocaleLabels`/`app_labels!` (locale-only, one
+/// struct type per resolution), so this stays hand-rolled — reusing `cad_is_de_locale` for the locale
+/// half instead of duplicating its `starts_with("de")` check.
+fn cad_labels(cfg: &CadConfig) -> &'static CadLabels {
+    let terminology = if cfg.terminology.is_empty() { "native" } else { cfg.terminology.as_str() };
+    let is_de = cad_is_de_locale(cfg);
     match (terminology, is_de) {
         ("reuse", true) => &CAD_LABELS_REUSE_DE,
         ("reuse", false) => &CAD_LABELS_REUSE_EN,
@@ -2162,6 +2152,38 @@ fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, inte
     true
 }
 
+/// @emoji 🔀️ WORKFLOWS-END-TO-END-TYPED-PORTS: the typed-command counterpart of the pre-B1
+/// `mesh_selection_ids` (JSON-args) helper — falls back to the current selection when the command
+/// carries no explicit ids.
+fn ids_or_selection(ids: &[String], fallback: &[String]) -> Vec<String> {
+    if ids.is_empty() { fallback.to_vec() } else { ids.to_vec() }
+}
+
+/// @emoji 🪟️ Maps a pane to the window-KIND id whose Dislocate options it owns — the typed-command
+/// counterpart of the pre-B1 `view_state.window_id` resolution (see `CadConfig::dislocate_shape`'s
+/// doc comment in `cad_document_engine`).
+fn cad_window_id_for_pane(pane: CadPaneId) -> &'static str {
+    match pane {
+        CadPaneId::Shape => CAD_PLAY_WINDOW_SHAPE,
+        CadPaneId::Building => CAD_PLAY_WINDOW_BUILDING,
+        CadPaneId::Energy => CAD_PLAY_WINDOW_ENERGY,
+        CadPaneId::StructureClassic => CAD_PLAY_WINDOW_STRUCTURE_CLASSIC,
+    }
+}
+
+/// @emoji 🩹️ Typed-command counterpart of a raw JSON patch value: `CadCommand::PatchObject`/
+/// `PatchSelection`/`PatchCadPlayReference` all carry `value: Option<String>` (the typed channel has no
+/// single Rust type spanning "maybe a string, maybe a number, maybe a bool") — this recovers the
+/// `serde_json::Value` shape `object_patch_from_field`/`resolve_number_edit` already expect, dispatching
+/// on the same field-name vocabulary those helpers use (bool fields by name, everything else tried as a
+/// number first, falling back to a string).
+fn command_value_json(field: &str, value: &str) -> Value {
+    match field {
+        "hidden" | "locked" => value.parse::<bool>().map(Value::Bool).unwrap_or(Value::Null),
+        _ => value.parse::<f64>().map(|number| json!(number)).unwrap_or_else(|_| Value::String(value.into())),
+    }
+}
+
 /// @emoji 📐️ The CAD play app. Document content lives in the wrapping `VcsDocumentApp`'s
 /// `DocumentStore<CadScene, CadOperation>`; only ephemeral view-state (selection, hover, engagement
 /// session, transform utility, sun) lives here on `runtime`. History (undo/redo/checkpoint) is
@@ -2169,19 +2191,15 @@ fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, inte
 //#endregion 🔖️ActionHelpers
 
 //#region 🔖️CadPlayApp
+/// @emoji 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `DocumentApp` — every former
+/// `CadPlayRuntime`/`self.runtime` field now lives in `cad_document_engine::CadConfig`, written through
+/// `cad_document_op::CadConfigOperation`s (real `backwards`, no ad hoc `InverseAction`). `preview_seq`
+/// is the sole surviving interior-mutable field — it backs `gesture_preview`'s never-VCS'd, never-config'd
+/// live rubber-band tick counter (see that method's doc comment), not app state.
+#[derive(Default)]
 pub struct CadPlayApp {
-    runtime: std::cell::RefCell<CadPlayRuntime>,
     /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
     preview_seq: std::cell::RefCell<u64>,
-}
-
-impl Default for CadPlayApp {
-    fn default() -> Self {
-        Self {
-            runtime: std::cell::RefCell::new(CadPlayRuntime::default()),
-            preview_seq: std::cell::RefCell::new(0),
-        }
-    }
 }
 
 impl CadPlayApp {
@@ -2200,18 +2218,19 @@ impl CadPlayApp {
     /// `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
     /// `#[allow(dead_code)]`: exercised by `🧪️Tests` only until a host bridge exists.
     #[allow(dead_code)]
-    fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
-        let runtime = self.runtime.borrow();
-        let session = runtime.engagement_session.as_ref()?;
-        Some(("gesture:engagement", *self.preview_seq.borrow(), serde_json::to_vec(session).ok()?))
+    fn gesture_preview(&self, config: &CadConfig) -> Option<(&'static str, u64, Vec<u8>)> {
+        let runtime = cad_runtime_from_config(config);
+        let session = runtime.engagement_session?;
+        Some(("gesture:engagement", *self.preview_seq.borrow(), serde_json::to_vec(&session).ok()?))
     }
 }
 
 impl DocumentApp for CadPlayApp {
     type Projection = CadScene;
     type Operation = CadOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = CadConfig;
+    type ConfigOperation = CadConfigOperation;
+    type Command = CadCommand;
 
     fn app_id(&self) -> &str {
         CAD_PLAY_APP_ID
@@ -2225,22 +2244,146 @@ impl DocumentApp for CadPlayApp {
         forest_play_scene()
     }
 
-    fn handle_action(
+    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+        Some(cad_io())
+    }
+
+    fn whole_document_operation(&self, projection: CadScene) -> Option<CadOperation> {
+        Some(CadOperation::SetScene { scene: Box::new(projection) })
+    }
+
+    /// 🎞️ `geometry:in` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): accepts incoming mesh/brep
+    /// geometry from any upstream 3D producer and inserts it as a new `CadObject` in the Shape pane —
+    /// reuses `cad_document_engine::geometry_import::cad_object_from_mesh`/`cad_object_from_solid_handle`
+    /// (the same helpers `import_cad_object_by_extension` already builds on for file-drop imports),
+    /// through the same brep kernel every other import path shares. Falls through to the default
+    /// `document:in` importer for any other port.
+    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, CadScene>) -> Result<Emit<CadOperation, CadConfigOperation>, MediaError> {
+        if port != "geometry:in" {
+            if port != "document:in" {
+                return Err(MediaError::NotImplemented);
+            }
+            let MediaPayload::Structured { json, .. } = &media.payload else {
+                return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+            };
+            let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let projection = <CadScene as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            return match self.whole_document_operation(projection) {
+                Some(operation) => Ok(Emit::operations(vec![operation])),
+                None => Err(MediaError::NotImplemented),
+            };
+        }
+        let name = match &media.media_type.form {
+            MediaForm::Brep => "import.step",
+            _ => "import.obj",
+        };
+        let payload = match &media.payload {
+            MediaPayload::Structured { json, .. } => Value::String(json.clone()),
+            MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured payload today".into())),
+        };
+        match import_cad_object_by_extension(name, &payload) {
+            Some(object) => Ok(Emit::operations(vec![CadOperation::AddObject { pane: CadPaneId::Shape, object }])),
+            None => Err(MediaError::Payload(port.to_string(), "unrecognized geometry payload".into())),
+        }
+    }
+
+    /// 🎞️ `brep:out` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): exports the cad document's current
+    /// brep geometry (every pane's solids fused into one modelspace, same as `saveInPlay`'s STEP export)
+    /// wrapped as `Media`. Falls through to the default whole-document `document:out` for any other port.
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, CadScene>) -> Result<Media, MediaError> {
+        if port != "brep:out" {
+            if port != "document:out" {
+                return Err(MediaError::NotImplemented);
+            }
+            let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep });
+            let bytes = <CadScene as store::DocumentPack>::encode_pack(doc.projection);
+            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
+        }
+        let view = CadPlayView { document: doc.projection.clone(), runtime: CadPlayRuntime::default() };
+        let Ok(mut kernel) = cad_brep_kernel().lock() else {
+            return Err(MediaError::Payload(port.to_string(), "brep kernel unavailable".into()));
+        };
+        let solids = collect_modelspace_solids(&mut **kernel, &view);
+        if solids.is_empty() {
+            return Err(MediaError::Payload(port.to_string(), "no solids to export".into()));
+        }
+        let Some(export) = export_solids_as(&mut **kernel, &solids, OsMediaFormat::Step, "cad.modelspace") else {
+            return Err(MediaError::Payload(port.to_string(), "brep export failed".into()));
+        };
+        let text = match export.data {
+            Value::String(text) => text,
+            other => other.to_string(),
+        };
+        Ok(Media {
+            media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+            payload: MediaPayload::Structured { schema: "3d.cad".into(), json: base64::engine::general_purpose::STANDARD.encode(text.as_bytes()) },
+        })
+    }
+
+    fn command_id(&self, command: &CadCommand) -> &str {
+        match command {
+            CadCommand::AddObject { .. } => "addObject",
+            CadCommand::PatchObject { .. } => "patchObject",
+            CadCommand::PatchSelection { .. } => "patchSelection",
+            CadCommand::DeleteObject { .. } => "deleteObject",
+            CadCommand::DuplicateObject { .. } => "duplicateObject",
+            CadCommand::AddNode { .. } => "addNode",
+            CadCommand::RenameNode { .. } => "renameNode",
+            CadCommand::TranslateSelection { .. } => "translateSelection",
+            CadCommand::RotateSelection { .. } => "rotateSelection",
+            CadCommand::ScaleSelection { .. } => "scaleSelection",
+            CadCommand::ApplyTransformation { .. } => "applyTransformation",
+            CadCommand::ImportCadFile { .. } => "importCadFile",
+            CadCommand::PatchCadPlayReference { .. } => "patchCadPlayReference",
+            CadCommand::EngagementSubmit { .. } => "engagementSubmit",
+            CadCommand::FocusModelDefinition { .. } => "focusModelDefinition",
+            CadCommand::SetActiveExample { .. } => "setActiveExample",
+            CadCommand::WorldPointerDown { .. } => "worldPointerDown",
+            CadCommand::SetCamera { .. } => "setCamera",
+            CadCommand::SetProjection { .. } => "setProjection",
+            CadCommand::SetProjectionParam { .. } => "setProjectionParam",
+            CadCommand::SetDislocateOption { .. } => "setDislocateOption",
+            CadCommand::SetSelection { .. } => "setSelection",
+            CadCommand::SetNodeSelection { .. } => "setNodeSelection",
+            CadCommand::WorldSelect { .. } => "worldSelect",
+            CadCommand::WorldHover { .. } => "worldHover",
+            CadCommand::SetHover { .. } => "setHover",
+            CadCommand::WorldPick { .. } => "worldPick",
+            CadCommand::SetSelectionMethod { .. } => "setSelectionMethod",
+            CadCommand::SetReferenceSelection { .. } => "setReferenceSelection",
+            CadCommand::ReferenceHover { .. } => "referenceHover",
+            CadCommand::EngagementInput { .. } => "engagementInput",
+            CadCommand::EngagementPossibleSelect { .. } => "engagementPossibleSelect",
+            CadCommand::EngagementRepeatLast { .. } => "engagementRepeatLast",
+            CadCommand::EngagementAbort => "engagementAbort",
+            CadCommand::WorldPointerMove { .. } => "worldPointerMove",
+            CadCommand::SetPrimitiveSelection { .. } => "setPrimitiveSelection",
+            CadCommand::ToggleSun => "toggleSun",
+            CadCommand::SetSunAzimuth { .. } => "setSunAzimuth",
+            CadCommand::SetSunElevation { .. } => "setSunElevation",
+            CadCommand::SetSunIntensity { .. } => "setSunIntensity",
+            CadCommand::SetActiveUtility { .. } => SET_ACTIVE_UTILITY_ACTION_ID,
+            CadCommand::SetLocale { .. } => "setLocale",
+            CadCommand::SetTerminology { .. } => "setTerminology",
+            CadCommand::SaveSelected => "saveSelected",
+            CadCommand::SaveInPlay => "saveInPlay",
+            CadCommand::SaveCurrent { .. } => "saveCurrent",
+            CadCommand::LoadRawRequest => "loadRawRequest",
+        }
+    }
+
+    fn handle(
         &self,
-        action: &str,
-        args: Option<&Value>,
+        command: &CadCommand,
         doc: &DocumentView<'_, CadScene>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-    ) -> ActionEmit<CadOperation> {
+        cfg: &ConfigView<'_, CadConfig>,
+    ) -> Emit<CadOperation, CadConfigOperation> {
         let document = doc.projection;
-        let mut runtime = self.runtime.borrow_mut();
-        match action {
-            "setActiveExample" => {
-                let example_id = args
-                    .and_then(|value| value.get("exampleId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
+        let base_config = cfg.projection;
+        let mut runtime = cad_runtime_from_config(base_config);
+        let snapshot_of = |runtime: &CadPlayRuntime| CadConfigOperation::Snapshot { config: cad_config_from_runtime(runtime, base_config) };
+        match command {
+            CadCommand::SetActiveExample { example_id } => {
                 let (scene, example_runtime) = if example_id.is_empty() {
                     (default_document(), CadPlayRuntime::default())
                 } else if example_id == CAD_EXAMPLE_FOREST_LEFT || example_id == "forest-left" {
@@ -2257,42 +2400,49 @@ impl DocumentApp for CadPlayApp {
                         },
                     )
                 } else {
-                    return ActionEmit::default();
+                    return Emit::default();
                 };
-                *runtime = example_runtime;
-                ActionEmit::operations(vec![CadOperation::SetScene { scene: Box::new(scene) }])
+                runtime = example_runtime;
+                let mut emit = Emit::operations(vec![CadOperation::SetScene { scene: Box::new(scene) }]);
+                emit.config_operations = vec![snapshot_of(&runtime)];
+                emit
             }
-            SET_ACTIVE_UTILITY_ACTION_ID => {
-                // 🧰️ Switching the host-owned active utility (`ViewState::active_utility_id`) is a pure
-                // View action: it never mutates the document. Clear any in-progress engagement
-                // session / rubber-band scratch so a stale preview cannot leak across a utility switch.
+            CadCommand::SetActiveUtility { utility_id } => {
+                // 🧰️ Switching the active utility is config-only: it never mutates the document. Clear
+                // any in-progress engagement session / rubber-band scratch so a stale preview cannot
+                // leak across a utility switch.
                 runtime.engagement_input.clear();
                 runtime.engagement_session = None;
                 runtime.engagement_step = "Idle".into();
                 runtime.hovered_object_id = None;
                 runtime.hovered_target = None;
-                ActionEmit::default()
+                let mut config = cad_config_from_runtime(&runtime, base_config);
+                config.active_utility_id = utility_id.clone();
+                Emit::config(vec![CadConfigOperation::Snapshot { config }])
             }
-            "setDislocateOption" => {
-                let window_id = view_state
-                    .window_id
-                    .as_deref()
-                    .or(view_state.active_window_kind_id.as_deref())
-                    .unwrap_or(CAD_PLAY_WINDOW_SHAPE);
+            CadCommand::SetLocale { value } => {
+                let mut config = cad_config_from_runtime(&runtime, base_config);
+                config.locale = value.clone();
+                Emit::config(vec![CadConfigOperation::Snapshot { config }])
+            }
+            CadCommand::SetTerminology { value } => {
+                let mut config = cad_config_from_runtime(&runtime, base_config);
+                config.terminology = value.clone();
+                Emit::config(vec![CadConfigOperation::Snapshot { config }])
+            }
+            CadCommand::SetDislocateOption { pane, option, pressed } => {
+                let pane = pane.as_deref().map(cad_pane_id_from_suffix).unwrap_or(CadPaneId::Shape);
+                let window_id = cad_window_id_for_pane(pane);
                 let options = runtime.dislocate_options_by_window_id.entry(window_id.into()).or_default();
-                let pressed = args.and_then(|value| value.get("pressed")).and_then(Value::as_bool);
-                match args.and_then(|value| value.get("option")).and_then(Value::as_str) {
-                    Some("move") => options.move_enabled = pressed.unwrap_or(!options.move_enabled),
-                    Some("rotate") => options.rotate_enabled = pressed.unwrap_or(!options.rotate_enabled),
+                match option.as_str() {
+                    "move" => options.move_enabled = pressed.unwrap_or(!options.move_enabled),
+                    "rotate" => options.rotate_enabled = pressed.unwrap_or(!options.rotate_enabled),
                     _ => {}
                 }
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "setSelection" => {
-                runtime.selected_object_ids = args
-                    .and_then(|value| value.get("objectIds"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-                    .unwrap_or_default();
+            CadCommand::SetSelection { object_ids } => {
+                runtime.selected_object_ids = SelectionSet::from(object_ids.clone());
                 runtime.selected_node_ids.clear();
                 runtime.selected_primitive_id = None;
                 runtime.selected_primitive_kind = None;
@@ -2300,158 +2450,136 @@ impl DocumentApp for CadPlayApp {
                 runtime.selected_reference_id = None;
                 runtime.active_object_id = runtime.selected_object_ids.first().map(str::to_string);
                 clear_component_selection(&mut runtime);
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "setNodeSelection" => {
-                runtime.selected_node_ids = args
-                    .and_then(|value| value.get("nodeIds"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-                    .unwrap_or_default();
+            CadCommand::SetNodeSelection { node_ids } => {
+                runtime.selected_node_ids = node_ids.clone();
                 runtime.selected_object_ids.clear();
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "setCamera" => {
-                if let Some(camera) = args.and_then(|value| value.get("camera")) {
-                    if let Ok(parsed) = serde_json::from_value::<CadCamera>(camera.clone()) {
-                        let pane = args
-                            .and_then(|value| value.get("surfaceId"))
-                            .and_then(|v| v.as_str())
-                            .map(cad_pane_id_from_surface_id)
-                            .unwrap_or(CadPaneId::Shape);
-                        *cad_pane_camera_runtime_mut(&mut runtime, pane) = parsed;
-                    }
-                }
-                ActionEmit::default()
+            CadCommand::SetCamera { pane, camera } => {
+                // 🎥️ `pane` carries the FULL `surfaceId` (`"cad.play.scene3d/building"`), not a bare
+                // pane suffix — mirrors the pre-B1 `args.get("surfaceId")` resolution exactly.
+                let pane = pane.as_deref().map(cad_pane_id_from_surface_id).unwrap_or(CadPaneId::Shape);
+                *cad_pane_camera_runtime_mut(&mut runtime, pane) = camera.clone();
+                Emit::amend_config(vec![snapshot_of(&runtime)], format!("camera:{}", cad_pane_suffix(pane)))
             }
-            "setProjection" | "setProjectionParam" => {
-                let pane = args
-                    .and_then(|value| value.get("surfaceId"))
-                    .and_then(|v| v.as_str())
-                    .map(cad_pane_id_from_surface_id)
-                    .unwrap_or(CadPaneId::Shape);
-                let mut camera = cad_pane_camera_runtime(&runtime, pane).clone();
-                let mut config = cad_camera_projection_config(&camera);
-                let moves_pose = world3d_projection_action_moves_pose(action, args);
-                apply_world3d_projection_action(&mut config, action, args);
+            CadCommand::SetProjection { pane, field, value_str, value_num, param } => {
+                // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment above.
+                let pane_id = pane.as_deref().map(cad_pane_id_from_surface_id).unwrap_or(CadPaneId::Shape);
+                let mut camera = cad_pane_camera_runtime(&runtime, pane_id).clone();
+                let mut projection_config = cad_camera_projection_config(&camera);
+                let args_value = json!({ "field": field, "value": value_str.clone().map(Value::String).or_else(|| value_num.map(|number| json!(number))), "param": param });
+                let args = Some(&args_value);
+                let moves_pose = world3d_projection_action_moves_pose("setProjection", args);
+                apply_world3d_projection_action(&mut projection_config, "setProjection", args);
                 if moves_pose {
-                    let (position, _up) = world3d_projection_pose(&config, camera.target, cad_camera_distance(&camera));
+                    let (position, _up) = world3d_projection_pose(&projection_config, camera.target, cad_camera_distance(&camera));
                     camera.position = position;
                 }
-                cad_camera_set_projection_config(&mut camera, &config);
-                *cad_pane_camera_runtime_mut(&mut runtime, pane) = camera;
-                ActionEmit::default()
+                cad_camera_set_projection_config(&mut camera, &projection_config);
+                *cad_pane_camera_runtime_mut(&mut runtime, pane_id) = camera;
+                Emit::amend_config(vec![snapshot_of(&runtime)], format!("projection:{}", cad_pane_suffix(pane_id)))
             }
-            "translateSelection" => {
-                let ids = mesh_selection_ids(args, runtime.selected_object_ids.as_slice());
-                if ids.is_empty() {
-                    return ActionEmit::default();
+            CadCommand::SetProjectionParam { pane, field, value_str, value_num, param } => {
+                // 🎥️ `pane` carries the full `surfaceId` — see `SetCamera`'s doc comment above.
+                let pane_id = pane.as_deref().map(cad_pane_id_from_surface_id).unwrap_or(CadPaneId::Shape);
+                let mut camera = cad_pane_camera_runtime(&runtime, pane_id).clone();
+                let mut projection_config = cad_camera_projection_config(&camera);
+                let args_value = json!({ "field": field, "value": value_str.clone().map(Value::String).or_else(|| value_num.map(|number| json!(number))), "param": param });
+                let args = Some(&args_value);
+                let moves_pose = world3d_projection_action_moves_pose("setProjectionParam", args);
+                apply_world3d_projection_action(&mut projection_config, "setProjectionParam", args);
+                if moves_pose {
+                    let (position, _up) = world3d_projection_pose(&projection_config, camera.target, cad_camera_distance(&camera));
+                    camera.position = position;
                 }
-                let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                ActionEmit::amend(vec![CadOperation::TranslateObjects { object_ids: ids, dx, dy, dz }], "gumball.translate")
+                cad_camera_set_projection_config(&mut camera, &projection_config);
+                *cad_pane_camera_runtime_mut(&mut runtime, pane_id) = camera;
+                Emit::amend_config(vec![snapshot_of(&runtime)], format!("projection:{}", cad_pane_suffix(pane_id)))
             }
-            "rotateSelection" => {
-                let ids = mesh_selection_ids(args, runtime.selected_object_ids.as_slice());
+            CadCommand::TranslateSelection { object_ids, dx, dy, dz } => {
+                let ids = ids_or_selection(object_ids, runtime.selected_object_ids.as_slice());
                 if ids.is_empty() {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
-                let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                ActionEmit::amend(vec![CadOperation::RotateObjects { object_ids: ids, ax, ay, az, angle }], "gumball.rotate")
+                Emit::amend(vec![CadOperation::TranslateObjects { object_ids: ids, dx: *dx, dy: *dy, dz: *dz }], "gumball.translate")
             }
-            "scaleSelection" => {
-                let ids = mesh_selection_ids(args, runtime.selected_object_ids.as_slice());
+            CadCommand::RotateSelection { object_ids, ax, ay, az, angle } => {
+                let ids = ids_or_selection(object_ids, runtime.selected_object_ids.as_slice());
                 if ids.is_empty() {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
-                let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                ActionEmit::amend(vec![CadOperation::ScaleObjects { object_ids: ids, sx, sy, sz }], "gumball.scale")
+                Emit::amend(vec![CadOperation::RotateObjects { object_ids: ids, ax: *ax, ay: *ay, az: *az, angle: *angle }], "gumball.rotate")
             }
-            "addObject" => {
-                let typology = args
-                    .and_then(|value| value.get("typology"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("spatial.shape.primitive.box");
+            CadCommand::ScaleSelection { object_ids, sx, sy, sz } => {
+                let ids = ids_or_selection(object_ids, runtime.selected_object_ids.as_slice());
+                if ids.is_empty() {
+                    return Emit::default();
+                }
+                Emit::amend(vec![CadOperation::ScaleObjects { object_ids: ids, sx: *sx, sy: *sy, sz: *sz }], "gumball.scale")
+            }
+            CadCommand::AddObject { typology } => {
+                let typology = typology.as_deref().unwrap_or("spatial.shape.primitive.box");
                 let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id)
                     .unwrap_or(CadPaneId::Shape);
                 let object = make_object_for_typology(typology, cad_pane_objects(document, pane).len(), pane);
                 runtime.selected_object_ids = SelectionSet::from(vec![object.id.clone()]);
-                ActionEmit::operations(vec![CadOperation::AddObject { pane, object }])
+                let mut emit = Emit::operations(vec![CadOperation::AddObject { pane, object }]);
+                emit.config_operations = vec![snapshot_of(&runtime)];
+                emit
             }
-            "patchObject" | "patchSelection" => {
-                let object_ids: Vec<String> = if action == "patchSelection" {
-                    args.and_then(|value| value.get("objectIds"))
-                        .and_then(|value| serde_json::from_value(value.clone()).ok())
-                        .unwrap_or_else(|| runtime.selected_object_ids.to_vec())
-                } else {
-                    args.and_then(|value| value.get("objectId"))
-                        .and_then(|value| value.as_str())
-                        .map(|id| vec![id.to_string()])
-                        .unwrap_or_default()
-                };
-                let field = args
-                    .and_then(|value| value.get("field"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                let value = args.and_then(|value| value.get("value"));
-                let delta = args.and_then(|value| value.get("delta"));
-                ActionEmit::operations(patch_objects_operations(document, &object_ids, field, value, delta))
+            CadCommand::PatchObject { object_id, field, value, delta } => {
+                let value_json = value.as_deref().map(|entry| command_value_json(field, entry));
+                let delta_json = delta.map(|entry| json!(entry));
+                Emit::operations(patch_objects_operations(document, std::slice::from_ref(object_id), field, value_json.as_ref(), delta_json.as_ref()))
             }
-            "deleteObject" => {
-                let object_id = args
-                    .and_then(|value| value.get("objectId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
+            CadCommand::PatchSelection { object_ids, field, value, delta } => {
+                let ids = ids_or_selection(object_ids, runtime.selected_object_ids.as_slice());
+                let value_json = value.as_deref().map(|entry| command_value_json(field, entry));
+                let delta_json = delta.map(|entry| json!(entry));
+                Emit::operations(patch_objects_operations(document, &ids, field, value_json.as_ref(), delta_json.as_ref()))
+            }
+            CadCommand::DeleteObject { object_id } => {
                 if let Some(pane) = cad_find_object_pane(document, object_id) {
                     runtime.selected_object_ids.remove_id(object_id);
-                    return ActionEmit::operations(vec![CadOperation::RemoveObject { pane, object_id: object_id.into() }]);
+                    let mut emit = Emit::operations(vec![CadOperation::RemoveObject { pane, object_id: object_id.clone() }]);
+                    emit.config_operations = vec![snapshot_of(&runtime)];
+                    return emit;
                 }
-                ActionEmit::default()
+                Emit::default()
             }
-            "duplicateObject" => {
-                let object_id = args
-                    .and_then(|value| value.get("objectId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
+            CadCommand::DuplicateObject { object_id } => {
                 let duplicate_target = cad_all_objects(document)
-                    .find(|(object, _)| object.id == object_id)
+                    .find(|(object, _)| &object.id == object_id)
                     .map(|(object, pane)| (object.clone(), pane));
                 if let Some((mut duplicate, pane)) = duplicate_target {
                     duplicate.id = next_cad_id("object");
                     duplicate.label = format!("{} copy", duplicate.label);
                     runtime.selected_object_ids = SelectionSet::from(vec![duplicate.id.clone()]);
-                    return ActionEmit::operations(vec![CadOperation::AddObject { pane, object: duplicate }]);
+                    let mut emit = Emit::operations(vec![CadOperation::AddObject { pane, object: duplicate }]);
+                    emit.config_operations = vec![snapshot_of(&runtime)];
+                    return emit;
                 }
-                ActionEmit::default()
+                Emit::default()
             }
-            "addNode" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("solid");
+            CadCommand::AddNode { kind } => {
                 let id = next_cad_id("node");
                 let label = format!("Node {}", document.nodes.len() + 1);
-                let node = CadNode { id: id.clone(), label, kind: kind.into() };
+                let node = CadNode { id: id.clone(), label, kind: kind.clone() };
                 runtime.selected_node_ids = vec![id];
-                ActionEmit::operations(vec![CadOperation::AddNode { node }])
+                let mut emit = Emit::operations(vec![CadOperation::AddNode { node }]);
+                emit.config_operations = vec![snapshot_of(&runtime)];
+                emit
             }
-            "renameNode" => {
-                let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).unwrap_or("");
-                let label = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
-                if node_id.is_empty() || label.is_empty() {
-                    return ActionEmit::default();
+            CadCommand::RenameNode { node_id, value } => {
+                if node_id.is_empty() || value.is_empty() {
+                    return Emit::default();
                 }
-                ActionEmit::operations(vec![CadOperation::RenameNode { node_id: node_id.into(), label: label.into() }])
+                Emit::operations(vec![CadOperation::RenameNode { node_id: node_id.clone(), label: value.clone() }])
             }
-            "worldSelect" => {
-                let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
-                let ids: Vec<String> = args
-                    .and_then(|value| value.get("ids"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-                    .unwrap_or_default();
-                runtime.selected_object_ids = merge_world_selection_ids(&runtime.selected_object_ids, &ids, merge);
+            CadCommand::WorldSelect { ids, merge } => {
+                runtime.selected_object_ids = merge_world_selection_ids(&runtime.selected_object_ids, ids, merge);
                 runtime.selected_node_ids.clear();
                 runtime.selected_primitive_id = None;
                 runtime.selected_primitive_kind = None;
@@ -2459,37 +2587,23 @@ impl DocumentApp for CadPlayApp {
                 runtime.selected_reference_id = None;
                 runtime.active_object_id = runtime.selected_object_ids.first().map(str::to_string);
                 clear_component_selection(&mut runtime);
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "worldHover" => {
-                runtime.hovered_object_id = args
-                    .and_then(|value| value.get("id"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
+            CadCommand::WorldHover { object_id } => {
+                runtime.hovered_object_id = object_id.clone();
                 runtime.hovered_target = runtime.hovered_object_id.as_ref().map(|object_id| CadHoverTarget {
                     object_id: Some(object_id.clone()),
                     mode: Some("mesh".into()),
                     id: Some(0),
                 });
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "setHover" => {
-                if args.is_none() || args.and_then(|value| value.get("objectId")).is_none() {
+            CadCommand::SetHover { object_id, mode, id } => {
+                if object_id.is_none() {
                     runtime.hovered_target = None;
                     runtime.hovered_object_id = None;
                 } else {
-                    let object_id = args
-                        .and_then(|value| value.get("objectId"))
-                        .and_then(|value| value.as_str())
-                        .map(str::to_string);
-                    let mut mode = args
-                        .and_then(|value| value.get("mode"))
-                        .and_then(|value| value.as_str())
-                        .map(str::to_string);
-                    let id = args
-                        .and_then(|value| value.get("id"))
-                        .and_then(|value| value.as_u64())
-                        .map(|value| value as u32);
+                    let mut mode = mode.clone();
                     // 🧵️ Curve-primitive objects (structure beams/columns/walls) are whole instances.
                     if mode.as_deref() == Some("edge") {
                         if let Some(object_id) = object_id.as_deref() {
@@ -2502,23 +2616,12 @@ impl DocumentApp for CadPlayApp {
                         }
                     }
                     runtime.hovered_object_id = object_id.clone();
-                    runtime.hovered_target = Some(CadHoverTarget { object_id, mode, id });
+                    runtime.hovered_target = Some(CadHoverTarget { object_id: object_id.clone(), mode, id: *id });
                 }
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "worldPick" => {
-                let merge = args
-                    .and_then(|value| value.get("merge"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("replace");
-                let granularity = args
-                    .and_then(|value| value.get("granularity"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("mesh");
-                if args
-                    .and_then(|value| value.get("id"))
-                    .map_or(true, |value| value.is_null())
-                {
+            CadCommand::WorldPick { id, merge, granularity, object_id, surface_id, pane } => {
+                if id.is_none() {
                     if merge == "replace" {
                         runtime.selected_object_ids.clear();
                         runtime.selected_primitive_id = None;
@@ -2526,82 +2629,52 @@ impl DocumentApp for CadPlayApp {
                         runtime.active_object_id = None;
                         clear_component_selection(&mut runtime);
                     }
-                    return ActionEmit::default();
+                    return Emit::config(vec![snapshot_of(&runtime)]);
                 }
-                if matches!(granularity, "edge" | "face" | "vertex") {
-                    let object_id = args
-                        .and_then(|value| value.get("objectId"))
-                        .and_then(|value| value.as_str())
-                        .map(str::to_string)
-                        .or_else(|| {
-                            runtime
-                                .hovered_target
-                                .as_ref()
-                                .and_then(|target| target.object_id.clone())
-                        })
+                if matches!(granularity.as_str(), "edge" | "face" | "vertex") {
+                    let resolved_object_id = object_id
+                        .clone()
+                        .or_else(|| runtime.hovered_target.as_ref().and_then(|target| target.object_id.clone()))
                         .or_else(|| runtime.hovered_object_id.clone())
                         .or_else(|| resolve_active_object_id(&runtime));
                     // 🧵️ Curve centerlines are the model-definition objects — select the instance, not an edge component.
-                    let curve_object_id = object_id.as_deref().and_then(|object_id| {
+                    let curve_object_id = resolved_object_id.as_deref().and_then(|object_id| {
                         cad_all_objects(document)
                             .find(|(object, _)| object.id == object_id)
                             .map(|(object, _)| object)
                             .filter(|object| primary_primitive_kind(object) == "curve")
                             .map(|object| object.id.clone())
                     });
-                    if let Some(id) = curve_object_id {
-                        runtime.selected_object_ids =
-                            merge_world_selection_ids(&runtime.selected_object_ids, &[id.clone()], merge);
-                        runtime.active_object_id = Some(id);
+                    if let Some(curve_id) = curve_object_id {
+                        runtime.selected_object_ids = merge_world_selection_ids(&runtime.selected_object_ids, &[curve_id.clone()], merge);
+                        runtime.active_object_id = Some(curve_id);
                         runtime.selected_node_ids.clear();
                         runtime.selected_primitive_id = None;
                         runtime.selected_primitive_kind = None;
                         runtime.selected_reference_model_definition_id = None;
                         runtime.selected_reference_id = None;
                         clear_component_selection(&mut runtime);
-                        return ActionEmit::default();
+                        return Emit::config(vec![snapshot_of(&runtime)]);
                     }
-                    let component_id = args
-                        .and_then(|value| value.get("id"))
-                        .and_then(|value| value.as_u64())
-                        .unwrap_or(0) as u32;
-                    apply_component_selection(
-                        &mut runtime,
-                        granularity,
-                        &[component_id],
-                        merge,
-                        object_id.as_deref(),
-                    );
+                    let component_id = id.unwrap_or(0) as u32;
+                    apply_component_selection(&mut runtime, granularity, &[component_id], merge, resolved_object_id.as_deref());
                     runtime.selected_node_ids.clear();
                     runtime.selected_primitive_id = None;
                     runtime.selected_primitive_kind = None;
                     runtime.selected_reference_model_definition_id = None;
                     runtime.selected_reference_id = None;
-                    return ActionEmit::default();
+                    return Emit::config(vec![snapshot_of(&runtime)]);
                 }
-                let index = args
-                    .and_then(|value| value.get("id"))
-                    .and_then(|value| value.as_u64())
-                    .unwrap_or(0) as usize;
-                let pane = args
-                    .and_then(|value| value.get("surfaceId"))
-                    .and_then(|value| value.as_str())
+                let index = id.unwrap_or(0) as usize;
+                let pane_id = surface_id
+                    .as_deref()
                     .map(cad_pane_id_from_surface_id)
-                    .or_else(|| {
-                        args.and_then(|value| value.get("pane"))
-                            .and_then(|value| value.as_str())
-                            .map(cad_pane_id_from_suffix)
-                    })
+                    .or_else(|| pane.as_deref().map(cad_pane_id_from_suffix))
                     .unwrap_or(CadPaneId::Shape);
-                if let Some(object) = cad_pane_objects(document, pane)
-                    .iter()
-                    .filter(|object| object.visible)
-                    .nth(index)
-                {
-                    let id = object.id.clone();
-                    runtime.selected_object_ids =
-                        merge_world_selection_ids(&runtime.selected_object_ids, &[id.clone()], merge);
-                    runtime.active_object_id = Some(id);
+                if let Some(object) = cad_pane_objects(document, pane_id).iter().filter(|object| object.visible).nth(index) {
+                    let picked_id = object.id.clone();
+                    runtime.selected_object_ids = merge_world_selection_ids(&runtime.selected_object_ids, &[picked_id.clone()], merge);
+                    runtime.active_object_id = Some(picked_id);
                     runtime.selected_node_ids.clear();
                     runtime.selected_primitive_id = None;
                     runtime.selected_primitive_kind = None;
@@ -2609,319 +2682,239 @@ impl DocumentApp for CadPlayApp {
                     runtime.selected_reference_id = None;
                     clear_component_selection(&mut runtime);
                 }
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "setSelectionMethod" => {
-                runtime.selection_method = args
-                    .and_then(|value| value.get("method"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("rectangle")
-                    .into();
-                ActionEmit::default()
+            CadCommand::SetSelectionMethod { method } => {
+                runtime.selection_method = method.clone();
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "focusModelDefinition" => {
-                if let Some(model_definition_id) = args
-                    .and_then(|value| value.get("modelDefinitionId"))
-                    .and_then(|value| value.as_str())
-                {
-                    return ActionEmit::operations(vec![CadOperation::SetActiveModelDefinition {
-                        model_definition_id: model_definition_id.into(),
-                    }]);
-                }
-                ActionEmit::default()
+            CadCommand::FocusModelDefinition { model_definition_id } => {
+                Emit::operations(vec![CadOperation::SetActiveModelDefinition { model_definition_id: model_definition_id.clone() }])
             }
-            "applyTransformation" => {
-                let qid = args
-                    .and_then(|value| value.get("qid"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                ActionEmit::operations(apply_transformation_operations(document, qid))
+            CadCommand::ApplyTransformation { qid } => Emit::operations(apply_transformation_operations(document, qid)),
+            CadCommand::SaveSelected => {
+                let view = CadPlayView { document: document.clone(), runtime: runtime.clone() };
+                Emit::effect(cad_spatial_export_effect(export_spatial_json(&view, "selected"), "cad.selected.spatial.dsl"))
             }
-            "saveSelected" => {
-                let view = CadPlayView { document: document.clone(), runtime: (*runtime).clone() };
-                ActionEmit::effect(cad_spatial_export_effect(
-                    export_spatial_json(&view, "selected"),
-                    "cad.selected.spatial.dsl",
-                ))
-            }
-            "saveInPlay" => {
-                let view = CadPlayView { document: document.clone(), runtime: (*runtime).clone() };
+            CadCommand::SaveInPlay => {
+                let view = CadPlayView { document: document.clone(), runtime: runtime.clone() };
                 let effect = match export_solid_modelspace(&view, OsMediaFormat::Step) {
                     Some(export) => cad_solid_export_effect(export),
                     None => cad_spatial_export_effect(export_spatial_json(&view, "modelspace"), "cad.modelspace.spatial.dsl"),
                 };
-                ActionEmit::effect(effect)
+                Emit::effect(effect)
             }
-            "saveCurrent" => {
-                let format = match args.and_then(|value| value.get("format")).and_then(|value| value.as_str()) {
+            CadCommand::SaveCurrent { format } => {
+                let format = match format.as_deref() {
                     Some("obj") => OsMediaFormat::Obj,
                     Some("stl") => OsMediaFormat::Stl,
                     _ => OsMediaFormat::Step,
                 };
-                let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id)
-                    .unwrap_or(CadPaneId::Shape);
-                let view = CadPlayView { document: document.clone(), runtime: (*runtime).clone() };
+                let pane = cad_pane_from_model_definition_id(&document.active_model_definition_id).unwrap_or(CadPaneId::Shape);
+                let view = CadPlayView { document: document.clone(), runtime: runtime.clone() };
                 let effect = match export_solid_for_pane(&view, pane, format) {
                     Some(export) => cad_solid_export_effect(export),
                     None => cad_spatial_export_effect(export_spatial_json(&view, "current"), "cad.current.spatial.dsl"),
                 };
-                ActionEmit::effect(effect)
+                Emit::effect(effect)
             }
-            "loadRawRequest" => ActionEmit::effect(HostEffect::RequestFileOpen {
+            CadCommand::LoadRawRequest => Emit::effect(HostEffect::RequestFileOpen {
                 accept: ".dsl,.spatial.dsl,.spk,.ops,.stp,.step,.obj,.stl,.glb,application/octet-stream,text/plain".into(),
                 read_as: Some("dataUrl".into()),
                 import_action: "importCadFile".into(),
                 multiple: false,
             }),
-            "importCadFile" => {
-                let name = args
-                    .and_then(|value| value.get("name"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("")
-                    .to_ascii_lowercase();
-                let payload = args
-                    .and_then(|value| value.get("payload").or_else(|| value.get("modelSpace")))
-                    .cloned()
-                    .or_else(|| args.cloned());
-                let Some(payload) = payload else { return ActionEmit::default() };
-                if let Some(object) = import_cad_object_by_extension(&name, &payload) {
+            CadCommand::ImportCadFile { name, payload } => {
+                let name_lower = name.to_ascii_lowercase();
+                let payload_value: Value = serde_json::from_str(payload).unwrap_or_else(|_| Value::String(payload.clone()));
+                if let Some(object) = import_cad_object_by_extension(&name_lower, &payload_value) {
                     runtime.selected_object_ids = SelectionSet::from(vec![object.id.clone()]);
-                    return ActionEmit::operations(vec![CadOperation::AddObject { pane: CadPaneId::Shape, object }]);
+                    let mut emit = Emit::operations(vec![CadOperation::AddObject { pane: CadPaneId::Shape, object }]);
+                    emit.config_operations = vec![snapshot_of(&runtime)];
+                    return emit;
                 }
-                let payload = match payload {
-                    Value::String(text) => serde_json::from_str::<Value>(&text).unwrap_or(Value::String(text)),
-                    other => other,
-                };
-                let unwrapped = unwrap_spatial_load_payload(&payload).unwrap_or(payload);
-                let scene = scene_from_spatial_payload(&unwrapped)
-                    .or_else(|| serde_json::from_value::<CadScene>(unwrapped).ok());
+                let unwrapped = unwrap_spatial_load_payload(&payload_value).unwrap_or(payload_value);
+                let scene = scene_from_spatial_payload(&unwrapped).or_else(|| serde_json::from_value::<CadScene>(unwrapped).ok());
                 if let Some(scene) = scene {
                     runtime.selected_object_ids.clear();
                     runtime.engagement_session = None;
-                    return ActionEmit::operations(vec![CadOperation::SetScene { scene: Box::new(scene) }]);
+                    let mut emit = Emit::operations(vec![CadOperation::SetScene { scene: Box::new(scene) }]);
+                    emit.config_operations = vec![snapshot_of(&runtime)];
+                    return emit;
                 }
-                ActionEmit::default()
+                Emit::default()
             }
-            "setReferenceSelection" => {
-                let pane = args
-                    .and_then(|value| value.get("pane"))
-                    .and_then(|value| value.as_str())
+            CadCommand::SetReferenceSelection { pane, model_definition_id, reference_id } => {
+                let pane_id = pane
+                    .as_deref()
                     .map(cad_pane_id_from_suffix)
-                    .or_else(|| {
-                        args.and_then(|value| value.get("modelDefinitionId"))
-                            .and_then(|value| value.as_str())
-                            .and_then(cad_pane_from_model_definition_id)
-                    })
+                    .or_else(|| model_definition_id.as_deref().and_then(cad_pane_from_model_definition_id))
                     .unwrap_or(CadPaneId::Shape);
-                runtime.selected_reference_model_definition_id =
-                    Some(pane.model_definition_id().into());
-                runtime.selected_reference_id = args
-                    .and_then(|value| value.get("referenceId"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
+                runtime.selected_reference_model_definition_id = Some(pane_id.model_definition_id().into());
+                runtime.selected_reference_id = reference_id.clone();
                 runtime.selected_object_ids.clear();
                 runtime.selected_node_ids.clear();
                 runtime.selected_primitive_id = None;
                 runtime.selected_primitive_kind = None;
                 runtime.active_object_id = None;
                 clear_component_selection(&mut runtime);
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "referenceHover" => {
-                runtime.hovered_object_id = args
-                    .and_then(|value| value.get("referenceId"))
-                    .and_then(|value| value.as_str())
-                    .map(|id| format!("reference:{id}"));
-                ActionEmit::default()
+            CadCommand::ReferenceHover { reference_id } => {
+                runtime.hovered_object_id = reference_id.as_deref().map(|id| format!("reference:{id}"));
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "patchCadPlayReference" => {
-                let model_definition_id = args
-                    .and_then(|value| value.get("modelDefinitionId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                let reference_id = args
-                    .and_then(|value| value.get("referenceId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                let field = args
-                    .and_then(|value| value.get("field"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                let value = args.and_then(|value| value.get("value"));
-                let delta = args.and_then(|value| value.get("delta"));
-                let patch = match field {
-                    "hidden" => value.and_then(|entry| entry.as_bool()).map(|hidden| CadReferencePatch {
-                        hidden: Some(hidden),
-                        ..Default::default()
-                    }),
-                    "locked" => value.and_then(|entry| entry.as_bool()).map(|locked| CadReferencePatch {
-                        locked: Some(locked),
-                        ..Default::default()
-                    }),
+            CadCommand::PatchCadPlayReference { model_definition_id, reference_id, field, value, delta } => {
+                let value_json = value.as_deref().map(|entry| command_value_json(field, entry));
+                let delta_json = delta.map(|entry| json!(entry));
+                let patch = match field.as_str() {
+                    "hidden" => value_json.as_ref().and_then(Value::as_bool).map(|hidden| CadReferencePatch { hidden: Some(hidden), ..Default::default() }),
+                    "locked" => value_json.as_ref().and_then(Value::as_bool).map(|locked| CadReferencePatch { locked: Some(locked), ..Default::default() }),
                     "widthWorld" => {
                         let current = document
                             .references_by_model_definition_id
                             .get(model_definition_id)
-                            .and_then(|refs| refs.iter().find(|reference| reference.id == reference_id))
+                            .and_then(|refs| refs.iter().find(|reference| &reference.id == reference_id))
                             .map(|reference| reference.width_world)
                             .unwrap_or(0.0);
-                        resolve_number_edit(current, value, delta).map(|width_world| CadReferencePatch { width_world: Some(width_world), ..Default::default() })
+                        resolve_number_edit(current, value_json.as_ref(), delta_json.as_ref()).map(|width_world| CadReferencePatch { width_world: Some(width_world), ..Default::default() })
                     }
                     _ => axis3_index(field, "origin").and_then(|axis| {
                         let mut origin = document
                             .references_by_model_definition_id
                             .get(model_definition_id)
-                            .and_then(|refs| refs.iter().find(|reference| reference.id == reference_id))
+                            .and_then(|refs| refs.iter().find(|reference| &reference.id == reference_id))
                             .map(|reference| reference.origin)
                             .unwrap_or([0.0, 0.0, 0.0]);
-                        let updated = resolve_number_edit(origin[axis], value, delta)?;
+                        let updated = resolve_number_edit(origin[axis], value_json.as_ref(), delta_json.as_ref())?;
                         origin[axis] = updated;
                         Some(CadReferencePatch { origin: Some(origin), ..Default::default() })
                     }),
                 };
                 match patch {
-                    Some(patch) => ActionEmit::operations(vec![CadOperation::PatchReference {
-                        model_definition_id: model_definition_id.into(),
-                        reference_id: reference_id.into(),
-                        patch,
-                    }]),
-                    None => ActionEmit::default(),
+                    Some(patch) => Emit::operations(vec![CadOperation::PatchReference { model_definition_id: model_definition_id.clone(), reference_id: reference_id.clone(), patch }]),
+                    None => Emit::default(),
                 }
             }
-            "engagementInput" => {
-                runtime.engagement_input = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("")
-                    .into();
-                runtime.engagement_pane = args
-                    .and_then(|value| value.get("pane"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
-                ActionEmit::default()
+            CadCommand::EngagementInput { value, pane } => {
+                runtime.engagement_input = value.clone();
+                runtime.engagement_pane = pane.clone();
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "engagementSubmit" => {
-                let pane = args
-                    .and_then(|value| value.get("pane"))
-                    .and_then(|value| value.as_str())
-                    .map(cad_pane_id_from_suffix)
-                    .unwrap_or(CadPaneId::Shape);
-                ActionEmit::operations(engagement_submit_operations(document, &mut runtime, pane))
+            CadCommand::EngagementSubmit { pane } => {
+                let pane_id = pane.as_deref().map(cad_pane_id_from_suffix).unwrap_or(CadPaneId::Shape);
+                let ops = engagement_submit_operations(document, &mut runtime, pane_id);
+                let mut emit = Emit::operations(ops);
+                emit.config_operations = vec![snapshot_of(&runtime)];
+                emit
             }
-            "engagementPossibleSelect" => {
-                let pane = args
-                    .and_then(|value| value.get("pane"))
-                    .and_then(|value| value.as_str())
-                    .map(cad_pane_id_from_suffix)
-                    .unwrap_or(CadPaneId::Shape);
-                if let Some(possible_id) = args
-                    .and_then(|value| value.get("possibleId"))
-                    .and_then(|value| value.as_str())
-                {
-                    let step = runtime.engagement_session.as_mut().and_then(|session| {
-                        apply_event(session, possible_id, None).then(|| session.state.clone())
-                    });
-                    if let Some(step) = step {
-                        runtime.engagement_step = step;
-                    } else if !start_interaction_session(&mut runtime, pane, possible_id) {
-                        runtime.engagement_input = possible_id.into();
-                    }
+            CadCommand::EngagementPossibleSelect { pane, possible_id } => {
+                let pane_id = pane.as_deref().map(cad_pane_id_from_suffix).unwrap_or(CadPaneId::Shape);
+                let step = runtime.engagement_session.as_mut().and_then(|session| apply_event(session, possible_id, None).then(|| session.state.clone()));
+                if let Some(step) = step {
+                    runtime.engagement_step = step;
+                } else if !start_interaction_session(&mut runtime, pane_id, possible_id) {
+                    runtime.engagement_input = possible_id.clone();
                 }
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "engagementRepeatLast" => {
-                let pane = args
-                    .and_then(|value| value.get("pane"))
-                    .and_then(|value| value.as_str())
-                    .map(cad_pane_id_from_suffix)
-                    .unwrap_or(CadPaneId::Shape);
+            CadCommand::EngagementRepeatLast { pane } => {
+                let pane_id = pane.as_deref().map(cad_pane_id_from_suffix).unwrap_or(CadPaneId::Shape);
                 if runtime.engagement_session.is_none() {
                     if let Some(interaction_id) = runtime.last_finalized_interaction_id.clone() {
-                        start_interaction_session(&mut runtime, pane, &interaction_id);
-                        return ActionEmit::default();
+                        start_interaction_session(&mut runtime, pane_id, &interaction_id);
+                        return Emit::config(vec![snapshot_of(&runtime)]);
                     }
                 }
                 runtime.engagement_step = "Idle".into();
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "engagementAbort" => {
+            CadCommand::EngagementAbort => {
                 runtime.engagement_input.clear();
                 runtime.engagement_session = None;
                 runtime.engagement_step = "Idle".into();
-                ActionEmit::default()
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "worldPointerDown" | "engagementPointerDown" => {
-                let pane = args
-                    .and_then(|value| value.get("pane"))
-                    .and_then(|value| value.as_str())
+            CadCommand::WorldPointerDown { pane, surface_id, x, y, z } => {
+                let pane_id = pane
+                    .as_deref()
                     .map(cad_pane_id_from_suffix)
-                    .or_else(|| {
-                        args.and_then(|value| value.get("surfaceId"))
-                            .and_then(|value| value.as_str())
-                            .and_then(|surface_id| surface_id.rsplit('/').next())
-                            .map(cad_pane_id_from_suffix)
-                    })
+                    .or_else(|| surface_id.as_deref().and_then(|surface_id| surface_id.rsplit('/').next()).map(cad_pane_id_from_suffix))
                     .unwrap_or(CadPaneId::Shape);
-                let point = args.and_then(|value| value.get("position"));
-                let commit = runtime.engagement_session.as_mut().and_then(|session| {
-                    apply_event(session, "pointer.down", point).then(|| (session.state.clone(), session.clone()))
-                });
+                // 📍️ `apply_event`'s payload for a pointer event is the raw position value itself
+                // (mirrors the pre-B1 `args.get("position")` extraction — NOT re-wrapped in another
+                // `{"position": ...}` object).
+                let point_value = (x.is_some() || y.is_some() || z.is_some()).then(|| json!([x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)]));
+                let commit = runtime.engagement_session.as_mut().and_then(|session| apply_event(session, "pointer.down", point_value.as_ref()).then(|| (session.state.clone(), session.clone())));
                 if let Some((step, snapshot)) = commit {
                     runtime.engagement_step = step;
-                    return ActionEmit::operations(try_commit_session_operations(document, &mut runtime, pane, &snapshot));
+                    let ops = try_commit_session_operations(document, &mut runtime, pane_id, &snapshot);
+                    let mut emit = Emit::operations(ops);
+                    emit.config_operations = vec![snapshot_of(&runtime)];
+                    return emit;
                 }
-                ActionEmit::default()
+                Emit::default()
             }
-            "worldPointerMove" => {
-                // Live rubber-band preview during an active engagement session: applies
-                // `pointer.move` (updating the session's cursor/preview context) without ever
-                // committing an object or touching VCS history.
-                let point = args.and_then(|value| value.get("position"));
+            CadCommand::WorldPointerMove { x, y, z } => {
+                // Live rubber-band preview during an active engagement session: applies `pointer.move`
+                // (updating the session's cursor/preview context) without ever committing an object or
+                // touching VCS history — coalesced (`amend_config`) so a whole drag is one undo step.
+                // 📍️ `apply_event`'s payload for a pointer event is the raw position value itself
+                // (mirrors the pre-B1 `args.get("position")` extraction — NOT re-wrapped in another
+                // `{"position": ...}` object).
+                let point_value = (x.is_some() || y.is_some() || z.is_some()).then(|| json!([x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)]));
                 if let Some(session) = runtime.engagement_session.as_mut() {
-                    apply_event(session, "pointer.move", point);
+                    apply_event(session, "pointer.move", point_value.as_ref());
                     let mut seq = self.preview_seq.borrow_mut();
                     *seq = seq.wrapping_add(1);
+                    Emit::amend_config(vec![snapshot_of(&runtime)], "engagement.pointer-move")
+                } else {
+                    Emit::default()
                 }
-                ActionEmit::default()
             }
-            "setPrimitiveSelection" => {
-                if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
-                    runtime.selected_object_ids = SelectionSet::from(vec![object_id.into()]);
-                    runtime.selected_node_ids.clear();
-                    runtime.selected_primitive_id = args
-                        .and_then(|value| value.get("primitiveId"))
-                        .and_then(|value| value.as_str())
-                        .map(str::to_string);
-                    runtime.selected_primitive_kind = args
-                        .and_then(|value| value.get("kind"))
-                        .and_then(|value| value.as_str())
-                        .map(str::to_string);
-                    runtime.selected_reference_model_definition_id = None;
-                    runtime.selected_reference_id = None;
-                }
-                ActionEmit::default()
+            CadCommand::SetPrimitiveSelection { object_id, primitive_id, kind } => {
+                runtime.selected_object_ids = SelectionSet::from(vec![object_id.clone()]);
+                runtime.selected_node_ids.clear();
+                runtime.selected_primitive_id = primitive_id.clone();
+                runtime.selected_primitive_kind = kind.clone();
+                runtime.selected_reference_model_definition_id = None;
+                runtime.selected_reference_id = None;
+                Emit::config(vec![snapshot_of(&runtime)])
             }
-            "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
-                apply_world3d_sun_action(&mut runtime.sun, action, args);
-                ActionEmit::default()
+            CadCommand::ToggleSun => {
+                apply_world3d_sun_action(&mut runtime.sun, "toggleSun", None);
+                Emit::amend_config(vec![snapshot_of(&runtime)], "sun")
             }
-            _ => ActionEmit::default(),
+            CadCommand::SetSunAzimuth { value } => {
+                let args_value = json!({ "value": value });
+                apply_world3d_sun_action(&mut runtime.sun, "setSunAzimuth", Some(&args_value));
+                Emit::amend_config(vec![snapshot_of(&runtime)], "sun")
+            }
+            CadCommand::SetSunElevation { value } => {
+                let args_value = json!({ "value": value });
+                apply_world3d_sun_action(&mut runtime.sun, "setSunElevation", Some(&args_value));
+                Emit::amend_config(vec![snapshot_of(&runtime)], "sun")
+            }
+            CadCommand::SetSunIntensity { value } => {
+                let args_value = json!({ "value": value });
+                apply_world3d_sun_action(&mut runtime.sun, "setSunIntensity", Some(&args_value));
+                Emit::amend_config(vec![snapshot_of(&runtime)], "sun")
+            }
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, CadScene>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
-        let view = CadPlayView { document: doc.projection.clone(), runtime: self.runtime.borrow().clone() };
-        let labels = cad_labels(view_state);
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> UiNode {
+        let view = CadPlayView { document: doc.projection.clone(), runtime: cad_runtime_from_config(cfg.projection) };
+        let labels = cad_labels(cfg.projection);
         let window_kind_id = match body_key {
-            CAD_PLAY_BODY_SHAPE => Some(CAD_PLAY_WINDOW_SHAPE),
-            CAD_PLAY_BODY_BUILDING => Some(CAD_PLAY_WINDOW_BUILDING),
-            CAD_PLAY_BODY_ENERGY => Some(CAD_PLAY_WINDOW_ENERGY),
-            CAD_PLAY_BODY_STRUCTURE_CLASSIC => Some(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC),
-            _ => None,
+            CAD_PLAY_BODY_SHAPE => CAD_PLAY_WINDOW_SHAPE,
+            CAD_PLAY_BODY_BUILDING => CAD_PLAY_WINDOW_BUILDING,
+            CAD_PLAY_BODY_ENERGY => CAD_PLAY_WINDOW_ENERGY,
+            CAD_PLAY_BODY_STRUCTURE_CLASSIC => CAD_PLAY_WINDOW_STRUCTURE_CLASSIC,
+            _ => CAD_PLAY_WINDOW_SHAPE,
         };
-        let window_id = view_state.window_id.as_deref().or(window_kind_id);
-        let active_utility = cad_window_active_utility(view_state, window_id);
-        let options = view.runtime.dislocate_options(window_id.unwrap_or(CAD_PLAY_WINDOW_SHAPE));
+        let active_utility = Some(cfg.projection.active_utility_id.as_str());
+        let options = view.runtime.dislocate_options(window_kind_id);
         match body_key {
             CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&view, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE, active_utility, options),
             CAD_PLAY_BODY_BUILDING => {
@@ -2942,9 +2935,9 @@ impl DocumentApp for CadPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, CadScene>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let view = CadPlayView { document: doc.projection.clone(), runtime: self.runtime.borrow().clone() };
-        let labels = cad_labels(view_state);
+    fn window_engagements(&self, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, WindowEngagement> {
+        let view = CadPlayView { document: doc.projection.clone(), runtime: cad_runtime_from_config(cfg.projection) };
+        let labels = cad_labels(cfg.projection);
         HashMap::from([
             (
                 CAD_PLAY_WINDOW_SHAPE.to_string(),
@@ -2965,13 +2958,17 @@ impl DocumentApp for CadPlayApp {
         ])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, CadScene>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let runtime = self.runtime.borrow();
+    /// 🪟️ Keyed by the 4 fixed window-KIND ids (was keyed by dynamic window-INSTANCE id, resolved off
+    /// `ViewState.window_instances` — deleted by B1; `window_measures` has no per-instance parameter
+    /// anymore, see `CadDislocateOptions`'s doc comment in `cad_document_engine`).
+    fn window_measures(&self, _doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let runtime = cad_runtime_from_config(cfg.projection);
+        let is_de = cad_is_de_locale(cfg.projection);
         let pane_measures = |pane: CadPaneId, window_id: &str| {
             vec![
                 world3d_projection_measures(&format!("cad-{}", pane.model_definition_id()), &cad_camera_projection_config(cad_pane_camera_runtime(&runtime, pane)), cad_action),
                 world3d_sun_measures("cad", &runtime.sun, cad_action),
-                cad_dislocate_utility_options(runtime.dislocate_options(window_id), is_de_locale(view_state)),
+                cad_dislocate_utility_options(runtime.dislocate_options(window_id), is_de),
             ]
         };
         [
@@ -2981,21 +2978,13 @@ impl DocumentApp for CadPlayApp {
             (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, CadPaneId::StructureClassic),
         ]
         .into_iter()
-        .flat_map(|(window_kind_id, pane)| {
-            cad_window_instance_ids(view_state, window_kind_id)
-                .into_iter()
-                .map(|window_id| {
-                    let measures = pane_measures(pane, &window_id);
-                    (window_id, measures)
-                })
-                .collect::<Vec<_>>()
-        })
+        .map(|(window_kind_id, pane)| (window_kind_id.to_string(), pane_measures(pane, window_kind_id)))
         .collect()
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = cad_labels(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, CadConfig>) -> AppLabelsOverlay {
+        let labels = cad_labels(cfg.projection);
+        let is_de = cad_is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(CAD_PLAY_WINDOW_SHAPE, labels.pane_shape)
             .window_kind_label(CAD_PLAY_WINDOW_BUILDING, labels.pane_building)
@@ -3016,11 +3005,10 @@ impl DocumentApp for CadPlayApp {
         &self,
         _request: &ContextMenuRequest,
         _doc: &DocumentView<'_, CadScene>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
+        cfg: &ConfigView<'_, CadConfig>,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
-        if self.runtime.borrow().selected_object_ids.is_empty() {
+        if cfg.projection.selected_object_ids.is_empty() {
             return Vec::new();
         }
         Menu::of(registry)
@@ -3200,7 +3188,13 @@ pub fn create_cad_app() -> App {
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
                 PanelGroup::Details,
                 CAD_PLAY_BODY_PROPERTIES,
-            ),
+            )
+            // 🎯️ Typed channel + port surface (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2) — `cad_io()` is
+            // this same `3d.cad`/Brep information's single source of truth, reused here rather than
+            // duplicated; `config_spec()` stays empty (cad has no sticky-default settings analogous to
+            // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
+            .config(CadPlayApp::default().config_spec())
+            .io(cad_io()),
     )
     .example(
         CAD_EXAMPLE_FOREST_LEFT,
@@ -3216,14 +3210,13 @@ pub fn create_cad_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use base64::Engine as _;
     use cad_document::{empty_cad_projection, CAD_PLAY_DOCUMENT_SCHEMA};
     use cad_document_engine::{
         align_mesh_to_fixture_centroid, cad_document_from_dwg, CAD_DEFAULT_TYPOLOGY_EXTENT,
         CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_WIDTH_WORLD,
         CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
     };
-    use semio_framework_plugin::{ActionMeta, AppActionRegistry, HistoryView, PluginApp, UiMenuRef, VcsDocumentApp};
+    use semio_framework_plugin::{ActionMeta, AppActionRegistry, HistoryView, PluginApp, UiMenuRef, VcsDocumentApp, ViewState};
     use protocol::{Operation, OperationDiff};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -3240,43 +3233,137 @@ mod tests {
         HistoryView::empty()
     }
 
-    /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped) so tests can inspect ephemeral
-    /// runtime view-state and the emitted operations directly.
-    fn drive(app: &CadPlayApp, scene: &CadScene, action: &str, args: Option<Value>) -> ActionEmit<CadOperation> {
-        drive_with_view(app, scene, action, args, &ViewState::default())
+    /// @emoji 🔀️ WORKFLOWS-END-TO-END-TYPED-PORTS test-only bridge: recovers a typed `CadCommand` from
+    /// the pre-B1 `(action id, JSON args)` shape every test in this module was already written against
+    /// — the same information `AppDefinition`'s declared `ActionArgDef`s carry, reconstructed by hand
+    /// here rather than threading a real host-side action→command bridge (out of scope for this ticket;
+    /// Wave 3 wires the shell). Panics on an unrecognized action id — every id used below is covered.
+    fn command_from_action(action: &str, args: Option<&Value>) -> CadCommand {
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+        let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_f64);
+        let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_u64);
+        let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
+        let str_vec_field = |key: &str| -> Vec<String> {
+            args.and_then(|value| value.get(key)).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
+        };
+        let value_string = || -> Option<String> {
+            args.and_then(|value| value.get("value")).and_then(|value| match value {
+                Value::String(text) => Some(text.clone()),
+                Value::Bool(flag) => Some(flag.to_string()),
+                Value::Number(number) => Some(number.to_string()),
+                _ => None,
+            })
+        };
+        let position_axis = |index: usize| args.and_then(|value| value.get("position")).and_then(|value| value.get(index)).and_then(Value::as_f64);
+        match action {
+            "setActiveExample" => CadCommand::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() },
+            SET_ACTIVE_UTILITY_ACTION_ID => CadCommand::SetActiveUtility { utility_id: str_field("utilityId").unwrap_or_default() },
+            "setLocale" => CadCommand::SetLocale { value: str_field("value").unwrap_or_default() },
+            "setTerminology" => CadCommand::SetTerminology { value: str_field("value").unwrap_or_default() },
+            "setDislocateOption" => CadCommand::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") },
+            "setSelection" => CadCommand::SetSelection { object_ids: str_vec_field("objectIds") },
+            "setNodeSelection" => CadCommand::SetNodeSelection { node_ids: str_vec_field("nodeIds") },
+            "setCamera" => CadCommand::SetCamera {
+                pane: str_field("surfaceId"),
+                camera: args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default(),
+            },
+            "setProjection" => CadCommand::SetProjection {
+                pane: str_field("surfaceId"),
+                field: str_field("field"),
+                value_str: args.and_then(|value| value.get("value")).and_then(Value::as_str).map(String::from),
+                value_num: args.and_then(|value| value.get("value")).and_then(Value::as_f64),
+                param: str_field("param"),
+            },
+            "setProjectionParam" => CadCommand::SetProjectionParam {
+                pane: str_field("surfaceId"),
+                field: str_field("field"),
+                value_str: args.and_then(|value| value.get("value")).and_then(Value::as_str).map(String::from),
+                value_num: args.and_then(|value| value.get("value")).and_then(Value::as_f64),
+                param: str_field("param"),
+            },
+            "translateSelection" => CadCommand::TranslateSelection { object_ids: str_vec_field("objectIds"), dx: f64_field("dx").unwrap_or(0.0), dy: f64_field("dy").unwrap_or(0.0), dz: f64_field("dz").unwrap_or(0.0) },
+            "rotateSelection" => CadCommand::RotateSelection { object_ids: str_vec_field("objectIds"), ax: f64_field("ax").unwrap_or(0.0), ay: f64_field("ay").unwrap_or(0.0), az: f64_field("az").unwrap_or(0.0), angle: f64_field("angle").unwrap_or(0.0) },
+            "scaleSelection" => CadCommand::ScaleSelection { object_ids: str_vec_field("objectIds"), sx: f64_field("sx").unwrap_or(1.0), sy: f64_field("sy").unwrap_or(1.0), sz: f64_field("sz").unwrap_or(1.0) },
+            "addObject" => CadCommand::AddObject { typology: str_field("typology") },
+            "patchObject" => CadCommand::PatchObject { object_id: str_field("objectId").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: value_string(), delta: f64_field("delta") },
+            "patchSelection" => CadCommand::PatchSelection { object_ids: str_vec_field("objectIds"), field: str_field("field").unwrap_or_default(), value: value_string(), delta: f64_field("delta") },
+            "deleteObject" => CadCommand::DeleteObject { object_id: str_field("objectId").unwrap_or_default() },
+            "duplicateObject" => CadCommand::DuplicateObject { object_id: str_field("objectId").unwrap_or_default() },
+            "addNode" => CadCommand::AddNode { kind: str_field("kind").unwrap_or_else(|| "solid".into()) },
+            "renameNode" => CadCommand::RenameNode { node_id: str_field("nodeId").unwrap_or_default(), value: str_field("value").unwrap_or_default() },
+            "worldSelect" => CadCommand::WorldSelect { ids: str_vec_field("ids"), merge: str_field("merge").unwrap_or_else(|| "replace".into()) },
+            "worldHover" => CadCommand::WorldHover { object_id: str_field("id") },
+            "setHover" => CadCommand::SetHover { object_id: str_field("objectId"), mode: str_field("mode"), id: u64_field("id").map(|value| value as u32) },
+            "worldPick" => CadCommand::WorldPick { id: u64_field("id"), merge: str_field("merge").unwrap_or_else(|| "replace".into()), granularity: str_field("granularity").unwrap_or_else(|| "mesh".into()), object_id: str_field("objectId"), surface_id: str_field("surfaceId"), pane: str_field("pane") },
+            "setSelectionMethod" => CadCommand::SetSelectionMethod { method: str_field("method").unwrap_or_else(|| "rectangle".into()) },
+            "focusModelDefinition" => CadCommand::FocusModelDefinition { model_definition_id: str_field("modelDefinitionId").unwrap_or_default() },
+            "applyTransformation" => CadCommand::ApplyTransformation { qid: str_field("qid").unwrap_or_default() },
+            "saveSelected" => CadCommand::SaveSelected,
+            "saveInPlay" => CadCommand::SaveInPlay,
+            "saveCurrent" => CadCommand::SaveCurrent { format: str_field("format") },
+            "loadRawRequest" => CadCommand::LoadRawRequest,
+            "importCadFile" => {
+                let payload = args.and_then(|value| value.get("payload").or_else(|| value.get("modelSpace"))).cloned().or_else(|| args.cloned());
+                let payload = match payload {
+                    Some(Value::String(text)) => text,
+                    Some(other) => other.to_string(),
+                    None => String::new(),
+                };
+                CadCommand::ImportCadFile { name: str_field("name").unwrap_or_default(), payload }
+            }
+            "setReferenceSelection" => CadCommand::SetReferenceSelection { pane: str_field("pane"), model_definition_id: str_field("modelDefinitionId"), reference_id: str_field("referenceId") },
+            "referenceHover" => CadCommand::ReferenceHover { reference_id: str_field("referenceId") },
+            "patchCadPlayReference" => CadCommand::PatchCadPlayReference {
+                model_definition_id: str_field("modelDefinitionId").unwrap_or_default(),
+                reference_id: str_field("referenceId").unwrap_or_default(),
+                field: str_field("field").unwrap_or_default(),
+                value: value_string(),
+                delta: f64_field("delta"),
+            },
+            "engagementInput" => CadCommand::EngagementInput { value: str_field("value").unwrap_or_default(), pane: str_field("pane") },
+            "engagementSubmit" => CadCommand::EngagementSubmit { pane: str_field("pane") },
+            "engagementPossibleSelect" => CadCommand::EngagementPossibleSelect { pane: str_field("pane"), possible_id: str_field("possibleId").unwrap_or_default() },
+            "engagementRepeatLast" => CadCommand::EngagementRepeatLast { pane: str_field("pane") },
+            "engagementAbort" => CadCommand::EngagementAbort,
+            "worldPointerDown" | "engagementPointerDown" => CadCommand::WorldPointerDown { pane: str_field("pane"), surface_id: str_field("surfaceId"), x: position_axis(0), y: position_axis(1), z: position_axis(2) },
+            "worldPointerMove" => CadCommand::WorldPointerMove { x: position_axis(0), y: position_axis(1), z: position_axis(2) },
+            "setPrimitiveSelection" => CadCommand::SetPrimitiveSelection { object_id: str_field("objectId").unwrap_or_default(), primitive_id: str_field("primitiveId"), kind: str_field("kind") },
+            "toggleSun" => CadCommand::ToggleSun,
+            "setSunAzimuth" => CadCommand::SetSunAzimuth { value: f64_field("value").unwrap_or(0.0) },
+            "setSunElevation" => CadCommand::SetSunElevation { value: f64_field("value").unwrap_or(0.0) },
+            "setSunIntensity" => CadCommand::SetSunIntensity { value: f64_field("value").unwrap_or(0.0) },
+            other => panic!("command_from_action: unhandled test action {other}"),
+        }
     }
 
-    fn drive_with_view(
-        app: &CadPlayApp,
-        scene: &CadScene,
-        action: &str,
-        args: Option<Value>,
-        view_state: &ViewState,
-    ) -> ActionEmit<CadOperation> {
+    /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped, config defaulted) so tests can
+    /// inspect the emitted document/config operations directly.
+    fn drive(app: &CadPlayApp, scene: &CadScene, action: &str, args: Option<Value>) -> Emit<CadOperation, CadConfigOperation> {
+        drive_with_config(app, scene, action, args, &CadConfig::default())
+    }
+
+    fn drive_with_config(app: &CadPlayApp, scene: &CadScene, action: &str, args: Option<Value>, config: &CadConfig) -> Emit<CadOperation, CadConfigOperation> {
         let history = empty_history();
         let doc = DocumentView { projection: scene, history: &history };
-        let config = semio_framework_plugin::NoConfig::default();
-        let cfg = semio_framework_plugin::ConfigView { projection: &config };
-        app.handle_action(action, args.as_ref(), &doc, &cfg, view_state)
+        let cfg = ConfigView { projection: config };
+        let command = command_from_action(action, args.as_ref());
+        app.handle(&command, &doc, &cfg)
     }
 
-    fn render_direct(app: &CadPlayApp, body_key: &str, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> UiNode {
-        let config = semio_framework_plugin::NoConfig::default();
-        let cfg = semio_framework_plugin::ConfigView { projection: &config };
-        app.render(body_key, doc, &cfg, view_state)
+    fn render_direct(app: &CadPlayApp, body_key: &str, doc: &DocumentView<'_, CadScene>, config: &CadConfig) -> UiNode {
+        let cfg = ConfigView { projection: config };
+        app.render(body_key, doc, &cfg)
     }
 
-    fn window_measures_direct(app: &CadPlayApp, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let config = semio_framework_plugin::NoConfig::default();
-        let cfg = semio_framework_plugin::ConfigView { projection: &config };
-        app.window_measures(doc, &cfg, view_state)
+    fn window_measures_direct(app: &CadPlayApp, doc: &DocumentView<'_, CadScene>, config: &CadConfig) -> HashMap<String, Vec<WindowMeasure>> {
+        let cfg = ConfigView { projection: config };
+        app.window_measures(doc, &cfg)
     }
 
-    fn context_menu_direct(app: &CadPlayApp, doc: &DocumentView<'_, CadScene>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let config = semio_framework_plugin::NoConfig::default();
-        let cfg = semio_framework_plugin::ConfigView { projection: &config };
+    fn context_menu_direct(app: &CadPlayApp, doc: &DocumentView<'_, CadScene>, config: &CadConfig, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let cfg = ConfigView { projection: config };
         let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
-        app.context_menu(&request, doc, &cfg, &ViewState::default(), registry)
+        app.context_menu(&request, doc, &cfg, registry)
     }
 
     /// 🧮️ Folds a list of `CadOperation`s onto a scene via the core `Operation`/`OperationDiff` impls —
@@ -3287,6 +3374,22 @@ mod tests {
             next = operation.diff(&next).apply(&next);
         }
         next
+    }
+
+    /// 🧮️ `apply_operations`'s config-targeted twin — folds an `Emit`'s `config_operations` onto a base
+    /// `CadConfig` (mirrors what `VcsDocumentApp`'s config store does when it dispatches them).
+    fn config_after(emit: &Emit<CadOperation, CadConfigOperation>, base: &CadConfig) -> CadConfig {
+        let mut next = base.clone();
+        for operation in &emit.config_operations {
+            next = operation.diff(&next);
+        }
+        next
+    }
+
+    /// 🧮️ `config_after` plus the `CadConfig -> CadPlayRuntime` boundary conversion — the direct
+    /// replacement for the pre-B1 `app.runtime.borrow()` most tests below inspected after `drive(..)`.
+    fn runtime_after(emit: &Emit<CadOperation, CadConfigOperation>, base: &CadConfig) -> CadPlayRuntime {
+        cad_runtime_from_config(&config_after(emit, base))
     }
 
     fn view(scene: CadScene, runtime: CadPlayRuntime) -> CadPlayView {
@@ -3384,7 +3487,7 @@ mod tests {
     }
 
     #[test]
-    fn forest_references_sit_at_authored_slab_elevation() {
+    fn forest_references_use_xy_ground_plane_and_z_up() {
         let scene = forest_play_scene();
         let reference = scene
             .references_by_model_definition_id
@@ -3406,8 +3509,20 @@ mod tests {
                 * (0.5 + CAD_FOREST_REFERENCE_Y_OFFSET_RATIO);
         assert!(
             (reference.origin[1] - expected_y).abs() < 1e-9,
-            "reference y {} should be centered then moved +20% of its height",
+            "reference CAD y {} should be centered then moved +20% forward on the world plane",
             reference.origin[1]
+        );
+        let centered_y = -18.0
+            + CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX
+                * 0.5;
+        assert!(
+            ((reference.origin[1] - centered_y)
+                - CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX
+                    / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX
+                    * 0.2)
+                .abs()
+                < 1e-9,
+            "the requested offset must affect CAD y only"
         );
         assert_eq!(CAD_FOREST_REFERENCE_Y_OFFSET_RATIO, 0.2);
         assert!(reference.locked, "example references default locked like puzzle 3d");
@@ -3493,7 +3608,7 @@ mod tests {
             CAD_PLAY_BODY_ENERGY,
             CAD_PLAY_BODY_STRUCTURE_CLASSIC,
         ] {
-            let node = render_direct(&app, body_key, &doc, &ViewState::default());
+            let node = render_direct(&app, body_key, &doc, &CadConfig::default());
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("world-3d"), "body {body_key} should render a world-3d scene");
         }
@@ -3516,7 +3631,7 @@ mod tests {
         scene.objects[0].typology = "building.building.beam".into();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &ViewState::default());
+        let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &CadConfig::default());
         let UiNode::Tree(tree) = node else {
             panic!("document body should render a tree");
         };
@@ -3532,7 +3647,7 @@ mod tests {
             &app,
             CAD_PLAY_BODY_DOCUMENT,
             &doc,
-            &ViewState { locale: Some("de".into()), ..ViewState::default() },
+            &CadConfig { locale: "de".into(), ..CadConfig::default() },
         );
         let UiNode::Tree(de_tree) = de_node else {
             panic!("document body should render a tree");
@@ -3629,7 +3744,7 @@ mod tests {
     #[test]
     fn engagement_input_and_possible_engagements_present() {
         let mut app = new_app();
-        let engagements = app.window_engagements(&ViewState::default());
+        let engagements = app.window_engagements();
         let shape = engagements.get(CAD_PLAY_WINDOW_SHAPE).expect("shape engagement");
         assert!(shape.input.is_some());
         assert!(shape.possible_engagements.as_ref().is_some_and(|rows| !rows.is_empty()));
@@ -3638,7 +3753,7 @@ mod tests {
     #[test]
     fn window_engagements_registered_for_all_four_panes() {
         let mut app = new_app();
-        let engagements = app.window_engagements(&ViewState::default());
+        let engagements = app.window_engagements();
         for window_kind in [
             CAD_PLAY_WINDOW_SHAPE,
             CAD_PLAY_WINDOW_BUILDING,
@@ -3673,12 +3788,13 @@ mod tests {
     //#region 🔖️ViewState
     #[test]
     fn gumball_fields_present_when_selection_active() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
-        drive(&mut app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
+        let emit = drive(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
+        let runtime = runtime_after(&emit, &CadConfig::default());
         let selection = world_selection_json(
             &scene,
-            &*app.runtime.borrow(),
+            &runtime,
             Some(CAD_DISLOCATE_UTILITY_ID),
             CadDislocateOptions::default(),
         );
@@ -3692,20 +3808,22 @@ mod tests {
 
     /// 🎥️ `setCamera`/`setProjection`/`setProjectionParam` are `ActionKind::View` (see the `.view_action`
     /// registrations below) — they must never emit a `CadOperation` (no VCS edit, no undo entry) and
-    /// instead write straight into the app's ephemeral `CadPlayRuntime`, isolated per pane.
+    /// instead write a coalesced `CadConfigOperation`, isolated per pane.
     #[test]
-    fn set_camera_writes_runtime_not_operations() {
-        let mut app = CadPlayApp::default();
+    fn set_camera_writes_config_not_operations() {
+        let app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(
-            &mut app,
+            &app,
             &scene,
             "setCamera",
             Some(json!({ "surfaceId": "cad.play.scene3d/building", "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0, "fov": 60.0 } })),
         );
-        assert!(emit.operations.is_empty(), "setCamera must not emit a VCS operation");
-        assert_eq!(cad_pane_camera_runtime(&*app.runtime.borrow(), CadPaneId::Building).zoom, 2.0);
-        assert_eq!(cad_pane_camera_runtime(&*app.runtime.borrow(), CadPaneId::Shape).zoom, 1.0, "panes stay isolated");
+        assert!(emit.document_operations.is_empty(), "setCamera must not emit a VCS operation");
+        assert!(!emit.config_operations.is_empty(), "setCamera must write a config operation");
+        let runtime = runtime_after(&emit, &CadConfig::default());
+        assert_eq!(cad_pane_camera_runtime(&runtime, CadPaneId::Building).zoom, 2.0);
+        assert_eq!(cad_pane_camera_runtime(&runtime, CadPaneId::Shape).zoom, 1.0, "panes stay isolated");
     }
 
     #[test]
@@ -3721,50 +3839,40 @@ mod tests {
     }
 
     #[test]
-    fn active_utility_flows_from_view_state_into_scene() {
+    fn active_utility_flows_from_config_into_scene() {
         let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let view_state = ViewState { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewState::default() };
-        let node = render_direct(&app, CAD_PLAY_BODY_SHAPE, &doc, &view_state);
+        let config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
+        let node = render_direct(&app, CAD_PLAY_BODY_SHAPE, &doc, &config);
         let json = serde_json::to_string(&node).unwrap();
         // The world selection blob is embedded as an escaped JSON string inside the scene node.
-        assert!(json.contains(r#"transformMode\":\"transform"#), "render sources Dislocate from ViewState::active_utility_id");
+        assert!(json.contains(r#"transformMode\":\"transform"#), "render sources Dislocate from CadConfig::active_utility_id");
     }
 
+    /// @emoji 🎯️ WORKFLOWS-END-TO-END-TYPED-PORTS: `active_utility_id` is now a single, global
+    /// `CadConfig` field (the pre-B1 per-window-instance `ViewState.active_utility_by_window_id` has no
+    /// replacement — `render`/`window_measures` have no per-instance parameter anymore, see
+    /// `CadDislocateOptions`'s doc comment in `cad_document_engine`) — so the gumball is active in
+    /// EVERY pane with an active selection once the Dislocate utility is on, not isolated per window.
     #[test]
-    fn dislocate_gumball_is_visible_only_in_its_active_window() {
+    fn dislocate_gumball_is_visible_in_every_pane_once_the_utility_is_active() {
         let app = CadPlayApp::default();
         let scene = default_document();
-        drive(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
+        let base_config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
+        let emit = drive_with_config(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })), &base_config);
+        let config = config_after(&emit, &base_config);
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let window_instances = vec![
-            semio_framework_plugin::ViewWindowInstance { id: CAD_PLAY_WINDOW_SHAPE.into(), window_kind_id: CAD_PLAY_WINDOW_SHAPE.into() },
-            semio_framework_plugin::ViewWindowInstance { id: CAD_PLAY_WINDOW_BUILDING.into(), window_kind_id: CAD_PLAY_WINDOW_BUILDING.into() },
-        ];
-        let mut active_utility_by_window_id = HashMap::new();
-        active_utility_by_window_id.insert(CAD_PLAY_WINDOW_SHAPE.into(), CAD_DISLOCATE_UTILITY_ID.into());
-        let shared = ViewState { window_instances, active_utility_by_window_id, ..ViewState::default() };
-        let shape = render_direct(
-            &app,
-            CAD_PLAY_BODY_SHAPE,
-            &doc,
-            &ViewState { window_id: Some(CAD_PLAY_WINDOW_SHAPE.into()), ..shared.clone() },
-        );
-        let building = render_direct(
-            &app,
-            CAD_PLAY_BODY_BUILDING,
-            &doc,
-            &ViewState { window_id: Some(CAD_PLAY_WINDOW_BUILDING.into()), ..shared },
-        );
+        let shape = render_direct(&app, CAD_PLAY_BODY_SHAPE, &doc, &config);
+        let building = render_direct(&app, CAD_PLAY_BODY_BUILDING, &doc, &config);
         let shape_json = serde_json::to_string(&shape).unwrap();
         let building_json = serde_json::to_string(&building).unwrap();
         assert!(shape_json.contains(r#"gumballActive\":true"#));
         assert!(shape_json.contains(r#"transformMode\":\"transform"#));
-        assert!(building_json.contains(r#"gumballActive\":false"#));
-        assert!(!building_json.contains(r#"transformMode\":"#));
+        assert!(building_json.contains(r#"gumballActive\":true"#));
+        assert!(building_json.contains(r#"transformMode\":\"transform"#));
     }
 
     #[test]
@@ -3774,11 +3882,13 @@ mod tests {
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
         let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
+        let empty_config = CadConfig::default();
 
-        assert!(context_menu_direct(&app, &doc, &registry).is_empty(), "no selection must fall through to the shell's window-level menu");
+        assert!(context_menu_direct(&app, &doc, &empty_config, &registry).is_empty(), "no selection must fall through to the shell's window-level menu");
 
-        drive(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
-        let items = context_menu_direct(&app, &doc, &registry);
+        let emit = drive(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
+        let config = config_after(&emit, &empty_config);
+        let items = context_menu_direct(&app, &doc, &config, &registry);
         assert!(items.iter().any(|item| item.id == "translateSelection" && item.label.is_some()), "labels must resolve from the registry: {items:?}");
         assert!(
             items.iter().any(|item| item.id == "deleteObject" && item.destructive == Some(true)),
@@ -3786,26 +3896,18 @@ mod tests {
         );
     }
 
+    /// @emoji 🎛️ Dislocate move/rotate options are now keyed by PANE (`CadConfig::dislocate_shape`/
+    /// `dislocate_building`/…), not by an arbitrary host-pushed window-instance id — the direct
+    /// replacement for the pre-B1 per-window-instance isolation test.
     #[test]
-    fn dislocate_move_and_rotate_options_are_per_window() {
+    fn dislocate_move_and_rotate_options_are_per_pane() {
         let app = CadPlayApp::default();
         let scene = default_document();
-        let second_window = "cad-play-shape-2";
-        let window_instances = vec![
-            semio_framework_plugin::ViewWindowInstance { id: CAD_PLAY_WINDOW_SHAPE.into(), window_kind_id: CAD_PLAY_WINDOW_SHAPE.into() },
-            semio_framework_plugin::ViewWindowInstance { id: second_window.into(), window_kind_id: CAD_PLAY_WINDOW_SHAPE.into() },
-        ];
-        let second_view = ViewState { window_id: Some(second_window.into()), window_instances: window_instances.clone(), ..ViewState::default() };
-        drive_with_view(
-            &app,
-            &scene,
-            "setDislocateOption",
-            Some(json!({ "option": "rotate", "pressed": false })),
-            &second_view,
-        );
+        let emit = drive(&app, &scene, "setDislocateOption", Some(json!({ "pane": "building", "option": "rotate", "pressed": false })));
+        let config = config_after(&emit, &CadConfig::default());
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let measures = window_measures_direct(&app, &doc, &ViewState { window_instances, ..ViewState::default() });
+        let measures = window_measures_direct(&app, &doc, &config);
         let rotate_pressed = |window_id: &str| {
             measures
                 .get(window_id)
@@ -3820,13 +3922,13 @@ mod tests {
                 }))
         };
         assert_eq!(rotate_pressed(CAD_PLAY_WINDOW_SHAPE), Some(true));
-        assert_eq!(rotate_pressed(second_window), Some(false));
+        assert_eq!(rotate_pressed(CAD_PLAY_WINDOW_BUILDING), Some(false));
     }
 
     #[test]
     fn engagement_hud_no_longer_carries_utility_switcher_options() {
         let mut app = new_app();
-        let engagements = app.window_engagements(&ViewState::default());
+        let engagements = app.window_engagements();
         for engagement in engagements.values() {
             assert!(engagement.options.is_none(), "utility switching now lives in the framework utility bar, not the engagement HUD");
         }
@@ -3840,17 +3942,16 @@ mod tests {
         // instead of the preceding addObject.
         let mut app = new_app();
         let before = app.projection().expect("projection").objects.len();
-        app.handle_action("addObject", Some(&json!({ "typology": "spatial.shape.primitive.box" })), &ViewState::default(), &meta("local"))
+        app.dispatch_typed(CadCommand::AddObject { typology: Some("spatial.shape.primitive.box".into()) }, &meta("local"))
             .expect("add object");
         let projection_after_add = serde_json::to_string(&app.projection().expect("projection")).unwrap();
-        let view_state = ViewState { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewState::default() };
         let result = app
-            .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": CAD_DISLOCATE_UTILITY_ID })), &view_state, &meta("local"))
+            .dispatch_typed(CadCommand::SetActiveUtility { utility_id: CAD_DISLOCATE_UTILITY_ID.into() }, &meta("local"))
             .expect("set active utility");
         assert!(result.operations.is_empty(), "utility switch must emit zero operations");
         let projection_after_switch = serde_json::to_string(&app.projection().expect("projection")).unwrap();
         assert_eq!(projection_after_add, projection_after_switch, "utility switch must not mutate the projection");
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        app.handle_action("undo", None, &meta("local")).expect("undo");
         assert_eq!(
             app.projection().expect("projection").objects.len(),
             before,
@@ -3860,12 +3961,13 @@ mod tests {
 
     #[test]
     fn sun_measures_registered_for_all_four_panes_and_default_off() {
-        let mut app = CadPlayApp::default();
-        assert!(!app.runtime.borrow().sun.enabled, "sun must be off by default");
+        let app = CadPlayApp::default();
+        let base_config = CadConfig::default();
+        assert!(!base_config.sun.enabled, "sun must be off by default");
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let measures = window_measures_direct(&app, &doc, &ViewState::default());
+        let measures = window_measures_direct(&app, &doc, &base_config);
         for window_kind in [
             CAD_PLAY_WINDOW_SHAPE,
             CAD_PLAY_WINDOW_BUILDING,
@@ -3874,46 +3976,49 @@ mod tests {
         ] {
             assert!(measures.contains_key(window_kind), "missing sun measures for {window_kind}");
         }
-        drive(&mut app, &scene, "toggleSun", None);
-        assert!(app.runtime.borrow().sun.enabled);
+        let emit = drive(&app, &scene, "toggleSun", None);
+        let runtime = runtime_after(&emit, &base_config);
+        assert!(runtime.sun.enabled);
     }
 
     #[test]
     fn world_pick_selects_visible_object_by_index() {
         // The Shape pane's fixture object is a single hexagonal-cut solid (one object), so this
         // exercises worldPick-by-index against the Building pane, which has multiple objects.
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = forest_play_scene();
         let building_visible: Vec<_> = scene.building_objects.iter().filter(|object| object.visible).collect();
         assert!(building_visible.len() > 1);
         let expected_id = building_visible[1].id.clone();
-        drive(
-            &mut app,
+        let emit = drive(
+            &app,
             &scene,
             "worldPick",
             Some(json!({ "surfaceId": "cad.play.scene3d/building", "id": 1, "merge": "replace" })),
         );
-        assert_eq!(app.runtime.borrow().selected_object_ids.to_vec(), vec![expected_id]);
-        assert_eq!(app.runtime.borrow().component_selection.mode, "mesh");
+        let runtime = runtime_after(&emit, &CadConfig::default());
+        assert_eq!(runtime.selected_object_ids.to_vec(), vec![expected_id]);
+        assert_eq!(runtime.component_selection.mode, "mesh");
     }
 
     #[test]
     fn set_hover_edge_round_trips_hovered_component() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
         let object_id = scene.objects.iter().find(|object| object.visible).expect("visible").id.clone();
-        drive(
-            &mut app,
+        let emit = drive(
+            &app,
             &scene,
             "setHover",
             Some(json!({ "objectId": object_id, "mode": "edge", "id": 3 })),
         );
-        let selection = world_selection_json(&scene, &*app.runtime.borrow(), None, CadDislocateOptions::default());
+        let runtime = runtime_after(&emit, &CadConfig::default());
+        let selection = world_selection_json(&scene, &runtime, None, CadDislocateOptions::default());
         assert!(selection.contains("\"hoveredComponent\""));
         assert!(selection.contains("\"mode\":\"edge\""));
         assert!(selection.contains("\"id\":3"));
         assert!(selection.contains("\"edge\":true"), "edge targets must stay enabled: {selection}");
-        let instances = world_instances_json(&scene.objects, &*app.runtime.borrow());
+        let instances = world_instances_json(&scene.objects, &runtime);
         assert!(
             instances.contains("\"hovered\":false"),
             "edge hover must not tint the whole mesh surface: {instances}"
@@ -3922,11 +4027,11 @@ mod tests {
 
     #[test]
     fn world_pick_edge_selects_component_and_emits_selection_mode() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
         let object_id = scene.objects.iter().find(|object| object.visible).expect("visible").id.clone();
-        drive(
-            &mut app,
+        let emit = drive(
+            &app,
             &scene,
             "worldPick",
             Some(json!({
@@ -3936,11 +4041,12 @@ mod tests {
                 "merge": "replace"
             })),
         );
-        assert_eq!(app.runtime.borrow().component_selection.mode, "edge");
-        assert_eq!(app.runtime.borrow().component_selection.ids, vec![7]);
-        assert_eq!(app.runtime.borrow().active_object_id.as_deref(), Some(object_id.as_str()));
-        assert!(app.runtime.borrow().selected_object_ids.contains(&object_id));
-        let selection = world_selection_json(&scene, &*app.runtime.borrow(), None, CadDislocateOptions::default());
+        let runtime = runtime_after(&emit, &CadConfig::default());
+        assert_eq!(runtime.component_selection.mode, "edge");
+        assert_eq!(runtime.component_selection.ids, vec![7]);
+        assert_eq!(runtime.active_object_id.as_deref(), Some(object_id.as_str()));
+        assert!(runtime.selected_object_ids.contains(&object_id));
+        let selection = world_selection_json(&scene, &runtime, None, CadDislocateOptions::default());
         assert!(selection.contains("\"selectionMode\":\"edge\""));
         assert!(selection.contains("\"componentIds\":[7]"));
         assert!(selection.contains(&format!("\"activeObjectId\":\"{object_id}\"")));
@@ -3948,7 +4054,7 @@ mod tests {
 
     #[test]
     fn world_pick_curve_centerline_selects_whole_object() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = forest_play_scene();
         let curve = scene
             .structure_classic_objects
@@ -3956,8 +4062,8 @@ mod tests {
             .find(|object| object.visible && primary_primitive_kind(object) == "curve")
             .expect("structure classic curve object");
         let object_id = curve.id.clone();
-        drive(
-            &mut app,
+        let emit = drive(
+            &app,
             &scene,
             "worldPick",
             Some(json!({
@@ -3967,22 +4073,26 @@ mod tests {
                 "merge": "replace"
             })),
         );
-        assert_eq!(app.runtime.borrow().selected_object_ids.to_vec(), vec![object_id.clone()]);
-        assert_eq!(app.runtime.borrow().active_object_id.as_deref(), Some(object_id.as_str()));
-        assert_eq!(app.runtime.borrow().component_selection.mode, "mesh");
-        assert!(app.runtime.borrow().component_selection.ids.is_empty());
-        drive(
-            &mut app,
+        let config_after_pick = config_after(&emit, &CadConfig::default());
+        let runtime = cad_runtime_from_config(&config_after_pick);
+        assert_eq!(runtime.selected_object_ids.to_vec(), vec![object_id.clone()]);
+        assert_eq!(runtime.active_object_id.as_deref(), Some(object_id.as_str()));
+        assert_eq!(runtime.component_selection.mode, "mesh");
+        assert!(runtime.component_selection.ids.is_empty());
+        let emit = drive_with_config(
+            &app,
             &scene,
             "setHover",
             Some(json!({ "objectId": object_id, "mode": "edge", "id": 0 })),
+            &config_after_pick,
         );
+        let runtime = runtime_after(&emit, &config_after_pick);
         assert_eq!(
-            app.runtime.borrow().hovered_target.as_ref().and_then(|target| target.mode.as_deref()),
+            runtime.hovered_target.as_ref().and_then(|target| target.mode.as_deref()),
             Some("mesh"),
             "curve hover must promote to instance mesh hover"
         );
-        let instances = world_instances_json(&scene.structure_classic_objects, &*app.runtime.borrow());
+        let instances = world_instances_json(&scene.structure_classic_objects, &runtime);
         assert!(
             instances.contains(&format!("\"id\":\"{object_id}\"")) && instances.contains("\"hovered\":true"),
             "curve instance must show hovered: {instances}"
@@ -4020,46 +4130,46 @@ mod tests {
             selected_object_ids: SelectionSet::from(vec!["object-box-1".into(), second_id]),
             ..CadPlayRuntime::default()
         };
-        let panel = build_properties_panel(&view(scene, runtime), cad_labels(&ViewState::default()), None);
+        let panel = build_properties_panel(&view(scene, runtime), cad_labels(&CadConfig::default()), None);
         let json = serde_json::to_string(&panel).unwrap();
         assert!(json.contains("Mixed"));
         assert!(json.contains("cad-play-inspector.object.orientation"));
     }
 
-    fn selected_box_panel(view_state: &ViewState) -> String {
+    fn selected_box_panel(config: &CadConfig) -> String {
         let runtime = CadPlayRuntime {
             selected_object_ids: SelectionSet::from(vec!["object-box-1".into()]),
             ..CadPlayRuntime::default()
         };
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(view_state), None);
+        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(config), None);
         serde_json::to_string(&panel).unwrap()
     }
 
     #[test]
     fn cad_labels_resolve_native_by_default() {
-        let json = selected_box_panel(&ViewState::default());
+        let json = selected_box_panel(&CadConfig::default());
         assert!(json.contains("\"Object\""));
         assert!(!json.contains("Building component"));
     }
 
     #[test]
     fn cad_labels_resolve_reuse_terminology_in_english() {
-        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("en".into()), ..ViewState::default() };
-        let json = selected_box_panel(&view_state);
+        let config = CadConfig { terminology: "reuse".into(), locale: "en".into(), ..CadConfig::default() };
+        let json = selected_box_panel(&config);
         assert!(json.contains("Building component"));
         assert!(!json.contains("\"Object\""));
     }
 
     #[test]
     fn cad_labels_resolve_reuse_terminology_in_german() {
-        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
-        assert!(selected_box_panel(&view_state).contains("Baukomponente"));
+        let config = CadConfig { terminology: "reuse".into(), locale: "de".into(), ..CadConfig::default() };
+        assert!(selected_box_panel(&config).contains("Baukomponente"));
     }
 
     #[test]
     fn cad_labels_resolve_native_terminology_in_german() {
-        let view_state = ViewState { terminology: Some("native".into()), locale: Some("de".into()), ..ViewState::default() };
-        assert!(selected_box_panel(&view_state).contains("\"Objekt\""));
+        let config = CadConfig { terminology: "native".into(), locale: "de".into(), ..CadConfig::default() };
+        assert!(selected_box_panel(&config).contains("\"Objekt\""));
     }
 
     #[test]
@@ -4069,8 +4179,8 @@ mod tests {
             selected_primitive_id: Some("box-solid".into()),
             ..CadPlayRuntime::default()
         };
-        let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(&view_state), None);
+        let config = CadConfig { terminology: "reuse".into(), locale: "de".into(), ..CadConfig::default() };
+        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(&config), None);
         assert!(serde_json::to_string(&panel).unwrap().contains("Bauteil"));
     }
 
@@ -4080,8 +4190,8 @@ mod tests {
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &view_state);
+        let config = CadConfig { locale: "de".into(), ..CadConfig::default() };
+        let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &config);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"Form\""));
         assert!(json.contains("Gebäude"));
@@ -4099,8 +4209,8 @@ mod tests {
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = render_direct(&app, CAD_PLAY_BODY_CATALOGUE, &doc, &view_state);
+        let config = CadConfig { locale: "de".into(), ..CadConfig::default() };
+        let node = render_direct(&app, CAD_PLAY_BODY_CATALOGUE, &doc, &config);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Typologien"));
         assert!(json.contains("Quader"));
@@ -4117,23 +4227,24 @@ mod tests {
     //#region 🔖️Operations
     #[test]
     fn add_object_action_appends_object_and_selects_it() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
-        let emit = drive(&mut app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
-        assert_eq!(emit.operations.len(), 1);
-        let next = apply_operations(&scene, &emit.operations);
+        let emit = drive(&app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
+        assert_eq!(emit.document_operations.len(), 1);
+        let next = apply_operations(&scene, &emit.document_operations);
         assert!(
             next.objects.iter().any(|object| object.typology == "building.building.column")
                 || next.building_objects.iter().any(|object| object.typology == "building.building.column")
         );
-        assert_eq!(app.runtime.borrow().selected_object_ids.len(), 1);
+        let runtime = runtime_after(&emit, &CadConfig::default());
+        assert_eq!(runtime.selected_object_ids.len(), 1);
     }
 
     #[test]
     fn add_object_through_wrapper_grows_projection() {
         let mut app = new_app();
         let before = app.projection().expect("projection").objects.len();
-        app.handle_action("addObject", Some(&json!({ "typology": "spatial.shape.primitive.box" })), &ViewState::default(), &meta("local"))
+        app.dispatch_typed(CadCommand::AddObject { typology: Some("spatial.shape.primitive.box".into()) }, &meta("local"))
             .expect("add object");
         assert_eq!(app.projection().expect("projection").objects.len(), before + 1);
     }
@@ -4141,19 +4252,19 @@ mod tests {
     #[test]
     fn focus_model_definition_emits_document_operation() {
         let mut app = new_app();
-        app.handle_action("focusModelDefinition", Some(&json!({ "modelDefinitionId": "aec.building" })), &ViewState::default(), &meta("local"))
+        app.dispatch_typed(CadCommand::FocusModelDefinition { model_definition_id: "aec.building".into() }, &meta("local"))
             .expect("focus model definition");
         assert_eq!(app.projection().expect("projection").active_model_definition_id, "aec.building");
     }
 
     #[test]
     fn derive_transformation_populates_energy_pane() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let mut scene = default_document();
         scene.objects = vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape)];
-        let emit = drive(&mut app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        assert!(!emit.operations.is_empty());
-        let next = apply_operations(&scene, &emit.operations);
+        let emit = drive(&app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
+        assert!(!emit.document_operations.is_empty());
+        let next = apply_operations(&scene, &emit.document_operations);
         assert!(!next.energy_objects.is_empty());
         assert!(next.energy_objects.iter().any(|object| object.typology.starts_with("energy.energy.")));
         assert_eq!(next.active_model_definition_id, "aec.building.energy");
@@ -4161,7 +4272,7 @@ mod tests {
 
     #[test]
     fn forest_transformation_uses_live_shape_pane() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let mut scene = forest_play_scene();
         let fixture_energy_ids: Vec<String> = scene.energy_objects.iter().map(|object| object.id.clone()).collect();
         assert!(!fixture_energy_ids.is_empty(), "forest fixture should have energy objects");
@@ -4169,8 +4280,8 @@ mod tests {
         scene.objects.truncate(1);
         scene.objects[0].typology = "spatial.shape.primitive.box".into();
         scene.objects[0].label = "live-shape-only".into();
-        let emit = drive(&mut app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        let next = apply_operations(&scene, &emit.operations);
+        let emit = drive(&app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
+        let next = apply_operations(&scene, &emit.document_operations);
         assert!(!next.energy_objects.is_empty());
         assert!(
             next.energy_objects.iter().all(|object| !fixture_energy_ids.contains(&object.id)),
@@ -4180,11 +4291,11 @@ mod tests {
 
     #[test]
     fn save_selected_emits_download_effect() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
-        app.runtime.borrow_mut().selected_object_ids = SelectionSet::from(vec!["object-box-1".into()]);
-        let emit = drive(&mut app, &scene, "saveSelected", None);
-        assert!(emit.operations.is_empty(), "export must not mutate the document");
+        let config = CadConfig { selected_object_ids: vec!["object-box-1".into()], ..CadConfig::default() };
+        let emit = drive_with_config(&app, &scene, "saveSelected", None, &config);
+        assert!(emit.document_operations.is_empty(), "export must not mutate the document");
         assert_eq!(emit.effects.len(), 1);
         match &emit.effects[0] {
             HostEffect::DownloadMediaExport { filename, data, .. } => {
@@ -4197,8 +4308,8 @@ mod tests {
 
     #[test]
     fn load_raw_request_emits_file_open_effect() {
-        let mut app = CadPlayApp::default();
-        let emit = drive(&mut app, &default_document(), "loadRawRequest", None);
+        let app = CadPlayApp::default();
+        let emit = drive(&app, &default_document(), "loadRawRequest", None);
         match &emit.effects[0] {
             HostEffect::RequestFileOpen { import_action, read_as, .. } => {
                 assert_eq!(import_action, "importCadFile");
@@ -4212,23 +4323,25 @@ mod tests {
     //#region 🔖️Engagement
     #[test]
     fn engagement_starts_box_interaction_session() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
-        app.runtime.borrow_mut().engagement_input = "b".into();
-        drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
-        assert!(app.runtime.borrow().engagement_session.is_some());
+        let config = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
+        let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+        let runtime = runtime_after(&emit, &config);
+        assert!(runtime.engagement_session.is_some());
     }
 
     #[test]
     fn world_pointer_move_updates_live_preview_without_committing_or_emitting_operations() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
-        app.runtime.borrow_mut().engagement_input = "b".into();
-        drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
+        let config = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
+        let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+        let config = config_after(&emit, &config);
 
-        let emit = drive(&mut app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })));
-        assert!(emit.operations.is_empty(), "a pointer move must not emit any document operation");
-        let runtime = app.runtime.borrow();
+        let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })), &config);
+        assert!(emit.document_operations.is_empty(), "a pointer move must not emit any document operation");
+        let runtime = runtime_after(&emit, &config);
         let session = runtime.engagement_session.as_ref().expect("session still active");
         assert_eq!(session.state, "first_corner", "pointer.move must not change state");
         assert_eq!(session.context.get("cursor"), Some(&json!([3.0, 4.0, 0.0])));
@@ -4237,81 +4350,94 @@ mod tests {
     //#region 🔖️GesturePreview
     /// 🔬️ CW7 preview-law seam: `CadPlayApp::gesture_preview` reads `CadEngagementSession` only, never
     /// `CadScene`/`CadOperation` — driven through the real `worldPointerMove` handler (the natural
-    /// per-tick gesture handler) via the existing `drive` helper.
+    /// per-tick gesture handler) via the existing `drive` helper, config threaded explicitly across
+    /// calls (the pure `CadPlayApp` no longer holds any of this state itself).
     #[test]
     fn gesture_preview_is_none_without_a_live_engagement_session() {
         let app = CadPlayApp::default();
-        assert!(app.gesture_preview().is_none(), "no live engagement session, nothing to preview");
+        assert!(app.gesture_preview(&CadConfig::default()).is_none(), "no live engagement session, nothing to preview");
     }
 
     #[test]
     fn gesture_preview_reflects_the_live_rubber_band_preview_and_clears_on_abort() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
-        app.runtime.borrow_mut().engagement_input = "b".into();
-        drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
+        let config = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
+        let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+        let config = config_after(&emit, &config);
 
-        drive(&mut app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })));
-        let (key, seq_after_first, payload) = app.gesture_preview().expect("a live engagement session is previewable");
+        let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })), &config);
+        let config = config_after(&emit, &config);
+        let (key, seq_after_first, payload) = app.gesture_preview(&config).expect("a live engagement session is previewable");
         assert_eq!(key, "gesture:engagement");
         let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
         assert_eq!(value["context"]["cursor"], json!([3.0, 4.0, 0.0]));
 
-        drive(&mut app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [5.0, 6.0, 0.0] })));
-        let (_, seq_after_second, payload_after_second) = app.gesture_preview().expect("still live mid-gesture");
+        let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [5.0, 6.0, 0.0] })), &config);
+        let config = config_after(&emit, &config);
+        let (_, seq_after_second, payload_after_second) = app.gesture_preview(&config).expect("still live mid-gesture");
         assert!(seq_after_second > seq_after_first, "seq is monotone per tick, for staleness detection on the receiving end");
         let value_after_second: Value = serde_json::from_slice(&payload_after_second).expect("payload is valid json");
         assert_eq!(value_after_second["context"]["cursor"], json!([5.0, 6.0, 0.0]), "preview tracks the live cursor, not the gesture start");
 
-        drive(&mut app, &scene, "engagementAbort", None);
-        assert!(app.gesture_preview().is_none(), "the engagement session was aborted: nothing left to preview");
+        let emit = drive_with_config(&app, &scene, "engagementAbort", None, &config);
+        let config = config_after(&emit, &config);
+        assert!(app.gesture_preview(&config).is_none(), "the engagement session was aborted: nothing left to preview");
     }
 
     #[test]
     fn gesture_preview_is_a_pure_read_never_mutating_the_engagement_session() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
-        app.runtime.borrow_mut().engagement_input = "b".into();
-        drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
-        drive(&mut app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [1.0, 2.0, 0.0] })));
-        let session_before = app.runtime.borrow().engagement_session.clone();
-        let _ = app.gesture_preview();
-        let _ = app.gesture_preview();
-        assert_eq!(app.runtime.borrow().engagement_session, session_before, "gesture_preview must never mutate the live engagement session it reads");
+        let config = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
+        let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+        let config = config_after(&emit, &config);
+        let emit = drive_with_config(&app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [1.0, 2.0, 0.0] })), &config);
+        let config = config_after(&emit, &config);
+        let session_before = config.engagement_session_json.clone();
+        let _ = app.gesture_preview(&config);
+        let _ = app.gesture_preview(&config);
+        assert_eq!(config.engagement_session_json, session_before, "gesture_preview must never mutate the live engagement session it reads");
     }
     //#endregion 🔖️GesturePreview
 
     #[test]
     fn engagement_repeat_last_restarts_the_last_finalized_interaction() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let mut scene = default_document();
-        app.runtime.borrow_mut().engagement_input = "b".into();
-        drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
-        assert!(app.runtime.borrow().engagement_session.is_some());
+        let mut config = CadConfig { engagement_input: "b".into(), ..CadConfig::default() };
+        let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+        config = config_after(&emit, &config);
+        assert!(cad_runtime_from_config(&config).engagement_session.is_some());
 
         // 🔣️box.json's default boxMode is "point" (length/width prompt); select diagonal mode (key
         // "d") to reach the classic two-corner-click flow.
-        app.runtime.borrow_mut().engagement_input = "d".into();
-        drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
+        config.engagement_input = "d".into();
+        let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+        config = config_after(&emit, &config);
 
         for position in [json!([0.0, 0.0, 0.0]), json!([2.0, 3.0, 0.0])] {
-            let emit = drive(&mut app, &scene, "worldPointerDown", Some(json!({ "pane": "shape", "position": position })));
-            scene = apply_operations(&scene, &emit.operations);
+            let emit = drive_with_config(&app, &scene, "worldPointerDown", Some(json!({ "pane": "shape", "position": position })), &config);
+            scene = apply_operations(&scene, &emit.document_operations);
+            config = config_after(&emit, &config);
         }
 
-        app.runtime.borrow_mut().engagement_input = "SetHeight2.5".into();
-        drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
+        config.engagement_input = "SetHeight2.5".into();
+        let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+        config = config_after(&emit, &config);
 
         // 🔣️box.json's `set.height` only records the height (state stays first_corner_height); an
         // explicit `confirm` (Enter) is needed to reach `ready`, box's commit.fromStates.
-        app.runtime.borrow_mut().engagement_input = "Confirm".into();
-        let emit = drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
-        scene = apply_operations(&scene, &emit.operations);
-        assert!(app.runtime.borrow().engagement_session.is_none(), "box should have committed");
-        assert_eq!(app.runtime.borrow().last_finalized_interaction_id.as_deref(), Some("primitive.box"));
+        config.engagement_input = "Confirm".into();
+        let emit = drive_with_config(&app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })), &config);
+        scene = apply_operations(&scene, &emit.document_operations);
+        config = config_after(&emit, &config);
+        let runtime = cad_runtime_from_config(&config);
+        assert!(runtime.engagement_session.is_none(), "box should have committed");
+        assert_eq!(runtime.last_finalized_interaction_id.as_deref(), Some("primitive.box"));
 
-        drive(&mut app, &scene, "engagementRepeatLast", Some(json!({ "pane": "shape" })));
-        let runtime = app.runtime.borrow();
+        let emit = drive_with_config(&app, &scene, "engagementRepeatLast", Some(json!({ "pane": "shape" })), &config);
+        let runtime = runtime_after(&emit, &config);
         let session = runtime.engagement_session.as_ref().expect("repeat-last should start a session");
         assert_eq!(session.interaction_id, "primitive.box");
     }
@@ -4348,7 +4474,7 @@ mod tests {
 
     #[test]
     fn import_cad_file_action_accepts_spatial_json_text_string_payload() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
         let file_text = json!({
             "schema": "spatial.model",
@@ -4366,20 +4492,20 @@ mod tests {
         })
         .to_string();
         let emit = drive(
-            &mut app,
+            &app,
             &scene,
             "importCadFile",
             Some(json!({ "payload": file_text, "name": "cad.spatial.json" })),
         );
-        assert!(!emit.operations.is_empty(), "importCadFile must emit a SetScene operation for a spatial JSON string payload");
-        let next = apply_operations(&scene, &emit.operations);
+        assert!(!emit.document_operations.is_empty(), "importCadFile must emit a SetScene operation for a spatial JSON string payload");
+        let next = apply_operations(&scene, &emit.document_operations);
         assert_eq!(next.objects.len(), 1);
         assert_eq!(next.objects[0].id, "object-loaded");
     }
 
     #[test]
     fn import_cad_file_action_imports_obj_by_extension() {
-        let mut app = CadPlayApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
         let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
         let obj_data_url = format!(
@@ -4387,13 +4513,13 @@ mod tests {
             base64::engine::general_purpose::STANDARD.encode(obj_text)
         );
         let emit = drive(
-            &mut app,
+            &app,
             &scene,
             "importCadFile",
             Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })),
         );
-        assert!(!emit.operations.is_empty(), "importCadFile must emit an AddObject operation for an OBJ payload");
-        let next = apply_operations(&scene, &emit.operations);
+        assert!(!emit.document_operations.is_empty(), "importCadFile must emit an AddObject operation for an OBJ payload");
+        let next = apply_operations(&scene, &emit.document_operations);
         assert_eq!(next.objects.len(), scene.objects.len() + 1);
         assert!(next.objects.last().unwrap().solid_handle.is_some());
     }
@@ -4406,8 +4532,7 @@ mod tests {
         let before = app.projection().expect("projection").objects.len();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(
             &mut app,
-            "addObject",
-            Some(&json!({ "typology": "spatial.shape.primitive.box" })),
+            CadCommand::AddObject { typology: Some("spatial.shape.primitive.box".into()) },
             |app| app.projection().expect("projection").objects.len(),
             before,
             before + 1,
@@ -4418,19 +4543,19 @@ mod tests {
     fn undo_redo_round_trips_added_node_through_wrapper() {
         let mut app = new_app();
         let before = app.projection().expect("projection").nodes.len();
-        app.handle_action("addNode", Some(&json!({ "kind": "solid" })), &ViewState::default(), &meta("local")).expect("add node");
+        app.dispatch_typed(CadCommand::AddNode { kind: "solid".into() }, &meta("local")).expect("add node");
         assert_eq!(app.projection().expect("projection").nodes.len(), before + 1);
-        let undo = app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        let undo = app.handle_action("undo", None, &meta("local")).expect("undo");
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.projection().expect("projection").nodes.len(), before);
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        app.handle_action("redo", None, &meta("local")).expect("redo");
         assert_eq!(app.projection().expect("projection").nodes.len(), before + 1);
     }
 
     #[test]
     fn coalesced_translate_drag_is_a_single_undo_step() {
         let mut app = new_app();
-        app.handle_action("addObject", Some(&json!({ "typology": "spatial.shape.primitive.box" })), &ViewState::default(), &meta("local"))
+        app.dispatch_typed(CadCommand::AddObject { typology: Some("spatial.shape.primitive.box".into()) }, &meta("local"))
             .expect("add object");
         let object_id = app.projection().expect("projection").objects.last().unwrap().id.clone();
         let origin_before = app
@@ -4442,10 +4567,8 @@ mod tests {
             .unwrap()
             .origin;
         for _ in 0..3 {
-            app.handle_action(
-                "translateSelection",
-                Some(&json!({ "ids": [object_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })),
-                &ViewState::default(),
+            app.dispatch_typed(
+                CadCommand::TranslateSelection { object_ids: vec![object_id.clone()], dx: 1.0, dy: 0.0, dz: 0.0 },
                 &meta("local"),
             )
             .expect("translate tick");
@@ -4460,7 +4583,7 @@ mod tests {
             .origin;
         assert_eq!(dragged[0], origin_before[0] + 3.0, "three coalesced ticks accumulate");
         // One undo reverts the whole coalesced drag back to the pre-drag origin (not one tick).
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo drag");
+        app.handle_action("undo", None, &meta("local")).expect("undo drag");
         let after_undo = app
             .projection()
             .expect("projection")
@@ -4501,27 +4624,23 @@ mod tests {
 
         // A renames object A.
         instance_a
-            .handle_action(
-                "patchObject",
-                Some(&json!({ "objectId": object_a, "field": "label", "value": "Renamed By A" })),
-                &ViewState::default(),
+            .dispatch_typed(
+                CadCommand::PatchObject { object_id: object_a.clone(), field: "label".into(), value: Some("Renamed By A".into()), delta: None },
                 &meta("actor-a"),
             )
             .expect("a renames object a");
 
         // B renames object B — a disjoint edit that must survive alongside A's.
         instance_b
-            .handle_action(
-                "patchObject",
-                Some(&json!({ "objectId": object_b, "field": "label", "value": "Renamed By B" })),
-                &ViewState::default(),
+            .dispatch_typed(
+                CadCommand::PatchObject { object_id: object_b.clone(), field: "label".into(), value: Some("Renamed By B".into()), delta: None },
                 &meta("actor-b"),
             )
             .expect("b renames object b");
 
         // A neutral history command always pumps inbound operations before doing its own work.
-        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
 
         let scene_a = instance_a.projection().expect("projection a");
         let scene_b = instance_b.projection().expect("projection b");
@@ -4543,7 +4662,7 @@ mod tests {
         let (near, mut far) = MemoryBackbone::pair("mem://cad-doc", "mem://cad-doc");
         sender.attach_backbone(Box::new(near)).expect("attach");
         sender
-            .handle_action("addNode", Some(&json!({ "kind": "solid" })), &ViewState::default(), &meta("local"))
+            .dispatch_typed(CadCommand::AddNode { kind: "solid".into() }, &meta("local"))
             .expect("add node");
 
         let mut envelopes = Vec::new();

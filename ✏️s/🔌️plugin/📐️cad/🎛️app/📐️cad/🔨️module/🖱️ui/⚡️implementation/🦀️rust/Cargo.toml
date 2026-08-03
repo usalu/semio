@@ -15,15 +15,16 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/�
 cad_document = { path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/⚡️implementation/🦀️rust", package = "semio-s-app-cad" }
 cad_document_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-cad-engine" }
 cad_document_op = { path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-cad-op" }
+# 🎯️ `CadPlayApp::Command` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2) is `cad_document_protocol::CadCommand`.
+cad_document_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-cad-protocol" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 kernel_3d_brepkit = { path = "../../../../../../../../🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
 kernel_3d_engine = { path = "../../../../../../../../🔨️module/🧊️3d/📐️brep/⚙️engine/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-3d-brep-engine" }
 ui_wgpu = { path = "../../../../../../../../../🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust", package = "semio-framework-ui-wgpu" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"
-
-[dev-dependencies]
-protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
-store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

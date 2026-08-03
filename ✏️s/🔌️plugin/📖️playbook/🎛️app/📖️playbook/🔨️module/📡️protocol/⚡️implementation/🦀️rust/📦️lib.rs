@@ -17,6 +17,38 @@ pub fn decode_op(bytes: &[u8]) -> Result<PlaybookOperation, protocol::ProtocolEr
     PlaybookOperation::decode_op(bytes)
 }
 
+//#region 🔖️PlaybookCommand
+/// 🎯️ B1: `PlaybookPlayApp::Command` — the SOLE dispatch surface for playbook's own behavior (mirrors
+/// `writer_protocol::WriterCommand`/`shooting_protocol::ShootingCommand`'s doc comment: covers every
+/// declared action, decoded once by `VcsDocumentApp::dispatch_typed_command` via `OpBinary::decode_op`).
+/// Field shapes mirror each former `handle_action` action's real `args` object exactly.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
+pub enum PlaybookCommand {
+    // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
+    #[dsl(key = "add-step")]
+    AddStep,
+    #[dsl(key = "remove-step")]
+    RemoveStep { step_id: String },
+    #[dsl(key = "move-step")]
+    MoveStep { step_id: String, index: usize },
+    #[dsl(key = "add-block")]
+    AddBlock { kind: String, step_id: Option<String> },
+    #[dsl(key = "remove-block")]
+    RemoveBlock { step_id: String, block_id: String },
+    #[dsl(key = "move-block")]
+    MoveBlock { block_id: String, from_step_id: String, to_step_id: String, index: usize },
+    #[dsl(key = "update-playbook")]
+    UpdatePlaybook { value: String },
+
+    // 👁️ Config-only (was ephemeral `PlaybookPlayApp::selected_ids` state) — emit `config_operations`,
+    // never document operations.
+    #[dsl(key = "set-selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+//#endregion 🔖️PlaybookCommand
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -28,5 +60,26 @@ mod tests {
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }
+
+    //#region 🔖️CommandTests
+    fn assert_command_binary_round_trips(command: &PlaybookCommand) {
+        let bytes = command.encode_op().expect("encode command");
+        assert_eq!(&PlaybookCommand::decode_op(&bytes).expect("decode command"), command);
+    }
+
+    #[test]
+    fn playbook_command_binary_round_trips_for_every_shape() {
+        assert_command_binary_round_trips(&PlaybookCommand::AddStep);
+        assert_command_binary_round_trips(&PlaybookCommand::RemoveStep { step_id: "s".into() });
+        assert_command_binary_round_trips(&PlaybookCommand::MoveStep { step_id: "s".into(), index: 2 });
+        assert_command_binary_round_trips(&PlaybookCommand::AddBlock { kind: "text".into(), step_id: None });
+        assert_command_binary_round_trips(&PlaybookCommand::AddBlock { kind: "note".into(), step_id: Some("s".into()) });
+        assert_command_binary_round_trips(&PlaybookCommand::RemoveBlock { step_id: "s".into(), block_id: "b".into() });
+        assert_command_binary_round_trips(&PlaybookCommand::MoveBlock { block_id: "b".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 0 });
+        assert_command_binary_round_trips(&PlaybookCommand::UpdatePlaybook { value: "Recipe".into() });
+        assert_command_binary_round_trips(&PlaybookCommand::SetSelection { ids: vec!["a".into(), "b".into()] });
+        assert_command_binary_round_trips(&PlaybookCommand::SetLocale { value: "de-DE".into() });
+    }
+    //#endregion 🔖️CommandTests
 }
 //#endregion 🧪️Tests

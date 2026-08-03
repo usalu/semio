@@ -14,3 +14,5 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/�
 dag_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-dag-op" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }

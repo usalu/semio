@@ -15,6 +15,8 @@ fem2d = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/�
 fem2d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-fem-2d-op" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 fem2d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-fem-2d-engine" }

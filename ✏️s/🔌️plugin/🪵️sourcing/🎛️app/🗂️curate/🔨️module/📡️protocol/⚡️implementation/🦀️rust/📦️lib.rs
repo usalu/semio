@@ -1,6 +1,11 @@
 //! ⚖️ Sourcing curate app — binary command protocol surface + laws (constitutional: protocol).
+//!
+//! 🎯️ Also hosts `SourcingCurateCommand` — the app-engine `AppCommand::Command` binary command envelope
+//! (mirrors `shooting_protocol::ShootingCommand`). One variant per `create_sourcing_curate_app`'s real
+//! declared action — the SOLE dispatch surface for `sourcing_ui::SourcingCurateApp::handle`.
 
 use protocol::OpBinary;
+use serde::{Deserialize, Serialize};
 use sourcing_op::SourcingOperation;
 
 /// 📦️ Encodes a `SourcingOperation` to its binary command form.
@@ -12,6 +17,55 @@ pub fn encode_op(operation: &SourcingOperation) -> Result<Vec<u8>, protocol::Pro
 pub fn decode_op(bytes: &[u8]) -> Result<SourcingOperation, protocol::ProtocolError> {
     SourcingOperation::decode_op(bytes)
 }
+
+//#region 🔖️SourcingCurateCommand
+/// 🎯️ B1: `SourcingCurateApp::Command` — the SOLE dispatch surface for curate's own behavior, covering
+/// every declared action. Field shapes mirror each action's real args exactly; `#[derive(dsl::DslOps)]`
+/// gives this a binary (`OpBinary`) AND text (`OpText`) codec, matching `sourcing_op`'s conventions.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum SourcingCurateCommand {
+    // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
+    /// 🛠️ Dev-only whole-document import — kept out of the command palette.
+    #[dsl(key = "document-json")]
+    SetDocumentJson { json: String },
+    #[dsl(key = "active-example")]
+    SetActiveExample { example_id: String },
+    #[dsl(key = "stock-from-catalogue")]
+    StockFromCatalogue,
+    #[dsl(key = "curate-add")]
+    CurateAdd { object_id: String },
+    /// 🎚️ The pool/curated tables' count stepper cell dispatches this SAME action for both a relative
+    /// drag tick (`delta`) and an absolute typed value (`value`) — mirrors `SetFilterMinAvailability`'s
+    /// two-mode shape (checked in that order, `delta` first).
+    #[dsl(key = "curate-set-count")]
+    CurateSetCount { object_id: String, delta: Option<f64>, value: Option<f64> },
+    #[dsl(key = "curate-remove")]
+    CurateRemove { object_id: String },
+    #[dsl(key = "drop-on-pool")]
+    DropOnPool { object_id: String },
+    #[dsl(key = "drop-on-curated")]
+    DropOnCurated { object_id: String },
+
+    // 👁️ Config-only (was `CurateDocument.filters`/`.runtime`) — emit `config_operations`, never
+    // document operations.
+    #[dsl(key = "filter-query")]
+    SetFilterQuery { value: String },
+    #[dsl(key = "filter-module")]
+    SetFilterModule { module_id: String, enabled: bool },
+    #[dsl(key = "filter-typology")]
+    SetFilterTypology { path: String },
+    #[dsl(key = "filter-min-availability")]
+    SetFilterMinAvailability { delta: Option<f64>, value: Option<f64> },
+    #[dsl(key = "sort-table")]
+    SortTable { column_id: String, direction: String },
+    #[dsl(key = "select-row")]
+    SelectRow { object_id: Option<String> },
+    #[dsl(key = "world-select")]
+    WorldSelect { ids: Vec<String> },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+//#endregion 🔖️SourcingCurateCommand
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -47,5 +101,30 @@ mod tests {
         store::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖️DslAndOpTextStore
+
+    //#region 🔖️SourcingCurateCommand
+    #[test]
+    fn sourcing_curate_command_op_text_round_trips_every_variant() {
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SetDocumentJson { json: "{}".into() });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SetActiveExample { example_id: "demo-stock".into() });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::StockFromCatalogue);
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::CurateAdd { object_id: "beam-glulam-gl24h".into() });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::CurateSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::CurateSetCount { object_id: "beam-glulam-gl24h".into(), delta: None, value: Some(4.0) });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::CurateRemove { object_id: "beam-glulam-gl24h".into() });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::DropOnPool { object_id: "beam-glulam-gl24h".into() });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::DropOnCurated { object_id: "beam-glulam-gl24h".into() });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SetFilterQuery { value: "glulam".into() });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SetFilterModule { module_id: "beams".into(), enabled: true });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SetFilterTypology { path: "beams/steel".into() });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SetFilterMinAvailability { delta: Some(1.0), value: None });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SetFilterMinAvailability { delta: None, value: Some(5.0) });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SortTable { column_id: "availability".into(), direction: "desc".into() });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SelectRow { object_id: Some("beam-glulam-gl24h".into()) });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SelectRow { object_id: None });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::WorldSelect { ids: vec!["beam-glulam-gl24h".into(), "beam-kvh-c24".into()] });
+        store::test_support::assert_op_text_binary_equivalence(&SourcingCurateCommand::SetLocale { value: "de-DE".into() });
+    }
+    //#endregion 🔖️SourcingCurateCommand
 }
 //#endregion 🧪️Tests

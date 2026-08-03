@@ -15,6 +15,9 @@ raster = { path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raste
 raster_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-raster-op" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+# 🎯️ `RasterCommand`'s `dsl::DslOps` derive (WORKFLOWS-END-TO-END-TYPED-PORTS B1 typed command channel).
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 raster_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-raster-engine" }

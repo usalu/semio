@@ -1,14 +1,21 @@
-//! 🖼️ FEM 2D app — `DocumentApp` impl, render, manifest (constitutional: ui).
+//! 🖼️ FEM 2D app — `DocumentApp` impl, render, manifest (constitutional: ui). B1: the pure-trait
+//! pilot — `Fem2dPlayApp` is a unit struct; every former `Fem2dPlayApp` `RefCell` field (result
+//! display, camera) plus the deleted `ViewState::locale` now live in `fem2d_engine::Fem2dConfig`,
+//! written via `fem2d_op::Fem2dConfigOperation`s (real `backwards`, no ad hoc `InverseAction`); every
+//! action dispatches through the single typed `fem2d_protocol::Fem2dCommand` channel via
+//! `DocumentApp::handle`.
 
 use fem2d::{Fem2dDocument, FemCamera};
+use fem2d_engine::Fem2dConfig;
+use fem2d_op::{Fem2dConfigOperation, Fem2dOperation};
+use fem2d_protocol::Fem2dCommand;
 use fem_core::{Dof, ElementResult};
-use fem_shared::{hex_to_rgb01, next_id, normalize_mode_shape, parse_result_display, result_display_action_args, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
+use fem_shared::{hex_to_rgb01, next_id, normalize_mode_shape, result_display_action_args, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
 use semio_framework_plugin::{
-    build_canvas_2d_scene, create_default_layout, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, SurfaceKind, UiNode, ViewState,
-    AppLabelsOverlay,
+    build_canvas_2d_scene, create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, AppIo, ArtifactKindSpec, Canvas2dScene, ConfigSpec, ConfigView, DocumentApp,
+    DocumentView, Emit, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode, AppLabelsOverlay,
 };
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use std::collections::HashMap;
 use store::DocumentDsl;
 
@@ -453,31 +460,77 @@ fn render_fem2d_results_buckling(doc: &Fem2dDocument, source_id: Option<&str>, m
 //#endregion 🔖️Fem2dRender
 
 //#region 🔖️Fem2dPlayApp
-/// 🧮️ v0 design: results are never persisted or cached — `fem2d_solve`/`fem2d_solve_all` run fresh
-/// inside `render()` whenever the results window is drawn. At v0 scale (≤10 nodes) this is cheap and
-/// correct-by-construction (no cache-invalidation bugs to get wrong). There is no `RunAnalysis` operation:
-/// solving is a pure function of the document. `result_display` is ephemeral view state (see
-/// `fem_shared::ResultDisplay`'s doc) — mutated by the `setResultDisplay` view action, defaulting to the
-/// first load case in `Static` mode.
-pub struct Fem2dPlayApp {
-    result_display: RefCell<ResultDisplay>,
-  camera: RefCell<FemCamera>,
+/// 👁️ B1: `cfg`-driven counterpart of the deleted `ResultDisplay` `RefCell` — converts the flat
+/// `Fem2dConfig` result-display fields back into `fem_shared::ResultDisplay`/`DisplayMode` so the
+/// existing `render_fem2d_results` pipeline (built around those shared types) needs no changes.
+fn config_result_display(cfg: &Fem2dConfig) -> ResultDisplay {
+    let mode = match cfg.result_mode.as_str() {
+        "modal" => DisplayMode::Modal(cfg.result_mode_index as usize),
+        "buckling" => DisplayMode::Buckling(cfg.result_mode_index as usize),
+        _ => DisplayMode::Static,
+    };
+    ResultDisplay { source_id: cfg.result_source_id.clone(), mode }
 }
 
-impl Default for Fem2dPlayApp {
-    fn default() -> Self {
-        Self {
-            result_display: RefCell::new(ResultDisplay::default()),
-            camera: RefCell::new(FemCamera::default()),
+/// 🎨️ Manual `fem_core::StaticResult` -> JSON bridge for `"results:out"` (see
+/// `Fem2dPlayApp::export_media`) — `fem_core::StaticResult`/`ElementResult`/`Dof` don't derive
+/// `Serialize` (out of this ticket's scope: `🫀️core` is a shared crate), so this hand-rolls the same
+/// shape `serde_json::to_string` would have produced, using `Dof`'s existing `{:?}` formatting (already
+/// used for the reaction-label layers in `render_fem2d_results_static` above).
+fn dof_json(dof: Dof) -> Value {
+    json!(format!("{dof:?}"))
+}
+
+fn element_result_json(result: &ElementResult) -> Value {
+    match result {
+        ElementResult::Bar { n } => json!({ "kind": "bar", "n": n }),
+        ElementResult::Beam { stations } => {
+            json!({ "kind": "beam", "stations": stations.iter().map(|s| json!({ "x": s.x, "n": s.n, "v": s.v, "m": s.m })).collect::<Vec<_>>() })
         }
+        ElementResult::Plane { gauss } => {
+            json!({ "kind": "plane", "gauss": gauss.iter().map(|g| json!({ "sxx": g.sxx, "syy": g.syy, "sxy": g.sxy, "vonMises": g.von_mises })).collect::<Vec<_>>() })
+        }
+        ElementResult::Plate { gauss } => {
+            json!({ "kind": "plate", "gauss": gauss.iter().map(|g| json!({ "mx": g.mx, "my": g.my, "mxy": g.mxy })).collect::<Vec<_>>() })
+        }
+        ElementResult::Solid { gauss } => json!({
+            "kind": "solid",
+            "gauss": gauss.iter().map(|g| json!({ "sxx": g.sxx, "syy": g.syy, "szz": g.szz, "sxy": g.sxy, "syz": g.syz, "sxz": g.sxz, "vonMises": g.von_mises })).collect::<Vec<_>>(),
+        }),
+        ElementResult::Shell { gauss } => json!({
+            "kind": "shell",
+            "gauss": gauss.iter().map(|g| json!({ "nxx": g.nxx, "nyy": g.nyy, "nxy": g.nxy, "mxx": g.mxx, "myy": g.myy, "mxy": g.mxy, "vonMisesTop": g.von_mises_top, "vonMisesBottom": g.von_mises_bottom })).collect::<Vec<_>>(),
+        }),
     }
 }
 
+fn static_result_json(result: &fem_core::StaticResult) -> Value {
+    json!({
+        "displacements": result.displacements.iter().map(|d| json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
+        "reactions": result.reactions.iter().map(|r| json!({ "nodeId": r.node_id, "dof": dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
+        "elements": result.elements.iter().map(|(id, element_result)| json!({ "id": id, "result": element_result_json(element_result) })).collect::<Vec<_>>(),
+        "checks": { "residualNorm": result.checks.residual_norm, "reactionSum": result.checks.reaction_sum },
+    })
+}
+
+fn results_map_json(results: &HashMap<String, fem_core::StaticResult>) -> Value {
+    Value::Object(results.iter().map(|(id, result)| (id.clone(), static_result_json(result))).collect())
+}
+
+/// 🧪️ B1: unit struct — every former `Fem2dPlayApp` `RefCell` field (`result_display`, `camera`) plus
+/// the deleted `ViewState::locale` now live in `fem2d_engine::Fem2dConfig` (see `DocumentApp::Config`),
+/// written through `fem2d_op::Fem2dConfigOperation`s. v0 design unchanged: results are never persisted
+/// or cached — `fem2d_solve`/`fem2d_solve_all` run fresh inside `render()`/`export_media` whenever the
+/// results window is drawn or the `"results:out"` port is read.
+#[derive(Default)]
+pub struct Fem2dPlayApp;
+
 impl DocumentApp for Fem2dPlayApp {
     type Projection = Fem2dDocument;
-    type Operation = fem2d_op::Fem2dOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Operation = Fem2dOperation;
+    type Config = Fem2dConfig;
+    type ConfigOperation = Fem2dConfigOperation;
+    type Command = Fem2dCommand;
 
     fn app_id(&self) -> &str {
         FEM2D_APP_ID
@@ -491,222 +544,264 @@ impl DocumentApp for Fem2dPlayApp {
         fem2d_engine::empty_fem2d_projection()
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, Fem2dDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<fem2d_op::Fem2dOperation> {
-        match action {
-            "addNode" => {
-                if let (Some(x), Some(y)) = (args.and_then(|v| v.get("x")).and_then(Value::as_f64), args.and_then(|v| v.get("y")).and_then(Value::as_f64)) {
-                    let id = next_id(doc.projection.nodes.iter().map(|n| n.id.clone()), "n");
-                    let index = doc.projection.nodes.len();
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetNode { index, node: fem2d::FemNode { id, x, y } }]);
+    fn io(&self) -> Option<AppIo> {
+        Some(fem2d_engine::fem2d_io())
+    }
+
+    /// 🎞️ `"document:out"` reproduces the trait's default whole-document pack (overriding
+    /// `export_media` shadows the trait's provided body for every port on this app, not just the new
+    /// one). `"results:out"` runs every load case/combination's analysis fresh and returns them as plain
+    /// JSON text in a `Structured` payload — `MediaPayload::Structured.json` doesn't require a
+    /// `pack`-encoded value (see `shooting_engine::shooting_photo_media`'s base64-PNG payload for
+    /// another existing non-pack producer). A document with no load cases, or a solve failure, is
+    /// reported as `MediaError::Payload` rather than an empty/panicking export.
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, Fem2dDocument>) -> Result<Media, MediaError> {
+        match port {
+            "document:out" => {
+                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let bytes = <Fem2dDocument as store::DocumentPack>::encode_pack(doc.projection);
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+            }
+            "results:out" => {
+                if doc.projection.load_cases.is_empty() {
+                    return Err(MediaError::Payload("results:out".into(), "no load cases defined".into()));
+                }
+                let results = fem2d_engine::fem2d_solve_all(doc.projection).map_err(|error| MediaError::Payload("results:out".into(), error.to_string()))?;
+                let json = results_map_json(&results).to_string();
+                Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.fem2d".into(), json } })
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+
+    fn whole_document_operation(&self, projection: Fem2dDocument) -> Option<Fem2dOperation> {
+        Some(Fem2dOperation::SetDocument { document: projection })
+    }
+
+    /// 🎞️ `"document:in"` reproduces the trait's default whole-document-pack importer (overriding
+    /// `import_media` shadows it for every port). `"geometry:in"` decodes a minimal, app-owned
+    /// `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...]}` polygon-with-holes contract — no
+    /// canonical cross-app 2D-vector schema exists yet in this codebase, so this app owns choosing its
+    /// own decode shape — into a new `FemRegion`, defaulted to the document's first existing material if
+    /// any, else an `"unassigned"` placeholder id (the region simply won't solve until a real material
+    /// is assigned; there's no generically "sensible" default material to synthesize here).
+    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, Fem2dDocument>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, MediaError> {
+        match port {
+            "document:in" => {
+                let MediaPayload::Structured { json, .. } = &media.payload else {
+                    return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+                };
+                let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let projection = <Fem2dDocument as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                match self.whole_document_operation(projection) {
+                    Some(operation) => Ok(Emit::operations(vec![operation])),
+                    None => Err(MediaError::NotImplemented),
                 }
             }
-            "addBar" | "addBeam" => {
-                if let (Some(start), Some(end), Some(material_id), Some(section_id)) = (
-                    args.and_then(|v| v.get("start")).and_then(Value::as_str),
-                    args.and_then(|v| v.get("end")).and_then(Value::as_str),
-                    args.and_then(|v| v.get("materialId")).and_then(Value::as_str),
-                    args.and_then(|v| v.get("sectionId")).and_then(Value::as_str),
-                ) {
-                    let id = next_id(doc.projection.elements.iter().map(|e| fem2d::element_id(e).to_string()), "e");
-                    let index = doc.projection.elements.len();
-                    let element = if action == "addBar" {
-                        fem2d::FemElement::Bar { id, start: start.into(), end: end.into(), material_id: material_id.into(), section_id: section_id.into() }
-                    } else {
-                        fem2d::FemElement::Beam { id, start: start.into(), end: end.into(), material_id: material_id.into(), section_id: section_id.into() }
-                    };
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetElement { index, element: Box::new(element) }]);
+            "geometry:in" => {
+                let MediaPayload::Structured { json, .. } = &media.payload else {
+                    return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured JSON payload".into()));
+                };
+                let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let outline: Vec<[f64; 2]> = serde_json::from_value(value.get("outline").cloned().unwrap_or(Value::Null))
+                    .map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
+                let holes: Vec<Vec<[f64; 2]>> = match value.get("holes").cloned() {
+                    Some(holes_value) => serde_json::from_value(holes_value).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
+                    None => Vec::new(),
+                };
+                let material_id = doc.projection.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
+                let id = next_id(doc.projection.regions.iter().map(|r| r.id.clone()), "r");
+                let index = doc.projection.regions.len();
+                let region = fem2d::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
+                Ok(Emit::operations(vec![Fem2dOperation::SetRegion { index, region }]))
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+
+    /// 🏷️ Maps each `Fem2dCommand` variant back to the action id it was declared under in
+    /// `create_fem2d_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check.
+    fn command_id(&self, command: &Fem2dCommand) -> &str {
+        match command {
+            Fem2dCommand::AddNode { .. } => "addNode",
+            Fem2dCommand::AddBar { .. } => "addBar",
+            Fem2dCommand::AddBeam { .. } => "addBeam",
+            Fem2dCommand::AddMaterial { .. } => "addMaterial",
+            Fem2dCommand::AddSection { .. } => "addSection",
+            Fem2dCommand::AddSupport { .. } => "addSupport",
+            Fem2dCommand::AddNodalLoad { .. } => "addNodalLoad",
+            Fem2dCommand::AddMemberUdl { .. } => "addMemberUdl",
+            Fem2dCommand::AddAreaLoad { .. } => "addAreaLoad",
+            Fem2dCommand::AddRegion { .. } => "addRegion",
+            Fem2dCommand::AddLoadCase { .. } => "addLoadCase",
+            Fem2dCommand::AddCombination { .. } => "addCombination",
+            Fem2dCommand::SetSelfWeight { .. } => "setSelfWeight",
+            Fem2dCommand::SetAnalysisSettings { .. } => "setAnalysisSettings",
+            Fem2dCommand::RemoveSelection { .. } => "removeSelection",
+            Fem2dCommand::SetActiveExample { .. } => "setActiveExample",
+            Fem2dCommand::SetCamera { .. } => "setCamera",
+            Fem2dCommand::SetResultDisplay { .. } => "setResultDisplay",
+            Fem2dCommand::SetLocale { .. } => "setLocale",
+        }
+    }
+
+    /// 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
+    /// `(command, document, config)` to an `Emit`. Every former `handle_action` match arm keeps working,
+    /// just through this typed channel instead of the `{action, args}` JSON channel.
+    fn handle(&self, command: &Fem2dCommand, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Emit<Fem2dOperation, Fem2dConfigOperation> {
+        let projection = doc.projection;
+        match command {
+            Fem2dCommand::AddNode { x, y } => {
+                let id = next_id(projection.nodes.iter().map(|n| n.id.clone()), "n");
+                let index = projection.nodes.len();
+                Emit::operations(vec![Fem2dOperation::SetNode { index, node: fem2d::FemNode { id, x: *x, y: *y } }])
+            }
+            Fem2dCommand::AddBar { start, end, material_id, section_id } => {
+                let id = next_id(projection.elements.iter().map(|e| fem2d::element_id(e).to_string()), "e");
+                let index = projection.elements.len();
+                let element = fem2d::FemElement::Bar { id, start: start.clone(), end: end.clone(), material_id: material_id.clone(), section_id: section_id.clone() };
+                Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }])
+            }
+            Fem2dCommand::AddBeam { start, end, material_id, section_id } => {
+                let id = next_id(projection.elements.iter().map(|e| fem2d::element_id(e).to_string()), "e");
+                let index = projection.elements.len();
+                let element = fem2d::FemElement::Beam { id, start: start.clone(), end: end.clone(), material_id: material_id.clone(), section_id: section_id.clone() };
+                Emit::operations(vec![Fem2dOperation::SetElement { index, element: Box::new(element) }])
+            }
+            Fem2dCommand::AddMaterial { name, e } => {
+                let id = next_id(projection.materials.iter().map(|m| m.id.clone()), "m");
+                let index = projection.materials.len();
+                Emit::operations(vec![Fem2dOperation::SetMaterial { index, material: fem2d::FemMaterial { id, name: name.clone(), e: *e, nu: 0.3, rho: 7850.0 } }])
+            }
+            Fem2dCommand::AddSection { name, area, iy } => {
+                let id = next_id(projection.sections.iter().map(|s| s.id.clone()), "s");
+                let index = projection.sections.len();
+                Emit::operations(vec![Fem2dOperation::SetSection { index, section: fem2d::FemSection { id, name: name.clone(), area: *area, iy: *iy } }])
+            }
+            Fem2dCommand::AddSupport { node_id, fixed } => {
+                let id = next_id(projection.supports.iter().map(|s| s.id.clone()), "sup");
+                let index = projection.supports.len();
+                Emit::operations(vec![Fem2dOperation::SetSupport { index, support: fem2d::FemSupport { id, node_id: node_id.clone(), fixed: fixed.clone() } }])
+            }
+            Fem2dCommand::AddNodalLoad { node_id, dof, value, case_id } => {
+                let (index, mut load_case) = fem2d_resolve_load_case(projection, case_id.as_deref());
+                let load_id = next_id(load_case.loads.iter().map(|l| fem2d::load_id(l).to_string()), "l");
+                load_case.loads.push(fem2d::FemLoad::Nodal { id: load_id, node_id: node_id.clone(), dof: *dof, value: *value });
+                Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }])
+            }
+            Fem2dCommand::AddMemberUdl { element_id, wx, wy, case_id } => {
+                let (index, mut load_case) = fem2d_resolve_load_case(projection, case_id.as_deref());
+                let load_id = next_id(load_case.loads.iter().map(|l| fem2d::load_id(l).to_string()), "l");
+                load_case.loads.push(fem2d::FemLoad::MemberUdl { id: load_id, element_id: element_id.clone(), wx: *wx, wy: *wy });
+                Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }])
+            }
+            Fem2dCommand::AddAreaLoad { region_id, pressure, case_id } => {
+                let (index, mut load_case) = fem2d_resolve_load_case(projection, case_id.as_deref());
+                let load_id = next_id(load_case.loads.iter().map(|l| fem2d::load_id(l).to_string()), "l");
+                load_case.loads.push(fem2d::FemLoad::Area { id: load_id, region_id: region_id.clone(), pressure: *pressure });
+                Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }])
+            }
+            Fem2dCommand::AddRegion { x, y, width, height, material_id, thickness, mesh_size } => {
+                let id = next_id(projection.regions.iter().map(|r| r.id.clone()), "r");
+                let index = projection.regions.len();
+                let outline = vec![[*x, *y], [x + width, *y], [x + width, y + height], [*x, y + height]];
+                let region =
+                    fem2d::FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: thickness.unwrap_or(0.02), material_id: material_id.clone(), mesh_size: mesh_size.unwrap_or(0.25) };
+                Emit::operations(vec![Fem2dOperation::SetRegion { index, region }])
+            }
+            Fem2dCommand::AddLoadCase { name, self_weight } => {
+                let id = next_id(projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
+                let index = projection.load_cases.len();
+                Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case: fem2d::FemLoadCase { id, name: name.clone(), loads: Vec::new(), self_weight: *self_weight } }])
+            }
+            Fem2dCommand::AddCombination { name, terms } => {
+                let id = next_id(projection.combinations.iter().map(|c| c.id.clone()), "c");
+                let index = projection.combinations.len();
+                Emit::operations(vec![Fem2dOperation::SetCombination { index, combination: fem2d::FemCombination { id, name: name.clone(), terms: terms.clone() } }])
+            }
+            Fem2dCommand::SetSelfWeight { case_id, enabled } => match projection.load_cases.iter().position(|lc| &lc.id == case_id) {
+                Some(index) => {
+                    let mut load_case = projection.load_cases[index].clone();
+                    load_case.self_weight = *enabled;
+                    Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }])
                 }
+                None => Emit::default(),
+            },
+            Fem2dCommand::SetAnalysisSettings { modal_count, buckling_count, deformation_scale } => {
+                let current = &projection.analysis;
+                let settings = fem2d::FemAnalysisSettings {
+                    modal_count: modal_count.map(|value| value as usize).unwrap_or(current.modal_count),
+                    buckling_count: buckling_count.map(|value| value as usize).unwrap_or(current.buckling_count),
+                    deformation_scale: deformation_scale.unwrap_or(current.deformation_scale),
+                };
+                Emit::operations(vec![Fem2dOperation::SetAnalysisSettings { settings }])
             }
-            "addMaterial" => {
-                if let (Some(name), Some(e)) = (args.and_then(|v| v.get("name")).and_then(Value::as_str), args.and_then(|v| v.get("e")).and_then(Value::as_f64)) {
-                    let id = next_id(doc.projection.materials.iter().map(|m| m.id.clone()), "m");
-                    let index = doc.projection.materials.len();
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetMaterial { index, material: fem2d::FemMaterial { id, name: name.into(), e, nu: 0.3, rho: 7850.0 } }]);
-                }
-            }
-            "addSection" => {
-                if let (Some(name), Some(area), Some(iy)) = (
-                    args.and_then(|v| v.get("name")).and_then(Value::as_str),
-                    args.and_then(|v| v.get("area")).and_then(Value::as_f64),
-                    args.and_then(|v| v.get("iy")).and_then(Value::as_f64),
-                ) {
-                    let id = next_id(doc.projection.sections.iter().map(|s| s.id.clone()), "s");
-                    let index = doc.projection.sections.len();
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetSection { index, section: fem2d::FemSection { id, name: name.into(), area, iy } }]);
-                }
-            }
-            "addSupport" => {
-                if let Some(node_id) = args.and_then(|v| v.get("nodeId")).and_then(Value::as_str) {
-                    let fixed: Vec<Dof> = args.and_then(|v| v.get("fixed")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
-                    let fixed: Vec<fem2d::FemDof> = fixed.into_iter().map(Into::into).collect();
-                    let id = next_id(doc.projection.supports.iter().map(|s| s.id.clone()), "sup");
-                    let index = doc.projection.supports.len();
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetSupport { index, support: fem2d::FemSupport { id, node_id: node_id.into(), fixed } }]);
-                }
-            }
-            "addNodalLoad" => {
-                if let (Some(node_id), Some(dof), Some(value)) = (
-                    args.and_then(|v| v.get("nodeId")).and_then(Value::as_str),
-                    args.and_then(|v| v.get("dof")).and_then(|v| serde_json::from_value::<fem2d::FemDof>(v.clone()).ok()),
-                    args.and_then(|v| v.get("value")).and_then(Value::as_f64),
-                ) {
-                    let case_id = args.and_then(|v| v.get("caseId")).and_then(Value::as_str);
-                    let (index, mut load_case) = fem2d_resolve_load_case(doc.projection, case_id);
-                    let load_id = next_id(load_case.loads.iter().map(|l| fem2d::load_id(l).to_string()), "l");
-                    load_case.loads.push(fem2d::FemLoad::Nodal { id: load_id, node_id: node_id.into(), dof, value });
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetLoadCase { index, load_case }]);
-                }
-            }
-            "addMemberUdl" => {
-                if let (Some(element_id), Some(wx), Some(wy)) = (
-                    args.and_then(|v| v.get("elementId")).and_then(Value::as_str),
-                    args.and_then(|v| v.get("wx")).and_then(Value::as_f64),
-                    args.and_then(|v| v.get("wy")).and_then(Value::as_f64),
-                ) {
-                    let case_id = args.and_then(|v| v.get("caseId")).and_then(Value::as_str);
-                    let (index, mut load_case) = fem2d_resolve_load_case(doc.projection, case_id);
-                    let load_id = next_id(load_case.loads.iter().map(|l| fem2d::load_id(l).to_string()), "l");
-                    load_case.loads.push(fem2d::FemLoad::MemberUdl { id: load_id, element_id: element_id.into(), wx, wy });
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetLoadCase { index, load_case }]);
-                }
-            }
-            "addAreaLoad" => {
-                if let (Some(region_id), Some(pressure)) = (args.and_then(|v| v.get("regionId")).and_then(Value::as_str), args.and_then(|v| v.get("pressure")).and_then(Value::as_f64)) {
-                    let case_id = args.and_then(|v| v.get("caseId")).and_then(Value::as_str);
-                    let (index, mut load_case) = fem2d_resolve_load_case(doc.projection, case_id);
-                    let load_id = next_id(load_case.loads.iter().map(|l| fem2d::load_id(l).to_string()), "l");
-                    load_case.loads.push(fem2d::FemLoad::Area { id: load_id, region_id: region_id.into(), pressure });
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetLoadCase { index, load_case }]);
-                }
-            }
-            "addRegion" => {
-                if let (Some(x), Some(y), Some(width), Some(height), Some(material_id)) = (
-                    args.and_then(|v| v.get("x")).and_then(Value::as_f64),
-                    args.and_then(|v| v.get("y")).and_then(Value::as_f64),
-                    args.and_then(|v| v.get("width")).and_then(Value::as_f64),
-                    args.and_then(|v| v.get("height")).and_then(Value::as_f64),
-                    args.and_then(|v| v.get("materialId")).and_then(Value::as_str),
-                ) {
-                    let thickness = args.and_then(|v| v.get("thickness")).and_then(Value::as_f64).unwrap_or(0.02);
-                    let mesh_size = args.and_then(|v| v.get("meshSize")).and_then(Value::as_f64).unwrap_or(0.25);
-                    let id = next_id(doc.projection.regions.iter().map(|r| r.id.clone()), "r");
-                    let index = doc.projection.regions.len();
-                    let outline = vec![[x, y], [x + width, y], [x + width, y + height], [x, y + height]];
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetRegion { index, region: fem2d::FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness, material_id: material_id.into(), mesh_size } }]);
-                }
-            }
-            "addLoadCase" => {
-                if let Some(name) = args.and_then(|v| v.get("name")).and_then(Value::as_str) {
-                    let self_weight = args.and_then(|v| v.get("selfWeight")).and_then(Value::as_bool).unwrap_or(false);
-                    let id = next_id(doc.projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
-                    let index = doc.projection.load_cases.len();
-                    return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetLoadCase { index, load_case: fem2d::FemLoadCase { id, name: name.into(), loads: Vec::new(), self_weight } }]);
-                }
-            }
-            "addCombination" => {
-                if let (Some(name), Some(terms_json)) = (args.and_then(|v| v.get("name")).and_then(Value::as_str), args.and_then(|v| v.get("terms")).and_then(Value::as_str)) {
-                    if let Ok(terms) = serde_json::from_str::<Vec<(String, f64)>>(terms_json) {
-                        let terms: Vec<fem2d::FemCombinationTerm> = terms.into_iter().map(|(case_id, factor)| fem2d::FemCombinationTerm { case_id, factor }).collect();
-                        let id = next_id(doc.projection.combinations.iter().map(|c| c.id.clone()), "c");
-                        let index = doc.projection.combinations.len();
-                        return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetCombination { index, combination: fem2d::FemCombination { id, name: name.into(), terms } }]);
-                    }
-                }
-            }
-            "setSelfWeight" => {
-                if let (Some(case_id), Some(enabled)) = (args.and_then(|v| v.get("caseId")).and_then(Value::as_str), args.and_then(|v| v.get("enabled")).and_then(Value::as_bool)) {
-                    if let Some(index) = doc.projection.load_cases.iter().position(|lc| lc.id == case_id) {
-                        let mut load_case = doc.projection.load_cases[index].clone();
-                        load_case.self_weight = enabled;
-                        return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetLoadCase { index, load_case }]);
-                    }
-                }
-            }
-            "setAnalysisSettings" => {
-                let current = &doc.projection.analysis;
-                let modal_count = args.and_then(|v| v.get("modalCount")).and_then(Value::as_u64).map(|n| n as usize).unwrap_or(current.modal_count);
-                let buckling_count = args.and_then(|v| v.get("bucklingCount")).and_then(Value::as_u64).map(|n| n as usize).unwrap_or(current.buckling_count);
-                let deformation_scale = args.and_then(|v| v.get("deformationScale")).and_then(Value::as_f64).unwrap_or(current.deformation_scale);
-                return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetAnalysisSettings { settings: fem2d::FemAnalysisSettings { modal_count, buckling_count, deformation_scale } }]);
-            }
-            "removeSelection" => {
-                let ids: Vec<String> = args.and_then(|v| v.get("ids")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
+            Fem2dCommand::RemoveSelection { ids } => {
                 let mut operations = Vec::new();
                 for id in ids {
-                    if doc.projection.nodes.iter().any(|n| n.id == id) {
-                        operations.push(fem2d_op::Fem2dOperation::RemoveNode { id });
-                    } else if doc.projection.elements.iter().any(|e| fem2d::element_id(e) == id) {
-                        operations.push(fem2d_op::Fem2dOperation::RemoveElement { id });
-                    } else if doc.projection.materials.iter().any(|m| m.id == id) {
-                        operations.push(fem2d_op::Fem2dOperation::RemoveMaterial { id });
-                    } else if doc.projection.sections.iter().any(|s| s.id == id) {
-                        operations.push(fem2d_op::Fem2dOperation::RemoveSection { id });
-                    } else if doc.projection.supports.iter().any(|s| s.id == id) {
-                        operations.push(fem2d_op::Fem2dOperation::RemoveSupport { id });
-                    } else if doc.projection.load_cases.iter().any(|l| l.id == id) {
-                        operations.push(fem2d_op::Fem2dOperation::RemoveLoadCase { id });
-                    } else if doc.projection.regions.iter().any(|r| r.id == id) {
-                        operations.push(fem2d_op::Fem2dOperation::RemoveRegion { id });
-                    } else if doc.projection.combinations.iter().any(|c| c.id == id) {
-                        operations.push(fem2d_op::Fem2dOperation::RemoveCombination { id });
+                    if projection.nodes.iter().any(|n| &n.id == id) {
+                        operations.push(Fem2dOperation::RemoveNode { id: id.clone() });
+                    } else if projection.elements.iter().any(|e| fem2d::element_id(e) == id) {
+                        operations.push(Fem2dOperation::RemoveElement { id: id.clone() });
+                    } else if projection.materials.iter().any(|m| &m.id == id) {
+                        operations.push(Fem2dOperation::RemoveMaterial { id: id.clone() });
+                    } else if projection.sections.iter().any(|s| &s.id == id) {
+                        operations.push(Fem2dOperation::RemoveSection { id: id.clone() });
+                    } else if projection.supports.iter().any(|s| &s.id == id) {
+                        operations.push(Fem2dOperation::RemoveSupport { id: id.clone() });
+                    } else if projection.load_cases.iter().any(|l| &l.id == id) {
+                        operations.push(Fem2dOperation::RemoveLoadCase { id: id.clone() });
+                    } else if projection.regions.iter().any(|r| &r.id == id) {
+                        operations.push(Fem2dOperation::RemoveRegion { id: id.clone() });
+                    } else if projection.combinations.iter().any(|c| &c.id == id) {
+                        operations.push(Fem2dOperation::RemoveCombination { id: id.clone() });
                     }
                 }
-                if !operations.is_empty() {
-                    return ActionEmit::operations(operations);
-                }
+                if operations.is_empty() { Emit::default() } else { Emit::operations(operations) }
             }
-            "setCamera" => {
-                if let (Some(x), Some(y), Some(zoom)) = (
-                    args.and_then(|v| v.get("x")).and_then(Value::as_f64),
-                    args.and_then(|v| v.get("y")).and_then(Value::as_f64),
-                    args.and_then(|v| v.get("zoom")).and_then(Value::as_f64),
-                ) {
-                    *self.camera.borrow_mut() = FemCamera { x, y, zoom };
-                }
-            }
-            "setResultDisplay" => {
-                *self.result_display.borrow_mut() = parse_result_display(args);
-            }
-            "setActiveExample" => {
-                let example_id = args.and_then(|v| v.get("exampleId")).and_then(Value::as_str).unwrap_or("");
+            Fem2dCommand::SetActiveExample { example_id } => {
                 let document = if example_id == "default" {
                     Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| fem2d_engine::empty_fem2d_projection())
                 } else {
                     fem2d_engine::empty_fem2d_projection()
                 };
-                *self.result_display.borrow_mut() = ResultDisplay::default();
-                *self.camera.borrow_mut() = FemCamera::default();
-                return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetDocument { document }]);
+                Emit {
+                    document_operations: vec![Fem2dOperation::SetDocument { document }],
+                    config_operations: vec![Fem2dConfigOperation::Snapshot { config: Fem2dConfig::default() }],
+                    ..Default::default()
+                }
             }
-            _ => {}
+            // 🎥️ Config-only: the canvas camera never touches the document.
+            Fem2dCommand::SetCamera { x, y, zoom } => Emit::config(vec![Fem2dConfigOperation::SetCamera { camera: FemCamera { x: *x, y: *y, zoom: *zoom } }]),
+            // 👁️ Config-only: which case/mode the results window shows never touches the document.
+            Fem2dCommand::SetResultDisplay { source_id, mode, mode_index } => {
+                Emit::config(vec![Fem2dConfigOperation::SetResultDisplay { source_id: source_id.clone(), mode: mode.clone(), mode_index: *mode_index }])
+            }
+            Fem2dCommand::SetLocale { value } => Emit::config(vec![Fem2dConfigOperation::SetLocale { value: value.clone() }]),
         }
-        ActionEmit::default()
     }
 
-    fn render(
-        &self,
-        body_key: &str,
-        doc: &DocumentView<'_, Fem2dDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> UiNode {
+    /// 🧮️ This app's typed configuration spec — no sticky ActionArgDef defaults are mirrored here (all
+    /// of `addRegion`'s `thickness`/`meshSize` defaults are baked directly into `handle`, not
+    /// user-configurable settings), so this simply declares no fields, matching
+    /// `shooting_ui::ShootingPlayApp::config_spec`'s documented judgment call for camera/selection.
+    fn config_spec(&self) -> ConfigSpec {
+        ConfigSpec::empty()
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Fem2dDocument>, cfg: &ConfigView<'_, Fem2dConfig>) -> UiNode {
+        let camera = &cfg.projection.camera;
         match body_key {
-            FEM2D_BODY_MODEL => render_fem2d_model(doc.projection, &*self.camera.borrow()),
-            FEM2D_BODY_RESULTS => render_fem2d_results(doc.projection, &*self.result_display.borrow(), &*self.camera.borrow()),
+            FEM2D_BODY_MODEL => render_fem2d_model(doc.projection, camera),
+            FEM2D_BODY_RESULTS => render_fem2d_results(doc.projection, &config_result_display(cfg.projection), camera),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = fem2d_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    fn app_labels(&self, cfg: &ConfigView<'_, Fem2dConfig>) -> AppLabelsOverlay {
+        let is_de = cfg.projection.locale.starts_with("de");
+        let labels = fem2d_labels(is_de);
         AppLabelsOverlay {
             window_kind_labels: HashMap::from([
                 (FEM2D_WINDOW_MODEL.to_string(), labels.window_model.to_string()),
@@ -738,8 +833,8 @@ struct Fem2dLabels {
 const FEM2D_LABELS_EN: Fem2dLabels = Fem2dLabels { window_model: "Model", window_results: "Results", mode_edit: "Edit", example_default: "Default" };
 const FEM2D_LABELS_DE: Fem2dLabels = Fem2dLabels { window_model: "Modell", window_results: "Ergebnisse", mode_edit: "Bearbeiten", example_default: "Standard" };
 
-fn fem2d_labels(view_state: &ViewState) -> &'static Fem2dLabels {
-    if view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de")) {
+fn fem2d_labels(is_de: bool) -> &'static Fem2dLabels {
+    if is_de {
         &FEM2D_LABELS_DE
     } else {
         &FEM2D_LABELS_EN
@@ -766,6 +861,7 @@ fn fem2d_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setCamera", "Set Camera", "Kamera festlegen"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
         ("setResultDisplay", "Set Result Display", "Ergebnisanzeige festlegen"),
+        ("setLocale", "Set Locale", "Sprache festlegen"),
     ];
     ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
 }
@@ -776,6 +872,22 @@ pub fn create_fem2d_app() -> App {
     App::from_builder(
         App::builder(FEM2D_APP_ID, "FEM 2D")
             .document(["semio", "fem", "fem2d"])
+            // 🔌️ The computed-results output artifact (`results:out`'s `kind_id`, see `fem2d_engine::fem2d_io`)
+            // — the OS-catalog-level resource descriptor for `computation.fem2d`; deliberately a
+            // different `media_type` (`Computation`×`Value`) than the PORT's wire-level `Data`×`Value`
+            // (see WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE's port recipe).
+            .artifact_kind(ArtifactKindSpec {
+                id: "computation.fem2d".into(),
+                name: "FEM 2D Results".into(),
+                source_format: "computation.fem2d".into(),
+                component_kind: "fem2d-results".into(),
+                dimension: "computation".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
+                schema: "computation.fem2d".into(),
+                export_formats: vec![],
+                import_formats: vec![],
+            })
             .icon_id("fem-app")
             .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
@@ -816,8 +928,11 @@ pub fn create_fem2d_app() -> App {
             ])
             .operation("addLoadCase", "Add Load Case")
             .action_args("addLoadCase", vec![ActionArgDef::text("name", "Name").required(), ActionArgDef::toggle("selfWeight", "Self Weight").default_value(false)])
+            // 🎯️ `terms` is now `Fem2dCommand::AddCombination`'s typed `Vec<fem2d::FemCombinationTerm>`
+            // (no longer a JSON-string blob) — no single `ActionArgDef` control maps to that shape, so
+            // (mirroring `shooting_ui`'s precedent for commands with no matching staged form, e.g.
+            // `SetShotCamera`) this action simply has no `.action_args(...)` declaration.
             .operation("addCombination", "Add Combination")
-            .action_args("addCombination", vec![ActionArgDef::text("name", "Name").required(), ActionArgDef::text("terms", "Terms").required()])
             .operation("setSelfWeight", "Set Self Weight")
             .action_args("setSelfWeight", vec![ActionArgDef::text("caseId", "Case").required(), ActionArgDef::toggle("enabled", "Enabled").required()])
             .operation("setAnalysisSettings", "Set Analysis Settings")
@@ -831,7 +946,13 @@ pub fn create_fem2d_app() -> App {
             .operation("setActiveExample", "Set Active Example")
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", "Example", vec![ActionArgOption::new("default", "Default")]).default_value("default")])
             .view_action("setResultDisplay", "Set Result Display")
-            .action_args("setResultDisplay", result_display_action_args()),
+            .action_args("setResultDisplay", result_display_action_args())
+            .view_action("setLocale", "Set Locale")
+            // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
+            // `config_spec()`/`fem2d_io()` are this same information's single source of truth, reused
+            // here rather than duplicated.
+            .config(Fem2dPlayApp::default().config_spec())
+            .io(fem2d_engine::fem2d_io()),
     )
     .example("default", "Family House", FEM2D_EXAMPLE_DSL, "file")
     .workflow("fem2d", "FEM 2D", "structure")
@@ -898,10 +1019,14 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::HistoryView;
+    use semio_framework_plugin::{ActionKind, HistoryView};
 
     fn history_view() -> HistoryView {
         HistoryView::empty()
+    }
+
+    fn default_config() -> Fem2dConfig {
+        Fem2dConfig::default()
     }
 
     //#region 🔖️RendersScenes
@@ -911,7 +1036,9 @@ mod tests {
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let node = app.render(FEM2D_BODY_MODEL, &doc, &ViewState::default());
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let node = app.render(FEM2D_BODY_MODEL, &doc, &cfg);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"));
     }
@@ -922,7 +1049,9 @@ mod tests {
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let node = app.render(FEM2D_BODY_RESULTS, &doc, &cfg);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"));
     }
@@ -931,15 +1060,17 @@ mod tests {
     //#region 🔖️AddNodeAction
     #[test]
     fn add_node_action_emits_op_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "x": 1.0, "y": 2.0 });
-        let emit = app.handle_action("addNode", Some(&args), &doc, &ViewState::default());
-        assert_eq!(emit.operations.len(), 1);
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetNode { node, .. } => {
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let emit = app.handle(&Fem2dCommand::AddNode { x: 1.0, y: 2.0 }, &doc, &cfg);
+        assert_eq!(emit.document_operations.len(), 1);
+        assert!(emit.config_operations.is_empty());
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetNode { node, .. } => {
                 assert_eq!(node.x, 1.0);
                 assert_eq!(node.y, 2.0);
             }
@@ -955,7 +1086,9 @@ mod tests {
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let _ = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let _ = app.render(FEM2D_BODY_RESULTS, &doc, &cfg);
     }
     //#endregion 🔖️SolverErrorSurfaced
 
@@ -966,8 +1099,10 @@ mod tests {
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let _ = app.render(FEM2D_BODY_MODEL, &doc, &ViewState::default());
-        let _ = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let _ = app.render(FEM2D_BODY_MODEL, &doc, &cfg);
+        let _ = app.render(FEM2D_BODY_RESULTS, &doc, &cfg);
     }
     //#endregion 🔖️ExampleFixtureRenders
 
@@ -978,7 +1113,9 @@ mod tests {
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let node = app.render(FEM2D_BODY_MODEL, &doc, &ViewState::default());
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let node = app.render(FEM2D_BODY_MODEL, &doc, &cfg);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("mesh-edge-"), "expected mesh-edge preview layers in the model scene");
     }
@@ -986,43 +1123,59 @@ mod tests {
 
     //#region 🔖️ResultDisplayAction
     #[test]
-    fn set_result_display_is_a_view_action() {
-        let mut app = Fem2dPlayApp::default();
+    fn set_result_display_is_config_only() {
+        let app = Fem2dPlayApp::default();
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "sourceId": "dead", "mode": "modal", "modeIndex": 0 });
-        let emit = app.handle_action("setResultDisplay", Some(&args), &doc, &ViewState::default());
-        assert!(emit.operations.is_empty(), "setResultDisplay must not emit operations (it's ephemeral view state)");
-        assert_eq!(app.result_display.mode, DisplayMode::Modal(0));
-        assert_eq!(app.result_display.source_id.as_deref(), Some("dead"));
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let command = Fem2dCommand::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 };
+        let emit = app.handle(&command, &doc, &cfg);
+        assert!(emit.document_operations.is_empty(), "setResultDisplay must not emit document operations (it's config-only)");
+        assert_eq!(emit.config_operations.len(), 1);
+        match &emit.config_operations[0] {
+            Fem2dConfigOperation::SetResultDisplay { source_id, mode, mode_index } => {
+                assert_eq!(source_id.as_deref(), Some("dead"));
+                assert_eq!(mode, "modal");
+                assert_eq!(*mode_index, 0);
+            }
+            other => panic!("expected SetResultDisplay, got {other:?}"),
+        }
     }
     //#endregion 🔖️ResultDisplayAction
 
     //#region 🔖️SetActiveExample
     #[test]
     fn set_active_example_loads_default_fixture_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "default" })), &doc, &ViewState::default());
-        assert_eq!(emit.operations.len(), 1);
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetDocument { document } => assert!(!document.nodes.is_empty(), "expected the default fixture's nodes"),
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let emit = app.handle(&Fem2dCommand::SetActiveExample { example_id: "default".into() }, &doc, &cfg);
+        assert_eq!(emit.document_operations.len(), 1);
+        // 🧮️ Also resets the config back to its default (mirrors the pre-B1 `result_display`/`camera`
+        // resets on `setActiveExample`) — a single whole-record `Snapshot`.
+        assert_eq!(emit.config_operations, vec![Fem2dConfigOperation::Snapshot { config: Fem2dConfig::default() }]);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetDocument { document } => assert!(!document.nodes.is_empty(), "expected the default fixture's nodes"),
             _ => panic!("expected SetDocument"),
         }
     }
 
     #[test]
     fn set_active_example_unknown_id_yields_empty_document_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &doc, &ViewState::default());
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetDocument { document } => assert_eq!(document, &fem2d_engine::empty_fem2d_projection()),
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let emit = app.handle(&Fem2dCommand::SetActiveExample { example_id: "".into() }, &doc, &cfg);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetDocument { document } => assert_eq!(document, &fem2d_engine::empty_fem2d_projection()),
             _ => panic!("expected SetDocument"),
         }
     }
@@ -1032,7 +1185,6 @@ mod tests {
     /// operations" guard would otherwise reject it.
     #[test]
     fn set_active_example_is_declared_as_operation_2d() {
-        use semio_framework_plugin::ActionKind;
         let definition = create_fem2d_app().definition;
         let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
         assert!(matches!(action.kind, ActionKind::Operation), "loading an example emits SetDocument operations, so it is an Operation");
@@ -1043,11 +1195,13 @@ mod tests {
     //#region 🔖️ContourRender
     #[test]
     fn results_window_renders_contour_for_region() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, camera: FemCamera::default() };
+        let app = Fem2dPlayApp::default();
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
+        let config = Fem2dConfig { result_source_id: Some("dead".into()), result_mode: "static".into(), ..Fem2dConfig::default() };
+        let cfg = ConfigView { projection: &config };
+        let node = app.render(FEM2D_BODY_RESULTS, &doc, &cfg);
         let json = serde_json::to_string(&node).unwrap();
         // `layers_json` is itself a JSON string embedded inside `UiNode`'s own serialization, so its
         // quotes come out backslash-escaped in `json` — match on the unescaped substrings instead.
@@ -1059,11 +1213,13 @@ mod tests {
     //#region 🔖️ReactionLabels
     #[test]
     fn results_window_renders_reaction_labels_2d() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, camera: FemCamera::default() };
+        let app = Fem2dPlayApp::default();
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
+        let config = Fem2dConfig { result_source_id: Some("dead".into()), result_mode: "static".into(), ..Fem2dConfig::default() };
+        let cfg = ConfigView { projection: &config };
+        let node = app.render(FEM2D_BODY_RESULTS, &doc, &cfg);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("reaction-"), "expected reaction-prefixed text label layers: {json}");
     }
@@ -1072,11 +1228,13 @@ mod tests {
     //#region 🔖️ModeShapeRender
     #[test]
     fn results_window_renders_modal_mode_shape_2d() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, camera: FemCamera::default() };
+        let app = Fem2dPlayApp::default();
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
+        let config = Fem2dConfig { result_mode: "modal".into(), result_mode_index: 0, ..Fem2dConfig::default() };
+        let cfg = ConfigView { projection: &config };
+        let node = app.render(FEM2D_BODY_RESULTS, &doc, &cfg);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
         assert!(!json.contains("Modal analysis error"), "unexpected modal error: {json}");
@@ -1084,11 +1242,13 @@ mod tests {
 
     #[test]
     fn results_window_renders_buckling_mode_shape_2d() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) }, camera: FemCamera::default() };
+        let app = Fem2dPlayApp::default();
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
+        let config = Fem2dConfig { result_source_id: Some("dead".into()), result_mode: "buckling".into(), result_mode_index: 0, ..Fem2dConfig::default() };
+        let cfg = ConfigView { projection: &config };
+        let node = app.render(FEM2D_BODY_RESULTS, &doc, &cfg);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
         assert!(!json.contains("Buckling analysis error"), "unexpected buckling error: {json}");
@@ -1098,17 +1258,20 @@ mod tests {
     //#region 🔖️StructureActions
     #[test]
     fn add_region_action_emits_set_region_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "x": 0.0, "y": 0.0, "width": 4.0, "height": 2.0, "materialId": "steel" });
-        let emit = app.handle_action("addRegion", Some(&args), &doc, &ViewState::default());
-        assert_eq!(emit.operations.len(), 1);
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetRegion { region, .. } => {
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let command = Fem2dCommand::AddRegion { x: 0.0, y: 0.0, width: 4.0, height: 2.0, material_id: "steel".into(), thickness: None, mesh_size: None };
+        let emit = app.handle(&command, &doc, &cfg);
+        assert_eq!(emit.document_operations.len(), 1);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetRegion { region, .. } => {
                 assert_eq!(region.outline, vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]]);
                 assert_eq!(region.thickness, 0.02);
+                assert_eq!(region.mesh_size, 0.25);
             }
             _ => panic!("expected SetRegion"),
         }
@@ -1116,52 +1279,59 @@ mod tests {
 
     #[test]
     fn remove_selection_covers_regions_and_combinations_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let mut projection = fem2d_engine::empty_fem2d_projection();
         projection.regions.push(fem2d::FemRegion { id: "r1".into(), name: "R".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 0.5 });
         projection.combinations.push(fem2d::FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![fem2d::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] });
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = app.handle_action("removeSelection", Some(&json!({ "ids": ["r1", "uls"] })), &doc, &ViewState::default());
-        assert_eq!(emit.operations.len(), 2);
-        assert!(matches!(emit.operations[0], fem2d_op::Fem2dOperation::RemoveRegion { .. }));
-        assert!(matches!(emit.operations[1], fem2d_op::Fem2dOperation::RemoveCombination { .. }));
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let emit = app.handle(&Fem2dCommand::RemoveSelection { ids: vec!["r1".into(), "uls".into()] }, &doc, &cfg);
+        assert_eq!(emit.document_operations.len(), 2);
+        assert!(matches!(emit.document_operations[0], Fem2dOperation::RemoveRegion { .. }));
+        assert!(matches!(emit.document_operations[1], Fem2dOperation::RemoveCombination { .. }));
     }
     //#endregion 🔖️StructureActions
 
     //#region 🔖️LoadCaseActions
     #[test]
     fn add_load_case_and_combination_emit_ops_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let mut projection = fem2d_engine::empty_fem2d_projection();
         projection.load_cases.push(fem2d::FemLoadCase { id: "dead".into(), name: "Dead".into(), loads: vec![], self_weight: false });
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
 
-        let emit_case = app.handle_action("addLoadCase", Some(&json!({ "name": "Live", "selfWeight": false })), &doc, &ViewState::default());
-        match &emit_case.operations[0] {
-            fem2d_op::Fem2dOperation::SetLoadCase { load_case, .. } => assert_eq!(load_case.name, "Live"),
+        let emit_case = app.handle(&Fem2dCommand::AddLoadCase { name: "Live".into(), self_weight: false }, &doc, &cfg);
+        match &emit_case.document_operations[0] {
+            Fem2dOperation::SetLoadCase { load_case, .. } => assert_eq!(load_case.name, "Live"),
             _ => panic!("expected SetLoadCase"),
         }
 
-        let emit_combo = app.handle_action("addCombination", Some(&json!({ "name": "ULS", "terms": "[[\"dead\",1.35]]" })), &doc, &ViewState::default());
-        match &emit_combo.operations[0] {
-            fem2d_op::Fem2dOperation::SetCombination { combination, .. } => assert_eq!(combination.terms, vec![fem2d::FemCombinationTerm { case_id: "dead".to_string(), factor: 1.35 }]),
+        let emit_combo = app.handle(&Fem2dCommand::AddCombination { name: "ULS".into(), terms: vec![fem2d::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] }, &doc, &cfg);
+        match &emit_combo.document_operations[0] {
+            Fem2dOperation::SetCombination { combination, .. } => assert_eq!(combination.terms, vec![fem2d::FemCombinationTerm { case_id: "dead".to_string(), factor: 1.35 }]),
             _ => panic!("expected SetCombination"),
         }
     }
 
     #[test]
     fn add_area_load_targets_named_case_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let mut projection = fem2d_engine::empty_fem2d_projection();
         projection.load_cases.push(fem2d::FemLoadCase { id: "dead".into(), name: "Dead".into(), loads: vec![], self_weight: false });
         projection.load_cases.push(fem2d::FemLoadCase { id: "live".into(), name: "Live".into(), loads: vec![], self_weight: false });
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = app.handle_action("addAreaLoad", Some(&json!({ "regionId": "r1", "pressure": 5000.0, "caseId": "live" })), &doc, &ViewState::default());
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetLoadCase { index, load_case } => {
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let command = Fem2dCommand::AddAreaLoad { region_id: "r1".into(), pressure: 5000.0, case_id: Some("live".into()) };
+        let emit = app.handle(&command, &doc, &cfg);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetLoadCase { index, load_case } => {
                 assert_eq!(*index, 1);
                 assert_eq!(load_case.id, "live");
                 assert!(matches!(load_case.loads[0], fem2d::FemLoad::Area { .. }));
@@ -1172,28 +1342,33 @@ mod tests {
 
     #[test]
     fn set_self_weight_toggles_case_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let mut projection = fem2d_engine::empty_fem2d_projection();
         projection.load_cases.push(fem2d::FemLoadCase { id: "dead".into(), name: "Dead".into(), loads: vec![], self_weight: false });
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = app.handle_action("setSelfWeight", Some(&json!({ "caseId": "dead", "enabled": true })), &doc, &ViewState::default());
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetLoadCase { load_case, .. } => assert!(load_case.self_weight),
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let emit = app.handle(&Fem2dCommand::SetSelfWeight { case_id: "dead".into(), enabled: true }, &doc, &cfg);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetLoadCase { load_case, .. } => assert!(load_case.self_weight),
             _ => panic!("expected SetLoadCase"),
         }
     }
 
     #[test]
     fn set_analysis_settings_partial_args_keep_current_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let mut projection = fem2d_engine::empty_fem2d_projection();
         projection.analysis = fem2d::FemAnalysisSettings { modal_count: 4, buckling_count: 6, deformation_scale: 50.0 };
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = app.handle_action("setAnalysisSettings", Some(&json!({ "deformationScale": 300.0 })), &doc, &ViewState::default());
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetAnalysisSettings { settings } => {
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let command = Fem2dCommand::SetAnalysisSettings { modal_count: None, buckling_count: None, deformation_scale: Some(300.0) };
+        let emit = app.handle(&command, &doc, &cfg);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetAnalysisSettings { settings } => {
                 assert_eq!(settings.modal_count, 4);
                 assert_eq!(settings.buckling_count, 6);
                 assert_eq!(settings.deformation_scale, 300.0);
@@ -1246,26 +1421,32 @@ mod tests {
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let json = serde_json::to_string(&app.render("nonsense", &doc, &ViewState::default())).unwrap();
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let json = serde_json::to_string(&app.render("nonsense", &doc, &cfg)).unwrap();
         assert!(json.contains("Unknown body: nonsense"));
     }
 
     #[test]
     fn app_labels_use_german_locale_2d() {
         let app = Fem2dPlayApp::default();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let labels = app.app_labels(&view_state);
+        let config = Fem2dConfig { locale: "de".into(), ..Fem2dConfig::default() };
+        let cfg = ConfigView { projection: &config };
+        let labels = app.app_labels(&cfg);
         assert_eq!(labels.window_kind_labels.get(FEM2D_WINDOW_MODEL).map(String::as_str), Some("Modell"));
         assert_eq!(labels.action_labels.get("addNode").map(String::as_str), Some("Knoten hinzufügen"));
+        assert_eq!(labels.action_labels.get("setLocale").map(String::as_str), Some("Sprache festlegen"));
     }
 
     #[test]
     fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) }, camera: FemCamera::default() };
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let json = serde_json::to_string(&app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default())).unwrap();
+        let config = Fem2dConfig { result_mode: "buckling".into(), result_mode_index: 0, ..Fem2dConfig::default() };
+        let cfg = ConfigView { projection: &config };
+        let json = serde_json::to_string(&app.render(FEM2D_BODY_RESULTS, &doc, &cfg)).unwrap();
         assert!(json.contains("No load case defined"), "{json}");
     }
     //#endregion 🔖️UnknownBodyAndGermanLabels
@@ -1273,34 +1454,37 @@ mod tests {
     //#region 🔖️MoreStructureAndLoadActions
     #[test]
     fn add_bar_and_add_beam_actions_emit_ops_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "start": "n1", "end": "n2", "materialId": "m1", "sectionId": "s1" });
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
 
-        let emit_bar = app.handle_action("addBar", Some(&args), &doc, &ViewState::default());
-        match &emit_bar.operations[0] {
-            fem2d_op::Fem2dOperation::SetElement { element, .. } => assert!(matches!(**element, fem2d::FemElement::Bar { .. })),
+        let emit_bar = app.handle(&Fem2dCommand::AddBar { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() }, &doc, &cfg);
+        match &emit_bar.document_operations[0] {
+            Fem2dOperation::SetElement { element, .. } => assert!(matches!(**element, fem2d::FemElement::Bar { .. })),
             _ => panic!("expected SetElement"),
         }
 
-        let emit_beam = app.handle_action("addBeam", Some(&args), &doc, &ViewState::default());
-        match &emit_beam.operations[0] {
-            fem2d_op::Fem2dOperation::SetElement { element, .. } => assert!(matches!(**element, fem2d::FemElement::Beam { .. })),
+        let emit_beam = app.handle(&Fem2dCommand::AddBeam { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() }, &doc, &cfg);
+        match &emit_beam.document_operations[0] {
+            Fem2dOperation::SetElement { element, .. } => assert!(matches!(**element, fem2d::FemElement::Beam { .. })),
             _ => panic!("expected SetElement"),
         }
     }
 
     #[test]
     fn add_material_action_emits_op_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = app.handle_action("addMaterial", Some(&json!({ "name": "Steel", "e": 2.1e11 })), &doc, &ViewState::default());
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetMaterial { material, .. } => {
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let emit = app.handle(&Fem2dCommand::AddMaterial { name: "Steel".into(), e: 2.1e11 }, &doc, &cfg);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetMaterial { material, .. } => {
                 assert_eq!(material.name, "Steel");
                 assert_eq!(material.e, 2.1e11);
             }
@@ -1310,44 +1494,50 @@ mod tests {
 
     #[test]
     fn add_section_action_emits_op_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "name": "HEA200", "area": 0.00538, "iy": 0.0000369 });
-        let emit = app.handle_action("addSection", Some(&args), &doc, &ViewState::default());
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetSection { section, .. } => assert_eq!(section.name, "HEA200"),
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let command = Fem2dCommand::AddSection { name: "HEA200".into(), area: 0.00538, iy: 0.0000369 };
+        let emit = app.handle(&command, &doc, &cfg);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetSection { section, .. } => assert_eq!(section.name, "HEA200"),
             _ => panic!("expected SetSection"),
         }
     }
 
     #[test]
     fn add_support_action_emits_op_with_fixed_dofs_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "nodeId": "n1", "fixed": ["Tx", "Ty"] });
-        let emit = app.handle_action("addSupport", Some(&args), &doc, &ViewState::default());
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetSupport { support, .. } => assert_eq!(support.fixed, vec![fem2d::FemDof::Tx, fem2d::FemDof::Ty]),
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let command = Fem2dCommand::AddSupport { node_id: "n1".into(), fixed: vec![fem2d::FemDof::Tx, fem2d::FemDof::Ty] };
+        let emit = app.handle(&command, &doc, &cfg);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetSupport { support, .. } => assert_eq!(support.fixed, vec![fem2d::FemDof::Tx, fem2d::FemDof::Ty]),
             _ => panic!("expected SetSupport"),
         }
     }
 
     #[test]
     fn add_nodal_load_action_targets_named_case_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let mut projection = fem2d_engine::empty_fem2d_projection();
         projection.load_cases.push(fem2d::FemLoadCase { id: "dead".into(), name: "Dead".into(), loads: vec![], self_weight: false });
         projection.load_cases.push(fem2d::FemLoadCase { id: "live".into(), name: "Live".into(), loads: vec![], self_weight: false });
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "nodeId": "n1", "dof": "Ty", "value": -5000.0, "caseId": "live" });
-        let emit = app.handle_action("addNodalLoad", Some(&args), &doc, &ViewState::default());
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetLoadCase { index, load_case } => {
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let command = Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: fem2d::FemDof::Ty, value: -5000.0, case_id: Some("live".into()) };
+        let emit = app.handle(&command, &doc, &cfg);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetLoadCase { index, load_case } => {
                 assert_eq!(*index, 1);
                 assert!(matches!(load_case.loads[0], fem2d::FemLoad::Nodal { .. }));
             }
@@ -1357,35 +1547,37 @@ mod tests {
 
     #[test]
     fn add_member_udl_action_emits_op_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let mut projection = fem2d_engine::empty_fem2d_projection();
         projection.load_cases.push(fem2d::FemLoadCase { id: "dead".into(), name: "Dead".into(), loads: vec![], self_weight: false });
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "elementId": "e1", "wx": 0.0, "wy": -500.0 });
-        let emit = app.handle_action("addMemberUdl", Some(&args), &doc, &ViewState::default());
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetLoadCase { load_case, .. } => assert!(matches!(load_case.loads[0], fem2d::FemLoad::MemberUdl { .. })),
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let command = Fem2dCommand::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: -500.0, case_id: None };
+        let emit = app.handle(&command, &doc, &cfg);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetLoadCase { load_case, .. } => assert!(matches!(load_case.loads[0], fem2d::FemLoad::MemberUdl { .. })),
             _ => panic!("expected SetLoadCase"),
         }
     }
 
     #[test]
-    fn set_camera_action_writes_runtime_not_operations() {
-        let mut app = Fem2dPlayApp::default();
+    fn set_camera_action_writes_config_not_document_operations() {
+        let app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = app.handle_action("setCamera", Some(&json!({ "x": 1.0, "y": 2.0, "zoom": 1.5 })), &doc, &ViewState::default());
-        assert!(emit.operations.is_empty(), "setCamera must not emit a VCS operation");
-        assert_eq!(app.camera.x, 1.0);
-        assert_eq!(app.camera.y, 2.0);
-        assert_eq!(app.camera.zoom, 1.5);
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let emit = app.handle(&Fem2dCommand::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }, &doc, &cfg);
+        assert!(emit.document_operations.is_empty(), "setCamera must not emit a document VCS operation");
+        assert_eq!(emit.config_operations, vec![Fem2dConfigOperation::SetCamera { camera: FemCamera { x: 1.0, y: 2.0, zoom: 1.5 } }]);
     }
 
     #[test]
     fn remove_selection_covers_nodes_elements_materials_sections_supports_load_cases_2d() {
-        let mut app = Fem2dPlayApp::default();
+        let app = Fem2dPlayApp::default();
         let mut projection = fem2d_engine::empty_fem2d_projection();
         projection.nodes.push(fem2d::FemNode { id: "n1".into(), x: 0.0, y: 0.0 });
         projection.elements.push(fem2d::FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n1".into(), material_id: "m1".into(), section_id: "s1".into() });
@@ -1395,37 +1587,179 @@ mod tests {
         projection.load_cases.push(fem2d::FemLoadCase { id: "case1".into(), name: "Case".into(), loads: vec![], self_weight: false });
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "ids": ["n1", "e1", "m1", "s1", "sup1", "case1"] });
-        let emit = app.handle_action("removeSelection", Some(&args), &doc, &ViewState::default());
-        assert_eq!(emit.operations.len(), 6);
-        assert!(matches!(emit.operations[0], fem2d_op::Fem2dOperation::RemoveNode { .. }));
-        assert!(matches!(emit.operations[1], fem2d_op::Fem2dOperation::RemoveElement { .. }));
-        assert!(matches!(emit.operations[2], fem2d_op::Fem2dOperation::RemoveMaterial { .. }));
-        assert!(matches!(emit.operations[3], fem2d_op::Fem2dOperation::RemoveSection { .. }));
-        assert!(matches!(emit.operations[4], fem2d_op::Fem2dOperation::RemoveSupport { .. }));
-        assert!(matches!(emit.operations[5], fem2d_op::Fem2dOperation::RemoveLoadCase { .. }));
-    }
-
-    #[test]
-    fn add_node_action_missing_args_yields_no_operation_2d() {
-        let mut app = Fem2dPlayApp::default();
-        let projection = fem2d_engine::empty_fem2d_projection();
-        let history = history_view();
-        let doc = DocumentView { projection: &projection, history: &history };
-        let emit = app.handle_action("addNode", Some(&json!({ "x": 1.0 })), &doc, &ViewState::default());
-        assert!(emit.operations.is_empty());
-    }
-
-    #[test]
-    fn add_combination_invalid_terms_json_yields_no_operation_2d() {
-        let mut app = Fem2dPlayApp::default();
-        let projection = fem2d_engine::empty_fem2d_projection();
-        let history = history_view();
-        let doc = DocumentView { projection: &projection, history: &history };
-        let args = json!({ "name": "Bad", "terms": "not-json" });
-        let emit = app.handle_action("addCombination", Some(&args), &doc, &ViewState::default());
-        assert!(emit.operations.is_empty());
+        let config = default_config();
+        let cfg = ConfigView { projection: &config };
+        let ids = vec!["n1".into(), "e1".into(), "m1".into(), "s1".into(), "sup1".into(), "case1".into()];
+        let emit = app.handle(&Fem2dCommand::RemoveSelection { ids }, &doc, &cfg);
+        assert_eq!(emit.document_operations.len(), 6);
+        assert!(matches!(emit.document_operations[0], Fem2dOperation::RemoveNode { .. }));
+        assert!(matches!(emit.document_operations[1], Fem2dOperation::RemoveElement { .. }));
+        assert!(matches!(emit.document_operations[2], Fem2dOperation::RemoveMaterial { .. }));
+        assert!(matches!(emit.document_operations[3], Fem2dOperation::RemoveSection { .. }));
+        assert!(matches!(emit.document_operations[4], Fem2dOperation::RemoveSupport { .. }));
+        assert!(matches!(emit.document_operations[5], Fem2dOperation::RemoveLoadCase { .. }));
     }
     //#endregion 🔖️MoreStructureAndLoadActions
+
+    //#region 🔖️CommandId
+    #[test]
+    fn command_id_maps_every_variant_to_a_declared_action_id() {
+        let app = Fem2dPlayApp::default();
+        let definition = create_fem2d_app().definition;
+        let samples: Vec<Fem2dCommand> = vec![
+            Fem2dCommand::AddNode { x: 0.0, y: 0.0 },
+            Fem2dCommand::AddBar { start: "n1".into(), end: "n2".into(), material_id: "m".into(), section_id: "s".into() },
+            Fem2dCommand::AddBeam { start: "n1".into(), end: "n2".into(), material_id: "m".into(), section_id: "s".into() },
+            Fem2dCommand::AddMaterial { name: "Steel".into(), e: 2.1e11 },
+            Fem2dCommand::AddSection { name: "Sec".into(), area: 0.01, iy: 0.0001 },
+            Fem2dCommand::AddSupport { node_id: "n1".into(), fixed: vec![] },
+            Fem2dCommand::AddNodalLoad { node_id: "n1".into(), dof: fem2d::FemDof::Ty, value: 0.0, case_id: None },
+            Fem2dCommand::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: 0.0, case_id: None },
+            Fem2dCommand::AddAreaLoad { region_id: "r1".into(), pressure: 0.0, case_id: None },
+            Fem2dCommand::AddRegion { x: 0.0, y: 0.0, width: 1.0, height: 1.0, material_id: "m".into(), thickness: None, mesh_size: None },
+            Fem2dCommand::AddLoadCase { name: "Case".into(), self_weight: false },
+            Fem2dCommand::AddCombination { name: "Combo".into(), terms: vec![] },
+            Fem2dCommand::SetSelfWeight { case_id: "case".into(), enabled: true },
+            Fem2dCommand::SetAnalysisSettings { modal_count: None, buckling_count: None, deformation_scale: None },
+            Fem2dCommand::RemoveSelection { ids: vec![] },
+            Fem2dCommand::SetActiveExample { example_id: "default".into() },
+            Fem2dCommand::SetCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+            Fem2dCommand::SetResultDisplay { source_id: None, mode: "static".into(), mode_index: 0 },
+            Fem2dCommand::SetLocale { value: "en-US".into() },
+        ];
+        for command in &samples {
+            let id = app.command_id(command);
+            assert!(definition.actions.iter().any(|action| action.id == id), "command_id {id} (for {command:?}) must be a declared action");
+        }
+    }
+    //#endregion 🔖️CommandId
+
+    //#region 🔖️ConfigAndIo
+    #[test]
+    fn config_spec_declares_no_fields() {
+        assert!(Fem2dPlayApp::default().config_spec().fields.is_empty());
+    }
+
+    #[test]
+    fn manifest_declares_config_io_and_computation_artifact_kind() {
+        let definition = create_fem2d_app().definition;
+        assert!(definition.config.fields.is_empty());
+        assert_eq!(definition.io.document_schema, fem2d::FEM_2D_SCHEMA);
+        let computation_kind = definition.artifact_kinds.iter().find(|kind| kind.id == "computation.fem2d").expect("computation.fem2d artifact kind declared");
+        assert_eq!(computation_kind.media_type.class, MediaClass::Computation);
+        assert_eq!(computation_kind.media_type.form, MediaForm::Value);
+    }
+
+    #[test]
+    fn app_io_forwards_the_engine_declared_ports() {
+        let io = Fem2dPlayApp::default().io().expect("io declared");
+        assert!(io.ports.iter().any(|port| port.id == "geometry:in"));
+        assert!(io.ports.iter().any(|port| port.id == "results:out"));
+    }
+    //#endregion 🔖️ConfigAndIo
+
+    //#region 🔖️ExportImportMedia
+    #[test]
+    fn export_media_document_out_round_trips_via_import_media_document_in() {
+        let app = Fem2dPlayApp::default();
+        let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let media = app.export_media("document:out", &doc).expect("document:out exports");
+        assert_eq!(media.media_type.class, MediaClass::TwoD);
+        assert_eq!(media.media_type.form, MediaForm::Vector);
+        let empty_projection = fem2d_engine::empty_fem2d_projection();
+        let empty_history = history_view();
+        let empty_doc = DocumentView { projection: &empty_projection, history: &empty_history };
+        let emit = app.import_media("document:in", &media, &empty_doc).expect("document:in imports");
+        assert_eq!(emit.document_operations.len(), 1);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetDocument { document } => assert_eq!(document, &projection),
+            _ => panic!("expected SetDocument"),
+        }
+    }
+
+    #[test]
+    fn export_media_results_out_returns_json_with_every_case_and_combination() {
+        let app = Fem2dPlayApp::default();
+        let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let media = app.export_media("results:out", &doc).expect("results:out exports");
+        assert_eq!(media.media_type.class, MediaClass::Data);
+        assert_eq!(media.media_type.form, MediaForm::Value);
+        match media.payload {
+            MediaPayload::Structured { schema, json } => {
+                assert_eq!(schema, "computation.fem2d");
+                let value: Value = serde_json::from_str(&json).expect("results:out payload is valid JSON");
+                for case_id in ["dead", "live", "uls"] {
+                    let result = value.get(case_id).unwrap_or_else(|| panic!("missing {case_id} in results:out payload: {value}"));
+                    assert!(result.get("displacements").is_some());
+                    assert!(result.get("reactions").is_some());
+                    assert!(result.get("checks").is_some());
+                }
+            }
+            MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
+        }
+    }
+
+    #[test]
+    fn export_media_results_out_errors_when_no_load_cases_are_defined() {
+        let app = Fem2dPlayApp::default();
+        let projection = fem2d_engine::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let error = app.export_media("results:out", &doc).expect_err("no load cases means no results to export");
+        match error {
+            MediaError::Payload(port, _) => assert_eq!(port, "results:out"),
+            other => panic!("expected MediaError::Payload, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn export_media_unknown_port_is_not_implemented() {
+        let app = Fem2dPlayApp::default();
+        let projection = fem2d_engine::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        assert!(matches!(app.export_media("bogus:out", &doc), Err(MediaError::NotImplemented)));
+    }
+
+    #[test]
+    fn import_media_geometry_in_builds_a_new_region_from_the_first_material() {
+        let app = Fem2dPlayApp::default();
+        let mut projection = fem2d_engine::empty_fem2d_projection();
+        projection.materials.push(fem2d::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let payload = json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }).to_string();
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
+        let emit = app.import_media("geometry:in", &media, &doc).expect("geometry:in imports");
+        assert_eq!(emit.document_operations.len(), 1);
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetRegion { region, .. } => {
+                assert_eq!(region.outline, vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]]);
+                assert!(region.holes.is_empty());
+                assert_eq!(region.material_id, "steel");
+            }
+            _ => panic!("expected SetRegion"),
+        }
+    }
+
+    #[test]
+    fn import_media_geometry_in_falls_back_to_unassigned_material_when_none_exists() {
+        let app = Fem2dPlayApp::default();
+        let projection = fem2d_engine::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let payload = json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }).to_string();
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
+        let emit = app.import_media("geometry:in", &media, &doc).expect("geometry:in imports");
+        match &emit.document_operations[0] {
+            Fem2dOperation::SetRegion { region, .. } => assert_eq!(region.material_id, "unassigned"),
+            _ => panic!("expected SetRegion"),
+        }
+    }
+    //#endregion 🔖️ExportImportMedia
 }
 //#endregion 🧪️Tests

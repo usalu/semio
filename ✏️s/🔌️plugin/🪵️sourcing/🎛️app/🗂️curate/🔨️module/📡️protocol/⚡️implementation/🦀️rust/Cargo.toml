@@ -15,6 +15,8 @@ sourcing = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sou
 sourcing_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate-op" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 sourcing_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate-engine" }

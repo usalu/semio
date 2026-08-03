@@ -20,6 +20,8 @@ present_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️a
 present_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-animate-present-engine" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

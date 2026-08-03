@@ -1,18 +1,24 @@
-//! 🖥️ Layout app — DocumentApp impl, render, manifest (constitutional: ui).
+//! 🖥️ Layout app — DocumentApp impl, render, manifest (constitutional: ui). B1: the pure-trait
+//! flip — `LayoutPlayApp` is a unit struct; every former `LayoutConfig` field (active page,
+//! selection, hover, drop-ghost, camera poses, engagement draft) now lives in
+//! `layout_engine::LayoutConfig`, written via `layout_op::LayoutConfigOperation`s (real `backwards`, no
+//! ad hoc inverse); every action dispatches through the single typed `layout_protocol::LayoutCommand`
+//! channel via `DocumentApp::handle`.
 
 use base64::Engine;
 use layout::{Frame, FramePatch, ImageLinkPatch, LayoutCamera, LayoutDocument, PagePatch, TextStoryPatch, LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins};
-use layout_engine::{build_display_list_for_page, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, parse_layout_document, resolve_page, DisplayList};
-use layout_op::LayoutOperation;
+use layout_engine::{build_display_list_for_page, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, parse_layout_document, resolve_page, DisplayList, LayoutConfig, LayoutDropPreviewState};
+use layout_op::{LayoutConfigOperation, LayoutOperation};
+use layout_protocol::LayoutCommand;
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{SurfaceKind,
-    build_canvas_2d_scene, create_default_layout, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, selection_ids,
+    build_canvas_2d_scene, create_default_layout, engagement_token_matches, localized_label_map,
     tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef,
-    ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt,
-    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec,
+    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
+    ActionArgOption, ActionDefinition, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt,
+    Canvas2dScene, ActionDescriptor, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec,
     IconName, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
-    ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
+    WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -20,7 +26,6 @@ use semio_framework_plugin::{SurfaceKind,
 use protocol::CollectionOperation;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -48,53 +53,6 @@ const LAYOUT_DROP_PREVIEW_HEIGHT: f64 = 120.0;
 //#region 🔖️Types
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct LayoutPlayRuntime {
-    #[serde(default = "default_active_page_id")]
-    active_page_id: String,
-    #[serde(default)]
-    selected_ids: Vec<String>,
-    #[serde(default)]
-    hovered_id: Option<String>,
-    #[serde(default)]
-    drop_preview: Option<LayoutDropPreviewState>,
-    #[serde(default)]
-    engagement_input: String,
-    /// 👁️ Ephemeral blueprint-surface camera pose — never in `LayoutDocument`, see `LayoutCamera`'s doc.
-    #[serde(default)]
-    camera: LayoutCamera,
-    /// 👁️ Ephemeral preview-surface camera pose — independent of `camera` above.
-    #[serde(default)]
-    preview_camera: LayoutCamera,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct LayoutDropPreviewState {
-    kind: String,
-    x: f64,
-    y: f64,
-}
-
-impl Default for LayoutPlayRuntime {
-    fn default() -> Self {
-        Self {
-            active_page_id: default_active_page_id(),
-            selected_ids: Vec::new(),
-            hovered_id: None,
-            drop_preview: None,
-            engagement_input: String::new(),
-            camera: LayoutCamera::default(),
-            preview_camera: LayoutCamera::default(),
-        }
-    }
-}
-
-fn default_active_page_id() -> String {
-    "page-1".into()
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct PreflightIssue {
     severity: String,
     code: String,
@@ -116,8 +74,8 @@ fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     }
 }
 
-fn active_page<'a>(doc: &'a LayoutDocument, runtime: &LayoutPlayRuntime) -> Option<&'a Page> {
-    doc.pages.iter().find(|page| page.id == runtime.active_page_id).or_else(|| doc.pages.first())
+fn active_page<'a>(doc: &'a LayoutDocument, config: &LayoutConfig) -> Option<&'a Page> {
+    doc.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| doc.pages.first())
 }
 
 fn frame_icon(kind: &str) -> &str {
@@ -161,18 +119,19 @@ fn style_row_id(style_id: &str) -> String {
     format!("layout-document.style.{style_id}")
 }
 
-/// 🩹️ Builds the `PagePatch` for a `patchPage` field write; unknown fields/mistyped values yield `None`.
-fn page_patch_for_field(field: &str, value: &Value) -> Option<PagePatch> {
+/// 🩹️ Builds the `PagePatch` for a `patchPage` field write from the command's text `value`; unknown
+/// fields/mistyped (non-numeric where a number is expected) values yield `None`.
+fn page_patch_for_field(field: &str, value: &str) -> Option<PagePatch> {
     match field {
-        "name" => value.as_str().map(|v| PagePatch { name: Some(v.into()), ..Default::default() }),
-        "width" => value.as_f64().map(|v| PagePatch { width: Some(v), ..Default::default() }),
-        "height" => value.as_f64().map(|v| PagePatch { height: Some(v), ..Default::default() }),
-        "marginTop" => value.as_f64().map(|v| PagePatch { margin_top: Some(v), ..Default::default() }),
-        "marginRight" => value.as_f64().map(|v| PagePatch { margin_right: Some(v), ..Default::default() }),
-        "marginBottom" => value.as_f64().map(|v| PagePatch { margin_bottom: Some(v), ..Default::default() }),
-        "marginLeft" => value.as_f64().map(|v| PagePatch { margin_left: Some(v), ..Default::default() }),
-        "columnsCount" => value.as_f64().map(|v| PagePatch { columns_count: Some(v.max(0.0) as u32), ..Default::default() }),
-        "columnsGutter" => value.as_f64().map(|v| PagePatch { columns_gutter: Some(v), ..Default::default() }),
+        "name" => Some(PagePatch { name: Some(value.into()), ..Default::default() }),
+        "width" => value.parse::<f64>().ok().map(|v| PagePatch { width: Some(v), ..Default::default() }),
+        "height" => value.parse::<f64>().ok().map(|v| PagePatch { height: Some(v), ..Default::default() }),
+        "marginTop" => value.parse::<f64>().ok().map(|v| PagePatch { margin_top: Some(v), ..Default::default() }),
+        "marginRight" => value.parse::<f64>().ok().map(|v| PagePatch { margin_right: Some(v), ..Default::default() }),
+        "marginBottom" => value.parse::<f64>().ok().map(|v| PagePatch { margin_bottom: Some(v), ..Default::default() }),
+        "marginLeft" => value.parse::<f64>().ok().map(|v| PagePatch { margin_left: Some(v), ..Default::default() }),
+        "columnsCount" => value.parse::<f64>().ok().map(|v| PagePatch { columns_count: Some(v.max(0.0) as u32), ..Default::default() }),
+        "columnsGutter" => value.parse::<f64>().ok().map(|v| PagePatch { columns_gutter: Some(v), ..Default::default() }),
         _ => None,
     }
 }
@@ -247,7 +206,7 @@ fn drop_preview_fill(kind: &str) -> [f32; 4] {
     }
 }
 
-fn display_list_to_host_layers(list: &DisplayList, blueprint: bool, drop_preview: Option<&LayoutDropPreviewState>) -> Vec<Value> {
+fn display_list_to_host_layers(list: &DisplayList, blueprint: bool, drop_preview: &LayoutDropPreviewState) -> Vec<Value> {
     let mut layers = Vec::new();
 
     let page_bg = if blueprint { [0.97, 0.97, 0.98, 1.0] } else { [1.0, 1.0, 1.0, 1.0] };
@@ -310,9 +269,9 @@ fn display_list_to_host_layers(list: &DisplayList, blueprint: bool, drop_preview
     }
 
     if blueprint {
-        if let Some(preview) = drop_preview.filter(|preview| preview.kind != "page") {
-            let segments = rect_segments(preview.x, preview.y, LAYOUT_DROP_PREVIEW_WIDTH, LAYOUT_DROP_PREVIEW_HEIGHT);
-            let fill = drop_preview_fill(&preview.kind);
+        if !drop_preview.kind.is_empty() && drop_preview.kind != "page" {
+            let segments = rect_segments(drop_preview.x, drop_preview.y, LAYOUT_DROP_PREVIEW_WIDTH, LAYOUT_DROP_PREVIEW_HEIGHT);
+            let fill = drop_preview_fill(&drop_preview.kind);
             layers.push(host_layer("layout.drop-preview", segments, Some(fill), Some(([0.1, 0.45, 0.95, 0.85], 2.0, None))));
         }
     }
@@ -320,45 +279,35 @@ fn display_list_to_host_layers(list: &DisplayList, blueprint: bool, drop_preview
     layers
 }
 
-fn canvas_layers(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, blueprint: bool) -> String {
-    let page = match active_page(doc, runtime) {
+fn canvas_layers(doc: &LayoutDocument, config: &LayoutConfig, blueprint: bool) -> String {
+    let page = match active_page(doc, config) {
         Some(page) => page,
         None => return "[]".into(),
     };
-    let list = build_display_list_for_page(doc, page, &page.id, &runtime.selected_ids, runtime.hovered_id.as_deref(), blueprint);
-    let layers = display_list_to_host_layers(&list, blueprint, runtime.drop_preview.as_ref());
+    let list = build_display_list_for_page(doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
+    let layers = display_list_to_host_layers(&list, blueprint, &config.drop_preview);
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 //#endregion 🔖️CanvasScene
 
 //#region 🔖️PointerCamera
-fn surface_is_blueprint(args: Option<&Value>) -> bool {
-    args.and_then(|value| value.get("surfaceId"))
-        .and_then(|value| value.as_str())
-        .is_none_or(|surface| surface.contains("blueprint"))
+fn surface_is_blueprint(surface_id: Option<&str>) -> bool {
+    surface_id.is_none_or(|surface| surface.contains("blueprint"))
 }
 
-fn screen_to_world_for_surface(runtime: &LayoutPlayRuntime, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
-    let camera_runtime = if blueprint { &runtime.camera } else { &runtime.preview_camera };
+fn screen_to_world_for_surface(config: &LayoutConfig, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
+    let camera_runtime = if blueprint { &config.camera } else { &config.preview_camera };
     let camera = infinite_canvas::camera::Camera { x: camera_runtime.x, y: camera_runtime.y, zoom: camera_runtime.zoom.max(0.0001) };
     let viewport = infinite_canvas::camera::Viewport { width: width.max(1.0) as u32, height: height.max(1.0) as u32, dpr: 1.0 };
     let world = infinite_canvas::camera::screen_to_world(&camera, &viewport, infinite_canvas::Point::new(sx, sy));
     (world.x, world.y)
 }
 
-fn pointer_args(args: Option<&Value>) -> (f64, f64, f64, f64) {
-    let x = args.and_then(|value| value.get("x")).and_then(Value::as_f64).unwrap_or(0.0);
-    let y = args.and_then(|value| value.get("y")).and_then(Value::as_f64).unwrap_or(0.0);
-    let width = args.and_then(|value| value.get("width")).and_then(Value::as_f64).unwrap_or(1.0);
-    let height = args.and_then(|value| value.get("height")).and_then(Value::as_f64).unwrap_or(1.0);
-    (x, y, width, height)
-}
-
-fn hit_test_at(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, args: Option<&Value>, blueprint: bool) -> Option<String> {
-    let page = active_page(doc, runtime)?;
-    let (sx, sy, width, height) = pointer_args(args);
-    let (wx, wy) = screen_to_world_for_surface(runtime, blueprint, sx, sy, width, height);
-    let list = build_display_list_for_page(doc, page, &page.id, &runtime.selected_ids, runtime.hovered_id.as_deref(), blueprint);
+#[allow(clippy::too_many_arguments)]
+fn hit_test_at(doc: &LayoutDocument, config: &LayoutConfig, sx: f64, sy: f64, width: f64, height: f64, blueprint: bool) -> Option<String> {
+    let page = active_page(doc, config)?;
+    let (wx, wy) = screen_to_world_for_surface(config, blueprint, sx, sy, width, height);
+    let list = build_display_list_for_page(doc, page, &page.id, &config.selected_ids, config.hovered_id.as_deref(), blueprint);
     list.hit_test(wx as f32, wy as f32)
 }
 //#endregion 🔖️PointerCamera
@@ -600,9 +549,19 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
-fn layout_labels(view_state: &ViewState) -> &'static LayoutLabels {
-    resolve_labels::<LayoutLabels>(view_state)
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` (mirrors `shooting_ui`'s identical B1 fix).
+fn is_de_locale(cfg: &LayoutConfig) -> bool {
+    cfg.locale.starts_with("de")
+}
+
+fn resolve_labels<L: LocaleLabels>(cfg: &LayoutConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+
+/// 🗣️ Resolves the active label set from the config-carried locale; unknown locales fall back to native English.
+fn layout_labels(cfg: &LayoutConfig) -> &'static LayoutLabels {
+    resolve_labels::<LayoutLabels>(cfg)
 }
 
 /// 🗣️ Resolves a catalogue frame kind's display label from its stable id; unknown kinds fall back to the kind id itself.
@@ -699,7 +658,7 @@ fn layout_tree_item_hoverable(
     item
 }
 
-fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels: &LayoutLabels) -> UiNode {
+fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
 
     let spread_items: Vec<UiTreeItemNode> = doc
         .spreads
@@ -826,7 +785,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
         layout_tree_item(style_row_id(&style.id), name, Some(description), Some("type".into()), None)
     }));
 
-    let highlighted_ids: Vec<String> = runtime
+    let highlighted_ids: Vec<String> = config
         .hovered_id
         .as_ref()
         .map(|id| vec![page_row_id(id), frame_row_id(id)])
@@ -846,7 +805,7 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
         .section("layout-document.stories", Some(labels.stories.into()), false, story_items)
         .section("layout-document.links", Some(labels.links.into()), false, link_items)
         .section("layout-document.styles", Some(labels.styles.into()), false, style_items)
-        .selected(runtime.selected_ids.iter().flat_map(|id| vec![page_row_id(id), frame_row_id(id), layer_row_id(&runtime.active_page_id, id)]).collect())
+        .selected(config.selected_ids.iter().flat_map(|id| vec![page_row_id(id), frame_row_id(id), layer_row_id(&config.active_page_id, id)]).collect())
         .selection_change(layout_action("setSelection", None));
     if !highlighted_ids.is_empty() {
         builder = builder.highlighted(highlighted_ids);
@@ -873,8 +832,8 @@ fn build_catalogue_tree(labels: &LayoutLabels) -> UiNode {
         .build()
 }
 
-fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels: &LayoutLabels) -> UiNode {
-    if runtime.selected_ids.is_empty() {
+fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &LayoutLabels) -> UiNode {
+    if config.selected_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "layout-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
@@ -883,13 +842,13 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                 ui_text(format!("{}: {}", labels.schema, LAYOUT_FIXTURE_SCHEMA)),
                 ui_text(format!("{}: {}", labels.name, doc.name)),
                 ui_text(format!("{}: {}", labels.pages, doc.pages.len())),
-                ui_text(format!("{}: {}", labels.active_page, runtime.active_page_id)),
+                ui_text(format!("{}: {}", labels.active_page, config.active_page_id)),
             ],
             presence: UiPresence::default(),
             menu: None,
         }]);
     }
-    let selected_id = &runtime.selected_ids[0];
+    let selected_id = &config.selected_ids[0];
     if let Some(page) = doc.pages.iter().find(|page| page.id == *selected_id) {
         let mut fields = vec![
             ui_inspector_readonly_field("layout-play-inspector.page-id", labels.id, page.id.clone()),
@@ -1198,13 +1157,13 @@ fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {
         .build()
 }
 
-fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str, labels: &LayoutLabels) -> WindowEngagement {
+fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutLabels) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(false),
         options: None,
         input: Some(WindowEngagementInput {
             id: Some(format!("layout-engagement-{label}")),
-            value: Some(runtime.engagement_input.clone()),
+            value: Some(config.engagement_input.clone()),
             placeholder: Some("undo, redo, export png".into()),
             disabled: None,
             on_change: Some(layout_action("engagementInput", None)),
@@ -1216,7 +1175,7 @@ fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str, labels: &L
         controls: None,
         status: Some(vec![WindowEngagementStatus {
             id: format!("layout-status-{label}"),
-            text: format!("{} {}", labels.page, runtime.active_page_id),
+            text: format!("{} {}", labels.page, config.active_page_id),
         }]),
         possible_engagements: Some(vec![
             WindowEngagementPossible { id: "layout.eng.undo".into(), label: labels.undo.into(), detail: None, action: Some(layout_action("undo", None)) },
@@ -1228,8 +1187,8 @@ fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str, labels: &L
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
-fn render_blueprint(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode {
-    let camera = &runtime.camera;
+fn render_blueprint(doc: &LayoutDocument, config: &LayoutConfig) -> UiNode {
+    let camera = &config.camera;
     build_canvas_2d_scene(
         LAYOUT_PLAY_SURFACE_BLUEPRINT,
         LAYOUT_PLAY_APP_ID,
@@ -1237,13 +1196,13 @@ fn render_blueprint(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode
             camera_x: camera.x,
             camera_y: camera.y,
             zoom: camera.zoom,
-            layers_json: canvas_layers(doc, runtime, true),
+            layers_json: canvas_layers(doc, config, true),
         },
     )
 }
 
-fn render_preview(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode {
-    let camera = &runtime.preview_camera;
+fn render_preview(doc: &LayoutDocument, config: &LayoutConfig) -> UiNode {
+    let camera = &config.preview_camera;
     build_canvas_2d_scene(
         LAYOUT_PLAY_SURFACE_PREVIEW,
         LAYOUT_PLAY_APP_ID,
@@ -1251,62 +1210,24 @@ fn render_preview(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode {
             camera_x: camera.x,
             camera_y: camera.y,
             zoom: camera.zoom,
-            layers_json: canvas_layers(doc, runtime, false),
+            layers_json: canvas_layers(doc, config, false),
         },
     )
 }
 //#endregion 🔖️Render
 
-//#region 🔖️GesturePreview
-/// 👻️ CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": a pure, JSON-serializable
-/// snapshot of a live, uncommitted drag-from-catalogue gesture (`canvasDragOver`/`canvasDragLeave` —
-/// dropping a new frame onto the canvas commits via `addFrame`, never emitted until the drop lands) —
-/// shaped as the exact payload `framework_sync::SyncSession::publish_preview(key, seq, payload)`
-/// expects, ready to hand off the instant a transport exists. This function only ever reads
-/// `LayoutDropPreviewState`, never `LayoutDocument`/`LayoutOperation` — a preview can never become
-/// persistent state.
-///
-/// 🚧️ Deliberately unwired beyond `LayoutPlayApp::gesture_preview` below — same gap as `draw-plugin`'s
-/// `draw_gesture_preview_payload` (see that doc for the full explanation): `framework/sync::
-/// SyncSession::publish_preview` is host-only and unreachable from this WASI-P2 sandboxed plugin
-/// crate, and `store::BackboneMessage` has no preview-shaped variant to relay one through. See
-/// `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
-fn layout_drag_preview_payload(state: &LayoutDropPreviewState) -> Value {
-    serde_json::to_value(state).unwrap_or(Value::Null)
-}
-//#endregion 🔖️GesturePreview
-
 //#region 🔖️LayoutPlayApp
-pub struct LayoutPlayApp {
-    runtime: RefCell<LayoutPlayRuntime>,
-    /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
-    preview_seq: Cell<u64>,
-}
-
-impl Default for LayoutPlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(LayoutPlayRuntime::default()), preview_seq: Cell::new(0) }
-    }
-}
-
-impl LayoutPlayApp {
-    /// 👻️ See `layout_drag_preview_payload`'s doc — the `(key, seq, payload)` tuple already shaped as
-    /// `SyncSession::publish_preview`'s exact argument list once a host bridge can carry it out of this
-    /// sandboxed plugin. `#[allow(dead_code)]`: no caller exists inside this crate today; exercised by
-    /// `🧪️Tests` only until that bridge lands.
-    #[allow(dead_code)]
-    fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
-        let state = self.runtime.borrow().drop_preview.clone()?;
-        let payload = layout_drag_preview_payload(&state);
-        Some(("gesture:dropPreview", self.preview_seq.get(), serde_json::to_vec(&payload).ok()?))
-    }
-}
+/// 🧪️ B1: unit struct — every former `LayoutPlayRuntime` field now lives in
+/// `layout_engine::LayoutConfig`, written through `layout_op::LayoutConfigOperation`s.
+#[derive(Default)]
+pub struct LayoutPlayApp;
 
 impl DocumentApp for LayoutPlayApp {
     type Projection = LayoutDocument;
     type Operation = LayoutOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = LayoutConfig;
+    type ConfigOperation = LayoutConfigOperation;
+    type Command = LayoutCommand;
 
     fn app_id(&self) -> &str {
         LAYOUT_PLAY_APP_ID
@@ -1320,63 +1241,68 @@ impl DocumentApp for LayoutPlayApp {
         layout_engine::default_document()
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, LayoutDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-    ) -> ActionEmit<LayoutOperation> {
+    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+        Some(layout_engine::layout_io())
+    }
+
+    /// 🏷️ Maps each `LayoutCommand` variant back to the action id it was declared under in
+    /// `create_layout_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check.
+    fn command_id(&self, command: &LayoutCommand) -> &str {
+        match command {
+            LayoutCommand::SetSelection { .. } => "setSelection",
+            LayoutCommand::SetActivePage { .. } => "setActivePage",
+            LayoutCommand::SetHover { .. } => "setHover",
+            LayoutCommand::FocusPreflightIssue { .. } => "focusPreflightIssue",
+            LayoutCommand::EngagementInput { .. } => "engagementInput",
+            LayoutCommand::CanvasPointerDown { .. } => "canvasPointerDown",
+            LayoutCommand::CanvasPointerMove { .. } => "canvasPointerMove",
+            LayoutCommand::CanvasPointerUp => "canvasPointerUp",
+            LayoutCommand::CanvasDragOver { .. } => "canvasDragOver",
+            LayoutCommand::CanvasDragLeave => "canvasDragLeave",
+            LayoutCommand::SetCamera { .. } => "setCamera",
+            LayoutCommand::SetLocale { .. } => "setLocale",
+            LayoutCommand::AddFrame { .. } => "addFrame",
+            LayoutCommand::AddPage => "addPage",
+            LayoutCommand::PatchPage { .. } => "patchPage",
+            LayoutCommand::PatchFrame { .. } => "patchFrame",
+            LayoutCommand::CanvasDrop { .. } => "canvasDrop",
+            LayoutCommand::ExportPng { .. } => "exportPng",
+            LayoutCommand::ExportSvg { .. } => "exportSvg",
+            LayoutCommand::ExportPdf { .. } => "exportPdf",
+            LayoutCommand::ExportPackage => "exportPackage",
+            LayoutCommand::EngagementSubmit { .. } => "engagementSubmit",
+        }
+    }
+
+    fn handle(&self, command: &LayoutCommand, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Emit<LayoutOperation, LayoutConfigOperation> {
         let document = doc.projection;
-        let mut rt = self.runtime.borrow_mut();
-        match action {
+        let config = cfg.projection;
+        match command {
             //#region 👁️View
-            "setSelection" => {
-                rt.selected_ids = selection_ids(args);
-                ActionEmit::default()
-            }
-            "setActivePage" => {
-                if let Some(page_id) = args.and_then(|value| value.get("pageId")).and_then(|value| value.as_str()) {
-                    rt.active_page_id = page_id.into();
+            LayoutCommand::SetSelection { ids } => Emit::config(vec![LayoutConfigOperation::SetSelection { ids: ids.clone() }]),
+            LayoutCommand::SetActivePage { page_id } => Emit::config(vec![LayoutConfigOperation::SetActivePage { page_id: page_id.clone() }]),
+            LayoutCommand::SetHover { id } => Emit::config(vec![LayoutConfigOperation::SetHover { id: id.clone() }]),
+            LayoutCommand::FocusPreflightIssue { object_id, page_id } => {
+                let mut config_operations = Vec::new();
+                if let Some(object_id) = object_id {
+                    config_operations.push(LayoutConfigOperation::SetSelection { ids: vec![object_id.clone()] });
                 }
-                ActionEmit::default()
-            }
-            "setHover" => {
-                rt.hovered_id = args
-                    .and_then(|value| value.get("id"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
-                ActionEmit::default()
-            }
-            "focusPreflightIssue" => {
-                if let Some(issue) = args.and_then(|value| value.get("issue")) {
-                    if let Some(object_id) = issue.get("objectId").and_then(|value| value.as_str()) {
-                        rt.selected_ids = vec![object_id.into()];
-                    }
-                    if let Some(page_id) = issue.get("pageId").and_then(|value| value.as_str()) {
-                        rt.active_page_id = page_id.into();
-                    }
+                if let Some(page_id) = page_id {
+                    config_operations.push(LayoutConfigOperation::SetActivePage { page_id: page_id.clone() });
                 }
-                ActionEmit::default()
+                Emit::config(config_operations)
             }
-            "engagementInput" => {
-                if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_str) {
-                    rt.engagement_input = value.into();
+            LayoutCommand::EngagementInput { value } => Emit::config(vec![LayoutConfigOperation::SetEngagementInput { value: value.clone() }]),
+            LayoutCommand::CanvasPointerDown { surface_id, button, extend, x, y, width, height } => {
+                let blueprint = surface_is_blueprint(surface_id.as_deref());
+                if !blueprint || *button != 0 {
+                    return Emit::default();
                 }
-                ActionEmit::default()
-            }
-            "canvasPointerDown" => {
-                let blueprint = surface_is_blueprint(args);
-                let button = args.and_then(|value| value.get("button")).and_then(Value::as_i64).unwrap_or(0);
-                if !blueprint || button != 0 {
-                    return ActionEmit::default();
-                }
-                let extend = args.and_then(|value| value.get("extend")).and_then(Value::as_bool).unwrap_or(false);
-                let hit = hit_test_at(document, &rt, args, blueprint);
-                rt.selected_ids = match hit {
-                    Some(id) if extend => {
-                        let mut ids = rt.selected_ids.clone();
+                let hit = hit_test_at(document, config, *x, *y, *width, *height, blueprint);
+                let ids = match hit {
+                    Some(id) if *extend => {
+                        let mut ids = config.selected_ids.clone();
                         if let Some(position) = ids.iter().position(|existing| *existing == id) {
                             ids.remove(position);
                         } else {
@@ -1387,76 +1313,49 @@ impl DocumentApp for LayoutPlayApp {
                     Some(id) => vec![id],
                     None => Vec::new(),
                 };
-                ActionEmit::default()
+                Emit::config(vec![LayoutConfigOperation::SetSelection { ids }])
             }
-            "canvasPointerMove" => {
-                let blueprint = surface_is_blueprint(args);
+            LayoutCommand::CanvasPointerMove { surface_id, x, y, width, height } => {
+                let blueprint = surface_is_blueprint(surface_id.as_deref());
                 if !blueprint {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
-                rt.hovered_id = hit_test_at(document, &rt, args, blueprint);
-                ActionEmit::default()
+                Emit::config(vec![LayoutConfigOperation::SetHover { id: hit_test_at(document, config, *x, *y, *width, *height, blueprint) }])
             }
-            "canvasPointerUp" => ActionEmit::default(),
-            "canvasDragOver" => {
-                let blueprint = surface_is_blueprint(args);
+            LayoutCommand::CanvasPointerUp => Emit::default(),
+            LayoutCommand::CanvasDragOver { surface_id, kind, x, y, width, height } => {
+                let blueprint = surface_is_blueprint(surface_id.as_deref());
                 if !blueprint {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
-                let kind = args
-                    .and_then(|value| value.get("types"))
-                    .and_then(|value| value.as_array())
-                    .and_then(|types| {
-                        types
-                            .iter()
-                            .find_map(|entry| entry.as_str().and_then(|type_value| type_value.strip_prefix(LAYOUT_CATALOGUE_KIND_MIME_PREFIX)).map(str::to_string))
-                    })
-                    .unwrap_or_else(|| "unknown".into());
-                let (sx, sy, width, height) = pointer_args(args);
-                let (wx, wy) = screen_to_world_for_surface(&rt, blueprint, sx, sy, width, height);
-                rt.drop_preview = Some(LayoutDropPreviewState { kind, x: wx, y: wy });
-                self.preview_seq.set(self.preview_seq.get().wrapping_add(1));
-                ActionEmit::default()
+                let (wx, wy) = screen_to_world_for_surface(config, blueprint, *x, *y, *width, *height);
+                Emit::config(vec![LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState { kind: kind.clone(), x: wx, y: wy } }])
             }
-            "canvasDragLeave" => {
-                rt.drop_preview = None;
-                ActionEmit::default()
-            }
-            "setCamera" => {
-                let blueprint = surface_is_blueprint(args);
-                if let Some(camera_value) = args.and_then(|value| value.get("camera")) {
-                    let x = camera_value.get("x").and_then(Value::as_f64);
-                    let y = camera_value.get("y").and_then(Value::as_f64);
-                    let zoom = camera_value.get("zoom").and_then(Value::as_f64);
-                    if let (Some(x), Some(y), Some(zoom)) = (x, y, zoom) {
-                        let camera = LayoutCamera { x, y, zoom };
-                        if blueprint {
-                            rt.camera = camera;
-                        } else {
-                            rt.preview_camera = camera;
-                        }
-                    }
+            LayoutCommand::CanvasDragLeave => Emit::config(vec![LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState::default() }]),
+            LayoutCommand::SetCamera { surface_id, camera } => {
+                let blueprint = surface_is_blueprint(surface_id.as_deref());
+                if blueprint {
+                    Emit::config(vec![LayoutConfigOperation::SetCamera { camera: camera.clone() }])
+                } else {
+                    Emit::config(vec![LayoutConfigOperation::SetPreviewCamera { camera: camera.clone() }])
                 }
-                ActionEmit::default()
             }
+            LayoutCommand::SetLocale { value } => Emit::config(vec![LayoutConfigOperation::SetLocale { value: value.clone() }]),
             //#endregion 👁️View
             //#region 🔧️Operations
-            "addFrame" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("rect");
-                let drop_x = args.and_then(|value| value.get("x")).and_then(Value::as_f64);
-                let drop_y = args.and_then(|value| value.get("y")).and_then(Value::as_f64);
-                let page_id = rt.active_page_id.clone();
+            LayoutCommand::AddFrame { kind, x, y } => {
+                let page_id = config.active_page_id.clone();
                 let Some(page) = document.pages.iter().find(|page| page.id == page_id) else {
-                    return ActionEmit::default();
+                    return Emit::default();
                 };
                 let index = page.frames.len();
                 let frame_id = format!("frame-{}", index + 1);
                 let layer_id = page.layer_ids.first().cloned().unwrap_or_else(|| "layer-1".into());
-                let frame = match kind {
+                let frame = match kind.as_str() {
                     "text" => Frame::Text {
                         id: frame_id.clone(),
                         layer_id: layer_id.clone(),
-                        bounds: layout::LayoutBounds { x: drop_x.unwrap_or(48.0), y: drop_y.unwrap_or(120.0), width: 200.0, height: 120.0, rotation: 0.0 },
+                        bounds: layout::LayoutBounds { x: x.unwrap_or(48.0), y: y.unwrap_or(120.0), width: 200.0, height: 120.0, rotation: 0.0 },
                         locked: None,
                         visible: None,
                         story_id: document.stories.first().map(|story| story.id.clone()).unwrap_or_else(|| "story-1".into()),
@@ -1468,7 +1367,7 @@ impl DocumentApp for LayoutPlayApp {
                     "image" => Frame::Image {
                         id: frame_id.clone(),
                         layer_id: layer_id.clone(),
-                        bounds: layout::LayoutBounds { x: drop_x.unwrap_or(48.0), y: drop_y.unwrap_or(280.0), width: 160.0, height: 120.0, rotation: 0.0 },
+                        bounds: layout::LayoutBounds { x: x.unwrap_or(48.0), y: y.unwrap_or(280.0), width: 160.0, height: 120.0, rotation: 0.0 },
                         locked: None,
                         visible: None,
                         link_id: document.links.first().map(|link| link.id.clone()).unwrap_or_else(|| "link-missing".into()),
@@ -1476,41 +1375,24 @@ impl DocumentApp for LayoutPlayApp {
                     _ => Frame::Rect {
                         id: frame_id.clone(),
                         layer_id: layer_id.clone(),
-                        bounds: layout::LayoutBounds { x: drop_x.unwrap_or(48.0), y: drop_y.unwrap_or(48.0), width: 120.0, height: 64.0, rotation: 0.0 },
+                        bounds: layout::LayoutBounds { x: x.unwrap_or(48.0), y: y.unwrap_or(48.0), width: 120.0, height: 64.0, rotation: 0.0 },
                         locked: None,
                         visible: None,
                         fill: Some([0.2, 0.24, 0.3, 1.0]),
                         stroke: None,
                     },
                 };
-                rt.selected_ids = vec![frame_id];
-                ActionEmit::operations(vec![LayoutOperation::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }])
+                Emit {
+                    document_operations: vec![LayoutOperation::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }],
+                    config_operations: vec![LayoutConfigOperation::SetSelection { ids: vec![frame_id] }],
+                    ..Default::default()
+                }
             }
-            "addPage" => {
-                let template = document
-                    .pages
-                    .iter()
-                    .find(|page| page.id == rt.active_page_id)
-                    .or_else(|| document.pages.first());
+            LayoutCommand::AddPage => {
+                let template = document.pages.iter().find(|page| page.id == config.active_page_id).or_else(|| document.pages.first());
                 let (width, height, spread_id, parent_page_id, margins, columns) = template
-                    .map(|page| {
-                        (
-                            page.width,
-                            page.height,
-                            page.spread_id.clone(),
-                            page.parent_page_id.clone(),
-                            page.margins.clone(),
-                            page.columns.clone(),
-                        )
-                    })
-                    .unwrap_or((
-                        595.0,
-                        842.0,
-                        "spread-1".into(),
-                        None,
-                        PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 },
-                        PageColumns { count: 1, gutter: 0.0 },
-                    ));
+                    .map(|page| (page.width, page.height, page.spread_id.clone(), page.parent_page_id.clone(), page.margins.clone(), page.columns.clone()))
+                    .unwrap_or((595.0, 842.0, "spread-1".into(), None, PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 }, PageColumns { count: 1, gutter: 0.0 }));
                 let page_id = format!("page-{}", document.pages.len() + 1);
                 let layer_id = format!("layer-{page_id}");
                 let page = Page {
@@ -1528,90 +1410,55 @@ impl DocumentApp for LayoutPlayApp {
                     frames: Vec::new(),
                     overrides: Vec::new(),
                 };
-                rt.active_page_id = page_id.clone();
-                rt.selected_ids = vec![page_id];
-                ActionEmit::operations(vec![LayoutOperation::Pages(CollectionOperation::Add { id: page.id.clone(), item: page, at: document.pages.len() })])
-            }
-            "patchPage" => {
-                let page_id = args
-                    .and_then(|value| value.get("pageId"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .unwrap_or_else(|| rt.active_page_id.clone());
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
-                match page_patch_for_field(field, &value) {
-                    Some(patch) if document.pages.iter().any(|page| page.id == page_id) => {
-                        ActionEmit::operations(vec![LayoutOperation::Pages(CollectionOperation::Patch { id: page_id, patch })])
-                    }
-                    _ => ActionEmit::default(),
+                Emit {
+                    document_operations: vec![LayoutOperation::Pages(CollectionOperation::Add { id: page.id.clone(), item: page, at: document.pages.len() })],
+                    config_operations: vec![LayoutConfigOperation::SetActivePage { page_id: page_id.clone() }, LayoutConfigOperation::SetSelection { ids: vec![page_id] }],
+                    ..Default::default()
                 }
             }
-            "patchFrame" => {
-                let frame_id = args.and_then(|value| value.get("frameId")).and_then(|value| value.as_str()).unwrap_or("").to_string();
-                let page_id = args
-                    .and_then(|value| value.get("pageId"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .unwrap_or_else(|| rt.active_page_id.clone());
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
-                let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
+            LayoutCommand::PatchPage { page_id, field, value } => {
+                let page_id = page_id.clone().unwrap_or_else(|| config.active_page_id.clone());
+                match page_patch_for_field(field, value) {
+                    Some(patch) if document.pages.iter().any(|page| page.id == page_id) => Emit::operations(vec![LayoutOperation::Pages(CollectionOperation::Patch { id: page_id, patch })]),
+                    _ => Emit::default(),
+                }
+            }
+            LayoutCommand::PatchFrame { frame_id, page_id, field, value } => {
+                let page_id = page_id.clone().unwrap_or_else(|| config.active_page_id.clone());
                 if frame_id.is_empty() {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
                 let Some(page) = document.pages.iter().find(|page| page.id == page_id) else {
-                    return ActionEmit::default();
+                    return Emit::default();
                 };
                 let Some(frame) = page.frames.iter().find(|frame| frame.id() == frame_id) else {
-                    return ActionEmit::default();
+                    return Emit::default();
                 };
                 match field.as_str() {
-                    "x" | "y" | "width" | "w" | "height" | "h" => match value.as_f64() {
-                        Some(number) => ActionEmit::operations(vec![LayoutOperation::PatchFrame {
-                            page_id,
-                            frame_id,
-                            patch: frame_bounds_patch(&field, number),
-                        }]),
-                        None => ActionEmit::default(),
+                    "x" | "y" | "width" | "w" | "height" | "h" => match value.parse::<f64>() {
+                        Ok(number) => Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch: frame_bounds_patch(field, number) }]),
+                        Err(_) => Emit::default(),
                     },
                     "fill" | "stroke" => {
-                        let rgba = text_to_rgba(value.as_str().unwrap_or(""));
-                        let patch = if field == "fill" {
-                            FramePatch { fill: Some(rgba), ..Default::default() }
-                        } else {
-                            FramePatch { stroke: Some(rgba), ..Default::default() }
-                        };
-                        ActionEmit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id, patch }])
+                        let rgba = text_to_rgba(value);
+                        let patch = if field == "fill" { FramePatch { fill: Some(rgba), ..Default::default() } } else { FramePatch { stroke: Some(rgba), ..Default::default() } };
+                        Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch }])
                     }
-                    "wrapMode" => match value.as_str() {
-                        Some(mode) => ActionEmit::operations(vec![LayoutOperation::PatchFrame {
-                            page_id,
-                            frame_id,
-                            patch: FramePatch { wrap_mode: Some(mode.into()), ..Default::default() },
-                        }]),
-                        None => ActionEmit::default(),
-                    },
-                    "columns" => match value.as_f64() {
-                        Some(count) => ActionEmit::operations(vec![LayoutOperation::PatchFrame {
-                            page_id,
-                            frame_id,
-                            patch: FramePatch { columns: Some(count.max(0.0) as u32), ..Default::default() },
-                        }]),
-                        None => ActionEmit::default(),
+                    "wrapMode" => Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch: FramePatch { wrap_mode: Some(value.clone()), ..Default::default() } }]),
+                    "columns" => match value.parse::<f64>() {
+                        Ok(count) => Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch: FramePatch { columns: Some(count.max(0.0) as u32), ..Default::default() } }]),
+                        Err(_) => Emit::default(),
                     },
                     "storyContent" => {
                         let story_id = match frame {
                             Frame::Text { story_id, .. } => Some(story_id.clone()),
                             _ => None,
                         };
-                        match (story_id, value.as_str()) {
-                            (Some(story_id), Some(content)) if document.stories.iter().any(|story| story.id == story_id) => {
-                                ActionEmit::operations(vec![LayoutOperation::Stories(CollectionOperation::Patch {
-                                    id: story_id,
-                                    patch: TextStoryPatch { content: Some(content.into()) },
-                                })])
+                        match story_id {
+                            Some(story_id) if document.stories.iter().any(|story| story.id == story_id) => {
+                                Emit::operations(vec![LayoutOperation::Stories(CollectionOperation::Patch { id: story_id, patch: TextStoryPatch { content: Some(value.clone()) } })])
                             }
-                            _ => ActionEmit::default(),
+                            _ => Emit::default(),
                         }
                     }
                     "linkPath" => {
@@ -1619,157 +1466,155 @@ impl DocumentApp for LayoutPlayApp {
                             Frame::Image { link_id, .. } => Some(link_id.clone()),
                             _ => None,
                         };
-                        match (link_id, value.as_str()) {
-                            (Some(link_id), Some(path)) if document.links.iter().any(|link| link.id == link_id) => {
-                                ActionEmit::operations(vec![LayoutOperation::Links(CollectionOperation::Patch {
-                                    id: link_id,
-                                    patch: ImageLinkPatch { path: Some(path.into()) },
-                                })])
+                        match link_id {
+                            Some(link_id) if document.links.iter().any(|link| link.id == link_id) => {
+                                Emit::operations(vec![LayoutOperation::Links(CollectionOperation::Patch { id: link_id, patch: ImageLinkPatch { path: Some(value.clone()) } })])
                             }
-                            _ => ActionEmit::default(),
+                            _ => Emit::default(),
                         }
                     }
-                    _ => ActionEmit::default(),
+                    _ => Emit::default(),
                 }
             }
-            "canvasDrop" => {
-                let blueprint = surface_is_blueprint(args);
-                rt.drop_preview = None;
+            LayoutCommand::CanvasDrop { surface_id, kind, x, y, width, height } => {
+                let blueprint = surface_is_blueprint(surface_id.as_deref());
+                let clear_preview = Emit::config(vec![LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState::default() }]);
                 if !blueprint {
-                    return ActionEmit::default();
+                    return clear_preview;
                 }
-                let Some(payload) = args
-                    .and_then(|value| value.get("dragData"))
-                    .and_then(Value::as_str)
-                    .and_then(|raw| serde_json::from_str::<Value>(raw).ok())
-                else {
-                    return ActionEmit::default();
-                };
-                let Some(kind) = payload.get("kind").and_then(Value::as_str).map(str::to_string) else {
-                    return ActionEmit::default();
-                };
-                let (sx, sy, width, height) = pointer_args(args);
-                let (wx, wy) = screen_to_world_for_surface(&rt, blueprint, sx, sy, width, height);
-                if kind == "page" {
-                    self.handle_action("addPage", None, doc, _cfg, view_state)
+                let (wx, wy) = screen_to_world_for_surface(config, blueprint, *x, *y, *width, *height);
+                let mut emitted = if kind == "page" {
+                    self.handle(&LayoutCommand::AddPage, doc, cfg)
                 } else {
-                    self.handle_action("addFrame", Some(&json!({ "kind": kind, "x": wx, "y": wy })), doc, _cfg, view_state)
-                }
+                    self.handle(&LayoutCommand::AddFrame { kind: kind.clone(), x: Some(wx), y: Some(wy) }, doc, cfg)
+                };
+                emitted.config_operations.push(LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState::default() });
+                emitted
             }
             //#endregion 🔧️Operations
             //#region 🐚️Shell
-            "exportPng" => {
-                let page_id = args
-                    .and_then(|value| value.get("pageId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or(rt.active_page_id.as_str())
-                    .to_string();
+            LayoutCommand::ExportPng { page_id } => {
+                let page_id = page_id.clone().unwrap_or_else(|| config.active_page_id.clone());
                 match export_document_png_cpu(document, &page_id) {
-                    Ok(bytes) => ActionEmit::effect(HostEffect::DownloadMediaExport {
-                        filename: format!("{page_id}.png"),
-                        mime_type: "image/png".into(),
-                        data: base64::engine::general_purpose::STANDARD.encode(bytes),
-                        encoding: Some("base64".into()),
-                    }),
-                    Err(_) => ActionEmit::default(),
+                    Ok(bytes) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.png"), mime_type: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) }),
+                    Err(_) => Emit::default(),
                 }
             }
-            "exportSvg" => {
-                let page_id = args
-                    .and_then(|value| value.get("pageId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or(rt.active_page_id.as_str())
-                    .to_string();
+            LayoutCommand::ExportSvg { page_id } => {
+                let page_id = page_id.clone().unwrap_or_else(|| config.active_page_id.clone());
                 match export_document_svg(document, &page_id) {
-                    Ok(svg) => ActionEmit::effect(HostEffect::DownloadMediaExport {
-                        filename: format!("{page_id}.svg"),
-                        mime_type: "image/svg+xml".into(),
-                        data: svg,
-                        encoding: None,
-                    }),
-                    Err(_) => ActionEmit::default(),
+                    Ok(svg) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None }),
+                    Err(_) => Emit::default(),
                 }
             }
-            "exportPdf" => {
-                let page_id = args
-                    .and_then(|value| value.get("pageId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or(rt.active_page_id.as_str())
-                    .to_string();
+            LayoutCommand::ExportPdf { page_id } => {
+                let page_id = page_id.clone().unwrap_or_else(|| config.active_page_id.clone());
                 match export_document_pdf(document, &page_id) {
-                    Ok(bytes) => ActionEmit::effect(HostEffect::DownloadMediaExport {
-                        filename: format!("{page_id}.pdf"),
-                        mime_type: "application/pdf".into(),
-                        data: base64::engine::general_purpose::STANDARD.encode(bytes),
-                        encoding: Some("base64".into()),
-                    }),
-                    Err(_) => ActionEmit::default(),
+                    Ok(bytes) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.pdf"), mime_type: "application/pdf".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) }),
+                    Err(_) => Emit::default(),
                 }
             }
-            "exportPackage" => {
-                let preflight_json =
-                    serde_json::to_string(&run_layout_preflight(document, layout_labels(view_state))).unwrap_or_else(|_| "[]".into());
+            LayoutCommand::ExportPackage => {
+                let preflight_json = serde_json::to_string(&run_layout_preflight(document, layout_labels(config))).unwrap_or_else(|_| "[]".into());
                 let doc_json = serde_json::to_string(document).unwrap_or_default();
                 match export_package_zip(&doc_json, &preflight_json) {
-                    Ok(bytes) => ActionEmit::effect(HostEffect::DownloadMediaExport {
-                        filename: format!("{}.layout-package.zip", document.name),
-                        mime_type: "application/zip".into(),
-                        data: base64::engine::general_purpose::STANDARD.encode(bytes),
-                        encoding: Some("base64".into()),
-                    }),
-                    Err(_) => ActionEmit::default(),
+                    Ok(bytes) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{}.layout-package.zip", document.name), mime_type: "application/zip".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) }),
+                    Err(_) => Emit::default(),
                 }
             }
-            "engagementSubmit" => {
-                let typed = args.and_then(|value| value.get("value")).and_then(Value::as_str).map(str::trim).unwrap_or_default();
+            LayoutCommand::EngagementSubmit { value } => {
+                let typed = value.trim();
                 let export = if engagement_token_matches(typed, "export png") || engagement_token_matches(typed, "png") {
-                    Some("exportPng")
+                    Some(LayoutCommand::ExportPng { page_id: None })
                 } else if engagement_token_matches(typed, "export svg") || engagement_token_matches(typed, "svg") {
-                    Some("exportSvg")
+                    Some(LayoutCommand::ExportSvg { page_id: None })
                 } else if engagement_token_matches(typed, "export pdf") || engagement_token_matches(typed, "pdf") {
-                    Some("exportPdf")
+                    Some(LayoutCommand::ExportPdf { page_id: None })
                 } else if engagement_token_matches(typed, "export package") || engagement_token_matches(typed, "package") {
-                    Some("exportPackage")
+                    Some(LayoutCommand::ExportPackage)
                 } else {
                     None
                 };
                 match export {
-                    Some(export) => self.handle_action(export, None, doc, _cfg, view_state),
-                    None => ActionEmit::default(),
+                    Some(export) => self.handle(&export, doc, cfg),
+                    None => Emit::default(),
                 }
             }
             //#endregion 🐚️Shell
-            _ => ActionEmit::default(),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, LayoutDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
+    //#region 🔖️Media
+    /// 🎞️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: `document:out` replicates the trait default
+    /// exactly (overriding `export_media` for `layout:out` forfeits the default's dispatch); `layout:out`
+    /// re-exports the current layout's first page as `2d.layout` vector/SVG — reuses `export_document_svg`
+    /// (the same exporter `exportSvg`/`LayoutCommand::ExportSvg` use). No `cfg` parameter reaches this
+    /// method, so there is no config-carried "active page" to prefer over the first page.
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, LayoutDocument>) -> Result<Media, MediaError> {
+        match port {
+            "document:out" => {
+                let bytes = store::DocumentPack::encode_pack(doc.projection);
+                Ok(Media {
+                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                    payload: MediaPayload::Structured { schema: LAYOUT_FIXTURE_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
+            }
+            "layout:out" => {
+                let document = doc.projection;
+                let page = document.pages.first().ok_or_else(|| MediaError::Payload(port.to_string(), "layout has no pages to export".into()))?;
+                let svg = export_document_svg(document, &page.id).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.layout".into(), json: svg } })
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+
+    /// 🎞️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: `fields:in` binds the incoming `form.dictionary`
+    /// values into `LayoutDocument::data_fields_json` — layout has no existing text-interpolation/
+    /// field-binding concept for frames/stories yet, so this stores the dictionary verbatim as a new
+    /// named data source (see `layout::LayoutDocument::data_fields_json`'s doc) rather than wiring it
+    /// into rendering today.
+    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, LayoutDocument>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, MediaError> {
+        match port {
+            "fields:in" => {
+                let MediaPayload::Structured { json, .. } = &media.payload else {
+                    return Err(MediaError::Payload(port.to_string(), "fields:in only accepts a Structured (JSON object) payload".into()));
+                };
+                Ok(Emit::operations(vec![LayoutOperation::SetDataFields { json: Some(json.clone()) }]))
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+    //#endregion 🔖️Media
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> UiNode {
         let document = doc.projection;
-        let labels = layout_labels(view_state);
-        let runtime = self.runtime.borrow();
+        let config = cfg.projection;
+        let labels = layout_labels(config);
         match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => render_blueprint(document, &runtime),
-            LAYOUT_PLAY_BODY_PREVIEW => render_preview(document, &runtime),
-            LAYOUT_PLAY_BODY_DOCUMENT => build_document_tree(document, &runtime, labels),
+            LAYOUT_PLAY_BODY_BLUEPRINT => render_blueprint(document, config),
+            LAYOUT_PLAY_BODY_PREVIEW => render_preview(document, config),
+            LAYOUT_PLAY_BODY_DOCUMENT => build_document_tree(document, config, labels),
             LAYOUT_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(document, &runtime, labels),
+            LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(document, config, labels),
             LAYOUT_PLAY_BODY_PREFLIGHT => build_preflight_tree(document, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let labels = layout_labels(view_state);
-        let runtime = self.runtime.borrow();
+    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
+        let config = cfg.projection;
+        let labels = layout_labels(config);
         HashMap::from([
-            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&runtime, "blueprint", labels)),
-            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(&runtime, "preview", labels)),
+            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(config, "blueprint", labels)),
+            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(config, "preview", labels)),
         ])
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = layout_labels(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, LayoutConfig>) -> AppLabelsOverlay {
+        let config = cfg.projection;
+        let labels = layout_labels(config);
+        let is_de = is_de_locale(config);
         AppLabelsOverlay::default()
             .window_kind_label(LAYOUT_PLAY_WINDOW_BLUEPRINT, labels.window_blueprint)
             .window_kind_label(LAYOUT_PLAY_WINDOW_PREVIEW, labels.window_preview)
@@ -1876,7 +1721,11 @@ pub fn create_layout_app() -> App {
             // appear on both windows.
             .window_kind_actions(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![
                 "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(),
-            ]),
+            ])
+            // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`layout_io()`
+            // are this same information's single source of truth, reused here rather than duplicated.
+            .config(LayoutPlayApp::default().config_spec())
+            .io(layout_engine::layout_io()),
     )
     .example("sample", "Sample", layout_engine::layout_sample_document_json(), "flask-conical")
     .workflow("layout", "Layout", "layout")
@@ -2129,7 +1978,16 @@ pub use wasm_session::LayoutSession;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, HistoryView, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
+
+    fn new_app() -> VcsDocumentApp<LayoutPlayApp> {
+        testkit::new_app::<LayoutPlayApp>()
+    }
+
+    /// 🧬️ A wrapper carrying the real action registry so kind discipline runs.
+    fn new_app_with_registry() -> VcsDocumentApp<LayoutPlayApp> {
+        testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app)
+    }
 
     fn render_json(app: &mut VcsDocumentApp<LayoutPlayApp>, body: &str) -> String {
         let node = app.render(body, None, &ViewState::default()).expect("render");
@@ -2137,9 +1995,8 @@ mod tests {
     }
 
     fn render_json_locale(app: &mut VcsDocumentApp<LayoutPlayApp>, body: &str, locale: &str) -> String {
-        let view_state = ViewState { locale: Some(locale.into()), ..ViewState::default() };
-        let node = app.render(body, None, &view_state).expect("render");
-        serde_json::to_string(&node).unwrap()
+        app.dispatch_typed(LayoutCommand::SetLocale { value: locale.into() }, &testkit::meta("local")).expect("set locale");
+        render_json(app, body)
     }
 
     fn scene_layers_json(node: &UiNode) -> String {
@@ -2156,13 +2013,13 @@ mod tests {
 
     #[test]
     fn renders_blueprint_canvas_scene() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("canvas-2d"));
     }
 
     #[test]
     fn renders_preview_canvas_scene() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_PREVIEW).contains("canvas-2d"));
     }
 
@@ -2189,7 +2046,7 @@ mod tests {
 
     #[test]
     fn document_lists_sample_pages() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.page.page-1"));
         assert!(json.contains("Page 1"));
@@ -2197,7 +2054,7 @@ mod tests {
 
     #[test]
     fn catalogue_lists_frame_kinds() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
         assert!(json.contains("layout-catalogue.rect"));
         assert!(json.contains("Text Frame"));
@@ -2205,7 +2062,7 @@ mod tests {
 
     #[test]
     fn layout_labels_resolve_native_english_by_default() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("\"Frames\""));
         assert!(json.contains("\"Layers\""));
@@ -2216,7 +2073,7 @@ mod tests {
 
     #[test]
     fn layout_labels_translate_document_tree_in_german() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let json = render_json_locale(&mut app, LAYOUT_PLAY_BODY_DOCUMENT, "de");
         assert!(json.contains("\"Rahmen\""));
         assert!(json.contains("\"Ebenen\""));
@@ -2229,15 +2086,15 @@ mod tests {
     fn preflight_finds_missing_asset() {
         let issues = run_layout_preflight(&layout_engine::default_document(), &LayoutLabels::EN);
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT);
         assert!(json.contains("asset.missing") || json.contains("Linked asset missing"));
     }
 
     #[test]
     fn set_selection_reflects_in_inspector() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        let mut app = new_app();
+        app.dispatch_typed(LayoutCommand::SetSelection { ids: vec!["frame-text-1".into()] }, &testkit::meta("local")).expect("select");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_INSPECTION);
         assert!(json.contains("frame-text-1"));
     }
@@ -2251,21 +2108,20 @@ mod tests {
 
     #[test]
     fn add_frame_action_appends_rect() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let before = app.projection().expect("projection").pages[0].frames.len();
-        let result = app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &testkit::meta("local")).expect("add");
+        let result = app.dispatch_typed(LayoutCommand::AddFrame { kind: "rect".into(), x: None, y: None }, &testkit::meta("local")).expect("add");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
     }
 
     #[test]
     fn undo_redo_round_trips_add_frame() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let before = app.projection().expect("projection").pages[0].frames.len();
         testkit::assert_undo_redo_round_trip(
             &mut app,
-            "addFrame",
-            Some(&json!({ "kind": "rect" })),
+            LayoutCommand::AddFrame { kind: "rect".into(), x: None, y: None },
             |app| app.projection().expect("projection").pages[0].frames.len(),
             before,
             before + 1,
@@ -2274,7 +2130,7 @@ mod tests {
 
     #[test]
     fn patch_page_supports_margins_and_columns() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         for (field, value) in [
             ("marginTop", 60.0),
             ("marginRight", 40.0),
@@ -2283,26 +2139,24 @@ mod tests {
             ("columnsGutter", 18.0),
         ] {
             let result = app
-                .handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": field, "value": value })), &ViewState::default(), &testkit::meta("local"))
+                .dispatch_typed(LayoutCommand::PatchPage { page_id: Some("page-1".into()), field: field.into(), value: value.to_string() }, &testkit::meta("local"))
                 .expect("patch");
             assert_eq!(result.operations.len(), 1, "field {field} should apply");
         }
-        app.handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })), &ViewState::default(), &testkit::meta("local")).expect("cols");
+        app.dispatch_typed(LayoutCommand::PatchPage { page_id: Some("page-1".into()), field: "columnsCount".into(), value: "3".into() }, &testkit::meta("local")).expect("cols");
         let page = app.projection().expect("projection").pages.into_iter().find(|page| page.id == "page-1").unwrap();
         assert_eq!(page.columns.count, 3);
     }
 
     #[test]
     fn patch_frame_supports_rect_fill_and_stroke() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let before = app.projection().expect("projection").pages[0].frames.len();
-        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &testkit::meta("local")).expect("add");
+        app.dispatch_typed(LayoutCommand::AddFrame { kind: "rect".into(), x: None, y: None }, &testkit::meta("local")).expect("add");
         let frame_id = format!("frame-{}", before + 1);
         let result = app
-            .handle_action(
-                "patchFrame",
-                Some(&json!({ "frameId": frame_id, "pageId": "page-1", "field": "fill", "value": "0.5, 0.4, 0.3, 1" })),
-                &ViewState::default(),
+            .dispatch_typed(
+                LayoutCommand::PatchFrame { frame_id: frame_id.clone(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() },
                 &testkit::meta("local"),
             )
             .expect("patch");
@@ -2315,21 +2169,17 @@ mod tests {
 
     #[test]
     fn patch_frame_supports_text_story_content_and_wrap_mode() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        app.handle_action(
-            "patchFrame",
-            Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "storyContent", "value": "Edited story body." })),
-            &ViewState::default(),
+        let mut app = new_app();
+        app.dispatch_typed(
+            LayoutCommand::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "storyContent".into(), value: "Edited story body.".into() },
             &testkit::meta("local"),
         )
         .expect("story");
         let story = app.projection().expect("projection").stories.into_iter().find(|story| story.id == "story-1").unwrap();
         assert_eq!(story.content, "Edited story body.");
 
-        app.handle_action(
-            "patchFrame",
-            Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "wrapMode", "value": "contour" })),
-            &ViewState::default(),
+        app.dispatch_typed(
+            LayoutCommand::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "wrapMode".into(), value: "contour".into() },
             &testkit::meta("local"),
         )
         .expect("wrap");
@@ -2341,11 +2191,9 @@ mod tests {
 
     #[test]
     fn patch_frame_supports_image_link_path() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        app.handle_action(
-            "patchFrame",
-            Some(&json!({ "frameId": "frame-image-1", "pageId": "page-1", "field": "linkPath", "value": "assets/updated.png" })),
-            &ViewState::default(),
+        let mut app = new_app();
+        app.dispatch_typed(
+            LayoutCommand::PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "linkPath".into(), value: "assets/updated.png".into() },
             &testkit::meta("local"),
         )
         .expect("link");
@@ -2355,27 +2203,28 @@ mod tests {
 
     #[test]
     fn export_actions_wire_to_real_layout_rs_exporters() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        for (action, mime_type) in [
-            ("exportPng", "image/png"),
-            ("exportSvg", "image/svg+xml"),
-            ("exportPdf", "application/pdf"),
-            ("exportPackage", "application/zip"),
-        ] {
-            let result = app.handle_action(action, Some(&json!({ "pageId": "page-1" })), &ViewState::default(), &testkit::meta("local")).expect("export");
+        let mut app = new_app();
+        let exports: Vec<(LayoutCommand, &str)> = vec![
+            (LayoutCommand::ExportPng { page_id: Some("page-1".into()) }, "image/png"),
+            (LayoutCommand::ExportSvg { page_id: Some("page-1".into()) }, "image/svg+xml"),
+            (LayoutCommand::ExportPdf { page_id: Some("page-1".into()) }, "application/pdf"),
+            (LayoutCommand::ExportPackage, "application/zip"),
+        ];
+        for (command, mime_type) in exports {
+            let result = app.dispatch_typed(command, &testkit::meta("local")).expect("export");
             match result.requested_effects.first() {
                 Some(HostEffect::DownloadMediaExport { mime_type: mime, data, .. }) => {
-                    assert_eq!(mime, mime_type, "{action}");
-                    assert!(!data.is_empty(), "{action} data");
+                    assert_eq!(mime, mime_type);
+                    assert!(!data.is_empty(), "export data");
                 }
-                other => panic!("{action} expected DownloadMediaExport, got {other:?}"),
+                other => panic!("expected DownloadMediaExport, got {other:?}"),
             }
         }
     }
 
     #[test]
     fn blueprint_scene_has_page_background_and_guides() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewState::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("layout.page-bg"));
@@ -2389,7 +2238,7 @@ mod tests {
 
     #[test]
     fn preview_scene_has_white_background_and_no_guides() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let node = app.render(LAYOUT_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("layout.page-bg"));
@@ -2398,7 +2247,7 @@ mod tests {
 
     #[test]
     fn inherited_frame_gets_dashed_stroke_in_blueprint() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewState::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("\"dash\":[4.0,3.0]"));
@@ -2406,49 +2255,45 @@ mod tests {
 
     #[test]
     fn selected_and_hovered_frames_get_chrome_strokes() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        let mut app = new_app();
+        app.dispatch_typed(LayoutCommand::SetSelection { ids: vec!["frame-text-1".into()] }, &testkit::meta("local")).expect("select");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("2.5"));
 
-        app.handle_action("setHover", Some(&json!({ "id": "frame-image-1" })), &ViewState::default(), &testkit::meta("local")).expect("hover");
+        app.dispatch_typed(LayoutCommand::SetHover { id: Some("frame-image-1".into()) }, &testkit::meta("local")).expect("hover");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("1.75"));
     }
 
     #[test]
-    fn set_camera_mutates_runtime_and_emits_no_operations() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+    fn set_camera_mutates_config_and_emits_no_operations() {
+        let mut app = new_app();
         let before = app.projection().expect("projection");
         let result = app
-            .handle_action(
-                "setCamera",
-                Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "camera": { "x": 10.0, "y": 20.0, "zoom": 1.5 } })),
-                &ViewState::default(),
+            .dispatch_typed(
+                LayoutCommand::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } },
                 &testkit::meta("local"),
             )
             .expect("camera");
-        assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
+        assert!(result.operations.is_empty(), "camera is a config action and emits no operations");
         assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT);
-        assert!(json.contains(r#""cameraX":10.0"#), "blueprint scene reflects runtime camera: {json}");
-        assert!(json.contains(r#""cameraY":20.0"#), "blueprint scene reflects runtime camera: {json}");
-        assert!(json.contains(r#""zoom":1.5"#), "blueprint scene reflects runtime camera: {json}");
+        assert!(json.contains(r#""cameraX":10.0"#), "blueprint scene reflects config camera: {json}");
+        assert!(json.contains(r#""cameraY":20.0"#), "blueprint scene reflects config camera: {json}");
+        assert!(json.contains(r#""zoom":1.5"#), "blueprint scene reflects config camera: {json}");
     }
 
     #[test]
     fn set_camera_preview_surface_updates_independently_of_blueprint() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let result = app
-            .handle_action(
-                "setCamera",
-                Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_PREVIEW, "camera": { "x": 3.0, "y": 4.0, "zoom": 2.0 } })),
-                &ViewState::default(),
+            .dispatch_typed(
+                LayoutCommand::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } },
                 &testkit::meta("local"),
             )
             .expect("camera");
-        assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
+        assert!(result.operations.is_empty(), "camera is a config action and emits no operations");
         let preview_json = render_json(&mut app, LAYOUT_PLAY_BODY_PREVIEW);
-        assert!(preview_json.contains(r#""cameraX":3.0"#), "preview scene reflects runtime camera: {preview_json}");
-        assert!(preview_json.contains(r#""zoom":2.0"#), "preview scene reflects runtime camera: {preview_json}");
+        assert!(preview_json.contains(r#""cameraX":3.0"#), "preview scene reflects config camera: {preview_json}");
+        assert!(preview_json.contains(r#""zoom":2.0"#), "preview scene reflects config camera: {preview_json}");
         let blueprint_json = render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT);
         assert!(blueprint_json.contains(r#""cameraX":0.0"#), "blueprint surface camera stays independent: {blueprint_json}");
         assert!(blueprint_json.contains(r#""zoom":1.0"#), "blueprint surface camera stays at default zoom: {blueprint_json}");
@@ -2456,12 +2301,10 @@ mod tests {
 
     #[test]
     fn pointer_down_selects_frame_via_hit_test() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
-        app.handle_action(
-            "canvasPointerDown",
-            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "button": 0 })),
-            &ViewState::default(),
+        app.dispatch_typed(
+            LayoutCommand::CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 },
             &testkit::meta("local"),
         )
         .expect("pointer");
@@ -2471,28 +2314,26 @@ mod tests {
 
     #[test]
     fn pointer_move_updates_hover_highlight() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
-        let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
-        let result = app.handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &testkit::meta("local")).expect("move");
-        assert!(result.operations.is_empty(), "hover is a view action, not an operation");
+        let result = app
+            .dispatch_typed(LayoutCommand::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }, &testkit::meta("local"))
+            .expect("move");
+        assert!(result.operations.is_empty(), "hover is a config action, not an operation");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.frame.frame-text-1"));
     }
 
     #[test]
     fn canvas_drop_adds_frame_at_world_coords() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        // 👁️ Camera pose is now runtime-default (see `LayoutCamera::default`), not a document field —
+        let mut app = new_app();
+        // 👁️ Camera pose is now config-default (see `LayoutCamera::default`), not a document field —
         // the screen point is computed against that same default (x=0 y=0 zoom=1.0), not the app's
         // former fixture-authored zoom=0.5.
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);
-        let drag_data = json!({ "kind": "rect" }).to_string();
         let result = app
-            .handle_action(
-                "canvasDrop",
-                Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "dragData": drag_data })),
-                &ViewState::default(),
+            .dispatch_typed(
+                LayoutCommand::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 },
                 &testkit::meta("local"),
             )
             .expect("drop");
@@ -2506,14 +2347,11 @@ mod tests {
 
     #[test]
     fn canvas_drop_page_kind_adds_page() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let before = app.projection().expect("projection").pages.len();
-        let drag_data = json!({ "kind": "page" }).to_string();
         let result = app
-            .handle_action(
-                "canvasDrop",
-                Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 0.0, "y": 0.0, "width": 800.0, "height": 600.0, "dragData": drag_data })),
-                &ViewState::default(),
+            .dispatch_typed(
+                LayoutCommand::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 },
                 &testkit::meta("local"),
             )
             .expect("drop");
@@ -2523,96 +2361,21 @@ mod tests {
 
     #[test]
     fn drag_over_emits_ghost_and_leave_clears() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        app.handle_action(
-            "canvasDragOver",
-            Some(&json!({
-                "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT,
-                "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0,
-                "types": [format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}rect")],
-            })),
-            &ViewState::default(),
+        let mut app = new_app();
+        app.dispatch_typed(
+            LayoutCommand::CanvasDragOver { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 },
             &testkit::meta("local"),
         )
         .expect("over");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
 
-        app.handle_action("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &ViewState::default(), &testkit::meta("local")).expect("leave");
+        app.dispatch_typed(LayoutCommand::CanvasDragLeave, &testkit::meta("local")).expect("leave");
         assert!(!render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
     }
 
-    //#region 🔖️GesturePreview
-    /// 🔬️ CW7 preview-law seam: `LayoutPlayApp::gesture_preview` reads `LayoutDropPreviewState` only,
-    /// never `LayoutDocument`/`LayoutOperation` — exercised directly against `LayoutPlayApp` (bypassing
-    /// the `VcsDocumentApp` wrapper, which has no accessor into the inner app) since `canvasDragOver` is
-    /// the natural per-tick gesture handler.
-    fn bare_history_view() -> HistoryView {
-        HistoryView::empty()
-    }
-
-    #[test]
-    fn gesture_preview_is_none_without_a_live_drag_over() {
-        let app = LayoutPlayApp::default();
-        assert!(app.gesture_preview().is_none(), "no live drag-over, nothing to preview");
-    }
-
-    #[test]
-    fn gesture_preview_reflects_the_live_drag_over_and_clears_on_leave() {
-        let mut app = LayoutPlayApp::default();
-        let document = layout_engine::default_document();
-        let history = bare_history_view();
-        let doc = DocumentView { projection: &document, history: &history };
-        let types = json!([format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}rect")]);
-
-        let over = app.handle_action(
-            "canvasDragOver",
-            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0, "types": types })),
-            &doc,
-            &ViewState::default(),
-        );
-        assert!(over.operations.is_empty(), "a live drag-over is a view action, not a document operation");
-        let (key, seq_after_over, payload) = app.gesture_preview().expect("a live drag-over is previewable");
-        assert_eq!(key, "gesture:dropPreview");
-        let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
-        assert_eq!(value["kind"], json!("rect"));
-
-        let moved = app.handle_action(
-            "canvasDragOver",
-            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 450.0, "y": 320.0, "width": 800.0, "height": 600.0, "types": types })),
-            &doc,
-            &ViewState::default(),
-        );
-        assert!(moved.operations.is_empty());
-        let (_, seq_after_move, payload_after_move) = app.gesture_preview().expect("still live mid-drag");
-        assert!(seq_after_move > seq_after_over, "seq is monotone per tick, for staleness detection on the receiving end");
-        assert_ne!(serde_json::from_slice::<Value>(&payload_after_move).unwrap()["x"], value["x"], "preview tracks the live drag position");
-
-        app.handle_action("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &doc, &ViewState::default());
-        assert!(app.gesture_preview().is_none(), "the drag left the canvas: nothing left to preview");
-    }
-
-    #[test]
-    fn gesture_preview_is_a_pure_read_never_mutating_the_drop_preview_state() {
-        let mut app = LayoutPlayApp::default();
-        let document = layout_engine::default_document();
-        let history = bare_history_view();
-        let doc = DocumentView { projection: &document, history: &history };
-        app.handle_action(
-            "canvasDragOver",
-            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0, "types": json!([format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}rect")]) })),
-            &doc,
-            &ViewState::default(),
-        );
-        let state_before = app.runtime.borrow().drop_preview.clone();
-        let _ = app.gesture_preview();
-        let _ = app.gesture_preview();
-        assert_eq!(app.runtime.borrow().drop_preview, state_before, "gesture_preview must never mutate the live drop-preview scratch it reads");
-    }
-    //#endregion 🔖️GesturePreview
-
     #[test]
     fn catalogue_items_are_draggable() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
         assert!(json.contains(LAYOUT_CATALOGUE_DRAG_MIME));
         assert!(json.contains("\"draggable\":true"));
@@ -2621,7 +2384,7 @@ mod tests {
 
     #[test]
     fn document_tree_has_nine_sections() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let mut app = new_app();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         for section_id in [
             "layout-document.document",
@@ -2705,8 +2468,8 @@ mod tests {
 
     #[test]
     fn window_engagements_cover_both_windows() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        let engagements = app.window_engagements(&ViewState::default());
+        let mut app = new_app();
+        let engagements = app.window_engagements();
         let blueprint = engagements.get(LAYOUT_PLAY_WINDOW_BLUEPRINT).expect("blueprint engagement");
         let status = blueprint.status.as_ref().and_then(|rows| rows.first()).expect("status");
         assert!(status.text.contains("Page"));
@@ -2719,9 +2482,9 @@ mod tests {
     fn registry_backed_engagement_submit_is_shell_effect_not_operation() {
         // 🧬️ engagementSubmit is declared `Shell`: through the real registry the kind-discipline
         // check must accept it because its handler only routes an export `HostEffect`, never operations.
-        let mut app = testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app);
+        let mut app = new_app_with_registry();
         let result = app
-            .handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(LayoutCommand::EngagementSubmit { value: "export png".into() }, &testkit::meta("local"))
             .expect("engagementSubmit passes registry kind discipline");
         assert!(result.operations.is_empty(), "Shell action must not emit document operations");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
@@ -2730,30 +2493,32 @@ mod tests {
     #[test]
     fn registry_backed_add_frame_emits_operation() {
         // 🧬️ addFrame is declared `Operation`: the registry-backed wrapper must let its operations through.
-        let mut app = testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app);
+        let mut app = new_app_with_registry();
         let result = app
-            .handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(LayoutCommand::AddFrame { kind: "rect".into(), x: None, y: None }, &testkit::meta("local"))
             .expect("addFrame passes registry kind discipline");
         assert_eq!(result.operations.len(), 1);
     }
 
     #[test]
     fn registry_backed_pointer_move_is_view_only() {
-        // 🧬️ canvasPointerMove is declared `View`: it mutates only runtime hover state and must
+        // 🧬️ canvasPointerMove is declared `View`: it mutates only config hover state and must
         // never emit an operation, which the registry kind-discipline check enforces.
-        let mut app = testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app);
+        let mut app = new_app_with_registry();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
-        let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
         let result = app
-            .handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(
+                LayoutCommand::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 },
+                &testkit::meta("local"),
+            )
             .expect("canvasPointerMove passes registry kind discipline");
         assert!(result.operations.is_empty(), "View action must not emit document operations");
     }
 
     #[test]
     fn engagement_submit_triggers_export() {
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &testkit::meta("local")).expect("submit");
+        let mut app = new_app();
+        let result = app.dispatch_typed(LayoutCommand::EngagementSubmit { value: "export png".into() }, &testkit::meta("local")).expect("submit");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 
@@ -2761,9 +2526,57 @@ mod tests {
     fn engagement_submit_triggers_export_from_normalized_shell_draft() {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "export png" arrives as "ExportPng".
-        let mut app = testkit::new_app::<LayoutPlayApp>();
-        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "ExportPng" })), &ViewState::default(), &testkit::meta("local")).expect("submit");
+        let mut app = new_app();
+        let result = app.dispatch_typed(LayoutCommand::EngagementSubmit { value: "ExportPng".into() }, &testkit::meta("local")).expect("submit");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
+
+    //#region 🧪️MediaPorts
+    #[test]
+    fn export_media_layout_out_returns_svg_of_first_page() {
+        let app = new_app();
+        let document = app.projection().expect("projection");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+        let media = LayoutPlayApp.export_media("layout:out", &doc).expect("export layout:out");
+        assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
+        let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
+        assert_eq!(schema, "2d.layout");
+        assert!(json.starts_with("<svg"));
+    }
+
+    #[test]
+    fn export_media_document_out_round_trips_through_pack() {
+        let app = new_app();
+        let document = app.projection().expect("projection");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+        let media = LayoutPlayApp.export_media("document:out", &doc).expect("export document:out");
+        let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
+        assert_eq!(schema, LAYOUT_FIXTURE_SCHEMA);
+        let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
+        let decoded = <LayoutDocument as store::DocumentPack>::decode_pack(&bytes).expect("decode pack");
+        assert_eq!(decoded, document);
+    }
+
+    #[test]
+    fn import_media_fields_in_sets_data_fields_json() {
+        let mut app = new_app();
+        let media = Media {
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+            payload: MediaPayload::Structured { schema: "form.dictionary".into(), json: r#"{"name":"Ada"}"#.into() },
+        };
+        app.import_media("fields:in", &media, &testkit::meta("local")).expect("import fields:in");
+        let document = app.projection().expect("projection");
+        assert_eq!(document.data_fields_json.as_deref(), Some(r#"{"name":"Ada"}"#));
+    }
+
+    #[test]
+    fn layout_io_exposes_declared_ports() {
+        let io = LayoutPlayApp.io().expect("layout declares io");
+        assert!(io.ports.iter().any(|port| port.id == "fields:in"));
+        assert!(io.ports.iter().any(|port| port.id == "layout:out"));
+    }
+    //#endregion 🧪️MediaPorts
 }
 //#endregion 🧪️Tests

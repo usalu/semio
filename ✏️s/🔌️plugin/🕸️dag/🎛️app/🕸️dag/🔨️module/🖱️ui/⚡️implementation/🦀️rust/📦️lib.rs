@@ -1,19 +1,19 @@
 //! 🖥️ DAG app — DocumentApp impl, render, manifest (constitutional: ui).
 
 use dag::{DagDocument, DAG_DOCUMENT_SCHEMA};
-use dag_engine::{connect_edge, default_node_for_kind, document_to_workflow, next_node_id, node_patch_for_field, split_endpoint};
-use dag_op::DagOperation;
+use dag_engine::{connect_edge, dag_config_camera, default_node_for_kind, document_to_workflow, next_node_id, node_patch_for_field, split_endpoint, DagConfig};
+use dag_op::{DagConfigOperation, DagOperation};
+use dag_protocol::{DagCommand, DagNodeGraphEditOp};
 use infinite_board_port_directed_dag::{
     dag_document_from_fixture, dag_fixture_from_document, dag_fixture_to_wire_literal, dag_node_kind_tag, default_dag_document, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodePatch, DagNodeSpec,
 };
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
-    ActionArgOption, ActionDescriptor, ActionEmit, App, DocumentApp, DocumentView, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
-    UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    ActionArgOption, ActionDescriptor, App, ConfigView, DocumentApp, DocumentView, Emit, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
+    UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -29,23 +29,6 @@ const DAG_PLAY_BODY_INSPECTOR: &str = "dag.play.inspection";
 const DAG_PLAY_WINDOW_MAIN: &str = "dag-main";
 const DAG_PLAY_WINDOW_COMPILED: &str = "dag-compiled-dag";
 //#endregion 🔖️Constants
-
-//#region 🔖️Runtime
-/// 🎛️ Ephemeral view state — selection and camera/viewport — lives in the app struct, not the
-/// document, so panning/zooming and selecting never pollute undo history.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-struct DagPlayRuntime {
-    selected_node_ids: Vec<String>,
-    camera: DagCamera,
-}
-
-impl Default for DagPlayRuntime {
-    fn default() -> Self {
-        Self { selected_node_ids: Vec::new(), camera: DagFixture::default().camera }
-    }
-}
-//#endregion 🔖️Runtime
 
 //#region 🔖️DocumentHelpers
 fn dag_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -213,10 +196,14 @@ const DAG_PLAY_LABELS_NATIVE_DE: DagPlayLabels = DagPlayLabels {
     window_compiled: "DSL",
 };
 
-/// 🗣️ Resolves the active label set from the shell-provided locale; this app has no terminology variant.
-fn dag_play_labels(view_state: &ViewState) -> &'static DagPlayLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de {
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven locale read.
+fn is_de_locale(cfg: &DagConfig) -> bool {
+    cfg.locale.starts_with("de")
+}
+
+/// 🗣️ Resolves the active label set from `cfg.locale`; this app has no terminology variant.
+fn dag_play_labels(cfg: &DagConfig) -> &'static DagPlayLabels {
+    if is_de_locale(cfg) {
         &DAG_PLAY_LABELS_NATIVE_DE
     } else {
         &DAG_PLAY_LABELS_NATIVE_EN
@@ -496,10 +483,10 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
 
 //#region 🔖️Render
 fn render_main_graph(document: &DagDocument, camera: &DagCamera, selected: &[String], labels: &DagPlayLabels) -> UiNode {
-    let (nodes_json, edges_json) = document_to_workflow(document);
-    let viewport_json = serde_json::to_string(camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
-    let selection_json = if selected.is_empty() { None } else { serde_json::to_string(selected).ok() };
-    build_node_graph_scene(DAG_PLAY_SURFACE_MAIN, DAG_PLAY_APP_ID, NodeGraphScene { editable: Some(true), selection_json, ..NodeGraphScene::base(nodes_json, edges_json, viewport_json) })
+    let (nodes, edges) = document_to_workflow(document);
+    let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
+    let selection = selected.to_vec();
+    build_node_graph_scene(DAG_PLAY_SURFACE_MAIN, DAG_PLAY_APP_ID, NodeGraphScene { editable: Some(true), selection, ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 
 fn render_compiled_dag(document: &DagDocument, camera: &DagCamera) -> UiNode {
@@ -509,33 +496,31 @@ fn render_compiled_dag(document: &DagDocument, camera: &DagCamera) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️DagPlayApp
-use std::cell::RefCell;
+/// 🧪️ B1: unit struct — every former `DagPlayRuntime`/`ViewState.locale` field now lives in
+/// `dag_engine::DagConfig` (see `DocumentApp::Config`), written through `dag_op::DagConfigOperation`s.
+#[derive(Default)]
+pub struct DagPlayApp;
 
-pub struct DagPlayApp {
-    runtime: RefCell<DagPlayRuntime>,
-}
-
-impl Default for DagPlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(DagPlayRuntime::default()) }
-    }
-}
-
-impl DagPlayApp {
-    /// 👁️ Parses the many selection-arg shapes (`ids`/`nodeIds` arrays or a single `nodeId`) into ids.
-    fn parse_selection(args: Option<&Value>) -> Vec<String> {
-        args.and_then(|value| value.get("nodeIds").or_else(|| value.get("ids")))
-            .and_then(|value| if value.is_array() { serde_json::from_value(value.clone()).ok() } else { value.as_str().map(|id| vec![id.to_string()]) })
-            .or_else(|| args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()]))
-            .unwrap_or_default()
+/// 🗑️ Builds the removal `DagOperation`s plus the config op that CLEARS the whole selection, or
+/// `None` when nothing in `node_ids` exists to remove — shared by `DagCommand::DeleteSelection` and
+/// `DagNodeGraphEditOp::DeleteSelection` (both were the same `handle_action` "deleteSelection" logic,
+/// reachable from two different action ids pre-B1). `DagCommand::RemoveNode` deliberately does NOT use
+/// this helper: it only pulls the removed id out of the selection, never clears it outright.
+fn delete_selection_result(document: &DagDocument, node_ids: &[String]) -> Option<(Vec<DagOperation>, DagConfigOperation)> {
+    let removes = remove_nodes_operations(document, node_ids);
+    if removes.is_empty() {
+        None
+    } else {
+        Some((removes, DagConfigOperation::SetSelection { node_ids: Vec::new() }))
     }
 }
 
 impl DocumentApp for DagPlayApp {
     type Projection = DagDocument;
     type Operation = DagOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = DagConfig;
+    type ConfigOperation = DagConfigOperation;
+    type Command = DagCommand;
 
     fn app_id(&self) -> &str {
         DAG_PLAY_APP_ID
@@ -549,197 +534,179 @@ impl DocumentApp for DagPlayApp {
         default_dag_document()
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, DagDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<DagOperation> {
-        let document = doc.projection;
-        match action {
-            "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                self.runtime.borrow_mut().selected_node_ids = Self::parse_selection(args);
-                ActionEmit::default()
-            }
-            "nodeGraphHover" => ActionEmit::default(),
-            "graphPointerDown" => {
-                self.runtime.borrow_mut().selected_node_ids.clear();
-                ActionEmit::default()
-            }
-            "nodeGraphViewport" => {
-                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
-                    if let Ok(camera) = serde_json::from_str::<DagCamera>(viewport_json) {
-                        self.runtime.borrow_mut().camera = camera;
-                    }
-                }
-                ActionEmit::default()
-            }
-            "nodeGraphEdit" => {
-                let operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
-                let mut emitted: Vec<DagOperation> = Vec::new();
-                for operation in operations {
-                    match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-                        "setFixture" => {
-                            if let Some(fixture_json) = operation.get("fixtureJson").and_then(|value| value.as_str()) {
-                                if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
-                                    self.runtime.borrow_mut().camera = fixture.camera.clone();
-                                    emitted.push(DagOperation::SetDocument { document: dag_document_from_fixture(&fixture) });
-                                }
-                            }
-                        }
-                        "deleteSelection" => {
-                            let ids = self.runtime.borrow_mut().selected_node_ids.clone();
-                            let removes = remove_nodes_operations(document, &ids);
-                            if !removes.is_empty() {
-                                self.runtime.borrow_mut().selected_node_ids.clear();
-                                emitted.extend(removes);
-                            }
-                        }
-                        "connect" => {
-                            let from = operation.get("sourceNodeId").and_then(|value| value.as_str());
-                            let from_port = operation.get("sourcePortId").and_then(|value| value.as_str());
-                            let to = operation.get("targetNodeId").and_then(|value| value.as_str());
-                            let to_port = operation.get("targetPortId").and_then(|value| value.as_str());
-                            if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
-                                if let Ok(edge) = connect_edge(document, from, from_port, to, to_port) {
-                                    emitted.push(DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge }));
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                ActionEmit::operations(emitted)
-            }
-            "deleteSelection" => {
-                let ids = self.runtime.borrow_mut().selected_node_ids.clone();
-                let removes = remove_nodes_operations(document, &ids);
-                if removes.is_empty() {
-                    return ActionEmit::default();
-                }
-                self.runtime.borrow_mut().selected_node_ids.clear();
-                ActionEmit::operations(removes)
-            }
-            "renameDagNode" => {
-                let old_id = args.and_then(|value| value.get("oldId")).and_then(|value| value.as_str());
-                let new_id = args.and_then(|value| value.get("value")).and_then(|value| value.as_str());
-                if let (Some(old_id), Some(new_id)) = (old_id, new_id) {
-                    let trimmed = new_id.trim();
-                    if !trimmed.is_empty() && trimmed != old_id && !document.nodes.iter().any(|node| node.id == trimmed) {
-                        let nodes: Vec<DagNodeSpec> = document.nodes.iter().map(|node| if node.id == old_id { DagNodeSpec { id: trimmed.into(), ..node.clone() } } else { node.clone() }).collect();
-                        let edges: Vec<DagFixtureEdge> = document
-                            .edges
-                            .iter()
-                            .map(|edge| {
-                                let (from_node, from_port) = split_endpoint(&edge.source);
-                                let (to_node, to_port) = split_endpoint(&edge.target);
-                                DagFixtureEdge {
-                                    source: if from_node == old_id { format!("{trimmed}@{from_port}") } else { edge.source.clone() },
-                                    target: if to_node == old_id { format!("{trimmed}@{to_port}") } else { edge.target.clone() },
-                                    ..edge.clone()
-                                }
-                            })
-                            .collect();
-                        self.runtime.borrow_mut().selected_node_ids = vec![trimmed.into()];
-                        return ActionEmit::operations(vec![DagOperation::SetNodes { nodes }, DagOperation::SetEdges { edges }]);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "removeNode" => {
-                let node_id = args.and_then(|value| value.get("nodeId")).or_else(|| args.and_then(|value| value.get("id"))).and_then(|value| value.as_str());
-                if let Some(node_id) = node_id {
-                    let removes = remove_nodes_operations(document, &[node_id.to_string()]);
-                    if !removes.is_empty() {
-                        self.runtime.borrow_mut().selected_node_ids.retain(|id| id != node_id);
-                        return ActionEmit::operations(removes);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "disconnect" => {
-                let edge_id = args.and_then(|value| value.get("edgeId")).or_else(|| args.and_then(|value| value.get("synapseId"))).and_then(|value| value.as_str());
-                match edge_id {
-                    Some(edge_id) if document.edges.iter().any(|edge| edge.id == edge_id) => ActionEmit::operations(vec![DagOperation::Edges(CollectionOperation::Remove { id: edge_id.into() })]),
-                    _ => ActionEmit::default(),
-                }
-            }
-            "moveMediaNode" => {
-                let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str());
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
-                if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
-                    if document.nodes.iter().any(|node| node.id == node_id) {
-                        return ActionEmit::amend(vec![DagOperation::Nodes(CollectionOperation::Patch { id: node_id.into(), patch: DagNodePatch { x: Some(x), y: Some(y), ..Default::default() } })], format!("move-{node_id}"));
-                    }
-                }
-                ActionEmit::default()
-            }
-            "connectMediaPorts" => {
-                let source_node_id = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str());
-                let source_port_id = args.and_then(|value| value.get("sourcePortId")).and_then(|value| value.as_str());
-                let target_node_id = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str());
-                let target_port_id = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str());
-                if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (source_node_id, source_port_id, target_node_id, target_port_id) {
-                    if let Ok(edge) = connect_edge(document, from, from_port, to, to_port) {
-                        return ActionEmit::operations(vec![DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge })]);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "addNode" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("computation");
-                let id = next_node_id(document);
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                let node = default_node_for_kind(kind, &id, x, y);
-                self.runtime.borrow_mut().selected_node_ids = vec![id];
-                ActionEmit::operations(vec![DagOperation::Nodes(CollectionOperation::Add { id: node.id.clone(), at: document.nodes.len(), item: node })])
-            }
-            "reorganize" => {
-                if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&dag_fixture_from_document(document, self.runtime.borrow_mut().camera.clone())).unwrap_or_default()) {
-                    let _ = host.reorganize(&DagLayoutOptions::default());
-                    if let Ok(json) = host.fixture_json() {
-                        if let Ok(fixture) = serde_json::from_str::<DagFixture>(&json) {
-                            return ActionEmit::operations(vec![DagOperation::SetNodes { nodes: fixture.nodes }]);
-                        }
-                    }
-                }
-                ActionEmit::default()
-            }
-            "patchDagNodes" => {
-                let node_ids: Vec<String> = args.and_then(|value| value.get("nodeIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let raw_value = args.and_then(|value| value.get("value"));
-                let operations: Vec<DagOperation> =
-                    document.nodes.iter().filter(|node| node_ids.contains(&node.id)).filter_map(|node| node_patch_for_field(node, field, raw_value).map(|patch| DagOperation::Nodes(CollectionOperation::Patch { id: node.id.clone(), patch }))).collect();
-                if operations.is_empty() {
-                    ActionEmit::default()
-                } else {
-                    ActionEmit::amend(operations, format!("patch-{field}-{}", node_ids.join(",")))
-                }
-            }
-            _ => ActionEmit::default(),
+    fn whole_document_operation(&self, projection: DagDocument) -> Option<DagOperation> {
+        Some(DagOperation::SetDocument { document: projection })
+    }
+
+    /// 🏷️ Maps each `DagCommand` variant back to the action id it was declared under in
+    /// `create_dag_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check. `SetLocale` has no manifest declaration (host-pushed, not a
+    /// user-facing action — see `dag_protocol::DagCommand::SetLocale`'s doc), matching
+    /// `shooting_protocol::ShootingCommand::SetLocale`'s equally-undeclared precedent.
+    fn command_id(&self, command: &DagCommand) -> &str {
+        match command {
+            DagCommand::AddNode { .. } => "addNode",
+            DagCommand::RemoveNode { .. } => "removeNode",
+            DagCommand::DeleteSelection => "deleteSelection",
+            DagCommand::NodeGraphEdit { .. } => "nodeGraphEdit",
+            DagCommand::ConnectMediaPorts { .. } => "connectMediaPorts",
+            DagCommand::Disconnect { .. } => "disconnect",
+            DagCommand::MoveMediaNode { .. } => "moveMediaNode",
+            DagCommand::RenameDagNode { .. } => "renameDagNode",
+            DagCommand::Reorganize => "reorganize",
+            DagCommand::PatchDagNodes { .. } => "patchDagNodes",
+            DagCommand::SetSelection { .. } => "setSelection",
+            DagCommand::SelectNode { .. } => "selectNode",
+            DagCommand::NodeGraphSelect { .. } => "nodeGraphSelect",
+            DagCommand::NodeGraphHover => "nodeGraphHover",
+            DagCommand::NodeGraphViewport { .. } => "nodeGraphViewport",
+            DagCommand::GraphPointerDown => "graphPointerDown",
+            DagCommand::SetLocale { .. } => "setLocale",
         }
     }
 
-    fn render(
-        &self,
-        body_key: &str,
-        doc: &DocumentView<'_, DagDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-    ) -> UiNode {
+    fn handle(&self, command: &DagCommand, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Emit<DagOperation, DagConfigOperation> {
         let document = doc.projection;
-        let runtime = self.runtime.borrow();
-        let selected = &runtime.selected_node_ids;
-        let camera = &runtime.camera;
-        let labels = dag_play_labels(view_state);
+        let config = cfg.projection;
+        match command {
+            DagCommand::SetSelection { ids } => Emit::config(vec![DagConfigOperation::SetSelection { node_ids: ids.clone() }]),
+            DagCommand::SelectNode { node_id } => Emit::config(vec![DagConfigOperation::SetSelection { node_ids: vec![node_id.clone()] }]),
+            DagCommand::NodeGraphSelect { node_ids } => Emit::config(vec![DagConfigOperation::SetSelection { node_ids: node_ids.clone() }]),
+            DagCommand::NodeGraphHover => Emit::default(),
+            DagCommand::GraphPointerDown => Emit::config(vec![DagConfigOperation::SetSelection { node_ids: Vec::new() }]),
+            DagCommand::NodeGraphViewport { x, y, zoom } => Emit::config(vec![DagConfigOperation::SetCamera { x: *x, y: *y, zoom: *zoom }]),
+            DagCommand::SetLocale { value } => Emit::config(vec![DagConfigOperation::SetLocale { value: value.clone() }]),
+            DagCommand::NodeGraphEdit { operations } => {
+                let mut document_operations: Vec<DagOperation> = Vec::new();
+                let mut config_operations: Vec<DagConfigOperation> = Vec::new();
+                for sub_operation in operations {
+                    match sub_operation {
+                        DagNodeGraphEditOp::SetFixture { fixture_json } => {
+                            if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
+                                config_operations.push(DagConfigOperation::SetCamera { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom });
+                                document_operations.push(DagOperation::SetDocument { document: dag_document_from_fixture(&fixture) });
+                            }
+                        }
+                        DagNodeGraphEditOp::DeleteSelection => {
+                            if let Some((removes, clear_selection)) = delete_selection_result(document, &config.selected_node_ids) {
+                                document_operations.extend(removes);
+                                config_operations.push(clear_selection);
+                            }
+                        }
+                        DagNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
+                            if let Ok(edge) = connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
+                                document_operations.push(DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge }));
+                            }
+                        }
+                    }
+                }
+                Emit { document_operations, config_operations, ..Default::default() }
+            }
+            DagCommand::DeleteSelection => match delete_selection_result(document, &config.selected_node_ids) {
+                Some((removes, clear_selection)) => Emit { document_operations: removes, config_operations: vec![clear_selection], ..Default::default() },
+                None => Emit::default(),
+            },
+            DagCommand::RenameDagNode { old_id, value } => {
+                let trimmed = value.trim();
+                if trimmed.is_empty() || trimmed == old_id.as_str() || document.nodes.iter().any(|node| node.id == trimmed) {
+                    return Emit::default();
+                }
+                let nodes: Vec<DagNodeSpec> = document.nodes.iter().map(|node| if &node.id == old_id { DagNodeSpec { id: trimmed.into(), ..node.clone() } } else { node.clone() }).collect();
+                let edges: Vec<DagFixtureEdge> = document
+                    .edges
+                    .iter()
+                    .map(|edge| {
+                        let (from_node, from_port) = split_endpoint(&edge.source);
+                        let (to_node, to_port) = split_endpoint(&edge.target);
+                        DagFixtureEdge {
+                            source: if &from_node == old_id { format!("{trimmed}@{from_port}") } else { edge.source.clone() },
+                            target: if &to_node == old_id { format!("{trimmed}@{to_port}") } else { edge.target.clone() },
+                            ..edge.clone()
+                        }
+                    })
+                    .collect();
+                Emit {
+                    document_operations: vec![DagOperation::SetNodes { nodes }, DagOperation::SetEdges { edges }],
+                    config_operations: vec![DagConfigOperation::SetSelection { node_ids: vec![trimmed.to_string()] }],
+                    ..Default::default()
+                }
+            }
+            DagCommand::RemoveNode { node_id } => {
+                let removes = remove_nodes_operations(document, std::slice::from_ref(node_id));
+                if removes.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit {
+                        document_operations: removes,
+                        config_operations: vec![DagConfigOperation::SetSelection { node_ids: config.selected_node_ids.iter().filter(|id| *id != node_id).cloned().collect() }],
+                        ..Default::default()
+                    }
+                }
+            }
+            DagCommand::Disconnect { edge_id } => {
+                if document.edges.iter().any(|edge| &edge.id == edge_id) {
+                    Emit::operations(vec![DagOperation::Edges(CollectionOperation::Remove { id: edge_id.clone() })])
+                } else {
+                    Emit::default()
+                }
+            }
+            DagCommand::MoveMediaNode { node_id, x, y } => {
+                if document.nodes.iter().any(|node| &node.id == node_id) {
+                    Emit::amend(vec![DagOperation::Nodes(CollectionOperation::Patch { id: node_id.clone(), patch: DagNodePatch { x: Some(*x), y: Some(*y), ..Default::default() } })], format!("move-{node_id}"))
+                } else {
+                    Emit::default()
+                }
+            }
+            DagCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => match connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
+                Ok(edge) => Emit::operations(vec![DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge })]),
+                Err(_) => Emit::default(),
+            },
+            DagCommand::AddNode { kind, x, y } => {
+                let id = next_node_id(document);
+                let node = default_node_for_kind(kind, &id, x.unwrap_or(120.0), y.unwrap_or(120.0));
+                Emit {
+                    document_operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: node.id.clone(), at: document.nodes.len(), item: node })],
+                    config_operations: vec![DagConfigOperation::SetSelection { node_ids: vec![id] }],
+                    ..Default::default()
+                }
+            }
+            DagCommand::Reorganize => {
+                let camera = dag_config_camera(config);
+                if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&dag_fixture_from_document(document, camera)).unwrap_or_default()) {
+                    let _ = host.reorganize(&DagLayoutOptions::default());
+                    if let Ok(json) = host.fixture_json() {
+                        if let Ok(fixture) = serde_json::from_str::<DagFixture>(&json) {
+                            return Emit::operations(vec![DagOperation::SetNodes { nodes: fixture.nodes }]);
+                        }
+                    }
+                }
+                Emit::default()
+            }
+            DagCommand::PatchDagNodes { node_ids, field, value } => {
+                let operations: Vec<DagOperation> = document
+                    .nodes
+                    .iter()
+                    .filter(|node| node_ids.contains(&node.id))
+                    .filter_map(|node| node_patch_for_field(node, field, Some(value.as_str())).map(|patch| DagOperation::Nodes(CollectionOperation::Patch { id: node.id.clone(), patch })))
+                    .collect();
+                if operations.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit::amend(operations, format!("patch-{field}-{}", node_ids.join(",")))
+                }
+            }
+        }
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> UiNode {
+        let document = doc.projection;
+        let config = cfg.projection;
+        let selected = &config.selected_node_ids;
+        let camera = dag_config_camera(config);
+        let labels = dag_play_labels(config);
         match body_key {
-            DAG_PLAY_BODY_MAIN => render_main_graph(document, camera, selected, labels),
-            DAG_PLAY_BODY_COMPILED => render_compiled_dag(document, camera),
+            DAG_PLAY_BODY_MAIN => render_main_graph(document, &camera, selected, labels),
+            DAG_PLAY_BODY_COMPILED => render_compiled_dag(document, &camera),
             DAG_PLAY_BODY_DOCUMENT => build_document_tree(document, selected, labels),
             DAG_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             DAG_PLAY_BODY_INSPECTOR => build_inspector_tree(document, selected, labels),
@@ -747,9 +714,9 @@ impl DocumentApp for DagPlayApp {
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = dag_play_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    fn app_labels(&self, cfg: &ConfigView<'_, DagConfig>) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = dag_play_labels(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         semio_framework_plugin::AppLabelsOverlay {
             window_kind_labels: HashMap::from([(DAG_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()), (DAG_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string())]),
             panel_tab_labels: HashMap::new(),
@@ -769,16 +736,15 @@ impl DocumentApp for DagPlayApp {
         &self,
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &DocumentView<'_, DagDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
+        cfg: &ConfigView<'_, DagConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let labels = dag_play_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        let selected = self.runtime.borrow().selected_node_ids.clone();
-        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+        let labels = dag_play_labels(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
+        let selected = &cfg.projection.selected_node_ids;
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), selected, &[]);
         let mut menu = Menu::of(registry);
         if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
@@ -862,7 +828,12 @@ pub fn create_dag_app() -> App {
                     ActionArgOption::new("note", "Note"),
                     ActionArgOption::new("preview", "Preview"),
                 ]).default_value("computation"),
-            ]),
+            ])
+            // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1)
+            // — dag has no user-visible config defaults to expose, so `config_spec()` stays the trait
+            // default `ConfigSpec::empty()`; declaring it explicitly here still keeps this app's typed
+            // channel surface consistent with `shooting_ui::create_shooting_app`'s convention.
+            .config(DagPlayApp::default().config_spec()),
     )
     .example("demo", "Demo", serde_json::to_string(&default_dag_document()).expect("default DAG document has no non-string map keys or non-finite floats, so JSON serialization is infallible"), "flask-conical")
     .workflow("dag", "DAG", "graph")
@@ -873,14 +844,15 @@ pub fn create_dag_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-
-    fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 1 }
-    }
+    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
 
     fn new_app() -> VcsDocumentApp<DagPlayApp> {
-        VcsDocumentApp::new(DagPlayApp::default())
+        testkit::new_app::<DagPlayApp>()
+    }
+
+    /// 🧬️ A wrapper carrying the real action registry so kind discipline runs.
+    fn new_app_with_registry() -> VcsDocumentApp<DagPlayApp> {
+        testkit::new_app_with_registry::<DagPlayApp>(create_dag_app)
     }
 
     #[test]
@@ -892,11 +864,13 @@ mod tests {
         assert!(json.contains("Edges"));
     }
 
+    /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more
+    /// passing a `ViewState` into `render`/`app_labels`/`context_menu` for this purpose.
     #[test]
     fn dag_play_labels_resolve_native_in_german() {
         let mut app = new_app();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &view_state).expect("render");
+        app.dispatch_typed(DagCommand::SetLocale { value: "de-DE".into() }, &testkit::meta("local")).expect("set locale");
+        let node = app.render(DAG_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Knoten"));
         assert!(json.contains("Kanten"));
@@ -919,28 +893,32 @@ mod tests {
     }
 
     #[test]
-    fn add_node_action_updates_document() {
+    fn add_node_action_updates_document_and_selects_the_new_node() {
         let mut app = new_app();
-        app.handle_action("addNode", Some(&json!({ "kind": "slider" })), &ViewState::default(), &meta("local")).expect("add node");
+        app.dispatch_typed(DagCommand::AddNode { kind: "slider".into(), x: None, y: None }, &testkit::meta("local")).expect("add node");
         let document = app.projection().expect("projection");
         assert!(document.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })));
+        let added_id = document.nodes.last().expect("added node").id.clone();
+        let node = app.render(DAG_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&node).unwrap().contains(&added_id), "the new node becomes the config selection");
     }
 
     #[test]
     fn rename_dag_node_rewrites_nodes_and_edges() {
         let mut app = new_app();
         let old_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
-        app.handle_action("renameDagNode", Some(&json!({ "oldId": old_id, "value": "renamed-node" })), &ViewState::default(), &meta("local")).expect("rename");
+        app.dispatch_typed(DagCommand::RenameDagNode { old_id: old_id.clone(), value: "renamed-node".into() }, &testkit::meta("local")).expect("rename");
         let document = app.projection().expect("projection");
         assert!(document.nodes.iter().any(|node| node.id == "renamed-node"));
         assert!(document.nodes.iter().all(|node| node.id != old_id));
     }
 
     #[test]
-    fn remove_node_deletes_node_and_connected_edges() {
+    fn remove_node_deletes_node_and_connected_edges_and_prunes_selection() {
         let mut app = new_app();
         let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
-        app.handle_action("removeNode", Some(&json!({ "nodeId": node_id })), &ViewState::default(), &meta("local")).expect("remove");
+        app.dispatch_typed(DagCommand::SetSelection { ids: vec![node_id.clone()] }, &testkit::meta("local")).expect("select");
+        app.dispatch_typed(DagCommand::RemoveNode { node_id: node_id.clone() }, &testkit::meta("local")).expect("remove");
         let document = app.projection().expect("projection");
         assert!(document.nodes.iter().all(|node| node.id != node_id));
         assert!(document.edges.iter().all(|edge| {
@@ -948,25 +926,27 @@ mod tests {
             let (to, _) = split_endpoint(&edge.target);
             from != node_id && to != node_id
         }));
+        let node = app.render(DAG_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        assert!(!serde_json::to_string(&node).unwrap().contains(&node_id), "the removed node is pruned from the config selection");
     }
 
     #[test]
     fn add_node_then_undo_restores_document() {
         let mut app = new_app();
         let before = app.projection().expect("projection").nodes.len();
-        app.handle_action("addNode", Some(&json!({ "kind": "note" })), &ViewState::default(), &meta("local")).expect("add");
+        app.dispatch_typed(DagCommand::AddNode { kind: "note".into(), x: None, y: None }, &testkit::meta("local")).expect("add");
         assert_eq!(app.projection().expect("projection").nodes.len(), before + 1);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").nodes.len(), before);
     }
 
     #[test]
     fn patch_slider_value_coalesces_into_one_edit() {
         let mut app = new_app();
-        app.handle_action("addNode", Some(&json!({ "kind": "slider" })), &ViewState::default(), &meta("local")).expect("add slider");
+        app.dispatch_typed(DagCommand::AddNode { kind: "slider".into(), x: None, y: None }, &testkit::meta("local")).expect("add slider");
         let node_id = app.projection().expect("projection").nodes.iter().find(|node| matches!(node.kind, DagNodeKind::Slider { .. })).map(|node| node.id.clone()).expect("slider");
         for value in [1.0, 2.0, 5.0] {
-            app.handle_action("patchDagNodes", Some(&json!({ "nodeIds": [node_id], "field": "value", "value": value })), &ViewState::default(), &meta("local")).expect("patch slider");
+            app.dispatch_typed(DagCommand::PatchDagNodes { node_ids: vec![node_id.clone()], field: "value".into(), value: value.to_string() }, &testkit::meta("local")).expect("patch slider");
         }
         let slider_value = app
             .projection()
@@ -982,30 +962,105 @@ mod tests {
         assert_eq!(slider_value, 5.0);
     }
 
+    /// 🧪️ `setSelection`/`selectNode`/`nodeGraphSelect` are three distinct declared actions that all
+    /// drive the same config selection — B1 gave each its own `DagCommand` variant (matching the
+    /// manifest 1:1) instead of the pre-B1 shared `handle_action` match arm.
+    #[test]
+    fn set_selection_select_node_and_node_graph_select_all_drive_config_selection() {
+        let mut app = new_app();
+        let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+
+        app.dispatch_typed(DagCommand::SetSelection { ids: vec![node_id.clone()] }, &testkit::meta("local")).expect("setSelection");
+        assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render")).unwrap().contains(&node_id));
+
+        app.dispatch_typed(DagCommand::GraphPointerDown, &testkit::meta("local")).expect("clear");
+        app.dispatch_typed(DagCommand::SelectNode { node_id: node_id.clone() }, &testkit::meta("local")).expect("selectNode");
+        assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render")).unwrap().contains(&node_id));
+
+        app.dispatch_typed(DagCommand::GraphPointerDown, &testkit::meta("local")).expect("clear");
+        app.dispatch_typed(DagCommand::NodeGraphSelect { node_ids: vec![node_id.clone()] }, &testkit::meta("local")).expect("nodeGraphSelect");
+        assert!(serde_json::to_string(&app.render(DAG_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render")).unwrap().contains(&node_id));
+    }
+
+    #[test]
+    fn node_graph_viewport_drives_the_rendered_camera() {
+        let mut app = new_app();
+        app.dispatch_typed(DagCommand::NodeGraphViewport { x: 10.0, y: 20.0, zoom: 2.0 }, &testkit::meta("local")).expect("viewport");
+        let node = app.render(DAG_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        let payload: Value = serde_json::to_value(&node).unwrap();
+        assert_eq!(payload["nodeGraph"]["viewport"], json!({ "x": 10.0, "y": 20.0, "zoom": 2.0 }));
+    }
+
+    /// 🧪️ `nodeGraphEdit` batches multiple sub-edits (connect + delete-selection here) into a single
+    /// typed command — mirrors the pre-B1 JSON `operations` array, now closed and typed via
+    /// `dag_protocol::DagNodeGraphEditOp`.
+    #[test]
+    fn node_graph_edit_batches_connect_then_delete_selection() {
+        let mut app = new_app();
+        let (source_id, target_id) = {
+            let projection = app.projection().expect("projection");
+            (projection.nodes[0].id.clone(), projection.nodes[1].id.clone())
+        };
+        let edges_before = app.projection().expect("projection").edges.len();
+        app.dispatch_typed(
+            DagCommand::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::Connect { source_node_id: source_id.clone(), source_port_id: "out".into(), target_node_id: target_id.clone(), target_port_id: "in".into() }] },
+            &testkit::meta("local"),
+        )
+        .expect("batched connect");
+        assert!(app.projection().expect("projection").edges.len() >= edges_before, "connect either adds an edge or is a safe no-op (e.g. a cycle)");
+
+        app.dispatch_typed(DagCommand::SetSelection { ids: vec![source_id.clone()] }, &testkit::meta("local")).expect("select");
+        let nodes_before = app.projection().expect("projection").nodes.len();
+        app.dispatch_typed(DagCommand::NodeGraphEdit { operations: vec![DagNodeGraphEditOp::DeleteSelection] }, &testkit::meta("local")).expect("batched delete");
+        assert_eq!(app.projection().expect("projection").nodes.len(), nodes_before - 1);
+    }
+
     /// 🧪️ Two instances apply DISJOINT edits (A adds a note node, B adds a slider node) and converge to
     /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        use store::MemoryBackbone;
-        let mut instance_a = new_app();
-        let mut instance_b = new_app();
-        let base = instance_a.projection().expect("projection").nodes.len();
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://dag-convergence", "mem://dag-convergence");
-        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        testkit::assert_two_instances_converge::<DagPlayApp, (bool, bool)>(
+            "mem://dag-convergence",
+            DagCommand::AddNode { kind: "note".into(), x: None, y: None },
+            DagCommand::AddNode { kind: "slider".into(), x: None, y: None },
+            |app| {
+                let projection = app.projection().expect("projection");
+                (projection.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Note { .. })), projection.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })))
+            },
+        );
+    }
 
-        instance_a.handle_action("addNode", Some(&json!({ "kind": "note" })), &ViewState::default(), &meta("actor-a")).expect("a adds note");
-        instance_b.handle_action("addNode", Some(&json!({ "kind": "slider" })), &ViewState::default(), &meta("actor-b")).expect("b adds slider");
+    #[test]
+    fn ingest_operations_is_idempotent_for_dag() {
+        testkit::assert_ingest_idempotent::<DagPlayApp, usize>(DagCommand::AddNode { kind: "note".into(), x: None, y: None }, |app| app.projection().expect("projection").nodes.len());
+    }
 
-        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+    #[test]
+    fn move_media_node_drag_coalesces_into_one_edit() {
+        let mut app = new_app();
+        let node_id = app.projection().expect("projection").nodes.first().map(|node| node.id.clone()).expect("node");
+        for position in [10.0, 20.0, 30.0] {
+            app.dispatch_typed(DagCommand::MoveMediaNode { node_id: node_id.clone(), x: position, y: position }, &testkit::meta("local")).expect("drag tick");
+        }
+        // A whole drag (three ticks, same coalesce key) is ONE undo step, not one-operation-per-tick.
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
+        let restored = app.projection().expect("projection");
+        let original = default_dag_document().nodes.iter().find(|node| node.id == node_id).map(|node| node.x).expect("original x");
+        assert_eq!(restored.nodes.iter().find(|node| node.id == node_id).unwrap().x, original, "undoing the coalesced drag restores the pre-drag position");
+    }
 
-        let projection_a = instance_a.projection().expect("projection");
-        let projection_b = instance_b.projection().expect("projection");
-        assert_eq!(projection_a.nodes.len(), base + 2, "instance A has both new nodes");
-        assert_eq!(projection_b.nodes.len(), base + 2, "instance B has both new nodes");
-        assert!(projection_a.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Note { .. })));
-        assert!(projection_a.nodes.iter().any(|node| matches!(node.kind, DagNodeKind::Slider { .. })));
+    #[test]
+    fn every_declared_action_is_registered_and_set_selection_is_a_view_action() {
+        let definition = create_dag_app().definition;
+        for command in [
+            "addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "reorganize", "patchDagNodes", "setSelection", "selectNode", "nodeGraphSelect", "nodeGraphHover",
+            "nodeGraphViewport", "graphPointerDown",
+        ] {
+            assert!(definition.actions.iter().any(|action| action.id == command), "registry declares {command}");
+        }
+        let mut app = new_app_with_registry();
+        let result = app.dispatch_typed(DagCommand::SetSelection { ids: Vec::new() }, &testkit::meta("local")).expect("setSelection");
+        assert!(result.operations.is_empty(), "setSelection (View) emits no operations even under registry enforcement");
     }
 }
 //#endregion 🧪️Tests

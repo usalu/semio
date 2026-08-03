@@ -18,6 +18,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/
 draw = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/⚡️implementation/🦀️rust", package = "semio-s-app-draw" }
 draw_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-draw-engine" }
 draw_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-draw-op" }
+draw_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-draw-protocol" }
 fsm = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🔨️module/🔄️fsm/⚡️implementation/🦀️rust", package = "semio-s-plugin-draw-fsm" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

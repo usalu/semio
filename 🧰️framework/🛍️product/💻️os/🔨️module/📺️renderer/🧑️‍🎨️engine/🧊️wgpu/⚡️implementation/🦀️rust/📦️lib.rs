@@ -2737,15 +2737,24 @@ enum NodeGraphEngine {
 #[derive(Default)]
 struct NodeGraphSyncCache {
     fixture_json: Option<String>,
-    selection_json: Option<String>,
+    selection: Option<Vec<String>>,
     preview_off_json: Option<String>,
     catalogue_json: Option<String>,
-    operators_json: Option<String>,
+    operators: Option<Vec<ui_wgpu::NodeGraphOperatorRecord>>,
     computing_json: Option<String>,
     eval_json: Option<String>,
     lod_json: Option<String>,
-    viewport_json: Option<String>,
+    viewport: Option<ui_wgpu::NodeGraphViewport>,
     scene_pack: Option<Vec<u8>>,
+}
+
+fn sync_eq_field<T: Clone + PartialEq>(cache: &mut Option<T>, value: &T) -> bool {
+    if cache.as_ref() == Some(value) {
+        false
+    } else {
+        *cache = Some(value.clone());
+        true
+    }
 }
 
 fn flow_fixture_semantic_eq(left: &FlowFixture, right: &FlowFixture) -> bool {
@@ -2921,11 +2930,8 @@ fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value
 }
 
 fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
-    if let Some(json) = &graph.operators_json {
-        let json = effective_json_field(json);
-        if sync_field(&mut cache.operators_json, &json) {
-            host.set_neuron_kind_infos_json(&json);
-        }
+    if sync_eq_field(&mut cache.operators, &graph.operators) {
+        host.set_neuron_kind_infos(&graph.operators);
     }
     if let Some(fixture_json) = &graph.fixture_json {
         let fixture_json = effective_json_field(fixture_json);
@@ -2953,11 +2959,8 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &
             host.set_host_catalogue_json(&json);
         }
     }
-    if let Some(json) = &graph.selection_json {
-        let json = effective_json_field(json);
-        if sync_field(&mut cache.selection_json, &json) {
-            host.set_selection_json(&json);
-        }
+    if sync_eq_field(&mut cache.selection, &graph.selection) {
+        host.set_selection(&graph.selection);
     }
     if let Some(json) = &graph.preview_off_json {
         let json = effective_json_field(json);
@@ -3009,15 +3012,13 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &
             }
         }
     }
-    let viewport_json = effective_json_field(&graph.viewport_json);
-    if sync_field(&mut cache.viewport_json, &viewport_json) {
-        if let Ok(viewport) = serde_json::from_str::<Value>(&viewport_json) {
-            let x = viewport.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
-            let y = viewport.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
-            let zoom = viewport.get("zoom").and_then(|v| v.as_f64()).unwrap_or(1.0);
-            host.set_camera(x, y, zoom);
+    if let Some(viewport) = &graph.viewport {
+        if sync_eq_field(&mut cache.viewport, viewport) {
+            host.set_camera(viewport.x, viewport.y, viewport.zoom);
         }
     }
+    // 🧵️ `hover` is a `NodeGraphHover { nodeId }`-only record today (see `ui_wgpu::NodeGraphHover`) —
+    // flow-backed scenes don't currently emit it, so there is nothing to sync here yet.
 }
 
 fn ensure_surface(
@@ -5384,13 +5385,13 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_optional_json_payload(&format!("{scene_label} world3d.points"), &world.points_json, limits)?;
     }
     if let Some(graph) = &scene.node_graph {
-        check_json_payload(&format!("{scene_label} nodeGraph.nodes"), &graph.nodes_json, limits)?;
-        check_json_payload(&format!("{scene_label} nodeGraph.edges"), &graph.edges_json, limits)?;
-        check_json_payload(&format!("{scene_label} nodeGraph.viewport"), &graph.viewport_json, limits)?;
-        check_optional_json_payload(&format!("{scene_label} nodeGraph.operators"), &graph.operators_json, limits)?;
-        check_optional_json_payload(&format!("{scene_label} nodeGraph.findItems"), &graph.find_items_json, limits)?;
-        check_optional_json_payload(&format!("{scene_label} nodeGraph.selection"), &graph.selection_json, limits)?;
-        check_optional_json_payload(&format!("{scene_label} nodeGraph.hover"), &graph.hover_json, limits)?;
+        check_json_payload(&format!("{scene_label} nodeGraph.nodes"), &serde_json::to_string(&graph.nodes).unwrap_or_default(), limits)?;
+        check_json_payload(&format!("{scene_label} nodeGraph.edges"), &serde_json::to_string(&graph.edges).unwrap_or_default(), limits)?;
+        check_json_payload(&format!("{scene_label} nodeGraph.viewport"), &serde_json::to_string(&graph.viewport).unwrap_or_default(), limits)?;
+        check_json_payload(&format!("{scene_label} nodeGraph.operators"), &serde_json::to_string(&graph.operators).unwrap_or_default(), limits)?;
+        check_json_payload(&format!("{scene_label} nodeGraph.findItems"), &serde_json::to_string(&graph.find_items).unwrap_or_default(), limits)?;
+        check_json_payload(&format!("{scene_label} nodeGraph.selection"), &serde_json::to_string(&graph.selection).unwrap_or_default(), limits)?;
+        check_json_payload(&format!("{scene_label} nodeGraph.hover"), &serde_json::to_string(&graph.hover).unwrap_or_default(), limits)?;
         check_optional_json_payload(
             &format!("{scene_label} nodeGraph.previewOff"),
             &graph.preview_off_json,
@@ -8387,6 +8388,12 @@ impl Viewport {
                     .unwrap_or(1.0) as f32,
             })
             .unwrap_or_default()
+    }
+
+    fn from_typed(viewport: Option<&ui_wgpu::NodeGraphViewport>) -> Self {
+        viewport
+            .map(|viewport| Self { x: viewport.x as f32, y: viewport.y as f32, zoom: viewport.zoom as f32 })
+            .unwrap_or(Self { x: 0.0, y: 0.0, zoom: 1.0 })
     }
 
     fn screen_to_world(&self, sx: f32, sy: f32, origin: Rect) -> (f32, f32) {
@@ -14046,72 +14053,27 @@ pub fn resolve_graph_context_action(
     resolved
 }
 
-#[derive(Clone, Debug, Deserialize)]
-struct GraphPort {
-    id: String,
-    #[serde(default)]
-    label: Option<String>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct GraphNode {
-    id: String,
-    label: Option<String>,
-    instance_id: Option<String>,
-    x: Option<f64>,
-    y: Option<f64>,
-    width: Option<f64>,
-    height: Option<f64>,
-    inputs: Option<Vec<GraphPort>>,
-    outputs: Option<Vec<GraphPort>>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct GraphEdge {
-    id: Option<String>,
-    source: Option<String>,
-    target: Option<String>,
-    source_node_id: Option<String>,
-    target_node_id: Option<String>,
-    source_port_id: Option<String>,
-    target_port_id: Option<String>,
-}
-
-fn parse_graph_nodes(json: &str) -> Vec<GraphNode> {
-    serde_json::from_str(json).unwrap_or_default()
-}
-
-fn parse_graph_edges(json: &str) -> Vec<GraphEdge> {
-    serde_json::from_str(json).unwrap_or_default()
-}
-
-fn find_graph_node(scene: &UiComponentSceneNode, node_id: &str) -> Option<GraphNode> {
-    scene
-        .node_graph
-        .as_ref()
-        .and_then(|graph| parse_graph_nodes(&graph.nodes_json).into_iter().find(|n| n.id == node_id))
+fn find_graph_node(scene: &UiComponentSceneNode, node_id: &str) -> Option<ui_wgpu::NodeGraphNodeRecord> {
+    scene.node_graph.as_ref().and_then(|graph| graph.nodes.iter().find(|n| n.id == node_id).cloned())
 }
 
 fn hit_graph_node(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Option<String> {
     let graph = scene.node_graph.as_ref()?;
-    let nodes = parse_graph_nodes(&graph.nodes_json);
     let state = scene_state(&scene.surface_id);
     let viewport = if state.viewport.zoom > 0.0 {
         state.viewport
     } else {
-        Viewport::from_json(&graph.viewport_json)
+        Viewport::from_typed(graph.viewport.as_ref())
     };
-    for node in nodes.iter().rev() {
+    for node in graph.nodes.iter().rev() {
         let (nx, ny) = state
             .node_positions
             .get(&node.id)
             .copied()
-            .unwrap_or((node.x.unwrap_or(0.0) as f32, node.y.unwrap_or(0.0) as f32));
+            .unwrap_or((node.x as f32, node.y as f32));
         let (sx, sy) = viewport.world_to_screen(nx, ny, inner);
-        let w = node.width.unwrap_or(180.0) as f32 * viewport.zoom;
-        let h = node.height.unwrap_or(72.0) as f32 * viewport.zoom;
+        let w = node.width as f32 * viewport.zoom;
+        let h = node.height as f32 * viewport.zoom;
         let rect = Rect::new(sx, sy, w, h);
         if rect.contains(x, y) {
             return Some(node.id.clone());
@@ -14155,8 +14117,7 @@ fn render_node_graph(
     let Some(graph) = &scene.node_graph else {
         return render_placeholder("node-graph", bounds, ctx);
     };
-    let nodes = parse_graph_nodes(&graph.nodes_json);
-    for node in &nodes {
+    for node in &graph.nodes {
         register_graph_node(&node.id, node.instance_id.as_deref());
         let label = node
             .label
@@ -14185,12 +14146,12 @@ fn render_node_graph(
     engine_canvas::paint_node_graph_overlays(ctx, scene, inner);
 }
 
-fn node_screen_pos(node: &GraphNode, state: &SceneSurfaceState, viewport: &Viewport, inner: Rect) -> (f32, f32) {
+fn node_screen_pos(node: &ui_wgpu::NodeGraphNodeRecord, state: &SceneSurfaceState, viewport: &Viewport, inner: Rect) -> (f32, f32) {
     let (nx, ny) = state
         .node_positions
         .get(&node.id)
         .copied()
-        .unwrap_or((node.x.unwrap_or(0.0) as f32, node.y.unwrap_or(0.0) as f32));
+        .unwrap_or((node.x as f32, node.y as f32));
     viewport.world_to_screen(nx, ny, inner)
 }
 //#endregion NodeGraph
@@ -17312,17 +17273,23 @@ impl ShellState {
     }
     //#endregion 🏠️🧳️PluginHostConfig
 
+    // TEMP(Wave 3): replace with workflow_palette() once the shell palette wiring lands. Reads
+    // `program.manifest.apps` directly (one `SpaceProgramEntry` per app) — `PluginManifest.workflows`/
+    // `WorkflowDefinition` were deleted in Wave 0 (WP-0.1); the real palette derivation moves to
+    // `semio-framework-os`'s `registry::workflow_palette()` (`AppIo`-driven) once the browser shell wires
+    // it in. `yields` is empty here (no registry lookup at this layer) — matches every other Wave-1
+    // `WorkflowNode.yields` derivation until Wave 2 populates apps' declared output ports.
     pub fn build_space_workflows(&self) -> Vec<SpaceProgramEntry> {
         self.plugins
             .iter()
             .flat_map(|program| {
-                program.manifest.workflows.iter().map(|workflow| SpaceProgramEntry {
+                program.manifest.apps.iter().map(|app| SpaceProgramEntry {
                     plugin_id: program.plugin_id.clone(),
-                    workflow_step_id: workflow.workflow_step_id.clone(),
-                    app_id: workflow.app_id.clone(),
-                    label: workflow.label.clone(),
-                    document: workflow.document.clone(),
-                    yields: workflow.yields.clone(),
+                    workflow_step_id: app.id.clone(),
+                    app_id: app.id.clone(),
+                    label: app.label.clone(),
+                    document: app.document.clone(),
+                    yields: String::new(),
                 })
             })
             .collect()

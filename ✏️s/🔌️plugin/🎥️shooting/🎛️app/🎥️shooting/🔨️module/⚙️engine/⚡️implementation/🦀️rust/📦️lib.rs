@@ -11,16 +11,19 @@ static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖️Constants
 
 //#region 🔖️Config
-/// 🧮️ Typed whole-app configuration for the shooting plugin — the eventual replacement for the sticky
-/// per-action `ActionArgDef::default_value` fields the ui slot's manifest currently hardcodes (see
-/// `create_shooting_app`'s `.action_args("addShot", ...)`/`.action_args("addAsset", ...)`): the same
-/// three sticky defaults (`addShot`'s `format`/`shape`, `addAsset`'s `format`), lifted onto an
-/// app-wide config record so a headless caller can set them once via `AppCommand::Configure` instead
-/// of repeating them on every `addShot`/`addAsset` dispatch. Not yet wired back into `handle_action`'s
-/// own defaulting (that stays on `ActionArgDef::default_value` for now, unaffected) — this is Wave 1's
-/// additive typed-config channel, not a behavior change to the existing action-arg path.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// 🧮️ B1: shooting's real `DocumentApp::Config` — the pure-trait pilot's config artifact. Absorbs
+/// both the old sticky `ActionArgDef` defaults (`default_shot_format`/`shape`/`default_asset_format`)
+/// AND everything that used to live in `ShootingPlayRuntime`'s app-struct `RefCell` (selection, hover,
+/// selection method, center-model toggle, fit-revision counter, camera draft label, and the free/live
+/// viewport camera) — session-only view state now round-trips through the config `DocumentStore`
+/// exactly like document content, with a real `backwards` per `shooting_op::ShootingConfigOperation`
+/// instead of never being VCS'd at all. `locale`/`active_utility_id` are the two `ViewState` fields
+/// the shooting UI actually reads (`resolve_labels`/`is_de_locale`/the transform-gumball utility) —
+/// see `shooting_ui::ShootingPlayApp::render`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "shootingcfg")]
+#[dsl(layout = "lines")]
 pub struct ShootingConfig {
     /// 🖼️ Mirrors `addShot`'s `format` `ActionArgDef` default (`"png"`).
     pub default_shot_format: String,
@@ -28,11 +31,64 @@ pub struct ShootingConfig {
     pub default_shot_shape: String,
     /// 🧱️ Mirrors `addAsset`'s `format` `ActionArgDef` default (`"glb"`).
     pub default_asset_format: String,
+    /// 👁️ Selected shot ids — was `ShootingPlayRuntime::selected_shot_ids`.
+    pub selected_shot_ids: Vec<String>,
+    /// 👁️ Selected asset ids — was `ShootingPlayRuntime::selected_asset_ids`.
+    pub selected_asset_ids: Vec<String>,
+    /// 👁️ Marquee selection method (`"rectangle"`/…) — was `ShootingPlayRuntime::selection_method`.
+    pub selection_method: String,
+    /// 👁️ Hovered asset id — was `ShootingPlayRuntime::hovered_asset_id`.
+    pub hovered_asset_id: Option<String>,
+    /// 👁️ "Center model in viewport" toggle — was `ShootingPlayRuntime::center_model`.
+    pub center_model: bool,
+    /// 👁️ Bumped whenever the active asset changes to re-trigger a viewport fit — was
+    /// `ShootingPlayRuntime::fit_revision`.
+    pub fit_revision: u32,
+    /// 👁️ In-progress "save camera" label draft — was `ShootingPlayRuntime::camera_draft_label`.
+    pub camera_draft_label: String,
+    /// 🎥️ The free/live viewport camera — session-only, never a document field. Was
+    /// `ShootingPlayRuntime::camera`.
+    #[dsl(block)]
+    pub camera: shooting::ShootingCamera,
+    /// 🧰️ The active transform-gumball utility for the scene window — was read off
+    /// `view_state.active_utility_id` (host-pushed `ViewState`, deleted by B1).
+    pub active_utility_id: String,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
 }
 
 impl Default for ShootingConfig {
     fn default() -> Self {
-        Self { default_shot_format: "png".into(), default_shot_shape: "rectangle".into(), default_asset_format: "glb".into() }
+        Self {
+            default_shot_format: "png".into(),
+            default_shot_shape: "rectangle".into(),
+            default_asset_format: "glb".into(),
+            selected_shot_ids: Vec::new(),
+            selected_asset_ids: Vec::new(),
+            selection_method: "rectangle".into(),
+            hovered_asset_id: None,
+            center_model: true,
+            fit_revision: 0,
+            camera_draft_label: String::new(),
+            camera: shooting::ShootingCamera::default(),
+            active_utility_id: "move".into(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl store::ConfigRecord for ShootingConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `shooting_op::ShootingConfigOperation` (lives here, not in
+/// `shooting_op`, since `protocol::OperationDiff`/`ShootingConfig` are both foreign to that crate —
+/// the orphan rule requires at least one local type). Mirrors `ShootingOperation::SetFixture`'s
+/// existing "whole-document replace" pattern: `apply` ignores `base` entirely.
+impl protocol::OperationDiff<ShootingConfig> for ShootingConfig {
+    fn apply(&self, _base: &ShootingConfig) -> ShootingConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
     }
 }
 //#endregion 🔖️Config
@@ -40,8 +96,8 @@ impl Default for ShootingConfig {
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
 /// `create_shooting_app` already declares via `.artifact_kind(...)` (schema/media type/export+import
-/// formats/presentation fields copied verbatim); no additional workflow ports beyond the implicit
-/// document in/out (the app declares none of its own today).
+/// formats/presentation fields copied verbatim); the sole app-specific port is `photos:out` (see
+/// `shooting_photos_out_port` below) — the implicit document in/out ports cover the rest.
 pub fn shooting_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: "shooting.scene".into(),
@@ -49,7 +105,7 @@ pub fn shooting_io() -> semio_framework_plugin::AppIo {
             class: semio_framework_plugin::MediaClass::TwoD,
             form: semio_framework_plugin::MediaForm::Raster,
         },
-        ports: Vec::new(),
+        ports: vec![shooting_photos_out_port()],
         export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
         import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
         artifact: semio_framework_plugin::ArtifactPresentation {
@@ -59,6 +115,42 @@ pub fn shooting_io() -> semio_framework_plugin::AppIo {
             component_kind: "shooting".into(),
         },
     }
+}
+
+/// 🔌️ `photos:out` — the shooting document's captured photo(s), as `2d.image` raster media (workflow
+/// port surface; WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe).
+/// `Many`/optional: a shooting document may carry several shots, and downstream consumers (e.g.
+/// remodel's `photos:in`) may connect before any shot exists.
+pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "photos:out".into(),
+        label: "Photos".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::TwoD,
+            form: semio_framework_plugin::MediaForm::Raster,
+        },
+        kind_id: Some("2d.image".into()),
+        required: false,
+        multiplicity: semio_framework_core::PortMultiplicity::Many,
+    }
+}
+
+/// 🖼️ Exports the active shot's rendered scene as a `2d.image` `Media` payload for the `photos:out`
+/// port — reuses the same SVG-then-rasterize pipeline (`shooting_scene_svg` +
+/// `rasterize_svg_to_png_base64`) as the `exportActiveShot`/PNG shell action
+/// (`register_2d_export_handlers` in the manifest crate), so there is exactly one photo renderer.
+pub fn shooting_photo_media(fixture: &ShootingFixture) -> Result<semio_framework_plugin::Media, semio_framework_plugin::MediaError> {
+    let (svg, width, height) = shooting_scene_svg(fixture);
+    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)
+        .map_err(|error| semio_framework_plugin::MediaError::Payload("photos:out".into(), error))?;
+    Ok(semio_framework_plugin::Media {
+        media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::TwoD,
+            form: semio_framework_plugin::MediaForm::Raster,
+        },
+        payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 },
+    })
 }
 //#endregion 🔖️Io
 
@@ -192,6 +284,36 @@ mod tests {
         assert_eq!(io.artifact.id, "2d.shooting");
         assert_eq!(io.export_formats.len(), 2);
         assert_eq!(io.import_formats.len(), 2);
+    }
+
+    /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:
+    /// `photos:out` is declared, optional/`Many`, and pinned to the `2d.image` kind.
+    #[test]
+    fn shooting_io_declares_the_photos_out_port() {
+        let io = shooting_io();
+        let port = io.ports.iter().find(|port| port.id == "photos:out").expect("photos:out declared");
+        assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(port.kind_id.as_deref(), Some("2d.image"));
+        assert!(!port.required);
+        assert_eq!(port.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert_eq!(port.media_type.class, semio_framework_plugin::MediaClass::TwoD);
+        assert_eq!(port.media_type.form, semio_framework_plugin::MediaForm::Raster);
+    }
+
+    /// 🖼️ `shooting_photo_media` renders the same scene as `exportActiveShot`'s PNG (base64, non-empty).
+    #[test]
+    fn shooting_photo_media_exports_a_raster_2d_image() {
+        let fixture = default_fixture();
+        let media = shooting_photo_media(&fixture).expect("photo export succeeds");
+        assert_eq!(media.media_type.class, semio_framework_plugin::MediaClass::TwoD);
+        assert_eq!(media.media_type.form, semio_framework_plugin::MediaForm::Raster);
+        match media.payload {
+            semio_framework_plugin::MediaPayload::Structured { schema, json } => {
+                assert_eq!(schema, "2d.image");
+                assert!(!json.is_empty());
+            }
+            semio_framework_plugin::MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
+        }
     }
 
     #[test]

@@ -1,22 +1,28 @@
-//! 🖥️ GIS 3D app — DocumentApp impl, render, manifest (constitutional: ui).
+//! 🖥️ GIS 3D app — DocumentApp impl, render, manifest (constitutional: ui). B1: the pure-trait
+//! migration — `Gis3dPlayApp` is a unit struct; every former `Gis3dPlayRuntime` field (camera,
+//! selection) now lives in `gis3d_engine::Gis3dConfig`, written via `gis3d_op::Gis3dConfigOperation`s
+//! (real `backwards`, no ad hoc `InverseAction`); every action dispatches through the single typed
+//! `gis3d_protocol::Gis3dCommand` channel via `DocumentApp::handle`.
 //!
 //! ⛰️ Reuses the existing `World3d` viewport/renderer rather than a bespoke one; deliberately
-//! read-mostly for this first pass — the only editable/undoable property is vertical exaggeration.
+//! read-mostly for this first pass — exaggeration and the `map:in` overlay layer are the only
+//! editable/undoable document state (see `gis3d::Gis3dTerrainDocument`).
 
 use gis3d::{Gis3dTerrainDocument, GIS_3D_TERRAIN_SCHEMA};
 use gis3d_dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
-use gis3d_engine::default_terrain_document;
-use gis3d_op::Gis3dTerrainOperation;
+use gis3d_engine::{default_terrain_document, gis3d_io, gis3d_map_in_port, gis3d_scene_media, gis3d_scene_out_port, Gis3dConfig};
+use gis3d_op::{Gis3dConfigOperation, Gis3dTerrainOperation};
+use gis3d_protocol::Gis3dCommand;
 use framework_surface_terrain::{build_terrain_scene_json, projection, TerrainDescriptorJson};
 use semio_framework_plugin::{
-    app_labels, build_world_3d_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, ui_text,
-    world3d_default_camera, world3d_scene_extended, world3d_selection_json,
-    ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, SurfaceKind, UiNode, ViewState, WindowMeasure,
+    app_labels, build_world_3d_scene, create_default_layout, localized_label_map, ui_text,
+    world3d_scene_extended, world3d_selection_json,
+    ArtifactKindSpec, AppIo, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
+    AppLabelsOverlay, AppLabelsOverlayExt, App,
 };
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use std::collections::HashMap;
+use store::DocumentPack;
 
 //#region 🔖️Constants
 const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
@@ -25,37 +31,24 @@ const GIS3D_PLAY_BODY_COMPOSITE: &str = "gis3d.play.composite";
 const GIS3D_PLAY_WINDOW_MAIN: &str = "gis3d-main";
 //#endregion 🔖️Constants
 
-//#region 🔖️Types
-/// 🎛️ Ephemeral view state — the read-only terrain fixture, the camera, and the current selection —
-/// lives in the app struct; only the vertical exaggeration is document (undoable) state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Gis3dPlayRuntime {
-    #[serde(default)]
-    terrain_fixture_text: String,
-    #[serde(default = "world3d_default_camera")]
-    camera_json: String,
-    #[serde(default)]
-    selected_ids: Vec<String>,
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `gis2d_ui`'s identical fix.
+fn is_de_locale(cfg: &Gis3dConfig) -> bool {
+    cfg.locale.starts_with("de")
 }
 
-impl Default for Gis3dPlayRuntime {
-    fn default() -> Self {
-        Self {
-            terrain_fixture_text: REUSE_TERRAIN_EXAMPLE_TEXT.into(),
-            camera_json: initial_camera_json(),
-            selected_ids: Vec::new(),
-        }
-    }
+fn resolve_labels<L: LocaleLabels>(cfg: &Gis3dConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
 }
-//#endregion 🔖️Types
+//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 /// 📜️ Hand-rolled reader for the `.gisterrain` fixture's `origin`/`position` scenery lines — the
 /// read-only pins/project-origin data rendered alongside the document (see module docs); the
 /// `gisterrain exaggeration=...` header line those same files start with is instead read by
 /// `Gis3dTerrainDocument`'s own derive-generated `DocumentDsl` (see `gis3d::Gis3dTerrainDocument`),
-/// since exaggeration is the one piece of this fixture that IS undoable document state.
+/// since exaggeration is undoable document state.
 mod terrain_fixture_text {
     use framework_surface_terrain::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
 
@@ -150,19 +143,38 @@ mod terrain_fixture_text {
     }
 }
 
-/// 🏔️ The full rendering descriptor (project origin + pins + exaggeration) for the current runtime's
-/// fixture text; `exaggeration` here always mirrors the LIVE document (see `render_canvas`'s override),
-/// not this fixture text's own header, so the fixture's exaggeration line only ever seeds the document
-/// once via {@link gis3d_engine::default_terrain_document}.
-fn parse_descriptor(runtime: &Gis3dPlayRuntime, exaggeration: f64) -> TerrainDescriptorJson {
-    terrain_fixture_text::parse_descriptor(&runtime.terrain_fixture_text, GIS_3D_TERRAIN_SCHEMA, exaggeration)
+/// 🔌️ `map:in`'s overlay pin layer (see `Gis3dTerrainDocument::imported_features_json`), decoded from
+/// its `{positions:[{id,lon,lat,label?,icon?}]}` descriptor JSON — malformed/empty JSON (including the
+/// default empty string) simply contributes no extra pins.
+fn imported_positions(document: &Gis3dTerrainDocument) -> Vec<framework_surface_terrain::TerrainPositionData> {
+    let Ok(value) = serde_json::from_str::<Value>(&document.imported_features_json) else {
+        return Vec::new();
+    };
+    let Some(positions) = value.get("positions").and_then(|value| value.as_array()) else {
+        return Vec::new();
+    };
+    positions
+        .iter()
+        .filter_map(|entry| {
+            Some(framework_surface_terrain::TerrainPositionData {
+                id: entry.get("id").and_then(|value| value.as_str())?.to_string(),
+                lon: entry.get("lon").and_then(|value| value.as_f64())?,
+                lat: entry.get("lat").and_then(|value| value.as_f64())?,
+                label: entry.get("label").and_then(|value| value.as_str()).map(str::to_string),
+                icon: entry.get("icon").and_then(|value| value.as_str()).map(str::to_string),
+            })
+        })
+        .collect()
 }
 
-/// 🎥️ A default overview camera scaled for a real-world DEM tile patch (hundreds of meters to a
-/// few kilometers wide) — the generic `world3d_default_camera()` (position `[4,-4,3]`) assumes
-/// an object-scale scene and would sit inside the ground here.
-fn initial_camera_json() -> String {
-    json!({ "position": [800.0, -800.0, 600.0], "target": [0.0, 0.0, 0.0], "up": [0.0, 0.0, 1.0], "fov": 45.0 }).to_string()
+/// 🏔️ The full rendering descriptor (project origin + fixture pins + `map:in` overlay pins +
+/// exaggeration) for the given document — `exaggeration` always mirrors the LIVE document, and the
+/// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
+/// {@link gis3d_engine::default_terrain_document}.
+fn parse_descriptor(document: &Gis3dTerrainDocument) -> TerrainDescriptorJson {
+    let mut descriptor = terrain_fixture_text::parse_descriptor(REUSE_TERRAIN_EXAMPLE_TEXT, GIS_3D_TERRAIN_SCHEMA, document.exaggeration);
+    descriptor.positions.extend(imported_positions(document));
+    descriptor
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -178,9 +190,9 @@ app_labels! {
 
 //#region 🔖️CommandLabels
 /// 🗣️ (action id) -> localized label for every view-action/operation declared in `create_gis3d_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how
-/// the command palette and Actions rail get a translated label without threading locale through the
-/// whole builder chain.
+/// static manifest — the manifest itself has no `cfg`/locale parameter, so this overlay is how the
+/// command palette and Actions rail get a translated label without threading locale through the whole
+/// builder chain.
 fn gis3d_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
         ("setCamera", "Set Camera", "Kamera festlegen"),
@@ -213,13 +225,13 @@ fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn render_canvas(document: &Gis3dTerrainDocument, runtime: &Gis3dPlayRuntime) -> UiNode {
-    let descriptor = parse_descriptor(runtime, document.exaggeration);
+fn render_canvas(document: &Gis3dTerrainDocument, cfg: &Gis3dConfig) -> UiNode {
+    let descriptor = parse_descriptor(document);
     let mut scene = world3d_scene_extended(
-        runtime.camera_json.clone(),
+        cfg.camera_json.clone(),
         "[]".into(),
         instances_json(&descriptor),
-        world3d_selection_json("rectangle", &runtime.selected_ids, None),
+        world3d_selection_json("rectangle", &cfg.selected_ids, None),
         None,
         None,
         None,
@@ -242,21 +254,17 @@ fn render_canvas(document: &Gis3dTerrainDocument, runtime: &Gis3dPlayRuntime) ->
 //#endregion 🔖️Render
 
 //#region 🔖️Gis3dPlayApp
-pub struct Gis3dPlayApp {
-    runtime: RefCell<Gis3dPlayRuntime>,
-}
-
-impl Default for Gis3dPlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(Gis3dPlayRuntime::default()) }
-    }
-}
+/// 🧪️ B1: unit struct — every former `Gis3dPlayRuntime` field now lives in `gis3d_engine::Gis3dConfig`
+/// (see `DocumentApp::Config`), written through `gis3d_op::Gis3dConfigOperation`s.
+#[derive(Default)]
+pub struct Gis3dPlayApp;
 
 impl DocumentApp for Gis3dPlayApp {
     type Projection = Gis3dTerrainDocument;
     type Operation = Gis3dTerrainOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = Gis3dConfig;
+    type ConfigOperation = Gis3dConfigOperation;
+    type Command = Gis3dCommand;
 
     fn app_id(&self) -> &str {
         GIS3D_PLAY_APP_ID
@@ -270,48 +278,104 @@ impl DocumentApp for Gis3dPlayApp {
         default_terrain_document()
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        _doc: &DocumentView<'_, Gis3dTerrainDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<Gis3dTerrainOperation> {
-        match action {
-            "setCamera" => {
-                let camera = args.and_then(|value| value.get("camera")).or_else(|| args.and_then(|value| value.get("cameraJson")));
-                if let Some(camera) = camera {
-                    self.runtime.borrow_mut().camera_json = camera.to_string();
-                }
-                ActionEmit::default()
+    /// 🔌️ `map:in`/`scene:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the implicit
+    /// document ports.
+    fn io(&self) -> Option<AppIo> {
+        Some(gis3d_io())
+    }
+
+    fn whole_document_operation(&self, projection: Gis3dTerrainDocument) -> Option<Gis3dTerrainOperation> {
+        Some(Gis3dTerrainOperation::SetDocument { document: projection })
+    }
+
+    /// 🎞️ `scene:out` (see `gis3d_engine::gis3d_scene_media`) plus the inherited `document:out`
+    /// default (the pack of `doc.projection`, replicated inline — overriding `export_media` shadows the
+    /// trait's provided body for every port on this app, not just the new one).
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>) -> Result<Media, MediaError> {
+        match port {
+            "scene:out" => Ok(gis3d_scene_media(doc.projection)),
+            "document:out" => {
+                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let bytes = doc.projection.encode_pack();
+                Ok(Media {
+                    media_type,
+                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
             }
-            "setSelection" | "worldSelect" => {
-                if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
-                    self.runtime.borrow_mut().selected_ids = ids;
-                }
-                ActionEmit::default()
-            }
-            "setExaggeration" => {
-                if let Some(exaggeration) = args.and_then(|value| value.get("exaggeration")).and_then(|value| value.as_f64()) {
-                    return ActionEmit::amend(vec![Gis3dTerrainOperation::SetExaggeration { exaggeration }], "gis3d-exaggeration");
-                }
-                ActionEmit::default()
-            }
-            _ => ActionEmit::default(),
+            _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
+    /// 🎞️ `map:in` writes the incoming `2d.map` descriptor JSON verbatim into
+    /// `Gis3dTerrainDocument::imported_features_json` (see `parse_descriptor`/`imported_positions` —
+    /// rendered as an extra pin layer) plus the inherited `document:in` default (replicated inline for
+    /// the same reason as `export_media`).
+    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, Gis3dTerrainDocument>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation>, MediaError> {
+        match port {
+            "map:in" => {
+                let MediaPayload::Structured { json, .. } = &media.payload else {
+                    return Err(MediaError::Payload(port.to_string(), "map:in only accepts a Structured JSON payload".into()));
+                };
+                Ok(Emit::operations(vec![Gis3dTerrainOperation::SetImportedFeatures { features_json: json.clone() }]))
+            }
+            "document:in" => {
+                let MediaPayload::Structured { json, .. } = &media.payload else {
+                    return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+                };
+                let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let projection = <Gis3dTerrainDocument as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                match self.whole_document_operation(projection) {
+                    Some(operation) => Ok(Emit::operations(vec![operation])),
+                    None => Err(MediaError::NotImplemented),
+                }
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+
+    /// 🏷️ Maps each `Gis3dCommand` variant back to the action id it was declared under in
+    /// `create_gis3d_app`. `SetLocale` is not palette-declared (host/test infra dispatches it
+    /// directly, mirroring `gis2d_ui::Gis2dPlayApp::command_id`).
+    fn command_id(&self, command: &Gis3dCommand) -> &str {
+        match command {
+            Gis3dCommand::SetExaggeration { .. } => "setExaggeration",
+            Gis3dCommand::SetCamera { .. } => "setCamera",
+            Gis3dCommand::SetSelection { .. } => "setSelection",
+            Gis3dCommand::WorldSelect { .. } => "worldSelect",
+            Gis3dCommand::SetLocale { .. } => "setLocale",
+        }
+    }
+
+    fn handle(
+        &self,
+        command: &Gis3dCommand,
+        _doc: &DocumentView<'_, Gis3dTerrainDocument>,
+        _cfg: &ConfigView<'_, Gis3dConfig>,
+    ) -> Emit<Gis3dTerrainOperation, Gis3dConfigOperation> {
+        match command {
+            Gis3dCommand::SetCamera { camera_json } => Emit::config(vec![Gis3dConfigOperation::SetCamera { camera_json: camera_json.clone() }]),
+            Gis3dCommand::SetSelection { ids } | Gis3dCommand::WorldSelect { ids } => Emit::config(vec![Gis3dConfigOperation::SetSelection { ids: ids.clone() }]),
+            Gis3dCommand::SetExaggeration { exaggeration } => Emit::amend(vec![Gis3dTerrainOperation::SetExaggeration { exaggeration: *exaggeration }], "gis3d-exaggeration"),
+            Gis3dCommand::SetLocale { value } => Emit::config(vec![Gis3dConfigOperation::SetLocale { value: value.clone() }]),
+        }
+    }
+
+    /// 🧮️ Empty — gis3d's `Config` is session view state (camera/selection), not a user-facing
+    /// settings record; `ConfigSpec::empty()` (the trait default) is correct as-is.
+    fn config_spec(&self) -> semio_framework_plugin::ConfigSpec {
+        semio_framework_plugin::ConfigSpec::empty()
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
         match body_key {
-            GIS3D_PLAY_BODY_COMPOSITE => render_canvas(doc.projection, &*self.runtime.borrow()),
+            GIS3D_PLAY_BODY_COMPOSITE => render_canvas(doc.projection, cfg.projection),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<Gis3dPlayLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, Gis3dConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<Gis3dPlayLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(GIS3D_PLAY_WINDOW_MAIN, labels.window_terrain)
             .mode_label("view", labels.mode_view)
@@ -325,6 +389,37 @@ pub fn create_gis3d_app() -> App {
     App::from_builder(
         App::builder(GIS3D_PLAY_APP_ID, "GIS 3D")
             .document(["semio", "gis", "3d"])
+            // 🔌️ Declared for clarity on both sides of the `map:in` edge (WORKFLOWS-END-TO-END-TYPED-PORTS
+            // Wave 2 port recipe) — the canonical declaration is `gis2d_ui::create_gis2d_app`'s;
+            // identical-shape duplicates are harmless (registry dedupes by id).
+            .artifact_kind(ArtifactKindSpec {
+                id: "2d.map".into(),
+                name: "2D Map".into(),
+                source_format: "gis.map".into(),
+                component_kind: "gismap".into(),
+                dimension: "2d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                schema: "gis.map".into(),
+                export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+                import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+            })
+            // 🔌️ `3d.mesh` — the interchange kind `scene:out` produces; canonically declared by
+            // `lowpoly` (`mesh_from_mesh_document`'s registration) — identical-shape duplicate.
+            .artifact_kind(ArtifactKindSpec {
+                id: "3d.mesh".into(),
+                name: "3D Mesh".into(),
+                source_format: "mesh.reference".into(),
+                component_kind: "mesh".into(),
+                dimension: "3d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+                schema: "mesh.reference".into(),
+                export_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl],
+                import_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj],
+            })
+            .media_input(gis3d_map_in_port())
+            .media_output(gis3d_scene_out_port())
             .icon_id("gis3d")
             .mode("view", "View", "eye")
             .default_mode_id("view")
@@ -335,7 +430,9 @@ pub fn create_gis3d_app() -> App {
             .view_action("worldSelect", "Select")
             .operation("setExaggeration", "Set Exaggeration")
             .keybinding("mod+z", "undo")
-            .keybinding("mod+shift+z", "redo"),
+            .keybinding("mod+shift+z", "redo")
+            .config(Gis3dPlayApp::default().config_spec())
+            .io(gis3d_io()),
     )
     .example("reuse-terrain", "Reuse Terrain", serde_json::to_string(&default_terrain_document()).unwrap(), "file-text")
     .workflow("gis3d", "GIS 3D", "terrain")
@@ -359,16 +456,16 @@ mod tests {
     }
 
     #[test]
-    fn camera_and_selection_are_view_state_and_emit_no_operations() {
+    fn camera_and_selection_are_config_state_and_emit_no_operations() {
         let mut app = new_app();
         let camera = app
-            .handle_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 1.0, 1.0] } })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(Gis3dCommand::SetCamera { camera_json: json!({ "position": [1.0, 1.0, 1.0] }).to_string() }, &testkit::meta("local"))
             .expect("setCamera");
-        assert!(camera.operations.is_empty(), "camera is ephemeral view state");
+        assert!(camera.operations.is_empty(), "camera is ephemeral config state");
         let selection = app
-            .handle_action("worldSelect", Some(&json!({ "ids": ["p_institut_de_botanique_ulg_liege"] })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(Gis3dCommand::WorldSelect { ids: vec!["p_institut_de_botanique_ulg_liege".into()] }, &testkit::meta("local"))
             .expect("worldSelect");
-        assert!(selection.operations.is_empty(), "selection is ephemeral view state");
+        assert!(selection.operations.is_empty(), "selection is ephemeral config state");
     }
 
     /// 🧪️ A slider drag is many `setExaggeration` ticks sharing one coalesce key: they fold into ONE
@@ -377,10 +474,10 @@ mod tests {
     fn exaggeration_drag_coalesces_into_one_undo_step() {
         let mut app = new_app();
         for value in [2.0, 2.5, 3.0] {
-            app.handle_action("setExaggeration", Some(&json!({ "exaggeration": value })), &ViewState::default(), &testkit::meta("local")).expect("drag tick");
+            app.dispatch_typed(Gis3dCommand::SetExaggeration { exaggeration: value }, &testkit::meta("local")).expect("drag tick");
         }
         assert_eq!(app.projection().expect("projection").exaggeration, 3.0);
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").exaggeration, 1.5, "one coalesced edit: undo restores the fixture exaggeration");
     }
 
@@ -391,11 +488,64 @@ mod tests {
     /// lose data.
     #[test]
     fn terrain_fixture_text_recovers_bundled_scenery_data() {
-        let descriptor = parse_descriptor(&Gis3dPlayRuntime::default(), 1.5);
+        let descriptor = parse_descriptor(&Gis3dTerrainDocument { exaggeration: 1.5, imported_features_json: String::new() });
         assert_eq!(descriptor.project_origin.lon, 5.5818);
         assert_eq!(descriptor.project_origin.lat, 50.603);
         assert_eq!(descriptor.positions.len(), 2);
         assert_eq!(descriptor.positions[0].id, "p_institut_de_botanique_ulg_liege");
+    }
+
+    /// 🔌️ `map:in`'s overlay layer renders as extra pins alongside the fixture's own two.
+    #[test]
+    fn imported_map_features_render_as_extra_pins() {
+        let document = Gis3dTerrainDocument {
+            exaggeration: 1.5,
+            imported_features_json: json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string(),
+        };
+        let descriptor = parse_descriptor(&document);
+        assert_eq!(descriptor.positions.len(), 3, "2 fixture pins + 1 imported pin");
+        assert!(descriptor.positions.iter().any(|position| position.id == "imported-1"));
+    }
+
+    #[test]
+    fn export_media_scene_out_produces_a_3d_mesh_structured_payload() {
+        let app = new_app();
+        let document = app.projection().expect("projection");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+        let media = Gis3dPlayApp.export_media("scene:out", &doc).expect("scene:out export");
+        let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
+        assert_eq!(schema, "3d.mesh");
+        assert!(json.contains("exaggeration"));
+    }
+
+    #[test]
+    fn import_media_map_in_writes_the_imported_features_operation() {
+        let app = new_app();
+        let document = app.projection().expect("projection");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+        let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming.clone() } };
+        let emit = Gis3dPlayApp.import_media("map:in", &media, &doc).expect("map:in import");
+        assert_eq!(emit.document_operations, vec![Gis3dTerrainOperation::SetImportedFeatures { features_json: incoming }]);
+    }
+
+    #[test]
+    fn media_ports_declare_map_in_and_scene_out() {
+        let app = Gis3dPlayApp;
+        let ports = app.media_ports();
+        assert!(ports.iter().any(|port| port.id == "map:in"));
+        assert!(ports.iter().any(|port| port.id == "scene:out"));
+    }
+
+    /// 🗣️ `SetLocale` is not palette-declared but still dispatches cleanly end-to-end (command_id
+    /// mapping → `handle` → config store) — the same typed channel the shell uses to push locale.
+    #[test]
+    fn locale_command_dispatches_through_the_config_store() {
+        let mut app = new_app();
+        let result = app.dispatch_typed(Gis3dCommand::SetLocale { value: "de-DE".into() }, &testkit::meta("local")).expect("set locale");
+        assert!(result.operations.is_empty(), "locale is config state, not a document edit");
     }
 }
 //#endregion 🧪️Tests

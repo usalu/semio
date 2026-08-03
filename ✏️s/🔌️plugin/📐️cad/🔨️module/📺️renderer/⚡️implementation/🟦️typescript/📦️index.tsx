@@ -3482,6 +3482,22 @@ export function useHostState<T>(controlled: T | undefined, onChange: ((value: T)
 // #endregion 🪝️Hooks
 
 // #region 🪩️Canvas
+export const CAD_WORLD_FORWARD: Vec3 = [0, 1, 0];
+
+export const CAD_WORLD_UP: Vec3 = [0, 0, 1];
+
+/** @emoji 🧭️ Overrides Three.js' Y-up defaults with the CAD world frame. */
+export function applyCadWorldCoordinateSystem(camera: THREE.Camera, scene: THREE.Scene): void {
+  camera.up.set(...CAD_WORLD_UP);
+  scene.up.set(...CAD_WORLD_UP);
+}
+
+function InteractionCadWorldCoordinateSystem(): null {
+  const { camera, scene } = useThree();
+  reactHostPort.useLayoutEffect(() => applyCadWorldCoordinateSystem(camera, scene), [camera, scene]);
+  return null;
+}
+
 export interface InteractionCanvasProps {
   readonly children: ReactNode;
   readonly onCanvasReady?: (binding: { readonly camera: THREE.Camera; readonly domElement: HTMLCanvasElement }) => void;
@@ -3635,7 +3651,7 @@ export function InteractionCanvas({
       style={{ height: "100%", width: "100%", ...style }}
       dpr={dpr}
       shadows={shadows}
-      cameraUp={[0, 0, 1]}
+      cameraUp={CAD_WORLD_UP}
       cameraPosition={cameraPosition}
       cameraFov={cameraFov}
       cameraNear={cameraNear}
@@ -3654,6 +3670,7 @@ export function InteractionCanvas({
       onLostPointerCapture={onLostPointerCapture}
       overlay={overlay}
     >
+      <InteractionCadWorldCoordinateSystem />
       {children}
     </WorldCanvas>
   );
@@ -6911,6 +6928,15 @@ if (import.meta.vitest) {
   });
 
   describe("@semio-tech/cad-js-renderer interaction adapter", () => {
+    it("uses CAD Y-forward and Z-up instead of Three.js Y-up defaults", () => {
+      const camera = new THREE.PerspectiveCamera();
+      const scene = new THREE.Scene();
+      applyCadWorldCoordinateSystem(camera, scene);
+      expect(CAD_WORLD_FORWARD).toEqual([0, 1, 0]);
+      expect(camera.up.toArray()).toEqual(CAD_WORLD_UP);
+      expect(scene.up.toArray()).toEqual(CAD_WORLD_UP);
+    });
+
     it("replHostGeometryPickingEnabled follows pickDisabledStates while session is active", () => {
       const spec = loadSpatialInteraction("primitive.box");
       expect(replHostGeometryPickingEnabled("primitive.box", spec, "first_corner")).toBe(false);

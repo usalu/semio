@@ -1,0 +1,423 @@
+   Compiling semio-s-app-puzzle-2d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+warning: unused import: `serde_json::Value`
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:485:16
+    |
+485 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+485 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+485 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:486:24
+    |
+486 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+486 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+486 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:496:16
+    |
+496 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+496 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+496 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:497:24
+    |
+497 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+497 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+497 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:557:41
+    |
+557 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+557 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+557 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:739:42
+    |
+739 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+739 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:743:38
+    |
+743 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+743 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+743 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:37
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:100
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1278:37
+     |
+1278 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1278 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1278 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+warning: unused import: `OsAppRegistration`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3271:72
+     |
+3271 |     use crate::registry::{os_app_registration, os_artifact_descriptor, OsAppRegistration, OsArtifactDescriptor};
+     |                                                                        ^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os` to apply 1 suggestion)
+warning: unused import: `store::DocumentDsl`
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:2822:13
+     |
+2822 |         use store::DocumentDsl;
+     |             ^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `store::DocumentDsl`
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:2914:13
+     |
+2914 |         use store::DocumentDsl;
+     |             ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::graph::apply_edge_handle_snap_to_fixture_v1_json`
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:3060:9
+     |
+3060 |     use crate::graph::apply_edge_handle_snap_to_fixture_v1_json;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:491:13
+    |
+491 |         let mut without = link_test_scene_no_edge();
+    |             ----^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-s-app-puzzle-2d-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-2d-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-2d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+warning: unused import: `super`
+   --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs:457:9
+    |
+457 |     use super::*;
+    |         ^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1751:23
+     |
+1751 |     let selected_set: std::collections::HashSet<&str> = selected.iter().map(String::as_str).collect();
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1751 -     let selected_set: std::collections::HashSet<&str> = selected.iter().map(String::as_str).collect();
+1751 +     let selected_set: HashSet<&str> = selected.iter().map(String::as_str).collect();
+     |
+
+warning: `semio-s-app-puzzle-2d-op` (lib test) generated 1 warning
+warning: `semio-s-app-puzzle-2d-ui` (lib test) generated 1 warning (run `cargo fix --lib -p semio-s-app-puzzle-2d-ui --tests` to apply 1 suggestion)
+warning: `semio-s-app-puzzle-2d-engine` (lib test) generated 4 warnings (run `cargo fix --lib -p semio-s-app-puzzle-2d-engine --tests` to apply 4 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 5.19s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_puzzle_2d_dsl-1d22040753d7a436)
+
+running 2 tests
+test tests::puzzle2d_projection_dsl_round_trips ... ok
+test tests::puzzle2d_example_fixtures_parse_and_round_trip_as_dsl ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_puzzle_2d_engine-9b8476fa0be1d328)
+
+running 117 tests
+test force_graph_tests::board_icon_codec_resolves_catalog_key_via_themed_lookup ... FAILED
+test force_graph_tests::edge_handle_snap_sets_circle_handle_angles_on_center_line ... ok
+test force_graph_tests::force_graph_normal_mode_node_id_edges_apply_spring_forces ... ok
+test force_graph_tests::force_graph_accepts_logical_nodes_without_xy ... ok
+test force_graph_tests::force_graph_pairwise_layout_is_deterministic_for_fixed_seed ... ok
+test force_graph_tests::force_graph_clamped_barnes_hut_theta_runs_without_error ... ok
+test force_graph_tests::force_graph_pins_locked_node_positions ... ok
+test force_graph_tests::force_graph_rejects_bad_schema ... ok
+test force_graph_tests::force_graph_spreads_two_linked_circles_along_x ... ok
+test force_graph_tests::hierarchical_tree_rejects_unknown_direction ... ok
+test force_graph_tests::hierarchical_tree_pins_locked_root_coordinates ... ok
+test force_graph_tests::redraw_force_graph_mindmap_schema_uses_undirected_layout ... ok
+test force_graph_tests::hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth ... ok
+test force_graph_tests::hierarchical_tree_right_places_children_larger_x_than_root ... ok
+test force_graph_tests::hierarchical_tree_upwards_places_children_smaller_y_than_root ... ok
+test force_graph_tests::hierarchical_tree_stacks_by_depth ... ok
+test force_graph_tests::redraw_rejects_unknown_mode ... ok
+test force_graph_tests::redraw_force_graph_top_level_locked_node_ids_pins ... ok
+test force_graph_tests::redraw_force_graph_wraps_flat_options ... ok
+test force_graph_tests::redraw_hierarchical_tree_nested_locked_node_ids_pins ... ok
+test force_graph_tests::redraw_force_graph_with_snap_sets_handle_angles ... ok
+test host_tests::board_host_additive_click_merges_edge_into_existing_selection ... ok
+test host_tests::board_host_area_select_from_empty_keeps_selection_until_commit ... ok
+test host_tests::board_host_area_select_preselect_matches_selected_chrome ... ok
+test host_tests::board_host_background_click_deselect_skips_preselect_events ... ok
+test host_tests::board_host_background_click_without_drag_clears_selection ... ok
+test host_tests::board_host_brush_candidates_sorted_by_handle_proximity ... ok
+test force_graph_tests::svg_icon_append_smoke ... ok
+test force_graph_tests::svg_icon_content_bounds_follows_nested_group_translate ... ok
+test host_tests::board_host_brush_fill_frontier_deterministic_and_collision_limited ... ok
+test force_graph_tests::svg_icon_content_bounds_includes_visible_image_abs_box ... ok
+test host_tests::board_host_brush_open_slot_suggestions_commit_and_cancel ... ok
+test host_tests::board_host_brush_lists_every_compatible_handle_per_node_kind ... ok
+test host_tests::board_host_brush_slot_accepts_pointer_on_indirect_ring_anchor ... ok
+test host_tests::board_host_brush_fill_session_step_matches_brush_fill_json ... ok
+test host_tests::board_host_brush_slot_accepts_pointer_on_node_body_at_overview_lod ... ok
+test host_tests::board_host_brush_slot_commit_survives_pointer_move_out_of_slot ... ok
+test host_tests::board_host_brush_session_mirror_json_shows_preview_without_pointer ... ok
+test host_tests::board_host_canvas_theme_keeps_explicit_element_state_colors ... ok
+test host_tests::board_host_cancel_area_select_restores_initial_selection ... ok
+test host_tests::board_host_brush_slot_emits_preview_and_place_on_leave ... ok
+test host_tests::board_host_brush_slot_skips_place_on_leave_without_alt ... ok
+test force_graph_tests::force_graph_bh_layout_is_deterministic_for_fixed_seed ... ok
+test host_tests::board_host_cached_content_includes_edge_vector_paths_at_overview_zoom ... ok
+test host_tests::board_host_defers_descriptor_sync_while_dragging_nodes ... ok
+test host_tests::board_host_detail_lod_resolves_direct_handle_hit ... ok
+test host_tests::board_host_defers_descriptor_sync_while_panning ... ok
+test host_tests::board_host_dragging_selected_node_keeps_selected_style_at_detail_lod ... ok
+test host_tests::board_host_drag_emits_node_move ... ok
+test host_tests::board_host_compact_discrete_hit_selects_and_drags_node ... ok
+test host_tests::board_host_handle_scale_combines_node_and_kind_scales ... ok
+test host_tests::board_host_fixture_drop_preview_uses_catalog_shape_and_icon_at_overview_lod ... ok
+test host_tests::board_host_hidden_handle_blocks_proximity_connect ... ok
+test host_tests::board_host_fixture_drop_preview_json_paints_while_select_utility_active ... ok
+test host_tests::board_host_hidden_node_blocks_indirect_connect ... ok
+test host_tests::board_host_hover_tracks_visible_wires ... ok
+test host_tests::board_host_indirect_does_not_commit_on_busy_target_handle ... ok
+test host_tests::board_host_indirect_handle_marker_radius_scales_with_node_extent ... ok
+test host_tests::board_host_indirect_ring_gap_scales_with_node_across_zoom ... ok
+test host_tests::board_host_indirect_ring_resolve_skips_connected_handles ... ok
+test host_tests::board_host_indirect_ring_shown_when_node_has_two_free_handles ... ok
+test host_tests::board_host_hover_change_does_not_bump_content_scene_generation ... ok
+test host_tests::board_host_indirect_ring_paints_without_rebuilding_world_cache ... ok
+test host_tests::board_host_indirect_sole_compatible_drop_creates_edge_immediately ... ok
+test host_tests::board_host_ingests_edge_and_node_kind_catalog_visual_fields ... ok
+test host_tests::board_host_indirect_target_click_elsewhere_stops_wire ... ok
+test host_tests::board_host_indirect_two_compatible_child_handles_on_target_require_ring_pick ... ok
+test host_tests::board_host_kind_catalog_accepts_modern_hsl_handle_colors ... ok
+test host_tests::board_host_link_does_not_start_from_busy_source_handle ... ok
+test host_tests::board_host_link_accepts_matching_handle_kind_pair ... ok
+test host_tests::board_host_link_drag_does_not_snap_when_target_handle_busy ... ok
+test host_tests::board_host_link_drag_snap_emits_edge_create ... ok
+test host_tests::board_host_link_drag_snap_micro_zoom_rectangle_compatible_handles ... ok
+test host_tests::board_host_link_drag_emits_compatible_nodes_and_target_ring_events ... ok
+test host_tests::board_host_link_drag_snap_proximity_connect_in_overview_lod ... ok
+test host_tests::board_host_link_rejects_incompatible_handle_kind_pairs ... ok
+test host_tests::board_host_link_short_drag_does_not_emit_edge_create ... ok
+test host_tests::board_host_link_important_pair_overrides_lower_specificity_filter ... ok
+test host_tests::board_host_link_wire_specificity_allows_when_handle_row_absent ... ok
+test host_tests::board_host_locked_node_blocks_hit_select ... ok
+test host_tests::board_host_locked_handle_blocks_proximity_connect ... ok
+test host_tests::board_host_minimap_bounded_drag_moves_selection_inside_union_bounds ... ok
+test host_tests::board_host_minimap_pointer_move_hovers_node_under_cursor ... ok
+test host_tests::board_host_manual_lod_follow_zoom_still_encodes_graph ... ok
+test host_tests::board_host_node_drag_invalidates_cached_world_content ... ok
+test host_tests::board_host_multi_select_drag_moves_each_selected_node ... ok
+test host_tests::board_host_minimap_preselect_matches_selected_chrome ... ok
+test host_tests::board_host_normal_lod_prefers_node_at_center_and_handle_off_rim ... ok
+test host_tests::board_host_node_drag_skips_proximity_when_moving_node_has_incident_edge ... ok
+test host_tests::board_host_overlay_paint_state_json_matches_host_camera_lod_and_node_centers ... ok
+test host_tests::board_host_overview_bounded_drag_moves_selection_inside_union_bounds ... ok
+test host_tests::board_host_pick_selection_never_sets_exit_highlight ... ok
+test host_tests::board_host_overview_lod_omits_direct_handle_resolve_hit ... ok
+test host_tests::board_host_node_drag_proximity_connect_overlapping_compatible_handles ... ok
+test host_tests::board_host_rejects_kind_catalog_rows_with_legacy_label ... ok
+test host_tests::board_host_parses_mindmap_fixture_without_handles ... ok
+test host_tests::board_host_rectangle_area_select_includes_handles_with_nodes ... ok
+test host_tests::board_host_selected_node_keeps_selected_style_when_hovered ... ok
+test host_tests::board_host_selection_target_edges_skips_node_geometry ... ok
+test host_tests::board_host_set_node_positions_updates_existing_nodes_only ... ok
+test host_tests::board_host_selection_change_does_not_bump_content_scene_generation ... ok
+test host_tests::board_host_silent_preselect_applies_selected_chrome_without_area_drag ... ok
+test host_tests::board_host_sync_descriptor_normal_graph_node_id_edges ... ok
+test host_tests::board_host_silent_selection_keeps_cached_world_content_warm ... ok
+test host_tests::board_host_syncs_descriptor_and_hit_tests_handle_before_node ... ok
+test tests::computes_handle_positions_and_edge_curves ... ok
+test host_tests::board_host_world_clip_changes_vector_encoding ... ok
+test tests::engine_extend_pick_keeps_node_when_adding_handle ... ok
+test tests::drags_nodes_without_rebuilding_the_scene_catalog ... ok
+test tests::hit_tests_handles_before_nodes_and_edges ... ok
+test tests::renders_snapshot_for_nodes_handles_and_edges ... ok
+test host_tests::puzzle2d_default_manifest_satisfies_board_host_validation ... FAILED
+test force_graph_tests::force_graph_barnes_hut_many_bodies_yields_finite_coordinates ... ok
+test force_graph_tests::board_icon_codec_resolves_emoji_prefix_without_tofu ... ok
+test force_graph_tests::board_icon_codec_resolves_typst_math_to_svg_plain ... ok
+test host_tests::board_host_brush_door_tambour_left_excludes_capital_with_metabolism_compat_rules ... ok
+test host_tests::board_host_fill_base_core_rectangular_excludes_cylindric_tambour ... FAILED
+
+failures:
+
+---- force_graph_tests::board_icon_codec_resolves_catalog_key_via_themed_lookup stdout ----
+
+thread 'force_graph_tests::board_icon_codec_resolves_catalog_key_via_themed_lookup' (80298760) panicked at ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:3894:22:
+unexpected resolution for catalog capsule_J: None
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- host_tests::puzzle2d_default_manifest_satisfies_board_host_validation stdout ----
+
+thread 'host_tests::puzzle2d_default_manifest_satisfies_board_host_validation' (80298871) panicked at ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:281:64:
+catalog json derived from the manifest must be valid: InvalidHandleKindColor("var(--muted-foreground)")
+
+---- host_tests::board_host_fill_base_core_rectangular_excludes_cylindric_tambour stdout ----
+
+thread 'host_tests::board_host_fill_base_core_rectangular_excludes_cylindric_tambour' (80298814) panicked at ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:2898:9:
+assertion `left == right` failed: expected one fill placement on base
+  left: 0
+ right: 1
+
+
+failures:
+    force_graph_tests::board_icon_codec_resolves_catalog_key_via_themed_lookup
+    host_tests::board_host_fill_base_core_rectangular_excludes_cylindric_tambour
+    host_tests::puzzle2d_default_manifest_satisfies_board_host_validation
+
+test result: FAILED. 114 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `-p semio-s-app-puzzle-2d-engine --lib`
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_puzzle_2d_op-16712db9af5fcc3f)
+
+running 1 test
+test tests::puzzle2d_delta_ops_are_granular_and_round_trip ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_puzzle_2d_pack-1d4a3bb4c8d75788)
+
+running 1 test
+test tests::pack_round_trips_and_agrees_with_dsl ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_puzzle_2d_protocol-549c666fab928577)
+
+running 1 test
+test tests::puzzle2d_document_vcs_replays_granular_operations ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_puzzle_2d_ui-de0596bee20fe632)
+
+running 28 tests
+test tests::dwg_import_returns_empty_board_with_no_camera_field ... ok
+test tests::brush_params_are_tagged_utility_options_not_engagement_controls ... ok
+test tests::fill_count_slider_is_a_tool_measure ... ok
+test tests::empty_board_events_declare_none_ui_scope ... ok
+test tests::kind_weight_group_normalizes_to_sum_one ... ok
+test tests::camera_event_declares_window_only_ui_scope ... ok
+test tests::renders_puzzle2d_board_scene ... ok
+test tests::apply_board_events_camera_event_commits ... ok
+test tests::add_node_action_declares_full_ui_scope ... ok
+test tests::add_node_action_emits_upsert_op_and_appends_node ... ok
+test tests::ingest_operations_is_idempotent ... ok
+test tests::select_then_delete_selection_removes_the_node ... ok
+test tests::set_camera_is_session_only_and_never_undoable ... ok
+test tests::set_active_example_loads_concrete_forest_via_operations ... ok
+test tests::select_action_declares_partial_ui_scope ... ok
+test tests::document_panel_lists_nodes_section ... ok
+test tests::puzzle2d_play_projection_pack_round_trips ... ok
+test tests::undo_redo_round_trip_through_the_wrapper ... ok
+test tests::select_action_emits_no_operations ... ok
+test tests::two_instances_converge_disjoint_node_edits_via_backbone ... ok
+test tests::apply_board_events_select_persists_across_the_next_action ... ok
+test tests::labels_resolve_native_english_and_german_and_reuse ... ok
+test tests::tool_registry_declares_fill_tool ... ok
+test tests::app_definition_has_three_lod_pane_window_kinds ... ok
+test tests::utility_switch_emits_no_ops_and_no_history ... ok
+test tests::utility_registry_declares_utilities ... ok
+test tests::view_actions_emit_no_ops_through_the_registry ... ok
+test tests::repeated_actions_do_not_duplicate_edges ... ok
+
+test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+
+error: 1 target failed:
+    `-p semio-s-app-puzzle-2d-engine --lib`

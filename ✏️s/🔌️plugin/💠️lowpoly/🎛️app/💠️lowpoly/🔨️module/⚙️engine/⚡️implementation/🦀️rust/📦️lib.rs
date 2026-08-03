@@ -5,6 +5,7 @@
 use kernel_3d_mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
 use lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyPaintLayer, LowpolyProjection, LowpolySelection, LOWPOLY_PAINT_TEXTURE_SIZE};
 use semio_framework_plugin::MeshData;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 //#region ⚠️ Errors
@@ -27,6 +28,190 @@ pub enum LowpolyCoreError {
     ObjectNotFound,
 }
 //#endregion ⚠️ Errors
+
+//#region 🔖️Config
+/// 🧮️ B1: lowpoly's real `DocumentApp::Config` — absorbs every field that used to live in the UI
+/// crate's `LowpolyPlayRuntime` app-struct `RefCell` (selection, active object, paint utility/layer,
+/// selection method/mode, hover, world camera, sun, show-edges) plus the two `ViewState` fields lowpoly
+/// actually read (`active_utility_id`/`locale`) — session-only view state now round-trips through the
+/// config `DocumentStore` exactly like document content, with a real `backwards` per
+/// `lowpoly_op::LowpolyConfigOperation`, mirroring the `shooting_engine::ShootingConfig` pilot. Nested
+/// value types (`LowpolySelection`, the world camera, hover target, sun, paint color) are flattened into
+/// scalar fields rather than embedded as DSL blocks — `LowpolySelection`/`WorldSunConfig` aren't
+/// `dsl::DslField`-capable today and flattening avoids widening that surface just for this migration.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "lowpolycfg")]
+#[dsl(layout = "lines")]
+pub struct LowpolyConfig {
+    /// 👁️ Was `LowpolyPlayRuntime::active_object_id`.
+    pub active_object_id: String,
+    /// 👁️ Was `LowpolyPlayRuntime::selection` (`LowpolySelection`), flattened.
+    pub selection_mode: String,
+    pub selection_ids: Vec<u32>,
+    pub selection_targets_mesh: bool,
+    pub selection_targets_vertex: bool,
+    pub selection_targets_edge: bool,
+    pub selection_targets_face: bool,
+    pub selection_keys: Vec<String>,
+    /// 👁️ Was `LowpolyPlayRuntime::paint_utility`.
+    pub paint_utility: String,
+    /// 👁️ Was `LowpolyPlayRuntime::active_paint_layer`.
+    pub active_paint_layer: u32,
+    /// 👁️ Was `LowpolyPlayRuntime::selection_method`.
+    pub selection_method: String,
+    /// 👁️ Was `LowpolyPlayRuntime::selection_mode_default`.
+    pub selection_mode_default: String,
+    /// 👁️ Was `LowpolyPlayRuntime::selected_object_ids` (`SelectionSet`), flattened to its ordered ids.
+    pub selected_object_ids: Vec<String>,
+    /// 👁️ Was `LowpolyPlayRuntime::hovered_object_id`.
+    pub hovered_object_id: Option<String>,
+    /// 👁️ Was `LowpolyPlayRuntime::hovered_target` (`LowpolyHoverTarget`), flattened.
+    pub hovered_target_object_id: Option<String>,
+    pub hovered_target_mode: Option<String>,
+    pub hovered_target_id: Option<u32>,
+    /// 👁️ Was `LowpolyPlayRuntime::utility_params` (`serde_json::Value`) — carried as canonical JSON
+    /// text since a raw `Value` field has no direct DSL binding.
+    pub utility_params_json: String,
+    /// 🎨️ Was `LowpolyPlayRuntime::paint_color` (`[u8; 4]`), flattened.
+    pub paint_color_r: u8,
+    pub paint_color_g: u8,
+    pub paint_color_b: u8,
+    pub paint_color_a: u8,
+    /// 🎥️ Was `LowpolyPlayRuntime::world_camera` (`LowpolyWorldCamera`), flattened.
+    #[dsl(coord)]
+    pub world_camera_position: [f64; 3],
+    #[dsl(coord)]
+    pub world_camera_target: [f64; 3],
+    #[dsl(angle = "deg")]
+    pub world_camera_fov: f64,
+    /// 👁️ Was `LowpolyPlayRuntime::engagement_input`.
+    pub engagement_input: String,
+    /// 👁️ Was `LowpolyPlayRuntime::show_edges`.
+    pub show_edges: bool,
+    /// 🌞️ Was `LowpolyPlayRuntime::sun` (`WorldSunConfig`), flattened.
+    pub sun_enabled: bool,
+    pub sun_azimuth: f64,
+    pub sun_elevation: f64,
+    pub sun_intensity: f64,
+    pub sun_color: String,
+    /// 🧰️ Was read off the host-pushed `ViewState::active_utility_id` (deleted for migrated apps).
+    pub active_utility_id: String,
+    /// 🗣️ Was read off `ViewState::locale`.
+    pub locale: String,
+}
+
+impl Default for LowpolyConfig {
+    fn default() -> Self {
+        Self {
+            active_object_id: String::new(),
+            selection_mode: "mesh".into(),
+            selection_ids: Vec::new(),
+            selection_targets_mesh: true,
+            selection_targets_vertex: false,
+            selection_targets_edge: false,
+            selection_targets_face: false,
+            selection_keys: Vec::new(),
+            paint_utility: "brush".into(),
+            active_paint_layer: 0,
+            selection_method: "rectangle".into(),
+            selection_mode_default: "default".into(),
+            selected_object_ids: Vec::new(),
+            hovered_object_id: None,
+            hovered_target_object_id: None,
+            hovered_target_mode: None,
+            hovered_target_id: None,
+            utility_params_json: default_utility_params_json(),
+            paint_color_r: 255,
+            paint_color_g: 64,
+            paint_color_b: 64,
+            paint_color_a: 255,
+            world_camera_position: [18.0, -18.0, 12.0],
+            world_camera_target: [0.0, 0.0, 0.0],
+            world_camera_fov: 45.0,
+            engagement_input: String::new(),
+            show_edges: true,
+            sun_enabled: false,
+            sun_azimuth: 45.0,
+            sun_elevation: 35.0,
+            sun_intensity: 0.85,
+            sun_color: "#ffffff".into(),
+            active_utility_id: "move".into(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+/// 🧰️ `LowpolyConfig::default`'s `utility_params_json` — mirrors the pre-B1
+/// `LowpolyPlayRuntime::utility_params`'s default JSON object verbatim.
+pub fn default_utility_params_json() -> String {
+    serde_json::json!({
+        "extrudeDistance": 0.25,
+        "insetAmount": 0.1,
+        "bevelAmount": 0.05,
+        "bevelSegments": 1,
+        "loopCuts": 1,
+        "decimateRatio": 0.5,
+        "snapGrid": 0.25,
+        "mirrorAxis": 0,
+        "brushSize": 16,
+        "brushOpacity": 1,
+        "brushHardness": 0.5,
+    })
+    .to_string()
+}
+
+impl store::ConfigRecord for LowpolyConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `lowpoly_op::LowpolyConfigOperation` — mirrors
+/// `shooting_engine::ShootingConfig`'s identical pattern (`apply` ignores `base` entirely).
+impl protocol::OperationDiff<LowpolyConfig> for LowpolyConfig {
+    fn apply(&self, _base: &LowpolyConfig) -> LowpolyConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
+/// `create_lowpoly_app` already declares for `"3d.lowpoly"` via `.artifact_kind(...)`, plus the two new
+/// workflow ports: `mesh:in` (Many, unrequired — accepts upstream mesh producers, e.g. cad via a
+/// Brep→Mesh conversion) and `mesh:out` (Many, unrequired, `kind_id: "3d.mesh"` — the shared interchange
+/// kind lowpoly already privately declares in `create_lowpoly_app`; see that declaration's doc for why
+/// it stays, unchanged, alongside sibling plugins declaring the identical shape).
+pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+        ports: vec![
+            semio_framework_plugin::MediaPortSpec {
+                id: "mesh:in".into(),
+                label: "Mesh".into(),
+                direction: semio_framework_plugin::MediaPortDirection::In,
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+                kind_id: None,
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+            semio_framework_plugin::MediaPortSpec {
+                id: "mesh:out".into(),
+                label: "Mesh".into(),
+                direction: semio_framework_plugin::MediaPortDirection::Out,
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+                kind_id: Some("3d.mesh".into()),
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+        ],
+        export_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl],
+        import_formats: vec![semio_framework_plugin::OsMediaFormat::Glb, semio_framework_plugin::OsMediaFormat::Obj],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.lowpoly".into(), name: "3D Lowpoly".into(), dimension: "3d".into(), component_kind: "lowpoly".into() },
+    }
+}
+//#endregion 🔖️Io
 
 //#region 🔖️DefaultProjection
 pub fn default_projection() -> LowpolyProjection {
@@ -537,6 +722,52 @@ pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use store::DocumentPack;
+
+    //#region 🔖️ConfigCoverage
+    #[test]
+    fn lowpoly_config_dsl_round_trips_default() {
+        store::test_support::assert_dsl_round_trip(&LowpolyConfig::default());
+    }
+
+    #[test]
+    fn lowpoly_config_dsl_round_trips_non_default() {
+        let config = LowpolyConfig {
+            active_object_id: "obj-2".into(),
+            selection_mode: "face".into(),
+            selection_ids: vec![1, 2, 3],
+            selected_object_ids: vec!["obj-2".into(), "obj-3".into()],
+            hovered_object_id: Some("obj-4".into()),
+            hovered_target_object_id: Some("obj-4".into()),
+            hovered_target_mode: Some("mesh".into()),
+            hovered_target_id: Some(7),
+            locale: "de-DE".into(),
+            ..LowpolyConfig::default()
+        };
+        store::test_support::assert_dsl_round_trip(&config);
+    }
+
+    #[test]
+    fn lowpoly_config_pack_round_trips() {
+        let config = LowpolyConfig { active_object_id: "obj-9".into(), sun_enabled: true, ..LowpolyConfig::default() };
+        let bytes = config.encode_pack();
+        let restored = LowpolyConfig::decode_pack(&bytes).expect("decode");
+        assert_eq!(restored, config);
+    }
+
+    #[test]
+    fn lowpoly_io_declares_mesh_ports_alongside_the_implicit_document_ports() {
+        let io = lowpoly_io();
+        let ports = io.all_ports();
+        assert!(ports.iter().any(|port| port.id == "document:in"));
+        assert!(ports.iter().any(|port| port.id == "document:out"));
+        let mesh_in = ports.iter().find(|port| port.id == "mesh:in").expect("mesh:in declared");
+        assert_eq!(mesh_in.direction, semio_framework_plugin::MediaPortDirection::In);
+        let mesh_out = ports.iter().find(|port| port.id == "mesh:out").expect("mesh:out declared");
+        assert_eq!(mesh_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(mesh_out.kind_id.as_deref(), Some("3d.mesh"));
+    }
+    //#endregion 🔖️ConfigCoverage
 
     #[test]
     fn default_projection_has_concrete_forest_left_object() {

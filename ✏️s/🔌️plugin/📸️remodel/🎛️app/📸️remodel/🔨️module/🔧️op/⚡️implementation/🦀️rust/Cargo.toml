@@ -12,6 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️a
 
 [dependencies]
 remodel = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/⚡️implementation/🦀️rust", package = "semio-s-app-remodel" }
+remodel_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-remodel-engine" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

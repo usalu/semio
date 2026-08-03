@@ -1,19 +1,23 @@
-//! 🗺️ Reasoning wires app — `DocumentApp` impl, render, manifest (constitutional: ui).
+//! 🗺️ Reasoning wires app — `DocumentApp` impl, render, manifest (constitutional: ui). B1: the
+//! pure-trait conversion — `ReasoningWiresPlayApp` is a unit struct; every former
+//! `WiresPlayRuntime` field (selection, in-flight drag) now lives in `reasoning_wires_engine::WiresConfig`,
+//! written via `reasoning_wires_op::WiresConfigOperation`s (real `backwards`, no ad hoc runtime
+//! `RefCell`); every action dispatches through the single typed
+//! `reasoning_wires_protocol::WiresCommand` channel via `DocumentApp::handle`.
 
 use reasoning_wires::MindmapWiresDocument;
-use reasoning_wires_engine::{empty_mindmap_wires_document, find_board_node, metabolism_wires_example_document, DefaultWiresExtension, RelationshipKind};
-use reasoning_wires_op::MindmapWiresOperation;
+use reasoning_wires_engine::{empty_mindmap_wires_document, find_board_node, metabolism_wires_example_document, DefaultWiresExtension, WiresConfig};
+use reasoning_wires_op::{MindmapWiresOperation, WiresConfigOperation};
+use reasoning_wires_protocol::WiresCommand;
 use semio_framework_plugin::{
-    app_labels, build_canvas_2d_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels,
-    tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, ActionDescriptor, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, DocumentApp, DocumentView, LocaleLabels, MediaClass, MediaForm, MediaType, OsMediaCapability,
-    PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, UiNode, UiTreeItemNode, ViewState,
+    app_labels, build_canvas_2d_scene, create_default_layout, localized_label_map,
+    tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, Emit, ActionDescriptor, App,
+    AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, ConfigView, DocumentApp, DocumentView, LocaleLabels, MediaClass, MediaForm, MediaType, OsMediaCapability,
+    PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, UiNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use dsl::{from_dsl_value, to_dsl_value, DslValue};
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 //#region 🔖️Constants
@@ -34,25 +38,17 @@ const WIRES_DOCUMENT_IDENTITY_PREFIX: &str = "wires-play-document.identity.";
 const WIRES_DOCUMENT_RELATIONSHIP_PREFIX: &str = "wires-play-document.relationship.";
 //#endregion 🔖️Constants
 
-//#region 🔖️Types
-/// 🖱️ In-flight pointer drag of one board node, tracked by screen delta so no viewport size is needed.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WiresDragState {
-    node_id: String,
-    last_x: f64,
-    last_y: f64,
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical helpers.
+fn is_de_locale(cfg: &WiresConfig) -> bool {
+    cfg.locale.starts_with("de")
 }
 
-/// 🎛️ Ephemeral view state (selection + in-flight drag) held in the app struct, never in the
-/// document — so it stays out of undo history and off the operation channel.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WiresPlayRuntime {
-    selected_ids: Vec<String>,
-    drag: Option<WiresDragState>,
+fn resolve_labels<L: LocaleLabels>(cfg: &WiresConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
 }
-//#endregion 🔖️Types
+//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -61,19 +57,6 @@ fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
         action: action.into(),
         args: semio_framework_plugin::optional_json_to_dsl(args),
     }
-}
-
-/// 🎯️ `ids` array first via the shared SDK core, falling back to a singular `id` key — this app's
-/// selection actions accept either shape.
-fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    let ids = semio_framework_plugin::selection_ids(args);
-    if !ids.is_empty() {
-        return ids;
-    }
-    args.and_then(|value| value.get("id"))
-        .and_then(|value| value.as_str())
-        .map(|id| vec![id.to_string()])
-        .unwrap_or_default()
 }
 
 fn dsl_to_json(value: &DslValue) -> Value {
@@ -491,21 +474,18 @@ fn render_canvas(board: &DslValue, wires: &DslValue) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️ReasoningWiresPlayApp
-pub struct ReasoningWiresPlayApp {
-    runtime: RefCell<WiresPlayRuntime>,
-}
-
-impl Default for ReasoningWiresPlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(WiresPlayRuntime::default()) }
-    }
-}
+/// 🧪️ B1: unit struct — every former `WiresPlayRuntime` field now lives in
+/// `reasoning_wires_engine::WiresConfig` (see `DocumentApp::Config`), written through
+/// `reasoning_wires_op::WiresConfigOperation`s.
+#[derive(Default)]
+pub struct ReasoningWiresPlayApp;
 
 impl DocumentApp for ReasoningWiresPlayApp {
     type Projection = MindmapWiresDocument;
     type Operation = MindmapWiresOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = WiresConfig;
+    type ConfigOperation = WiresConfigOperation;
+    type Command = WiresCommand;
 
     fn app_id(&self) -> &str {
         WIRES_PLAY_APP_ID
@@ -519,53 +499,61 @@ impl DocumentApp for ReasoningWiresPlayApp {
         empty_mindmap_wires_document()
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, MindmapWiresDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<MindmapWiresOperation> {
+    /// 🏷️ Maps each `WiresCommand` variant back to the action id it was declared under in
+    /// `create_wires_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check.
+    fn command_id(&self, command: &WiresCommand) -> &str {
+        match command {
+            WiresCommand::SetActiveExample { .. } => "setActiveExample",
+            WiresCommand::AddNode { .. } => "addNode",
+            WiresCommand::AddRelationship { .. } => "addRelationship",
+            WiresCommand::DeleteSelection => "deleteSelection",
+            WiresCommand::ForceLayout => "forceLayout",
+            WiresCommand::Reorganize => "reorganize",
+            WiresCommand::CanvasPointerMove { .. } => "canvasPointerMove",
+            WiresCommand::SetSelection { .. } => "setSelection",
+            WiresCommand::DocumentSelect { .. } => "documentSelect",
+            WiresCommand::CanvasPointerDown { .. } => "canvasPointerDown",
+            WiresCommand::CanvasPointerUp => "canvasPointerUp",
+            WiresCommand::SetLocale { .. } => "setLocale",
+        }
+    }
+
+    fn handle(&self, command: &WiresCommand, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> Emit<MindmapWiresOperation, WiresConfigOperation> {
         let document = doc.projection;
-        let mut runtime = self.runtime.borrow_mut();
-        match action {
-            // 👁️ View actions — mutate ephemeral runtime, emit no operations.
-            "setSelection" | "documentSelect" => {
-                runtime.selected_ids = selection_ids(args);
-                ActionEmit::default()
+        let config = cfg.projection;
+        match command {
+            // 👁️ Config-only — mutate ephemeral selection/drag state, emit no document operations.
+            WiresCommand::SetSelection { ids } | WiresCommand::DocumentSelect { ids } => {
+                Emit::config(vec![WiresConfigOperation::SetSelection { ids: ids.clone() }])
             }
-            "canvasPointerDown" => {
-                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                if let Some(id) = id.filter(|id| find_board_node(document, id).is_some()) {
-                    runtime.selected_ids = vec![id.to_string()];
-                    runtime.drag = Some(WiresDragState { node_id: id.to_string(), last_x: x, last_y: y });
-                }
-                ActionEmit::default()
-            }
-            "canvasPointerUp" => {
-                runtime.drag = None;
-                ActionEmit::default()
-            }
+            WiresCommand::CanvasPointerDown { id, x, y } => match id.as_deref().filter(|id| find_board_node(document, id).is_some()) {
+                Some(id) => Emit::config(vec![
+                    WiresConfigOperation::SetSelection { ids: vec![id.to_string()] },
+                    WiresConfigOperation::SetDrag { node_id: Some(id.to_string()), last_x: *x, last_y: *y },
+                ]),
+                None => Emit::default(),
+            },
+            WiresCommand::CanvasPointerUp => Emit::config(vec![WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }]),
+            WiresCommand::SetLocale { value } => Emit::config(vec![WiresConfigOperation::SetLocale { value: value.clone() }]),
             // ✏️ Operations — dispatched as VCS operations with a true inverse.
-            "setActiveExample" => {
-                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                let next = if example_id == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
+            WiresCommand::SetActiveExample { example_id } => {
+                let next = if example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
                     metabolism_wires_example_document()
                 } else {
                     empty_mindmap_wires_document()
                 };
-                runtime.selected_ids.clear();
-                runtime.drag = None;
-                ActionEmit::operations(vec![MindmapWiresOperation::ReplaceDocument {
-                    wires_fixture: next.wires_fixture,
-                    board_fixture: next.board_fixture,
-                }])
+                Emit {
+                    document_operations: vec![MindmapWiresOperation::ReplaceDocument { wires_fixture: next.wires_fixture, board_fixture: next.board_fixture }],
+                    config_operations: vec![
+                        WiresConfigOperation::SetSelection { ids: Vec::new() },
+                        WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 },
+                    ],
+                    ..Default::default()
+                }
             }
-            "addNode" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("identity");
+            WiresCommand::AddNode { kind } => {
+                let kind = if kind.is_empty() { "identity" } else { kind.as_str() };
                 let id = format!("node-{}", fixture_nodes(&document.board_fixture).len() + 1);
                 let node = to_dsl_value(&json!({
                     "id": id,
@@ -578,11 +566,14 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     "handles": []
                 }))
                 .expect("node serializes");
-                runtime.selected_ids = vec![id];
-                ActionEmit::operations(vec![MindmapWiresOperation::AddNode { node }])
+                Emit {
+                    document_operations: vec![MindmapWiresOperation::AddNode { node }],
+                    config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![id] }],
+                    ..Default::default()
+                }
             }
-            "addRelationship" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("owns");
+            WiresCommand::AddRelationship { kind } => {
+                let kind = if kind.is_empty() { "owns" } else { kind.as_str() };
                 let edge_id = format!("edge-{}", fixture_edges(&document.board_fixture).len() + 1);
                 let edge = to_dsl_value(&json!({
                     "id": edge_id,
@@ -598,12 +589,15 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     "targetIdentityId": 2
                 }))
                 .expect("relationship serializes");
-                runtime.selected_ids = vec![edge_id];
-                ActionEmit::operations(vec![MindmapWiresOperation::AddRelationship { edge, relationship }])
+                Emit {
+                    document_operations: vec![MindmapWiresOperation::AddRelationship { edge, relationship }],
+                    config_operations: vec![WiresConfigOperation::SetSelection { ids: vec![edge_id] }],
+                    ..Default::default()
+                }
             }
-            "deleteSelection" => {
+            WiresCommand::DeleteSelection => {
                 let mut operations = Vec::new();
-                for id in &runtime.selected_ids {
+                for id in &config.selected_ids {
                     if find_board_node(document, id).is_some() {
                         operations.push(MindmapWiresOperation::RemoveNode { node_id: id.clone() });
                     } else if fixture_edges(&document.board_fixture)
@@ -613,12 +607,10 @@ impl DocumentApp for ReasoningWiresPlayApp {
                         operations.push(MindmapWiresOperation::RemoveEdge { edge_id: id.clone() });
                     }
                 }
-                if !operations.is_empty() {
-                    runtime.selected_ids.clear();
-                }
-                ActionEmit::operations(operations)
+                let config_operations = if operations.is_empty() { Vec::new() } else { vec![WiresConfigOperation::SetSelection { ids: Vec::new() }] };
+                Emit { document_operations: operations, config_operations, ..Default::default() }
             }
-            "forceLayout" | "reorganize" => {
+            WiresCommand::ForceLayout | WiresCommand::Reorganize => {
                 let mut board = document.board_fixture.clone();
                 force_layout_board(&mut board);
                 let operations: Vec<MindmapWiresOperation> = fixture_nodes(&board)
@@ -636,45 +628,42 @@ impl DocumentApp for ReasoningWiresPlayApp {
                         Some(MindmapWiresOperation::PatchNode { node_id: id.to_string(), patch })
                     })
                     .collect();
-                ActionEmit::operations(operations)
+                Emit::operations(operations)
             }
-            "canvasPointerMove" => {
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let Some(drag) = runtime.drag.clone() else { return ActionEmit::default() };
-                let Some(node) = find_board_node(document, &drag.node_id) else { return ActionEmit::default() };
+            WiresCommand::CanvasPointerMove { x, y } => {
+                let Some(drag_node_id) = config.drag_node_id.clone() else { return Emit::default() };
+                let Some(node) = find_board_node(document, &drag_node_id) else { return Emit::default() };
                 let zoom = fixture_camera(&document.board_fixture).2.max(1e-6);
                 let (cur_x, cur_y) = node_position(node);
-                let (dx, dy) = ((x - drag.last_x) / zoom, (y - drag.last_y) / zoom);
+                let (dx, dy) = ((x - config.drag_last_x) / zoom, (y - config.drag_last_y) / zoom);
                 let mut patch = BTreeMap::new();
                 patch.insert("x".into(), to_dsl_value(&(cur_x + dx)).unwrap_or(DslValue::Null));
                 patch.insert("y".into(), to_dsl_value(&(cur_y + dy)).unwrap_or(DslValue::Null));
-                runtime.drag = Some(WiresDragState { node_id: drag.node_id.clone(), last_x: x, last_y: y });
-                ActionEmit::amend(
-                    vec![MindmapWiresOperation::PatchNode { node_id: drag.node_id.clone(), patch }],
-                    format!("drag:{}", drag.node_id),
-                )
+                Emit {
+                    document_operations: vec![MindmapWiresOperation::PatchNode { node_id: drag_node_id.clone(), patch }],
+                    config_operations: vec![WiresConfigOperation::SetDrag { node_id: Some(drag_node_id.clone()), last_x: *x, last_y: *y }],
+                    coalesce_key: Some(format!("drag:{drag_node_id}")),
+                    ..Default::default()
+                }
             }
-            _ => ActionEmit::default(),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
         let document = doc.projection;
-        let labels = resolve_labels::<WiresLabels>(view_state);
-        let runtime = self.runtime.borrow();
+        let labels = resolve_labels::<WiresLabels>(cfg.projection);
         match body_key {
             WIRES_PLAY_BODY_COMPOSITE => render_canvas(&document.board_fixture, &document.wires_fixture),
-            WIRES_PLAY_BODY_DOCUMENT => render_document_panel(document, &runtime.selected_ids, labels),
+            WIRES_PLAY_BODY_DOCUMENT => render_document_panel(document, &cfg.projection.selected_ids, labels),
             WIRES_PLAY_BODY_CATALOGUE => render_catalogue_panel(&document.wires_fixture, labels),
-            WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(document, &runtime.selected_ids),
+            WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(document, &cfg.projection.selected_ids),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<WiresLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, WiresConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<WiresLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::with_framework_panel_tabs(
             ["framework.panel.document", "framework.panel.catalogue", "framework.panel.inspection"],
             is_de,
@@ -730,7 +719,11 @@ pub fn create_wires_app() -> App {
             .view_action("setSelection", "Set Selection")
             .view_action("documentSelect", "Document Select")
             .view_action("canvasPointerDown", "Canvas Pointer Down")
-            .view_action("canvasPointerUp", "Canvas Pointer Up"),
+            .view_action("canvasPointerUp", "Canvas Pointer Up")
+            // 🎯️ Typed channel surface (B1 pure-trait conversion) — `config_spec()`'s single source of
+            // truth (the trait default `ConfigSpec::empty()`: none of `WiresConfig`'s fields are
+            // user-visible settings, they're ephemeral view state) reused here rather than duplicated.
+            .config(ReasoningWiresPlayApp::default().config_spec()),
     )
     .example(
         WIRES_PLAY_EXAMPLE_METABOLISM_ID,
@@ -746,8 +739,9 @@ pub fn create_wires_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use reasoning_wires_engine::RelationshipKind;
     use semio_framework_plugin::testkit;
-    use semio_framework_plugin::{PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{PluginApp, VcsDocumentApp, ViewState};
     use store::MemoryBackbone;
 
     fn new_app() -> VcsDocumentApp<ReasoningWiresPlayApp> {
@@ -781,14 +775,16 @@ mod tests {
         assert!(catalogue_json.contains("Relationship kinds"));
     }
 
+    /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more
+    /// `ViewState.locale` threaded through `render` (the trait dropped `ViewState` entirely).
     #[test]
     fn wires_labels_resolve_native_in_german() {
         let mut app = metabolism_app();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let json = serde_json::to_string(&app.render(WIRES_PLAY_BODY_DOCUMENT, None, &view_state).expect("render")).unwrap();
+        app.dispatch_typed(WiresCommand::SetLocale { value: "de-DE".into() }, &testkit::meta("local")).expect("set locale");
+        let json = serde_json::to_string(&app.render(WIRES_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
         assert!(json.contains("Identitäten"));
         assert!(json.contains("Beziehungen"));
-        let catalogue_json = serde_json::to_string(&app.render(WIRES_PLAY_BODY_CATALOGUE, None, &view_state).expect("render")).unwrap();
+        let catalogue_json = serde_json::to_string(&app.render(WIRES_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render")).unwrap();
         assert!(catalogue_json.contains("Identitätsarten"));
         assert!(catalogue_json.contains("Beziehungsarten"));
     }
@@ -818,7 +814,7 @@ mod tests {
     #[test]
     fn add_node_appends_and_selects() {
         let mut app = new_app();
-        app.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &testkit::meta("local")).expect("add");
+        app.dispatch_typed(WiresCommand::AddNode { kind: "identity".into() }, &testkit::meta("local")).expect("add");
         let projection = app.projection().expect("projection");
         assert_eq!(fixture_nodes(&projection.board_fixture).len(), 1);
         assert!(find_board_node(&projection, "node-1").is_some());
@@ -827,15 +823,15 @@ mod tests {
     #[test]
     fn pointer_drag_translates_node_by_screen_delta() {
         let mut app = new_app();
-        app.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &testkit::meta("local")).expect("add");
-        app.handle_action("canvasPointerDown", Some(&json!({ "id": "node-1", "x": 100.0, "y": 100.0 })), &ViewState::default(), &testkit::meta("local")).expect("down");
-        app.handle_action("canvasPointerMove", Some(&json!({ "x": 140.0, "y": 130.0 })), &ViewState::default(), &testkit::meta("local")).expect("move");
+        app.dispatch_typed(WiresCommand::AddNode { kind: "identity".into() }, &testkit::meta("local")).expect("add");
+        app.dispatch_typed(WiresCommand::CanvasPointerDown { id: Some("node-1".into()), x: 100.0, y: 100.0 }, &testkit::meta("local")).expect("down");
+        app.dispatch_typed(WiresCommand::CanvasPointerMove { x: 140.0, y: 130.0 }, &testkit::meta("local")).expect("move");
         let node = find_board_node(&app.projection().expect("projection"), "node-1").expect("node-1").clone();
         assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(40.0));
         assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
-        app.handle_action("canvasPointerUp", Some(&json!({ "x": 140.0, "y": 130.0 })), &ViewState::default(), &testkit::meta("local")).expect("up");
+        app.dispatch_typed(WiresCommand::CanvasPointerUp, &testkit::meta("local")).expect("up");
         // A coalesced drag collapses to a single undo step restoring the origin.
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         let node = find_board_node(&app.projection().expect("projection"), "node-1").expect("node-1").clone();
         assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(0.0));
     }
@@ -843,9 +839,9 @@ mod tests {
     #[test]
     fn delete_selection_removes_node() {
         let mut app = new_app();
-        app.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &testkit::meta("local")).expect("add");
-        app.handle_action("setSelection", Some(&json!({ "ids": ["node-1"] })), &ViewState::default(), &testkit::meta("local")).expect("select");
-        app.handle_action("deleteSelection", None, &ViewState::default(), &testkit::meta("local")).expect("delete");
+        app.dispatch_typed(WiresCommand::AddNode { kind: "identity".into() }, &testkit::meta("local")).expect("add");
+        app.dispatch_typed(WiresCommand::SetSelection { ids: vec!["node-1".into()] }, &testkit::meta("local")).expect("select");
+        app.dispatch_typed(WiresCommand::DeleteSelection, &testkit::meta("local")).expect("delete");
         assert!(fixture_nodes(&app.projection().expect("projection").board_fixture).is_empty());
     }
 
@@ -856,7 +852,7 @@ mod tests {
             .iter()
             .map(node_position)
             .collect();
-        app.handle_action("forceLayout", None, &ViewState::default(), &testkit::meta("local")).expect("force layout");
+        app.dispatch_typed(WiresCommand::ForceLayout, &testkit::meta("local")).expect("force layout");
         let after: Vec<(f64, f64)> =
             fixture_nodes(&app.projection().expect("projection").board_fixture).iter().map(node_position).collect();
         assert_eq!(before.len(), after.len());
@@ -875,8 +871,7 @@ mod tests {
         let mut app = new_app();
         testkit::assert_undo_redo_round_trip(
             &mut app,
-            "addNode",
-            Some(&json!({ "kind": "identity" })),
+            WiresCommand::AddNode { kind: "identity".into() },
             |app| fixture_nodes(&app.projection().expect("projection").board_fixture).len(),
             0,
             1,
@@ -907,13 +902,13 @@ mod tests {
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
         // A adds node-3 (a new node); B moves node-2 (a PatchNode) — disjoint edits on the graph.
-        instance_a.handle_action("addNode", Some(&json!({ "kind": "identity" })), &ViewState::default(), &testkit::meta("actor-a")).expect("a adds node");
-        instance_b.handle_action("canvasPointerDown", Some(&json!({ "id": "node-2", "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("actor-b")).expect("b down");
-        instance_b.handle_action("canvasPointerMove", Some(&json!({ "x": 50.0, "y": 60.0 })), &ViewState::default(), &testkit::meta("actor-b")).expect("b move");
-        instance_b.handle_action("canvasPointerUp", Some(&json!({ "x": 50.0, "y": 60.0 })), &ViewState::default(), &testkit::meta("actor-b")).expect("b up");
+        instance_a.dispatch_typed(WiresCommand::AddNode { kind: "identity".into() }, &testkit::meta("actor-a")).expect("a adds node");
+        instance_b.dispatch_typed(WiresCommand::CanvasPointerDown { id: Some("node-2".into()), x: 0.0, y: 0.0 }, &testkit::meta("actor-b")).expect("b down");
+        instance_b.dispatch_typed(WiresCommand::CanvasPointerMove { x: 50.0, y: 60.0 }, &testkit::meta("actor-b")).expect("b move");
+        instance_b.dispatch_typed(WiresCommand::CanvasPointerUp, &testkit::meta("actor-b")).expect("b up");
 
-        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-b")).expect("pump b");
+        instance_a.handle_action("commitCheckpoint", None, &testkit::meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &testkit::meta("actor-b")).expect("pump b");
 
         let projection_a = instance_a.projection().expect("projection a");
         let projection_b = instance_b.projection().expect("projection b");
@@ -929,8 +924,7 @@ mod tests {
     #[test]
     fn ingest_operations_is_idempotent() {
         testkit::assert_ingest_idempotent::<ReasoningWiresPlayApp, usize>(
-            "addNode",
-            Some(&json!({ "kind": "identity" })),
+            WiresCommand::AddNode { kind: "identity".into() },
             |app| fixture_nodes(&app.projection().expect("projection").board_fixture).len(),
         );
     }

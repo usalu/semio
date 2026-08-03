@@ -12,6 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/�
 
 [dependencies]
 fem2d = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/⚡️implementation/🦀️rust", package = "semio-s-app-fem-2d" }
+fem2d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-fem-2d-engine" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

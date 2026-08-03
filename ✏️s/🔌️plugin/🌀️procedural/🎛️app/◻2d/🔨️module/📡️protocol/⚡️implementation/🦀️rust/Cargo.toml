@@ -15,8 +15,10 @@ procedural_2d = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀�
 procedural_2d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-2d-op" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
 
 [dev-dependencies]
 procedural_2d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-2d-engine" }
 flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
-serde_json = "1.0.140"

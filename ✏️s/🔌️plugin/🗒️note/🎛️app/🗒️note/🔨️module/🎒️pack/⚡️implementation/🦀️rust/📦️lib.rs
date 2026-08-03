@@ -17,6 +17,8 @@ pub fn decode(bytes: &[u8]) -> Result<NoteDocument, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+    use std::collections::BTreeMap;
 
     #[test]
     fn pack_round_trips_and_agrees_with_dsl() {

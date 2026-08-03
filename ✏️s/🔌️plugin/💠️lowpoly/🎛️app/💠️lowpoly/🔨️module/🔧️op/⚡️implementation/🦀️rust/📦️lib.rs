@@ -257,6 +257,129 @@ impl Operation<LowpolyProjection> for LowpolyOperation {
 }
 //#endregion 🔖️Operations
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `lowpoly_engine::LowpolyConfig`'s operation enum — one variant per settled
+/// interaction (mirrors the pre-B1 `LowpolyPlayRuntime` field writes), plus a generic `Snapshot` every
+/// variant's `backwards()` returns — mirrors `shooting_op::ShootingConfigOperation`'s identical pattern
+/// (see that type's doc comment for the full rationale): a config-only dispatch is always a plain
+/// `Apply` (never `AmendLast`), so "undo this tick" = "restore the whole-config snapshot from just
+/// before it", the simplest correct inverse.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum LowpolyConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: lowpoly_engine::LowpolyConfig,
+    },
+    #[dsl(key = "active-object")]
+    SetActiveObject { object_id: String },
+    #[dsl(key = "selection")]
+    SetSelection { mode: String, ids: Vec<u32> },
+    #[dsl(key = "selection-targets")]
+    SetSelectionTargets { mesh: bool, vertex: bool, edge: bool, face: bool },
+    #[dsl(key = "selection-keys")]
+    SetSelectionKeys { keys: Vec<String> },
+    #[dsl(key = "paint-utility")]
+    SetPaintUtility { value: String },
+    #[dsl(key = "active-paint-layer")]
+    SetActivePaintLayer { value: u32 },
+    #[dsl(key = "selection-method")]
+    SetSelectionMethod { value: String },
+    #[dsl(key = "selection-mode-default")]
+    SetSelectionModeDefault { value: String },
+    #[dsl(key = "selected-objects")]
+    SetSelectedObjectIds { ids: Vec<String> },
+    #[dsl(key = "hovered-object")]
+    SetHoveredObject { object_id: Option<String> },
+    #[dsl(key = "hovered-target")]
+    SetHoveredTarget { object_id: Option<String>, mode: Option<String>, id: Option<u32> },
+    #[dsl(key = "utility-params")]
+    SetUtilityParams { json: String },
+    #[dsl(key = "paint-color")]
+    SetPaintColor { r: u8, g: u8, b: u8, a: u8 },
+    #[dsl(key = "world-camera")]
+    SetWorldCamera {
+        #[dsl(coord)]
+        position: [f64; 3],
+        #[dsl(coord)]
+        target: [f64; 3],
+        fov: f64,
+    },
+    #[dsl(key = "engagement-input")]
+    SetEngagementInput { value: String },
+    #[dsl(key = "show-edges")]
+    SetShowEdges { value: bool },
+    #[dsl(key = "sun")]
+    SetSun { enabled: bool, azimuth: f64, elevation: f64, intensity: f64, color: String },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<lowpoly_engine::LowpolyConfig> for LowpolyConfigOperation {
+    type Diff = lowpoly_engine::LowpolyConfig;
+
+    fn diff(&self, base: &lowpoly_engine::LowpolyConfig) -> lowpoly_engine::LowpolyConfig {
+        let mut next = base.clone();
+        match self {
+            LowpolyConfigOperation::Snapshot { config } => return config.clone(),
+            LowpolyConfigOperation::SetActiveObject { object_id } => next.active_object_id = object_id.clone(),
+            LowpolyConfigOperation::SetSelection { mode, ids } => {
+                next.selection_mode = mode.clone();
+                next.selection_ids = ids.clone();
+            }
+            LowpolyConfigOperation::SetSelectionTargets { mesh, vertex, edge, face } => {
+                next.selection_targets_mesh = *mesh;
+                next.selection_targets_vertex = *vertex;
+                next.selection_targets_edge = *edge;
+                next.selection_targets_face = *face;
+            }
+            LowpolyConfigOperation::SetSelectionKeys { keys } => next.selection_keys = keys.clone(),
+            LowpolyConfigOperation::SetPaintUtility { value } => next.paint_utility = value.clone(),
+            LowpolyConfigOperation::SetActivePaintLayer { value } => next.active_paint_layer = *value,
+            LowpolyConfigOperation::SetSelectionMethod { value } => next.selection_method = value.clone(),
+            LowpolyConfigOperation::SetSelectionModeDefault { value } => next.selection_mode_default = value.clone(),
+            LowpolyConfigOperation::SetSelectedObjectIds { ids } => next.selected_object_ids = ids.clone(),
+            LowpolyConfigOperation::SetHoveredObject { object_id } => next.hovered_object_id = object_id.clone(),
+            LowpolyConfigOperation::SetHoveredTarget { object_id, mode, id } => {
+                next.hovered_target_object_id = object_id.clone();
+                next.hovered_target_mode = mode.clone();
+                next.hovered_target_id = *id;
+            }
+            LowpolyConfigOperation::SetUtilityParams { json } => next.utility_params_json = json.clone(),
+            LowpolyConfigOperation::SetPaintColor { r, g, b, a } => {
+                next.paint_color_r = *r;
+                next.paint_color_g = *g;
+                next.paint_color_b = *b;
+                next.paint_color_a = *a;
+            }
+            LowpolyConfigOperation::SetWorldCamera { position, target, fov } => {
+                next.world_camera_position = *position;
+                next.world_camera_target = *target;
+                next.world_camera_fov = *fov;
+            }
+            LowpolyConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            LowpolyConfigOperation::SetShowEdges { value } => next.show_edges = *value,
+            LowpolyConfigOperation::SetSun { enabled, azimuth, elevation, intensity, color } => {
+                next.sun_enabled = *enabled;
+                next.sun_azimuth = *azimuth;
+                next.sun_elevation = *elevation;
+                next.sun_intensity = *intensity;
+                next.sun_color = color.clone();
+            }
+            LowpolyConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            LowpolyConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &lowpoly_engine::LowpolyConfig) -> Vec<Self> {
+        vec![LowpolyConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -490,5 +613,39 @@ mod tests {
         assert!(result.is_err());
     }
     //#endregion 🔖️OpText
+
+    //#region 🔖️ConfigOperationsCoverage
+    #[test]
+    fn config_op_backwards_always_snapshots_prior_state() {
+        let base = lowpoly_engine::LowpolyConfig { active_object_id: "obj-1".into(), ..lowpoly_engine::LowpolyConfig::default() };
+        let operation = LowpolyConfigOperation::SetActiveObject { object_id: "obj-2".into() };
+        let after = operation.diff(&base);
+        assert_eq!(after.active_object_id, "obj-2");
+        let backwards = operation.backwards(&base);
+        assert_eq!(backwards, vec![LowpolyConfigOperation::Snapshot { config: base.clone() }]);
+        assert_eq!(backwards[0].diff(&after), base);
+    }
+
+    #[test]
+    fn config_op_text_round_trip_set_selection() {
+        store::test_support::assert_op_line_round_trip(&LowpolyConfigOperation::SetSelection { mode: "face".into(), ids: vec![1, 2, 3] });
+    }
+
+    #[test]
+    fn config_op_text_round_trip_world_camera() {
+        store::test_support::assert_op_line_round_trip(&LowpolyConfigOperation::SetWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
+    }
+
+    #[test]
+    fn config_op_text_round_trip_snapshot() {
+        store::test_support::assert_op_line_round_trip(&LowpolyConfigOperation::Snapshot { config: lowpoly_engine::LowpolyConfig::default() });
+    }
+
+    #[test]
+    fn config_op_binary_round_trips_and_agrees_with_text() {
+        let operation = LowpolyConfigOperation::SetHoveredTarget { object_id: Some("obj-1".into()), mode: Some("mesh".into()), id: Some(3) };
+        store::test_support::assert_op_text_binary_equivalence(&operation);
+    }
+    //#endregion 🔖️ConfigOperationsCoverage
 }
 //#endregion 🧪️Tests

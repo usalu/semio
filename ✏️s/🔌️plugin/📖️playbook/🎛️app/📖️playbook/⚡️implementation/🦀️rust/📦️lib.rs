@@ -9,5 +9,5 @@
 //! the kernel individually.
 
 pub use playbook::{
-    empty_playbook_projection, PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookSpec, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA,
+    empty_playbook_projection, flatten_playbook_blocks, PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookSpec, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA,
 };

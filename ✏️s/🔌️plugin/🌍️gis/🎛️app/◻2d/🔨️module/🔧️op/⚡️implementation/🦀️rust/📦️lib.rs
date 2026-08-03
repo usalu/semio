@@ -1,6 +1,7 @@
 //! ⚡️ GIS 2D app — operation enum + laws (constitutional: op).
 
 use gis2d::{GisMapDocument, MapFeature, MapFeaturePatch};
+use gis2d_engine::Gis2dConfig;
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Operation, OperationDiff, Patchable};
 use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
@@ -195,6 +196,80 @@ impl protocol::OpBinary for GisMapOperation {
 }
 //#endregion 🔖️OpText
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `gis2d_engine::Gis2dConfig`'s operation enum — one variant per settled interaction
+/// (mirrors the pre-B1 `Gis2dPlayRuntime` field writes), plus a generic `Snapshot` every variant's
+/// `backwards()` returns — mirrors `shooting_op::ShootingConfigOperation`'s identical "whole-config
+/// snapshot is the simplest correct inverse" shape. `Operation::Diff` is the WHOLE `Gis2dConfig` (not a
+/// granular patch type): `diff()` returns "the full config after this op", and
+/// `OperationDiff<Gis2dConfig>::apply` for `Gis2dConfig` itself (in `gis2d_engine`) just returns that
+/// snapshot verbatim, ignoring `base`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Gis2dConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: Gis2dConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "layer-visibility")]
+    SetLayerVisibility { layer_id: String, visible: bool },
+    #[dsl(key = "camera")]
+    SetCamera { camera_json: String },
+    #[dsl(key = "render-mode")]
+    SetRenderMode { value: String },
+    #[dsl(key = "vector-style")]
+    SetVectorStyle { value: String },
+    #[dsl(key = "lod-mode")]
+    SetLodMode { value: String },
+    #[dsl(key = "feature-selection")]
+    SetFeatureSelection { value_json: String },
+    #[dsl(key = "hover")]
+    SetHover { value_json: String },
+    #[dsl(key = "selection-method")]
+    SetSelectionMethod { value: String },
+    #[dsl(key = "selection-mode")]
+    SetSelectionMode { value: String },
+    #[dsl(key = "layer-stroke-scale")]
+    SetLayerStrokeScale { layer_id: String, value: f64 },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<Gis2dConfig> for Gis2dConfigOperation {
+    type Diff = Gis2dConfig;
+
+    fn diff(&self, base: &Gis2dConfig) -> Gis2dConfig {
+        let mut next = base.clone();
+        match self {
+            Gis2dConfigOperation::Snapshot { config } => return config.clone(),
+            Gis2dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            Gis2dConfigOperation::SetLayerVisibility { layer_id, visible } => {
+                next.layer_visibility.insert(layer_id.clone(), *visible);
+            }
+            Gis2dConfigOperation::SetCamera { camera_json } => next.camera_json = camera_json.clone(),
+            Gis2dConfigOperation::SetRenderMode { value } => next.render_mode = value.clone(),
+            Gis2dConfigOperation::SetVectorStyle { value } => next.vector_style = value.clone(),
+            Gis2dConfigOperation::SetLodMode { value } => next.lod_mode = value.clone(),
+            Gis2dConfigOperation::SetFeatureSelection { value_json } => next.feature_selection_json = value_json.clone(),
+            Gis2dConfigOperation::SetHover { value_json } => next.hover_json = value_json.clone(),
+            Gis2dConfigOperation::SetSelectionMethod { value } => next.selection_method = value.clone(),
+            Gis2dConfigOperation::SetSelectionMode { value } => next.selection_mode = value.clone(),
+            Gis2dConfigOperation::SetLayerStrokeScale { layer_id, value } => {
+                next.layer_stroke_scale.insert(layer_id.clone(), *value);
+            }
+            Gis2dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &Gis2dConfig) -> Vec<Self> {
+        vec![Gis2dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -213,8 +288,14 @@ mod tests {
         forward
     }
 
+    /// 🧬️ `MapFeature::data`/`MapFeaturePatch::data` are `dsl::DslValue` (see `gis2d::MapFeature`'s doc
+    /// comment) — this bridges a `serde_json::json!` literal into one for test-fixture ergonomics.
+    fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
+        dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)
+    }
+
     fn feature(id: &str) -> MapFeature {
-        MapFeature { id: id.into(), data: json!({ "id": id, "lon": 1.0, "lat": 2.0 }) }
+        MapFeature { id: id.into(), data: dsl_of(json!({ "id": id, "lon": 1.0, "lat": 2.0 })) }
     }
 
     #[test]
@@ -224,7 +305,7 @@ mod tests {
         assert_eq!(added.positions.len(), 1);
         let patched = round_trip(
             &added,
-            &GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(json!({ "id": "p1", "label": "Home" })) } }),
+            &GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: Some(dsl_of(json!({ "id": "p1", "label": "Home" }))) } }),
         );
         assert_eq!(patched.positions[0].data.get("label").and_then(|value| value.as_str()), Some("Home"));
         let removed = round_trip(&patched, &GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
@@ -254,7 +335,7 @@ mod tests {
     }
 
     fn sample_patch_feature() -> MapFeature {
-        MapFeature { id: "p1".into(), data: json!({ "id": "p1", "lon": 1.0, "lat": 2.0 }) }
+        MapFeature { id: "p1".into(), data: dsl_of(json!({ "id": "p1", "lon": 1.0, "lat": 2.0 })) }
     }
 
     #[test]
@@ -264,7 +345,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to: 3 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch {
             id: "p1".into(),
-            patch: MapFeaturePatch { data: Some(json!({ "label": "Home" })) },
+            patch: MapFeaturePatch { data: Some(dsl_of(json!({ "label": "Home" }))) },
         }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } }));
     }
@@ -276,7 +357,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch {
             id: "p1".into(),
-            patch: MapFeaturePatch { data: Some(json!({ "kind": "reuse" })) },
+            patch: MapFeaturePatch { data: Some(dsl_of(json!({ "kind": "reuse" }))) },
         }));
     }
 
@@ -287,13 +368,50 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to: 2 }));
         store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch {
             id: "p1".into(),
-            patch: MapFeaturePatch { data: Some(json!({ "kind": "boundary" })) },
+            patch: MapFeaturePatch { data: Some(dsl_of(json!({ "kind": "boundary" }))) },
         }));
     }
 
     #[test]
     fn gis_map_set_document_op_line_round_trips() {
         store::test_support::assert_op_line_round_trip(&GisMapOperation::SetDocument { document: gis2d_engine::default_document() });
+    }
+
+    #[test]
+    fn gis2d_config_operation_diff_writes_the_targeted_field_and_leaves_the_rest() {
+        let base = Gis2dConfig::default();
+        let next = Gis2dConfigOperation::SetRenderMode { value: "vector".into() }.diff(&base);
+        assert_eq!(next.render_mode, "vector");
+        assert_eq!(next.vector_style, base.vector_style, "untouched fields survive the diff");
+    }
+
+    #[test]
+    fn gis2d_config_operation_backwards_restores_the_pre_operation_snapshot() {
+        let base = Gis2dConfig::default();
+        let operation = Gis2dConfigOperation::SetLayerVisibility { layer_id: "water".into(), visible: false };
+        let next = operation.diff(&base);
+        assert_eq!(next.layer_visibility.get("water"), Some(&false));
+        let backwards = operation.backwards(&base);
+        assert_eq!(backwards, vec![Gis2dConfigOperation::Snapshot { config: base.clone() }]);
+        let restored = backwards[0].diff(&next);
+        assert_eq!(restored, base, "the snapshot inverse restores the exact pre-operation config");
+    }
+
+    #[test]
+    fn gis2d_config_operation_lines_round_trip() {
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetSelection { ids: vec!["roads".into()] });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetLayerVisibility { layer_id: "water".into(), visible: false });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetCamera { camera_json: r#"{"x":1,"y":2,"zoom":3}"#.into() });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetRenderMode { value: "vector".into() });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetVectorStyle { value: "figureGround".into() });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetLodMode { value: "automatic".into() });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetFeatureSelection { value_json: r#"{"positions":[],"routes":[]}"#.into() });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetHover { value_json: "null".into() });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetSelectionMethod { value: "lasso".into() });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetSelectionMode { value: "additive".into() });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&Gis2dConfigOperation::Snapshot { config: Gis2dConfig::default() });
     }
 }
 //#endregion 🧪️Tests

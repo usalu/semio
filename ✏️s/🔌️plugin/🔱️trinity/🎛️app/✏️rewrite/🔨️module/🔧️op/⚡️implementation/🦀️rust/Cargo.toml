@@ -12,6 +12,8 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️a
 
 [dependencies]
 rewrite = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-rewrite" }
+rewrite_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-rewrite-engine" }
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-ram" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

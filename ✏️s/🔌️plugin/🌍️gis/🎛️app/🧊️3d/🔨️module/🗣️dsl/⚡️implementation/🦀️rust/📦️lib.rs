@@ -28,7 +28,15 @@ mod tests {
 
     #[test]
     fn gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration() {
-        store::test_support::assert_dsl_round_trip(&Gis3dTerrainDocument { exaggeration: 2.75 });
+        store::test_support::assert_dsl_round_trip(&Gis3dTerrainDocument { exaggeration: 2.75, imported_features_json: String::new() });
+    }
+
+    #[test]
+    fn gis3d_terrain_document_dsl_round_trips_imported_features_json() {
+        store::test_support::assert_dsl_round_trip(&Gis3dTerrainDocument {
+            exaggeration: 1.0,
+            imported_features_json: r#"{"positions":[{"id":"p1","lon":1.0,"lat":2.0}],"routes":[],"regions":[]}"#.into(),
+        });
     }
 }
 //#endregion 🧪️Tests

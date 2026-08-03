@@ -1,7 +1,8 @@
 //! ⚡️ Writer app — operation enum + laws (constitutional: op).
 
 use protocol::{Operation, OperationDiff};
-use writer::WriterProjection;
+use writer::{WriterCamera, WriterProjection};
+use writer_engine::{WriterConfig, WriterEditorSelection, WriterEditorSettings};
 
 //#region 🔖️Types
 /// 📐️ Typed content mutation for a `WriterProjection`. The editor viewport camera is session-only
@@ -63,6 +64,79 @@ impl Operation<WriterProjection> for WriterOperation {
 }
 //#endregion 🔖️Types
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `writer_engine::WriterConfig`'s operation enum — one variant per settled interaction
+/// (mirrors the pre-B1 `WriterPlayRuntime` field writes), plus a generic `Snapshot` every variant's
+/// `backwards()` returns — mirrors `shooting_op::ShootingConfigOperation` exactly (see that type's
+/// doc comment for the whole-config-snapshot inverse rationale).
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
+pub enum WriterConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: WriterConfig,
+    },
+    #[dsl(key = "selected-ast-ids")]
+    SetSelectedAstIds { ids: Vec<String> },
+    #[dsl(key = "editor-selection")]
+    SetEditorSelection {
+        #[dsl(block)]
+        selection: Option<WriterEditorSelection>,
+    },
+    #[dsl(key = "format-signal")]
+    SetFormatSignal { value: u32 },
+    #[dsl(key = "lint-signal")]
+    SetLintSignal { value: u32 },
+    #[dsl(key = "revision")]
+    SetRevision { value: u32 },
+    #[dsl(key = "editor-settings")]
+    SetEditorSettings {
+        #[dsl(block)]
+        settings: WriterEditorSettings,
+    },
+    #[dsl(key = "tree-hovered-ast-id")]
+    SetTreeHoveredAstId { id: Option<String> },
+    #[dsl(key = "editor-hover-offset")]
+    SetEditorHoverOffset { offset: Option<usize> },
+    #[dsl(key = "engagement-input")]
+    SetEngagementInput { value: String },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: WriterCamera,
+    },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<WriterConfig> for WriterConfigOperation {
+    type Diff = WriterConfig;
+
+    fn diff(&self, base: &WriterConfig) -> WriterConfig {
+        let mut next = base.clone();
+        match self {
+            WriterConfigOperation::Snapshot { config } => return config.clone(),
+            WriterConfigOperation::SetSelectedAstIds { ids } => next.selected_ast_ids = ids.clone(),
+            WriterConfigOperation::SetEditorSelection { selection } => next.editor_selection = selection.clone(),
+            WriterConfigOperation::SetFormatSignal { value } => next.format_signal = *value,
+            WriterConfigOperation::SetLintSignal { value } => next.lint_signal = *value,
+            WriterConfigOperation::SetRevision { value } => next.revision = *value,
+            WriterConfigOperation::SetEditorSettings { settings } => next.editor_settings = settings.clone(),
+            WriterConfigOperation::SetTreeHoveredAstId { id } => next.tree_hovered_ast_id = id.clone(),
+            WriterConfigOperation::SetEditorHoverOffset { offset } => next.editor_hover_offset = *offset,
+            WriterConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            WriterConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            WriterConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &WriterConfig) -> Vec<Self> {
+        vec![WriterConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -117,5 +191,45 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&WriterOperation::SetText { text: "line one\nline two".into() });
         store::test_support::assert_op_line_round_trip(&WriterOperation::SetDocument { document: jack_projection() });
     }
+
+    //#region 🔖️ConfigTests
+    #[test]
+    fn writer_config_dsl_round_trips_default_and_populated() {
+        store::test_support::assert_config_round_trip(&WriterConfig::default());
+        let populated = WriterConfig {
+            selected_ast_ids: vec!["jack-ast-1".into()],
+            editor_selection: Some(WriterEditorSelection { start: 3, end: 7 }),
+            format_signal: 2,
+            lint_signal: 1,
+            revision: 9,
+            engagement_input: "format".into(),
+            locale: "de-DE".into(),
+            ..WriterConfig::default()
+        };
+        store::test_support::assert_config_round_trip(&populated);
+    }
+
+    #[test]
+    fn writer_config_operation_backwards_restores_pre_state() {
+        let pre = WriterConfig::default();
+        store::test_support::assert_operation_round_trip(&pre, WriterConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_operation_round_trip(&pre, WriterConfigOperation::SetSelectedAstIds { ids: vec!["a".into()] });
+        store::test_support::assert_operation_round_trip(&pre, WriterConfigOperation::SetCamera { camera: WriterCamera { x: 5.0, y: -2.0, zoom: 1.5 } });
+    }
+
+    #[test]
+    fn writer_config_operation_binary_matches_text() {
+        store::test_support::assert_op_text_binary_equivalence(&WriterConfigOperation::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_text_binary_equivalence(&WriterConfigOperation::Snapshot { config: WriterConfig::default() });
+    }
+
+    #[test]
+    fn writer_config_pack_round_trips() {
+        let config = WriterConfig { locale: "de-DE".into(), engagement_input: "format".into(), ..WriterConfig::default() };
+        let bytes = store::DocumentPack::encode_pack(&config);
+        let decoded = <WriterConfig as store::DocumentPack>::decode_pack(&bytes).expect("decode writer config pack");
+        assert_eq!(decoded, config);
+    }
+    //#endregion 🔖️ConfigTests
 }
 //#endregion 🧪️Tests

@@ -14,8 +14,10 @@ path = "../../../../../../../../../✏️s/🔌️plugin/💠️lowpoly/🎛️a
 lowpoly = { path = "../../../../../../../../../✏️s/🔌️plugin/💠️lowpoly/🎛️app/💠️lowpoly/⚡️implementation/🦀️rust", package = "semio-s-app-lowpoly" }
 lowpoly_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/💠️lowpoly/🎛️app/💠️lowpoly/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-lowpoly-engine" }
 lowpoly_op = { path = "../../../../../../../../../✏️s/🔌️plugin/💠️lowpoly/🎛️app/💠️lowpoly/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-lowpoly-op" }
+lowpoly_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/💠️lowpoly/🎛️app/💠️lowpoly/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-lowpoly-protocol" }
 kernel_3d_mesh = { path = "../../../../../../../../🔨️module/🧊️3d/🥽️mesh/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-3d-mesh" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"

@@ -14,6 +14,8 @@ path = "../../../../../../../../../✏️s/🔌️plugin/➗️mathematical/🎛
 mathematical = { path = "../../../../../../../../../✏️s/🔌️plugin/➗️mathematical/🎛️app/➗️mathematical/⚡️implementation/🦀️rust", package = "semio-s-app-mathematical" }
 mathematical_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/➗️mathematical/🎛️app/➗️mathematical/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-mathematical-engine" }
 mathematical_op = { path = "../../../../../../../../../✏️s/🔌️plugin/➗️mathematical/🎛️app/➗️mathematical/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-mathematical-op" }
+mathematical_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/➗️mathematical/🎛️app/➗️mathematical/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-mathematical-protocol" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }

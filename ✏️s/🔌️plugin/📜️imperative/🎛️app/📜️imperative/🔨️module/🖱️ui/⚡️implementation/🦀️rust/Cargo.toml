@@ -18,10 +18,15 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📜️imperative/🎛�
 imperative = { path = "../../../../../../../../../✏️s/🔌️plugin/📜️imperative/🎛️app/📜️imperative/⚡️implementation/🦀️rust", package = "semio-s-app-imperative" }
 imperative_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📜️imperative/🎛️app/📜️imperative/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-imperative-engine" }
 imperative_op = { path = "../../../../../../../../../✏️s/🔌️plugin/📜️imperative/🎛️app/📜️imperative/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-imperative-op" }
+imperative_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/📜️imperative/🎛️app/📜️imperative/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-imperative-protocol" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+
+[dev-dependencies]
+neural_engine = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚙️engine/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

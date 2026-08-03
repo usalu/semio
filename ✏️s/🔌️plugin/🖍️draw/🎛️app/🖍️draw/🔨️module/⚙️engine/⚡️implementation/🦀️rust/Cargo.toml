@@ -14,6 +14,11 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/
 draw = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/⚡️implementation/🦀️rust", package = "semio-s-app-draw" }
 draw_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-draw-dsl" }
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
+# 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe: `DrawConfig`'s `dsl::DslDocument` derive +
+# `store::ConfigRecord`/`protocol::OperationDiff` impls (mirrors `shooting_engine`'s `ShootingConfig`).
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 kernel_2d_engine = { path = "../../../../../../../../../✏️s/🔨️module/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-kernel-geometry-2d-engine" }
 kernel_2d_rs = { path = "../../../../../../../../../✏️s/🔨️module/◻2d/⚡️implementation/🦀️rust", package = "semio-s-kernel-geometry-2d" }
 base64 = "0.22"

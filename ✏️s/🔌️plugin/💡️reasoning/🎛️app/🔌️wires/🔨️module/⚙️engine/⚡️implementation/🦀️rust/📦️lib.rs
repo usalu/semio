@@ -2,9 +2,56 @@
 
 use dsl::DslValue;
 use reasoning_wires::MindmapWiresDocument;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub use reasoning_wires::{empty_board_fixture, empty_mindmap_wires_document, empty_wires_fixture};
+
+//#region 🔖️Config
+/// 🧮️ B1: wires' `DocumentApp::Config` — the pure-trait pilot's config artifact for this app. Absorbs
+/// everything that used to live in `reasoning_wires_ui::ReasoningWiresPlayApp`'s ephemeral
+/// `WiresPlayRuntime` (selection + in-flight pointer drag of one board node) plus the `locale` the
+/// deleted `ViewState` used to carry (`resolve_labels`/`is_de_locale`) — see
+/// `reasoning_wires_ui::ReasoningWiresPlayApp::render`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "wirescfg")]
+#[dsl(layout = "lines")]
+pub struct WiresConfig {
+    /// 👁️ Selected node/edge ids — was `WiresPlayRuntime::selected_ids`.
+    pub selected_ids: Vec<String>,
+    /// 🖱️ In-flight pointer-drag target node id — was `WiresDragState::node_id`
+    /// (`WiresPlayRuntime::drag`); `None` means no drag is in progress.
+    pub drag_node_id: Option<String>,
+    /// 🖱️ Last observed drag pointer X (screen space) — was `WiresDragState::last_x`.
+    pub drag_last_x: f64,
+    /// 🖱️ Last observed drag pointer Y (screen space) — was `WiresDragState::last_y`.
+    pub drag_last_y: f64,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+impl Default for WiresConfig {
+    fn default() -> Self {
+        Self { selected_ids: Vec::new(), drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0, locale: "en-US".into() }
+    }
+}
+
+impl store::ConfigRecord for WiresConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `reasoning_wires_op::WiresConfigOperation` (lives here, not in
+/// `reasoning_wires_op`, since `protocol::OperationDiff`/`WiresConfig` are both foreign to that crate —
+/// the orphan rule requires at least one local type). Mirrors `shooting_engine::ShootingConfig`'s
+/// identical "whole-record replace" impl: `apply` ignores `base` entirely.
+impl protocol::OperationDiff<WiresConfig> for WiresConfig {
+    fn apply(&self, _base: &WiresConfig) -> WiresConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
 
 //#region 🔖️DocumentHelpers
 pub fn array_mut<'a>(fixture: &'a mut DslValue, key: &str) -> &'a mut Vec<DslValue> {
@@ -250,6 +297,29 @@ mod tests {
         assert_eq!(RelationshipKind::Has.label(), "has");
     }
 
+    //#region 🔖️ConfigTests
+    #[test]
+    fn wires_config_default_matches_no_selection_no_drag_and_en_locale() {
+        let config = WiresConfig::default();
+        assert!(config.selected_ids.is_empty());
+        assert!(config.drag_node_id.is_none());
+        assert_eq!(config.locale, "en-US");
+    }
+
+    /// 🔁️ B1 dsl/pack round-trip law for `WiresConfig` — a non-default fixture exercising every field.
+    #[test]
+    fn wires_config_dsl_pack_round_trip() {
+        let config = WiresConfig {
+            selected_ids: vec!["node-1".into(), "edge-1".into()],
+            drag_node_id: Some("node-1".into()),
+            drag_last_x: 12.5,
+            drag_last_y: -7.25,
+            locale: "de-DE".into(),
+        };
+        store::test_support::assert_dsl_pack_equivalence(&config);
+    }
+    //#endregion 🔖️ConfigTests
+
     #[test]
     fn fixed_identity_set_validation() {
         let mut ext = DefaultWiresExtension::default();
@@ -272,7 +342,7 @@ mod tests {
         // hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same shape
         // `from_fixture_json` has always expected.
         let document = metabolism_wires_example_document();
-        let json = serde_json::to_string(&dsl::from_dsl_value(document.wires_fixture.clone()).expect("wires fixture")).expect("json");
+        let json = serde_json::to_string(&dsl::from_dsl_value::<Value>(document.wires_fixture.clone()).expect("wires fixture")).expect("json");
         let ext = DefaultWiresExtension::from_fixture_json(&json).expect("metabolism fixture");
         assert_eq!(ext.mindmap.topics.len(), 7);
         assert_eq!(ext.relationships.len(), 9);

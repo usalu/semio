@@ -1,4 +1,12 @@
-//! 🎛️ S Studio app — `DocumentApp` impl, render, manifest (constitutional: ui).
+//! 🎛️ S Studio app — `DocumentApp` impl, render, manifest (constitutional: ui). B1: the pure-trait
+//! cutover — `SpaceApp` is a unit struct; every former `StudioRuntimeState` field (selection, hover,
+//! camera, clipboard, presence identity, …) plus the deleted `ViewState.panel_json`-backed
+//! `SpacePanelState.active_panel_tab` now live in `space_engine::SpaceConfig`, written via
+//! `space_op::SpaceConfigOperation`s (real `backwards`, no ad hoc `InverseAction`); every action
+//! dispatches through the single typed `space_protocol::SpaceCommand` channel via
+//! `DocumentApp::handle`. A `WorkflowNode` IS the app instance now (see the kernel `🔁️workflow` crate's
+//! `🔖️InstanceIdentity` doc) — every former `instance_id`/`OsAppInstance` join collapses onto
+//! `projection.workflow.nodes` directly.
 //!
 //! 🕳️ Deviation from the usual "ui" content: this app's `DocumentApp::Projection`/`Operation` are
 //! `semio_framework_os::{OsProjection, OsOperation}` — see `space_op`'s doc comment. This crate also
@@ -6,53 +14,61 @@
 //! documents through the Home launcher's own catalog port (`openSpace`, `exportStudioPack`,
 //! `exportStudioDsl`, `importSpacePackPayload`) — a real, non-test dependency, not just a test fixture.
 
-use std::cell::RefCell;
 use space::{
-    SpacePanelState, SpaceProgramEntry, StudioRuntimeState, S_PLAY_APP_ID, S_PLAY_BODY_COMPILED_DAG,
-    S_PLAY_BODY_MEDIA_VFS, S_PLAY_BODY_WORKFLOW, S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_CATALOGUE_DRAG_MIME,
-    S_PLAY_CATALOGUE_TAB_ID, S_PLAY_CONTROLLER_ID, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID,
-    S_PLAY_PARAMETERS_BODY_KEY, S_PLAY_PARAMETERS_TAB_ID, S_PLAY_SURFACE_COMPILED_DAG, S_PLAY_SURFACE_MEDIA_VFS,
-    S_PLAY_SURFACE_WORKFLOW, S_PLAY_WINDOW_COMPILED_DAG, S_PLAY_WINDOW_MEDIA_VFS, S_PLAY_WINDOW_WORKFLOW,
-    S_STUDIO_EXAMPLES,
+    S_PLAY_APP_ID, S_PLAY_BODY_COMPILED_DAG, S_PLAY_BODY_MEDIA_VFS, S_PLAY_BODY_WORKFLOW,
+    S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_CATALOGUE_DRAG_MIME, S_PLAY_CATALOGUE_TAB_ID, S_PLAY_CONTROLLER_ID,
+    S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID, S_PLAY_PARAMETERS_BODY_KEY, S_PLAY_PARAMETERS_TAB_ID,
+    S_PLAY_SURFACE_COMPILED_DAG, S_PLAY_SURFACE_MEDIA_VFS, S_PLAY_SURFACE_WORKFLOW, S_PLAY_WINDOW_COMPILED_DAG,
+    S_PLAY_WINDOW_MEDIA_VFS, S_PLAY_WINDOW_WORKFLOW, S_STUDIO_EXAMPLES,
 };
 use space_engine::{
-    add_parameter_operation, compiled_dag_wire_literal, flatten_media_vfs_rows,
-    negotiate_media_connect, parameter_entity_id, parse_panel_state, panel_json,
-    patch_parameter_operation, primary_selected_instance_id, selected_instance_ids, spawn_app_instance_operation,
-    OsParameterId,
+    add_parameter_operation, add_workflow_node_operation, compiled_dag_wire_literal, flatten_media_vfs_rows,
+    negotiate_media_connect, parameter_entity_id, patch_parameter_operation,
+    OsParameterId, SpaceConfig,
 };
+use space_op::SpaceConfigOperation;
+use space_protocol::SpaceCommand;
 use space_shared::{demo_space_projection, ensure_space_fixtures_registered, parse_demo_space_document};
 use semio_framework_os::{
     apply_flow_fixture_to_os_workflow, build_os_workflow_operator_infos, create_empty_os_document,
-    create_os_id, default_os_projection, list_os_workflows,
-    materialize_os_app_instance_document_json, materialize_os_projection,
-    os_app_registration, os_document_to_json, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload,
-    os_workflow_vfs_schema, os_parameter_types_compatible, os_parameter_value,
-    OsAppInstance, OsOperation, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection,
-    OsWorkflowCamera, OS_WORKFLOW_VFS_ROOT_ID, OS_SPACE_SCHEMA,
+    create_os_id, default_os_projection, materialize_os_app_instance_document_json, materialize_os_projection,
+    os_app_primary_output_kind, os_app_registration, os_document_to_json, os_workflow_to_flow_fixture,
+    os_workflow_to_node_graph_payload, os_workflow_vfs_schema, os_parameter_types_compatible, os_parameter_value,
+    workflow_palette, MediaContract, OsOperation, OsParameter, OsParameterFieldBinding, OsParameterType,
+    OsProjection, OsWorkflowCamera, WorkflowEdge, WorkflowNode, OS_WORKFLOW_VFS_ROOT_ID, OS_SPACE_SCHEMA,
 };
-// 🕳️ `export_os_space_pack`/`export_os_space_dsl`/`import_os_space_from_pack` (wave 1, `host`
-// region) aren't in `framework/product/os/core/rs/lib.rs`'s crate-root `pub use host::{...}` list
-// (that file's non-test code is out of this family's edit scope — see the pack-rollout ticket's
-// wave 2 family note) — reached via `host::` directly instead, since `pub mod host` makes every
-// `pub fn` inside it reachable that way regardless of the root re-export list.
 use semio_framework_os::host::{export_os_space_dsl, export_os_space_pack, import_os_space_from_pack};
 use semio_framework_plugin::{
     app_labels, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
-    create_default_layout, host_now_ms, is_de_locale, localized_label_map, resolve_labels, tree_item_desc,
+    create_default_layout, host_now_ms, localized_label_map, tree_item_desc,
     ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, IconName, MeasureSelectItem, WindowEngagementStatus,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HostEffect, NodeGraphScene, PanelGroup,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
+    AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, LocaleLabels,
+    NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphOperatorRecord, NodeGraphViewport, PanelGroup,
     PanelTreeBuilder, SurfaceKind, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
-    UiNumberStepperNode, UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode, ViewState,
+    UiNumberStepperNode, UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode,
     VirtualFileSystemScene, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowLayout,
     WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
 use semio_framework_plugin::optional_json_to_dsl;
+use protocol::Operation;
+use serde::Serialize;
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{LazyLock, Mutex};
+
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — see `shooting_ui`'s identical pair.
+fn is_de_locale(cfg: &SpaceConfig) -> bool {
+    cfg.locale.starts_with("de")
+}
+
+fn resolve_labels<L: LocaleLabels>(cfg: &SpaceConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -168,7 +184,8 @@ fn space_workflow_context_menu_items(
 // `PresencePeer`/`Presence` frames via `framework/sync`'s `DocumentEvent::Presence` for migrated
 // apps. `s` isn't wired onto `DocumentHost` yet (WS-F's last wave), so it keeps this tiny
 // self-contained in-memory heartbeat map until then — same upsert/prune/exclude-self semantics as
-// before, just owned locally instead of delegated to a shared cross-process mechanism.
+// before, just owned locally instead of delegated to a shared cross-process mechanism. B1: keyed
+// off `SpaceConfig` fields now instead of the deleted `StudioRuntimeState`.
 #[derive(Clone)]
 struct SPresencePeerLocal {
     client_id: String,
@@ -182,13 +199,13 @@ const S_PRESENCE_STALE_MS: f64 = 15_000.0;
 static PRESENCE_PEERS: LazyLock<Mutex<HashMap<String, HashMap<String, SPresencePeerLocal>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
-fn runtime_space_id(runtime: &StudioRuntimeState) -> String {
-    runtime.space_id.clone().unwrap_or_else(|| "default".into())
+fn config_space_id(config: &SpaceConfig) -> String {
+    config.space_id.clone().unwrap_or_else(|| "default".into())
 }
 
-fn presence_peers_json(runtime: &StudioRuntimeState) -> String {
-    let space_id = runtime_space_id(runtime);
-    let self_client_id = runtime.client_id.clone().unwrap_or_default();
+fn presence_peers_json(config: &SpaceConfig) -> String {
+    let space_id = config_space_id(config);
+    let self_client_id = config.client_id.clone().unwrap_or_default();
     let now_ms = host_now_ms();
     let peers: Vec<Value> = PRESENCE_PEERS
         .lock()
@@ -208,11 +225,11 @@ fn presence_peers_json(runtime: &StudioRuntimeState) -> String {
     serde_json::to_string(&peers).unwrap_or_else(|_| "[]".into())
 }
 
-fn publish_presence(runtime: &StudioRuntimeState) {
-    let (Some(client_id), Some(client_name)) = (&runtime.client_id, &runtime.client_name) else {
+fn publish_presence(config: &SpaceConfig) {
+    let (Some(client_id), Some(client_name)) = (&config.client_id, &config.client_name) else {
         return;
     };
-    let space_id = runtime_space_id(runtime);
+    let space_id = config_space_id(config);
     let now_ms = host_now_ms();
     if let Ok(mut registry) = PRESENCE_PEERS.lock() {
         let peers = registry.entry(space_id).or_default();
@@ -222,11 +239,19 @@ fn publish_presence(runtime: &StudioRuntimeState) {
             SPresencePeerLocal {
                 client_id: client_id.clone(),
                 name: client_name.clone(),
-                selection: runtime.selected_media_node_ids.clone(),
+                selection: config.selected_node_ids.clone(),
                 updated_at_ms: now_ms,
             },
         );
     }
+}
+
+/// @emoji 🔎️ First selected node — the fallback target for actions that implicitly operate on "the"
+/// current selection (rename/remove/open) when no explicit node id is supplied. Was
+/// `primary_selected_instance_id(&StudioRuntimeState, &OsProjection)`; no join needed anymore (node IS
+/// the instance).
+fn primary_selected_node_id(config: &SpaceConfig) -> Option<String> {
+    config.selected_node_ids.first().cloned().or_else(|| config.active_node_id.clone())
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -252,7 +277,7 @@ app_labels! {
         workflow_nodes: &'static str = en: "Workflow nodes", de: "Workflow-Knoten";
         app_instance: &'static str = en: "App instance", de: "App-Instanz";
         app_instances: &'static str = en: "App instances", de: "App-Instanzen";
-        select_hint: &'static str = en: "Select workflow nodes or app instances in the canvas.", de: "Wähle Workflow-Knoten oder App-Instanzen im Arbeitsbereich aus.";
+        select_hint: &'static str = en: "Select workflow nodes in the canvas.", de: "Wähle Workflow-Knoten im Arbeitsbereich aus.";
         program_prefix: &'static str = en: "Program", de: "Programm";
         app_prefix: &'static str = en: "App", de: "App";
         instance_id_prefix: &'static str = en: "Instance id", de: "Instanz-ID";
@@ -265,7 +290,7 @@ app_labels! {
         toggle_off: &'static str = en: "Off", de: "Aus";
         mixed_placeholder: &'static str = en: "Mixed", de: "Gemischt";
         parameter_count_suffix: &'static str = en: "parameter(s)", de: "Parameter";
-        media_node_count_label: &'static str = en: "media node(s)", de: "Medienknoten";
+        media_node_count_label: &'static str = en: "node(s)", de: "Knoten";
         app_instance_count_label: &'static str = en: "app instance(s)", de: "App-Instanz(en)";
         context_open_instance: &'static str = en: "Open instance", de: "Instanz öffnen";
         context_duplicate: &'static str = en: "Duplicate", de: "Duplizieren";
@@ -282,11 +307,12 @@ app_labels! {
 
 //#region 🔖️CommandLabels
 /// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in
-/// `create_space_app`'s static manifest — same rationale as `app_home`'s `s_home_action_labels`.
+/// `create_space_app`'s static manifest — same rationale as `app_home`'s `s_home_action_labels`. The
+/// dead `"setParameter"` action (never dispatched by any real UI call site pre-B1) is dropped along
+/// with its `SpaceCommand` variant.
 fn s_studio_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
         // 🔧️ Document-mutating operations
-        ("setParameter", "Set Parameter", "Parameter festlegen"),
         ("patchParameter", "Patch Parameter", "Parameter aktualisieren"),
         ("addParameter", "Add Parameter", "Parameter hinzufügen"),
         ("removeParameter", "Remove Parameter", "Parameter entfernen"),
@@ -308,7 +334,7 @@ fn s_studio_action_labels(is_de: bool) -> HashMap<String, String> {
         ("workflowEngagementSubmit", "Workflow Engagement Submit", "Workflow-Eingabe bestätigen"),
         ("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen"),
         ("nodeGraphEdit", "Edit Workflow", "Workflow bearbeiten"),
-        // 👁️ Ephemeral view state
+        // 👁️ Ephemeral view state (config-only now)
         ("setActivePanelTab", "Set Active Panel Tab", "Aktiven Panel-Tab festlegen"),
         ("selectInstance", "Select Instance", "Instanz auswählen"),
         ("nodeGraphSelect", "Select Graph Node", "Graphknoten auswählen"),
@@ -342,7 +368,19 @@ fn s_studio_action_labels(is_de: bool) -> HashMap<String, String> {
 #[derive(Default)]
 struct AppCatalogueNode {
     children: BTreeMap<String, AppCatalogueNode>,
-    app: Option<SpaceProgramEntry>,
+    app: Option<CatalogueAppEntry>,
+}
+
+/// 🎨️ One catalogue leaf's presentation — a thin projection of `registry::AppPaletteEntry` (the
+/// `workflow_palette()` entry) plus its resolved `document` breadcrumb/`yields`, both sourced from
+/// `os_app_registration` (`AppPaletteEntry` itself doesn't carry them). Replaces the pre-merge
+/// `SpaceProgramEntry`/`SpacePanelState.workflows` cache — this is built fresh from the registry every
+/// render, never cached in config.
+struct CatalogueAppEntry {
+    plugin_id: String,
+    app_id: String,
+    label: String,
+    yields: String,
 }
 
 /// 🌳️ Builds a catalogue tree item on top of the SDK's `tree_item_desc` skeleton — only the
@@ -376,39 +414,25 @@ fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> U
     item
 }
 
-fn build_catalogue_tree(panel: &SpacePanelState, labels: &SStudioLabels) -> UiNode {
-    let workflows: Vec<SpaceProgramEntry> = if panel.workflows.is_empty() {
-        let mut entries = Vec::new();
-        for program in list_os_workflows() {
-            if program.id == "s.system" {
-                continue;
-            }
-            for app in program.apps {
-                entries.push(SpaceProgramEntry {
-                    plugin_id: program.id.clone(),
-                    workflow_step_id: app.id.clone(),
-                    app_id: app.id,
-                    label: app.label,
-                    document: app.document,
-                    yields: app
-                        .outputs
-                        .first()
-                        .map(|port| port.artifact_kind.clone())
-                        .unwrap_or_default(),
-                });
-            }
-        }
-        entries
-    } else {
-        panel.workflows.clone()
-    };
+/// 🎨️ Builds the app catalogue tree straight from the production registry — `workflow_palette()`
+/// (every registered `(plugin_id, app_id)`) joined with `os_app_registration` for the document
+/// breadcrumb/primary output kind. Replaces the pre-merge `list_os_workflows()`
+/// (`BUILTIN_WORKFLOWS`/`EXTENSION_WORKFLOWS`, deleted) + `SpacePanelState.workflows` cache fallback —
+/// always live, never stale.
+fn build_catalogue_tree(labels: &SStudioLabels) -> UiNode {
     let mut document = AppCatalogueNode::default();
-    for workflow in workflows {
+    for entry in workflow_palette() {
+        if entry.app_id == S_PLAY_APP_ID {
+            continue;
+        }
+        let registration = os_app_registration(&entry.plugin_id, &entry.app_id);
+        let doc_path = registration.as_ref().map(|row| row.document.clone()).unwrap_or_default();
+        let yields = registration.as_ref().map(os_app_primary_output_kind).unwrap_or_default();
         let mut node = &mut document;
-        for segment in &workflow.document {
+        for segment in &doc_path {
             node = node.children.entry(segment.clone()).or_default();
         }
-        node.app = Some(workflow);
+        node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label: entry.label, yields });
     }
     let items = document
         .children
@@ -712,41 +736,37 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
     ui_declarative_sections_to_tree(&children)
 }
 
-fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState, term_labels: &SStudioLabels) -> UiNode {
-    let media_node_ids = &runtime.selected_media_node_ids;
-    let instance_ids = &runtime.selected_app_instance_ids;
+/// 🔎️ Inspector body — a node's position (Transform-ish section) and identity/parameter-binding
+/// facets (Properties-ish section), both driven off the SAME `SpaceConfig.selected_node_ids` now (a
+/// node's position and its instance identity are the same record — see the module doc comment).
+fn build_inspector_tree(projection: &OsProjection, config: &SpaceConfig, term_labels: &SStudioLabels) -> UiNode {
+    let selected_node_ids = &config.selected_node_ids;
     let mut children = vec![UiSectionNode {
         id: "s-play-inspector.header".into(),
         label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
         default_open: Some(true),
         presence: UiPresence::default(),
-        children: vec![ui_text(format!(
-            "{} {} · {} {}",
-            media_node_ids.len(),
-            term_labels.media_node_count_label,
-            instance_ids.len(),
-            term_labels.app_instance_count_label
-        ))],
+        children: vec![ui_text(format!("{} {}", selected_node_ids.len(), term_labels.media_node_count_label))],
         menu: None,
     }];
-    if !media_node_ids.is_empty() {
-        let nodes: Vec<_> = media_node_ids
-            .iter()
-            .filter_map(|node_id| projection.workflow.nodes.iter().find(|node| &node.id == node_id))
-            .collect();
+    let nodes: Vec<&WorkflowNode> = selected_node_ids
+        .iter()
+        .filter_map(|node_id| projection.workflow.nodes.iter().find(|node| &node.id == node_id))
+        .collect();
+    if !nodes.is_empty() {
         let xs: Vec<_> = nodes.iter().map(|node| node.x).collect();
         let ys: Vec<_> = nodes.iter().map(|node| node.y).collect();
         let x_uniform = ui_inspector_all_equal(&xs.iter().map(|v| v.to_string()).collect::<Vec<_>>());
         let y_uniform = ui_inspector_all_equal(&ys.iter().map(|v| v.to_string()).collect::<Vec<_>>());
         let mut node_fields = Vec::new();
-        if media_node_ids.len() == 1 {
+        if selected_node_ids.len() == 1 {
             node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: "s-play-inspector.media-node.id".into(),
                 label: term_labels.node_id.into(),
                 child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(),
                     id: "s-play-inspector.media-node.id.input".into(),
                     input_kind: "text".into(),
-                    value: media_node_ids[0].clone(),
+                    value: selected_node_ids[0].clone(),
                     placeholder: None,
                     commit: None,
                     on_change: s_play_action("noOperation", None),
@@ -777,7 +797,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                 commit: None,
                 on_change: s_play_action(
                     "patchMediaNodes",
-                    Some(json!({ "nodeIds": media_node_ids, "field": "position", "axis": "x" })),
+                    Some(json!({ "nodeIds": selected_node_ids, "field": "position", "axis": "x" })),
                 ),
                 min: None,
                 max: None,
@@ -805,7 +825,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                 commit: None,
                 on_change: s_play_action(
                     "patchMediaNodes",
-                    Some(json!({ "nodeIds": media_node_ids, "field": "position", "axis": "y" })),
+                    Some(json!({ "nodeIds": selected_node_ids, "field": "position", "axis": "y" })),
                 ),
                 min: None,
                 max: None,
@@ -820,25 +840,20 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
         }));
         children.push(UiSectionNode {
             id: "s-play-inspector.media-nodes".into(),
-            label: Some(if media_node_ids.len() == 1 {
+            label: Some(if selected_node_ids.len() == 1 {
                 term_labels.workflow_node.into()
             } else {
-                format!("{} ({})", term_labels.workflow_nodes, media_node_ids.len())
+                format!("{} ({})", term_labels.workflow_nodes, selected_node_ids.len())
             }),
             default_open: Some(true),
             presence: UiPresence::default(),
             children: node_fields,
             menu: None,
         });
-    }
-    if !instance_ids.is_empty() {
-        let instances: Vec<_> = instance_ids
-            .iter()
-            .filter_map(|id| projection.app_instances.iter().find(|instance| &instance.id == id))
-            .collect();
-        let labels: Vec<_> = instances.iter().map(|instance| instance.label.clone()).collect();
-        let programs: Vec<_> = instances.iter().map(|instance| instance.plugin_id.clone()).collect();
-        let apps: Vec<_> = instances.iter().map(|instance| instance.app_id.clone()).collect();
+
+        let labels: Vec<_> = nodes.iter().map(|node| node.label.clone()).collect();
+        let programs: Vec<_> = nodes.iter().map(|node| node.plugin_id.clone()).collect();
+        let apps: Vec<_> = nodes.iter().map(|node| node.app_id.clone()).collect();
         let label_uniform = ui_inspector_all_equal(&labels);
         let program_uniform = ui_inspector_all_equal(&programs);
         let app_uniform = ui_inspector_all_equal(&apps);
@@ -876,7 +891,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                     commit: None,
                     on_change: s_play_action(
                         "patchAppInstances",
-                        Some(json!({ "instanceIds": instance_ids, "field": "label" })),
+                        Some(json!({ "nodeIds": selected_node_ids, "field": "label" })),
                     ),
                     min: None,
                     max: None,
@@ -890,15 +905,15 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                 menu: None,
             }),
         ];
-        if instance_ids.len() == 1 {
-            instance_fields.insert(2, ui_text(format!("{}: {}", term_labels.instance_id_prefix, instance_ids[0])));
+        if selected_node_ids.len() == 1 {
+            instance_fields.insert(2, ui_text(format!("{}: {}", term_labels.instance_id_prefix, selected_node_ids[0])));
         }
-        if instance_ids.len() == 1 {
-            if let Some(instance) = instances.first() {
-                if let Some(registration) = os_app_registration(&instance.plugin_id, &instance.app_id) {
+        if selected_node_ids.len() == 1 {
+            if let Some(node) = nodes.first() {
+                if let Some(registration) = os_app_registration(&node.plugin_id, &node.app_id) {
                     for field_spec in &registration.parameter_fields {
                         let binding = projection.parameter_bindings.iter().find(|entry| {
-                            entry.instance_id == instance.id && entry.field_path == field_spec.field_path
+                            entry.node_id == node.id && entry.field_path == field_spec.field_path
                         });
                         let compatible: Vec<_> = projection
                             .parameters
@@ -946,7 +961,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                                 on_change: s_play_action(
                                     "bindParameterField",
                                     Some(json!({
-                                        "instanceId": instance.id,
+                                        "nodeId": node.id,
                                         "fieldPath": field_spec.field_path,
                                     })),
                                 ),
@@ -976,58 +991,74 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
         }
         children.push(UiSectionNode {
             id: "s-play-inspector.app-instances".into(),
-            label: Some(if instance_ids.len() == 1 {
+            label: Some(if selected_node_ids.len() == 1 {
                 term_labels.app_instance.into()
             } else {
-                format!("{} ({})", term_labels.app_instances, instance_ids.len())
+                format!("{} ({})", term_labels.app_instances, selected_node_ids.len())
             }),
             default_open: Some(true),
             presence: UiPresence::default(),
             children: instance_fields,
             menu: None,
         });
-    }
-    if media_node_ids.is_empty() && instance_ids.is_empty() {
+    } else {
         children[0].children.push(ui_text(term_labels.select_hint));
     }
     ui_declarative_sections_to_tree(&children)
 }
 //#endregion 🔖️Panels
 
+// TEMP(Wave 3): space producer flip pending — `os_workflow_to_node_graph_payload`/
+// `build_os_workflow_operator_infos` still emit JSON-string payloads (W4 not landed yet), while
+// `NodeGraphScene` is now typed (W5). These shims JSON-decode the existing wire shape into the new
+// typed records so this one call site compiles without doing the real space/W4 cutover. Delete once
+// the space producer is flipped to build the typed records directly.
+fn json_array_to_node_graph_nodes(json: &str) -> Vec<NodeGraphNodeRecord> {
+    serde_json::from_str(json).unwrap_or_default()
+}
+
+fn json_array_to_node_graph_edges(json: &str) -> Vec<NodeGraphEdgeRecord> {
+    serde_json::from_str(json).unwrap_or_default()
+}
+
+fn json_array_to_node_graph_find_items(json: &str) -> Vec<NodeGraphFindItem> {
+    serde_json::from_str(json).unwrap_or_default()
+}
+
+fn json_array_to_node_graph_operators<T: Serialize>(operators: &[T]) -> Vec<NodeGraphOperatorRecord> {
+    serde_json::to_string(operators).ok().and_then(|json| serde_json::from_str(&json).ok()).unwrap_or_default()
+}
+// TEMP(Wave 3) end
+
 //#region 🔖️Render
-fn render_workflow(projection: &OsProjection, runtime: &StudioRuntimeState, labels: &SStudioLabels) -> UiNode {
-    let graph_payload = os_workflow_to_node_graph_payload(&projection.workflow, &projection.app_instances);
-    let camera = runtime.workflow_camera.clone().unwrap_or_default();
-    let fixture = os_workflow_to_flow_fixture(&projection.workflow, &projection.app_instances, &camera);
-    let operators = build_os_workflow_operator_infos(
-        &projection.workflow,
-        &projection.app_instances,
-        &projection.parameters,
-    );
-    let selection_json = if runtime.selected_media_node_ids.is_empty() {
-        None
-    } else {
-        Some(serde_json::to_string(&runtime.selected_media_node_ids).unwrap_or_else(|_| "[]".into()))
-    };
-    let hover_json = runtime.hovered_media_node_id.as_ref().map(|id| {
-        json!({ "nodeId": id }).to_string()
-    });
+fn workflow_camera(config: &SpaceConfig) -> OsWorkflowCamera {
+    config.camera.get(S_PLAY_WINDOW_WORKFLOW).copied().map(Into::into).unwrap_or_default()
+}
+
+fn render_workflow(projection: &OsProjection, config: &SpaceConfig, labels: &SStudioLabels) -> UiNode {
+    let _ = labels;
+    let graph_payload = os_workflow_to_node_graph_payload(&projection.workflow);
+    let camera = workflow_camera(config);
+    let fixture = os_workflow_to_flow_fixture(&projection.workflow, &camera);
+    let operators = build_os_workflow_operator_infos(&projection.workflow, &projection.parameters);
+    let selection = config.selected_node_ids.clone();
+    let hover = config.hovered_node_id.as_ref().map(|id| NodeGraphHover { node_id: Some(id.clone()) });
     build_node_graph_scene(
         S_PLAY_SURFACE_WORKFLOW,
         S_PLAY_CONTROLLER_ID,
         NodeGraphScene {
             editable: Some(true),
-            operators_json: Some(serde_json::to_string(&operators).unwrap_or_else(|_| "[]".into())),
-            find_items_json: Some(graph_payload.find_items_json),
-            selection_json,
-            hover_json,
+            operators: json_array_to_node_graph_operators(&operators),
+            find_items: json_array_to_node_graph_find_items(&graph_payload.find_items_json),
+            selection,
+            hover,
             capabilities_json: Some(r#"{"engine":"flow","spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
             fixture_json: Some(fixture.to_string()),
-            presence_peers_json: Some(presence_peers_json(runtime)),
+            presence_peers_json: Some(presence_peers_json(config)),
             ..NodeGraphScene::base(
-                graph_payload.nodes_json,
-                graph_payload.edges_json,
-                serde_json::to_string(&camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
+                json_array_to_node_graph_nodes(&graph_payload.nodes_json),
+                json_array_to_node_graph_edges(&graph_payload.edges_json),
+                NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom },
             )
         },
     )
@@ -1054,7 +1085,6 @@ fn render_media_vfs(projection: &OsProjection, labels: &SStudioLabels) -> UiNode
     })];
     flatten_media_vfs_rows(
         OS_WORKFLOW_VFS_ROOT_ID,
-        &projection.app_instances,
         &projection.workflow,
         &projection.parameter_bindings,
         &projection.parameters,
@@ -1079,31 +1109,38 @@ fn render_media_vfs(projection: &OsProjection, labels: &SStudioLabels) -> UiNode
 //#endregion 🔖️Render
 
 //#region 🔖️SpaceApp
-pub struct SpaceApp {
-    runtime: RefCell<StudioRuntimeState>,
+/// 🧪️ B1: unit struct — every former `StudioRuntimeState`/`self.config` field now lives in
+/// `space_engine::SpaceConfig` (see `DocumentApp::Config`), written through
+/// `space_op::SpaceConfigOperation`s.
+#[derive(Default)]
+pub struct SpaceApp;
+
+/// @emoji 🤝️ Resolves the source/target ports for a proposed connect and negotiates their wire
+/// contract via `space_engine::negotiate_media_connect`, converting a rejection into a `Notify`
+/// effect — shared by `"connectMediaPorts"` and the `nodeGraphEdit`/`"connect"` fixture edit.
+fn negotiate_connect_or_notify(projection: &OsProjection, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, HostEffect> {
+    negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id).map_err(|reason| HostEffect::Notify { message: reason })
 }
 
-impl SpaceApp {
-    /// @emoji 🎬️ Empty studio runtime — the host loads the target catalog/example document via
-    /// `openSpace` → `HostEffect::LoadDocument`; demo content is no longer the silent default.
-    pub fn new() -> Self {
-        Self {
-            runtime: RefCell::new(StudioRuntimeState::default()),
-        }
-    }
-}
-
-impl Default for SpaceApp {
-    fn default() -> Self {
-        Self::new()
+fn connect_edge_operation(source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str, contract: MediaContract) -> OsOperation {
+    OsOperation::ConnectWorkflowPorts {
+        edge: WorkflowEdge {
+            id: create_os_id("edge"),
+            source_node_id: source_node_id.into(),
+            source_port_id: source_port_id.into(),
+            target_node_id: target_node_id.into(),
+            target_port_id: target_port_id.into(),
+            contract,
+        },
     }
 }
 
 impl DocumentApp for SpaceApp {
     type Projection = OsProjection;
     type Operation = OsOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = SpaceConfig;
+    type ConfigOperation = SpaceConfigOperation;
+    type Command = SpaceCommand;
 
     fn app_id(&self) -> &str {
         S_PLAY_APP_ID
@@ -1117,921 +1154,486 @@ impl DocumentApp for SpaceApp {
         default_os_projection()
     }
 
-    fn handle_action(
+    /// 🏷️ Maps each `SpaceCommand` variant back to the action id it was declared under in
+    /// `create_space_app`.
+    fn command_id(&self, command: &SpaceCommand) -> &str {
+        match command {
+            SpaceCommand::PatchParameter { .. } => "patchParameter",
+            SpaceCommand::AddParameter { .. } => "addParameter",
+            SpaceCommand::RemoveParameter { .. } => "removeParameter",
+            SpaceCommand::SpawnApp { .. } => "spawnApp",
+            SpaceCommand::MoveMediaNode { .. } => "moveMediaNode",
+            SpaceCommand::ConnectMediaPorts { .. } => "connectMediaPorts",
+            SpaceCommand::DisconnectMediaEdge { .. } => "disconnectMediaEdge",
+            SpaceCommand::RemoveAppInstance { .. } => "removeAppInstance",
+            SpaceCommand::DeleteSelection => "deleteSelection",
+            SpaceCommand::CopyAppInstance => "copyAppInstance",
+            SpaceCommand::DuplicateAppInstance => "duplicateAppInstance",
+            SpaceCommand::PasteAppInstance => "pasteAppInstance",
+            SpaceCommand::RenameAppInstance { .. } => "renameAppInstance",
+            SpaceCommand::PatchMediaNodes { .. } => "patchMediaNodes",
+            SpaceCommand::PatchAppInstances { .. } => "patchAppInstances",
+            SpaceCommand::BindParameterField { .. } => "bindParameterField",
+            SpaceCommand::UnbindParameterField { .. } => "unbindParameterField",
+            SpaceCommand::ReorganizeWorkflow => "reorganizeWorkflow",
+            SpaceCommand::WorkflowEngagementSubmit { .. } => "workflowEngagementSubmit",
+            SpaceCommand::CompiledDagEngagementSubmit => "compiledDagEngagementSubmit",
+            SpaceCommand::NodeGraphEdit { .. } => "nodeGraphEdit",
+            SpaceCommand::SetActivePanelTab { .. } => "setActivePanelTab",
+            SpaceCommand::SelectInstance { .. } => "selectInstance",
+            SpaceCommand::NodeGraphSelect { .. } => "nodeGraphSelect",
+            SpaceCommand::SetMediaNodeSelection { .. } => "setMediaNodeSelection",
+            SpaceCommand::SetAppInstanceSelection { .. } => "setAppInstanceSelection",
+            SpaceCommand::NodeGraphHover { .. } => "nodeGraphHover",
+            SpaceCommand::TextHover { .. } => "textHover",
+            SpaceCommand::NodeGraphViewport { .. } => "nodeGraphViewport",
+            SpaceCommand::PresenceHeartbeat { .. } => "presenceHeartbeat",
+            SpaceCommand::WorkflowEngagementInput { .. } => "workflowEngagementInput",
+            SpaceCommand::CompiledDagEngagementInput { .. } => "compiledDagEngagementInput",
+            SpaceCommand::SetActiveExample { .. } => "setActiveExample",
+            SpaceCommand::ExportMedia { .. } => "exportMedia",
+            SpaceCommand::ImportMedia { .. } => "importMedia",
+            SpaceCommand::ImportMediaPayload { .. } => "importMediaPayload",
+            SpaceCommand::ExportStudioPack => "exportStudioPack",
+            SpaceCommand::ExportStudioDsl => "exportStudioDsl",
+            SpaceCommand::ImportSpacePack => "importSpacePack",
+            SpaceCommand::ImportSpacePackPayload { .. } => "importSpacePackPayload",
+            SpaceCommand::OpenSpace { .. } => "openSpace",
+            SpaceCommand::OpenInstance { .. } => "openInstance",
+            SpaceCommand::CloseFocusedInstance => "closeFocusedInstance",
+            SpaceCommand::GoHome => "goHome",
+            SpaceCommand::NavigateVirtualFileSystemNode { .. } => "navigateVirtualFileSystemNode",
+        }
+    }
+
+    fn handle(
         &self,
-        action: &str,
-        args: Option<&Value>,
+        command: &SpaceCommand,
         doc: &DocumentView<'_, OsProjection>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-    ) -> ActionEmit<OsOperation> {
+        cfg: &ConfigView<'_, SpaceConfig>,
+    ) -> Emit<OsOperation, SpaceConfigOperation> {
         let projection = doc.projection;
-        let mut operations: Vec<OsOperation> = Vec::new();
-        let mut effects: Vec<HostEffect> = Vec::new();
-        let mut coalesce_key: Option<String> = None;
-        let mut ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
-        match action {
-            "setActivePanelTab" => {
-                if let Some(tab) = args.and_then(|value| value.get("tabId")).and_then(|value| value.as_str()) {
-                    let mut panel = parse_panel_state(view_state);
-                    panel.active_panel_tab = tab.into();
-                    return ActionEmit::effect(HostEffect::SetPanel { panel_json: panel_json(&panel) });
-                }
-                return ActionEmit::default();
-            }
-            "navigateVirtualFileSystemNode" => {
-                if let Some(space_id) = args.and_then(|value| value.get("spaceId")).and_then(|value| value.as_str()) {
-                    return ActionEmit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") });
-                }
-                return ActionEmit::default();
-            }
-            "setParameter" | "patchParameter" => {
-                let parameter_id = args
-                    .and_then(|value| value.get("id").or_else(|| value.get("parameterId")))
-                    .and_then(|value| value.as_str());
-                let field = args
-                    .and_then(|value| value.get("field"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("value");
-                let value = args.and_then(|value| value.get("value")).cloned();
-                if let Some(parameter_id) = parameter_id {
-                    let patch = if field == "addOption" {
-                        value
-                            .and_then(|value| value.as_str().map(str::to_string))
-                            .and_then(|option| {
-                                projection
-                                    .parameters
-                                    .iter()
-                                    .find(|entry| parameter_entity_id(entry) == parameter_id)
-                                    .and_then(|entry| match entry {
-                                        OsParameter::Categorical { options, .. } => {
-                                            let mut next_options = options.clone();
-                                            if !next_options.iter().any(|row| row == &option) {
-                                                next_options.push(option.clone());
-                                            }
-                                            Some(json!({ "options": next_options, "value": option }))
-                                        }
-                                        _ => None,
-                                    })
-                            })
-                    } else if field == "removeOption" {
-                        value
-                            .and_then(|value| value.as_str().map(str::to_string))
-                            .and_then(|option| {
-                                projection
-                                    .parameters
-                                    .iter()
-                                    .find(|entry| parameter_entity_id(entry) == parameter_id)
-                                    .and_then(|entry| match entry {
-                                        OsParameter::Categorical { options, value, .. } => {
-                                            let next_options: Vec<_> = options
-                                                .iter()
-                                                .filter(|row| row.as_str() != option)
-                                                .cloned()
-                                                .collect();
-                                            let next_value = if next_options.iter().any(|row| row == value) {
-                                                value.clone()
-                                            } else {
-                                                next_options.first().cloned().unwrap_or_default()
-                                            };
-                                            Some(json!({ "options": next_options, "value": next_value }))
-                                        }
-                                        _ => None,
-                                    })
-                            })
-                    } else {
-                        value.map(|value| json!({ field: value }))
-                    };
-                    if let Some(patch) = patch {
-                        if let Some(operation) = patch_parameter_operation(projection, parameter_id, &patch) {
-                            operations.push(operation);
-                        }
-                    }
+        let config = cfg.projection;
+        match command {
+            SpaceCommand::PatchParameter { parameter_id, field, value } => {
+                let value_json: Value = serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.clone()));
+                let patch = if field == "addOption" {
+                    value_json.as_str().map(str::to_string).and_then(|option| {
+                        projection.parameters.iter().find(|entry| parameter_entity_id(entry) == parameter_id).and_then(|entry| match entry {
+                            OsParameter::Categorical { options, .. } => {
+                                let mut next_options = options.clone();
+                                if !next_options.iter().any(|row| row == &option) {
+                                    next_options.push(option.clone());
+                                }
+                                Some(json!({ "options": next_options, "value": option }))
+                            }
+                            _ => None,
+                        })
+                    })
+                } else if field == "removeOption" {
+                    value_json.as_str().map(str::to_string).and_then(|option| {
+                        projection.parameters.iter().find(|entry| parameter_entity_id(entry) == parameter_id).and_then(|entry| match entry {
+                            OsParameter::Categorical { options, value, .. } => {
+                                let next_options: Vec<_> = options.iter().filter(|row| row.as_str() != option).cloned().collect();
+                                let next_value = if next_options.iter().any(|row| row == value) { value.clone() } else { next_options.first().cloned().unwrap_or_default() };
+                                Some(json!({ "options": next_options, "value": next_value }))
+                            }
+                            _ => None,
+                        })
+                    })
+                } else {
+                    Some(json!({ field: value_json }))
+                };
+                match patch.and_then(|patch| patch_parameter_operation(projection, parameter_id, &patch)) {
+                    Some(operation) => Emit::operations(vec![operation]),
+                    None => Emit::default(),
                 }
             }
-            "addParameter" => {
-                let parameter_type = match args
-                    .and_then(|value| value.get("type"))
-                    .and_then(|value| value.as_str())
-                {
-                    Some("categorical") => OsParameterType::Categorical,
-                    Some("toggle") => OsParameterType::Toggle,
-                    Some("text") => OsParameterType::Text,
+            SpaceCommand::AddParameter { name, kind } => {
+                let parameter_type = match kind.as_str() {
+                    "categorical" => OsParameterType::Categorical,
+                    "toggle" => OsParameterType::Toggle,
+                    "text" => OsParameterType::Text,
                     _ => OsParameterType::Numeric,
                 };
-                let name = args
-                    .and_then(|value| value.get("name"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("Parameter");
-                operations.push(add_parameter_operation(&parameter_type, name));
+                Emit::operations(vec![add_parameter_operation(&parameter_type, name)])
             }
-            "removeParameter" => {
-                if let Some(parameter_id) = args
-                    .and_then(|value| value.get("parameterId"))
-                    .and_then(|value| value.as_str())
-                {
-                    operations.push(OsOperation::RemoveParameter {
-                        parameter_id: parameter_id.into(),
-                    });
+            SpaceCommand::RemoveParameter { parameter_id } => Emit::operations(vec![OsOperation::RemoveParameter { parameter_id: parameter_id.clone() }]),
+            SpaceCommand::SpawnApp { plugin_id, app_id, x, y } => match add_workflow_node_operation(plugin_id, app_id, None, *x, *y) {
+                Some((operation, node_id)) => Emit {
+                    document_operations: vec![operation],
+                    config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }],
+                    ..Default::default()
+                },
+                None => Emit::default(),
+            },
+            SpaceCommand::MoveMediaNode { node_id, x, y } => Emit::amend(vec![OsOperation::MoveWorkflowNode { node_id: node_id.clone(), x: *x, y: *y }], format!("moveMediaNode:{node_id}")),
+            SpaceCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => {
+                match negotiate_connect_or_notify(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
+                    Ok(contract) => Emit::operations(vec![connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract)]),
+                    Err(effect) => Emit::effect(effect),
                 }
             }
-            "spawnApp" => {
-                let plugin_id = args
-                    .and_then(|value| value.get("pluginId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                let app_id = args
-                    .and_then(|value| value.get("appId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                if !plugin_id.is_empty() && !app_id.is_empty() {
-                    let position = args
-                        .and_then(|value| value.get("position"))
-                        .and_then(|value| value.as_object())
-                        .map(|position| semio_framework_os::WorkflowPosition {
-                            x: position
-                                .get("x")
-                                .and_then(|value| value.as_f64())
-                                .unwrap_or(80.0),
-                            y: position
-                                .get("y")
-                                .and_then(|value| value.as_f64())
-                                .unwrap_or(80.0),
+            SpaceCommand::DisconnectMediaEdge { edge_id } => Emit::operations(vec![OsOperation::DisconnectWorkflowEdge { edge_id: edge_id.clone() }]),
+            SpaceCommand::RemoveAppInstance { node_id } => match node_id.clone().or_else(|| primary_selected_node_id(config)) {
+                Some(node_id) => {
+                    let mut config_operations = Vec::new();
+                    if config.active_node_id.as_deref() == Some(node_id.as_str()) {
+                        config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: None });
+                    }
+                    if config.focused_node_id.as_deref() == Some(node_id.as_str()) {
+                        config_operations.push(SpaceConfigOperation::SetFocusedNode { node_id: None });
+                    }
+                    Emit { document_operations: vec![OsOperation::RemoveWorkflowNode { node_id }], config_operations, ..Default::default() }
+                }
+                None => Emit::default(),
+            },
+            SpaceCommand::DeleteSelection => {
+                let document_operations = config.selected_node_ids.iter().cloned().map(|node_id| OsOperation::RemoveWorkflowNode { node_id }).collect();
+                Emit {
+                    document_operations,
+                    config_operations: vec![
+                        SpaceConfigOperation::SetSelection { node_ids: Vec::new() },
+                        SpaceConfigOperation::SetActiveNode { node_id: None },
+                        SpaceConfigOperation::SetFocusedNode { node_id: None },
+                    ],
+                    ..Default::default()
+                }
+            }
+            SpaceCommand::CopyAppInstance => Emit::config(vec![SpaceConfigOperation::SetClipboard { node_ids: config.selected_node_ids.clone() }]),
+            SpaceCommand::DuplicateAppInstance | SpaceCommand::PasteAppInstance => {
+                let source_ids = if matches!(command, SpaceCommand::PasteAppInstance) { config.clipboard_node_ids.clone() } else { config.selected_node_ids.clone() };
+                let mut document_operations = Vec::new();
+                let mut new_active_node_id = None;
+                for node_id in source_ids {
+                    let Some(node) = projection.workflow.nodes.iter().find(|row| row.id == node_id) else { continue };
+                    let label = format!("{} Copy", node.label);
+                    if let Some((operation, new_id)) = add_workflow_node_operation(&node.plugin_id, &node.app_id, Some(&label), node.x + 40.0, node.y + 40.0) {
+                        new_active_node_id = Some(new_id);
+                        document_operations.push(operation);
+                    }
+                }
+                let config_operations = new_active_node_id.into_iter().map(|node_id| SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }).collect();
+                Emit { document_operations, config_operations, ..Default::default() }
+            }
+            SpaceCommand::RenameAppInstance { label } => match primary_selected_node_id(config) {
+                Some(node_id) => {
+                    let next_label = label.clone().or_else(|| projection.workflow.nodes.iter().find(|row| row.id == node_id).map(|node| format!("{} (renamed)", node.label)));
+                    match next_label {
+                        Some(next_label) => Emit::operations(vec![OsOperation::PatchWorkflowNode { node_id, label: next_label }]),
+                        None => Emit::default(),
+                    }
+                }
+                None => Emit::default(),
+            },
+            SpaceCommand::PatchMediaNodes { node_ids, field, axis, value } => {
+                let numeric = value.parse::<f64>().ok();
+                if field == "position" && numeric.is_some() {
+                    let numeric = numeric.unwrap();
+                    let document_operations = node_ids
+                        .iter()
+                        .filter_map(|node_id| {
+                            let node = projection.workflow.nodes.iter().find(|row| &row.id == node_id)?;
+                            let x = if axis.as_deref() == Some("x") { numeric } else { node.x };
+                            let y = if axis.as_deref() == Some("y") { numeric } else { node.y };
+                            Some(OsOperation::MoveWorkflowNode { node_id: node_id.clone(), x, y })
                         })
-                        .unwrap_or(semio_framework_os::WorkflowPosition { x: 80.0, y: 80.0 });
-                    if let Some((operation, instance_id)) = spawn_app_instance_operation(plugin_id, app_id, None, position) {
-                        self.runtime.borrow_mut().active_instance_id = Some(instance_id);
-                        operations.push(operation);
-                    }
-                }
-            }
-            "moveMediaNode" => {
-                if let (Some(node_id), Some(x), Some(y)) = (
-                    args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()),
-                    args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()),
-                    args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()),
-                ) {
-                    coalesce_key = Some(format!("moveMediaNode:{node_id}"));
-                    operations.push(OsOperation::MoveWorkflowNode {
-                        node_id: node_id.into(),
-                        x,
-                        y,
-                    });
-                }
-            }
-            "connectMediaPorts" => {
-                if let (
-                    Some(source_node_id),
-                    Some(source_port_id),
-                    Some(target_node_id),
-                    Some(target_port_id),
-                ) = (
-                    args.and_then(|value| value.get("sourceNodeId"))
-                        .and_then(|value| value.as_str()),
-                    args.and_then(|value| value.get("sourcePortId"))
-                        .and_then(|value| value.as_str()),
-                    args.and_then(|value| value.get("targetNodeId"))
-                        .and_then(|value| value.as_str()),
-                    args.and_then(|value| value.get("targetPortId"))
-                        .and_then(|value| value.as_str()),
-                ) {
-                    match negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
-                        Ok(contract) => operations.push(OsOperation::ConnectWorkflowPorts {
-                            edge: semio_framework_os::OsWorkflowEdge {
-                                id: create_os_id("edge"),
-                                source_node_id: source_node_id.into(),
-                                source_port_id: source_port_id.into(),
-                                target_node_id: target_node_id.into(),
-                                target_port_id: target_port_id.into(),
-                                contract,
-                            },
-                        }),
-                        Err(reason) => effects.push(HostEffect::Notify { message: reason }),
-                    }
-                }
-            }
-            "disconnectMediaEdge" => {
-                if let Some(edge_id) = args
-                    .and_then(|value| value.get("edgeId"))
-                    .and_then(|value| value.as_str())
-                {
-                    operations.push(OsOperation::DisconnectWorkflowEdge {
-                        edge_id: edge_id.into(),
-                    });
-                }
-            }
-            "removeAppInstance" => {
-                let instance_id = args
-                    .and_then(|value| value.get("instanceId"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .or_else(|| primary_selected_instance_id(&*self.runtime.borrow(), projection));
-                if let Some(instance_id) = instance_id {
-                    operations.push(OsOperation::RemoveAppInstance {
-                        instance_id: instance_id.clone(),
-                    });
-                    if self.runtime.borrow_mut().active_instance_id.as_deref() == Some(instance_id.as_str()) {
-                        self.runtime.borrow_mut().active_instance_id = None;
-                    }
-                    if self.runtime.borrow_mut().focused_instance_id.as_deref() == Some(instance_id.as_str()) {
-                        self.runtime.borrow_mut().focused_instance_id = None;
-                    }
-                }
-            }
-            "deleteSelection" => {
-                let instance_ids = selected_instance_ids(&*self.runtime.borrow(), projection);
-                for instance_id in instance_ids {
-                    operations.push(OsOperation::RemoveAppInstance {
-                        instance_id: instance_id.clone(),
-                    });
-                }
-                self.runtime.borrow_mut().selected_app_instance_ids.clear();
-                self.runtime.borrow_mut().selected_media_node_ids.clear();
-                self.runtime.borrow_mut().active_instance_id = None;
-                self.runtime.borrow_mut().focused_instance_id = None;
-            }
-            "copyAppInstance" => {
-                self.runtime.borrow_mut().clipboard_instance_ids = selected_instance_ids(&*self.runtime.borrow(), projection);
-            }
-            "duplicateAppInstance" | "pasteAppInstance" => {
-                let source_ids = if action == "pasteAppInstance" {
-                    self.runtime.borrow_mut().clipboard_instance_ids.clone()
+                        .collect();
+                    Emit::operations(document_operations)
                 } else {
-                    selected_instance_ids(&*self.runtime.borrow(), projection)
-                };
-                for instance_id in source_ids {
-                    let Some(instance) = projection
-                        .app_instances
-                        .iter()
-                        .find(|row| row.id == instance_id)
-                    else {
-                        continue;
-                    };
-                    let position = projection
-                        .workflow
-                        .nodes
-                        .iter()
-                        .find(|node| node.instance_id == instance_id)
-                        .map(|node| semio_framework_os::WorkflowPosition {
-                            x: node.x + 40.0,
-                            y: node.y + 40.0,
-                        })
-                        .unwrap_or(semio_framework_os::WorkflowPosition { x: 80.0, y: 80.0 });
-                    let label = format!("{} Copy", instance.label);
-                    if let Some((operation, new_id)) = spawn_app_instance_operation(
-                        &instance.plugin_id,
-                        &instance.app_id,
-                        Some(&label),
-                        position,
-                    ) {
-                        self.runtime.borrow_mut().active_instance_id = Some(new_id);
-                        operations.push(operation);
-                    }
+                    Emit::default()
                 }
             }
-            "renameAppInstance" => {
-                if let Some(instance_id) = primary_selected_instance_id(&*self.runtime.borrow(), projection) {
-                    let next_label = args
-                        .and_then(|value| value.get("label"))
-                        .and_then(|value| value.as_str())
-                        .map(str::to_string)
-                        .or_else(|| {
-                            projection
-                                .app_instances
-                                .iter()
-                                .find(|row| row.id == instance_id)
-                                .map(|instance| format!("{} (renamed)", instance.label))
-                        });
-                    if let Some(label) = next_label {
-                        operations.push(OsOperation::PatchAppInstance {
-                            instance_id,
-                            label: Some(label),
-                        });
-                    }
-                }
-            }
-            "setActiveExample" => {
-                if let Some(example_id) = args
-                    .and_then(|value| value.get("exampleId"))
-                    .and_then(|value| value.as_str())
-                    .filter(|value| !value.is_empty())
-                {
-                    // 🧭️ Examples are catalog documents in the new topology — selecting one navigates
-                    // the shell to that studio route; the host's `openDocument(ref)` loads it (no
-                    // in-place whole-document swap on the plugin side anymore); an empty id is the
-                    // shell's "no example" reset and keeps the current studio route.
-                    return ActionEmit::effect(HostEffect::Navigate { uri: format!("/spaces/{example_id}") });
-                }
-                return ActionEmit::default();
-            }
-            "exportMedia" => {
-                if let (Some(instance_id), Some(format)) = (
-                    args.and_then(|value| value.get("instanceId")).and_then(|value| value.as_str()),
-                    args.and_then(|value| value.get("format")).and_then(|value| value.as_str()),
-                ) {
-                    if let Some(instance) = projection
-                        .app_instances
-                        .iter()
-                        .find(|row| row.id == instance_id)
-                    {
-                        ensure_space_fixtures_registered();
-                        // 📤️ `s` is a shell: the instance's live content lives in its own
-                        // `OsDocumentRef`-addressed document (owned by the host's backbone), so this
-                        // seeds a bare schema doc for the export handler rather than reaching into
-                        // another document's store from here.
-                        let document_json = materialize_os_app_instance_document_json(
-                            &json!({ "schema": instance.document.schema }).to_string(),
-                            &instance.id,
-                            &projection.parameter_bindings,
-                            &projection.parameters,
-                        );
-                        let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
-                        let export_format = semio_framework_os::OsMediaFormat::parse(format)
-                            .unwrap_or(semio_framework_os::OsMediaFormat::Svg);
-                        if let Ok(result) = semio_framework_os::export_os_app_instance_media(
-                            instance,
-                            &document_value,
-                            export_format,
-                        ) {
-                            effects.push(HostEffect::DownloadMediaExport {
-                                filename: result.file_name,
-                                mime_type: result.mime_type,
-                                data: result.data,
-                                encoding: result.encoding,
-                            });
-                        }
-                    }
-                }
-            }
-            "importMedia" => {
-                if let (Some(instance_id), Some(format)) = (
-                    args.and_then(|value| value.get("instanceId")).and_then(|value| value.as_str()),
-                    args.and_then(|value| value.get("format")).and_then(|value| value.as_str()),
-                ) {
-                    self.runtime.borrow_mut().pending_import_instance_id = Some(instance_id.to_string());
-                    self.runtime.borrow_mut().pending_import_format = Some(format.to_string());
-                    return ActionEmit::effect(HostEffect::RequestFileOpen {
-                        accept: format!(".{format}"),
-                        read_as: Some("dataUrl".into()),
-                        import_action: "importMediaPayload".into(),
-                        multiple: false,
-                    });
-                }
-                return ActionEmit::default();
-            }
-            "importMediaPayload" => {
-                if let (Some(instance_id), Some(format_name)) = (self.runtime.borrow_mut().pending_import_instance_id.take(), self.runtime.borrow_mut().pending_import_format.take()) {
-                    let payload = args.and_then(|value| value.get("payload")).and_then(|value| value.as_str());
-                    let format = semio_framework_os::OsMediaFormat::parse(&format_name);
-                    if let (Some(payload), Some(format)) = (payload, format) {
-                        use base64::Engine;
-                        let base64_part = payload.split_once(',').map(|(_, data)| data).unwrap_or(payload);
-                        if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
-                            if let Some(instance) = projection.app_instances.iter().find(|row| row.id == instance_id) {
-                                // 📥️ Decoding/validation happens here; the decoded content is applied
-                                // to the instance's own `OsDocumentRef` document by the host (a
-                                // cross-document operation the shell can't author from its own store), so
-                                // this arm emits no studio operation.
-                                let _ = semio_framework_os::import_os_app_instance_media(instance, &bytes, format);
-                            }
-                        }
-                    }
-                }
-                return ActionEmit::default();
-            }
-            "exportStudioPack" => {
-                let space_id = runtime_space_id(&*self.runtime.borrow());
-                if let Some(document) = home_ui::resolve_studio_document(&space_id) {
-                    // 📦️ Whole-document pack<->dsl codec (`register_document_codec_for_app::<SpaceApp>`
-                    // in `register_s_exports`, see `🔖️DocumentCodecs`), not the per-instance media
-                    // export above — mirrors `exportMedia`'s effect shape (base64 binary +
-                    // plain-text sidecar) one level up, at the studio document itself.
-                    if let Ok(pack_files) = export_os_space_pack(&document) {
-                        use base64::Engine;
-                        effects.push(HostEffect::DownloadMediaExport {
-                            filename: format!("{space_id}.pack"),
-                            mime_type: "application/octet-stream".into(),
-                            data: base64::engine::general_purpose::STANDARD.encode(&pack_files.pack),
-                            encoding: Some("base64".into()),
-                        });
-                        effects.push(HostEffect::DownloadMediaExport {
-                            filename: format!("{space_id}.ops"),
-                            mime_type: "text/plain".into(),
-                            data: pack_files.ops,
-                            encoding: None,
-                        });
-                    }
-                }
-            }
-            "exportStudioDsl" => {
-                let space_id = runtime_space_id(&*self.runtime.borrow());
-                if let Some(document) = home_ui::resolve_studio_document(&space_id) {
-                    if let Ok(text_files) = export_os_space_dsl(&document) {
-                        effects.push(HostEffect::DownloadMediaExport {
-                            filename: format!("{space_id}.os"),
-                            mime_type: "text/plain".into(),
-                            data: text_files.dsl,
-                            encoding: None,
-                        });
-                    }
-                }
-            }
-            "importSpacePack" => {
-                return ActionEmit::effect(HostEffect::RequestFileOpen {
-                    accept: ".pack".into(),
-                    read_as: Some("dataUrl".into()),
-                    import_action: "importSpacePackPayload".into(),
-                    multiple: false,
-                });
-            }
-            "importSpacePackPayload" => {
-                if let Some(payload) = args.and_then(|value| value.get("payload")).and_then(|value| value.as_str()) {
-                    use base64::Engine;
-                    let base64_part = payload.split_once(',').map(|(_, data)| data).unwrap_or(payload);
-                    if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
-                        // 🌱️ A single `.pack` file carries no separate `.spr` sidecar (unlike
-                        // `exportStudioPack`'s two-file output) — `store::empty_document_spr`
-                        // builds a bare, edit-free op log so the pack+spr-first codec path still
-                        // decodes to a document with no replayed edit history, i.e. its bare
-                        // initial projection, exactly like `importSpace`'s JSON-envelope
-                        // counterpart.
-                        let empty_spr = store::empty_document_spr("", OS_SPACE_SCHEMA);
-                        let _ = import_os_space_from_pack(&bytes, &empty_spr, home_ui::catalog_port());
-                    }
-                }
-                return ActionEmit::default();
-            }
-            "selectInstance" => {
-                self.runtime.borrow_mut().active_instance_id = args
-                    .and_then(|value| value.get("instanceId"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
-                if let Some(instance_id) = self.runtime.borrow_mut().active_instance_id.clone() {
-                    let node_id = projection
-                        .workflow
-                        .nodes
-                        .iter()
-                        .find(|node| node.instance_id == instance_id)
-                        .map(|node| node.id.clone());
-                    self.runtime.borrow_mut().selected_app_instance_ids = vec![instance_id];
-                    self.runtime.borrow_mut().selected_media_node_ids = node_id.into_iter().collect();
-                }
-            }
-            "nodeGraphSelect" | "setMediaNodeSelection" => {
-                let node_ids: Vec<String> = if args
-                    .and_then(|value| value.get("selectAll"))
-                    .and_then(|value| value.as_bool())
-                    .unwrap_or(false)
-                {
-                    projection.workflow.nodes.iter().map(|node| node.id.clone()).collect()
+            SpaceCommand::PatchAppInstances { node_ids, field, value } => {
+                if field == "label" {
+                    Emit::operations(node_ids.iter().cloned().map(|node_id| OsOperation::PatchWorkflowNode { node_id, label: value.clone() }).collect())
                 } else {
-                    args
-                        .and_then(|value| value.get("nodeIds"))
-                        .and_then(|value| value.as_array())
-                        .map(|rows| {
-                            rows.iter()
-                                .filter_map(|value| value.as_str().map(str::to_string))
-                                .collect()
-                        })
-                        .unwrap_or_default()
-                };
-                self.runtime.borrow_mut().selected_media_node_ids = node_ids.clone();
-                self.runtime.borrow_mut().selected_app_instance_ids = node_ids
+                    Emit::default()
+                }
+            }
+            SpaceCommand::BindParameterField { node_id, field_path, parameter_id } => {
+                if parameter_id.is_empty() || parameter_id == "__direct__" {
+                    Emit::operations(vec![OsOperation::UnbindParameterField { node_id: node_id.clone(), field_path: field_path.clone() }])
+                } else {
+                    Emit::operations(vec![OsOperation::BindParameterField { binding: OsParameterFieldBinding { parameter_id: parameter_id.clone(), node_id: node_id.clone(), field_path: field_path.clone() } }])
+                }
+            }
+            SpaceCommand::UnbindParameterField { node_id, field_path } => Emit::operations(vec![OsOperation::UnbindParameterField { node_id: node_id.clone(), field_path: field_path.clone() }]),
+            SpaceCommand::ReorganizeWorkflow => {
+                let node_ids: Vec<String> = if config.selected_node_ids.is_empty() { projection.workflow.nodes.iter().map(|node| node.id.clone()).collect() } else { config.selected_node_ids.clone() };
+                let document_operations = node_ids
                     .iter()
-                    .filter_map(|node_id| {
-                        projection
-                            .workflow
-                            .nodes
-                            .iter()
-                            .find(|node| node.id == *node_id)
-                            .map(|node| node.instance_id.clone())
+                    .enumerate()
+                    .map(|(index, node_id)| {
+                        let col = (index % 4) as f64;
+                        let row = (index / 4) as f64;
+                        OsOperation::MoveWorkflowNode { node_id: node_id.clone(), x: 80.0 + col * 220.0, y: 80.0 + row * 160.0 }
                     })
                     .collect();
-                if self.runtime.borrow_mut().selected_app_instance_ids.len() == 1 {
-                    self.runtime.borrow_mut().active_instance_id = self.runtime.borrow_mut().selected_app_instance_ids.first().cloned();
+                Emit::operations(document_operations)
+            }
+            SpaceCommand::WorkflowEngagementSubmit { value } => {
+                let raw = value.clone().unwrap_or_else(|| config.workflow_engagement_input.clone());
+                let mut parts = raw.split_whitespace();
+                match (parts.next(), parts.next()) {
+                    (Some(plugin_id), Some(app_id)) => match add_workflow_node_operation(plugin_id, app_id, None, 80.0, 80.0) {
+                        Some((operation, node_id)) => Emit {
+                            document_operations: vec![operation],
+                            config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }],
+                            ..Default::default()
+                        },
+                        None => Emit::default(),
+                    },
+                    _ => Emit::default(),
                 }
             }
-            "reorganizeWorkflow" => {
-                let node_ids: Vec<String> = if self.runtime.borrow_mut().selected_media_node_ids.is_empty() {
-                    projection.workflow.nodes.iter().map(|node| node.id.clone()).collect()
-                } else {
-                    self.runtime.borrow_mut().selected_media_node_ids.clone()
-                };
-                for (index, node_id) in node_ids.iter().enumerate() {
-                    let col = (index % 4) as f64;
-                    let row = (index / 4) as f64;
-                    operations.push(OsOperation::MoveWorkflowNode {
-                        node_id: node_id.clone(),
-                        x: 80.0 + col * 220.0,
-                        y: 80.0 + row * 160.0,
-                    });
-                }
-            }
-            "nodeGraphHover" | "textHover" => {
-                self.runtime.borrow_mut().hovered_media_node_id = args
-                    .and_then(|value| value.get("hoverJson"))
-                    .and_then(|value| {
-                        if value.is_null() {
-                            None
-                        } else if let Some(text) = value.as_str() {
-                            serde_json::from_str::<Value>(text)
-                                .ok()
-                                .and_then(|parsed| parsed.get("nodeId").and_then(|id| id.as_str().map(str::to_string)))
-                                .or_else(|| Some(text.to_string()))
-                        } else {
-                            value.get("nodeId").and_then(|id| id.as_str().map(str::to_string))
-                        }
-                    });
-            }
-            "nodeGraphViewport" => {
-                if let Some(camera) = args
-                    .and_then(|value| value.get("viewportJson"))
-                    .and_then(|value| value.as_str())
-                    .and_then(|viewport_json| serde_json::from_str::<OsWorkflowCamera>(viewport_json).ok())
-                {
-                    self.runtime.borrow_mut().workflow_camera = Some(camera);
-                }
-            }
-            "nodeGraphEdit" => {
-                let edit_operations = args
-                    .and_then(|value| value.get("operations"))
-                    .and_then(|value| value.as_array())
-                    .cloned()
-                    .unwrap_or_default();
+            SpaceCommand::CompiledDagEngagementSubmit => Emit::default(),
+            SpaceCommand::NodeGraphEdit { operations_json } => {
+                let edit_operations = serde_json::from_str::<Value>(operations_json).ok().and_then(|value| value.get("operations").and_then(Value::as_array).cloned()).unwrap_or_default();
+                let mut document_operations = Vec::new();
+                let mut config_operations = Vec::new();
+                let mut effects = Vec::new();
                 for edit in &edit_operations {
-                    match edit.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
+                    match edit.get("operation").and_then(Value::as_str).unwrap_or("") {
                         "setFixture" => {
-                            if let Some(fixture_json) = edit.get("fixtureJson").and_then(|value| value.as_str()) {
-                                if let Some(camera) = serde_json::from_str::<Value>(fixture_json)
-                                    .ok()
-                                    .and_then(|fixture| fixture.get("camera").cloned())
-                                    .and_then(|camera| serde_json::from_value::<OsWorkflowCamera>(camera).ok())
-                                {
-                                    self.runtime.borrow_mut().workflow_camera = Some(camera);
+                            if let Some(fixture_json) = edit.get("fixtureJson").and_then(Value::as_str) {
+                                if let Some(camera) = serde_json::from_str::<Value>(fixture_json).ok().and_then(|fixture| fixture.get("camera").cloned()).and_then(|camera| serde_json::from_value::<OsWorkflowCamera>(camera).ok()) {
+                                    config_operations.push(SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() });
                                 }
-                                operations.extend(apply_flow_fixture_to_os_workflow(&projection.workflow, fixture_json));
+                                document_operations.extend(apply_flow_fixture_to_os_workflow(&projection.workflow, fixture_json));
                             }
                         }
                         "move" => {
-                            if let (Some(node_id), Some(x), Some(y)) = (
-                                edit.get("nodeId").and_then(|value| value.as_str()),
-                                edit.get("x").and_then(|value| value.as_f64()),
-                                edit.get("y").and_then(|value| value.as_f64()),
-                            ) {
-                                operations.push(OsOperation::MoveWorkflowNode { node_id: node_id.into(), x, y });
+                            if let (Some(node_id), Some(x), Some(y)) = (edit.get("nodeId").and_then(Value::as_str), edit.get("x").and_then(Value::as_f64), edit.get("y").and_then(Value::as_f64)) {
+                                document_operations.push(OsOperation::MoveWorkflowNode { node_id: node_id.into(), x, y });
                             }
                         }
                         "connect" => {
-                            if let (Some(source_node_id), Some(source_port_id), Some(target_node_id), Some(target_port_id)) = (
-                                edit.get("sourceNodeId").and_then(|value| value.as_str()),
-                                edit.get("sourcePortId").and_then(|value| value.as_str()),
-                                edit.get("targetNodeId").and_then(|value| value.as_str()),
-                                edit.get("targetPortId").and_then(|value| value.as_str()),
-                            ) {
-                                match negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
-                                    Ok(contract) => operations.push(OsOperation::ConnectWorkflowPorts {
-                                        edge: semio_framework_os::OsWorkflowEdge {
-                                            id: create_os_id("edge"),
-                                            source_node_id: source_node_id.into(),
-                                            source_port_id: source_port_id.into(),
-                                            target_node_id: target_node_id.into(),
-                                            target_port_id: target_port_id.into(),
-                                            contract,
-                                        },
-                                    }),
-                                    Err(reason) => effects.push(HostEffect::Notify { message: reason }),
+                            if let (Some(source_node_id), Some(source_port_id), Some(target_node_id), Some(target_port_id)) =
+                                (edit.get("sourceNodeId").and_then(Value::as_str), edit.get("sourcePortId").and_then(Value::as_str), edit.get("targetNodeId").and_then(Value::as_str), edit.get("targetPortId").and_then(Value::as_str))
+                            {
+                                match negotiate_connect_or_notify(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
+                                    Ok(contract) => document_operations.push(connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract)),
+                                    Err(effect) => effects.push(effect),
                                 }
                             }
                         }
                         "deleteSelection" => {
-                            for node_id in &*self.runtime.borrow().selected_media_node_ids {
-                                if let Some(node) = projection.workflow.nodes.iter().find(|node| node.id == *node_id) {
-                                    operations.push(OsOperation::RemoveAppInstance { instance_id: node.instance_id.clone() });
-                                }
+                            for node_id in &config.selected_node_ids {
+                                document_operations.push(OsOperation::RemoveWorkflowNode { node_id: node_id.clone() });
                             }
                         }
                         _ => {}
                     }
                 }
+                Emit { document_operations, config_operations, effects, ..Default::default() }
             }
-            "presenceHeartbeat" => {
-                if let Some(client_id) = args.and_then(|value| value.get("clientId")).and_then(|value| value.as_str()) {
-                    self.runtime.borrow_mut().client_id = Some(client_id.into());
-                    self.runtime.borrow_mut().client_name = Some(
-                        args.and_then(|value| value.get("name"))
-                            .and_then(|value| value.as_str())
-                            .unwrap_or("Guest")
-                            .into(),
-                    );
+            SpaceCommand::SetActivePanelTab { tab_id } => Emit::config(vec![SpaceConfigOperation::SetActivePanelTab { tab_id: tab_id.clone() }]),
+            SpaceCommand::SelectInstance { node_id } => {
+                let node_ids = node_id.iter().cloned().collect();
+                Emit::config(vec![SpaceConfigOperation::SetActiveNode { node_id: node_id.clone() }, SpaceConfigOperation::SetSelection { node_ids }])
+            }
+            SpaceCommand::NodeGraphSelect { node_ids, select_all } | SpaceCommand::SetMediaNodeSelection { node_ids, select_all } => {
+                let node_ids = if *select_all { projection.workflow.nodes.iter().map(|node| node.id.clone()).collect() } else { node_ids.clone() };
+                let mut config_operations = vec![SpaceConfigOperation::SetSelection { node_ids: node_ids.clone() }];
+                if node_ids.len() == 1 {
+                    config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: node_ids.first().cloned() });
                 }
-                // 🐢️ A heartbeat only records this client's own identity for the presence broadcast below
-                // — it never changes anything this instance's own UI should re-render.
-                ui_scope = semio_framework_core::kernel::UiDirtyScope::None;
+                let next_config = apply_config_operations(config, &config_operations);
+                publish_presence(&next_config);
+                Emit::config(config_operations)
             }
-            "setAppInstanceSelection" => {
-                let instance_ids: Vec<String> = args
-                    .and_then(|value| value.get("instanceIds"))
-                    .and_then(|value| value.as_array())
-                    .map(|rows| {
-                        rows.iter()
-                            .filter_map(|value| value.as_str().map(str::to_string))
-                            .collect()
-                    })
-                    .unwrap_or_default();
-                self.runtime.borrow_mut().selected_app_instance_ids = instance_ids.clone();
-                self.runtime.borrow_mut().selected_media_node_ids = instance_ids
-                    .iter()
-                    .filter_map(|instance_id| {
-                        projection
-                            .workflow
-                            .nodes
-                            .iter()
-                            .find(|node| node.instance_id == *instance_id)
-                            .map(|node| node.id.clone())
-                    })
-                    .collect();
-                if instance_ids.len() == 1 {
-                    self.runtime.borrow_mut().active_instance_id = Some(instance_ids[0].clone());
+            SpaceCommand::SetAppInstanceSelection { node_ids } => {
+                let mut config_operations = vec![SpaceConfigOperation::SetSelection { node_ids: node_ids.clone() }];
+                if node_ids.len() == 1 {
+                    config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: node_ids.first().cloned() });
+                }
+                let next_config = apply_config_operations(config, &config_operations);
+                publish_presence(&next_config);
+                Emit::config(config_operations)
+            }
+            SpaceCommand::NodeGraphHover { hover_json } | SpaceCommand::TextHover { hover_json } => {
+                let node_id = hover_json.as_deref().and_then(|text| {
+                    serde_json::from_str::<Value>(text).ok().and_then(|parsed| parsed.get("nodeId").and_then(|id| id.as_str().map(str::to_string))).or_else(|| Some(text.to_string()))
+                });
+                Emit::config(vec![SpaceConfigOperation::SetHover { node_id }])
+            }
+            SpaceCommand::NodeGraphViewport { viewport_json } => match serde_json::from_str::<OsWorkflowCamera>(viewport_json) {
+                Ok(camera) => Emit::config(vec![SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }]),
+                Err(_) => Emit::default(),
+            },
+            SpaceCommand::PresenceHeartbeat { client_id, name } => {
+                let config_operations = vec![SpaceConfigOperation::SetClient { client_id: Some(client_id.clone()), client_name: Some(name.clone()) }];
+                let next_config = apply_config_operations(config, &config_operations);
+                publish_presence(&next_config);
+                Emit { config_operations, ui_scope: semio_framework_core::kernel::UiDirtyScope::None, ..Default::default() }
+            }
+            SpaceCommand::WorkflowEngagementInput { value } => Emit::config(vec![SpaceConfigOperation::SetWorkflowEngagementInput { value: value.clone() }]),
+            SpaceCommand::CompiledDagEngagementInput { value } => Emit::config(vec![SpaceConfigOperation::SetCompiledDagEngagementInput { value: value.clone() }]),
+            SpaceCommand::SetActiveExample { example_id } => {
+                if example_id.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{example_id}") })
                 }
             }
-            "patchMediaNodes" => {
-                let node_ids: Vec<String> = args
-                    .and_then(|value| value.get("nodeIds"))
-                    .and_then(|value| value.as_array())
-                    .map(|rows| {
-                        rows.iter()
-                            .filter_map(|value| value.as_str().map(str::to_string))
-                            .collect()
-                    })
-                    .unwrap_or_default();
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str());
-                let axis = args.and_then(|value| value.get("axis")).and_then(|value| value.as_str());
-                let numeric = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_f64())
-                    .or_else(|| {
-                        args.and_then(|value| value.get("value"))
-                            .and_then(|value| value.as_str())
-                            .and_then(|value| value.parse().ok())
-                    });
-                if field == Some("position") && numeric.is_some() {
-                    for node_id in node_ids {
-                        if let Some(node) = projection.workflow.nodes.iter().find(|row| row.id == node_id) {
-                            let x = if axis == Some("x") {
-                                numeric.unwrap()
-                            } else {
-                                node.x
-                            };
-                            let y = if axis == Some("y") {
-                                numeric.unwrap()
-                            } else {
-                                node.y
-                            };
-                            operations.push(OsOperation::MoveWorkflowNode {
-                                node_id,
-                                x,
-                                y,
-                            });
+            SpaceCommand::ExportMedia { node_id, format } => {
+                match projection.workflow.nodes.iter().find(|row| &row.id == node_id) {
+                    Some(node) => {
+                        ensure_space_fixtures_registered();
+                        let schema = os_app_registration(&node.plugin_id, &node.app_id).map(|row| row.source_format).unwrap_or_default();
+                        let document_json = materialize_os_app_instance_document_json(&json!({ "schema": schema }).to_string(), &node.id, &projection.parameter_bindings, &projection.parameters);
+                        let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
+                        let export_format = semio_framework_os::OsMediaFormat::parse(format).unwrap_or(semio_framework_os::OsMediaFormat::Svg);
+                        match semio_framework_os::export_os_app_instance_media(node, &document_value, export_format) {
+                            Ok(result) => Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding }),
+                            Err(_) => Emit::default(),
                         }
                     }
+                    None => Emit::default(),
                 }
             }
-            "patchAppInstances" => {
-                let instance_ids: Vec<String> = args
-                    .and_then(|value| value.get("instanceIds"))
-                    .and_then(|value| value.as_array())
-                    .map(|rows| {
-                        rows.iter()
-                            .filter_map(|value| value.as_str().map(str::to_string))
-                            .collect()
-                    })
-                    .unwrap_or_default();
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str());
-                let value = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str());
-                if field == Some("label") {
-                    for instance_id in instance_ids {
-                        if let Some(label) = value {
-                            operations.push(OsOperation::PatchAppInstance {
-                                instance_id,
-                                label: Some(label.into()),
-                            });
-                        }
-                    }
-                }
-            }
-            "bindParameterField" => {
-                let instance_id = args
-                    .and_then(|value| value.get("instanceId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                let field_path = args
-                    .and_then(|value| value.get("fieldPath"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                let parameter_id = args
-                    .and_then(|value| value.get("parameterId").or_else(|| value.get("value")))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                if !instance_id.is_empty() && !field_path.is_empty() {
-                    if parameter_id.is_empty() || parameter_id == "__direct__" {
-                        operations.push(OsOperation::UnbindParameterField {
-                            instance_id: instance_id.into(),
-                            field_path: field_path.into(),
-                        });
-                    } else {
-                        operations.push(OsOperation::BindParameterField {
-                            binding: OsParameterFieldBinding {
-                                parameter_id: parameter_id.into(),
-                                instance_id: instance_id.into(),
-                                field_path: field_path.into(),
-                            },
-                        });
-                    }
-                }
-            }
-            "unbindParameterField" => {
-                let instance_id = args
-                    .and_then(|value| value.get("instanceId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                let field_path = args
-                    .and_then(|value| value.get("fieldPath"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                if !instance_id.is_empty() && !field_path.is_empty() {
-                    operations.push(OsOperation::UnbindParameterField {
-                        instance_id: instance_id.into(),
-                        field_path: field_path.into(),
-                    });
-                }
-            }
-            "openSpace" => {
-                if let Some(space_id) = args
-                    .and_then(|value| value.get("spaceId"))
-                    .and_then(|value| value.as_str())
-                {
-                    self.runtime.borrow_mut().space_id = Some(space_id.into());
-                    self.runtime.borrow_mut().focused_instance_id = None;
-                    self.runtime.borrow_mut().selected_media_node_ids.clear();
-                    self.runtime.borrow_mut().selected_app_instance_ids.clear();
-                    self.runtime.borrow_mut().clipboard_instance_ids.clear();
-                    let document = home_ui::resolve_studio_document(space_id)
-                        .or_else(|| {
-                            if space_id == "demo" {
-                                Some(parse_demo_space_document())
-                            } else {
-                                None
+            SpaceCommand::ImportMedia { node_id, format } => Emit {
+                config_operations: vec![SpaceConfigOperation::SetPendingImport { node_id: Some(node_id.clone()), format: Some(format.clone()) }],
+                effects: vec![HostEffect::RequestFileOpen { accept: format!(".{format}"), read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
+                ..Default::default()
+            },
+            SpaceCommand::ImportMediaPayload { payload } => {
+                let mut config_operations = Vec::new();
+                if let (Some(node_id), Some(format_name)) = (config.pending_import_node_id.clone(), config.pending_import_format.clone()) {
+                    config_operations.push(SpaceConfigOperation::SetPendingImport { node_id: None, format: None });
+                    if let Some(format) = semio_framework_os::OsMediaFormat::parse(&format_name) {
+                        use base64::Engine;
+                        let base64_part = payload.split_once(',').map(|(_, data)| data).unwrap_or(payload);
+                        if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
+                            if let Some(node) = projection.workflow.nodes.iter().find(|row| row.id == node_id) {
+                                // 📥️ Decoding/validation happens here; the decoded content is applied to
+                                // the node's own document-ref document by the host (a cross-document
+                                // operation the shell can't author from its own store), so this arm emits
+                                // no studio document operation.
+                                let _ = semio_framework_os::import_os_app_instance_media(node, &bytes, format);
                             }
-                        })
-                        .unwrap_or_else(|| create_empty_os_document(space_id, "Untitled Studio"));
-                    if let Ok(projection) = materialize_os_projection(&document, &[]) {
-                        self.runtime.borrow_mut().active_instance_id =
-                            projection.app_instances.first().map(|instance| instance.id.clone());
-                    } else {
-                        self.runtime.borrow_mut().active_instance_id = None;
+                        }
                     }
-                    if let Some(files) = home_ui::space_document_envelope_pack(&document) {
+                }
+                Emit::config(config_operations)
+            }
+            SpaceCommand::ExportStudioPack => {
+                let space_id = config_space_id(config);
+                match home_ui::resolve_studio_document(&space_id) {
+                    Some(document) => match export_os_space_pack(&document) {
+                        Ok(pack_files) => {
+                            use base64::Engine;
+                            Emit {
+                                effects: vec![
+                                    HostEffect::DownloadMediaExport { filename: format!("{space_id}.pack"), mime_type: "application/octet-stream".into(), data: base64::engine::general_purpose::STANDARD.encode(&pack_files.pack), encoding: Some("base64".into()) },
+                                    HostEffect::DownloadMediaExport { filename: format!("{space_id}.ops"), mime_type: "text/plain".into(), data: pack_files.ops, encoding: None },
+                                ],
+                                ..Default::default()
+                            }
+                        }
+                        Err(_) => Emit::default(),
+                    },
+                    None => Emit::default(),
+                }
+            }
+            SpaceCommand::ExportStudioDsl => {
+                let space_id = config_space_id(config);
+                match home_ui::resolve_studio_document(&space_id) {
+                    Some(document) => match export_os_space_dsl(&document) {
+                        Ok(text_files) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{space_id}.os"), mime_type: "text/plain".into(), data: text_files.dsl, encoding: None }),
+                        Err(_) => Emit::default(),
+                    },
+                    None => Emit::default(),
+                }
+            }
+            SpaceCommand::ImportSpacePack => Emit::effect(HostEffect::RequestFileOpen { accept: ".pack".into(), read_as: Some("dataUrl".into()), import_action: "importSpacePackPayload".into(), multiple: false }),
+            SpaceCommand::ImportSpacePackPayload { payload } => {
+                use base64::Engine;
+                let base64_part = payload.split_once(',').map(|(_, data)| data).unwrap_or(payload);
+                if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
+                    // 🌱️ A single `.pack` file carries no separate `.spr` sidecar (unlike
+                    // `exportStudioPack`'s two-file output) — `store::empty_document_spr` builds a bare,
+                    // edit-free op log so the pack+spr-first codec path still decodes to a document with
+                    // no replayed edit history, i.e. its bare initial projection.
+                    let empty_spr = store::empty_document_spr("", OS_SPACE_SCHEMA);
+                    let _ = import_os_space_from_pack(&bytes, &empty_spr, home_ui::catalog_port());
+                }
+                Emit::default()
+            }
+            SpaceCommand::OpenSpace { space_id } => {
+                let document = home_ui::resolve_studio_document(space_id)
+                    .or_else(|| if space_id == "demo" { Some(parse_demo_space_document()) } else { None })
+                    .unwrap_or_else(|| create_empty_os_document(space_id, "Untitled Studio"));
+                let mut config_operations = vec![
+                    SpaceConfigOperation::SetSpaceId { space_id: Some(space_id.clone()) },
+                    SpaceConfigOperation::SetFocusedNode { node_id: None },
+                    SpaceConfigOperation::SetSelection { node_ids: Vec::new() },
+                    SpaceConfigOperation::SetClipboard { node_ids: Vec::new() },
+                ];
+                match home_ui::space_document_envelope_pack(&document) {
+                    Some(files) => {
+                        let active_node_id = materialize_os_projection(&document, &[]).ok().and_then(|projection| projection.workflow.nodes.first().map(|node| node.id.clone()));
+                        config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: active_node_id });
                         eprintln!(
-                            "[DEBUG] openSpace id={} instances={} backbone={:?}",
+                            "[DEBUG] openSpace id={} nodes={} backbone={:?}",
                             space_id,
-                            document.vcs.initial_projection.app_instances.len(),
+                            document.vcs.initial_projection.workflow.nodes.len(),
                             document.backbone.as_ref().map(|row| row.uri.clone())
                         );
-                        return ActionEmit::effect(HostEffect::LoadDocument { pack: files.pack, spr: files.spr });
+                        Emit { config_operations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() }
                     }
-                    eprintln!("[DEBUG] openSpace missing envelope id={space_id}");
-                    self.runtime.borrow_mut().active_instance_id = None;
-                }
-                return ActionEmit::default();
-            }
-            "openInstance" => {
-                let instance_id = args
-                    .and_then(|value| value.get("instanceId"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .or_else(|| primary_selected_instance_id(&*self.runtime.borrow(), projection));
-                if let Some(instance_id) = instance_id {
-                    self.runtime.borrow_mut().focused_instance_id = Some(instance_id.clone());
-                    self.runtime.borrow_mut().active_instance_id = Some(instance_id.clone());
-                    self.runtime.borrow_mut().selected_app_instance_ids = vec![instance_id.clone()];
-                    if let Some(node) = projection
-                        .workflow
-                        .nodes
-                        .iter()
-                        .find(|row| row.instance_id == instance_id)
-                    {
-                        self.runtime.borrow_mut().selected_media_node_ids = vec![node.id.clone()];
-                    }
-                    if let Some(instance) = projection
-                        .app_instances
-                        .iter()
-                        .find(|row| row.id == instance_id)
-                    {
-                        effects.push(HostEffect::OpenPluginInstance {
-                            plugin_id: instance.plugin_id.clone(),
-                            app_id: instance.app_id.clone(),
-                            os_instance_id: Some(instance.id.clone()),
-                        });
+                    None => {
+                        eprintln!("[DEBUG] openSpace missing envelope id={space_id}");
+                        config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: None });
+                        Emit::config(config_operations)
                     }
                 }
             }
-            "closeFocusedInstance" => {
-                self.runtime.borrow_mut().focused_instance_id = None;
-                let mut panel = parse_panel_state(view_state);
-                panel.active_spawned_id = None;
-                return ActionEmit::effect(HostEffect::SetPanel { panel_json: panel_json(&panel) });
-            }
-            "goHome" => return ActionEmit::effect(HostEffect::Navigate { uri: "/".into() }),
-            "workflowEngagementInput" => {
-                self.runtime.borrow_mut().workflow_engagement_input = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("")
-                    .into();
-            }
-            "workflowEngagementSubmit" => {
-                let raw = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .unwrap_or_else(|| self.runtime.borrow_mut().workflow_engagement_input.clone());
-                let mut parts = raw.split_whitespace();
-                if let (Some(plugin_id), Some(app_id)) = (parts.next(), parts.next()) {
-                    if let Some((operation, instance_id)) = spawn_app_instance_operation(
-                        plugin_id,
-                        app_id,
-                        None,
-                        semio_framework_os::WorkflowPosition { x: 80.0, y: 80.0 },
-                    ) {
-                        self.runtime.borrow_mut().active_instance_id = Some(instance_id);
-                        operations.push(operation);
-                    }
-                }
-            }
-            "compiledDagEngagementInput" => {
-                self.runtime.borrow_mut().compiled_dag_engagement_input = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("")
-                    .into();
-            }
-            "compiledDagEngagementSubmit" => {}
-            _ => {}
-        }
-        if matches!(
-            action,
-            "presenceHeartbeat" | "nodeGraphSelect" | "setMediaNodeSelection" | "selectInstance" | "setAppInstanceSelection" | "deleteSelection"
-        ) {
-            publish_presence(&*self.runtime.borrow());
-        }
-        ActionEmit {
-            operations,
-            coalesce_key,
-            effects,
-            ui_scope,
-            ..Default::default()
+            SpaceCommand::OpenInstance { node_id } => match node_id.clone().or_else(|| primary_selected_node_id(config)) {
+                Some(node_id) => match projection.workflow.nodes.iter().find(|row| row.id == node_id) {
+                    Some(node) => Emit {
+                        config_operations: vec![
+                            SpaceConfigOperation::SetFocusedNode { node_id: Some(node_id.clone()) },
+                            SpaceConfigOperation::SetActiveNode { node_id: Some(node_id.clone()) },
+                            SpaceConfigOperation::SetSelection { node_ids: vec![node_id.clone()] },
+                        ],
+                        effects: vec![HostEffect::OpenPluginInstance { plugin_id: node.plugin_id.clone(), app_id: node.app_id.clone(), os_instance_id: Some(node.id.clone()) }],
+                        ..Default::default()
+                    },
+                    None => Emit::default(),
+                },
+                None => Emit::default(),
+            },
+            SpaceCommand::CloseFocusedInstance => Emit::config(vec![SpaceConfigOperation::SetFocusedNode { node_id: None }]),
+            SpaceCommand::GoHome => Emit::effect(HostEffect::Navigate { uri: "/".into() }),
+            SpaceCommand::NavigateVirtualFileSystemNode { space_id } => Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }),
         }
     }
 
-    fn render(
-        &self,
-        body_key: &str,
-        doc: &DocumentView<'_, OsProjection>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-    ) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, OsProjection>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
         let projection = doc.projection;
-        let panel = parse_panel_state(view_state);
-        let labels = resolve_labels::<SStudioLabels>(view_state);
+        let config = cfg.projection;
+        let labels = resolve_labels::<SStudioLabels>(config);
         match body_key {
-            S_PLAY_BODY_WORKFLOW => render_workflow(projection, &*self.runtime.borrow(), labels),
+            S_PLAY_BODY_WORKFLOW => render_workflow(projection, config, labels),
             S_PLAY_BODY_MEDIA_VFS => render_media_vfs(projection, labels),
             S_PLAY_BODY_COMPILED_DAG => render_compiled_dag(projection),
-            S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(&panel, labels),
+            S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(labels),
             S_PLAY_PARAMETERS_BODY_KEY => build_parameters_tree(projection, labels),
-            S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(projection, &*self.runtime.borrow(), labels),
+            S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(projection, config, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_measures(
-        &self,
-        doc: &DocumentView<'_, OsProjection>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-    ) -> HashMap<String, Vec<WindowMeasure>> {
-        let labels = resolve_labels::<SStudioLabels>(view_state);
-        HashMap::from([(
-            S_PLAY_WINDOW_WORKFLOW.into(),
-            workflow_measures(&*self.runtime.borrow(), &doc.projection.app_instances, labels),
-        )])
+    fn window_measures(&self, doc: &DocumentView<'_, OsProjection>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let labels = resolve_labels::<SStudioLabels>(cfg.projection);
+        HashMap::from([(S_PLAY_WINDOW_WORKFLOW.into(), workflow_measures(cfg.projection, &doc.projection.workflow.nodes, labels))])
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<SStudioLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, SpaceConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<SStudioLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(S_PLAY_WINDOW_WORKFLOW, labels.window_workflow)
             .window_kind_label(S_PLAY_WINDOW_MEDIA_VFS, labels.window_media_vfs)
@@ -2043,15 +1645,21 @@ impl DocumentApp for SpaceApp {
         &self,
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &DocumentView<'_, OsProjection>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
+        cfg: &ConfigView<'_, SpaceConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let labels = resolve_labels::<SStudioLabels>(view_state);
-        let is_de = is_de_locale(view_state);
-        let selected = self.runtime.borrow().selected_media_node_ids.clone();
-        space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &selected)
+        let labels = resolve_labels::<SStudioLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
+        space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &cfg.projection.selected_node_ids)
     }
+}
+
+/// 🔧️ Small pure fold applying a batch of `SpaceConfigOperation`s onto a snapshot — used where
+/// `handle()` needs the POST-command config (not the pre-command `cfg.projection`) to build a
+/// derived side value (the presence broadcast) in the very same call, without reaching back into a
+/// store this pure function doesn't own.
+fn apply_config_operations(config: &SpaceConfig, operations: &[SpaceConfigOperation]) -> SpaceConfig {
+    operations.iter().fold(config.clone(), |acc, operation| operation.diff(&acc))
 }
 //#endregion 🔖️SpaceApp
 
@@ -2073,13 +1681,13 @@ fn space_play_layout() -> WindowLayout {
     )
 }
 
-fn workflow_engagement(runtime: &StudioRuntimeState, node_count: usize, app_count: usize) -> WindowEngagement {
+fn workflow_engagement(config: &SpaceConfig, node_count: usize) -> WindowEngagement {
     WindowEngagement {
         session_active: Some(false),
         options: None,
         input: Some(WindowEngagementInput {
             id: Some("s-media-catalogue-hint".into()),
-            value: Some(runtime.workflow_engagement_input.clone()),
+            value: Some(config.workflow_engagement_input.clone()),
             placeholder: Some("Drag apps from Catalogue workbench tab".into()),
             on_change: Some(s_play_action("workflowEngagementInput", None)),
             on_submit: Some(s_play_action("workflowEngagementSubmit", None)),
@@ -2091,23 +1699,23 @@ fn workflow_engagement(runtime: &StudioRuntimeState, node_count: usize, app_coun
         controls: None,
         status: Some(vec![WindowEngagementStatus {
             id: "s-media-count".into(),
-            text: format!("{node_count} nodes · {app_count} apps"),
+            text: format!("{node_count} nodes"),
         }]),
         possible_engagements: None,
     }
 }
 
-fn workflow_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance], labels: &SStudioLabels) -> Vec<WindowMeasure> {
+fn workflow_measures(config: &SpaceConfig, nodes: &[WorkflowNode], labels: &SStudioLabels) -> Vec<WindowMeasure> {
     vec![WindowMeasure::Select {
         id: "s-media-active-instance".into(),
         label: Some(labels.active_app.into()),
-        value: runtime.active_instance_id.clone().unwrap_or_default(),
-        items: instances
+        value: config.active_node_id.clone().unwrap_or_default(),
+        items: nodes
             .iter()
-            .map(|instance| MeasureSelectItem {
-                id: instance.id.clone(),
-                value: instance.id.clone(),
-                label: instance.label.clone(),
+            .map(|node| MeasureSelectItem {
+                id: node.id.clone(),
+                value: node.id.clone(),
+                label: node.label.clone(),
             })
             .collect(),
         on_change: s_play_action("selectInstance", None),
@@ -2132,16 +1740,9 @@ fn compiled_dag_engagement(projection: &OsProjection) -> WindowEngagement {
 
 pub fn create_space_app() -> App {
     let projection = demo_space_projection();
-    let runtime = StudioRuntimeState {
-        active_instance_id: projection.app_instances.first().map(|instance| instance.id.clone()),
-        ..StudioRuntimeState::default()
-    };
-    let engagement = workflow_engagement(
-        &runtime,
-        projection.workflow.nodes.len(),
-        projection.app_instances.len(),
-    );
-    let measures = workflow_measures(&runtime, &projection.app_instances, resolve_labels::<SStudioLabels>(&ViewState::default()));
+    let config = SpaceConfig::default();
+    let engagement = workflow_engagement(&config, projection.workflow.nodes.len());
+    let measures = workflow_measures(&config, &projection.workflow.nodes, resolve_labels::<SStudioLabels>(&config));
     let builder = App::builder(S_PLAY_APP_ID, "Space").document(["semio", "s", "studio"])
         .icon_id("s")
         .mode("main", "Space", "globe")
@@ -2174,7 +1775,6 @@ pub fn create_space_app() -> App {
             S_PLAY_INSPECTOR_BODY_KEY,
         )
         .default_layout(space_play_layout())
-        .operation("setParameter", "Set Parameter")
         .operation("patchParameter", "Patch Parameter")
         .operation("addParameter", "Add Parameter")
         .operation("removeParameter", "Remove Parameter")
@@ -2236,7 +1836,7 @@ pub fn create_space_app() -> App {
         // window only drives its own engagement. Navigation, panel-tab, presence, example and generic
         // node-graph view actions stay unscoped orphans and appear on every window.
         .window_kind_actions(S_PLAY_WINDOW_WORKFLOW, vec![
-            "setParameter".into(), "patchParameter".into(), "addParameter".into(), "removeParameter".into(),
+            "patchParameter".into(), "addParameter".into(), "removeParameter".into(),
             "spawnApp".into(), "moveMediaNode".into(), "connectMediaPorts".into(), "disconnectMediaEdge".into(),
             "removeAppInstance".into(), "deleteSelection".into(), "copyAppInstance".into(),
             "duplicateAppInstance".into(), "pasteAppInstance".into(), "renameAppInstance".into(),
@@ -2272,11 +1872,7 @@ pub fn create_space_app() -> App {
     {
         window.options.engagement = WindowEngagementSlot::Some(compiled_engagement);
     }
-    let mut app = App {
-        definition,
-        examples: vec![],
-        workflow: None,
-    };
+    let mut app = App { definition, examples: Vec::new() };
     app.definition.controller_id = S_PLAY_CONTROLLER_ID.into();
     let mut app = app.workflow("s", "S Studio", "studio");
     for (id, label) in S_STUDIO_EXAMPLES {
@@ -2292,39 +1888,105 @@ pub fn create_space_app() -> App {
 mod tests {
     use super::*;
     use semio_framework_os::{
-        apply_os_operation, merge_os_plugin_definition, os_baseline_resource, os_in_port, os_out_port, register_artifact_descriptor, validate_workflow, MediaClass, MediaForm, MediaType, MediaWireFormat, OsAppResourceSpec,
-        OsMediaFormat, OsWorkflowNode, OsMediaPort, OsPlatformAppInput, OsPlatformInput, ArtifactKindSpec,
+        apply_os_operation, register_app_io, register_artifact_descriptor, validate_workflow, ArtifactKindSpec, ArtifactPresentation, AppDefinition, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MediaWireFormat,
+        OsMediaFormat, PortMultiplicity,
     };
-    use semio_framework_plugin::{testkit, HistoryView, ModeDefinition, PluginApp, UiControlNode, UiNode, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, AppIo, HistoryView, PluginApp, UiControlNode, UiNode, VcsDocumentApp, ViewState};
+    use std::collections::HashSet;
 
     //#region 🔧️Harness
     fn empty_history() -> HistoryView {
         HistoryView::empty()
     }
 
-    /// 🎛️ Drives the typed `SpaceApp::handle_action` against a projection snapshot, returning its emit.
-    ///
-    /// 🩹️ Renamed from the pre-split monolith's mismatched pair: the harness fn was defined as
-    /// `space_emit` but every call site below already called it `studio_emit` — a latent bug (every
-    /// call site would have failed to resolve). Renamed the definition to match the (majority, and
-    /// pre-existing) call sites rather than the other way around.
-    fn studio_emit(app: &mut SpaceApp, projection: &OsProjection, action: &str, args: Value) -> ActionEmit<OsOperation> {
+    /// 🎛️ Drives the typed `SpaceApp::handle` against a projection/config snapshot, returning its emit.
+    fn studio_emit(projection: &OsProjection, config: &SpaceConfig, command: SpaceCommand) -> Emit<OsOperation, SpaceConfigOperation> {
         let history = empty_history();
         let doc = DocumentView { projection, history: &history };
-        app.handle_action(action, Some(&args), &doc, &ViewState::default())
+        let cfg = ConfigView { projection: config };
+        SpaceApp.handle(&command, &doc, &cfg)
     }
 
-    /// 📽️ Folds studio operations onto a projection the way the store would (minus history), for operation-application asserts.
+    /// 📽️ Folds studio document operations onto a projection the way the store would (minus history).
     fn apply_operations(projection: &OsProjection, operations: &[OsOperation]) -> OsProjection {
         operations.iter().fold(projection.clone(), |current, operation| apply_os_operation(&current, operation))
+    }
+
+    /// 📽️ Folds studio config operations onto a config snapshot the way the store would.
+    fn apply_config(config: &SpaceConfig, operations: &[SpaceConfigOperation]) -> SpaceConfig {
+        apply_config_operations(config, operations)
+    }
+
+    /// 🌱️ Registers a minimal `AppDefinition` directly into the production registry (`register_app_io`)
+    /// — the B1 replacement for the pre-merge `merge_os_plugin_definition`/`OsAppResourceSpec` test
+    /// seeding (both deleted). Every declared port additionally carries the implicit `document:in`/
+    /// `document:out` pair (see `AppIo::all_ports`).
+    fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str, ports: Vec<MediaPortSpec>) -> AppDefinition {
+        let definition = App::builder(app_id, label)
+            .document(document.iter().map(|segment| segment.to_string()))
+            .mode("edit", "Edit", "square-pen")
+            .window_kind("main", "Main", format!("{app_id}.main"), SurfaceKind::Canvas2d, "square-pen")
+            .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() }).with_ports(ports))
+            .build_definition();
+        register_app_io(plugin_id, &definition);
+        definition
+    }
+
+    fn seed_draw_plugin() {
+        seed_app("draw", "draw", "Draw", &["semio", "draw"], "draw.document", Vec::new());
+    }
+
+    fn seed_catalogue_apps() {
+        seed_app("puzzle", "puzzle2d-play", "Puzzle 2D", &["semio", "puzzle", "2d"], "puzzle2d.document", Vec::new());
+        seed_app("puzzle", "puzzle3d-play", "Puzzle 3D", &["semio", "puzzle", "3d"], "puzzle3d.document", Vec::new());
+    }
+
+    fn seed_multi_port_plugins() {
+        let puzzle_ports = vec![
+            MediaPortSpec { id: "in-a".into(), label: "In A".into(), direction: MediaPortDirection::In, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: Some("topology".into()), required: false, multiplicity: PortMultiplicity::One },
+            MediaPortSpec { id: "out-a".into(), label: "Out A".into(), direction: MediaPortDirection::Out, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: Some("topology".into()), required: false, multiplicity: PortMultiplicity::One },
+            MediaPortSpec { id: "out-b".into(), label: "Out B".into(), direction: MediaPortDirection::Out, media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, kind_id: Some("topology".into()), required: false, multiplicity: PortMultiplicity::One },
+        ];
+        seed_app("puzzle.5d", "puzzle5d", "Puzzle 5D", &["semio", "puzzle", "5d"], "puzzle5d.document", puzzle_ports);
+
+        let shooting_ports = vec![MediaPortSpec { id: "scene-in".into(), label: "Scene".into(), direction: MediaPortDirection::In, media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, kind_id: Some("2d.shooting".into()), required: true, multiplicity: PortMultiplicity::One }];
+        seed_app("shooting", "shooting", "Shooting", &["semio", "shooting"], "shooting.document", shooting_ports);
+    }
+
+    fn test_node(id: &str, inputs: Vec<semio_framework_os::WorkflowMediaPort>, outputs: Vec<semio_framework_os::WorkflowMediaPort>) -> WorkflowNode {
+        WorkflowNode {
+            id: id.into(),
+            plugin_id: "test".into(),
+            app_id: "test".into(),
+            label: id.into(),
+            yields: String::new(),
+            document_ref: format!("documents/{id}"),
+            config_ref: format!("config/{id}"),
+            x: 0.0,
+            y: 0.0,
+            width: 1.0,
+            height: 1.0,
+            inputs,
+            outputs,
+        }
+    }
+
+    fn test_port(node_id: &str, spec_id: &str, direction: MediaPortDirection, media_type: MediaType, kind_id: &str) -> semio_framework_os::WorkflowMediaPort {
+        let dir_word = match direction {
+            MediaPortDirection::In => "in",
+            MediaPortDirection::Out => "out",
+        };
+        semio_framework_os::WorkflowMediaPort {
+            id: format!("{node_id}:{spec_id}:{dir_word}"),
+            spec: MediaPortSpec { id: spec_id.into(), label: spec_id.into(), direction, media_type, kind_id: Some(kind_id.into()), required: false, multiplicity: PortMultiplicity::One },
+        }
     }
     //#endregion 🔧️Harness
 
     #[test]
     fn initial_projection_is_empty_not_demo() {
-        let app = SpaceApp::new();
-        assert!(app.initial_projection().app_instances.is_empty());
-        assert!(app.runtime.active_instance_id.is_none());
+        let app = SpaceApp;
+        assert!(app.initial_projection().workflow.nodes.is_empty());
     }
 
     #[test]
@@ -2334,20 +1996,16 @@ mod tests {
         let port: Arc<dyn semio_framework_os::OsBackbonePort> = Arc::new(MemoryBackbonePort::new());
         let entry = create_os_space("Opened Empty", port.clone()).expect("create");
         home_ui::register_studio_port_for_test(&entry.id, port);
-        let mut app = SpaceApp::new();
         let empty = default_os_projection();
-        let emit = studio_emit(&mut app, &empty, "openSpace", json!({ "spaceId": entry.id }));
-        assert_eq!(app.runtime.space_id.as_deref(), Some(entry.id.as_str()));
-        assert!(app.runtime.active_instance_id.is_none());
-        assert!(
-            emit.effects
-                .iter()
-                .any(|effect| matches!(effect, HostEffect::LoadDocument { .. }))
-        );
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: entry.id.clone() });
+        assert!(emit.config_operations.contains(&SpaceConfigOperation::SetSpaceId { space_id: Some(entry.id.clone()) }));
+        assert!(emit.config_operations.contains(&SpaceConfigOperation::SetActiveNode { node_id: None }));
+        assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })));
         assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
     }
 
-    fn load_document_projection(emit: &ActionEmit<OsOperation>) -> (OsProjection, String) {
+    fn load_document_projection(emit: &Emit<OsOperation, SpaceConfigOperation>) -> (OsProjection, String) {
         let (pack, spr) = emit
             .effects
             .iter()
@@ -2363,33 +2021,34 @@ mod tests {
 
     #[test]
     fn open_studio_unknown_id_loads_empty_not_demo() {
-        let mut app = SpaceApp::new();
         let empty = default_os_projection();
-        let emit = studio_emit(&mut app, &empty, "openSpace", json!({ "spaceId": "unknown-studio-id" }));
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: "unknown-studio-id".into() });
         let (projection, id) = load_document_projection(&emit);
         assert_eq!(id, "unknown-studio-id");
-        assert!(projection.app_instances.is_empty());
+        assert!(projection.workflow.nodes.is_empty());
         assert_ne!(id, "demo");
-        assert!(app.runtime.active_instance_id.is_none());
     }
 
     #[test]
     fn open_studio_demo_explicit_loads_demo_fixture() {
-        let mut app = SpaceApp::new();
         let empty = default_os_projection();
-        let emit = studio_emit(&mut app, &empty, "openSpace", json!({ "spaceId": "demo" }));
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: "demo".into() });
         let (projection, id) = load_document_projection(&emit);
         assert!(id.contains("demo-studio"));
-        assert!(!projection.app_instances.is_empty());
+        assert!(!projection.workflow.nodes.is_empty());
     }
 
     #[test]
     fn open_studio_loads_ephemeral_created_studio() {
-        let mut home = home_ui::HomeApp;
-        let projection = home.initial_projection();
+        let home = home_ui::HomeApp;
+        let home_projection = home.initial_projection();
         let history = empty_history();
-        let doc = DocumentView { projection: &projection, history: &history };
-        let create = home.handle_action("createStudio", Some(&json!({ "name": "Ephemeral Open" })), &doc, &ViewState::default());
+        let doc = DocumentView { projection: &home_projection, history: &history };
+        let home_config = home_engine::HomeConfig::default();
+        let home_cfg = ConfigView { projection: &home_config };
+        let create = home.handle(&home_protocol::HomeCommand::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg);
         let space_id = create
             .effects
             .iter()
@@ -2398,59 +2057,25 @@ mod tests {
                 _ => None,
             })
             .expect("navigate");
-        let mut app = SpaceApp::new();
         let empty = default_os_projection();
-        let emit = studio_emit(&mut app, &empty, "openSpace", json!({ "spaceId": space_id.clone() }));
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: space_id.clone() });
         let (projection, id) = load_document_projection(&emit);
         assert_eq!(id, space_id);
-        assert!(projection.app_instances.is_empty());
-    }
-
-    fn seed_draw_plugin() {
-        let mut resources = HashMap::new();
-        resources.insert(
-            "draw".into(),
-            os_baseline_resource("2d.drawing", "draw.document", "draw"),
-        );
-        merge_os_plugin_definition(
-            "draw",
-            &OsPlatformInput {
-                id: "draw".into(),
-                name: "Draw".into(),
-                api_version: "1".into(),
-                apps: vec![OsPlatformAppInput {
-                    id: "draw".into(),
-                    label: "Draw".into(),
-                    document: vec!["semio".into(), "draw".into()],
-                    controller_id: "draw-play".into(),
-                    modes: vec![ModeDefinition {
-                        id: "edit".into(),
-                        label: "Edit".into(),
-                icon_id: "square-pen".into(),
-                        tools: vec![],
-                        layout_id: None,
-                        commands: vec![],
-                    }],
-                    default_mode_id: None,
-                }],
-            },
-            &resources,
-        )
-        .expect("merge draw");
+        assert!(projection.workflow.nodes.is_empty());
     }
 
     #[test]
     fn demo_document_has_instances_and_edges() {
         let projection = demo_space_projection();
-        assert!(projection.app_instances.len() >= 5);
-        assert!(projection.workflow.nodes.len() >= 2);
+        assert!(projection.workflow.nodes.len() >= 5);
         assert!(projection.workflow.edges.len() >= 1);
         assert!(validate_workflow(&projection.workflow).ok);
     }
 
     #[test]
     fn renders_workflow_scene() {
-        let mut app = VcsDocumentApp::new(SpaceApp::new());
+        let mut app = VcsDocumentApp::new(SpaceApp);
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
     }
@@ -2485,7 +2110,7 @@ mod tests {
 
     #[test]
     fn renders_compiled_dag_editor() {
-        let mut app = VcsDocumentApp::new(SpaceApp::new());
+        let mut app = VcsDocumentApp::new(SpaceApp);
         let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("text-editor"));
         let wire = compiled_dag_wire_literal(&demo_space_projection());
@@ -2497,17 +2122,16 @@ mod tests {
         let app = create_space_app();
         assert_eq!(app.definition.id, "studio");
         assert_eq!(app.definition.controller_id, "s-play");
-        assert_eq!(app.workflow.as_ref().map(|p| p.workflow_step_id.as_str()), Some("s"));
     }
 
     #[test]
     fn move_media_node_emits_coalesced_move_operation() {
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
+        let config = SpaceConfig::default();
         let node_id = projection.workflow.nodes.first().expect("node").id.clone();
-        let emit = studio_emit(&mut app, &projection, "moveMediaNode", json!({ "nodeId": node_id, "x": 120.0, "y": 160.0 }));
+        let emit = studio_emit(&projection, &config, SpaceCommand::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 });
         assert_eq!(emit.coalesce_key.as_deref(), Some(format!("moveMediaNode:{node_id}").as_str()));
-        let node = apply_operations(&projection, &emit.operations)
+        let node = apply_operations(&projection, &emit.document_operations)
             .workflow
             .nodes
             .into_iter()
@@ -2545,34 +2169,17 @@ mod tests {
             import_formats: vec![OsMediaFormat::Glb],
         });
         let mut projection = demo_space_projection();
-        projection.workflow.nodes.push(OsWorkflowNode {
-            id: "contract-src".into(),
-            instance_id: "contract-src".into(),
-            x: 0.0,
-            y: 0.0,
-            width: 1.0,
-            height: 1.0,
-            inputs: vec![],
-            outputs: vec![OsMediaPort { id: "contract-src:out".into(), artifact_kind: "test.contract.2d".into(), direction: "out".into() }],
-        });
-        projection.workflow.nodes.push(OsWorkflowNode {
-            id: "contract-dst".into(),
-            instance_id: "contract-dst".into(),
-            x: 0.0,
-            y: 0.0,
-            width: 1.0,
-            height: 1.0,
-            inputs: vec![OsMediaPort { id: "contract-dst:in".into(), artifact_kind: "test.contract.3d".into(), direction: "in".into() }],
-            outputs: vec![],
-        });
-        let mut app = SpaceApp::new();
+        let src_out = test_port("contract-src", "out", MediaPortDirection::Out, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "test.contract.2d");
+        let dst_in = test_port("contract-dst", "in", MediaPortDirection::In, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, "test.contract.3d");
+        projection.workflow.nodes.push(test_node("contract-src", vec![], vec![src_out]));
+        projection.workflow.nodes.push(test_node("contract-dst", vec![dst_in], vec![]));
+        let config = SpaceConfig::default();
         let emit = studio_emit(
-            &mut app,
             &projection,
-            "connectMediaPorts",
-            json!({ "sourceNodeId": "contract-src", "sourcePortId": "contract-src:out", "targetNodeId": "contract-dst", "targetPortId": "contract-dst:in" }),
+            &config,
+            SpaceCommand::ConnectMediaPorts { source_node_id: "contract-src".into(), source_port_id: "contract-src:out:out".into(), target_node_id: "contract-dst".into(), target_port_id: "contract-dst:in:in".into() },
         );
-        assert!(emit.operations.is_empty(), "an incompatible connect must not push OsOperation::ConnectWorkflowPorts");
+        assert!(emit.document_operations.is_empty(), "an incompatible connect must not push OsOperation::ConnectWorkflowPorts");
         assert!(matches!(emit.effects.first(), Some(HostEffect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
     }
 
@@ -2603,35 +2210,18 @@ mod tests {
             import_formats: vec![],
         });
         let mut projection = demo_space_projection();
-        projection.workflow.nodes.push(OsWorkflowNode {
-            id: "contract-src-2".into(),
-            instance_id: "contract-src-2".into(),
-            x: 0.0,
-            y: 0.0,
-            width: 1.0,
-            height: 1.0,
-            inputs: vec![],
-            outputs: vec![OsMediaPort { id: "contract-src-2:out".into(), artifact_kind: "test.contract.doc-a".into(), direction: "out".into() }],
-        });
-        projection.workflow.nodes.push(OsWorkflowNode {
-            id: "contract-dst-2".into(),
-            instance_id: "contract-dst-2".into(),
-            x: 0.0,
-            y: 0.0,
-            width: 1.0,
-            height: 1.0,
-            inputs: vec![OsMediaPort { id: "contract-dst-2:in".into(), artifact_kind: "test.contract.doc-b".into(), direction: "in".into() }],
-            outputs: vec![],
-        });
-        let mut app = SpaceApp::new();
+        let src_out = test_port("contract-src-2", "out", MediaPortDirection::Out, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-a");
+        let dst_in = test_port("contract-dst-2", "in", MediaPortDirection::In, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-b");
+        projection.workflow.nodes.push(test_node("contract-src-2", vec![], vec![src_out]));
+        projection.workflow.nodes.push(test_node("contract-dst-2", vec![dst_in], vec![]));
+        let config = SpaceConfig::default();
         let emit = studio_emit(
-            &mut app,
             &projection,
-            "connectMediaPorts",
-            json!({ "sourceNodeId": "contract-src-2", "sourcePortId": "contract-src-2:out", "targetNodeId": "contract-dst-2", "targetPortId": "contract-dst-2:in" }),
+            &config,
+            SpaceCommand::ConnectMediaPorts { source_node_id: "contract-src-2".into(), source_port_id: "contract-src-2:out:out".into(), target_node_id: "contract-dst-2".into(), target_port_id: "contract-dst-2:in:in".into() },
         );
         let edge = emit
-            .operations
+            .document_operations
             .iter()
             .find_map(|operation| match operation {
                 OsOperation::ConnectWorkflowPorts { edge } if edge.source_node_id == "contract-src-2" => Some(edge.clone()),
@@ -2641,7 +2231,7 @@ mod tests {
         assert_eq!(edge.contract.kind_id, "test.contract.doc-b");
         assert_eq!(edge.contract.wire, MediaWireFormat::Document { schema: "test.contract.doc.schema".into() });
         assert!(edge.contract.conversion.is_none());
-        let next = apply_operations(&projection, &emit.operations);
+        let next = apply_operations(&projection, &emit.document_operations);
         assert!(validate_workflow(&next.workflow).ok, "a freshly negotiated edge must pass validate_workflow's contract-consistency check");
     }
     //#endregion 🔖️MediaContractConnect
@@ -2649,39 +2239,25 @@ mod tests {
     #[test]
     fn spawns_draw_app_instance() {
         seed_draw_plugin();
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        let emit = studio_emit(&mut app, &projection, "spawnApp", json!({ "pluginId": "draw", "appId": "draw" }));
-        assert!(!emit.operations.is_empty());
-        let next = apply_operations(&projection, &emit.operations);
-        assert_eq!(next.app_instances.len(), projection.app_instances.len() + 1);
-        assert_eq!(app.runtime.active_instance_id, next.app_instances.last().map(|i| i.id.clone()));
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 });
+        assert!(!emit.document_operations.is_empty());
+        let next = apply_operations(&projection, &emit.document_operations);
+        assert_eq!(next.workflow.nodes.len(), projection.workflow.nodes.len() + 1);
+        let expected_active = next.workflow.nodes.last().map(|node| node.id.clone());
+        assert_eq!(emit.config_operations, vec![SpaceConfigOperation::SetActiveNode { node_id: expected_active }]);
     }
 
     #[test]
     fn spawns_draw_app_instance_at_drop_position() {
         seed_draw_plugin();
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        let existing: HashSet<String> = projection.app_instances.iter().map(|i| i.id.clone()).collect();
-        let emit = studio_emit(
-            &mut app,
-            &projection,
-            "spawnApp",
-            json!({ "pluginId": "draw", "appId": "draw", "position": { "x": 321.0, "y": 654.0 } }),
-        );
-        let next = apply_operations(&projection, &emit.operations);
-        let instance = next
-            .app_instances
-            .iter()
-            .find(|i| i.plugin_id == "draw" && !existing.contains(&i.id))
-            .expect("newly spawned draw instance");
-        let node = next
-            .workflow
-            .nodes
-            .iter()
-            .find(|n| n.instance_id == instance.id)
-            .expect("media node for spawned instance");
+        let config = SpaceConfig::default();
+        let existing: HashSet<String> = projection.workflow.nodes.iter().map(|node| node.id.clone()).collect();
+        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 321.0, y: 654.0 });
+        let next = apply_operations(&projection, &emit.document_operations);
+        let node = next.workflow.nodes.iter().find(|node| node.plugin_id == "draw" && !existing.contains(&node.id)).expect("newly spawned draw node");
         assert!((node.x - 321.0).abs() < 0.01);
         assert!((node.y - 654.0).abs() < 0.01);
     }
@@ -2689,24 +2265,22 @@ mod tests {
     #[test]
     fn open_instance_emits_open_plugin_instance_effect_matching_instance() {
         seed_draw_plugin();
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        let instance = projection.app_instances.iter().find(|i| i.plugin_id == "draw").expect("draw instance").clone();
-        let emit = studio_emit(&mut app, &projection, "openInstance", json!({ "instanceId": instance.id }));
-        assert!(emit.operations.is_empty(), "opening an instance is a host effect, not a document operation");
+        let node = projection.workflow.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&projection, &config, SpaceCommand::OpenInstance { node_id: Some(node.id.clone()) });
+        assert!(emit.document_operations.is_empty(), "opening an instance is a host effect, not a document operation");
         let opened = emit
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => {
-                    Some((plugin_id.clone(), app_id.clone(), os_instance_id.clone()))
-                }
+                HostEffect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => Some((plugin_id.clone(), app_id.clone(), os_instance_id.clone())),
                 _ => None,
             })
             .expect("OpenPluginInstance effect");
         assert_eq!(opened.0, "draw");
         assert_eq!(opened.1, "draw");
-        assert_eq!(opened.2.as_deref(), Some(instance.id.as_str()));
+        assert_eq!(opened.2.as_deref(), Some(node.id.as_str()));
     }
 
     #[test]
@@ -2715,7 +2289,7 @@ mod tests {
         seed_draw_plugin();
         semio_framework_os::register_os_media_export_handler("2d.drawing", OsMediaFormat::Dwg, |_doc| {
             let drawing = semio_framework_os::DwgDrawing::default();
-            let bytes = semio_framework_os::dwg_to_bytes(&drawing).map_err(|error| error)?;
+            let bytes = semio_framework_os::dwg_to_bytes(&drawing)?;
             Ok(semio_framework_os::OsMediaExportResult {
                 data: base64::engine::general_purpose::STANDARD.encode(bytes),
                 mime_type: OsMediaFormat::Dwg.mime_type().into(),
@@ -2725,11 +2299,11 @@ mod tests {
         });
         semio_framework_os::register_dwg_import_handler("2d.drawing", |_drawing| Ok(json!({ "schema": "draw.document", "imported": true })));
 
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        let instance = projection.app_instances.iter().find(|i| i.plugin_id == "draw").expect("draw instance").clone();
+        let node = projection.workflow.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
+        let config = SpaceConfig::default();
 
-        let export = studio_emit(&mut app, &projection, "exportMedia", json!({ "instanceId": instance.id, "format": "dwg" }));
+        let export = studio_emit(&projection, &config, SpaceCommand::ExportMedia { node_id: node.id.clone(), format: "dwg".into() });
         let (data, encoding) = export
             .effects
             .iter()
@@ -2741,39 +2315,32 @@ mod tests {
         assert!(!data.is_empty());
         assert_eq!(encoding.as_deref(), Some("base64"));
 
-        let import = studio_emit(&mut app, &projection, "importMedia", json!({ "instanceId": instance.id, "format": "dwg" }));
-        assert!(import.effects.iter().any(|effect| matches!(
-            effect,
-            HostEffect::RequestFileOpen { import_action, .. } if import_action == "importMediaPayload"
-        )));
+        let import = studio_emit(&projection, &config, SpaceCommand::ImportMedia { node_id: node.id.clone(), format: "dwg".into() });
+        assert!(import.effects.iter().any(|effect| matches!(effect, HostEffect::RequestFileOpen { import_action, .. } if import_action == "importMediaPayload")));
+        assert_eq!(import.config_operations, vec![SpaceConfigOperation::SetPendingImport { node_id: Some(node.id.clone()), format: Some("dwg".into()) }]);
 
-        // Decoding is exercised here; the decoded content is applied to the instance's own
-        // `OsDocumentRef` document by the host, so this arm emits no studio operation.
-        let payload = studio_emit(&mut app, &projection, "importMediaPayload", json!({ "payload": format!("data:image/vnd.dwg;base64,{data}") }));
-        assert!(payload.operations.is_empty());
+        // Decoding is exercised here; the decoded content is applied to the node's own document-ref
+        // document by the host, so this arm emits no studio document operation.
+        let pending_config = apply_config(&config, &import.config_operations);
+        let payload = studio_emit(&projection, &pending_config, SpaceCommand::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") });
+        assert!(payload.document_operations.is_empty());
     }
 
     #[test]
     fn commit_checkpoint_round_trips_projection() {
-        let mut app = VcsDocumentApp::new(SpaceApp::new());
-        let before = app.projection().expect("projection").app_instances.len();
-        app.handle_action("commitCheckpoint", Some(&json!({ "message": "snapshot" })), &ViewState::default(), &testkit::meta("local"))
-            .expect("commit");
-        assert_eq!(app.projection().expect("projection").app_instances.len(), before);
+        let mut app = VcsDocumentApp::new(SpaceApp);
+        let before = app.projection().expect("projection").workflow.nodes.len();
+        app.handle_action("commitCheckpoint", Some(&json!({ "message": "snapshot" })), &testkit::meta("local")).expect("commit");
+        assert_eq!(app.projection().expect("projection").workflow.nodes.len(), before);
     }
 
     #[test]
     fn patch_parameter_action_updates_value() {
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        let emit = studio_emit(
-            &mut app,
-            &projection,
-            "patchParameter",
-            json!({ "parameterId": "param-brush-size", "field": "value", "value": 48.0 }),
-        );
-        assert_eq!(emit.operations.len(), 1);
-        let next = apply_operations(&projection, &emit.operations);
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&projection, &config, SpaceCommand::PatchParameter { parameter_id: "param-brush-size".into(), field: "value".into(), value: "48".into() });
+        assert_eq!(emit.document_operations.len(), 1);
+        let next = apply_operations(&projection, &emit.document_operations);
         match next.parameters.iter().find(|entry| entry.id() == "param-brush-size").expect("parameter") {
             OsParameter::Numeric { value, .. } => assert_eq!(*value, 48.0),
             _ => panic!("expected numeric"),
@@ -2785,13 +2352,12 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_on_spawn() {
         seed_draw_plugin();
-        let mut app = VcsDocumentApp::new(SpaceApp::new());
-        let before = app.projection().expect("projection").app_instances.len();
+        let mut app = VcsDocumentApp::new(SpaceApp);
+        let before = app.projection().expect("projection").workflow.nodes.len();
         testkit::assert_undo_redo_round_trip(
             &mut app,
-            "spawnApp",
-            Some(&json!({ "pluginId": "draw", "appId": "draw" })),
-            |app| app.projection().expect("projection").app_instances.len(),
+            SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 },
+            |app| app.projection().expect("projection").workflow.nodes.len(),
             before,
             before + 1,
         );
@@ -2799,28 +2365,9 @@ mod tests {
 
     #[test]
     fn catalogue_tree_nests_apps_by_canonical_document() {
-        let panel = SpacePanelState {
-            workflows: vec![
-                SpaceProgramEntry {
-                    plugin_id: "puzzle".into(),
-                    workflow_step_id: "puzzle2d".into(),
-                    app_id: "puzzle2d-play".into(),
-                    label: "Puzzle 2D".into(),
-                    document: vec!["semio".into(), "puzzle".into(), "2d".into()],
-                    yields: "layout".into(),
-                },
-                SpaceProgramEntry {
-                    plugin_id: "puzzle".into(),
-                    workflow_step_id: "puzzle3d".into(),
-                    app_id: "puzzle3d-play".into(),
-                    label: "Puzzle 3D".into(),
-                    document: vec!["semio".into(), "puzzle".into(), "3d".into()],
-                    yields: "model".into(),
-                },
-            ],
-            ..Default::default()
-        };
-        let tree = build_catalogue_tree(&panel, resolve_labels::<SStudioLabels>(&ViewState::default()));
+        seed_catalogue_apps();
+        let config = SpaceConfig::default();
+        let tree = build_catalogue_tree(resolve_labels::<SStudioLabels>(&config));
         let json = serde_json::to_string(&tree).unwrap();
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.2d"));
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.3d"));
@@ -2829,47 +2376,34 @@ mod tests {
 
     #[test]
     fn patch_app_instances_updates_labels() {
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        let ids: Vec<String> = projection.app_instances.iter().take(2).map(|i| i.id.clone()).collect();
-        let emit = studio_emit(
-            &mut app,
-            &projection,
-            "patchAppInstances",
-            json!({ "instanceIds": ids, "field": "label", "value": "Batch Label" }),
-        );
-        let next = apply_operations(&projection, &emit.operations);
-        let labels: Vec<String> = next
-            .app_instances
-            .iter()
-            .filter(|i| ids.contains(&i.id))
-            .map(|i| i.label.clone())
-            .collect();
+        let config = SpaceConfig::default();
+        let ids: Vec<String> = projection.workflow.nodes.iter().take(2).map(|node| node.id.clone()).collect();
+        let emit = studio_emit(&projection, &config, SpaceCommand::PatchAppInstances { node_ids: ids.clone(), field: "label".into(), value: "Batch Label".into() });
+        let next = apply_operations(&projection, &emit.document_operations);
+        let labels: Vec<String> = next.workflow.nodes.iter().filter(|node| ids.contains(&node.id)).map(|node| node.label.clone()).collect();
         assert!(labels.iter().all(|label| label == "Batch Label"));
     }
 
     #[test]
     fn open_and_close_focused_instance() {
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        let instance_id = projection.app_instances.first().expect("instance").id.clone();
-        assert!(app.runtime.focused_instance_id.is_none());
-        studio_emit(&mut app, &projection, "openInstance", json!({ "instanceId": instance_id }));
-        assert_eq!(app.runtime.focused_instance_id.as_deref(), Some(instance_id.as_str()));
-        let emit = studio_emit(&mut app, &projection, "closeFocusedInstance", json!({}));
-        assert!(app.runtime.focused_instance_id.is_none());
-        assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::SetPanel { .. })));
+        let config = SpaceConfig::default();
+        let node_id = projection.workflow.nodes.first().expect("node").id.clone();
+        let open_emit = studio_emit(&projection, &config, SpaceCommand::OpenInstance { node_id: Some(node_id.clone()) });
+        assert!(open_emit.config_operations.contains(&SpaceConfigOperation::SetFocusedNode { node_id: Some(node_id.clone()) }));
+        let config_after_open = apply_config(&config, &open_emit.config_operations);
+        assert_eq!(config_after_open.focused_node_id.as_deref(), Some(node_id.as_str()));
+        let close_emit = studio_emit(&projection, &config_after_open, SpaceCommand::CloseFocusedInstance);
+        assert_eq!(close_emit.config_operations, vec![SpaceConfigOperation::SetFocusedNode { node_id: None }]);
     }
 
     #[test]
     fn inspector_tree_exposes_label_field() {
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        let ids: Vec<String> = projection.app_instances.iter().take(2).map(|i| i.id.clone()).collect();
-        app.runtime.selected_app_instance_ids = ids;
-        let history = empty_history();
-        let doc = DocumentView { projection: &projection, history: &history };
-        let tree = app.render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &ViewState::default());
+        let ids: Vec<String> = projection.workflow.nodes.iter().take(2).map(|node| node.id.clone()).collect();
+        let config = SpaceConfig { selected_node_ids: ids, ..SpaceConfig::default() };
+        let tree = build_inspector_tree(&projection, &config, resolve_labels::<SStudioLabels>(&config));
         let UiNode::Tree(tree_node) = tree else {
             panic!("expected tree");
         };
@@ -2890,218 +2424,73 @@ mod tests {
         assert_eq!(input.on_change.action, "patchAppInstances");
     }
 
-    fn seed_multi_port_plugins() {
-        let mut puzzle_resources = HashMap::new();
-        puzzle_resources.insert(
-            "puzzle5d".into(),
-            OsAppResourceSpec {
-                inputs: vec![os_in_port("topology", "in-a", "In A", false)],
-                outputs: vec![
-                    os_out_port("topology", "out-a", "Out A"),
-                    os_out_port("topology", "out-b", "Out B"),
-                ],
-                source_format: "puzzle5d.document".into(),
-                component_kind: "world-3d".into(),
-                modes: vec![ModeDefinition {
-                    id: "edit".into(),
-                    label: "Edit".into(),
-                icon_id: "square-pen".into(),
-                    tools: vec![],
-                    layout_id: None,
-                    commands: vec![],
-                }],
-                default_mode_id: None,
-                parameter_fields: Vec::new(),
-                config: semio_framework_core::ConfigSpec::empty(),
-            },
-        );
-        merge_os_plugin_definition(
-            "puzzle.5d",
-            &OsPlatformInput {
-                id: "puzzle.5d".into(),
-                name: "Puzzle 5D".into(),
-                api_version: "1".into(),
-                apps: vec![OsPlatformAppInput {
-                    id: "puzzle5d".into(),
-                    label: "Puzzle 5D".into(),
-                    document: vec!["semio".into(), "puzzle".into(), "5d".into()],
-                    controller_id: "puzzle5d-play".into(),
-                    modes: vec![ModeDefinition {
-                        id: "edit".into(),
-                        label: "Edit".into(),
-                icon_id: "square-pen".into(),
-                        tools: vec![],
-                        layout_id: None,
-                        commands: vec![],
-                    }],
-                    default_mode_id: None,
-                }],
-            },
-            &puzzle_resources,
-        )
-        .expect("merge puzzle5d");
-
-        let mut shooting_resources = HashMap::new();
-        shooting_resources.insert(
-            "shooting".into(),
-            OsAppResourceSpec {
-                inputs: vec![os_in_port("2d.shooting", "scene-in", "Scene", true)],
-                outputs: vec![os_out_port("2d.shooting", "scene-out", "Scene")],
-                source_format: "shooting.document".into(),
-                component_kind: "world-3d".into(),
-                modes: vec![ModeDefinition {
-                    id: "edit".into(),
-                    label: "Edit".into(),
-                icon_id: "square-pen".into(),
-                    tools: vec![],
-                    layout_id: None,
-                    commands: vec![],
-                }],
-                default_mode_id: None,
-                parameter_fields: Vec::new(),
-                config: semio_framework_core::ConfigSpec::empty(),
-            },
-        );
-        merge_os_plugin_definition(
-            "shooting",
-            &OsPlatformInput {
-                id: "shooting".into(),
-                name: "Shooting".into(),
-                api_version: "1".into(),
-                apps: vec![OsPlatformAppInput {
-                    id: "shooting".into(),
-                    label: "Shooting".into(),
-                    document: vec!["semio".into(), "shooting".into()],
-                    controller_id: "shooting-play".into(),
-                    modes: vec![ModeDefinition {
-                        id: "edit".into(),
-                        label: "Edit".into(),
-                icon_id: "square-pen".into(),
-                        tools: vec![],
-                        layout_id: None,
-                        commands: vec![],
-                    }],
-                    default_mode_id: None,
-                }],
-            },
-            &shooting_resources,
-        )
-        .expect("merge shooting");
-    }
-
     #[test]
     fn spawns_puzzle5d_and_shooting_with_multi_port_registrations() {
         seed_multi_port_plugins();
-        let mut app = SpaceApp::new();
         let mut projection = demo_space_projection();
-        let emit = studio_emit(
-            &mut app,
-            &projection,
-            "spawnApp",
-            json!({ "pluginId": "puzzle.5d", "appId": "puzzle5d", "position": { "x": 200, "y": 100 } }),
-        );
-        projection = apply_operations(&projection, &emit.operations);
-        let emit = studio_emit(
-            &mut app,
-            &projection,
-            "spawnApp",
-            json!({ "pluginId": "shooting", "appId": "shooting", "position": { "x": 300, "y": 100 } }),
-        );
-        projection = apply_operations(&projection, &emit.operations);
-        let puzzle_instance = projection.app_instances.iter().rev().nth(1).expect("puzzle");
-        let shooting_instance = projection.app_instances.last().expect("shooting");
-        let puzzle_node = projection
-            .workflow
-            .nodes
-            .iter()
-            .find(|node| node.instance_id == puzzle_instance.id)
-            .expect("puzzle node");
-        let shooting_node = projection
-            .workflow
-            .nodes
-            .iter()
-            .find(|node| node.instance_id == shooting_instance.id)
-            .expect("shooting node");
-        assert_eq!(puzzle_node.outputs.len(), 2);
-        assert_eq!(shooting_node.inputs.len(), 1);
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "puzzle.5d".into(), app_id: "puzzle5d".into(), x: 200.0, y: 100.0 });
+        projection = apply_operations(&projection, &emit.document_operations);
+        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "shooting".into(), app_id: "shooting".into(), x: 300.0, y: 100.0 });
+        projection = apply_operations(&projection, &emit.document_operations);
+        let puzzle_node = projection.workflow.nodes.iter().find(|node| node.plugin_id == "puzzle.5d").expect("puzzle node");
+        let shooting_node = projection.workflow.nodes.iter().find(|node| node.plugin_id == "shooting").expect("shooting node");
+        // 🔌️ `AppIo::all_ports()` prepends the implicit `document:in`/`document:out` pair to every
+        // app's declared ports now (the pre-merge `OsAppResourceSpec` had no such implicit pair).
+        assert_eq!(puzzle_node.outputs.len(), 3, "document:out + out-a + out-b");
+        assert_eq!(shooting_node.inputs.len(), 2, "document:in + scene-in");
     }
 
     #[test]
     fn unbind_parameter_field_removes_binding() {
-        let mut app = SpaceApp::new();
         let mut projection = demo_space_projection();
-        let instance = projection.app_instances.first().expect("instance").clone();
+        let config = SpaceConfig::default();
+        let node = projection.workflow.nodes.first().expect("node").clone();
         let parameter_id = parameter_entity_id(projection.parameters.first().expect("parameter")).to_string();
-        let emit = studio_emit(
-            &mut app,
-            &projection,
-            "bindParameterField",
-            json!({ "instanceId": instance.id, "fieldPath": "label", "parameterId": parameter_id }),
-        );
-        projection = apply_operations(&projection, &emit.operations);
-        assert!(projection
-            .parameter_bindings
-            .iter()
-            .any(|row| row.instance_id == instance.id && row.field_path == "label"));
-        let emit = studio_emit(
-            &mut app,
-            &projection,
-            "unbindParameterField",
-            json!({ "instanceId": instance.id, "fieldPath": "label" }),
-        );
-        projection = apply_operations(&projection, &emit.operations);
-        assert!(!projection
-            .parameter_bindings
-            .iter()
-            .any(|row| row.instance_id == instance.id && row.field_path == "label"));
+        let emit = studio_emit(&projection, &config, SpaceCommand::BindParameterField { node_id: node.id.clone(), field_path: "label".into(), parameter_id: parameter_id.clone() });
+        projection = apply_operations(&projection, &emit.document_operations);
+        assert!(projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));
+        let emit = studio_emit(&projection, &config, SpaceCommand::UnbindParameterField { node_id: node.id.clone(), field_path: "label".into() });
+        projection = apply_operations(&projection, &emit.document_operations);
+        assert!(!projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));
     }
 
     #[test]
     fn checkout_checkpoint_restores_projection() {
         seed_draw_plugin();
-        let mut app = VcsDocumentApp::new(SpaceApp::new());
-        let before = app.projection().expect("projection").app_instances.len();
-        app.handle_action("spawnApp", Some(&json!({ "pluginId": "draw", "appId": "draw" })), &ViewState::default(), &testkit::meta("local"))
-            .expect("spawn");
-        app.handle_action("commitCheckpoint", Some(&json!({ "message": "after-first-spawn" })), &ViewState::default(), &testkit::meta("local"))
-            .expect("commit");
-        let after_first = app.projection().expect("projection").app_instances.len();
+        let mut app = VcsDocumentApp::new(SpaceApp);
+        let before = app.projection().expect("projection").workflow.nodes.len();
+        app.dispatch_typed(SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }, &testkit::meta("local")).expect("spawn");
+        app.handle_action("commitCheckpoint", Some(&json!({ "message": "after-first-spawn" })), &testkit::meta("local")).expect("commit");
+        let after_first = app.projection().expect("projection").workflow.nodes.len();
         assert!(after_first > before);
         let files = app.document_pack().expect("document pack");
         let parsed: store::ParsedDocumentText<OsProjection, OsOperation> = store::parse_document_pack(&files.pack, &files.spr).expect("parse document pack");
         let checkpoint_id = parsed.envelope.vcs.checkpoints[0].id.clone();
-        app.handle_action("spawnApp", Some(&json!({ "pluginId": "draw", "appId": "draw" })), &ViewState::default(), &testkit::meta("local"))
-            .expect("spawn2");
-        assert!(app.projection().expect("projection").app_instances.len() > after_first);
-        app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": checkpoint_id })), &ViewState::default(), &testkit::meta("local"))
-            .expect("checkout");
-        assert_eq!(app.projection().expect("projection").app_instances.len(), after_first);
+        app.dispatch_typed(SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }, &testkit::meta("local")).expect("spawn2");
+        assert!(app.projection().expect("projection").workflow.nodes.len() > after_first);
+        app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": checkpoint_id })), &testkit::meta("local")).expect("checkout");
+        assert_eq!(app.projection().expect("projection").workflow.nodes.len(), after_first);
     }
 
     /// 🧪️ The definitional proof: two independent instances start from the same deterministic demo
     /// projection, apply DISJOINT edits (A spawns a new draw instance, B renames an existing
     /// instance), and exchanging operations over a backbone converges both sides onto the same
     /// projection — impossible under whole-document `setDocument` snapshots, where one side's write
-    /// would clobber the other's. Driven through the shared testkit convergence harness instead of
-    /// a hand-rolled `MemoryBackbone::pair` + manual drain/ingest.
+    /// would clobber the other's.
     #[test]
     fn two_instances_converge_on_disjoint_edits_via_backbone() {
         seed_draw_plugin();
-        let instance_id = demo_space_projection().app_instances.first().expect("instance").id.clone();
-        let rename_args = json!({ "instanceIds": [instance_id.clone()], "field": "label", "value": "Renamed" });
+        let node_id = demo_space_projection().workflow.nodes.first().expect("node").id.clone();
+        let rename_id = node_id.clone();
         testkit::assert_two_instances_converge::<SpaceApp, (usize, bool)>(
             "mem://s-studio-convergence",
-            ("spawnApp", Some(&json!({ "pluginId": "draw", "appId": "draw" }))),
-            ("patchAppInstances", Some(&rename_args)),
+            SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 },
+            SpaceCommand::PatchAppInstances { node_ids: vec![node_id.clone()], field: "label".into(), value: "Renamed".into() },
             move |app| {
                 let projection = app.projection().expect("projection");
-                let draw_count = projection.app_instances.iter().filter(|i| i.plugin_id == "draw").count();
-                let renamed = projection
-                    .app_instances
-                    .iter()
-                    .find(|i| i.id == instance_id)
-                    .map(|i| i.label == "Renamed")
-                    .unwrap_or(false);
+                let draw_count = projection.workflow.nodes.iter().filter(|node| node.plugin_id == "draw").count();
+                let renamed = projection.workflow.nodes.iter().find(|node| node.id == rename_id).map(|node| node.label == "Renamed").unwrap_or(false);
                 (draw_count, renamed)
             },
         );
@@ -3117,7 +2506,7 @@ mod tests {
 
     #[test]
     fn workflow_scene_uses_flow_engine_with_fixture() {
-        let mut app = VcsDocumentApp::new(SpaceApp::new());
+        let mut app = VcsDocumentApp::new(SpaceApp);
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#"\"engine\":\"flow\""#));
@@ -3127,19 +2516,15 @@ mod tests {
 
     #[test]
     fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
+        let config = SpaceConfig::default();
         let node = projection.workflow.nodes.first().expect("node").clone();
         let camera = OsWorkflowCamera { x: 40.0, y: -20.0, zoom: 2.0 };
-        let mut fixture = os_workflow_to_flow_fixture(&projection.workflow, &projection.app_instances, &camera);
+        let mut fixture = os_workflow_to_flow_fixture(&projection.workflow, &camera);
         fixture["layout"][&node.id] = json!({ "x": 500.0 + node.width / 2.0, "y": 300.0 + node.height / 2.0 });
-        let emit = studio_emit(
-            &mut app,
-            &projection,
-            "nodeGraphEdit",
-            json!({ "operations": [{ "operation": "setFixture", "fixtureJson": fixture.to_string() }] }),
-        );
-        let moved = apply_operations(&projection, &emit.operations)
+        let operations_json = json!({ "operations": [{ "operation": "setFixture", "fixtureJson": fixture.to_string() }] }).to_string();
+        let emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphEdit { operations_json });
+        let moved = apply_operations(&projection, &emit.document_operations)
             .workflow
             .nodes
             .into_iter()
@@ -3147,34 +2532,32 @@ mod tests {
             .expect("node");
         assert!((moved.x - 500.0).abs() < 0.01);
         assert!((moved.y - 300.0).abs() < 0.01);
-        assert_eq!(app.runtime.workflow_camera, Some(camera));
+        assert_eq!(emit.config_operations, vec![SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }]);
     }
 
     #[test]
     fn node_graph_viewport_persists_camera() {
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        studio_emit(&mut app, &projection, "nodeGraphViewport", json!({ "viewportJson": r#"{"x":7.0,"y":9.0,"zoom":0.5}"# }));
-        assert_eq!(app.runtime.workflow_camera, Some(OsWorkflowCamera { x: 7.0, y: 9.0, zoom: 0.5 }));
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphViewport { viewport_json: r#"{"x":7.0,"y":9.0,"zoom":0.5}"#.into() });
+        assert_eq!(emit.config_operations, vec![SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera: OsWorkflowCamera { x: 7.0, y: 9.0, zoom: 0.5 }.into() }]);
     }
 
     #[test]
     fn presence_heartbeat_publishes_peer_for_other_clients() {
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
+        let config = SpaceConfig::default();
         let first_node_id = projection.workflow.nodes[0].id.clone();
-        studio_emit(&mut app, &projection, "nodeGraphSelect", json!({ "nodeIds": [first_node_id] }));
-        studio_emit(&mut app, &projection, "presenceHeartbeat", json!({ "clientId": "client-test-a", "name": "Ada" }));
-        let other_runtime = StudioRuntimeState {
-            client_id: Some("client-test-b".into()),
-            space_id: app.runtime.space_id.clone(),
-            ..StudioRuntimeState::default()
-        };
-        let peers = presence_peers_json(&other_runtime);
+        let select_emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphSelect { node_ids: vec![first_node_id], select_all: false });
+        let config_after_select = apply_config(&config, &select_emit.config_operations);
+        let _ = studio_emit(&projection, &config_after_select, SpaceCommand::PresenceHeartbeat { client_id: "client-test-a".into(), name: "Ada".into() });
+        let other_config = SpaceConfig { client_id: Some("client-test-b".into()), space_id: config_after_select.space_id.clone(), ..SpaceConfig::default() };
+        let peers = presence_peers_json(&other_config);
         assert!(peers.contains("client-test-a"));
         assert!(peers.contains("Ada"));
         assert!(peers.contains(r#""selectionCount":1"#));
-        let self_view = presence_peers_json(&app.runtime);
+        let self_config = SpaceConfig { client_id: Some("client-test-a".into()), ..config_after_select };
+        let self_view = presence_peers_json(&self_config);
         assert!(!self_view.contains("client-test-a"));
     }
 
@@ -3183,22 +2566,24 @@ mod tests {
     #[test]
     fn presence_heartbeat_declares_none_ui_scope() {
         use semio_framework_core::kernel::UiDirtyScope;
-        let mut app = SpaceApp::new();
         let projection = demo_space_projection();
-        let emit = studio_emit(&mut app, &projection, "presenceHeartbeat", json!({ "clientId": "client-test-c", "name": "Cass" }));
+        let config = SpaceConfig::default();
+        let emit = studio_emit(&projection, &config, SpaceCommand::PresenceHeartbeat { client_id: "client-test-c".into(), name: "Cass".into() });
         assert!(matches!(emit.ui_scope, UiDirtyScope::None), "presenceHeartbeat must declare None, got {:?}", emit.ui_scope);
     }
 
     #[test]
     fn space_labels_resolve_native_english_by_default() {
-        let history = empty_history();
-        let app = SpaceApp::new();
         let projection = demo_space_projection();
+        let history = empty_history();
         let doc = DocumentView { projection: &projection, history: &history };
-        let catalogue_json = serde_json::to_string(&app.render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &ViewState::default())).unwrap();
+        let config = SpaceConfig::default();
+        let cfg = ConfigView { projection: &config };
+        let app = SpaceApp;
+        let catalogue_json = serde_json::to_string(&app.render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg)).unwrap();
         assert!(catalogue_json.contains("\"Apps\""));
 
-        let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &ViewState::default())).unwrap();
+        let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg)).unwrap();
         assert!(parameters_json.contains("Add Parameter"));
         assert!(parameters_json.contains("\"Name\""));
         assert!(parameters_json.contains("\"Remove\""));
@@ -3207,36 +2592,33 @@ mod tests {
 
     #[test]
     fn space_labels_resolve_native_german_locale() {
-        let history = empty_history();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let app = SpaceApp::new();
         let projection = demo_space_projection();
+        let history = empty_history();
         let doc = DocumentView { projection: &projection, history: &history };
-        let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &view_state)).unwrap();
+        let config = SpaceConfig { locale: "de".into(), ..SpaceConfig::default() };
+        let cfg = ConfigView { projection: &config };
+        let app = SpaceApp;
+        let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg)).unwrap();
         assert!(parameters_json.contains("Parameter hinzufügen"));
         assert!(parameters_json.contains("\"Entfernen\""));
         assert!(!parameters_json.contains("Add Parameter"));
 
-        let inspector_json = serde_json::to_string(&app.render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &view_state)).unwrap();
-        assert!(inspector_json.contains("Wähle Workflow-Knoten oder App-Instanzen im Arbeitsbereich aus."));
+        let inspector_json = serde_json::to_string(&app.render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &cfg)).unwrap();
+        assert!(inspector_json.contains("Wähle Workflow-Knoten im Arbeitsbereich aus."));
     }
 
-    /// 🌉️ Moved from `home_ui`'s own test module: exercises BOTH apps together (Home's `createStudio`
-    /// followed by Space's `openSpace`) — this crate already regular-depends on `home_ui`, so the
-    /// integration test lives beside the app that owns the dependency edge instead of requiring a new
-    /// dev-dependency cycle back from `home_ui` onto this crate.
+    /// 🌉️ Exercises BOTH apps together (Home's `createStudio` followed by Space's `openSpace`) — this
+    /// crate already regular-depends on `home_ui`, so the integration test lives here instead of
+    /// requiring a new dev-dependency cycle back from `home_ui` onto this crate.
     #[test]
     fn create_space_navigates_without_download_and_opens_empty() {
-        let mut home = home_ui::HomeApp;
+        let home = home_ui::HomeApp;
         let home_projection = home.initial_projection();
         let history = empty_history();
         let doc = DocumentView { projection: &home_projection, history: &history };
-        let emit = home.handle_action(
-            "createStudio",
-            Some(&json!({ "name": "Fresh Studio" })),
-            &doc,
-            &ViewState::default(),
-        );
+        let home_config = home_engine::HomeConfig::default();
+        let home_cfg = ConfigView { projection: &home_config };
+        let emit = home.handle(&home_protocol::HomeCommand::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg);
         assert!(
             !emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })),
             "create must not download a file"
@@ -3255,23 +2637,15 @@ mod tests {
         let document = home_ui::resolve_studio_document(space_id).expect("created studio");
         assert_eq!(document.name, "Fresh Studio");
         assert!(document.backbone.is_none(), "ephemeral studio must not attach backbone");
-        assert!(document.vcs.initial_projection.app_instances.is_empty());
+        assert!(document.vcs.initial_projection.workflow.nodes.is_empty());
 
-        let mut studio = SpaceApp::new();
         let empty = default_os_projection();
         let studio_doc = DocumentView { projection: &empty, history: &history };
-        let open = studio.handle_action(
-            "openSpace",
-            Some(&json!({ "spaceId": space_id })),
-            &studio_doc,
-            &ViewState::default(),
-        );
-        assert!(
-            open.effects
-                .iter()
-                .any(|effect| matches!(effect, HostEffect::LoadDocument { .. })),
-            "openSpace must load the created studio"
-        );
+        let studio_config = SpaceConfig::default();
+        let studio_cfg = ConfigView { projection: &studio_config };
+        let studio = SpaceApp;
+        let open = studio.handle(&SpaceCommand::OpenSpace { space_id: space_id.to_string() }, &studio_doc, &studio_cfg);
+        assert!(open.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })), "openSpace must load the created studio");
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));
     }

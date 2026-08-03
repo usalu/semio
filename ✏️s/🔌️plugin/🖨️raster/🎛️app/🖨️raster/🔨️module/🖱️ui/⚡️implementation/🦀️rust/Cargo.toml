@@ -14,9 +14,8 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️ap
 raster = { path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/⚡️implementation/🦀️rust", package = "semio-s-app-raster" }
 raster_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-raster-engine" }
 raster_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-raster-op" }
+raster_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-raster-protocol" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-
-[dev-dependencies]
-store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

@@ -1,0 +1,488 @@
+=== cargo check --all-targets (shooting engine/ui, remodel 6 crates + both plugin bundles) ===
+warning: unused import: `serde_json::Value`
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:485:16
+    |
+485 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+485 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+485 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:486:24
+    |
+486 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+486 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+486 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:496:16
+    |
+496 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+496 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+496 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:497:24
+    |
+497 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+497 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+497 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:557:41
+    |
+557 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+557 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+557 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:739:42
+    |
+739 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+739 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:743:38
+    |
+743 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+743 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+743 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:37
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:100
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1278:37
+     |
+1278 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1278 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1278 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+warning: unused import: `OsAppRegistration`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3271:72
+     |
+3271 |     use crate::registry::{os_app_registration, os_artifact_descriptor, OsAppRegistration, OsArtifactDescriptor};
+     |                                                                        ^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os` to apply 1 suggestion)
+    Checking semio-s-app-shooting-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+    Checking semio-s-app-remodel-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+    Checking semio-s-app-remodel-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+    Checking semio-s-app-remodel-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+    Checking semio-s-app-remodel-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+    Checking semio-s-app-shooting-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+    Checking semio-s-app-shooting-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+    Checking semio-s-app-shooting-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+warning: unused doc comment
+   --> ✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:276:1
+    |
+276 | /// 🗣️ Complete UI label set for the shooting app; one field per label makes every locale combination compile-checked.
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-app-shooting-ui` (lib) generated 1 warning
+    Checking semio-s-plugin-shooting v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust)
+warning: `semio-s-app-shooting-ui` (lib test) generated 1 warning (1 duplicate)
+    Finished `dev` profile [unoptimized] target(s) in 4.18s
+=== cargo test --lib (same package set) ===
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-workflow v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-store-sync v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-remodel v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-shooting v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-shooting-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+warning: unused import: `serde_json::Value`
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:485:16
+    |
+485 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+485 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+485 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:486:24
+    |
+486 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+486 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+486 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:496:16
+    |
+496 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+496 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+496 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:497:24
+    |
+497 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+497 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+497 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:557:41
+    |
+557 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+557 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+557 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:739:42
+    |
+739 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+739 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:743:38
+    |
+743 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+743 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+743 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:37
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:100
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1278:37
+     |
+1278 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1278 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1278 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+   Compiling semio-s-app-remodel-pack v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🎒️pack/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-remodel-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust)
+warning: unused import: `OsAppRegistration`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3271:72
+     |
+3271 |     use crate::registry::{os_app_registration, os_artifact_descriptor, OsAppRegistration, OsArtifactDescriptor};
+     |                                                                        ^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os` to apply 1 suggestion)
+   Compiling semio-s-app-remodel-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-shooting-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-shooting-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-remodel-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-remodel-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-shooting-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-remodel-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-shooting-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+warning: unused doc comment
+   --> ✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:276:1
+    |
+276 | /// 🗣️ Complete UI label set for the shooting app; one field per label makes every locale combination compile-checked.
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-app-shooting-ui` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized] target(s) in 8.78s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_remodel_dsl-b22e187c67ff7b97)
+
+running 2 tests
+test tests::default_scene_roundtrips_through_dsl ... ok
+test tests::populated_scene_roundtrips_through_dsl ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_remodel_engine-4ec56d5ada6e8e4e)
+
+running 8 tests
+test tests::remodel_config_default_matches_the_former_runtime_defaults ... ok
+test tests::remodel_config_operation_diff_is_whole_record_replace ... ok
+test tests::remodel_io_declares_photos_in_and_mesh_out ... ok
+test tests::next_remodel_id_is_monotonic_and_prefixed ... ok
+test tests::las_exporter_writes_a_227_byte_header_plus_20_bytes_per_point ... ok
+test tests::ply_exporter_writes_a_well_formed_ascii_header ... ok
+test tests::raster_to_png_asset_normalizes_valid_cells_only ... ok
+test tests::png_export_round_trips_a_stored_texture_asset ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_remodel_op-9259d64545f5a234)
+
+running 25 tests
+test tests::config_operations_apply_and_backwards_restore_the_pre_edit_snapshot ... ok
+test tests::set_feature_params_op_applies_and_reverts ... ok
+test tests::set_calibration_op_applies_and_reverts ... ok
+test tests::concurrent_set_asset_ops_converge_regardless_of_order ... ok
+test tests::concurrent_edits_across_different_op_families_converge ... ok
+test tests::set_asset_op_applies_and_reverts_including_absent_case ... ok
+test tests::set_dense_params_op_applies_and_reverts ... ok
+test tests::set_dense_op_applies_and_reverts ... ok
+test tests::set_gcps_op_applies_and_reverts ... ok
+test tests::set_geo_params_op_applies_and_reverts ... ok
+test tests::set_geo_products_op_applies_and_reverts ... ok
+test tests::set_ingest_params_op_applies_and_reverts ... ok
+test tests::set_job_op_applies_and_reverts ... ok
+test tests::set_match_params_op_applies_and_reverts ... ok
+test tests::set_mesh_params_op_applies_and_reverts ... ok
+test tests::set_motion_params_op_applies_and_reverts ... ok
+test tests::set_sfm_params_op_applies_and_reverts ... ok
+test tests::set_qc_op_applies_and_reverts ... ok
+test tests::set_sparse_op_applies_and_reverts ... ok
+test tests::set_mesh_result_op_applies_and_reverts ... ok
+test tests::set_streams_op_applies_and_reverts ... ok
+test tests::set_tracks_op_applies_and_reverts ... ok
+test tests::set_trajectory_op_applies_and_reverts ... ok
+test tests::config_operations_roundtrip_through_op_text ... ok
+test tests::every_operation_variant_roundtrips_through_op_text ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_remodel_pack-3aeb28184f7afe2e)
+
+running 2 tests
+test tests::default_scene_roundtrips_through_dsl_pack_equivalence ... ok
+test tests::populated_scene_roundtrips_through_dsl_pack_equivalence ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_remodel_protocol-9bb2e66b101ad8be)
+
+running 3 tests
+test tests::op_binary_round_trips_and_agrees_with_text ... ok
+test tests::every_command_variant_roundtrips_through_op_text ... ok
+test tests::store_roundtrips_through_document_text ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_remodel_ui-5278d4976134cf5b)
+
+running 20 tests
+test tests::default_scene_seeds_the_world3d_mesh_json ... ok
+test tests::export_media_mesh_out_exports_a_structured_3d_mesh ... ok
+test tests::render_does_not_panic_for_known_body_keys ... ok
+test tests::import_media_photos_in_creates_and_appends_to_the_workflow_stream ... ok
+test tests::set_active_utility_switches_host_view_state_without_ops_or_history ... ok
+test tests::set_geo_params_command_materializes_typed_fields_into_operations ... ok
+test tests::set_ingest_params_command_materializes_min_sharpness ... ok
+test tests::clear_result_resets_all_seven_result_fields_and_reset_placeholder_restores_the_box ... ok
+test tests::remodel_io_declares_photos_in_and_mesh_out_on_the_manifest ... ok
+test tests::set_mesh_params_command_materializes_watertight_knobs ... ok
+test tests::set_sfm_params_command_materializes_typed_fields_into_operations ... ok
+test tests::undo_redo_round_trip_through_the_wrapper ... ok
+test tests::import_frame_payload_creates_a_stream_and_asset ... ok
+test tests::view_actions_emit_config_operations_not_document_operations ... ok
+test tests::full_run_collapses_into_a_single_undo_step ... ok
+test tests::retry_stage_starts_a_fresh_run_with_a_new_job_id ... ok
+test tests::run_reconstruction_runs_synchronously_to_a_terminal_stage ... ok
+test tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+test tests::import_video_bytes_payload_extracts_frames_in_process ... ok
+test tests::import_video_frame_payload_then_done_writes_one_stream_with_video_source ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_shooting_engine-1cc3d04d3e262d90)
+
+running 9 tests
+test tests::shooting_io_mirrors_the_declared_artifact_kind ... ok
+test tests::shooting_config_default_matches_the_existing_action_arg_sticky_defaults ... ok
+test tests::shooting_io_declares_the_photos_out_port ... ok
+test tests::default_example_fixture_parses ... ok
+test tests::dwg_import_stays_schema_valid_for_a_non_trivial_extent ... ok
+test tests::scene_svg_embeds_active_asset_name_and_shot_shape ... ok
+test tests::dwg_import_never_errors_on_empty_drawing ... ok
+test tests::export_svg_uses_scene_render_not_title_card ... ok
+test tests::shooting_photo_media_exports_a_raster_2d_image ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_shooting_ui-6668c2ab07abbf45)
+
+running 24 tests
+test tests::document_lists_shots_and_assets ... ok
+test tests::renders_icon_render_scene_with_real_request ... ok
+test tests::renders_world_model_scene ... ok
+test tests::add_shot_action_appends_shot ... ok
+test tests::export_import_and_download_operations ... ok
+test tests::gumball_transform_drag_coalesces_into_one_edit ... ok
+test tests::model_scene_uses_asset_mesh_urls ... ok
+test tests::center_model_and_asset_activation_bump_fit_revision ... ok
+test tests::camera_drag_never_creates_a_document_undo_step ... ok
+test tests::set_active_shot_label_patches_active_shot ... ok
+test tests::save_and_load_camera_round_trip ... ok
+test tests::shooting_labels_resolve_native_english_by_default ... ok
+test tests::ingest_operations_is_idempotent_for_shooting ... ok
+test tests::scene_setters_mutate_lighting_and_measures_reflect_them ... ok
+test tests::set_active_shot_updates_fixture ... ok
+test tests::toggle_sun_round_trips_through_ops_and_defaults_off ... ok
+test tests::set_active_utility_clears_hover_and_emits_no_document_operations ... ok
+test tests::shooting_labels_resolve_native_german ... ok
+test tests::undo_redo_round_trip_through_the_wrapper ... ok
+test tests::world_pick_and_hover_drive_selection_protocol ... ok
+test tests::reset_fixture_restores_default_fixture ... ok
+test tests::utility_registry_scopes_transform_gumball_and_actions_are_declared ... ok
+test tests::world_pick_is_declared_as_a_view_action_and_emits_no_operations ... ok
+test tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+

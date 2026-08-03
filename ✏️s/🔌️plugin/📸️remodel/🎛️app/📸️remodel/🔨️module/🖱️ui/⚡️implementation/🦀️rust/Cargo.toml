@@ -13,6 +13,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️a
 [dependencies]
 remodel = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/⚡️implementation/🦀️rust", package = "semio-s-app-remodel" }
 remodel_op = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-remodel-op" }
+remodel_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-remodel-protocol" }
 remodel_app_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-remodel-engine" }
 remodel_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-engine" }
 remodel_image = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-image" }

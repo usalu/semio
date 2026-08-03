@@ -12,6 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/➗️mathematical/🎛
 
 [dependencies]
 mathematical = { path = "../../../../../../../../../✏️s/🔌️plugin/➗️mathematical/🎛️app/➗️mathematical/⚡️implementation/🦀️rust", package = "semio-s-app-mathematical" }
+mathematical_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/➗️mathematical/🎛️app/➗️mathematical/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-mathematical-engine" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

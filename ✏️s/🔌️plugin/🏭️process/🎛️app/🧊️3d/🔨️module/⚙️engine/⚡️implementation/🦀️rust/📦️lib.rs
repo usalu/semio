@@ -5,7 +5,7 @@ use kernel_3d_brepkit::{BrepkitKernel, ObjSolidExporter, ObjSolidImporter, Solid
 use kernel_3d_engine::{BrepKernel, GeometryHandle};
 use process_3d::{Pose, Process3dDocument, ProcessMeasure, ProcessStep, SolidSpec, Stock};
 use semio_framework_plugin::{MeshData, MeshExporter, MeshImporter};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
@@ -38,6 +38,126 @@ pub fn next_step_id() -> String {
     format!("step-{}", PROCESS3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed))
 }
 //#endregion 🔖️IdGeneration
+
+//#region 🔖️Config
+/// 🧮️ B1: process3d's real `DocumentApp::Config` — absorbs every field that used to live in the UI
+/// crate's `Process3dRuntime` app-struct `RefCell` (selection, hover, face pick, selection method,
+/// engagement input, camera, sun) plus the two `ViewState` fields process3d actually read
+/// (`active_utility_id`/`locale`) — session-only view state now round-trips through the config
+/// `DocumentStore` exactly like document content, with a real `backwards` per
+/// `process_3d_op::Process3dConfigOperation`, mirroring the `shooting_engine::ShootingConfig` pilot.
+/// The camera (was `Process3dCamera`) and sun (was `WorldSunConfig`) are flattened into scalar fields
+/// rather than embedded as DSL blocks — neither type derives `dsl::DslRecord`, and `WorldSunConfig` is
+/// shared framework state out of scope for this migration (mirrors `lowpoly_engine::LowpolyConfig`'s
+/// identical flattening of its own world camera/sun).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "process3dcfg")]
+#[dsl(layout = "lines")]
+pub struct Process3dConfig {
+    /// 👁️ Was `Process3dRuntime::selected_id`.
+    pub selected_id: Option<String>,
+    /// 👁️ Was `Process3dRuntime::hovered_id`.
+    pub hovered_id: Option<String>,
+    /// 🖱️ Was `Process3dRuntime::selected_face_id`.
+    pub selected_face_id: Option<u32>,
+    /// 👁️ Was `Process3dRuntime::selection_method`.
+    pub selection_method: String,
+    /// 👁️ Was `Process3dRuntime::engagement_input`.
+    pub engagement_input: String,
+    /// 🎥️ Was `Process3dRuntime::camera` (`Process3dCamera`), flattened.
+    #[dsl(coord)]
+    pub camera_position: [f64; 3],
+    #[dsl(coord)]
+    pub camera_target: [f64; 3],
+    pub camera_fov: f64,
+    /// 🌞️ Was `Process3dRuntime::sun` (`WorldSunConfig`), flattened.
+    pub sun_enabled: bool,
+    pub sun_azimuth: f64,
+    pub sun_elevation: f64,
+    pub sun_intensity: f64,
+    pub sun_color: String,
+    /// 🧰️ Was read off the host-pushed `ViewState::active_utility_id` (deleted for migrated apps).
+    pub active_utility_id: String,
+    /// 🗣️ Was read off `ViewState::locale`.
+    pub locale: String,
+}
+
+impl Default for Process3dConfig {
+    fn default() -> Self {
+        Self {
+            selected_id: None,
+            hovered_id: None,
+            selected_face_id: None,
+            selection_method: "rectangle".into(),
+            engagement_input: String::new(),
+            camera_position: [3.0, -3.0, 2.0],
+            camera_target: [0.0, 0.0, 0.0],
+            camera_fov: 45.0,
+            sun_enabled: false,
+            sun_azimuth: 45.0,
+            sun_elevation: 35.0,
+            sun_intensity: 0.85,
+            sun_color: "#ffffff".into(),
+            active_utility_id: "select".into(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl store::ConfigRecord for Process3dConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `process_3d_op::Process3dConfigOperation` (lives here, not in
+/// `process_3d_op`, since `protocol::OperationDiff`/`Process3dConfig` are both foreign to that crate —
+/// the orphan rule requires at least one local type). Mirrors `Process3dOperation::SetDocument`'s
+/// existing "whole-document replace" pattern: `apply` ignores `base` entirely.
+impl protocol::OperationDiff<Process3dConfig> for Process3dConfig {
+    fn apply(&self, _base: &Process3dConfig) -> Process3dConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
+/// `create_process3d_app` already declares for `"3d.process"` via `.artifact_kind(...)` (schema/media
+/// type/export+import formats/presentation fields copied verbatim), plus the two workflow ports:
+/// `geometry:in` (Many, unrequired — accepts upstream geometry producers, e.g. cad/lowpoly) and
+/// `brep:out` (Many, unrequired, `kind_id: "3d.process"` — reusing the artifact kind already declared,
+/// never a second `.artifact_kind(...)` call).
+pub fn process3d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: process_3d::PROCESS_3D_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Brep },
+        ports: vec![
+            semio_framework_plugin::MediaPortSpec {
+                id: "geometry:in".into(),
+                label: "Geometry".into(),
+                direction: semio_framework_plugin::MediaPortDirection::In,
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
+                kind_id: None,
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+            semio_framework_plugin::MediaPortSpec {
+                id: "brep:out".into(),
+                label: "Brep".into(),
+                direction: semio_framework_plugin::MediaPortDirection::Out,
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Brep },
+                kind_id: Some("3d.process".into()),
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+        ],
+        export_formats: vec![semio_framework_plugin::OsMediaFormat::Step, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl, semio_framework_plugin::OsMediaFormat::Glb],
+        import_formats: vec![semio_framework_plugin::OsMediaFormat::Step, semio_framework_plugin::OsMediaFormat::Obj, semio_framework_plugin::OsMediaFormat::Stl],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.process".into(), name: "3D Process".into(), dimension: "3d".into(), component_kind: "process3d".into() },
+    }
+}
+//#endregion 🔖️Io
 
 //#region 🔖️Modules
 fn default_cut_measure() -> ProcessMeasure {
@@ -502,6 +622,58 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dDoc
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    //#region 🔖️ConfigCoverage
+    #[test]
+    fn process3d_config_default_matches_the_existing_runtime_defaults() {
+        let config = Process3dConfig::default();
+        assert_eq!(config.selection_method, "rectangle");
+        assert_eq!(config.camera_position, [3.0, -3.0, 2.0]);
+        assert_eq!(config.camera_target, [0.0, 0.0, 0.0]);
+        assert_eq!(config.camera_fov, 45.0);
+        assert!(!config.sun_enabled);
+        assert_eq!(config.active_utility_id, "select");
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[test]
+    fn process3d_config_dsl_and_pack_round_trip() {
+        use store::DocumentPack;
+        let config = Process3dConfig { selected_id: Some("stock".into()), hovered_id: Some("step-0".into()), selected_face_id: Some(3), sun_enabled: true, active_utility_id: "cut".into(), ..Process3dConfig::default() };
+        store::test_support::assert_dsl_round_trip(&config);
+        let bytes = config.encode_pack();
+        assert_eq!(Process3dConfig::decode_pack(&bytes).expect("decode"), config);
+    }
+
+    #[test]
+    fn process3d_io_mirrors_the_declared_artifact_kind() {
+        let io = process3d_io();
+        assert_eq!(io.document_schema, process_3d::PROCESS_3D_SCHEMA);
+        assert_eq!(io.artifact.id, "3d.process");
+        assert_eq!(io.export_formats.len(), 4);
+        assert_eq!(io.import_formats.len(), 3);
+    }
+
+    /// 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe:
+    /// `geometry:in` and `brep:out` are declared with the right direction/kind/multiplicity.
+    #[test]
+    fn process3d_io_declares_geometry_in_and_brep_out_ports() {
+        let io = process3d_io();
+        let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
+        assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
+        assert!(geometry_in.kind_id.is_none());
+        assert!(!geometry_in.required);
+        assert_eq!(geometry_in.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+
+        let brep_out = io.ports.iter().find(|port| port.id == "brep:out").expect("brep:out declared");
+        assert_eq!(brep_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(brep_out.kind_id.as_deref(), Some("3d.process"));
+        assert!(!brep_out.required);
+        assert_eq!(brep_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+        assert_eq!(brep_out.media_type.class, semio_framework_plugin::MediaClass::ThreeD);
+        assert_eq!(brep_out.media_type.form, semio_framework_plugin::MediaForm::Brep);
+    }
+    //#endregion 🔖️ConfigCoverage
 
     #[test]
     fn default_document_parses_timber_example() {

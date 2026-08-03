@@ -1,9 +1,9 @@
 //! ⚡️ Draw app — operation enum + laws (constitutional: op).
 
-use draw::{DrawDocument, DrawLayerNode, DrawTransform, DrawTraceParams, FillStyle, StrokeStyle};
+use draw::{DrawCamera, DrawDocument, DrawLayerNode, DrawTextBody, DrawTransform, DrawTraceParams, FillStyle, PathSegment, StrokeStyle};
 use draw_engine::{
     clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba, insert_layer, layer_base, layer_base_mut, mutate_draw_layer,
-    remove_layer_from_tree, update_layer_in_tree,
+    remove_layer_from_tree, update_layer_in_tree, DrawConfig,
 };
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
@@ -324,6 +324,60 @@ impl Operation<DrawDocument> for DrawOperation {
 }
 //#endregion 🔖️Vcs
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `draw_engine::DrawConfig`'s operation enum — one variant per settled interaction
+/// (mirrors the pre-B1 `DrawInteractionState` field writes), plus a generic `Snapshot` every
+/// variant's `backwards()` returns: since a config-only "View" dispatch is a plain `Apply` (not an
+/// `AmendLast`), each tick is its own distinct, real config edit, and "undo this tick" is exactly
+/// "restore the whole-config snapshot from just before it" — mirrors
+/// `shooting_op::ShootingConfigOperation`'s identical shape.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum DrawConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: DrawConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "hover")]
+    SetHovered { id: Option<String> },
+    #[dsl(key = "engagement-input")]
+    SetEngagementInput { value: String },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: DrawCamera,
+    },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<DrawConfig> for DrawConfigOperation {
+    type Diff = DrawConfig;
+
+    fn diff(&self, base: &DrawConfig) -> DrawConfig {
+        let mut next = base.clone();
+        match self {
+            DrawConfigOperation::Snapshot { config } => return config.clone(),
+            DrawConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            DrawConfigOperation::SetHovered { id } => next.hovered_id = id.clone(),
+            DrawConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            DrawConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            DrawConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            DrawConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &DrawConfig) -> Vec<Self> {
+        vec![DrawConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -607,5 +661,28 @@ mod tests {
         assert!(err.message.contains("unknown operation line"), "unexpected error message: {}", err.message);
     }
 
+    #[test]
+    fn draw_config_operation_round_trips_and_backwards_restores_snapshot() {
+        let base = DrawConfig { selected_ids: vec!["a".into()], active_utility_id: "selectDirect".into(), ..Default::default() };
+        let operation = DrawConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] };
+        let forward = operation.diff(&base);
+        assert_eq!(forward.selected_ids, vec!["a".to_string(), "b".to_string()]);
+        let backwards = operation.backwards(&base);
+        assert_eq!(backwards, vec![DrawConfigOperation::Snapshot { config: base.clone() }]);
+        let restored = backwards[0].diff(&forward);
+        assert_eq!(restored, base);
+    }
+
+    #[test]
+    fn draw_config_operation_op_text_round_trips_every_variant() {
+        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::Snapshot { config: DrawConfig::default() });
+        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetHovered { id: Some("a".into()) });
+        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetHovered { id: None });
+        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetEngagementInput { value: "New \"Name\"".into() });
+        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetCamera { camera: DrawCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
+        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetActiveUtility { utility_id: "pen".into() });
+        store::test_support::assert_op_line_round_trip(&DrawConfigOperation::SetLocale { value: "de-DE".into() });
+    }
 }
 //#endregion 🧪️Tests

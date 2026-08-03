@@ -1,8 +1,8 @@
 //! ⚡️ Raster app — operation enum + laws (constitutional: op).
 
 use protocol::{Operation, OperationDiff};
-use raster::{RasterLayerNode, RasterLayerPatch, RasterProjection};
-use raster_engine::{find_layer, layer_node_id, locate_layer};
+use raster::{RasterCamera, RasterLayerNode, RasterLayerPatch, RasterProjection};
+use raster_engine::{find_layer, layer_node_id, locate_layer, RasterConfig, RasterConfigViewportSize};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Tree
@@ -259,6 +259,66 @@ pub type RasterEnvelope = store::DocumentEnvelope<RasterProjection, RasterOperat
 pub type RasterStore = store::DocumentStore<RasterProjection, RasterOperation>;
 //#endregion 🔖️Types
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `raster_engine::RasterConfig`'s operation enum — one variant per settled interaction
+/// (mirrors the pre-B1 `RasterPlayRuntime` field writes), plus a generic `Snapshot` every variant's
+/// `backwards()` returns — mirrors `shooting_op::ShootingConfigOperation`'s identical shape.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum RasterConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: RasterConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "hover")]
+    SetHovered { id: Option<String> },
+    #[dsl(key = "brush-size")]
+    SetBrushSize { value: f64 },
+    #[dsl(key = "brush-opacity")]
+    SetBrushOpacity { value: f64 },
+    #[dsl(key = "composite-viewport")]
+    SetCompositeViewport {
+        #[dsl(block)]
+        viewport: Option<RasterConfigViewportSize>,
+    },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: RasterCamera,
+    },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<RasterConfig> for RasterConfigOperation {
+    type Diff = RasterConfig;
+
+    fn diff(&self, base: &RasterConfig) -> RasterConfig {
+        let mut next = base.clone();
+        match self {
+            RasterConfigOperation::Snapshot { config } => return config.clone(),
+            RasterConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            RasterConfigOperation::SetHovered { id } => next.hovered_id = id.clone(),
+            RasterConfigOperation::SetBrushSize { value } => next.brush_size = *value,
+            RasterConfigOperation::SetBrushOpacity { value } => next.brush_opacity = value.clamp(0.0, 1.0),
+            RasterConfigOperation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
+            RasterConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            RasterConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            RasterConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &RasterConfig) -> Vec<Self> {
+        vec![RasterConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -364,13 +424,13 @@ mod tests {
             "asset-1".into(),
             RasterImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into() },
         );
-        let mut params = serde_json::Map::new();
-        params.insert("brightness".into(), serde_json::json!(0.06));
-        params.insert("label".into(), serde_json::json!("Warm \"Curve\""));
-        params.insert("enabled".into(), serde_json::json!(true));
-        params.insert("fallback".into(), serde_json::Value::Null);
-        params.insert("curves".into(), serde_json::json!([[0.0, 0.0], [0.25, 0.2], [1.0, 1.0]]));
-        params.insert("nested".into(), serde_json::json!({ "inner": 1.5 }));
+        let mut params = BTreeMap::new();
+        params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
+        params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));
+        params.insert("enabled".into(), dsl::to_dsl_value(&serde_json::json!(true)).expect("dsl value"));
+        params.insert("fallback".into(), dsl::DslValue::Null);
+        params.insert("curves".into(), dsl::to_dsl_value(&serde_json::json!([[0.0, 0.0], [0.25, 0.2], [1.0, 1.0]])).expect("dsl value"));
+        params.insert("nested".into(), dsl::to_dsl_value(&serde_json::json!({ "inner": 1.5 })).expect("dsl value"));
         RasterProjection {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),
@@ -482,5 +542,31 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&RasterOperation::ReplaceDocument { document: representative_raster_document() });
     }
     //#endregion 🔖️OpText
+
+    #[test]
+    fn raster_config_operation_round_trips_and_backwards_restores_snapshot() {
+        let base = RasterConfig { selected_ids: vec!["a".into()], ..Default::default() };
+        let operation = RasterConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] };
+        let forward = operation.diff(&base);
+        assert_eq!(forward.selected_ids, vec!["a".to_string(), "b".to_string()]);
+        let backwards = operation.backwards(&base);
+        assert_eq!(backwards, vec![RasterConfigOperation::Snapshot { config: base.clone() }]);
+        assert_eq!(backwards[0].diff(&forward), base);
+    }
+
+    #[test]
+    fn raster_config_operation_op_text_round_trips_every_variant() {
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::Snapshot { config: RasterConfig::default() });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetHovered { id: Some("a".into()) });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetHovered { id: None });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetBrushSize { value: 40.0 });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetBrushOpacity { value: 0.5 });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }) });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetCompositeViewport { viewport: None });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetCamera { camera: RasterCamera { x: 1.0, y: -2.0, zoom: 3.0 } });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetActiveUtility { utility_id: "paintBrush".into() });
+        store::test_support::assert_op_line_round_trip(&RasterConfigOperation::SetLocale { value: "de-DE".into() });
+    }
 }
 //#endregion 🧪️Tests

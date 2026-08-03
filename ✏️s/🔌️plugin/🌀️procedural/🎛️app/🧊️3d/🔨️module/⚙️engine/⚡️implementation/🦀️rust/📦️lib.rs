@@ -6,7 +6,6 @@ use flow_core::{CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
 use flow_module_brep::tessellate_geometry;
 use playbook::{selected_generation, GenerationPlayState};
 use procedural_3d::{widget_id, Procedural3dDocument};
-use semio_framework_plugin::SelectionSet;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use store::DocumentDsl;
@@ -25,7 +24,7 @@ pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
 //#region 🔖️EvalCache
 /// 🧠️ Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions.
 ///
-/// `Procedural3dPlayView` is a stateless serde value rebuilt from `document_json` on every
+/// `Procedural3dPlayApp` is a stateless unit struct rebuilt from `document_json`/config on every
 /// plugin dispatch, so a fresh `FlowHost::from_fixture` would otherwise discard per-node
 /// memoization (and the geometry handle stability that lets `flow_module_brep`'s mesh cache
 /// hit) on every single edit. Mirrors `flow_module_brep`'s single-instance `KERNEL`/`MESH_CACHE`
@@ -38,12 +37,14 @@ pub fn procedural_neural_cache() -> std::sync::Arc<flow_core::neural::NeuralCach
 //#endregion 🔖️EvalCache
 
 //#region 🔖️Types
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Procedural3dPreviewCamera {
     #[serde(default = "default_preview_cam_pos")]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default = "default_preview_cam_target")]
+    #[dsl(coord)]
     pub target: [f64; 3],
     #[serde(default = "default_preview_fov")]
     pub fov: f64,
@@ -71,48 +72,6 @@ pub fn default_preview_fov() -> f64 {
     45.0
 }
 
-/// 👁️ Ephemeral per-session view state — never part of the persisted document. Selection, hover,
-/// graph camera, preview camera, sun/LOD display options, the derived mesh preview caches, and the
-/// active generation selection/preview all live here on the app struct, out of the VCS document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Procedural3dRuntime {
-    pub selected_node_ids: SelectionSet,
-    pub lod_mode: String,
-    pub show_mode: String,
-    pub selection_method: String,
-    pub hovered_node_id: Option<String>,
-    pub camera: CameraJson,
-    pub preview_camera: Procedural3dPreviewCamera,
-    pub preview_cache: Option<Procedural3dPreviewCache>,
-    pub generation_preview_cache: Option<Procedural3dPreviewCache>,
-    pub sun: semio_framework_plugin::WorldSunConfig,
-    pub selected_generation_id: Option<String>,
-    pub generation_preview_text: Option<String>,
-    /// 🧵️ Off-main-thread evaluation state — see `FlowEvalDriver`.
-    pub eval_driver: FlowEvalDriver,
-}
-
-impl Default for Procedural3dRuntime {
-    fn default() -> Self {
-        Self {
-            selected_node_ids: SelectionSet::default(),
-            lod_mode: String::new(),
-            show_mode: default_show_mode(),
-            selection_method: default_selection_method(),
-            hovered_node_id: None,
-            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
-            preview_camera: Procedural3dPreviewCamera::default(),
-            preview_cache: None,
-            generation_preview_cache: None,
-            sun: semio_framework_plugin::WorldSunConfig::default(),
-            selected_generation_id: None,
-            generation_preview_text: None,
-            eval_driver: FlowEvalDriver::default(),
-        }
-    }
-}
-
 pub fn default_show_mode() -> String {
     "shaded".into()
 }
@@ -121,15 +80,155 @@ pub fn default_selection_method() -> String {
     "rectangle".into()
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Procedural3dPreviewCache {
-    pub signature: u64,
-    pub meshes_json: String,
-    pub instances_json: String,
-    pub status_json: Option<String>,
+/// 🌞️ Serialized default [`semio_framework_plugin::WorldSunConfig`] — the sun toggle/azimuth/
+/// elevation/intensity display options, stored as raw JSON on `Procedural3dConfig` since
+/// `WorldSunConfig` is a framework type without a `dsl::DslRecord` impl (see `Procedural3dConfig::sun`).
+pub fn default_sun_json() -> String {
+    serde_json::to_string(&semio_framework_plugin::WorldSunConfig::default()).unwrap_or_default()
+}
+
+/// 🧮️ B1: `Procedural3dPlayApp`'s real `DocumentApp::Config` — the pure-trait config artifact.
+/// Absorbs everything that used to live in `Procedural3dRuntime`'s app-struct `RefCell` (selection,
+/// hover, selection method, LOD/show display options, flow-graph + preview cameras, sun display
+/// options, active generation selection/preview, and the off-main-thread eval driver) — session-only
+/// view state now round-trips through the config `DocumentStore` exactly like document content, with
+/// a real `backwards` per `procedural_3d_op::Procedural3dConfigOperation` instead of never being VCS'd
+/// at all. `locale`/`active_utility_id` are the two `ViewState` fields the procedural3d UI actually
+/// read (`resolve_labels`/`is_de_locale`/the transform-gumball utility) — see
+/// `procedural_3d_ui::Procedural3dPlayApp::render`. The former `preview_cache`/`generation_preview_cache`
+/// signature-keyed memoization layer has NO field here: a rendering memoization cache is neither
+/// undoable nor worth persisting/VCS-tracking, and `render`/`render_generate_preview` recompute
+/// `preview_payload_from_eval` fresh on every call instead (the actually expensive tessellation step
+/// already has its own internal handle-level cache in `flow_module_brep`, see `PROCEDURAL_NEURAL_CACHE`
+/// above, so this is not a real cost regression).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "procedural3dcfg")]
+#[dsl(layout = "lines")]
+pub struct Procedural3dConfig {
+    /// 👁️ Selected flow-graph widget ids — was `Procedural3dRuntime::selected_node_ids` (a
+    /// `semio_framework_plugin::SelectionSet`); reconstruct one via `SelectionSet::from_ids` at call
+    /// sites that need its API (`contains`/`first`/`remove_id`/…).
+    pub selected_node_ids: Vec<String>,
+    /// 🎚️ Level-of-detail tessellation deflection — was `Procedural3dRuntime::lod_mode`.
+    pub lod_mode: String,
+    /// 👁️ Preview shading mode — was `Procedural3dRuntime::show_mode`.
+    pub show_mode: String,
+    /// 🖱️ Marquee selection method — was `Procedural3dRuntime::selection_method`.
+    pub selection_method: String,
+    /// 👁️ Hovered flow-graph widget id — was `Procedural3dRuntime::hovered_node_id`.
+    pub hovered_node_id: Option<String>,
+    /// 📷️ The flow-graph node canvas camera — was `Procedural3dRuntime::camera`.
+    #[dsl(block)]
+    pub camera: CameraJson,
+    /// 📷️ The 3D preview viewport camera — was `Procedural3dRuntime::preview_camera`.
+    #[dsl(block)]
+    pub preview_camera: Procedural3dPreviewCamera,
+    /// 🌞️ JSON-encoded `semio_framework_plugin::WorldSunConfig` — was `Procedural3dRuntime::sun` (a
+    /// framework type without a `dsl::DslRecord` impl); see `sun`/`Procedural3dConfigOperation::SetSun`.
+    #[serde(default = "default_sun_json")]
+    pub sun_json: String,
+    /// 🧬️ The selected generation id — was `Procedural3dRuntime::selected_generation_id`.
+    pub selected_generation_id: Option<String>,
+    /// 🧬️ The evaluated preview text for the selected generation — was
+    /// `Procedural3dRuntime::generation_preview_text`.
+    pub generation_preview_text: Option<String>,
+    /// 🧵️ JSON-encoded `flow_core::FlowEvalDriver` (off-main-thread evaluation state) — was
+    /// `Procedural3dRuntime::eval_driver` (not `dsl::DslRecord`-derivable); see
+    /// `eval_driver`/`Procedural3dConfigOperation::SetEvalDriver`.
+    #[serde(default)]
+    pub eval_driver_json: String,
+    /// 🧰️ The active transform-gumball utility for the preview window — was read off the deleted
+    /// `ViewState::active_utility_id` (host-pushed `ViewState`, deleted by the pure-trait migration).
+    pub active_utility_id: String,
+    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState::locale`.
+    pub locale: String,
+}
+
+impl Default for Procedural3dConfig {
+    fn default() -> Self {
+        Self {
+            selected_node_ids: Vec::new(),
+            lod_mode: String::new(),
+            show_mode: default_show_mode(),
+            selection_method: default_selection_method(),
+            hovered_node_id: None,
+            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+            preview_camera: Procedural3dPreviewCamera::default(),
+            sun_json: default_sun_json(),
+            selected_generation_id: None,
+            generation_preview_text: None,
+            eval_driver_json: String::new(),
+            active_utility_id: "move".into(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl Procedural3dConfig {
+    /// 🌞️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed/legacy value.
+    pub fn sun(&self) -> semio_framework_plugin::WorldSunConfig {
+        serde_json::from_str(&self.sun_json).unwrap_or_default()
+    }
+
+    /// 🧵️ Parses `eval_driver_json` — falls back to `FlowEvalDriver::default()` on any malformed/empty value.
+    pub fn eval_driver(&self) -> FlowEvalDriver {
+        serde_json::from_str(&self.eval_driver_json).unwrap_or_default()
+    }
+}
+
+impl store::ConfigRecord for Procedural3dConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `procedural_3d_op::Procedural3dConfigOperation` (lives here, not in
+/// `procedural_3d_op`, since `protocol::OperationDiff`/`Procedural3dConfig` are both foreign to that
+/// crate — the orphan rule requires at least one local type). Mirrors `ShootingConfig`'s identical
+/// "whole-record replace" pattern.
+impl protocol::OperationDiff<Procedural3dConfig> for Procedural3dConfig {
+    fn apply(&self, _base: &Procedural3dConfig) -> Procedural3dConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
 }
 //#endregion 🔖️Types
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
+/// `create_procedural3d_app` already declares via `.artifact_kind(...)` (schema/media type copied
+/// verbatim, no export/import formats declared today); `params:in`/`geometry:out` are the
+/// workflow-specific ports (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2
+/// port recipe) beyond the implicit document in/out ports.
+pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo::from_document(
+        "procedural.3d",
+        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Flow },
+        semio_framework_plugin::ArtifactPresentation { id: "3d.procedural".into(), name: "3D Procedural".into(), dimension: "3d".into(), component_kind: "procedural3d".into() },
+    )
+    .with_ports(vec![
+        semio_framework_plugin::MediaPortSpec {
+            id: "params:in".into(),
+            label: "Parameters".into(),
+            direction: semio_framework_plugin::MediaPortDirection::In,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+            kind_id: None,
+            required: false,
+            multiplicity: semio_framework_core::PortMultiplicity::One,
+        },
+        semio_framework_plugin::MediaPortSpec {
+            id: "geometry:out".into(),
+            label: "Geometry".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+            // 🔗️ Reuses the `3d.mesh` `ArtifactKindSpec.id` the sibling `💠️lowpoly` plugin declares —
+            // tag only, this app does not register a second `.artifact_kind(...)` for it.
+            kind_id: Some("3d.mesh".into()),
+            required: false,
+            multiplicity: semio_framework_core::PortMultiplicity::Many,
+        },
+    ])
+}
+//#endregion 🔖️Io
 
 //#region 🔖️DocumentHelpers
 /// 📄️ The `procedural3d-play` "default" document — parsed from the bundled "hexagonal mushroom
@@ -164,31 +263,6 @@ pub fn example_document_json(example_id: &str) -> String {
     serde_json::to_string(&example_projection(example_id)).unwrap_or_default()
 }
 
-pub fn fixture_signature(fixture: &FlowFixture) -> u64 {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    if let Ok(json) = serde_json::to_string(&fixture.widgets) {
-        json.hash(&mut hasher);
-    }
-    if let Ok(json) = serde_json::to_string(&fixture.synapses) {
-        json.hash(&mut hasher);
-    }
-    hasher.finish()
-}
-
-pub fn generation_preview_signature(fixture: &FlowFixture, generation: &GenerationPlayState) -> u64 {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    fixture_signature(fixture).hash(&mut hasher);
-    if let Some(selected) = selected_generation(generation) {
-        selected.id.hash(&mut hasher);
-        if let Ok(json) = serde_json::to_string(&selected.values) {
-            json.hash(&mut hasher);
-        }
-    }
-    hasher.finish()
-}
-
 pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
     if let Some(selected) = selected_generation(generation) {
         let patched = apply_generation_values_to_fixture(
@@ -201,16 +275,6 @@ pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlay
     }
 }
 
-fn preview_cache_signature(fixture: &FlowFixture, eval_json: &str, runtime: &Procedural3dRuntime) -> u64 {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    fixture_signature(fixture).hash(&mut hasher);
-    eval_json.hash(&mut hasher);
-    runtime.lod_mode.hash(&mut hasher);
-    runtime.show_mode.hash(&mut hasher);
-    hasher.finish()
-}
-
 pub fn preview_tolerance(lod_mode: &str) -> f64 {
     match lod_mode {
         "coarse" => 0.15,
@@ -219,108 +283,24 @@ pub fn preview_tolerance(lod_mode: &str) -> f64 {
     }
 }
 
-pub fn refresh_preview_cache(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture) {
-    let eval_json = runtime.eval_driver.eval_json().to_string();
-    let signature = preview_cache_signature(fixture, &eval_json, runtime);
-    if runtime.preview_cache.as_ref().is_some_and(|entry| entry.signature == signature) {
-        return;
-    }
-    let (meshes_json, instances_json) = preview_payload_from_eval(&eval_json, fixture, runtime);
-    let status_json = preview_status_json(&eval_json, fixture);
-    runtime.preview_cache = Some(Procedural3dPreviewCache {
-        signature,
-        meshes_json,
-        instances_json,
-        status_json,
-    });
-}
-
-pub fn refresh_generation_preview_cache(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture, generation: &GenerationPlayState) {
-    let Some(selected) = selected_generation(generation) else {
-        runtime.generation_preview_cache = None;
-        return;
-    };
-    let eval_json = runtime
-        .generation_preview_text
-        .clone()
-        .unwrap_or_else(|| evaluate_generation_preview(fixture, &selected.values));
-    let signature = preview_cache_signature(fixture, &eval_json, runtime);
-    if runtime.generation_preview_cache.as_ref().is_some_and(|entry| entry.signature == signature) {
-        return;
-    }
-    let (meshes_json, instances_json) = preview_payload_from_eval(&eval_json, fixture, runtime);
-    let status_json = preview_status_json(&eval_json, fixture);
-    runtime.generation_preview_cache = Some(Procedural3dPreviewCache {
-        signature,
-        meshes_json,
-        instances_json,
-        status_json,
-    });
-}
-
-/// 🧵️ Never evaluates: returns the last converged cache or empty scene JSON while `flowEvalTick` runs.
-pub fn preview_payload_cached(runtime: &Procedural3dRuntime, _fixture: &FlowFixture) -> (String, String) {
-    if let Some(cache) = &runtime.preview_cache {
-        return (cache.meshes_json.clone(), cache.instances_json.clone());
-    }
-    ("[]".into(), "[]".into())
-}
-
-pub fn preview_status_cached(runtime: &Procedural3dRuntime) -> Option<String> {
-    runtime.preview_cache.as_ref().and_then(|cache| cache.status_json.clone())
-}
-
-pub fn generation_preview_payload_cached(runtime: &Procedural3dRuntime) -> (String, String) {
-    if let Some(cache) = &runtime.generation_preview_cache {
-        return (cache.meshes_json.clone(), cache.instances_json.clone());
-    }
-    ("[]".into(), "[]".into())
-}
-
-/// 🗂️ Refreshes the ephemeral base + generation mesh preview caches after a mutation, so the next
-/// render hits instead of recomputing. `generation` carries the active selection from the runtime.
-pub fn refresh_all_caches(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture, generation: &GenerationPlayState) {
-    refresh_preview_cache(runtime, fixture);
-    if selected_generation(generation).is_none() {
-        // 🪞️ No active generation: `generation_fixture_for` would just return a clone of `fixture`,
-        // so the generation preview is identical to the base preview — reuse the result just
-        // computed above instead of evaluating the same fixture twice.
-        let signature = generation_preview_signature(fixture, generation);
-        let already_cached = runtime.generation_preview_cache.as_ref().is_some_and(|entry| entry.signature == signature);
-        if !already_cached {
-            if let Some(base) = runtime.preview_cache.clone() {
-                runtime.generation_preview_cache = Some(Procedural3dPreviewCache {
-                    signature,
-                    meshes_json: base.meshes_json,
-                    instances_json: base.instances_json,
-                    status_json: base.status_json,
-                });
-            }
-        }
-    } else {
-        let generation_fixture = generation_fixture_for(fixture, generation);
-        refresh_generation_preview_cache(runtime, &generation_fixture, generation);
-    }
-}
-
-pub fn preview_camera_json(runtime: &Procedural3dRuntime) -> String {
+pub fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
     ui_wgpu::world3d_camera_json(
-        runtime.preview_camera.position,
-        runtime.preview_camera.target,
-        runtime.preview_camera.fov,
+        cfg.preview_camera.position,
+        cfg.preview_camera.target,
+        cfg.preview_camera.fov,
     )
 }
 
 /// 🧭️ World-3d selection payload with the host-owned gumball utility spliced in, so the transform
-/// handles follow `view_state.active_utility_id` instead of any document/runtime-stored utility.
-pub fn preview_selection_json(runtime: &Procedural3dRuntime, active_utility: &str) -> String {
+/// handles follow `cfg.active_utility_id` instead of any document-stored utility.
+pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) -> String {
     let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json(
-        &runtime.selection_method,
-        runtime.selected_node_ids.as_slice(),
-        runtime.hovered_node_id.as_deref(),
+        &cfg.selection_method,
+        &cfg.selected_node_ids,
+        cfg.hovered_node_id.as_deref(),
     ))
     .unwrap_or_else(|_| json!({}));
-    let show_mode = if runtime.show_mode.is_empty() { "shaded" } else { runtime.show_mode.as_str() };
+    let show_mode = if cfg.show_mode.is_empty() { "shaded" } else { cfg.show_mode.as_str() };
     let (show_edges, selection_mode, targets) = match show_mode {
         "wireframe" => (true, "mesh", json!({ "mesh": false, "vertex": false, "edge": true, "face": false })),
         "points" => (false, "vertex", json!({ "mesh": false, "vertex": true, "edge": false, "face": false })),
@@ -329,7 +309,7 @@ pub fn preview_selection_json(runtime: &Procedural3dRuntime, active_utility: &st
     };
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode".into(), json!(active_utility));
-        object.insert("gumballActive".into(), json!(!runtime.selected_node_ids.is_empty()));
+        object.insert("gumballActive".into(), json!(!cfg.selected_node_ids.is_empty()));
         object.insert("showEdges".into(), json!(show_edges));
         object.insert("selectionMode".into(), json!(selection_mode));
         object.insert("granularity".into(), json!(selection_mode));
@@ -357,9 +337,11 @@ fn merge_status_json(computing: Option<String>, preview_status: Option<String>) 
     }
 }
 
-pub fn preview_scene_status_json(runtime: &Procedural3dRuntime) -> Option<String> {
-    let computing = runtime.eval_driver.pending().then(|| r#"{"computing":true}"#.to_string());
-    merge_status_json(computing, preview_status_cached(runtime))
+/// 👁️ Merges the driver's live "still computing" flag with a fresh `preview_status_json` result —
+/// called fresh on every render (no cache) since `eval_driver.pending()` is a cheap boolean read.
+pub fn preview_scene_status_json(eval_driver: &FlowEvalDriver, preview_status: Option<String>) -> Option<String> {
+    let computing = eval_driver.pending().then(|| r#"{"computing":true}"#.to_string());
+    merge_status_json(computing, preview_status)
 }
 
 pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
@@ -382,48 +364,32 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
         .unwrap_or_else(|| (endpoint.to_string(), "out".into()))
 }
 
-pub fn fixture_to_workflow(fixture: &DagFixture) -> (String, String) {
-    let nodes: Vec<Value> = fixture
+pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::NodeGraphNodeRecord>, Vec<ui_wgpu::NodeGraphEdgeRecord>) {
+    let nodes: Vec<ui_wgpu::NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
-        .map(|node| {
-            json!({
-                "id": node.id,
-                "label": if node.name.is_empty() { &node.id } else { &node.name },
-                "x": node.x,
-                "y": node.y,
-                "width": node.width,
-                "height": node.height,
-                "inputs": node.inputs().iter().filter(|port| port.visible).map(|port| json!({
-                    "id": format!("{}@{}", node.id, port.id),
-                    "label": port.label,
-                })).collect::<Vec<_>>(),
-                "outputs": node.outputs().iter().filter(|port| port.visible).map(|port| json!({
-                    "id": format!("{}@{}", node.id, port.id),
-                    "label": port.label,
-                })).collect::<Vec<_>>(),
-            })
+        .map(|node| ui_wgpu::NodeGraphNodeRecord {
+            id: node.id.clone(),
+            label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
+            x: node.x,
+            y: node.y,
+            width: node.width,
+            height: node.height,
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| ui_wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| ui_wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            ..Default::default()
         })
         .collect();
-    let edges: Vec<Value> = fixture
+    let edges: Vec<ui_wgpu::NodeGraphEdgeRecord> = fixture
         .edges
         .iter()
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            json!({
-                "id": edge.id,
-                "sourceNodeId": source_node_id,
-                "sourcePortId": source_port_id,
-                "targetNodeId": target_node_id,
-                "targetPortId": target_port_id,
-            })
+            ui_wgpu::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
-    (
-        serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()),
-        serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()),
-    )
+    (nodes, edges)
 }
 
 pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
@@ -523,7 +489,10 @@ pub fn preview_status_json(eval_json: &str, fixture: &FlowFixture) -> Option<Str
     }
 }
 
-pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> (String, String) {
+/// 🧵️ Pure per-render tessellation: bounded-cost (`flow_module_brep::tessellate_geometry` already
+/// caches at the handle level, see `PROCEDURAL_NEURAL_CACHE`'s doc comment), so this is safe to call
+/// fresh on every `render`/`render_generate_preview` call instead of behind an outer memoization layer.
+pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
     if eval_json.is_empty() {
         return ("[]".into(), "[]".into());
     }
@@ -533,8 +502,8 @@ pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, runtime
         }
     }
     let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
-    let tolerance = preview_tolerance(&runtime.lod_mode);
-    let show_mode = if runtime.show_mode.is_empty() { "solid" } else { runtime.show_mode.as_str() };
+    let tolerance = preview_tolerance(&cfg.lod_mode);
+    let show_mode = if cfg.show_mode.is_empty() { "solid" } else { cfg.show_mode.as_str() };
     let mut meshes: Vec<Value> = Vec::new();
     let mut instances: Vec<Value> = Vec::new();
     for widget in &fixture.widgets {
@@ -547,8 +516,8 @@ pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, runtime
         if handles.is_empty() {
             continue;
         }
-        let selected = runtime.selected_node_ids.contains(&id);
-        let hovered = runtime.hovered_node_id.as_deref() == Some(id.as_str());
+        let selected = cfg.selected_node_ids.iter().any(|entry| entry == &id);
+        let hovered = cfg.hovered_node_id.as_deref() == Some(id.as_str());
         for (index, handle) in handles.iter().enumerate() {
             let mesh_id = if handles.len() == 1 {
                 format!("eval-{id}")
@@ -597,16 +566,6 @@ pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::M
     host.evaluate().unwrap_or_default()
 }
 
-/// 👁️ Recomputes the ephemeral generation preview text for the selected generation and stores it
-/// on the runtime (never on the persisted document).
-pub fn refresh_generation_preview(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture, generation: &GenerationPlayState) {
-    let Some(selected) = selected_generation(generation) else {
-        runtime.generation_preview_text = None;
-        return;
-    };
-    runtime.generation_preview_text = Some(evaluate_generation_preview(fixture, &selected.values));
-}
-
 pub fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semio_framework_plugin::MeshData {
     let mut merged = semio_framework_plugin::MeshData::default();
     for mesh in meshes {
@@ -625,11 +584,10 @@ pub fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semi
 }
 
 pub fn export_mesh_from_document(projection: &Procedural3dDocument) -> semio_framework_plugin::MeshData {
-    let mut runtime = Procedural3dRuntime::default();
+    let config = Procedural3dConfig::default();
     let mut host = host_from_fixture(&projection.fixture);
     let eval_json = host.evaluate().unwrap_or_default();
-    runtime.eval_driver.set_eval_json(eval_json.clone());
-    let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.fixture, &runtime);
+    let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.fixture, &config);
     let meshes: Vec<semio_framework_plugin::MeshData> = serde_json::from_str::<Vec<Value>>(&meshes_json)
         .unwrap_or_default()
         .into_iter()
@@ -750,19 +708,19 @@ mod tests {
         TEST_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
-    fn preview_payload_from_evaluated_fixture(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> (String, String) {
+    fn preview_payload_from_evaluated_fixture(fixture: &FlowFixture, cfg: &Procedural3dConfig) -> (String, String) {
         let mut host = FlowHost::from_fixture(fixture.clone());
         host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
         let eval_json = host.evaluate().unwrap_or_default();
-        preview_payload_from_eval(&eval_json, fixture, runtime)
+        preview_payload_from_eval(&eval_json, fixture, cfg)
     }
 
     #[test]
     fn preview_payload_has_meshes_and_instances() {
         let _serial = test_serial();
         let projection = default_projection();
-        let runtime = Procedural3dRuntime::default();
-        let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &runtime);
+        let config = Procedural3dConfig::default();
+        let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         assert_ne!(meshes_json, "[]", "meshes_json was empty");
         assert_ne!(instances_json, "[]", "instances_json was empty");
         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes json");
@@ -780,17 +738,17 @@ mod tests {
         }
         let camera = Camera3d {
             position: Vec3::from_array([
-                runtime.preview_camera.position[0] as f32,
-                runtime.preview_camera.position[1] as f32,
-                runtime.preview_camera.position[2] as f32,
+                config.preview_camera.position[0] as f32,
+                config.preview_camera.position[1] as f32,
+                config.preview_camera.position[2] as f32,
             ]),
             target: Vec3::from_array([
-                runtime.preview_camera.target[0] as f32,
-                runtime.preview_camera.target[1] as f32,
-                runtime.preview_camera.target[2] as f32,
+                config.preview_camera.target[0] as f32,
+                config.preview_camera.target[1] as f32,
+                config.preview_camera.target[2] as f32,
             ]),
             up: Vec3::new(0.0, 0.0, 1.0),
-            fov_y: runtime.preview_camera.fov as f32 * std::f32::consts::PI / 180.0,
+            fov_y: config.preview_camera.fov as f32 * std::f32::consts::PI / 180.0,
             near: 0.1,
             far: 1000.0,
         };
@@ -870,8 +828,8 @@ mod tests {
     fn rectangle_wire_preview_emits_edge_only_mesh() {
         let _serial = test_serial();
         let projection = Procedural3dDocument::parse_dsl(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
-        let runtime = Procedural3dRuntime::default();
-        let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &runtime);
+        let config = Procedural3dConfig::default();
+        let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty(), "rectangle wire preview should tessellate curve edges");
         let data: semio_framework_core::MeshData =
@@ -892,15 +850,40 @@ mod tests {
     fn wireframe_show_mode_strips_shaded_triangles() {
         let _serial = test_serial();
         let projection = default_projection();
-        let mut runtime = Procedural3dRuntime::default();
-        runtime.show_mode = "wireframe".into();
-        let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.fixture, &runtime);
+        let mut config = Procedural3dConfig::default();
+        config.show_mode = "wireframe".into();
+        let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
         assert!(!meshes.is_empty());
         let data: semio_framework_core::MeshData =
             serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
         assert!(data.indices.is_empty());
         assert!(!data.edge_positions.is_empty());
+    }
+
+    #[test]
+    fn procedural3d_config_default_matches_the_former_runtime_defaults() {
+        let config = Procedural3dConfig::default();
+        assert_eq!(config.show_mode, "shaded");
+        assert_eq!(config.selection_method, "rectangle");
+        assert_eq!(config.active_utility_id, "move");
+        assert_eq!(config.locale, "en-US");
+        assert_eq!(config.sun(), semio_framework_plugin::WorldSunConfig::default());
+        assert_eq!(config.eval_driver(), FlowEvalDriver::default());
+    }
+
+    #[test]
+    fn procedural3d_io_declares_the_params_and_geometry_ports() {
+        let io = procedural3d_io();
+        assert_eq!(io.document_schema, "procedural.3d");
+        assert_eq!(io.artifact.id, "3d.procedural");
+        let params = io.ports.iter().find(|port| port.id == "params:in").expect("params:in declared");
+        assert_eq!(params.direction, semio_framework_plugin::MediaPortDirection::In);
+        assert!(!params.required);
+        let geometry = io.ports.iter().find(|port| port.id == "geometry:out").expect("geometry:out declared");
+        assert_eq!(geometry.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(geometry.kind_id.as_deref(), Some("3d.mesh"));
+        assert_eq!(geometry.multiplicity, semio_framework_core::PortMultiplicity::Many);
     }
 }
 //#endregion 🧪️Tests

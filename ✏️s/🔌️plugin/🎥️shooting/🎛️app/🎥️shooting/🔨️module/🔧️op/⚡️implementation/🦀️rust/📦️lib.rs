@@ -512,6 +512,83 @@ impl protocol::OpBinary for ShootingOperation {
 }
 //#endregion 🔖️OpText
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `shooting_engine::ShootingConfig`'s operation enum — one variant per settled
+/// interaction (mirrors the pre-B1 `ShootingPlayRuntime` field writes), plus a generic `Snapshot`
+/// every variant's `backwards()` returns: since a config-only "View" dispatch is a plain `Apply` (not
+/// an `AmendLast` — see `ShootingPlayApp::handle`), each tick is its own distinct, real config edit,
+/// and "undo this tick" is exactly "restore the whole-config snapshot from just before it" — the
+/// simplest correct inverse, needing no per-field reverse-patch bookkeeping. `Operation::Diff` is the
+/// WHOLE `ShootingConfig` (not a granular patch type, unlike `ShootingDiff`): `diff()` returns "the
+/// full config after this op", and `OperationDiff<ShootingConfig>::apply` for `ShootingConfig` itself
+/// (below) just returns that snapshot verbatim, ignoring `base` — the same "whole-record diff" shape
+/// `ShootingOperation::SetFixture` already uses for a full-document replace.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum ShootingConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: shooting_engine::ShootingConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { shot_ids: Vec<String>, asset_ids: Vec<String> },
+    #[dsl(key = "hovered-asset")]
+    SetHoveredAsset { asset_id: Option<String> },
+    #[dsl(key = "selection-method")]
+    SetSelectionMethod { method: String },
+    #[dsl(key = "center-model")]
+    SetCenterModel { value: bool },
+    #[dsl(key = "fit-revision")]
+    SetFitRevision { value: u32 },
+    #[dsl(key = "camera-draft-label")]
+    SetCameraDraftLabel { value: String },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: ShootingCamera,
+    },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+    #[dsl(key = "defaults")]
+    SetDefaults { shot_format: String, shot_shape: String, asset_format: String },
+}
+
+impl Operation<shooting_engine::ShootingConfig> for ShootingConfigOperation {
+    type Diff = shooting_engine::ShootingConfig;
+
+    fn diff(&self, base: &shooting_engine::ShootingConfig) -> shooting_engine::ShootingConfig {
+        let mut next = base.clone();
+        match self {
+            ShootingConfigOperation::Snapshot { config } => return config.clone(),
+            ShootingConfigOperation::SetSelection { shot_ids, asset_ids } => {
+                next.selected_shot_ids = shot_ids.clone();
+                next.selected_asset_ids = asset_ids.clone();
+            }
+            ShootingConfigOperation::SetHoveredAsset { asset_id } => next.hovered_asset_id = asset_id.clone(),
+            ShootingConfigOperation::SetSelectionMethod { method } => next.selection_method = method.clone(),
+            ShootingConfigOperation::SetCenterModel { value } => next.center_model = *value,
+            ShootingConfigOperation::SetFitRevision { value } => next.fit_revision = *value,
+            ShootingConfigOperation::SetCameraDraftLabel { value } => next.camera_draft_label = value.clone(),
+            ShootingConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            ShootingConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            ShootingConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            ShootingConfigOperation::SetDefaults { shot_format, shot_shape, asset_format } => {
+                next.default_shot_format = shot_format.clone();
+                next.default_shot_shape = shot_shape.clone();
+                next.default_asset_format = asset_format.clone();
+            }
+        }
+        next
+    }
+
+    fn backwards(&self, base: &shooting_engine::ShootingConfig) -> Vec<Self> {
+        vec![ShootingConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

@@ -6,7 +6,8 @@ use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture
 use imperative_engine::{compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step};
 use mathematical_graph_manifest::PropertyBag;
 use neural_engine::{ChannelSpec, Dictionary, Registry, Value};
-use sequence::{default_fixture, SequenceCamera, SequenceEdge, SequenceFixture, SequenceStep, SlotRef, StepParams};
+use sequence::{default_fixture, SequenceCamera, SequenceEdge, SequenceFixture, SequenceStep, SlotRef, StepParams, SEQUENCE_FIXTURE_SCHEMA};
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use store::DocumentDsl;
 
@@ -581,6 +582,89 @@ impl SequenceHost {
 }
 //#endregion 🔖️Host
 
+//#region 🔖️Config
+/// 🧮️ B1: sequence's real `DocumentApp::Config` — absorbs every former `SequencePlayRuntime` field
+/// (`selected_step_ids`/`last_run_json`/`orientation`) plus the node-graph viewport camera
+/// (`SequenceHost::camera`, session-only, never a document field) and the locale the pre-B1
+/// host-pushed `ViewState` used to carry (see `sequence_ui::SequencePlayApp::app_labels`) — same
+/// "absorb every runtime field" shape `shooting_engine::ShootingConfig` established for the pilot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "sequencecfg")]
+#[dsl(layout = "lines")]
+pub struct SequenceConfig {
+    /// 👁️ Selected step ids — was `SequencePlayRuntime::selected_step_ids`.
+    pub selected_step_ids: Vec<String>,
+    /// 🏃️ Last `run` command's `RunResult` JSON, rendered under the compiled script — was
+    /// `SequencePlayRuntime::last_run_json`.
+    pub last_run_json: String,
+    /// 🌳️ Layered-layout flow direction (`"leftRight"`/`"topBottom"`) `reorganize` reads — was
+    /// `SequencePlayRuntime::orientation`. Kept as a string rather than `DagLayoutOrientation`
+    /// directly: that enum is foreign to this crate and only derives `Serialize`/`Deserialize`, not
+    /// `dsl::DslField` (see `sequence_ui`'s conversion helpers).
+    pub orientation: String,
+    /// 🎥️ The node-graph viewport pan/zoom — session-only, never a document field. Was
+    /// `SequencePlayRuntime::camera`.
+    #[dsl(block)]
+    pub camera: SequenceCamera,
+    /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewState.locale`.
+    pub locale: String,
+}
+
+impl Default for SequenceConfig {
+    fn default() -> Self {
+        Self { selected_step_ids: Vec::new(), last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() }
+    }
+}
+
+impl store::ConfigRecord for SequenceConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `sequence_op::SequenceConfigOperation` (lives here rather than in
+/// `sequence_op`, matching `shooting_engine::ShootingConfig`'s note on the orphan rule): mirrors
+/// `SequenceOperation`'s existing "whole-document replace" pattern — `apply` ignores `base` entirely.
+impl protocol::OperationDiff<SequenceConfig> for SequenceConfig {
+    fn apply(&self, _base: &SequenceConfig) -> SequenceConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `create_sequence_app`'s
+/// `.artifact_kind(...)` literal (schema/media type copied verbatim) plus the extra `steps:in` input
+/// port (Wave-2 port recipe): incoming computation results from an upstream workflow node insert as
+/// new steps in the sequence document (see `sequence_ui::SequencePlayApp::import_media`).
+pub fn sequence_io() -> semio_framework_core::AppIo {
+    semio_framework_core::AppIo {
+        document_schema: SEQUENCE_FIXTURE_SCHEMA.into(),
+        document_media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::Computation, form: semio_framework_core::MediaForm::Sequence },
+        ports: vec![semio_framework_core::MediaPortSpec {
+            id: "steps:in".into(),
+            label: "Steps".into(),
+            direction: semio_framework_core::MediaPortDirection::In,
+            media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::Computation, form: semio_framework_core::MediaForm::Any },
+            kind_id: None,
+            required: false,
+            multiplicity: semio_framework_core::PortMultiplicity::Many,
+        }],
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: semio_framework_core::ArtifactPresentation { id: "computation.sequence".into(), name: "Sequence".into(), dimension: "graph".into(), component_kind: "sequence".into() },
+    }
+}
+
+/// 🎯️ Pure next-available step id for `import_media("steps:in", ...)` — mirrors `SequenceHost::next_step_id`
+/// but never mutates a host's serial counter (there is no live `SequenceHost` in a pure
+/// `DocumentApp::import_media` call): derives the next id purely from the fixture's own existing
+/// `step-N`/`edge-N` ids, exactly like `SequenceHost::from_fixture`'s own initial-serial derivation.
+pub fn next_available_step_id(fixture: &SequenceFixture) -> String {
+    format!("step-{}", max_serial_in_fixture(fixture).max(100) + 1)
+}
+//#endregion 🔖️Io
+
 //#region 🔖️Manifest
 /// 📄️ JSON re-serialization of `default_fixture()`, round-tripped through its own `.sequence` DSL first
 /// (see `sequence` crate's `🔖️Dsl` region) to prove the fixture is fully expressible in text — for the
@@ -987,6 +1071,51 @@ mod tests {
         let literal = host.compiled_wire_literal();
         assert!(literal.contains("step-1"));
         assert!(literal.contains("step-2"));
+    }
+
+    #[test]
+    fn sequence_config_default_matches_the_existing_runtime_defaults() {
+        let config = SequenceConfig::default();
+        assert!(config.selected_step_ids.is_empty());
+        assert!(config.last_run_json.is_empty());
+        assert_eq!(config.orientation, "leftRight");
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[test]
+    fn sequence_config_dsl_round_trips() {
+        let config = SequenceConfig { selected_step_ids: vec!["step-1".into()], last_run_json: "{}".into(), orientation: "topBottom".into(), camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 }, locale: "de-DE".into() };
+        let text = DocumentDsl::print_dsl(&config);
+        let parsed = <SequenceConfig as DocumentDsl>::parse_dsl(&text).expect("config dsl round trip");
+        assert_eq!(parsed, config);
+    }
+
+    #[test]
+    fn sequence_config_pack_round_trips() {
+        let config = SequenceConfig { selected_step_ids: vec!["step-2".into()], last_run_json: "{\"ok\":true}".into(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() };
+        let bytes = store::DocumentPack::encode_pack(&config);
+        let decoded = <SequenceConfig as store::DocumentPack>::decode_pack(&bytes).expect("config pack round trip");
+        assert_eq!(decoded, config);
+    }
+
+    #[test]
+    fn sequence_io_declares_the_steps_in_port() {
+        let io = sequence_io();
+        assert_eq!(io.document_schema, SEQUENCE_FIXTURE_SCHEMA);
+        assert_eq!(io.ports.len(), 1);
+        let port = &io.ports[0];
+        assert_eq!(port.id, "steps:in");
+        assert_eq!(port.direction, semio_framework_core::MediaPortDirection::In);
+        assert_eq!(port.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert!(!port.required);
+    }
+
+    #[test]
+    fn next_available_step_id_is_free_and_deterministic() {
+        let fixture = default_fixture();
+        let id = next_available_step_id(&fixture);
+        assert!(!fixture.steps.iter().any(|step| step.id == id));
+        assert_eq!(id, next_available_step_id(&fixture), "pure function of the fixture, not a mutating counter");
     }
 }
 //#endregion 🧪️Tests

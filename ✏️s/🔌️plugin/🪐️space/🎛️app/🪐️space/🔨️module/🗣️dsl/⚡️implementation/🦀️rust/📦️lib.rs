@@ -34,5 +34,13 @@ mod tests {
         let reparsed = parse_dsl(&printed).expect("reparse printed dsl");
         assert_eq!(reparsed, projection);
     }
+
+    /// 🧮️ Per-app recipe item 3: `SpaceConfig` (this app's `DocumentApp::Config`, defined in
+    /// `space_engine`) round-trips its own DSL extension independently of the `OsProjection` document
+    /// grammar above.
+    #[test]
+    fn space_config_dsl_text_round_trips() {
+        store::test_support::assert_dsl_round_trip(&space_engine::SpaceConfig::default());
+    }
 }
 //#endregion 🧪️Tests

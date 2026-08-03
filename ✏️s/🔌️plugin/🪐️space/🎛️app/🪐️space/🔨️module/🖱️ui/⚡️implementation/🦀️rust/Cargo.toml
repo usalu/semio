@@ -14,6 +14,8 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app
 space = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🪐️space/⚡️implementation/🦀️rust", package = "semio-s-app-space-space" }
 space_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🪐️space/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-space-space-engine" }
 space_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🪐️space/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-space-space-op" }
+space_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🪐️space/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-space-space-protocol" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 home_ui = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/🖱️ui/⚡️implementation/🦀️rust", package = "semio-s-app-space-home-ui" }
 space_shared = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🔨️module/🤝️shared/⚡️implementation/🦀️rust", package = "semio-s-plugin-space-shared" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
@@ -21,5 +23,10 @@ semio-framework-os = { path = "../../../../../../../../../🧰️framework/🛍�
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 infinite_board_port_directed_dag = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
+serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22"
+
+[dev-dependencies]
+home_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-space-home-engine" }
+home_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-space-home-protocol" }

@@ -14,6 +14,7 @@ use std::collections::{BTreeMap, HashMap};
 use trinity_jack::{execute, parse};
 use trinity_ram::{create_trinity_graph_envelope, dispatch_trinity_graph_operations, port_key, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TrinityGraphStore};
 use rewrite::TrinityRewriteError;
+use store::DocumentDsl as _;
 
 pub use trinity_jack::{complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack, Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan};
 pub use trinity_ram::{self, Camera, Manifest};
@@ -24,6 +25,108 @@ const TRINITY_HANDLE_RADIUS: f64 = 5.0;
 const TRINITY_BOARD_PORT_HANDLE_KIND: &str = "port";
 const TRINITY_DEFAULT_NODE_RADIUS: f64 = 44.0;
 const TRINITY_BOARD_KIND_CATALOGS_JSON: &str = "{\"handleKinds\":[{\"id\":\"port\",\"name\":\"Port\",\"color\":\"#6b7280\"}],\"edgeKinds\":[{\"id\":\"Connection\",\"name\":\"Connection\",\"color\":\"#94a3b8\"}]}";
+
+//#region 🔖️Config
+/// 🧮️ B1: rewrite's real `DocumentApp::Config` — absorbs every former `RewritePlayRuntime`
+/// (app-struct `RefCell`) field: node selection, the Before pane's live viewport camera (seeded once
+/// from the initial before-fixture's seed-only `camera` field, then only ever written by
+/// `nodeGraphViewport` — see `trinity_ram::GraphFixture::camera`'s own doc comment), the reorganize
+/// epoch, the hover/select var focus + their epochs, the per-window LOD mode, and the BCP-47 locale
+/// tag (mirrors `shooting_engine::ShootingConfig::locale`/`trinity_jack_engine::JackConfig::locale`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "rewritecfg")]
+#[dsl(layout = "lines")]
+pub struct RewriteConfig {
+    pub selected_node_ids: Vec<String>,
+    #[dsl(block)]
+    pub before_pane_camera: Camera,
+    pub reorganize_epoch: u64,
+    pub active_hover_var: String,
+    pub hover_epoch: u64,
+    pub active_select_var: String,
+    pub select_epoch: u64,
+    pub lod_mode_by_window: BTreeMap<String, String>,
+    pub locale: String,
+}
+
+impl Default for RewriteConfig {
+    fn default() -> Self {
+        Self {
+            selected_node_ids: Vec::new(),
+            before_pane_camera: Camera::default(),
+            reorganize_epoch: 0,
+            active_hover_var: String::new(),
+            hover_epoch: 0,
+            active_select_var: String::new(),
+            select_epoch: 0,
+            lod_mode_by_window: BTreeMap::new(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl store::ConfigRecord for RewriteConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `rewrite_op::RewriteConfigOperation` — mirrors
+/// `shooting_engine::ShootingConfig`'s own `OperationDiff<Self>` impl (the orphan rule requires the
+/// local type, hence living here rather than in `rewrite_op`).
+impl protocol::OperationDiff<RewriteConfig> for RewriteConfig {
+    fn apply(&self, _base: &RewriteConfig) -> RewriteConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ Rewrite's typed media I/O surface (`AppDefinition.io`) — the implicit document in/out pair (a
+/// `trinity.rewrite.rule` document) plus a graph in/out pair: `graph:in` loads an incoming
+/// `trinity.graph` as this rule's `before_fixture_json` working graph, and `graph:out` re-emits the
+/// rule-applied result graph (`rewrite_ui::after_fixture_json`'s pure computation) — rewrite
+/// transforms a graph and hands a new one back downstream. Reuses `"graph.trinity"`, the artifact
+/// kind `trinity_jack_engine::jack_io` already declares, as both ports' `kind_id`.
+pub fn rewrite_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: rewrite::REWRITE_RULE_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::Computation,
+            form: semio_framework_plugin::MediaForm::Value,
+        },
+        ports: vec![
+            semio_framework_plugin::MediaPortSpec {
+                id: "graph:in".into(),
+                label: "Graph".into(),
+                direction: semio_framework_plugin::MediaPortDirection::In,
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Graph, form: semio_framework_plugin::MediaForm::Trinity },
+                kind_id: Some("graph.trinity".into()),
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::One,
+            },
+            semio_framework_plugin::MediaPortSpec {
+                id: "graph:out".into(),
+                label: "Graph".into(),
+                direction: semio_framework_plugin::MediaPortDirection::Out,
+                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Graph, form: semio_framework_plugin::MediaForm::Trinity },
+                kind_id: Some("graph.trinity".into()),
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+        ],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation {
+            id: "trinity.rewrite".into(),
+            name: "Trinity Rewrite Rule".into(),
+            dimension: "graph".into(),
+            component_kind: "trinity".into(),
+        },
+    }
+}
+//#endregion 🔖️Io
+
 // #region 🔖️Rewrite
 /// ◀️ Left-hand side pattern for rewriting.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1600,6 +1703,37 @@ mod tests {
         assert_eq!(host.draw_lod_label(), "minimap");
     }
     //#endregion 🔖️TrinityHostTests
+
+    //#region 🔖️ConfigTests
+    #[test]
+    fn rewrite_config_default_has_empty_selection_and_default_locale() {
+        let config = RewriteConfig::default();
+        assert!(config.selected_node_ids.is_empty());
+        assert_eq!(config.locale, "en-US");
+        assert_eq!(config.before_pane_camera, Camera::default());
+    }
+
+    #[test]
+    fn rewrite_config_dsl_round_trips() {
+        let mut config = RewriteConfig::default();
+        config.selected_node_ids = vec!["n1".into()];
+        config.active_hover_var = "a".into();
+        config.lod_mode_by_window.insert("trinity-rewrite-before".into(), "compact".into());
+        store::test_support::assert_dsl_round_trip(&config);
+        store::test_support::assert_dsl_pack_equivalence(&config);
+    }
+
+    #[test]
+    fn rewrite_io_declares_graph_in_and_graph_out_ports() {
+        let io = rewrite_io();
+        assert_eq!(io.document_schema, rewrite::REWRITE_RULE_SCHEMA);
+        let graph_in = io.ports.iter().find(|port| port.id == "graph:in").expect("graph:in declared");
+        assert_eq!(graph_in.kind_id.as_deref(), Some("graph.trinity"));
+        assert_eq!(graph_in.multiplicity, semio_framework_plugin::PortMultiplicity::One);
+        let graph_out = io.ports.iter().find(|port| port.id == "graph:out").expect("graph:out declared");
+        assert_eq!(graph_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+    }
+    //#endregion 🔖️ConfigTests
 }
 // #endregion 🔖️Tests
 

@@ -1,9 +1,9 @@
 {
-  "title": "Scale And Position Cad Reference",
+  "title": "Scale and Position CAD Reference",
   "emoji": "📐️",
-  "status": "open",
+  "status": "closed",
   "description": "Increase the scale of the CAD reference visual slightly, preserving its existing behavior and verifying the relevant rendering path.",
-  "summary": "Changed the concrete-forest CAD reference positive Y offset from 30% to 20% of its rendered height. Preserved the 28.6-world-unit scale and X center of -9.7; the resulting Y center is -8.312. Updated the existing placement assertion and ticket-local verifier. Focused verification passed.",
+  "summary": "Kept the reference 30% larger at 28.6 world units and moved it 20% forward on CAD Y without changing Z. Enforced the CAD renderer boundary as Y-forward and Z-up on camera and scene, and added axis and placement regression coverage. The ticket verifier passed and the live React CAD view rendered flat with no console errors. Focused Nx test and lint remain blocked before collection by unrelated missing Vitest configuration and policy-linter file-resolution errors.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2407"
   },

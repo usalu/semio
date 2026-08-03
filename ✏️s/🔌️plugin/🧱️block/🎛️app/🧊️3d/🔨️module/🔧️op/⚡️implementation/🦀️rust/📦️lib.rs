@@ -251,6 +251,46 @@ impl Operation<Block3dDefinition> for Block3dOperation {
 }
 // #endregion 🔖️Operations
 
+//#region 🔖️ConfigOperations
+/// 🧮️ `block_3d_engine::Block3dConfig`'s operation enum — one variant per settled interaction
+/// (mirrors the pre-B1 `Block3dPlayApp` `RefCell` field writes), plus a generic `Snapshot` every
+/// variant's `backwards()` returns — same "whole-config-snapshot inverse" shape
+/// `shooting_op::ShootingConfigOperation` established for the pilot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Block3dConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot { #[dsl(block)] config: block_3d_engine::Block3dConfig },
+    #[dsl(key = "selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "active-representation")]
+    SetActiveRepresentation { representation_id: Option<String> },
+    #[dsl(key = "wanted-tags")]
+    SetWantedTags { tags: Vec<String> },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<block_3d_engine::Block3dConfig> for Block3dConfigOperation {
+    type Diff = block_3d_engine::Block3dConfig;
+
+    fn diff(&self, base: &block_3d_engine::Block3dConfig) -> block_3d_engine::Block3dConfig {
+        let mut next = base.clone();
+        match self {
+            Block3dConfigOperation::Snapshot { config } => return config.clone(),
+            Block3dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            Block3dConfigOperation::SetActiveRepresentation { representation_id } => next.active_representation_id = representation_id.clone(),
+            Block3dConfigOperation::SetWantedTags { tags } => next.wanted_tags = tags.clone(),
+            Block3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &block_3d_engine::Block3dConfig) -> Vec<Self> {
+        vec![Block3dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -268,6 +308,18 @@ mod tests {
             projection = operation.diff(&projection).apply(&projection);
         }
         assert_eq!(projection, block_3d_engine::empty_block3d_definition());
+    }
+
+    #[test]
+    fn config_operation_backwards_restores_the_pre_operation_snapshot() {
+        let base = block_3d_engine::Block3dConfig::default();
+        let operation = Block3dConfigOperation::SetSelection { ids: vec!["r0".into()] };
+        let next = operation.diff(&base);
+        assert_eq!(next.selected_ids, vec!["r0".to_string()]);
+        let inverse = operation.backwards(&base);
+        assert_eq!(inverse, vec![Block3dConfigOperation::Snapshot { config: base.clone() }]);
+        let restored = inverse[0].diff(&next);
+        assert_eq!(restored, base);
     }
 }
 //#endregion 🧪️Tests

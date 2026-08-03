@@ -15,6 +15,9 @@ draw = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/�
 draw_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-draw-op" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+# 🎯️ `DrawCommand`'s `dsl::DslOps` derive (WORKFLOWS-END-TO-END-TYPED-PORTS B1 typed command channel).
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 draw_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-draw-engine" }

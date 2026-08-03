@@ -12,8 +12,11 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️a
 
 [dependencies]
 rewrite_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-rewrite-op" }
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-ram" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 rewrite = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-rewrite" }

@@ -12,6 +12,8 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️a
 
 [dependencies]
 trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-ram" }
-
-[dev-dependencies]
+trinity_jack_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/🔌️jack/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-jack-engine" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

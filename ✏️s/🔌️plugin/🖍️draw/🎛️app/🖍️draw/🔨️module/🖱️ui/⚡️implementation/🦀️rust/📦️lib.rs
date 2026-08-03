@@ -1,29 +1,36 @@
-//! 🖥️ Draw app — DocumentApp impl, render, manifest (constitutional: ui).
+//! 🖥️ Draw app — DocumentApp impl, render, manifest (constitutional: ui). B1: `DrawPlayApp` keeps
+//! only ephemeral in-process gesture scratch (`gesture`/`preview_seq` `RefCell`s, never undo-tracked
+//! — see `//#region 🔖️UtilityPreviewContract` in the framework plugin crate); every former
+//! `DrawInteractionState` field (selection, hover, engagement-input draft, the session-only free
+//! canvas camera) now lives in `draw_engine::DrawConfig`, written via `draw_op::DrawConfigOperation`s
+//! (real `backwards`, no ad hoc inverse). Every action dispatches through the single typed
+//! `draw_protocol::DrawCommand` channel via `DocumentApp::handle` — mirrors `shooting_ui`'s B1 pilot.
 
 use draw::{DrawArtboard, DrawDocument, DrawLayerNode, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPERATIONS, DRAW_DOCUMENT_SCHEMA};
 use draw_engine::{
     create_draw_boolean_layer, create_draw_path_layer, create_draw_trace_layer, create_layer_by_kind, default_draw_document, default_layer_base,
-    draw_layer_descendant_leaf_ids, draw_layer_world_bounds, draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id,
-    draw_transform_to_matrix, empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes, flatten_draw_layers,
-    layer_base, layer_id, layer_kind_label, layer_to_path_segments, resolve_draw_artboard, rgba_to_hex, semio_draw_example_document, semio_draw_example_json,
+    draw_layer_descendant_leaf_ids, draw_layer_world_bounds, draw_io, draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id,
+    draw_transform_to_matrix, draw_vector_media, empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes, flatten_draw_layers,
+    layer_base, layer_id, layer_kind_label, layer_to_path_segments, resolve_draw_artboard, rgba_to_hex, semio_draw_example_document, semio_draw_example_json, DrawConfig,
 };
-use draw_op::{draw_op_for_layer_field, DrawOperation};
-use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView,
-    build_canvas_2d_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids,
+use draw_op::{draw_op_for_layer_field, DrawConfigOperation, DrawOperation};
+use draw_protocol::DrawCommand;
+use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionKind, AppIo, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaError, MediaPayload,
+    build_canvas_2d_scene, create_default_layout, localized_label_map, selection_ids,
     tree_item, tree_item_with_action, tree_item_with_action_draggable,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec,
     ActionDescriptor, PanelGroup, UtilityCategory, UtilityDefinition, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem,
-    UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, ViewState, WindowEngagement,
+    UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, WindowEngagement,
     WindowEngagementInput, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use semio_framework_plugin::kernel::HostEffect;
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use store::DocumentPack;
 
 //#region 🔖️Constants
 const DRAW_PLAY_APP_ID: &str = "draw-play";
@@ -40,22 +47,17 @@ const DRAW_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-draw-layer-kind";
 const DRAW_PLAY_EXAMPLE_DEFAULT_ID: &str = "semio";
 //#endregion 🔖️Constants
 
-//#region 🔖️Types
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct DrawInteractionState {
-    #[serde(default)]
-    selected_ids: Vec<String>,
-    #[serde(default)]
-    hovered_id: Option<String>,
-    #[serde(default)]
-    engagement_input: String,
-    /// 🎥️ Per-session camera pose — session-only view state (never a VCS-tracked document field): see
-    /// `.🦑️repo/🎫️tickets/26/07/31/MOVE-DRAW-PLUGIN-CAMERA-TO-RUNTIME-STATE`.
-    #[serde(default)]
-    camera: draw::DrawCamera,
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical helpers.
+fn is_de_locale(cfg: &DrawConfig) -> bool {
+    cfg.locale.starts_with("de")
 }
-//#endregion 🔖️Types
+
+fn resolve_labels<L: LocaleLabels>(cfg: &DrawConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -219,7 +221,7 @@ fn best_pick_layer_id(targets: &[DrawPickTarget]) -> Option<String> {
     targets.iter().max_by_key(|target| target.generality).map(|target| target.layer_id.clone())
 }
 
-fn apply_point_pick(interaction: &mut DrawInteractionState, doc: &DrawDocument, world: [f64; 2], shift: bool, ctrl: bool, meta: bool, include_control_points: bool) {
+fn apply_point_pick(interaction: &mut DrawConfig, doc: &DrawDocument, world: [f64; 2], shift: bool, ctrl: bool, meta: bool, include_control_points: bool) {
     let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
     let targets = resolve_pick_targets_at(doc, world, tolerance, include_control_points);
     let picked = best_pick_layer_id(&targets);
@@ -302,7 +304,7 @@ fn draft_preview_segments(utility: &str, points: &[[f64; 2]], cursor: [f64; 2]) 
 
 /// 🔷️ Emits the operations that commit a shape drag (add the shape layer + return to direct-select) and
 /// records the new layer as the current selection; empty when the drag is too small to commit.
-fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawOperation> {
+fn commit_shape_drag(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawOperation> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -339,7 +341,7 @@ fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument,
 
 /// ✒️ Emits the operations that commit a freehand/polygon draft into a path or polygon layer and records it
 /// as the current selection; empty when the draft has too few points to form a shape.
-fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, points: &[[f64; 2]]) -> Vec<DrawOperation> {
+fn commit_draft(interaction: &mut DrawConfig, doc: &DrawDocument, utility: &str, points: &[[f64; 2]]) -> Vec<DrawOperation> {
     if points.len() < 2 {
         return Vec::new();
     }
@@ -367,7 +369,7 @@ fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, util
 
 /// 🖍️ Emits the operations that add a trace layer over the picked image (or first asset) and records it as
 /// the current selection; empty when no bitmap source is available.
-fn commit_trace_at(interaction: &mut DrawInteractionState, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawOperation> {
+fn commit_trace_at(interaction: &mut DrawConfig, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawOperation> {
     let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
     let hit_layer_id = best_pick_layer_id(&resolve_pick_targets_at(doc, world, tolerance, false));
     let source_key = hit_layer_id
@@ -386,16 +388,35 @@ fn commit_trace_at(interaction: &mut DrawInteractionState, doc: &DrawDocument, w
 
 /// 🧰️ Wraps a committed gesture's `operations` as a single described edit plus the host effect that returns
 /// the canvas to the default select utility (the active utility is host-owned, never a document operation).
-fn commit_with_utility_reset(operations: Vec<DrawOperation>, description: &str) -> ActionEmit<DrawOperation> {
+fn commit_with_utility_reset(operations: Vec<DrawOperation>, description: &str) -> Emit<DrawOperation, DrawConfigOperation> {
     if operations.is_empty() {
-        return ActionEmit::default();
+        return Emit::default();
     }
-    let mut emit = ActionEmit::commit(operations, description);
+    let mut emit = Emit::commit(operations, description);
     emit.effects.push(HostEffect::SetActiveUtility {
         window_id: DRAW_PLAY_WINDOW_CANVAS.into(),
         utility_id: DRAW_DEFAULT_UTILITY.into(),
     });
     emit
+}
+
+/// 🧮️ B1: appends a `DrawConfigOperation::SetSelection` config edit to a gesture's document-side
+/// `Emit` iff the gesture actually changed the selection (`apply_point_pick`/`commit_shape_drag`/…
+/// mutate `config.selected_ids` in place) — keeps document operations (shape/draft/trace commits) and
+/// the selection change that rode along with them in exactly one dispatch's `Emit`.
+fn finish_gesture_emit(mut emit: Emit<DrawOperation, DrawConfigOperation>, before: &DrawConfig, after: &DrawConfig) -> Emit<DrawOperation, DrawConfigOperation> {
+    if after.selected_ids != before.selected_ids {
+        emit.config_operations.push(DrawConfigOperation::SetSelection { ids: after.selected_ids.clone() });
+    }
+    emit
+}
+
+/// 🩹️ Parses a `DrawCommand::PatchLayer`/`PatchLayers` wire `value` as JSON text (falling back to a
+/// plain JSON string when it isn't valid JSON) so one `String` wire field covers every heterogeneous
+/// `draw_op_for_layer_field` value type (bool/number/string) — mirrors
+/// `shooting_protocol::ShootingCommand`'s `PatchShots`/`PatchAssets` shape.
+fn patch_value_json(value: &str) -> Value {
+    serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.to_string()))
 }
 
 //#region 🔖️GestureContext
@@ -759,6 +780,7 @@ fn draw_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setSelection", "Set Selection", "Auswahl festlegen"),
         ("setHover", "Set Hover", "Überfahren festlegen"),
         ("engagementInput", "Engagement Input", "Eingabe"),
+        ("setLocale", "Set Locale", "Sprache festlegen"),
     ];
     localized_label_map(is_de, ENTRIES)
 }
@@ -844,7 +866,7 @@ fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> U
     }
 }
 
-fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionState, labels: &DrawPlayLabels) -> UiNode {
+fn render_layers_panel(document: &DrawDocument, interaction: &DrawConfig, labels: &DrawPlayLabels) -> UiNode {
     let action_items = vec![
         tree_button("draw-play-layers.add.path", labels.add_path, "pen-tool", "addLayer", json!({ "kind": "path" })),
         tree_button("draw-play-layers.add.rect", labels.add_rectangle, "square", "addLayer", json!({ "kind": "shape:rect" })),
@@ -882,7 +904,7 @@ fn tree_button(id: &str, label: &str, icon: &str, action: &str, args: Value) -> 
     ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args))) }
 }
 
-fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractionState, labels: &DrawPlayLabels) -> UiNode {
+fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawConfig, labels: &DrawPlayLabels) -> UiNode {
     let catalogue_kinds = [
         ("path", labels.kind_path, "pen-tool"),
         ("shape:rect", labels.kind_rectangle, "square"),
@@ -1391,7 +1413,7 @@ fn inspector_orientation_group(layers: &[&draw::DrawLayerNode], labels: &DrawPla
     }
 }
 
-fn render_properties_panel(document: &DrawDocument, interaction: &DrawInteractionState, labels: &DrawPlayLabels, active_utility: &str) -> UiNode {
+fn render_properties_panel(document: &DrawDocument, interaction: &DrawConfig, labels: &DrawPlayLabels, active_utility: &str) -> UiNode {
     let selected_layers: Vec<&draw::DrawLayerNode> = interaction
         .selected_ids
         .iter()
@@ -1487,7 +1509,7 @@ fn artboard_scene_records(document: &DrawDocument) -> Vec<Value> {
     ]
 }
 
-fn render_canvas(document: &DrawDocument, interaction: &DrawInteractionState, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
+fn render_canvas(document: &DrawDocument, interaction: &DrawConfig, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
@@ -1595,8 +1617,12 @@ fn render_canvas(document: &DrawDocument, interaction: &DrawInteractionState, ge
 //#endregion 🔖️Render
 
 //#region 🔖️DrawPlayApp
+/// 🧪️ B1: unit-shaped struct — every former `DrawConfig` field (selection, hover, camera, engagement
+/// draft, active utility, locale) now lives in `draw_engine::DrawConfig` (see `DocumentApp::Config`),
+/// written through `draw_op::DrawConfigOperation`s. `gesture`/`preview_seq` stay app-runtime `RefCell`
+/// scratch — genuinely ephemeral, never undo-tracked, matching the "scratch + commit" preview pattern
+/// (`Emit::commit`'s doc, `UtilityPreviewContract`).
 pub struct DrawPlayApp {
-    interaction: RefCell<DrawInteractionState>,
     /// 🎭️ Live `fsm` snapshot driving pointer gestures — see `//#region 🔖️GestureMachine`.
     gesture: RefCell<draw_gesture::Snapshot>,
     /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
@@ -1607,7 +1633,6 @@ impl Default for DrawPlayApp {
     fn default() -> Self {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         Self {
-            interaction: RefCell::new(DrawInteractionState::default()),
             gesture: RefCell::new(fsm::init::<draw_gesture::DrawGesture>((), &mut sink)),
             preview_seq: RefCell::new(0),
         }
@@ -1617,12 +1642,15 @@ impl Default for DrawPlayApp {
 impl DrawPlayApp {
     /// 🎭️ Feeds one gesture event through the shared `fsm` statechart, then drains and executes any
     /// requested `GestureEffect`s against the live document — the only place gesture control-flow
-    /// (owned by `fsm`) meets document-mutating logic (owned by `draw`, unchanged from before the migration).
-    fn step_gesture(&self, event: draw_gesture::Event, document: &DrawDocument) -> ActionEmit<DrawOperation> {
+    /// (owned by `fsm`) meets document-mutating logic (owned by `draw`). `config` is the caller's
+    /// working copy (mutated in place for selection changes the gesture makes); the returned `Emit`
+    /// carries only DOCUMENT operations (shape/draft/trace commits) — the caller (`handle`) diffs
+    /// `config` before/after via `finish_gesture_emit` to fold in any selection change.
+    fn step_gesture(&self, event: draw_gesture::Event, document: &DrawDocument, config: &mut DrawConfig) -> Emit<DrawOperation, DrawConfigOperation> {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         fsm::macrostep(&mut *self.gesture.borrow_mut(), event, &mut sink, &mut fsm::NullInspector);
-        *self.preview_seq.borrow_mut() = self.preview_seq.borrow().wrapping_add(1);
-        let mut interaction = self.interaction.borrow_mut();
+        let next_seq = self.preview_seq.borrow().wrapping_add(1);
+        *self.preview_seq.borrow_mut() = next_seq;
         let mut operations = Vec::new();
         let mut commit_description: Option<&'static str> = None;
         for command in sink {
@@ -1632,31 +1660,31 @@ impl DrawPlayApp {
                     if active {
                         let crossing = end[0] < start[0];
                         let hits = marquee_layer_hits(document, start, end, crossing);
-                        interaction.selected_ids = merge_selection(&merge, &interaction.selected_ids, &hits);
+                        config.selected_ids = merge_selection(&merge, &config.selected_ids, &hits);
                     } else {
-                        apply_point_pick(&mut interaction, document, end, shift, ctrl, meta, false);
+                        apply_point_pick(config, document, end, shift, ctrl, meta, false);
                     }
                 }
                 GestureEffect::CommitShape { utility, start, end } => {
-                    operations.extend(commit_shape_drag(&mut interaction, document, &utility, start, end));
+                    operations.extend(commit_shape_drag(config, document, &utility, start, end));
                     commit_description = Some("Add shape");
                 }
                 GestureEffect::CommitDraft { utility, points } => {
-                    operations.extend(commit_draft(&mut interaction, document, &utility, &points));
+                    operations.extend(commit_draft(config, document, &utility, &points));
                     commit_description = Some("Commit draft");
                 }
                 GestureEffect::CommitTrace { world } => {
-                    operations.extend(commit_trace_at(&mut interaction, document, world));
+                    operations.extend(commit_trace_at(config, document, world));
                     commit_description = Some("Trace image");
                 }
                 GestureEffect::PickPoint { world, shift, ctrl, meta } => {
-                    apply_point_pick(&mut interaction, document, world, shift, ctrl, meta, true);
+                    apply_point_pick(config, document, world, shift, ctrl, meta, true);
                 }
             }
         }
         match commit_description {
             Some(description) => commit_with_utility_reset(operations, description),
-            None => ActionEmit::default(),
+            None => Emit::default(),
         }
     }
 
@@ -1675,8 +1703,9 @@ impl DrawPlayApp {
 impl DocumentApp for DrawPlayApp {
     type Projection = DrawDocument;
     type Operation = DrawOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = DrawConfig;
+    type ConfigOperation = DrawConfigOperation;
+    type Command = DrawCommand;
 
     fn app_id(&self) -> &str {
         DRAW_PLAY_APP_ID
@@ -1690,71 +1719,87 @@ impl DocumentApp for DrawPlayApp {
         default_draw_document("empty", None)
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, DrawDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-    ) -> ActionEmit<DrawOperation> {
+    fn io(&self) -> Option<AppIo> {
+        Some(draw_io())
+    }
+
+    /// 🎞️ `vector:out` (see `draw_engine::draw_vector_media`) plus the inherited `document:out`
+    /// default (the pack of `doc.projection`, replicated inline — overriding `export_media` shadows
+    /// the trait's provided body for every port on this app, not just the new one).
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, DrawDocument>) -> Result<Media, MediaError> {
+        match port {
+            "vector:out" => draw_vector_media(doc.projection),
+            "document:out" => {
+                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let bytes = doc.projection.encode_pack();
+                Ok(Media {
+                    media_type,
+                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+
+    fn whole_document_operation(&self, projection: DrawDocument) -> Option<DrawOperation> {
+        Some(DrawOperation::SetDocument { document: projection })
+    }
+
+    /// 🏷️ Maps each `DrawCommand` variant back to the action id it was declared under in
+    /// `create_draw_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check.
+    fn command_id(&self, command: &DrawCommand) -> &str {
+        match command {
+            DrawCommand::SetDocument { .. } => "setDocument",
+            DrawCommand::CommitDocument { .. } => "commitDocument",
+            DrawCommand::SetFixtureJson { .. } => "setFixtureJson",
+            DrawCommand::SetActiveExample { .. } => "setActiveExample",
+            DrawCommand::SetSelectedOpacity { .. } => "setSelectedOpacity",
+            DrawCommand::EngagementSubmit { .. } => "engagementSubmit",
+            DrawCommand::AddLayer { .. } => "addLayer",
+            DrawCommand::DropLayerKind { .. } => "dropLayerKind",
+            DrawCommand::MoveLayer { .. } => "moveLayer",
+            DrawCommand::DeleteLayer { .. } => "deleteLayer",
+            DrawCommand::DuplicateLayer { .. } => "duplicateLayer",
+            DrawCommand::ToggleLayerVisible { .. } => "toggleLayerVisible",
+            DrawCommand::CombineBoolean { .. } => "combineBoolean",
+            DrawCommand::PatchLayer { .. } => "patchLayer",
+            DrawCommand::PatchLayers { .. } => "patchLayers",
+            DrawCommand::SetActiveUtility { .. } => SET_ACTIVE_UTILITY_ACTION_ID,
+            DrawCommand::SetCamera { .. } => "setCamera",
+            DrawCommand::SetCameraZoom { .. } => "setCameraZoom",
+            DrawCommand::SetSelection { .. } => "setSelection",
+            DrawCommand::SetHover { .. } => "setHover",
+            DrawCommand::SelectAll => "selectAll",
+            DrawCommand::ClearSelection => "clearSelection",
+            DrawCommand::EngagementInput { .. } => "engagementInput",
+            DrawCommand::SetLocale { .. } => "setLocale",
+            DrawCommand::CanvasPointerDown { .. } => "canvasPointerDown",
+            DrawCommand::CanvasPointerMove { .. } => "canvasPointerMove",
+            DrawCommand::CanvasPointerUp { .. } => "canvasPointerUp",
+            DrawCommand::CanvasDoubleClick => "canvasDoubleClick",
+            DrawCommand::CanvasCommitDraft => "canvasCommitDraft",
+            DrawCommand::CanvasEscape => "canvasEscape",
+        }
+    }
+
+    fn handle(&self, command: &DrawCommand, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>) -> Emit<DrawOperation, DrawConfigOperation> {
         let document = doc.projection;
-        let mut interaction = self.interaction.borrow_mut();
-        let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| DRAW_DEFAULT_UTILITY.into());
-        match action {
+        let mut config = cfg.projection.clone();
+        match command {
             //#region 🔖️ContentOperations
-            "setDocument" | "commitDocument" => {
-                if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(document) = serde_json::from_value::<DrawDocument>(next.clone()) {
-                        return ActionEmit::operations(vec![DrawOperation::SetDocument { document }]);
+            DrawCommand::SetDocument { document: next } | DrawCommand::CommitDocument { document: next } => {
+                Emit::operations(vec![DrawOperation::SetDocument { document: next.clone() }])
+            }
+            DrawCommand::SetFixtureJson { json } => {
+                if json.contains(DRAW_DOCUMENT_SCHEMA) {
+                    if let Ok(document) = serde_json::from_str::<DrawDocument>(json) {
+                        return Emit::operations(vec![DrawOperation::SetDocument { document }]);
                     }
                 }
-                ActionEmit::default()
+                Emit::default()
             }
-            SET_ACTIVE_UTILITY_ACTION_ID => {
-                // 🧰️ Host-owned utility switch: clear any in-progress gesture scratch, emit nothing.
-                self.step_gesture(draw_gesture::Event::UtilityChanged, document);
-                ActionEmit::default()
-            }
-            // 📷️ Camera — session-only runtime pose, never a document operation (`ActionKind::View`).
-            "setCamera" => {
-                if let Some(camera) = args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value::<draw::DrawCamera>(value.clone()).ok()) {
-                    interaction.camera = camera;
-                }
-                ActionEmit::default()
-            }
-            "setCameraZoom" => {
-                let zoom = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(interaction.camera.zoom);
-                interaction.camera.zoom = zoom;
-                ActionEmit::default()
-            }
-            "setSelectedOpacity" => {
-                let opacity = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                let operations: Vec<DrawOperation> = interaction
-                    .selected_ids
-                    .iter()
-                    .filter(|id| find_draw_layer(document, id).is_some())
-                    .map(|id| DrawOperation::SetLayerOpacity { layer_id: id.clone(), opacity })
-                    .collect();
-                if operations.is_empty() {
-                    return ActionEmit::default();
-                }
-                ActionEmit { operations, coalesce_key: Some("opacity".into()), ..Default::default() }
-            }
-            "engagementSubmit" => {
-                let value = args
-                    .and_then(|value| value.get("value"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .unwrap_or_else(|| interaction.engagement_input.clone());
-                let value = value.trim();
-                if value.is_empty() || interaction.selected_ids.len() != 1 {
-                    return ActionEmit::default();
-                }
-                ActionEmit::operations(vec![DrawOperation::SetLayerName { layer_id: interaction.selected_ids[0].clone(), name: value.into() }])
-            }
-            "setActiveExample" => {
-                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
+            DrawCommand::SetActiveExample { example_id } => {
                 let next = if example_id.is_empty() {
                     Some(default_draw_document("empty", None))
                 } else if example_id == DRAW_PLAY_EXAMPLE_DEFAULT_ID {
@@ -1763,227 +1808,192 @@ impl DocumentApp for DrawPlayApp {
                     None
                 };
                 match next {
-                    Some(document) => {
-                        interaction.selected_ids.clear();
-                        ActionEmit::operations(vec![DrawOperation::SetDocument { document }])
-                    }
-                    None => ActionEmit::default(),
+                    Some(document) => Emit {
+                        document_operations: vec![DrawOperation::SetDocument { document }],
+                        config_operations: vec![DrawConfigOperation::SetSelection { ids: Vec::new() }],
+                        ..Default::default()
+                    },
+                    None => Emit::default(),
                 }
             }
-            "setFixtureJson" => {
-                let json_text = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()).unwrap_or("");
-                if json_text.contains(DRAW_DOCUMENT_SCHEMA) {
-                    if let Ok(document) = serde_json::from_str::<DrawDocument>(json_text) {
-                        return ActionEmit::operations(vec![DrawOperation::SetDocument { document }]);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "addLayer" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("path");
-                let layer = create_layer_by_kind(kind);
-                interaction.selected_ids = vec![layer_id(&layer).to_string()];
-                ActionEmit::operations(vec![DrawOperation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }])
-            }
-            "dropLayerKind" | "moveLayer" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
-                let layer_id_arg = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str());
-                let target_row_id = args
-                    .and_then(|value| value.get("targetRowId"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("draw-play-layers");
-                let drop_position = args
-                    .and_then(|value| value.get("dropPosition"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("inside");
-                if action == "dropLayerKind" {
-                    if let Some(kind) = kind {
-                        let layer = create_layer_by_kind(kind);
-                        let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
-                        interaction.selected_ids = vec![layer_id(&layer).to_string()];
-                        return ActionEmit::operations(vec![DrawOperation::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }]);
-                    }
-                } else if let Some(layer_id) = layer_id_arg {
-                    let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
-                    return ActionEmit::operations(vec![DrawOperation::ReorderLayer { layer_id: layer_id.into(), parent_id, index }]);
-                }
-                ActionEmit::default()
-            }
-            "deleteLayer" => {
-                let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
-                if layer_id.is_empty() {
-                    return ActionEmit::default();
-                }
-                interaction.selected_ids.retain(|id| id != layer_id);
-                ActionEmit::operations(vec![DrawOperation::RemoveLayer { layer_id: layer_id.into() }])
-            }
-            "duplicateLayer" => {
-                let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
-                if layer_id.is_empty() {
-                    return ActionEmit::default();
-                }
-                ActionEmit::operations(vec![DrawOperation::DuplicateLayer { layer_id: layer_id.into() }])
-            }
-            "toggleLayerVisible" => {
-                let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
-                match find_draw_layer(document, layer_id) {
-                    Some(layer) => {
-                        let visible = !layer_base(layer).visible;
-                        ActionEmit::operations(vec![DrawOperation::SetLayerVisible { layer_id: layer_id.into(), visible }])
-                    }
-                    None => ActionEmit::default(),
-                }
-            }
-            "combineBoolean" => {
-                let operation = args.and_then(|value| value.get("operation")).and_then(|value| value.as_str()).unwrap_or("union");
-                let ids: Vec<String> = args
-                    .and_then(|value| value.get("ids"))
-                    .and_then(|value| value.as_array())
-                    .map(|values| values.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect::<Vec<_>>())
-                    .filter(|values: &Vec<String>| !values.is_empty())
-                    .unwrap_or_else(|| interaction.selected_ids.clone());
-                if ids.len() < 2 {
-                    return ActionEmit::default();
-                }
-                let layer = create_draw_boolean_layer("Boolean", operation, ids);
-                interaction.selected_ids = vec![layer_id(&layer).to_string()];
-                ActionEmit::operations(vec![DrawOperation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }])
-            }
-            "patchLayer" => {
-                let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args
-                    .and_then(|value| value.get("value"))
-                    .or_else(|| args.and_then(|value| value.get("pressed")))
-                    .cloned()
-                    .unwrap_or(Value::Null);
-                match draw_op_for_layer_field(document, layer_id, field, &value) {
-                    Some(operation) => ActionEmit::operations(vec![operation]),
-                    None => ActionEmit::default(),
-                }
-            }
-            "patchLayers" => {
-                let layer_ids: Vec<String> = args
-                    .and_then(|value| value.get("layerIds"))
-                    .and_then(|value| value.as_array())
-                    .map(|values| values.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect())
-                    .unwrap_or_default();
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args
-                    .and_then(|value| value.get("value"))
-                    .or_else(|| args.and_then(|value| value.get("pressed")))
-                    .cloned()
-                    .unwrap_or(Value::Null);
-                let operations: Vec<DrawOperation> = layer_ids
+            DrawCommand::SetSelectedOpacity { value } => {
+                let operations: Vec<DrawOperation> = config
+                    .selected_ids
                     .iter()
-                    .filter_map(|id| draw_op_for_layer_field(document, id, field, &value))
+                    .filter(|id| find_draw_layer(document, id).is_some())
+                    .map(|id| DrawOperation::SetLayerOpacity { layer_id: id.clone(), opacity: *value })
                     .collect();
                 if operations.is_empty() {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
-                ActionEmit::operations(operations)
+                Emit::amend(operations, "opacity")
+            }
+            DrawCommand::EngagementSubmit { value } => {
+                let value = value.clone().unwrap_or_else(|| config.engagement_input.clone());
+                let value = value.trim();
+                if value.is_empty() || config.selected_ids.len() != 1 {
+                    return Emit::default();
+                }
+                Emit::operations(vec![DrawOperation::SetLayerName { layer_id: config.selected_ids[0].clone(), name: value.into() }])
+            }
+            DrawCommand::AddLayer { kind } => {
+                let layer = create_layer_by_kind(kind);
+                let select_id = layer_id(&layer).to_string();
+                Emit {
+                    document_operations: vec![DrawOperation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }],
+                    config_operations: vec![DrawConfigOperation::SetSelection { ids: vec![select_id] }],
+                    ..Default::default()
+                }
+            }
+            DrawCommand::DropLayerKind { kind, target_row_id, drop_position } => {
+                let layer = create_layer_by_kind(kind);
+                let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
+                let select_id = layer_id(&layer).to_string();
+                Emit {
+                    document_operations: vec![DrawOperation::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }],
+                    config_operations: vec![DrawConfigOperation::SetSelection { ids: vec![select_id] }],
+                    ..Default::default()
+                }
+            }
+            DrawCommand::MoveLayer { layer_id: target_id, target_row_id, drop_position } => {
+                let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
+                Emit::operations(vec![DrawOperation::ReorderLayer { layer_id: target_id.clone(), parent_id, index }])
+            }
+            DrawCommand::DeleteLayer { layer_id: target_id } => {
+                if target_id.is_empty() || find_draw_layer(document, target_id).is_none() {
+                    return Emit::default();
+                }
+                let remaining: Vec<String> = config.selected_ids.iter().filter(|id| *id != target_id).cloned().collect();
+                Emit {
+                    document_operations: vec![DrawOperation::RemoveLayer { layer_id: target_id.clone() }],
+                    config_operations: vec![DrawConfigOperation::SetSelection { ids: remaining }],
+                    ..Default::default()
+                }
+            }
+            DrawCommand::DuplicateLayer { layer_id: target_id } => {
+                if target_id.is_empty() {
+                    return Emit::default();
+                }
+                Emit::operations(vec![DrawOperation::DuplicateLayer { layer_id: target_id.clone() }])
+            }
+            DrawCommand::ToggleLayerVisible { layer_id: target_id } => match find_draw_layer(document, target_id) {
+                Some(layer) => {
+                    let visible = !layer_base(layer).visible;
+                    Emit::operations(vec![DrawOperation::SetLayerVisible { layer_id: target_id.clone(), visible }])
+                }
+                None => Emit::default(),
+            },
+            DrawCommand::CombineBoolean { operation, ids } => {
+                let ids: Vec<String> = if ids.is_empty() { config.selected_ids.clone() } else { ids.clone() };
+                if ids.len() < 2 {
+                    return Emit::default();
+                }
+                let layer = create_draw_boolean_layer("Boolean", operation, ids);
+                let select_id = layer_id(&layer).to_string();
+                Emit {
+                    document_operations: vec![DrawOperation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }],
+                    config_operations: vec![DrawConfigOperation::SetSelection { ids: vec![select_id] }],
+                    ..Default::default()
+                }
+            }
+            DrawCommand::PatchLayer { layer_id: target_id, field, value } => {
+                let json_value = patch_value_json(value);
+                match draw_op_for_layer_field(document, target_id, field, &json_value) {
+                    Some(operation) => Emit::operations(vec![operation]),
+                    None => Emit::default(),
+                }
+            }
+            DrawCommand::PatchLayers { layer_ids, field, value } => {
+                let json_value = patch_value_json(value);
+                let operations: Vec<DrawOperation> = layer_ids.iter().filter_map(|id| draw_op_for_layer_field(document, id, field, &json_value)).collect();
+                if operations.is_empty() {
+                    return Emit::default();
+                }
+                Emit::operations(operations)
             }
             //#endregion 🔖️ContentOperations
-            //#region 🔖️ViewState
-            "setSelection" => {
-                interaction.selected_ids = selection_ids(args);
-                ActionEmit::default()
+            //#region 🔖️ConfigOnly
+            DrawCommand::SetActiveUtility { utility_id } => {
+                // 🧰️ Host-owned utility switch: clear any in-progress gesture scratch (discarding any
+                // document-op the FSM would produce — `UtilityChanged` never carries one).
+                self.step_gesture(draw_gesture::Event::UtilityChanged, document, &mut config);
+                Emit::config(vec![DrawConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }])
             }
-            "setHover" => {
-                interaction.hovered_id = args
-                    .and_then(|value| value.get("id"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
-                ActionEmit::default()
+            // 📷️ Camera — session-only runtime pose, never a document operation.
+            DrawCommand::SetCamera { camera } => Emit::config(vec![DrawConfigOperation::SetCamera { camera: camera.clone() }]),
+            DrawCommand::SetCameraZoom { value } => {
+                let camera = draw::DrawCamera { zoom: *value, ..config.camera };
+                Emit::config(vec![DrawConfigOperation::SetCamera { camera }])
             }
-            "selectAll" => {
-                interaction.selected_ids = flatten_draw_layers(&document.layers)
-                    .into_iter()
-                    .map(|layer| layer_id(layer).to_string())
-                    .collect();
-                ActionEmit::default()
+            DrawCommand::SetSelection { ids } => Emit::config(vec![DrawConfigOperation::SetSelection { ids: ids.clone() }]),
+            DrawCommand::SetHover { id } => Emit::config(vec![DrawConfigOperation::SetHovered { id: id.clone() }]),
+            DrawCommand::SelectAll => {
+                let ids = flatten_draw_layers(&document.layers).into_iter().map(|layer| layer_id(layer).to_string()).collect();
+                Emit::config(vec![DrawConfigOperation::SetSelection { ids }])
             }
-            "clearSelection" => {
-                interaction.selected_ids.clear();
-                ActionEmit::default()
-            }
-            "engagementInput" => {
-                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                    interaction.engagement_input = value.to_string();
-                }
-                ActionEmit::default()
-            }
-            //#endregion 🔖️ViewState
+            DrawCommand::ClearSelection => Emit::config(vec![DrawConfigOperation::SetSelection { ids: Vec::new() }]),
+            DrawCommand::EngagementInput { value } => Emit::config(vec![DrawConfigOperation::SetEngagementInput { value: value.clone() }]),
+            DrawCommand::SetLocale { value } => Emit::config(vec![DrawConfigOperation::SetLocale { value: value.clone() }]),
+            //#endregion 🔖️ConfigOnly
             //#region 🔖️CanvasGestures
-            "canvasPointerDown" => {
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
-                let viewport_w = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(800.0);
-                let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
-                let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
-                let (world_x, world_y) = canvas_point_to_world(&interaction.camera, x, y, viewport_w, viewport_h);
-                let world = [world_x, world_y];
-                self.step_gesture(draw_gesture::Event::PointerDown { utility: active_utility.clone(), world, shift, ctrl, meta }, document)
+            DrawCommand::CanvasPointerDown { x, y, width, height, shift, ctrl, meta } => {
+                let (world_x, world_y) = canvas_point_to_world(&config.camera, *x, *y, *width, *height);
+                let active_utility = config.active_utility_id.clone();
+                let emit = self.step_gesture(draw_gesture::Event::PointerDown { utility: active_utility, world: [world_x, world_y], shift: *shift, ctrl: *ctrl, meta: *meta }, document, &mut config);
+                finish_gesture_emit(emit, cfg.projection, &config)
             }
-            "canvasPointerMove" => {
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
-                let viewport_w = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(800.0);
-                let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
-                let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
-                let (world_x, world_y) = canvas_point_to_world(&interaction.camera, x, y, viewport_w, viewport_h);
+            DrawCommand::CanvasPointerMove { x, y, width, height } => {
+                let (world_x, world_y) = canvas_point_to_world(&config.camera, *x, *y, *width, *height);
                 let world = [world_x, world_y];
                 if self.gesture.borrow().matches("idle") {
-                    let utility = active_utility.clone();
-                    let include_control_points = utility == "selectDirect";
-                    let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
-                    interaction.hovered_id = best_pick_layer_id(&resolve_pick_targets_at(document, world, tolerance, include_control_points));
-                    return ActionEmit::default();
+                    let include_control_points = config.active_utility_id == "selectDirect";
+                    let tolerance = DRAW_PICK_TOLERANCE_PX / config.camera.zoom.max(1e-6);
+                    let hovered_id = best_pick_layer_id(&resolve_pick_targets_at(document, world, tolerance, include_control_points));
+                    if hovered_id == config.hovered_id {
+                        return Emit::default();
+                    }
+                    return Emit::config(vec![DrawConfigOperation::SetHovered { id: hovered_id }]);
                 }
-                let marquee_threshold_world = DRAW_MARQUEE_THRESHOLD_PX / interaction.camera.zoom.max(1e-6);
-                self.step_gesture(draw_gesture::Event::PointerMove { world, marquee_threshold_world }, document)
+                let marquee_threshold_world = DRAW_MARQUEE_THRESHOLD_PX / config.camera.zoom.max(1e-6);
+                let emit = self.step_gesture(draw_gesture::Event::PointerMove { world, marquee_threshold_world }, document, &mut config);
+                finish_gesture_emit(emit, cfg.projection, &config)
             }
-            "canvasPointerUp" => {
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
-                let viewport_w = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(800.0);
-                let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
-                let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
-                let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
-                let (world_x, world_y) = canvas_point_to_world(&interaction.camera, x, y, viewport_w, viewport_h);
-                let world = [world_x, world_y];
-                self.step_gesture(draw_gesture::Event::PointerUp { utility: active_utility.clone(), world, shift, ctrl, meta }, document)
+            DrawCommand::CanvasPointerUp { x, y, width, height, shift, ctrl, meta } => {
+                let (world_x, world_y) = canvas_point_to_world(&config.camera, *x, *y, *width, *height);
+                let active_utility = config.active_utility_id.clone();
+                let emit = self.step_gesture(draw_gesture::Event::PointerUp { utility: active_utility, world: [world_x, world_y], shift: *shift, ctrl: *ctrl, meta: *meta }, document, &mut config);
+                finish_gesture_emit(emit, cfg.projection, &config)
             }
-            "canvasDoubleClick" | "canvasCommitDraft" => self.step_gesture(draw_gesture::Event::CommitDraft, document),
-            "canvasEscape" => self.step_gesture(draw_gesture::Event::Escape, document),
+            DrawCommand::CanvasDoubleClick | DrawCommand::CanvasCommitDraft => {
+                let emit = self.step_gesture(draw_gesture::Event::CommitDraft, document, &mut config);
+                finish_gesture_emit(emit, cfg.projection, &config)
+            }
+            DrawCommand::CanvasEscape => {
+                let emit = self.step_gesture(draw_gesture::Event::Escape, document, &mut config);
+                finish_gesture_emit(emit, cfg.projection, &config)
+            }
             //#endregion 🔖️CanvasGestures
-            _ => ActionEmit::default(),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, DrawDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>) -> UiNode {
         let document = doc.projection;
-        let interaction = self.interaction.borrow();
+        let config = cfg.projection;
         let gesture = self.gesture.borrow();
-        let labels = resolve_labels::<DrawPlayLabels>(view_state);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(DRAW_DEFAULT_UTILITY);
+        let labels = resolve_labels::<DrawPlayLabels>(config);
+        let active_utility = config.active_utility_id.as_str();
         match body_key {
-            DRAW_PLAY_BODY_COMPOSITE => render_canvas(document, &interaction, &gesture, active_utility),
-            DRAW_PLAY_BODY_LAYERS => render_layers_panel(document, &interaction, labels),
-            DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(document, &interaction, labels),
-            DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(document, &interaction, labels, active_utility),
+            DRAW_PLAY_BODY_COMPOSITE => render_canvas(document, config, &gesture, active_utility),
+            DRAW_PLAY_BODY_LAYERS => render_layers_panel(document, config, labels),
+            DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(document, config, labels),
+            DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(document, config, labels, active_utility),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<DrawPlayLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, DrawConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<DrawPlayLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::with_framework_panel_tabs(
             ["framework.panel.document", "framework.panel.catalogue", "framework.panel.inspection"],
             is_de,
@@ -2081,6 +2091,7 @@ pub fn create_draw_app() -> App {
             .action_with(draw_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(draw_internal_action("setHover", "Set Hover", ActionKind::View))
             .action_with(draw_internal_action("engagementInput", "Engagement Input", ActionKind::View))
+            .action_with(draw_internal_action("setLocale", "Set Locale", ActionKind::View))
             // 📷️ Camera — session-only runtime pose, never a document operation.
             .action_with(draw_internal_action("setCamera", "Set Camera", ActionKind::View))
             .action_with(draw_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::View))
@@ -2190,7 +2201,7 @@ mod wasm_bridge {
 mod tests {
     use super::*;
     use draw_engine::create_draw_shape_layer_rect;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
 
     fn new_app() -> VcsDocumentApp<DrawPlayApp> {
         testkit::new_app::<DrawPlayApp>()
@@ -2201,10 +2212,10 @@ mod tests {
         testkit::new_app_with_registry::<DrawPlayApp>(create_draw_app)
     }
 
-
-    /// 🧰️ A view state whose host-owned active utility is `utility` (replaces the deleted document field).
-    fn view_with_utility(utility: &str) -> ViewState {
-        ViewState { active_utility_id: Some(utility.into()), ..ViewState::default() }
+    /// 🧰️ Sets the config's host-owned active utility to `utility` (replaces the deleted
+    /// `ViewState.active_utility_id` seam — B1 moved it onto `DrawConfig`).
+    fn set_utility(app: &mut VcsDocumentApp<DrawPlayApp>, utility: &str) {
+        app.dispatch_typed(DrawCommand::SetActiveUtility { utility_id: utility.into() }, &testkit::meta("local")).expect("set active utility");
     }
 
     fn first_layer_id(app: &VcsDocumentApp<DrawPlayApp>) -> String {
@@ -2276,7 +2287,7 @@ mod tests {
     fn add_layer_action_emits_op_and_appends_path() {
         let mut app = new_app();
         let before = app.projection().unwrap().layers.len();
-        let result = app.handle_action("addLayer", Some(&json!({ "kind": "shape:rect" })), &ViewState::default(), &testkit::meta("local")).expect("add layer");
+        let result = app.dispatch_typed(DrawCommand::AddLayer { kind: "shape:rect".into() }, &testkit::meta("local")).expect("add layer");
         assert_eq!(result.operations.len(), 1);
         let projection = app.projection().unwrap();
         assert_eq!(projection.layers.len(), before + 1);
@@ -2288,7 +2299,7 @@ mod tests {
         let mut app = new_app();
         let id = first_layer_id(&app);
         let result = app
-            .handle_action("patchLayers", Some(&json!({ "layerIds": [id], "field": "opacity", "value": 0.5 })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(DrawCommand::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }, &testkit::meta("local"))
             .expect("patch");
         assert_eq!(result.operations.len(), 1);
         let projection = app.projection().unwrap();
@@ -2300,7 +2311,7 @@ mod tests {
         let mut app = new_app();
         let id = first_layer_id(&app);
         let result = app
-            .handle_action("patchLayer", Some(&json!({ "layerId": id, "field": "name", "value": "Renamed" })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(DrawCommand::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }, &testkit::meta("local"))
             .expect("patch");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(layer_base(&app.projection().unwrap().layers[0]).name, "Renamed");
@@ -2310,7 +2321,7 @@ mod tests {
     fn set_selection_view_action_emits_no_ops_and_drives_inspector() {
         let mut app = new_app();
         let id = first_layer_id(&app);
-        let result = app.handle_action("setSelection", Some(&json!({ "ids": [id] })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        let result = app.dispatch_typed(DrawCommand::SetSelection { ids: vec![id] }, &testkit::meta("local")).expect("select");
         assert!(result.operations.is_empty(), "selection is ephemeral view state, not a document operation");
         let node = app.render(DRAW_PLAY_BODY_PROPERTIES, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -2321,15 +2332,16 @@ mod tests {
     #[test]
     fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
         let mut app = new_app_with_registry();
+        set_utility(&mut app, "shapeRect");
         // Begin a shape gesture so there is scratch to clear.
-        app.handle_action("canvasPointerDown", Some(&json!({ "x": 10.0, "y": 10.0, "width": 800.0, "height": 600.0 })), &view_with_utility("shapeRect"), &testkit::meta("local")).expect("down");
+        app.dispatch_typed(DrawCommand::CanvasPointerDown { x: 10.0, y: 10.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("down");
         let before = app.projection().unwrap();
         // Switching utilities is the framework View action: no document operations, nothing to sync/undo.
-        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "pen" })), &view_with_utility("pen"), &testkit::meta("local")).expect("switch utility");
+        let result = app.dispatch_typed(DrawCommand::SetActiveUtility { utility_id: "pen".into() }, &testkit::meta("local")).expect("switch utility");
         assert!(result.operations.is_empty(), "utility switching never emits document operations");
         assert_eq!(app.projection().unwrap(), before, "utility switching does not mutate the document");
         // The cleared scratch means a follow-up pointer up commits nothing.
-        let up = app.handle_action("canvasPointerUp", Some(&json!({ "x": 40.0, "y": 40.0, "width": 800.0, "height": 600.0, "shift": false, "ctrl": false, "meta": false })), &view_with_utility("pen"), &testkit::meta("local")).expect("up");
+        let up = app.dispatch_typed(DrawCommand::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("up");
         assert!(up.operations.is_empty(), "the in-progress shape draft was cleared on utility switch");
     }
 
@@ -2347,24 +2359,25 @@ mod tests {
     fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
         let mut app = DrawPlayApp::default();
         let document = default_draw_document("empty", None);
+        let mut config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
 
-        let down = app.step_gesture(draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [10.0, 10.0], shift: false, ctrl: false, meta: false }, &document);
-        assert!(down.operations.is_empty(), "pointer-down starts a scratch drag, not a document operation");
+        let down = app.step_gesture(draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [10.0, 10.0], shift: false, ctrl: false, meta: false }, &document, &mut config);
+        assert!(down.document_operations.is_empty(), "pointer-down starts a scratch drag, not a document operation");
         let (key, seq_after_down, payload) = app.gesture_preview().expect("shape drag is live after pointer-down");
         assert_eq!(key, "gesture");
         let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
         assert_eq!(value["start"], json!([10.0, 10.0]));
         assert_eq!(value["cursor"], json!([10.0, 10.0]));
 
-        let moved = app.step_gesture(draw_gesture::Event::PointerMove { world: [40.0, 30.0], marquee_threshold_world: 4.0 }, &document);
-        assert!(moved.operations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
+        let moved = app.step_gesture(draw_gesture::Event::PointerMove { world: [40.0, 30.0], marquee_threshold_world: 4.0 }, &document, &mut config);
+        assert!(moved.document_operations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
         let (_, seq_after_move, payload) = app.gesture_preview().expect("shape drag is still live mid-drag");
         let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
         assert_eq!(value["cursor"], json!([40.0, 30.0]), "preview tracks the live cursor, not the drag start");
         assert!(seq_after_move > seq_after_down, "seq is monotone per tick, for staleness detection on the receiving end");
 
-        let up = app.step_gesture(draw_gesture::Event::PointerUp { utility: "shapeRect".into(), world: [40.0, 30.0], shift: false, ctrl: false, meta: false }, &document);
-        assert_eq!(up.operations.len(), 1, "pointer-up commits the shape as one real DrawOperation");
+        let up = app.step_gesture(draw_gesture::Event::PointerUp { utility: "shapeRect".into(), world: [40.0, 30.0], shift: false, ctrl: false, meta: false }, &document, &mut config);
+        assert_eq!(up.document_operations.len(), 1, "pointer-up commits the shape as one real DrawOperation");
         assert!(app.gesture_preview().is_none(), "the gesture returned to idle: nothing left to preview, and the commit above already carried the real operation");
     }
 
@@ -2372,11 +2385,12 @@ mod tests {
     fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
         let mut app = DrawPlayApp::default();
         let document = default_draw_document("empty", None);
-        app.step_gesture(draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [1.0, 2.0], shift: false, ctrl: false, meta: false }, &document);
-        let context_before = app.gesture.context.clone();
+        let mut config = DrawConfig { active_utility_id: "shapeRect".into(), ..Default::default() };
+        app.step_gesture(draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [1.0, 2.0], shift: false, ctrl: false, meta: false }, &document, &mut config);
+        let context_before = app.gesture.borrow().context.clone();
         let _ = app.gesture_preview();
         let _ = app.gesture_preview();
-        assert_eq!(app.gesture.context, context_before, "gesture_preview must never mutate the live gesture scratch it reads");
+        assert_eq!(app.gesture.borrow().context, context_before, "gesture_preview must never mutate the live gesture scratch it reads");
     }
     //#endregion 🔖️GesturePreview
 
@@ -2385,10 +2399,10 @@ mod tests {
     fn combine_boolean_creates_boolean_layer() {
         let mut app = new_app();
         let first_id = first_layer_id(&app);
-        app.handle_action("addLayer", Some(&json!({ "kind": "shape:rect" })), &ViewState::default(), &testkit::meta("local")).expect("add rect");
+        app.dispatch_typed(DrawCommand::AddLayer { kind: "shape:rect".into() }, &testkit::meta("local")).expect("add rect");
         let second_id = last_layer_id(&app);
         let result = app
-            .handle_action("combineBoolean", Some(&json!({ "operation": "union", "ids": [first_id, second_id] })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(DrawCommand::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }, &testkit::meta("local"))
             .expect("combine");
         assert_eq!(result.operations.len(), 1);
         assert!(app.projection().unwrap().layers.iter().any(|layer| matches!(layer, DrawLayerNode::Boolean(_))));
@@ -2407,16 +2421,11 @@ mod tests {
         // Under the real registry: canvasPointerUp is an Operation-kind pointer handler, so emitting
         // the AddLayer operation is allowed; the return-to-select is a HostEffect, not a document operation.
         let mut app = new_app_with_registry();
-        let view = view_with_utility("shapeRect");
-        app.handle_action("canvasPointerDown", Some(&json!({ "x": 500.0, "y": 400.0, "width": 1000.0, "height": 800.0 })), &view, &testkit::meta("local")).expect("down");
-        app.handle_action("canvasPointerMove", Some(&json!({ "x": 600.0, "y": 500.0, "width": 1000.0, "height": 800.0 })), &view, &testkit::meta("local")).expect("move");
+        set_utility(&mut app, "shapeRect");
+        app.dispatch_typed(DrawCommand::CanvasPointerDown { x: 500.0, y: 400.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("down");
+        app.dispatch_typed(DrawCommand::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0 }, &testkit::meta("local")).expect("move");
         let result = app
-            .handle_action(
-                "canvasPointerUp",
-                Some(&json!({ "x": 600.0, "y": 500.0, "width": 1000.0, "height": 800.0, "shift": false, "ctrl": false, "meta": false })),
-                &view,
-                &testkit::meta("local"),
-            )
+            .dispatch_typed(DrawCommand::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local"))
             .expect("up");
         assert_eq!(result.operations.len(), 1, "a shape drag commits as one edit adding exactly the layer");
         let projection = app.projection().unwrap();
@@ -2430,10 +2439,10 @@ mod tests {
     #[test]
     fn pen_draft_commits_path_layer_on_enter() {
         let mut app = new_app();
-        let view = view_with_utility("pen");
-        app.handle_action("canvasPointerDown", Some(&json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &view, &testkit::meta("local")).expect("p1");
-        app.handle_action("canvasPointerDown", Some(&json!({ "x": 500.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &view, &testkit::meta("local")).expect("p2");
-        let result = app.handle_action("canvasCommitDraft", None, &view, &testkit::meta("local")).expect("commit");
+        set_utility(&mut app, "pen");
+        app.dispatch_typed(DrawCommand::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("p1");
+        app.dispatch_typed(DrawCommand::CanvasPointerDown { x: 500.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("p2");
+        let result = app.dispatch_typed(DrawCommand::CanvasCommitDraft, &testkit::meta("local")).expect("commit");
         assert_eq!(result.operations.len(), 1, "the draft commits as exactly one AddLayer edit");
         let projection = app.projection().unwrap();
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Path(path) if !path.segments.is_empty())));
@@ -2444,9 +2453,9 @@ mod tests {
     fn canvas_escape_cancels_draft_without_committing() {
         let mut app = new_app();
         let before = app.projection().unwrap().layers.len();
-        let view = view_with_utility("pen");
-        app.handle_action("canvasPointerDown", Some(&json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &view, &testkit::meta("local")).expect("p1");
-        let result = app.handle_action("canvasEscape", None, &view, &testkit::meta("local")).expect("escape");
+        set_utility(&mut app, "pen");
+        app.dispatch_typed(DrawCommand::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("p1");
+        let result = app.dispatch_typed(DrawCommand::CanvasEscape, &testkit::meta("local")).expect("escape");
         assert!(result.operations.is_empty());
         assert_eq!(app.projection().unwrap().layers.len(), before);
     }
@@ -2454,7 +2463,7 @@ mod tests {
     #[test]
     fn marquee_select_covers_contained_layer_only() {
         let mut app = new_app();
-        let view = view_with_utility("selectMarquee");
+        set_utility(&mut app, "selectMarquee");
         let mut document = default_draw_document("marquee-test", None);
         document.layers.clear();
         let mut rect_a = create_draw_shape_layer_rect("A");
@@ -2469,20 +2478,13 @@ mod tests {
         let rect_b_id = layer_id(&rect_b).to_string();
         document.layers.push(rect_a);
         document.layers.push(rect_b);
-        let document_value: Value = serde_json::to_value(&document).unwrap();
-        app.handle_action("setDocument", Some(&json!({ "document": document_value })), &view, &testkit::meta("local")).expect("load");
+        app.dispatch_typed(DrawCommand::SetDocument { document: document.clone() }, &testkit::meta("local")).expect("load");
         // `default_draw_document` centers the camera on its 1024x1024 artboard (512,512 @ 0.75 zoom);
         // pin it to an identity camera so screen and world coordinates coincide for this drag.
-        app.handle_action("setCamera", Some(&json!({ "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 } })), &view, &testkit::meta("local")).expect("camera");
-        app.handle_action("canvasPointerDown", Some(&json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &view, &testkit::meta("local")).expect("down");
-        app.handle_action("canvasPointerMove", Some(&json!({ "x": 460.0, "y": 360.0, "width": 800.0, "height": 600.0 })), &view, &testkit::meta("local")).expect("move");
-        app.handle_action(
-            "canvasPointerUp",
-            Some(&json!({ "x": 460.0, "y": 360.0, "width": 800.0, "height": 600.0, "shift": false, "ctrl": false, "meta": false })),
-            &view,
-            &testkit::meta("local"),
-        )
-        .expect("up");
+        app.dispatch_typed(DrawCommand::SetCamera { camera: draw::DrawCamera { x: 0.0, y: 0.0, zoom: 1.0 } }, &testkit::meta("local")).expect("camera");
+        app.dispatch_typed(DrawCommand::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("down");
+        app.dispatch_typed(DrawCommand::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }, &testkit::meta("local")).expect("move");
+        app.dispatch_typed(DrawCommand::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }, &testkit::meta("local")).expect("up");
         let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(&format!("overlay:sel:{rect_a_id}")), "the contained rect A is selected");
@@ -2494,7 +2496,7 @@ mod tests {
         let mut app = new_app();
         let before = app.projection().expect("projection");
         let result = app
-            .handle_action("setCamera", Some(&json!({ "camera": { "x": 5.0, "y": 5.0, "zoom": 2.0 } })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(DrawCommand::SetCamera { camera: draw::DrawCamera { x: 5.0, y: 5.0, zoom: 2.0 } }, &testkit::meta("local"))
             .expect("camera");
         assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
         assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
@@ -2506,9 +2508,9 @@ mod tests {
     #[test]
     fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
         let mut app = new_app();
-        app.handle_action("setCamera", Some(&json!({ "camera": { "x": 4.0, "y": 5.0, "zoom": 1.0 } })), &ViewState::default(), &testkit::meta("local")).expect("set camera");
+        app.dispatch_typed(DrawCommand::SetCamera { camera: draw::DrawCamera { x: 4.0, y: 5.0, zoom: 1.0 } }, &testkit::meta("local")).expect("set camera");
         let result = app
-            .handle_action("setCameraZoom", Some(&json!({ "value": 3.0 })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(DrawCommand::SetCameraZoom { value: 3.0 }, &testkit::meta("local"))
             .expect("set camera zoom");
         assert!(result.operations.is_empty(), "camera zoom is a view action and emits no operations");
         let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
@@ -2522,8 +2524,7 @@ mod tests {
         let before = app.projection().unwrap().layers.len();
         testkit::assert_undo_redo_round_trip(
             &mut app,
-            "addLayer",
-            Some(&json!({ "kind": "path" })),
+            DrawCommand::AddLayer { kind: "path".into() },
             |app| app.projection().unwrap().layers.len(),
             before,
             before + 1,
@@ -2552,9 +2553,9 @@ mod tests {
     #[test]
     fn render_canvas_emits_selection_overlay() {
         let mut app = new_app();
-        app.handle_action("addLayer", Some(&json!({ "kind": "shape:rect" })), &ViewState::default(), &testkit::meta("local")).expect("add");
+        app.dispatch_typed(DrawCommand::AddLayer { kind: "shape:rect".into() }, &testkit::meta("local")).expect("add");
         let id = last_layer_id(&app);
-        app.handle_action("setSelection", Some(&json!({ "ids": [id.clone()] })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        app.dispatch_typed(DrawCommand::SetSelection { ids: vec![id.clone()] }, &testkit::meta("local")).expect("select");
         let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(&format!("overlay:sel:{id}")));
@@ -2573,16 +2574,31 @@ mod tests {
     #[test]
     fn draw_labels_translate_panels_in_german() {
         let mut app = new_app();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let layers_node = app.render(DRAW_PLAY_BODY_LAYERS, None, &view_state).expect("render");
+        app.dispatch_typed(DrawCommand::SetLocale { value: "de-DE".into() }, &testkit::meta("local")).expect("set locale");
+        let layers_node = app.render(DRAW_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render");
         let layers_json = serde_json::to_string(&layers_node).unwrap();
         assert!(layers_json.contains("Pfad hinzufügen"));
         assert!(layers_json.contains("Rechteck hinzufügen"));
         assert!(!layers_json.contains("Add Path"));
-        let catalogue_node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
+        let catalogue_node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
         assert!(catalogue_json.contains("\"Ellipse\""));
         assert!(catalogue_json.contains("Nachzeichnung"));
+    }
+
+    #[test]
+    fn draw_io_declares_vector_out_and_export_media_covers_both_ports() {
+        let mut app = new_app();
+        app.dispatch_typed(DrawCommand::AddLayer { kind: "shape:rect".into() }, &testkit::meta("local")).expect("add");
+        let projection = app.projection().expect("projection");
+        let doc = DocumentView { projection: &projection, history: &semio_framework_plugin::HistoryView::empty() };
+        let app_impl = DrawPlayApp::default();
+        let vector = app_impl.export_media("vector:out", &doc).expect("vector:out");
+        let MediaPayload::Structured { schema, json } = vector.payload else { panic!("expected structured svg payload") };
+        assert_eq!(schema, "2d.drawing");
+        assert!(json.starts_with("<svg"));
+        assert!(app_impl.export_media("document:out", &doc).is_ok());
+        assert!(matches!(app_impl.export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
     }
 }
 //#endregion 🧪️Tests

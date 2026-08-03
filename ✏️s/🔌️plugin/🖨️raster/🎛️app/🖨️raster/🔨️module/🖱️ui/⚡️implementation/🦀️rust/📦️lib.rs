@@ -1,29 +1,35 @@
-//! 🖥️ Raster app — DocumentApp impl, render, manifest (constitutional: ui).
+//! 🖥️ Raster app — DocumentApp impl, render, manifest (constitutional: ui). B1: `RasterPlayApp` is a
+//! unit struct — every former `RasterConfig` (`ui`-crate `RefCell`) field (selection, hover, brush
+//! size/opacity, navigator composite-viewport size, the session-only free camera) now lives in
+//! `raster_engine::RasterConfig`, written via `raster_op::RasterConfigOperation`s. Every action
+//! dispatches through the single typed `raster_protocol::RasterCommand` channel via
+//! `DocumentApp::handle` — mirrors `shooting_ui`'s B1 pilot.
 
 use raster::{
     RasterCamera, RasterLayerNode, RasterLayerPatch, RasterProjection as RasterDocument, RasterTransform, RASTER_DOCUMENT_SCHEMA,
 };
 use raster_engine::{
     clone_layer, create_layer_of_kind, empty_raster_document, empty_raster_projection, find_layer, flatten_raster_layers, layer_name, layer_node_id,
-    layer_opacity, layer_patch_for_field, layer_visible, semio_example_document, semio_example_json,
+    layer_opacity, layer_patch_for_field, layer_visible, raster_append_image_layer, raster_composite_media, raster_io, semio_example_document, semio_example_json,
+    RasterConfig, RasterConfigViewportSize,
 };
-use raster_op::RasterOperation;
+use raster_op::{RasterConfigOperation, RasterOperation};
+use raster_protocol::RasterCommand;
 use semio_framework_plugin::{SurfaceKind,
     build_paint_2d_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor,
-    AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
-    Paint2dScene, ArtifactKindSpec, UtilityCategory, UtilityDefinition, WindowMeasure, is_de_locale, localized_label_map, resolve_labels,
-    selection_ids, tree_item_with_action,
-    UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, ViewState,
+    ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ActionDescriptor,
+    AppIo, AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
+    Paint2dScene, ArtifactKindSpec, UtilityCategory, UtilityDefinition, WindowMeasure, localized_label_map,
+    tree_item_with_action,
+    UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     create_default_layout, SET_ACTIVE_UTILITY_ACTION_ID,
 };
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use std::collections::HashMap;
+use store::DocumentPack;
 
 //#region 🔖️Constants
 const RASTER_PLAY_APP_ID: &str = "raster-play";
@@ -44,39 +50,17 @@ const RASTER_TREE_PREFIX: &str = "raster-play-layers";
 const RASTER_DEFAULT_UTILITY: &str = "selectMarquee";
 //#endregion 🔖️Constants
 
-//#region 🔖️Document
-/// 🎛️ Ephemeral view state (selection, hover, utility/brush settings, navigator viewport) held in the
-/// app struct — never in the document — so it stays out of undo history and off the operation channel.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct RasterPlayRuntime {
-    selected_ids: Vec<String>,
-    hovered_id: Option<String>,
-    brush_size: f32,
-    brush_opacity: f32,
-    composite_viewport: Option<RasterViewportSize>,
-    camera: RasterCamera,
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical helpers.
+fn is_de_locale(cfg: &RasterConfig) -> bool {
+    cfg.locale.starts_with("de")
 }
 
-impl RasterPlayRuntime {
-    fn new() -> Self {
-        Self {
-            selected_ids: Vec::new(),
-            hovered_id: None,
-            brush_size: 24.0,
-            brush_opacity: 1.0,
-            composite_viewport: None,
-            camera: RasterCamera::default(),
-        }
-    }
+fn resolve_labels<L: LocaleLabels>(cfg: &RasterConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
 }
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct RasterViewportSize {
-    width: f64,
-    height: f64,
-}
+//#endregion 🔖️Locale
 
 fn layer_row_id(layer: &RasterLayerNode) -> String {
     let segment = match layer {
@@ -148,6 +132,7 @@ fn raster_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setBrushSize", "Set Brush Size", "Pinselgröße festlegen"),
         ("setBrushOpacity", "Set Brush Opacity", "Pinseldeckkraft festlegen"),
         ("setCompositeViewport", "Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"),
+        ("setLocale", "Set Locale", "Sprache festlegen"),
     ])
 }
 
@@ -169,29 +154,6 @@ fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> Action
         action: action.into(),
         args: semio_framework_plugin::optional_json_to_dsl(args),
     }
-}
-
-fn selection_from_view(view_state: &ViewState) -> Vec<String> {
-    view_state
-        .selection_json
-        .as_ref()
-        .and_then(|json| serde_json::from_str::<Value>(json).ok())
-        .and_then(|value| {
-            value.as_array().map(|items| {
-                items
-                    .iter()
-                    .filter_map(|item| item.as_str().map(str::to_string))
-                    .collect()
-            })
-        })
-        .unwrap_or_default()
-}
-
-fn selection_from_runtime(runtime: &RasterPlayRuntime, view_state: &ViewState) -> Vec<String> {
-    if !runtime.selected_ids.is_empty() {
-        return runtime.selected_ids.clone();
-    }
-    selection_from_view(view_state)
 }
 
 fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
@@ -230,7 +192,7 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
     }
 }
 
-fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, view_state: &ViewState, labels: &RasterPlayLabels) -> UiNode {
+fn render_layers_panel(document: &RasterDocument, runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
     let action_rows = vec![
         UiTreeItemNode {
             icon_id: Some("image".into()),
@@ -252,7 +214,7 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
         },
     ];
     let layer_items: Vec<UiTreeItemNode> = document.layers.iter().map(layer_tree_item).collect();
-    let selected_ids: Vec<String> = selection_from_runtime(runtime, view_state)
+    let selected_ids: Vec<String> = runtime.selected_ids
         .iter()
         .filter_map(|id| find_layer(&document.layers, id).map(layer_row_id))
         .collect();
@@ -270,7 +232,7 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
         .build()
 }
 
-fn render_masks_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, view_state: &ViewState, labels: &RasterPlayLabels) -> UiNode {
+fn render_masks_panel(document: &RasterDocument, runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
     let mut items = Vec::new();
     fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>, labels: &RasterPlayLabels) {
         if let RasterLayerNode::Pixel { id, name, mask, .. }
@@ -300,7 +262,7 @@ fn render_masks_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, vi
     PanelTreeBuilder::new(RASTER_TREE_PREFIX)
         .section_or_placeholder("raster-play-masks", Some(labels.masks.into()), true, items, labels.no_masks)
         .selected(
-            selection_from_runtime(runtime, view_state)
+            runtime.selected_ids
                 .iter()
                 .map(|id| mask_row_id(id))
                 .collect(),
@@ -323,8 +285,8 @@ fn render_catalogue_panel(labels: &RasterPlayLabels) -> UiNode {
     }])
 }
 
-fn render_properties_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, view_state: &ViewState, labels: &RasterPlayLabels) -> UiNode {
-    let selected = selection_from_runtime(runtime, view_state);
+fn render_properties_panel(document: &RasterDocument, runtime: &RasterConfig, labels: &RasterPlayLabels) -> UiNode {
+    let selected = &runtime.selected_ids;
     let layers: Vec<&RasterLayerNode> = selected
         .iter()
         .filter_map(|id| find_layer(&document.layers, id))
@@ -375,7 +337,7 @@ fn document_sync_json(document: &RasterDocument) -> String {
     value.to_string()
 }
 
-fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_utility: &str, view_mode: &str) -> Paint2dScene {
+fn raster_scene(document: &RasterDocument, runtime: &RasterConfig, active_utility: &str, view_mode: &str) -> Paint2dScene {
     Paint2dScene {
         document_sync_json: document_sync_json(document),
         assets_json: serde_json::to_string(&document.assets).unwrap_or_else(|_| "{}".into()),
@@ -383,8 +345,8 @@ fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_u
         selection_json: serde_json::to_string(&runtime.selected_ids).unwrap_or_else(|_| "[]".into()),
         hovered_id: runtime.hovered_id.clone(),
         active_utility: active_utility.into(),
-        brush_size: runtime.brush_size as f64,
-        brush_opacity: runtime.brush_opacity as f64,
+        brush_size: runtime.brush_size,
+        brush_opacity: runtime.brush_opacity,
         view_mode: view_mode.into(),
         composite_viewport_json: runtime
             .composite_viewport
@@ -393,51 +355,39 @@ fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_u
     }
 }
 
-fn render_composite_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_utility: &str) -> UiNode {
+fn render_composite_scene(document: &RasterDocument, runtime: &RasterConfig, active_utility: &str) -> UiNode {
     build_paint_2d_scene(RASTER_PLAY_SURFACE_COMPOSITE, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, active_utility, "composite"))
 }
 
-fn render_navigator_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_utility: &str) -> UiNode {
+fn render_navigator_scene(document: &RasterDocument, runtime: &RasterConfig, active_utility: &str) -> UiNode {
     build_paint_2d_scene(RASTER_PLAY_SURFACE_NAVIGATOR, RASTER_PLAY_CONTROLLER_ID, raster_scene(document, runtime, active_utility, "navigator"))
 }
 //#endregion 🔖️Render
 
 //#region 🔖️RasterPlayApp
-pub struct RasterPlayApp {
-    runtime: RefCell<RasterPlayRuntime>,
+/// 🩹️ Builds `PatchLayer` operations for a `patchLayer`/`patchLayers` field write across ids.
+fn raster_patch_layer_operations(document: &RasterDocument, layer_ids: &[String], field: &str, value: &Value) -> Vec<RasterOperation> {
+    layer_ids
+        .iter()
+        .filter_map(|layer_id| {
+            let prior = find_layer(&document.layers, layer_id)?;
+            let patch = layer_patch_for_field(field, value, prior)?;
+            Some(RasterOperation::PatchLayer { layer_id: layer_id.clone(), patch })
+        })
+        .collect()
 }
 
-impl Default for RasterPlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(RasterPlayRuntime::default()) }
-    }
-}
-
-impl RasterPlayApp {
-    /// 🩹️ Builds `PatchLayer` operations for a `patchLayer`/`patchLayers` field write across ids.
-    fn patch_layer_operations(&self, document: &RasterDocument, layer_ids: &[String], field: &str, value: &Value) -> Vec<RasterOperation> {
-        layer_ids
-            .iter()
-            .filter_map(|layer_id| {
-                let prior = find_layer(&document.layers, layer_id)?;
-                let patch = layer_patch_for_field(field, value, prior)?;
-                Some(RasterOperation::PatchLayer { layer_id: layer_id.clone(), patch })
-            })
-            .collect()
-    }
-}
-
-impl Default for RasterPlayRuntime {
-    fn default() -> Self {
-        Self::new()
-    }
+/// 🩹️ Parses a `RasterCommand::PatchLayer`/`PatchLayers` wire `value` as JSON text (falling back to
+/// a plain JSON string when it isn't valid JSON) — mirrors `draw_ui::patch_value_json`.
+fn patch_value_json(value: &str) -> Value {
+    serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.to_string()))
 }
 
 fn raster_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     play_action(RASTER_PLAY_CONTROLLER_ID, action, args)
 }
 
-fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, label: &str) -> WindowMeasure {
+fn raster_paint_utility_options(runtime: &RasterConfig, utility: &str, label: &str) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("raster-utility-options-{utility}"),
         label: label.into(),
@@ -484,18 +434,24 @@ fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, labe
     }
 }
 
-fn raster_window_measures(runtime: &RasterPlayRuntime) -> Vec<WindowMeasure> {
+fn raster_window_measures(runtime: &RasterConfig) -> Vec<WindowMeasure> {
     vec![
         raster_paint_utility_options(runtime, "paintBrush", "Brush"),
         raster_paint_utility_options(runtime, "paintEraser", "Eraser"),
     ]
 }
 
+/// 🧪️ B1: unit struct — every former `RasterConfig` field now lives in `raster_engine::RasterConfig`
+/// (see `DocumentApp::Config`), written through `raster_op::RasterConfigOperation`s.
+#[derive(Default)]
+pub struct RasterPlayApp;
+
 impl DocumentApp for RasterPlayApp {
     type Projection = RasterDocument;
     type Operation = RasterOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = RasterConfig;
+    type ConfigOperation = RasterConfigOperation;
+    type Command = RasterCommand;
 
     fn app_id(&self) -> &str {
         RASTER_PLAY_APP_ID
@@ -509,175 +465,176 @@ impl DocumentApp for RasterPlayApp {
         empty_raster_document()
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, RasterDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<RasterOperation> {
+    fn io(&self) -> Option<AppIo> {
+        Some(raster_io())
+    }
+
+    /// 🎞️ `image:in`/`image:out` (see `raster_engine::{raster_append_image_layer,
+    /// raster_composite_media}`) plus the inherited `document:out` default (the pack of
+    /// `doc.projection`, replicated inline — overriding `export_media` shadows the trait's provided
+    /// body for every port on this app, not just the new ones).
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, RasterDocument>) -> Result<Media, MediaError> {
+        match port {
+            "image:out" => raster_composite_media(doc.projection),
+            "document:out" => {
+                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let bytes = doc.projection.encode_pack();
+                Ok(Media {
+                    media_type,
+                    payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+
+    /// 🎞️ `image:in` inserts the incoming raster media as a new composited layer + embedded asset
+    /// (`raster_append_image_layer`) via a whole-document `ReplaceDocument` — `RasterOperation` has
+    /// no granular "add asset" step (see that function's doc). Falls through to the inherited
+    /// `document:in` default (base64 pack replace) for any other port.
+    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, RasterDocument>) -> Result<Emit<RasterOperation, RasterConfigOperation>, MediaError> {
+        if port != "image:in" {
+            return Err(MediaError::NotImplemented);
+        }
+        let MediaPayload::Structured { json: png_base64, .. } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "image:in only accepts a Structured (base64 PNG) payload".into()));
+        };
+        let next = raster_append_image_layer(doc.projection, png_base64);
+        Ok(Emit::operations(vec![RasterOperation::ReplaceDocument { document: next }]))
+    }
+
+    fn whole_document_operation(&self, projection: RasterDocument) -> Option<RasterOperation> {
+        Some(RasterOperation::ReplaceDocument { document: projection })
+    }
+
+    /// 🏷️ Maps each `RasterCommand` variant back to the action id it was declared under in
+    /// `create_raster_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check.
+    fn command_id(&self, command: &RasterCommand) -> &str {
+        match command {
+            RasterCommand::SetDocument { .. } => "setDocument",
+            RasterCommand::SetActiveExample { .. } => "setActiveExample",
+            RasterCommand::AddLayer { .. } => "addLayer",
+            RasterCommand::DropLayerKind { .. } => "dropLayerKind",
+            RasterCommand::SetLayerVisible { .. } => "setLayerVisible",
+            RasterCommand::ToggleLayerVisible { .. } => "toggleLayerVisible",
+            RasterCommand::DeleteLayer { .. } => "deleteLayer",
+            RasterCommand::DuplicateLayer { .. } => "duplicateLayer",
+            RasterCommand::PatchLayer { .. } => "patchLayer",
+            RasterCommand::PatchLayers { .. } => "patchLayers",
+            RasterCommand::MoveLayer { .. } => "moveLayer",
+            RasterCommand::SetSelection { .. } => "setSelection",
+            RasterCommand::SetHover { .. } => "setHover",
+            RasterCommand::SelectAll => "selectAll",
+            RasterCommand::SetBrushSize { .. } => "setBrushSize",
+            RasterCommand::SetBrushOpacity { .. } => "setBrushOpacity",
+            RasterCommand::SetCompositeViewport { .. } => "setCompositeViewport",
+            RasterCommand::SetCamera { .. } => "setCamera",
+            RasterCommand::SetCameraZoom { .. } => "setCameraZoom",
+            RasterCommand::SetActiveUtility { .. } => SET_ACTIVE_UTILITY_ACTION_ID,
+            RasterCommand::SetLocale { .. } => "setLocale",
+        }
+    }
+
+    fn handle(&self, command: &RasterCommand, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> Emit<RasterOperation, RasterConfigOperation> {
         let document = doc.projection;
-        let mut runtime = self.runtime.borrow_mut();
-        match action {
-            // 👁️ View actions — mutate ephemeral runtime, emit no operations.
-            "setBrushSize" => {
-                if let Some(size) = args.and_then(|value| value.get("value").or_else(|| value.get("brushSize"))).and_then(|value| value.as_f64()) {
-                    runtime.brush_size = size as f32;
-                }
-                ActionEmit::default()
+        let config = cfg.projection;
+        match command {
+            // 👁️ Config-only.
+            RasterCommand::SetBrushSize { value } => Emit::config(vec![RasterConfigOperation::SetBrushSize { value: *value }]),
+            RasterCommand::SetBrushOpacity { value } => Emit::config(vec![RasterConfigOperation::SetBrushOpacity { value: *value }]),
+            RasterCommand::SetActiveUtility { utility_id } => Emit::config(vec![RasterConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }]),
+            RasterCommand::SetSelection { ids } => Emit::config(vec![RasterConfigOperation::SetSelection { ids: ids.clone() }]),
+            RasterCommand::SetHover { id } => Emit::config(vec![RasterConfigOperation::SetHovered { id: id.clone() }]),
+            RasterCommand::SetCompositeViewport { width, height } => {
+                Emit::config(vec![RasterConfigOperation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: *width, height: *height }) }])
             }
-            "setBrushOpacity" => {
-                if let Some(opacity) = args.and_then(|value| value.get("value").or_else(|| value.get("opacity"))).and_then(|value| value.as_f64()) {
-                    runtime.brush_opacity = (opacity as f32).clamp(0.0, 1.0);
-                }
-                ActionEmit::default()
-            }
-            SET_ACTIVE_UTILITY_ACTION_ID => {
-                // 🧰️ Host-owned utility switch: the active utility lives in session view state (never the
-                // document). There is no plugin-side paint scratch to clear — brush strokes are painted
-                // host-side in the WASM canvas — so this simply acknowledges with no operations or history.
-                ActionEmit::default()
-            }
-            "setSelection" => {
-                runtime.selected_ids = selection_ids(args);
-                ActionEmit::default()
-            }
-            "setHover" => {
-                runtime.hovered_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                ActionEmit::default()
-            }
-            "setCompositeViewport" => {
-                if let (Some(width), Some(height)) = (
-                    args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()),
-                    args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()),
-                ) {
-                    runtime.composite_viewport = Some(RasterViewportSize { width, height });
-                }
-                ActionEmit::default()
-            }
-            "selectAll" => {
-                runtime.selected_ids = flatten_raster_layers(&document.layers)
-                    .into_iter()
-                    .map(|layer| layer_node_id(layer).to_string())
-                    .collect();
-                ActionEmit::default()
+            RasterCommand::SelectAll => {
+                let ids = flatten_raster_layers(&document.layers).into_iter().map(|layer| layer_node_id(layer).to_string()).collect();
+                Emit::config(vec![RasterConfigOperation::SetSelection { ids }])
             }
             // 📷️ Camera — session-only runtime pose, never a document operation.
-            "setCamera" | "setCameraZoom" => {
-                if let Some(camera) = args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value::<RasterCamera>(value.clone()).ok()) {
-                    runtime.camera = camera;
-                    return ActionEmit::default();
-                }
-                if let Some(zoom) = args.and_then(|value| value.get("zoom")).and_then(|value| value.as_f64()) {
-                    runtime.camera = RasterCamera { zoom, ..runtime.camera.clone() };
-                    return ActionEmit::default();
-                }
-                ActionEmit::default()
+            RasterCommand::SetCamera { camera } => Emit::config(vec![RasterConfigOperation::SetCamera { camera: camera.clone() }]),
+            RasterCommand::SetCameraZoom { zoom } => {
+                let camera = RasterCamera { zoom: *zoom, ..config.camera.clone() };
+                Emit::config(vec![RasterConfigOperation::SetCamera { camera }])
             }
+            RasterCommand::SetLocale { value } => Emit::config(vec![RasterConfigOperation::SetLocale { value: value.clone() }]),
             // ✏️ Operations — dispatched as VCS operations with a true inverse.
-            "setActiveExample" => {
-                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                let replacement = if example_id == "semio" {
-                    semio_example_document()
-                } else {
-                    empty_raster_document()
-                };
-                runtime.selected_ids.clear();
-                ActionEmit::operations(vec![RasterOperation::ReplaceDocument { document: replacement }])
+            RasterCommand::SetActiveExample { example_id } => {
+                let replacement = if example_id == "semio" { semio_example_document() } else { empty_raster_document() };
+                Emit {
+                    document_operations: vec![RasterOperation::ReplaceDocument { document: replacement }],
+                    config_operations: vec![RasterConfigOperation::SetSelection { ids: Vec::new() }],
+                    ..Default::default()
+                }
             }
-            "setDocument" => match args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<RasterDocument>(value.clone()).ok()) {
-                Some(replacement) => ActionEmit::operations(vec![RasterOperation::ReplaceDocument { document: replacement }]),
-                None => ActionEmit::default(),
-            },
-            "setLayerVisible" | "toggleLayerVisible" => {
-                let Some(target_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) else {
-                    return ActionEmit::default();
-                };
-                let Some(layer) = find_layer(&document.layers, target_id) else { return ActionEmit::default() };
-                let visible = args
-                    .and_then(|value| value.get("visible"))
-                    .and_then(|value| value.as_bool())
-                    .unwrap_or_else(|| !layer_visible(layer));
-                ActionEmit::operations(vec![RasterOperation::PatchLayer {
-                    layer_id: target_id.into(),
-                    patch: RasterLayerPatch { visible: Some(visible), ..Default::default() },
-                }])
+            RasterCommand::SetDocument { document } => Emit::operations(vec![RasterOperation::ReplaceDocument { document: document.clone() }]),
+            RasterCommand::SetLayerVisible { layer_id: target_id, visible } => {
+                let Some(layer) = find_layer(&document.layers, target_id) else { return Emit::default() };
+                let resolved = visible.unwrap_or_else(|| !layer_visible(layer));
+                Emit::operations(vec![RasterOperation::PatchLayer { layer_id: target_id.clone(), patch: RasterLayerPatch { visible: Some(resolved), ..Default::default() } }])
             }
-            "addLayer" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("pixel");
+            RasterCommand::ToggleLayerVisible { layer_id: target_id } => {
+                let Some(layer) = find_layer(&document.layers, target_id) else { return Emit::default() };
+                let resolved = !layer_visible(layer);
+                Emit::operations(vec![RasterOperation::PatchLayer { layer_id: target_id.clone(), patch: RasterLayerPatch { visible: Some(resolved), ..Default::default() } }])
+            }
+            RasterCommand::AddLayer { kind } => {
                 let layer = create_layer_of_kind(kind);
-                runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
-                ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }])
+                let select_id = layer_node_id(&layer).to_string();
+                Emit {
+                    document_operations: vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }],
+                    config_operations: vec![RasterConfigOperation::SetSelection { ids: vec![select_id] }],
+                    ..Default::default()
+                }
             }
-            "dropLayerKind" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("pixel");
+            RasterCommand::DropLayerKind { kind } => {
                 let layer = create_layer_of_kind(kind);
-                runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
-                ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }])
+                let select_id = layer_node_id(&layer).to_string();
+                Emit {
+                    document_operations: vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }],
+                    config_operations: vec![RasterConfigOperation::SetSelection { ids: vec![select_id] }],
+                    ..Default::default()
+                }
             }
-            "deleteLayer" => {
-                let Some(target_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) else {
-                    return ActionEmit::default();
-                };
+            RasterCommand::DeleteLayer { layer_id: target_id } => {
                 if find_layer(&document.layers, target_id).is_none() {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
-                runtime.selected_ids.retain(|id| id != target_id);
-                ActionEmit::operations(vec![RasterOperation::RemoveLayer { layer_id: target_id.into() }])
+                let remaining: Vec<String> = config.selected_ids.iter().filter(|id| *id != target_id).cloned().collect();
+                Emit {
+                    document_operations: vec![RasterOperation::RemoveLayer { layer_id: target_id.clone() }],
+                    config_operations: vec![RasterConfigOperation::SetSelection { ids: remaining }],
+                    ..Default::default()
+                }
             }
-            "duplicateLayer" => {
-                let Some(target_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) else {
-                    return ActionEmit::default();
-                };
-                match find_layer(&document.layers, target_id) {
-                    Some(layer) => {
-                        let copy = clone_layer(layer);
-                        runtime.selected_ids = vec![layer_node_id(&copy).to_string()];
-                        ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(copy) }])
+            RasterCommand::DuplicateLayer { layer_id: target_id } => match find_layer(&document.layers, target_id) {
+                Some(layer) => {
+                    let copy = clone_layer(layer);
+                    let select_id = layer_node_id(&copy).to_string();
+                    Emit {
+                        document_operations: vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(copy) }],
+                        config_operations: vec![RasterConfigOperation::SetSelection { ids: vec![select_id] }],
+                        ..Default::default()
                     }
-                    None => ActionEmit::default(),
                 }
+                None => Emit::default(),
+            },
+            RasterCommand::PatchLayer { layer_id: target_id, field, value } => {
+                let json_value = patch_value_json(value);
+                let operations = raster_patch_layer_operations(document, &[target_id.clone()], field, &json_value);
+                if operations.is_empty() { Emit::default() } else { Emit::operations(operations) }
             }
-            "patchLayer" => {
-                let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args
-                    .and_then(|value| value.get("value"))
-                    .or_else(|| args.and_then(|value| value.get("pressed")))
-                    .cloned()
-                    .unwrap_or(Value::Null);
-                if layer_id.is_empty() || field.is_empty() {
-                    return ActionEmit::default();
-                }
-                ActionEmit::operations(self.patch_layer_operations(document, &[layer_id.to_string()], field, &value))
+            RasterCommand::PatchLayers { layer_ids, field, value } => {
+                let json_value = patch_value_json(value);
+                let operations = raster_patch_layer_operations(document, layer_ids, field, &json_value);
+                if operations.is_empty() { Emit::default() } else { Emit::operations(operations) }
             }
-            "patchLayers" => {
-                let layer_ids: Vec<String> = args
-                    .and_then(|value| value.get("layerIds"))
-                    .and_then(|value| value.as_array())
-                    .map(|values| values.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect())
-                    .unwrap_or_default();
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args
-                    .and_then(|value| value.get("value"))
-                    .or_else(|| args.and_then(|value| value.get("pressed")))
-                    .cloned()
-                    .unwrap_or(Value::Null);
-                if field.is_empty() {
-                    return ActionEmit::default();
+            RasterCommand::MoveLayer { layer_id: target_id, target_row_id, drop_position } => {
+                if find_layer(&document.layers, target_id).is_none() {
+                    return Emit::default();
                 }
-                ActionEmit::operations(self.patch_layer_operations(document, &layer_ids, field, &value))
-            }
-            "moveLayer" => {
-                let Some(layer_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) else {
-                    return ActionEmit::default();
-                };
-                if find_layer(&document.layers, layer_id).is_none() {
-                    return ActionEmit::default();
-                }
-                let target_row_id = args.and_then(|value| value.get("targetRowId")).and_then(|value| value.as_str()).unwrap_or("raster-play-layers");
-                let drop_position = args.and_then(|value| value.get("dropPosition")).and_then(|value| value.as_str()).unwrap_or("after");
                 let parent_id = layer_id_from_tree_row_id(target_row_id).and_then(|id| {
                     find_layer(&document.layers, &id).and_then(|entry| matches!(entry, RasterLayerNode::Group { .. }).then_some(id))
                 });
@@ -691,35 +648,35 @@ impl DocumentApp for RasterPlayApp {
                 } else {
                     document.layers.len()
                 };
-                ActionEmit::operations(vec![RasterOperation::MoveLayer { layer_id: layer_id.into(), parent_id, index }])
+                Emit::operations(vec![RasterOperation::MoveLayer { layer_id: target_id.clone(), parent_id, index }])
             }
-            _ => ActionEmit::default(),
         }
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, RasterDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let measures = raster_window_measures(&*self.runtime.borrow());
+    fn window_measures(&self, _doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let measures = raster_window_measures(cfg.projection);
         HashMap::from([(RASTER_PLAY_WINDOW_COMPOSITE.into(), measures)])
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, RasterDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> UiNode {
         let document = doc.projection;
-        let labels = resolve_labels::<RasterPlayLabels>(view_state);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(RASTER_DEFAULT_UTILITY);
+        let config = cfg.projection;
+        let labels = resolve_labels::<RasterPlayLabels>(config);
+        let active_utility = config.active_utility_id.as_str();
         match body_key {
-            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(document, &*self.runtime.borrow(), active_utility),
-            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(document, &*self.runtime.borrow(), active_utility),
-            RASTER_PLAY_BODY_LAYERS => render_layers_panel(document, &*self.runtime.borrow(), view_state, labels),
-            RASTER_PLAY_BODY_MASKS => render_masks_panel(document, &*self.runtime.borrow(), view_state, labels),
+            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(document, config, active_utility),
+            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(document, config, active_utility),
+            RASTER_PLAY_BODY_LAYERS => render_layers_panel(document, config, labels),
+            RASTER_PLAY_BODY_MASKS => render_masks_panel(document, config, labels),
             RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
-            RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(document, &*self.runtime.borrow(), view_state, labels),
+            RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(document, config, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<RasterPlayLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, RasterConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<RasterPlayLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(RASTER_PLAY_WINDOW_COMPOSITE, labels.window_composite)
             .window_kind_label(RASTER_PLAY_WINDOW_NAVIGATOR, labels.window_navigator)
@@ -759,6 +716,21 @@ pub fn create_raster_app() -> App {
                 schema: "raster.document".into(),
                 export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
+            })
+            // 🖼️ `2d.image` — the interchange kind `image:out` produces (WORKFLOWS-END-TO-END-TYPED-PORTS
+            // Wave 2 port recipe); `shooting`'s `photos:out` already declares the identical shape — a
+            // harmless duplicate registration (registry dedupes by id).
+            .artifact_kind(ArtifactKindSpec {
+                id: "2d.image".into(),
+                name: "2D Image".into(),
+                source_format: "2d.image".into(),
+                component_kind: "image".into(),
+                dimension: "2d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+                schema: "2d.image".into(),
+                export_formats: vec![OsMediaFormat::Png],
+                import_formats: vec![OsMediaFormat::Png],
             })
             .icon_id("raster")
             .mode("edit", "Edit", "square-pen")
@@ -812,6 +784,7 @@ pub fn create_raster_app() -> App {
             .action_with(raster_internal_action("setCompositeViewport", "Set Composite Viewport", ActionKind::View))
             .action_with(raster_internal_action("setCamera", "Set Camera", ActionKind::View))
             .action_with(raster_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::View))
+            .action_with(raster_internal_action("setLocale", "Set Locale", ActionKind::View))
             // 📝️ Staged palette-form arguments for the two palette operations.
             .action_args("addLayer", vec![
                 ActionArgDef::select("kind", "Layer Kind", vec![
@@ -842,7 +815,7 @@ pub fn create_raster_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
     use store::MemoryBackbone;
 
     fn semio_app() -> VcsDocumentApp<RasterPlayApp> {
@@ -910,14 +883,14 @@ mod tests {
     #[test]
     fn raster_labels_resolve_german_locale() {
         let mut app = testkit::new_app::<RasterPlayApp>();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let layers_json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_LAYERS, None, &view_state).expect("render")).unwrap();
+        app.dispatch_typed(RasterCommand::SetLocale { value: "de-DE".into() }, &testkit::meta("local")).expect("set locale");
+        let layers_json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render")).unwrap();
         assert!(layers_json.contains("Pixel hinzufügen"));
         assert!(layers_json.contains("Gruppe hinzufügen"));
-        let masks_json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_MASKS, None, &view_state).expect("render")).unwrap();
+        let masks_json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_MASKS, None, &ViewState::default()).expect("render")).unwrap();
         assert!(masks_json.contains("Masken"));
         assert!(masks_json.contains("Keine Masken"));
-        let catalogue_json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_CATALOGUE, None, &view_state).expect("render")).unwrap();
+        let catalogue_json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render")).unwrap();
         assert!(catalogue_json.contains("Ebenenarten"));
     }
 
@@ -959,7 +932,7 @@ mod tests {
         let mut app = semio_app();
         let layer_id = layer_node_id(&app.projection().expect("projection").layers[0]).to_string();
         let row_id = layer_row_id(find_layer(&app.projection().expect("projection").layers, &layer_id).expect("layer"));
-        let result = app.handle_action("setHover", Some(&json!({ "id": layer_id })), &ViewState::default(), &testkit::meta("local")).expect("hover");
+        let result = app.dispatch_typed(RasterCommand::SetHover { id: Some(layer_id) }, &testkit::meta("local")).expect("hover");
         assert!(result.operations.is_empty(), "hover is a view action and emits no operations");
         let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render")).unwrap();
         assert!(json.contains(&format!("\"id\":\"{row_id}\"")), "hovered layer row must be present");
@@ -969,7 +942,7 @@ mod tests {
     #[test]
     fn set_composite_viewport_feeds_navigator_scene() {
         let mut app = testkit::new_app::<RasterPlayApp>();
-        app.handle_action("setCompositeViewport", Some(&json!({ "width": 640.0, "height": 480.0 })), &ViewState::default(), &testkit::meta("local")).expect("viewport");
+        app.dispatch_typed(RasterCommand::SetCompositeViewport { width: 640.0, height: 480.0 }, &testkit::meta("local")).expect("viewport");
         let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_NAVIGATOR, None, &ViewState::default()).expect("render")).unwrap();
         assert!(json.contains("compositeViewportJson"));
         assert!(json.contains(r#"\"width\":640.0"#));
@@ -981,7 +954,7 @@ mod tests {
         let mut app = testkit::new_app::<RasterPlayApp>();
         let before = app.projection().expect("projection");
         let result = app
-            .handle_action("setCamera", Some(&json!({ "camera": { "x": 4.0, "y": 5.0, "zoom": 2.0 } })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(RasterCommand::SetCamera { camera: RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } }, &testkit::meta("local"))
             .expect("set camera");
         assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
         assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
@@ -993,9 +966,9 @@ mod tests {
     #[test]
     fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
         let mut app = testkit::new_app::<RasterPlayApp>();
-        app.handle_action("setCamera", Some(&json!({ "camera": { "x": 4.0, "y": 5.0, "zoom": 1.0 } })), &ViewState::default(), &testkit::meta("local")).expect("set camera");
+        app.dispatch_typed(RasterCommand::SetCamera { camera: RasterCamera { x: 4.0, y: 5.0, zoom: 1.0 } }, &testkit::meta("local")).expect("set camera");
         let result = app
-            .handle_action("setCameraZoom", Some(&json!({ "zoom": 3.0 })), &ViewState::default(), &testkit::meta("local"))
+            .dispatch_typed(RasterCommand::SetCameraZoom { zoom: 3.0 }, &testkit::meta("local"))
             .expect("set camera zoom");
         assert!(result.operations.is_empty(), "camera zoom is a view action and emits no operations");
         let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
@@ -1007,11 +980,11 @@ mod tests {
     fn add_layer_action_appends_and_undo_removes() {
         let mut app = testkit::new_app::<RasterPlayApp>();
         let before = app.projection().expect("projection").layers.len();
-        app.handle_action("addLayer", Some(&json!({ "kind": "group" })), &ViewState::default(), &testkit::meta("local")).expect("add");
+        app.dispatch_typed(RasterCommand::AddLayer { kind: "group".into() }, &testkit::meta("local")).expect("add");
         let projection = app.projection().expect("projection");
         assert_eq!(projection.layers.len(), before + 1);
         assert!(matches!(projection.layers.last().unwrap(), RasterLayerNode::Group { .. }));
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").layers.len(), before);
     }
 
@@ -1019,18 +992,18 @@ mod tests {
     fn patch_layer_renames_and_toggles_visibility_round_trip() {
         let mut app = testkit::new_app::<RasterPlayApp>();
         let layer_id = layer_node_id(&app.projection().expect("projection").layers[0]).to_string();
-        app.handle_action("patchLayer", Some(&json!({ "layerId": layer_id, "field": "name", "value": "Renamed" })), &ViewState::default(), &testkit::meta("local")).expect("rename");
+        app.dispatch_typed(RasterCommand::PatchLayer { layer_id: layer_id.clone(), field: "name".into(), value: "Renamed".into() }, &testkit::meta("local")).expect("rename");
         assert_eq!(layer_name(&app.projection().expect("projection").layers[0]), "Renamed");
-        app.handle_action("toggleLayerVisible", Some(&json!({ "layerId": layer_id })), &ViewState::default(), &testkit::meta("local")).expect("toggle");
+        app.dispatch_typed(RasterCommand::ToggleLayerVisible { layer_id }, &testkit::meta("local")).expect("toggle");
         assert!(!layer_visible(&app.projection().expect("projection").layers[0]));
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo toggle");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo toggle");
         assert!(layer_visible(&app.projection().expect("projection").layers[0]));
     }
 
     #[test]
     fn move_layer_into_group() {
         let mut app = testkit::new_app::<RasterPlayApp>();
-        app.handle_action("addLayer", Some(&json!({ "kind": "group" })), &ViewState::default(), &testkit::meta("local")).expect("add group");
+        app.dispatch_typed(RasterCommand::AddLayer { kind: "group".into() }, &testkit::meta("local")).expect("add group");
         let (group_id, pixel_id) = {
             let projection = app.projection().expect("projection");
             let group = projection.layers.iter().find(|layer| matches!(layer, RasterLayerNode::Group { .. })).unwrap();
@@ -1038,7 +1011,7 @@ mod tests {
             (layer_node_id(group).to_string(), layer_node_id(pixel).to_string())
         };
         let target_row = format!("{RASTER_TREE_PREFIX}.group.{group_id}");
-        app.handle_action("moveLayer", Some(&json!({ "layerId": pixel_id, "targetRowId": target_row })), &ViewState::default(), &testkit::meta("local")).expect("move");
+        app.dispatch_typed(RasterCommand::MoveLayer { layer_id: pixel_id.clone(), target_row_id: target_row, drop_position: "after".into() }, &testkit::meta("local")).expect("move");
         let projection = app.projection().expect("projection");
         let RasterLayerNode::Group { children, .. } = projection.layers.iter().find(|layer| layer_node_id(layer) == group_id).unwrap() else {
             panic!("expected group");
@@ -1077,11 +1050,11 @@ mod tests {
         instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-        instance_a.handle_action("addLayer", Some(&json!({ "kind": "pixel" })), &ViewState::default(), &testkit::meta("actor-a")).expect("a adds layer");
-        instance_b.handle_action("patchLayer", Some(&json!({ "layerId": background_id, "field": "name", "value": "Renamed By B" })), &ViewState::default(), &testkit::meta("actor-b")).expect("b renames");
+        instance_a.dispatch_typed(RasterCommand::AddLayer { kind: "pixel".into() }, &testkit::meta("actor-a")).expect("a adds layer");
+        instance_b.dispatch_typed(RasterCommand::PatchLayer { layer_id: background_id, field: "name".into(), value: "Renamed By B".into() }, &testkit::meta("actor-b")).expect("b renames");
 
-        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-b")).expect("pump b");
+        instance_a.handle_action("commitCheckpoint", None, &testkit::meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &testkit::meta("actor-b")).expect("pump b");
 
         let projection_a = instance_a.projection().expect("projection a");
         let projection_b = instance_b.projection().expect("projection b");
@@ -1094,25 +1067,23 @@ mod tests {
     #[test]
     fn ingest_operations_is_idempotent() {
         testkit::assert_ingest_idempotent::<RasterPlayApp, usize>(
-            "addLayer",
-            Some(&json!({ "kind": "pixel" })),
+            RasterCommand::AddLayer { kind: "pixel".into() },
             |app| app.projection().unwrap().layers.len(),
         );
     }
 
     #[test]
-    fn set_active_utility_switch_emits_no_ops_and_reads_from_view_state() {
+    fn set_active_utility_switch_emits_no_ops_and_persists_in_config() {
         let mut app = testkit::new_app_with_registry::<RasterPlayApp>(create_raster_app);
         let before = app.projection().expect("projection");
-        let view = ViewState { active_utility_id: Some("paintBrush".into()), ..ViewState::default() };
         // Switching utilities is the framework View action: no document operations, nothing to sync/undo.
         let result = app
-            .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "paintBrush" })), &view, &testkit::meta("local"))
+            .dispatch_typed(RasterCommand::SetActiveUtility { utility_id: "paintBrush".into() }, &testkit::meta("local"))
             .expect("switch utility");
         assert!(result.operations.is_empty(), "utility switching never emits document operations");
         assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
-        // The composite scene reads the host-owned active utility from session view state, not the runtime.
-        let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_COMPOSITE, None, &view).expect("render")).unwrap();
+        // The composite scene reads the host-owned active utility from config, not view state.
+        let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
         assert!(json.contains("\"activeUtility\":\"paintBrush\""), "scene reflects host-owned active utility: {json}");
     }
 
@@ -1129,6 +1100,32 @@ mod tests {
         // The framework auto-injects the setActiveUtility View action once utilities are declared; no doc operation survives.
         assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
         assert!(!definition.actions.iter().any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));
+    }
+
+    #[test]
+    fn raster_io_declares_image_in_out_and_export_media_covers_all_ports() {
+        let projection = empty_raster_document();
+        let doc = DocumentView { projection: &projection, history: &semio_framework_plugin::HistoryView::empty() };
+        let app = RasterPlayApp;
+        let image_out = app.export_media("image:out", &doc).expect("image:out");
+        let MediaPayload::Structured { schema, json } = image_out.payload else { panic!("expected structured payload") };
+        assert_eq!(schema, "2d.image");
+        assert!(!json.is_empty());
+        assert!(app.export_media("document:out", &doc).is_ok());
+        assert!(matches!(app.export_media("unknown:out", &doc), Err(MediaError::NotImplemented)));
+    }
+
+    #[test]
+    fn raster_import_media_appends_layer_from_incoming_image() {
+        let mut app = testkit::new_app::<RasterPlayApp>();
+        let before = app.projection().expect("projection").layers.len();
+        let media = Media {
+            media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+            payload: MediaPayload::Structured { schema: "2d.image".into(), json: "aGVsbG8=".into() },
+        };
+        let result = app.import_media("image:in", &media, &testkit::meta("local")).expect("import image:in");
+        assert!(!result.operations.is_empty(), "image:in import must emit a real document operation");
+        assert_eq!(app.projection().expect("projection").layers.len(), before + 1);
     }
 }
 //#endregion 🧪️Tests

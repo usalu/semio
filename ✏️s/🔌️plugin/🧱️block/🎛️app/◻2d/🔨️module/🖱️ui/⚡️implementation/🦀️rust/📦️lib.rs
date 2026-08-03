@@ -1,12 +1,19 @@
-//! 🩻️ Block 2D app — DocumentApp impl, render, manifest (constitutional: ui).
+//! 🩻️ Block 2D app — DocumentApp impl, render, manifest (constitutional: ui). B1: pure-trait
+//! conversion (mirrors `shooting_ui`'s pilot) — `Block2dPlayApp` is a unit struct; the former
+//! `selected_ids` `RefCell` field now lives in `block_2d_engine::Block2dConfig`, written via
+//! `block_2d_op::Block2dConfigOperation`s (real `backwards`, no ad hoc `InverseAction`); every action
+//! dispatches through the single typed `block_2d_protocol::Block2dCommand` channel via
+//! `DocumentApp::handle`.
 
 use block_2d::{Block2dDefinition, Block2dHandleKind, Block2dHandleTemplate, BLOCK_2D_SCHEMA};
-use block_2d_op::Block2dOperation;
+use block_2d_engine::Block2dConfig;
+use block_2d_op::{Block2dConfigOperation, Block2dOperation};
+use block_2d_protocol::Block2dCommand;
 use block_shared::BlockCompatibilityRule;
 use semio_framework_plugin::{
-    is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, ActionEmit, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiFieldNode, UiInspectorFieldGroup,
-    UiInputNode, UiNode, UiPresence, UiTreeItemNode, ViewState,
+    localized_label_map, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App,
+    AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiFieldNode, UiInspectorFieldGroup,
+    UiInputNode, UiNode, UiPresence, UiTreeItemNode,
 };
 use serde_json::{json, Value};
 
@@ -19,7 +26,22 @@ const BLOCK2D_BODY_INSPECTOR: &str = "block2d.play.inspector";
 const BLOCK2D_WINDOW_BOARD: &str = "block2d-board";
 const BLOCK2D_EXAMPLE_LEFT: &str = "hexagonal-cut-concrete-forest-left";
 const BLOCK2D_EXAMPLE_RIGHT: &str = "hexagonal-cut-concrete-forest-right";
+/// 🗂️ The `s/plugin/puzzle` 2d catalog artifact kind block2d's `"catalog:out"` port produces — see
+/// `block_2d_engine::block2d_io` and `Block2dPlayApp::export_media`.
+const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 //#endregion 🔖️Constants
+
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
+fn is_de_locale(cfg: &Block2dConfig) -> bool {
+    cfg.locale.starts_with("de")
+}
+
+fn resolve_labels<L: LocaleLabels>(cfg: &Block2dConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+//#endregion 🔖️Locale
 
 //#region 🔖️Terminology
 semio_framework_plugin::app_labels! {
@@ -142,23 +164,19 @@ fn render_board(definition: &Block2dDefinition, labels: &Block2dLabels) -> UiNod
 }
 //#endregion 🔖️Panels
 
-use std::cell::RefCell;
-/// 🎛️ Ephemeral view state: the multi-selected row ids in the document tree.
-pub struct Block2dPlayApp {
-    selected_ids: RefCell<Vec<String>>,
-}
-
-impl Default for Block2dPlayApp {
-    fn default() -> Self {
-        Self { selected_ids: RefCell::new(Vec::new()) }
-    }
-}
+//#region 🔖️Block2dPlayApp
+/// 🧪️ B1: unit struct — the former `selected_ids` `RefCell` field now lives in
+/// `block_2d_engine::Block2dConfig` (see `DocumentApp::Config`), written through
+/// `block_2d_op::Block2dConfigOperation`s.
+#[derive(Default)]
+pub struct Block2dPlayApp;
 
 impl DocumentApp for Block2dPlayApp {
     type Projection = Block2dDefinition;
     type Operation = Block2dOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = Block2dConfig;
+    type ConfigOperation = Block2dConfigOperation;
+    type Command = Block2dCommand;
 
     fn app_id(&self) -> &str {
         BLOCK2D_PLAY_APP_ID
@@ -172,107 +190,126 @@ impl DocumentApp for Block2dPlayApp {
         block_2d_engine::empty_block2d_definition()
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, Block2dDefinition>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<Block2dOperation> {
-        match action {
-            "setSelection" => {
-                *self.selected_ids.borrow_mut() = selection_ids(args);
-                ActionEmit::default()
-            }
-            "patchNodeKind" => {
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
-                let mut node_kind = doc.projection.node_kind.clone();
-                match field {
-                    "name" => node_kind.name = value.to_string(),
-                    "label" => node_kind.label = value.to_string(),
-                    "variant" => node_kind.variant = if value.is_empty() { None } else { Some(value.to_string()) },
-                    "description" => node_kind.description = value.to_string(),
-                    _ => return ActionEmit::default(),
-                }
-                ActionEmit::operations(vec![Block2dOperation::SetNodeKind { node_kind }])
-            }
-            "addHandleKind" => {
-                let id = block_2d_engine::next_id(doc.projection.handle_kinds.iter().map(|kind| kind.id.as_str()), "handle-kind-");
-                let handle_kind = Block2dHandleKind { id: id.clone(), name: id.clone(), label: id, color: "#888888".into(), default_wire_kind: "cable.link".into() };
-                ActionEmit::operations(vec![Block2dOperation::SetHandleKind { index: doc.projection.handle_kinds.len(), handle_kind }])
-            }
-            "removeHandleKind" => {
-                let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) else { return ActionEmit::default() };
-                ActionEmit::operations(vec![Block2dOperation::RemoveHandleKind { id: id.to_string() }])
-            }
-            "addHandle" => {
-                let Some(handle_kind_id) = doc.projection.handle_kinds.first().map(|kind| kind.id.clone()) else { return ActionEmit::default() };
-                let id = block_2d_engine::next_id(doc.projection.handles.iter().map(|handle| handle.id.as_str()), "handle-");
-                let handle = Block2dHandleTemplate { id, handle_kind: handle_kind_id, angle: 0.0, radius: 0.36 };
-                ActionEmit::operations(vec![Block2dOperation::SetHandle { index: doc.projection.handles.len(), handle }])
-            }
-            "removeHandle" => {
-                let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) else { return ActionEmit::default() };
-                ActionEmit::operations(vec![Block2dOperation::RemoveHandle { id: id.to_string() }])
-            }
-            "addCompatibilityRule" => {
-                let source = args.and_then(|value| value.get("source")).and_then(|value| value.as_str()).unwrap_or_default();
-                let target = args.and_then(|value| value.get("target")).and_then(|value| value.as_str()).unwrap_or_default();
-                if source.is_empty() || target.is_empty() {
-                    return ActionEmit::default();
-                }
-                let id = block_2d_engine::next_id(doc.projection.compatibility.iter().map(|rule| rule.id.as_str()), "compat-");
-                let rule = BlockCompatibilityRule { id, source: source.to_string(), target: target.to_string(), bidirectional: true };
-                ActionEmit::operations(vec![Block2dOperation::SetCompatibilityRule { index: doc.projection.compatibility.len(), rule }])
-            }
-            "removeCompatibilityRule" => {
-                let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) else { return ActionEmit::default() };
-                ActionEmit::operations(vec![Block2dOperation::RemoveCompatibilityRule { id: id.to_string() }])
-            }
-            "setActiveExample" => {
-                let example = match args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
-                    Some(BLOCK2D_EXAMPLE_LEFT) => block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
-                    Some(BLOCK2D_EXAMPLE_RIGHT) => block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).ok(),
-                    _ => None,
-                };
-                match example {
-                    Some(document) => ActionEmit::operations(vec![Block2dOperation::SetDocument { document }]),
-                    None => ActionEmit::default(),
-                }
-            }
-            "edit" | "textEdit" => {
-                let Some(text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) else { return ActionEmit::default() };
-                match serde_json::from_str::<Block2dDefinition>(text) {
-                    Ok(document) if &document != doc.projection => ActionEmit::operations(vec![Block2dOperation::SetDocument { document }]),
-                    _ => ActionEmit::default(),
-                }
-            }
-            _ => ActionEmit::default(),
+    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+        Some(block_2d_engine::block2d_io())
+    }
+
+    /// 🏷️ Maps each `Block2dCommand` variant back to the action id it was declared under in
+    /// `create_block2d_app` — used for command-log labeling and the registry's View-kind discipline
+    /// check.
+    fn command_id(&self, command: &Block2dCommand) -> &str {
+        match command {
+            Block2dCommand::PatchNodeKind { .. } => "patchNodeKind",
+            Block2dCommand::AddHandleKind => "addHandleKind",
+            Block2dCommand::RemoveHandleKind { .. } => "removeHandleKind",
+            Block2dCommand::AddHandle => "addHandle",
+            Block2dCommand::RemoveHandle { .. } => "removeHandle",
+            Block2dCommand::AddCompatibilityRule { .. } => "addCompatibilityRule",
+            Block2dCommand::RemoveCompatibilityRule { .. } => "removeCompatibilityRule",
+            Block2dCommand::SetActiveExample { .. } => "setActiveExample",
+            Block2dCommand::Edit { .. } => "edit",
+            Block2dCommand::SetSelection { .. } => "setSelection",
         }
     }
 
-    fn render(
+    fn handle(
         &self,
-        body_key: &str,
+        command: &Block2dCommand,
         doc: &DocumentView<'_, Block2dDefinition>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-    ) -> UiNode {
-        let labels = resolve_labels::<Block2dLabels>(view_state);
+        _cfg: &ConfigView<'_, Block2dConfig>,
+    ) -> Emit<Block2dOperation, Block2dConfigOperation> {
+        match command {
+            Block2dCommand::PatchNodeKind { field, value } => {
+                let mut node_kind = doc.projection.node_kind.clone();
+                match field.as_str() {
+                    "name" => node_kind.name = value.clone(),
+                    "label" => node_kind.label = value.clone(),
+                    "variant" => node_kind.variant = if value.is_empty() { None } else { Some(value.clone()) },
+                    "description" => node_kind.description = value.clone(),
+                    _ => return Emit::default(),
+                }
+                Emit::operations(vec![Block2dOperation::SetNodeKind { node_kind }])
+            }
+            Block2dCommand::AddHandleKind => {
+                let id = block_2d_engine::next_id(doc.projection.handle_kinds.iter().map(|kind| kind.id.as_str()), "handle-kind-");
+                let handle_kind = Block2dHandleKind { id: id.clone(), name: id.clone(), label: id, color: "#888888".into(), default_wire_kind: "cable.link".into() };
+                Emit::operations(vec![Block2dOperation::SetHandleKind { index: doc.projection.handle_kinds.len(), handle_kind }])
+            }
+            Block2dCommand::RemoveHandleKind { id } => Emit::operations(vec![Block2dOperation::RemoveHandleKind { id: id.clone() }]),
+            Block2dCommand::AddHandle => {
+                let Some(handle_kind_id) = doc.projection.handle_kinds.first().map(|kind| kind.id.clone()) else { return Emit::default() };
+                let id = block_2d_engine::next_id(doc.projection.handles.iter().map(|handle| handle.id.as_str()), "handle-");
+                let handle = Block2dHandleTemplate { id, handle_kind: handle_kind_id, angle: 0.0, radius: 0.36 };
+                Emit::operations(vec![Block2dOperation::SetHandle { index: doc.projection.handles.len(), handle }])
+            }
+            Block2dCommand::RemoveHandle { id } => Emit::operations(vec![Block2dOperation::RemoveHandle { id: id.clone() }]),
+            Block2dCommand::AddCompatibilityRule { source, target } => {
+                if source.is_empty() || target.is_empty() {
+                    return Emit::default();
+                }
+                let id = block_2d_engine::next_id(doc.projection.compatibility.iter().map(|rule| rule.id.as_str()), "compat-");
+                let rule = BlockCompatibilityRule { id, source: source.clone(), target: target.clone(), bidirectional: true };
+                Emit::operations(vec![Block2dOperation::SetCompatibilityRule { index: doc.projection.compatibility.len(), rule }])
+            }
+            Block2dCommand::RemoveCompatibilityRule { id } => Emit::operations(vec![Block2dOperation::RemoveCompatibilityRule { id: id.clone() }]),
+            Block2dCommand::SetActiveExample { id } => {
+                let example = match id.as_str() {
+                    BLOCK2D_EXAMPLE_LEFT => block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
+                    BLOCK2D_EXAMPLE_RIGHT => block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).ok(),
+                    _ => None,
+                };
+                match example {
+                    Some(document) => Emit::operations(vec![Block2dOperation::SetDocument { document }]),
+                    None => Emit::default(),
+                }
+            }
+            Block2dCommand::Edit { text } => match serde_json::from_str::<Block2dDefinition>(text) {
+                Ok(document) if &document != doc.projection => Emit::operations(vec![Block2dOperation::SetDocument { document }]),
+                _ => Emit::default(),
+            },
+            Block2dCommand::SetSelection { ids } => Emit::config(vec![Block2dConfigOperation::SetSelection { ids: ids.clone() }]),
+        }
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Block2dDefinition>, cfg: &ConfigView<'_, Block2dConfig>) -> UiNode {
+        let labels = resolve_labels::<Block2dLabels>(cfg.projection);
         match body_key {
             BLOCK2D_BODY_BOARD => render_board(doc.projection, labels),
-            BLOCK2D_BODY_DOCUMENT | BLOCK2D_BODY_KINDS => build_document_tree(doc.projection, &*self.selected_ids.borrow(), labels),
+            BLOCK2D_BODY_DOCUMENT | BLOCK2D_BODY_KINDS => build_document_tree(doc.projection, &cfg.projection.selected_ids, labels),
             BLOCK2D_BODY_INSPECTOR => build_inspection_tree(doc.projection, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<Block2dLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, Block2dConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<Block2dLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default().window_kind_label(BLOCK2D_WINDOW_BOARD, labels.window_board).action_labels(block2d_action_labels(is_de))
+    }
+
+    /// 🌉️ `puzzle2d_manifest_fragment`'s first real caller — wraps the block-2d document's
+    /// puzzle2d-shaped catalog fragment (`portKinds`/`wireKinds`/`edgeKinds`/`nodeKinds`/
+    /// `kindCompatibility`) as a `kit.catalog`-schema `Media` value for the `"catalog:out"` port
+    /// declared in `block_2d_engine::block2d_io`. Falls through to the default whole-document pack
+    /// export for every other port (`"document:out"`).
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, Block2dDefinition>) -> Result<Media, MediaError> {
+        if port != "catalog:out" {
+            // 🌉️ Reimplements `DocumentApp::export_media`'s default `"document:out"` behavior
+            // verbatim — overriding the trait method forfeits the ability to delegate back to its
+            // own default body, so the whole-document pack export is duplicated here rather than
+            // left unreachable for this app.
+            if port != "document:out" {
+                return Err(MediaError::NotImplemented);
+            }
+            let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type });
+            let bytes = store::DocumentPack::encode_pack(doc.projection);
+            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
+        }
+        let fragment = block_2d_engine::puzzle2d_manifest_fragment(doc.projection);
+        Ok(Media {
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+            payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() },
+        })
     }
 }
 //#endregion 🔖️Block2dPlayApp
@@ -294,6 +331,20 @@ pub fn create_block2d_app() -> App {
                 export_formats: vec![],
                 import_formats: vec![],
             })
+            // 🗂️ The puzzle2d catalog artifact this app's new `"catalog:out"` port produces — see
+            // `block_2d_engine::block2d_io`/`Block2dPlayApp::export_media`.
+            .artifact_kind(ArtifactKindSpec {
+                id: KIT_CATALOG_ARTIFACT_ID.into(),
+                name: "Kit Catalog".into(),
+                source_format: KIT_CATALOG_ARTIFACT_ID.into(),
+                component_kind: "kit-catalog".into(),
+                dimension: "2d".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+                schema: KIT_CATALOG_ARTIFACT_ID.into(),
+                export_formats: vec![],
+                import_formats: vec![],
+            })
             .icon_id("layout-grid")
             .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
@@ -309,7 +360,8 @@ pub fn create_block2d_app() -> App {
             .operation("removeCompatibilityRule", "Remove Compatibility Rule")
             .operation("setActiveExample", "Set Active Example")
             .operation("edit", "Edit")
-            .view_action("setSelection", "Set Selection"),
+            .view_action("setSelection", "Set Selection")
+            .io(block_2d_engine::block2d_io()),
     )
     .example(BLOCK2D_EXAMPLE_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "trees")
     .example(BLOCK2D_EXAMPLE_RIGHT, "Hexagonal Cut Concrete Forest Right", serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "trees")
@@ -325,11 +377,15 @@ pub fn register_block2d_exports() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp};
+    use semio_framework_plugin::{testkit, PluginApp, ViewState};
+
+    fn new_app() -> semio_framework_plugin::VcsDocumentApp<Block2dPlayApp> {
+        testkit::new_app::<Block2dPlayApp>()
+    }
 
     #[test]
     fn renders_document_tree_and_inspector() {
-        let mut app = testkit::new_app::<Block2dPlayApp>();
+        let mut app = new_app();
         let node = app.render(BLOCK2D_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Handle Kinds"));
@@ -342,28 +398,28 @@ mod tests {
 
     #[test]
     fn add_handle_kind_then_add_handle_then_remove_round_trips() {
-        let mut app = testkit::new_app::<Block2dPlayApp>();
-        app.handle_action("addHandleKind", None, &ViewState::default(), &testkit::meta("local")).expect("add handle kind");
+        let mut app = new_app();
+        app.dispatch_typed(Block2dCommand::AddHandleKind, &testkit::meta("local")).expect("add handle kind");
         assert_eq!(app.projection().expect("projection").handle_kinds.len(), 1);
-        app.handle_action("addHandle", None, &ViewState::default(), &testkit::meta("local")).expect("add handle");
+        app.dispatch_typed(Block2dCommand::AddHandle, &testkit::meta("local")).expect("add handle");
         let projection = app.projection().expect("projection");
         assert_eq!(projection.handles.len(), 1);
         let handle_id = projection.handles[0].id.clone();
-        app.handle_action("removeHandle", Some(&json!({ "id": handle_id })), &ViewState::default(), &testkit::meta("local")).expect("remove handle");
+        app.dispatch_typed(Block2dCommand::RemoveHandle { id: handle_id }, &testkit::meta("local")).expect("remove handle");
         assert_eq!(app.projection().expect("projection").handles.len(), 0);
     }
 
     #[test]
     fn patch_node_kind_updates_name() {
-        let mut app = testkit::new_app::<Block2dPlayApp>();
-        app.handle_action("patchNodeKind", Some(&json!({ "field": "name", "value": "Renamed" })), &ViewState::default(), &testkit::meta("local")).expect("patch");
+        let mut app = new_app();
+        app.dispatch_typed(Block2dCommand::PatchNodeKind { field: "name".into(), value: "Renamed".into() }, &testkit::meta("local")).expect("patch");
         assert_eq!(app.projection().expect("projection").node_kind.name, "Renamed");
     }
 
     #[test]
     fn set_active_example_loads_left_fixture() {
-        let mut app = testkit::new_app::<Block2dPlayApp>();
-        app.handle_action("setActiveExample", Some(&json!({ "id": BLOCK2D_EXAMPLE_LEFT })), &ViewState::default(), &testkit::meta("local")).expect("load example");
+        let mut app = new_app();
+        app.dispatch_typed(Block2dCommand::SetActiveExample { id: BLOCK2D_EXAMPLE_LEFT.into() }, &testkit::meta("local")).expect("load example");
         let projection = app.projection().expect("projection");
         assert_eq!(projection.node_kind.id, "Hexagonal Cut Concrete Forest Left");
         assert_eq!(projection.handles.len(), 11);
@@ -371,13 +427,43 @@ mod tests {
 
     #[test]
     fn undo_redo_round_trips_through_the_wrapper() {
-        let mut app = testkit::new_app::<Block2dPlayApp>();
-        app.handle_action("addHandleKind", None, &ViewState::default(), &testkit::meta("local")).expect("add handle kind");
+        let mut app = new_app();
+        app.dispatch_typed(Block2dCommand::AddHandleKind, &testkit::meta("local")).expect("add handle kind");
         assert_eq!(app.projection().expect("projection").handle_kinds.len(), 1);
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").handle_kinds.len(), 0);
-        app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
+        app.handle_action("redo", None, &testkit::meta("local")).expect("redo");
         assert_eq!(app.projection().expect("projection").handle_kinds.len(), 1);
+    }
+
+    #[test]
+    fn set_selection_writes_config_not_document() {
+        let mut app = new_app();
+        let result = app.dispatch_typed(Block2dCommand::SetSelection { ids: vec!["handle-kind:b-l".into()] }, &testkit::meta("local")).expect("select");
+        assert!(result.operations.is_empty(), "setSelection is config-only and must emit no document operations");
+    }
+
+    /// 🌉️ `puzzle2d_manifest_fragment`'s new caller round-trips through the `"catalog:out"` media port.
+    #[test]
+    fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
+        let mut app = new_app();
+        app.dispatch_typed(Block2dCommand::SetActiveExample { id: BLOCK2D_EXAMPLE_LEFT.into() }, &testkit::meta("local")).expect("load example");
+        let media = app.export_media("catalog:out").expect("export catalog");
+        assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
+        match media.payload {
+            MediaPayload::Structured { schema, json } => {
+                assert_eq!(schema, "kit.catalog");
+                let value: Value = serde_json::from_str(&json).expect("valid json");
+                assert_eq!(value["nodeKinds"][0]["id"], "Hexagonal Cut Concrete Forest Left");
+            }
+            other => panic!("expected Structured payload, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn block2d_io_is_wired_into_the_manifest() {
+        let definition = create_block2d_app().definition;
+        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
     }
 }
 //#endregion 🧪️Tests

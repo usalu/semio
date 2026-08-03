@@ -1,17 +1,18 @@
 //! 🗂️ VCS app — DocumentApp impl, render, manifest (constitutional: ui).
 
 use semio_framework_plugin::{SurfaceKind,
-    build_graph_timeline_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids,
-    tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App, ActionDescriptor,
-    AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HistoryView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
+    build_graph_timeline_scene, create_default_layout, localized_label_map,
+    tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, ActionDescriptor,
+    AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit, HistoryView, LocaleLabels, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
     ArtifactKindSpec, UiButtonNode, UiFieldNode, UiInspectorFieldGroup, UiInputNode, UiNode, UiPresence, UiStackNode,
-    UiTreeItemNode, GraphTimelineScene, ViewState, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    UiTreeItemNode, GraphTimelineScene, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
 use serde_json::{json, Value};
 use store::{DocumentCommand, DocumentStore};
 use vcs::{VcsDemoProjection, VCS_DEMO_SCHEMA};
-use vcs_engine::empty_vcs_demo_projection;
-use vcs_op::VcsDemoOperation;
+use vcs_engine::{empty_vcs_demo_projection, VcsDemoConfig};
+use vcs_op::{VcsDemoConfigOperation, VcsDemoOperation};
+use vcs_protocol::VcsDemoCommand;
 
 //#region 🔖️Constants
 pub const VCS_PLAY_APP_ID: &str = "vcs-play";
@@ -27,6 +28,18 @@ const VCS_PLAY_WINDOW_HISTORY: &str = "vcs-history";
 //#region 🔖️Types
 type VcsDemoStore = DocumentStore<VcsDemoProjection, VcsDemoOperation>;
 //#endregion 🔖️Types
+
+//#region 🔖️Locale
+/// 🗣️ `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
+fn is_de_locale(cfg: &VcsDemoConfig) -> bool {
+    cfg.locale.starts_with("de")
+}
+
+fn resolve_labels<L: LocaleLabels>(cfg: &VcsDemoConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 fn demo_authors() -> Vec<vcs_kernel::Author> {
@@ -82,6 +95,18 @@ fn vcs_demo_projection_diff_operations(current: &VcsDemoProjection, next: &VcsDe
         }
     }
     operations
+}
+
+/// 🩹️ Builds the `VcsDemoOperation` for a `patchProjection` field write — mirrors
+/// `shooting_ui::shot_patch_for_field`'s string-keyed field dispatch.
+fn vcs_patch_operation_for_field(field: &str, value: &str) -> Option<VcsDemoOperation> {
+    match field {
+        "title" => Some(VcsDemoOperation::SetTitle { title: value.into() }),
+        "counter" => value.parse::<i64>().ok().map(|counter| VcsDemoOperation::SetCounter { counter }),
+        "status" => Some(VcsDemoOperation::SetStatus { status: value.into() }),
+        "notes" => Some(VcsDemoOperation::SetNotes { notes: value.into() }),
+        _ => None,
+    }
 }
 
 /// 🌱️ Seeds a rich, forked checkpoint/alternative history directly against the store — this app's
@@ -536,24 +561,17 @@ fn render_history(history: &HistoryView) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️VcsPlayApp
-use std::cell::RefCell;
-
-/// 🎛️ Ephemeral view state: the multi-selected checkpoint ids in the document tree.
-pub struct VcsPlayApp {
-    selected_checkpoint_ids: RefCell<Vec<String>>,
-}
-
-impl Default for VcsPlayApp {
-    fn default() -> Self {
-        Self { selected_checkpoint_ids: RefCell::new(Vec::new()) }
-    }
-}
+/// 🧪️ B1: unit struct — the former `VcsPlayApp::selected_checkpoint_ids` `RefCell` field now lives in
+/// `vcs_engine::VcsDemoConfig` (see `DocumentApp::Config`), written through `vcs_op::VcsDemoConfigOperation`s.
+#[derive(Default)]
+pub struct VcsPlayApp;
 
 impl DocumentApp for VcsPlayApp {
     type Projection = VcsDemoProjection;
     type Operation = VcsDemoOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = VcsDemoConfig;
+    type ConfigOperation = VcsDemoConfigOperation;
+    type Command = VcsDemoCommand;
 
     fn app_id(&self) -> &str {
         VCS_PLAY_APP_ID
@@ -571,68 +589,75 @@ impl DocumentApp for VcsPlayApp {
         seed_vcs_demo_history(store);
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, VcsDemoProjection>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<VcsDemoOperation> {
-        // "undo"/"redo"/"commitCheckpoint"/"createAlternative"/"switchAlternative"/"checkoutCheckpoint"
-        // never reach here — `VcsDocumentApp` intercepts those six history actions before calling
-        // `handle_action`, dispatching them straight to `DocumentCommand`.
-        match action {
-            "setSelection" => {
-                *self.selected_checkpoint_ids.borrow_mut() = selection_ids(args);
-                ActionEmit::default()
-            }
-            "incrementCounter" => ActionEmit::operations(vec![VcsDemoOperation::SetCounter { counter: doc.projection.counter + 1 }]),
-            "patchProjection" => {
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args.and_then(|value| value.get("value"));
-                let operation = match field {
-                    "title" => value.and_then(|entry| entry.as_str()).map(|title| VcsDemoOperation::SetTitle { title: title.into() }),
-                    "counter" => value.and_then(|entry| entry.as_i64()).map(|counter| VcsDemoOperation::SetCounter { counter }),
-                    "status" => value.and_then(|entry| entry.as_str()).map(|status| VcsDemoOperation::SetStatus { status: status.into() }),
-                    "notes" => value.and_then(|entry| entry.as_str()).map(|notes| VcsDemoOperation::SetNotes { notes: notes.into() }),
-                    _ => None,
-                };
-                match operation {
-                    Some(operation) => ActionEmit::operations(vec![operation]),
-                    None => ActionEmit::default(),
-                }
-            }
-            "textEdit" | "edit" => {
-                if let Some(text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) {
-                    if let Ok(next_projection) = serde_json::from_str::<VcsDemoProjection>(text) {
-                        let operations = vcs_demo_projection_diff_operations(doc.projection, &next_projection);
-                        if !operations.is_empty() {
-                            return ActionEmit::operations(operations);
-                        }
-                    }
-                }
-                ActionEmit::default()
-            }
-            "noOperation" | "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => ActionEmit::default(),
-            _ => ActionEmit::default(),
+    /// 🏷️ Maps each `VcsDemoCommand` variant back to the action id it was declared under in
+    /// `create_vcs_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check. `setLocale` isn't declared in the manifest (mirrors
+    /// `ShootingCommand::SetLocale` — see `shooting_ui`'s identical doc), so it skips enforcement.
+    fn command_id(&self, command: &VcsDemoCommand) -> &str {
+        match command {
+            VcsDemoCommand::IncrementCounter => "incrementCounter",
+            VcsDemoCommand::PatchProjection { .. } => "patchProjection",
+            VcsDemoCommand::TextEdit { .. } => "textEdit",
+            VcsDemoCommand::Edit { .. } => "edit",
+            VcsDemoCommand::SetSelection { .. } => "setSelection",
+            VcsDemoCommand::SetLocale { .. } => "setLocale",
+            VcsDemoCommand::NoOperation => "noOperation",
+            VcsDemoCommand::CanvasPointerDown => "canvasPointerDown",
+            VcsDemoCommand::CanvasPointerMove => "canvasPointerMove",
+            VcsDemoCommand::CanvasPointerUp => "canvasPointerUp",
+            VcsDemoCommand::CanvasWheel => "canvasWheel",
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
-        let labels = resolve_labels::<VcsLabels>(view_state);
+    /// 🧩️ The former `handle_action` match arms, ported verbatim: document-mutating arms emit
+    /// `document_operations`; former ephemeral-state arms (selection/locale) emit `config_operations`.
+    /// "undo"/"redo"/"commitCheckpoint"/"createAlternative"/"switchAlternative"/"checkoutCheckpoint"
+    /// never reach here — `VcsDocumentApp` intercepts those six history actions before dispatching a
+    /// typed command, straight to `DocumentCommand`.
+    fn handle(
+        &self,
+        command: &VcsDemoCommand,
+        doc: &DocumentView<'_, VcsDemoProjection>,
+        _cfg: &ConfigView<'_, VcsDemoConfig>,
+    ) -> Emit<VcsDemoOperation, VcsDemoConfigOperation> {
+        let projection = doc.projection;
+        match command {
+            VcsDemoCommand::IncrementCounter => Emit::operations(vec![VcsDemoOperation::SetCounter { counter: projection.counter + 1 }]),
+            VcsDemoCommand::PatchProjection { field, value } => match vcs_patch_operation_for_field(field, value) {
+                Some(operation) => Emit::operations(vec![operation]),
+                None => Emit::default(),
+            },
+            VcsDemoCommand::TextEdit { text } | VcsDemoCommand::Edit { text } => match serde_json::from_str::<VcsDemoProjection>(text) {
+                Ok(next_projection) => {
+                    let operations = vcs_demo_projection_diff_operations(projection, &next_projection);
+                    if operations.is_empty() { Emit::default() } else { Emit::operations(operations) }
+                }
+                Err(_) => Emit::default(),
+            },
+            VcsDemoCommand::SetSelection { ids } => Emit::config(vec![VcsDemoConfigOperation::SetSelection { checkpoint_ids: ids.clone() }]),
+            VcsDemoCommand::SetLocale { value } => Emit::config(vec![VcsDemoConfigOperation::SetLocale { value: value.clone() }]),
+            VcsDemoCommand::NoOperation
+            | VcsDemoCommand::CanvasPointerDown
+            | VcsDemoCommand::CanvasPointerMove
+            | VcsDemoCommand::CanvasPointerUp
+            | VcsDemoCommand::CanvasWheel => Emit::default(),
+        }
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>) -> UiNode {
+        let labels = resolve_labels::<VcsLabels>(cfg.projection);
         match body_key {
             VCS_PLAY_BODY_EDITOR => render_editor(doc.projection, labels),
             VCS_PLAY_BODY_HISTORY => render_history(doc.history),
-            VCS_PLAY_BODY_DOCUMENT => build_document_tree(doc.history, &self.selected_checkpoint_ids.borrow(), labels),
+            VCS_PLAY_BODY_DOCUMENT => build_document_tree(doc.history, &cfg.projection.selected_checkpoint_ids, labels),
             VCS_PLAY_BODY_INSPECTION => build_inspection_tree(doc.projection, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<VcsLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, VcsDemoConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<VcsLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(VCS_PLAY_WINDOW_EDITOR, labels.window_editor)
             .window_kind_label(VCS_PLAY_WINDOW_HISTORY, labels.window_history)
@@ -682,7 +707,11 @@ pub fn create_vcs_app() -> App {
                 "row",
                 Some(&[30.0, 70.0]),
                 Some(&["Editor".into(), "History".into()]),
-            )),
+            ))
+            // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
+            // this app has no user-visible sticky defaults, so `config_spec()` stays the trait default
+            // `ConfigSpec::empty()`; declared anyway for parity with every other converted app.
+            .config(VcsPlayApp::default().config_spec()),
     )
 }
 //#endregion 🔖️Manifest
@@ -691,7 +720,7 @@ pub fn create_vcs_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
     use store::{DocumentEnvelope, HistoryColumn};
 
     /// 📦️ Parses `document_pack()` (the full envelope) for tests that need to inspect raw
@@ -754,11 +783,11 @@ mod tests {
             .filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str()))
             .count();
 
-        let checkout = app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": root_checkpoint_id })), &ViewState::default(), &testkit::meta("local")).expect("checkout");
+        let checkout = app.handle_action("checkoutCheckpoint", Some(&json!({ "checkpointId": root_checkpoint_id })), &testkit::meta("local")).expect("checkout");
         assert!(checkout.operations.is_empty(), "history actions never emit KernelOperations");
 
-        app.handle_action("incrementCounter", None, &ViewState::default(), &testkit::meta("local")).expect("increment");
-        app.handle_action("commitCheckpoint", Some(&json!({ "message": "forked from root" })), &ViewState::default(), &testkit::meta("local")).expect("commit");
+        app.dispatch_typed(VcsDemoCommand::IncrementCounter, &testkit::meta("local")).expect("increment");
+        app.handle_action("commitCheckpoint", Some(&json!({ "message": "forked from root" })), &testkit::meta("local")).expect("commit");
 
         let envelope_after = seeded_envelope(&app);
         let children_of_root_after = envelope_after
@@ -778,7 +807,7 @@ mod tests {
     fn increment_counter_action_updates_projection() {
         let mut app = testkit::new_app::<VcsPlayApp>();
         let before = app.projection().expect("materialize projection").counter;
-        let result = app.handle_action("incrementCounter", None, &ViewState::default(), &testkit::meta("local")).expect("increment");
+        let result = app.dispatch_typed(VcsDemoCommand::IncrementCounter, &testkit::meta("local")).expect("increment");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(app.projection().expect("materialize projection").counter, before + 1);
     }
@@ -800,7 +829,7 @@ mod tests {
         edited.counter = before.counter + 41;
         edited.tags.push("edited-in-place".into());
         let text = serde_json::to_string_pretty(&edited).unwrap();
-        let result = app.handle_action("textEdit", Some(&json!({ "text": text })), &ViewState::default(), &testkit::meta("local")).expect("text edit");
+        let result = app.dispatch_typed(VcsDemoCommand::TextEdit { text }, &testkit::meta("local")).expect("text edit");
         assert!(!result.operations.is_empty());
         let after = app.projection().expect("materialize projection");
         assert_eq!(after.title, "Edited via JSON");
@@ -833,25 +862,27 @@ mod tests {
         assert!(document_json.contains("checkpoints"));
     }
 
+    /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more passing
+    /// a `ViewState` into `render`/`app_labels` for this purpose (mirrors `shooting_ui`'s identical test).
     #[test]
     fn vcs_labels_resolve_german_locale() {
         let mut app = testkit::new_app::<VcsPlayApp>();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        app.dispatch_typed(VcsDemoCommand::SetLocale { value: "de-DE".into() }, &testkit::meta("local")).expect("set locale");
 
-        let node = app.render(VCS_PLAY_BODY_EDITOR, None, &view_state).expect("render");
+        let node = app.render(VCS_PLAY_BODY_EDITOR, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Aktionen"));
         assert!(json.contains("Rückgängig"));
         assert!(json.contains("Wiederholen"));
         assert!(json.contains("Zähler"));
 
-        let inspection = app.render(VCS_PLAY_BODY_INSPECTION, None, &view_state).expect("render");
+        let inspection = app.render(VCS_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
         let inspection_json = serde_json::to_string(&inspection).unwrap();
         assert!(inspection_json.contains("Titel"));
         assert!(inspection_json.contains("Notizen"));
         assert!(inspection_json.contains("Schlagwörter"));
 
-        let document_tree = app.render(VCS_PLAY_BODY_DOCUMENT, None, &view_state).expect("render");
+        let document_tree = app.render(VCS_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let document_json = serde_json::to_string(&document_tree).unwrap();
         assert!(document_json.contains("Alternativen"));
         assert!(document_json.contains("Checkpoints"));
@@ -865,7 +896,7 @@ mod tests {
         let mut edited = before.clone();
         edited.status = "reviewed".into();
         let text = serde_json::to_string(&edited).unwrap();
-        let result = app.handle_action("edit", Some(&json!({ "text": text })), &ViewState::default(), &testkit::meta("local")).expect("edit");
+        let result = app.dispatch_typed(VcsDemoCommand::Edit { text }, &testkit::meta("local")).expect("edit");
         assert!(!result.operations.is_empty());
         assert_eq!(app.projection().expect("materialize projection").status, "reviewed");
     }
@@ -874,23 +905,47 @@ mod tests {
     fn undo_redo_round_trips_through_the_wrapper() {
         let mut app = testkit::new_app::<VcsPlayApp>();
         let before = app.projection().expect("materialize projection").counter;
-        app.handle_action("incrementCounter", None, &ViewState::default(), &testkit::meta("local")).expect("increment");
+        app.dispatch_typed(VcsDemoCommand::IncrementCounter, &testkit::meta("local")).expect("increment");
         assert_eq!(app.projection().expect("materialize projection").counter, before + 1);
-        let undo = app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        let undo = app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert!(undo.operations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.projection().expect("materialize projection").counter, before);
-        app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
+        app.handle_action("redo", None, &testkit::meta("local")).expect("redo");
         assert_eq!(app.projection().expect("materialize projection").counter, before + 1);
     }
 
     #[test]
     fn create_and_switch_alternative_round_trip_through_the_wrapper() {
         let mut app = testkit::new_app::<VcsPlayApp>();
-        let create = app.handle_action("createAlternative", Some(&json!({ "name": "trying-something" })), &ViewState::default(), &testkit::meta("local")).expect("create alternative");
+        let create = app.handle_action("createAlternative", Some(&json!({ "name": "trying-something" })), &testkit::meta("local")).expect("create alternative");
         assert!(create.operations.is_empty());
         let envelope = seeded_envelope(&app);
         assert!(envelope.active_alternative_id.is_some(), "createAlternative must set an active alternative");
+    }
+
+    /// 👁️ `setSelection` is config-only: it must drive `cfg.selected_checkpoint_ids` (rendered into the
+    /// document tree's `selected` ids) without ever touching the document store.
+    #[test]
+    fn set_selection_drives_config_and_emits_no_document_operations() {
+        let mut app = testkit::new_app::<VcsPlayApp>();
+        let checkpoint_id = seeded_envelope(&app).vcs.checkpoints[0].id.clone();
+        let result = app.dispatch_typed(VcsDemoCommand::SetSelection { ids: vec![checkpoint_id.clone()] }, &testkit::meta("local")).expect("select");
+        assert!(result.operations.is_empty(), "setSelection mutates only ephemeral config, never the document");
+        let node = app.render(VCS_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(&checkpoint_id));
+    }
+
+    /// 🎥️ Config-only commands (selection/locale) never create a document-store undo step — mirrors
+    /// `shooting_ui`'s `camera_drag_never_creates_a_document_undo_step`.
+    #[test]
+    fn set_selection_never_creates_a_document_undo_step() {
+        let mut app = testkit::new_app::<VcsPlayApp>();
+        let before = app.projection().expect("materialize projection").counter;
+        app.dispatch_typed(VcsDemoCommand::SetSelection { ids: vec!["checkpoint-1".into()] }, &testkit::meta("local")).expect("select");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo (no-op: nothing on the document store to undo)");
+        assert_eq!(app.projection().expect("materialize projection").counter, before, "document undo has nothing to revert — selection never touched the document");
     }
 }
 //#endregion 🧪️Tests

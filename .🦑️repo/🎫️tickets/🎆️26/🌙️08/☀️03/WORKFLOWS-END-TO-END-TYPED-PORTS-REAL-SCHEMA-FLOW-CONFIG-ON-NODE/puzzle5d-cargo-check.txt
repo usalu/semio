@@ -1,0 +1,191 @@
+warning: unused import: `serde_json::Value`
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:485:16
+    |
+485 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+485 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+485 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:486:24
+    |
+486 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+486 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+486 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:496:16
+    |
+496 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+496 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+496 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:497:24
+    |
+497 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+497 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+497 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:557:41
+    |
+557 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+557 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+557 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:739:42
+    |
+739 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+739 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+739 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:743:38
+    |
+743 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+743 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+743 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:37
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1211:100
+     |
+1211 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1211 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1211 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1278:37
+     |
+1278 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1278 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1278 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:153:9
+    |
+153 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:430:22
+    |
+430 |             part_2d: puzzle_5d::Puzzle5dPart2d { x, y, ..Default::default() },
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+430 -             part_2d: puzzle_5d::Puzzle5dPart2d { x, y, ..Default::default() },
+430 +             part_2d: Puzzle5dPart2d { x, y, ..Default::default() },
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:431:22
+    |
+431 |             part_3d: puzzle_5d::Puzzle5dPart3d { origin: [x, y, 0.0], ..Default::default() },
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+431 -             part_3d: puzzle_5d::Puzzle5dPart3d { origin: [x, y, 0.0], ..Default::default() },
+431 +             part_3d: Puzzle5dPart3d { origin: [x, y, 0.0], ..Default::default() },
+    |
+
+warning: `semio-s-app-puzzle-5d-engine` (lib test) generated 2 warnings (run `cargo fix --lib -p semio-s-app-puzzle-5d-engine --tests` to apply 2 suggestions)
+warning: unused import: `OsAppRegistration`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3271:72
+     |
+3271 |     use crate::registry::{os_app_registration, os_artifact_descriptor, OsAppRegistration, OsArtifactDescriptor};
+     |                                                                        ^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os` to apply 1 suggestion)
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1575:79
+     |
+1575 |     let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool, separator: bo...
+     |                                                                               ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1575 -     let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool, separator: bool| ContextMenuItemSpec {
+1575 +     let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<Value>, destructive: bool, separator: bool| ContextMenuItemSpec {
+     |
+
+warning: `semio-s-app-puzzle-5d-ui` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-puzzle-5d-ui` to apply 1 suggestion)
+warning: `semio-s-app-puzzle-5d-ui` (lib test) generated 1 warning (1 duplicate)
+    Finished `dev` profile [unoptimized] target(s) in 1.12s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

@@ -246,6 +246,40 @@ impl Operation<Block2dDefinition> for Block2dOperation {
 }
 // #endregion 🔖️Operations
 
+//#region 🔖️ConfigOperations
+/// 🧮️ `block_2d_engine::Block2dConfig`'s operation enum — one variant per settled interaction
+/// (mirrors the pre-B1 `Block2dPlayApp` `RefCell` field write), plus a generic `Snapshot` every
+/// variant's `backwards()` returns — same "whole-config-snapshot inverse" shape
+/// `shooting_op::ShootingConfigOperation` established for the pilot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Block2dConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot { #[dsl(block)] config: block_2d_engine::Block2dConfig },
+    #[dsl(key = "selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<block_2d_engine::Block2dConfig> for Block2dConfigOperation {
+    type Diff = block_2d_engine::Block2dConfig;
+
+    fn diff(&self, base: &block_2d_engine::Block2dConfig) -> block_2d_engine::Block2dConfig {
+        let mut next = base.clone();
+        match self {
+            Block2dConfigOperation::Snapshot { config } => return config.clone(),
+            Block2dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            Block2dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &block_2d_engine::Block2dConfig) -> Vec<Self> {
+        vec![Block2dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -272,6 +306,17 @@ mod tests {
         diff.absorb(Block2dDiff { document: Some(block_2d_engine::empty_block2d_definition()), ..Default::default() });
         assert!(diff.document.is_some());
         assert!(diff.node_kind.is_none());
+    }
+
+    #[test]
+    fn config_operation_backwards_restores_the_pre_operation_snapshot() {
+        let base = block_2d_engine::Block2dConfig::default();
+        let operation = Block2dConfigOperation::SetSelection { ids: vec!["h0".into()] };
+        let next = operation.diff(&base);
+        assert_eq!(next.selected_ids, vec!["h0".to_string()]);
+        let inverse = operation.backwards(&base);
+        assert_eq!(inverse, vec![Block2dConfigOperation::Snapshot { config: base.clone() }]);
+        assert_eq!(inverse[0].diff(&next), base);
     }
 }
 //#endregion 🧪️Tests

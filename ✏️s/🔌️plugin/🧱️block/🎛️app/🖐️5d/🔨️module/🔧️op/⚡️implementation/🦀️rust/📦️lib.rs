@@ -284,6 +284,40 @@ impl Operation<Block5dDefinition> for Block5dOperation {
 }
 // #endregion 🔖️Operations
 
+//#region 🔖️ConfigOperations
+/// 🧮️ `block_5d_engine::Block5dConfig`'s operation enum — one variant per settled interaction
+/// (mirrors the pre-B1 `Block5dPlayApp` `RefCell` field write), plus a generic `Snapshot` every
+/// variant's `backwards()` returns — same "whole-config-snapshot inverse" shape
+/// `shooting_op::ShootingConfigOperation` established for the pilot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Block5dConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot { #[dsl(block)] config: block_5d_engine::Block5dConfig },
+    #[dsl(key = "selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<block_5d_engine::Block5dConfig> for Block5dConfigOperation {
+    type Diff = block_5d_engine::Block5dConfig;
+
+    fn diff(&self, base: &block_5d_engine::Block5dConfig) -> block_5d_engine::Block5dConfig {
+        let mut next = base.clone();
+        match self {
+            Block5dConfigOperation::Snapshot { config } => return config.clone(),
+            Block5dConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            Block5dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &block_5d_engine::Block5dConfig) -> Vec<Self> {
+        vec![Block5dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -301,6 +335,17 @@ mod tests {
             projection = operation.diff(&projection).apply(&projection);
         }
         assert_eq!(projection, block_5d_engine::empty_block5d_definition());
+    }
+
+    #[test]
+    fn config_operation_backwards_restores_the_pre_operation_snapshot() {
+        let base = block_5d_engine::Block5dConfig::default();
+        let operation = Block5dConfigOperation::SetSelection { ids: vec!["g0".into()] };
+        let next = operation.diff(&base);
+        assert_eq!(next.selected_ids, vec!["g0".to_string()]);
+        let inverse = operation.backwards(&base);
+        assert_eq!(inverse, vec![Block5dConfigOperation::Snapshot { config: base.clone() }]);
+        assert_eq!(inverse[0].diff(&next), base);
     }
 }
 //#endregion 🧪️Tests

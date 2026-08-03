@@ -1,25 +1,12 @@
 active-plugin-id=cad active-alternative-id=alt-timber-roof programs=[ cad norm ]
 workflow {
-  schema=s.workflow
-  nodes [id:TEXT instance-id:TEXT x:NUM y:NUM width:NUM height:NUM inputs:LIST outputs:LIST] {
-    node-cad-1 app-cad-1 40 80 220 92 [ ] [ id="app-cad-1:cad.out:out" artifact-kind=cad.scene direction=out ]
-    node-en1995-1 app-en1995-1 320 80 220 92 [ id="app-en1995-1:cad.in:in" artifact-kind=cad.scene direction=in ] [ ]
+  schema=workflow.graph nodes=[ id=app-cad-1 plugin-id=cad app-id=cad label="Roof Beam \"B12\"" yields=cad.scene document-ref=documents/app-cad-1 config-ref=config/app-cad-1 x=40 y=80 width=220 height=92 inputs=[ ] outputs=[ id="app-cad-1:cad.out:out" port_id=cad.out label=Out direction=out class=threeD form=brep kind_id=cad.scene required=false multiplicity=one ] id=app-en1995-1 plugin-id=norm app-id=en1995 label="EN 1995 Timber Check" yields=en1995.report document-ref=documents/app-en1995-1 config-ref=config/app-en1995-1 x=320 y=80 width=220 height=92 inputs=[ id="app-en1995-1:cad.in:in" port_id=cad.in label=In direction=in class=threeD form=brep kind_id=cad.scene required=false multiplicity=one ] outputs=[ ] ] edges=[ id=edge-1 source-node-id=app-cad-1 source-port-id="app-cad-1:cad.out:out" target-node-id=app-en1995-1 target-port-id="app-en1995-1:cad.in:in"
+  contract {
+    kind_id=cad.scene class=threeD form=brep wire_kind=document wire_schema=cad.scene
   }
-  edges [id:TEXT source-node-id:TEXT source-port-id:TEXT target-node-id:TEXT target-port-id:TEXT contract:BLOCK] {
-    edge-1 node-cad-1 "app-cad-1:cad.out:out" node-en1995-1 "app-en1995-1:cad.in:in" {
-      kind_id=cad.scene class=threeD form=brep wire_kind=document wire_schema=cad.scene
-    }
-  }
+  ]
 }
-app-instances [id:TEXT plugin-id:TEXT app-id:TEXT label:TEXT yields:TEXT document:BLOCK] {
-  app-cad-1 cad cad "Roof Beam \"B12\"" cad.scene {
-    document-id=doc-cad-1 schema=cad.scene
-  }
-  app-en1995-1 norm en1995 "EN 1995 Timber Check" en1995.report {
-    document-id=doc-en1995-1 schema=en1995.report
-  }
-}
-parameter-bindings [parameter-id:TEXT instance-id:TEXT field-path:TEXT] {
+parameter-bindings [parameter-id:TEXT node-id:TEXT field-path:TEXT] {
   p-span app-cad-1 "/span"
   p-grade app-cad-1 "/grade"
 }

@@ -7,7 +7,177 @@
 use base64::Engine as _;
 use remodel::{CameraPosePreview, DenseResolution, ImageAsset, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RemodelScene, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
 use semio_framework_plugin::{MeshData, MeshExporter, OsMediaFormat};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::sync::atomic::{AtomicU32, Ordering};
+
+//#region 🔖️Ids
+static REMODEL_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
+
+/// 🔢️ B1: replaces every former `RemodelPlayRuntime` id counter (`stream_counter`/`job_counter`/
+/// `gcp_counter`/`import_counter`) — mirrors `shooting_engine::next_shooting_id`'s precedent (a plain
+/// global monotonic counter, not VCS-tracked config state: uniqueness is all id generation needs, and
+/// the generated id itself becomes real, undoable document content the moment an operation stores it).
+pub fn next_remodel_id(prefix: &str) -> String {
+    let next = REMODEL_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
+    format!("{prefix}-{next}")
+}
+//#endregion 🔖️Ids
+
+//#region 🔖️Config
+/// 🎥️ Ephemeral viewport orbit camera — never persisted as document content, mirrors the pre-B1
+/// `RemodelPlayRuntime::camera`'s shape.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RemodelWorldCamera {
+    #[dsl(coord)]
+    pub position: [f64; 3],
+    #[dsl(coord)]
+    pub target: [f64; 3],
+    pub fov: f64,
+}
+
+impl Default for RemodelWorldCamera {
+    fn default() -> Self {
+        Self { position: [4.0, -4.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }
+    }
+}
+
+/// 🖱️ Ephemeral face/vertex/object selection — was `RemodelPlayRuntime::selection`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RemodelSelection {
+    pub mode: String,
+    pub ids: Vec<String>,
+}
+
+/// 👁️ Which `remodel-main` point-cloud/mesh layers are visible — was `RemodelPlayRuntime::layers`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RemodelLayerVisibility {
+    pub mesh: bool,
+    pub dense: bool,
+    pub sparse: bool,
+    pub cameras: bool,
+    pub gcps: bool,
+}
+
+impl Default for RemodelLayerVisibility {
+    fn default() -> Self {
+        Self { mesh: true, dense: true, sparse: true, cameras: true, gcps: true }
+    }
+}
+
+/// 🎞️ Which frame `remodel-frames` currently shows — was `RemodelPlayRuntime::frame_cursor`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RemodelFrameCursor {
+    pub stream_id: Option<String>,
+    pub frame_index: u32,
+}
+
+/// 🧮️ B1: remodel's real `DocumentApp::Config` — absorbs every former `RemodelPlayRuntime` view/session
+/// field (camera/selection/layers/frame cursor/report table selection) plus the two `ViewState`-sourced
+/// fields the UI actually reads (`active_utility_id`/`locale`, mirroring `shooting_engine::ShootingConfig`).
+/// The live `remodel_engine::ReconstructionEngine` and the video-import blur-gate rolling window are
+/// deliberately NOT here: neither is `Clone + Serialize + Deserialize` in a way that round-trips through
+/// a pure `&self` `handle()` (see `remodel_ui::RemodelPlayApp::handle`'s `RunReconstruction`/
+/// `ImportVideoFramePayload` docs for how both are rebuilt from already-persisted document state instead
+/// of carried as hidden interior-mutable scratch).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "remodelcfg")]
+#[dsl(layout = "lines")]
+pub struct RemodelConfig {
+    #[dsl(block)]
+    pub camera: RemodelWorldCamera,
+    #[dsl(block)]
+    pub selection: RemodelSelection,
+    #[dsl(block)]
+    pub layers: RemodelLayerVisibility,
+    #[dsl(block)]
+    pub frame_cursor: RemodelFrameCursor,
+    /// 📊️ Which `remodel-report` dataset is selected (`"frames"`/`"cameras"`/`"tracks"`/`"gcps"`/…).
+    pub report_table: String,
+    /// 🧰️ The active utility for `remodel-main`/`remodel-frames` — was read off `view_state.active_utility_id`.
+    pub active_utility_id: String,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+impl Default for RemodelConfig {
+    fn default() -> Self {
+        Self {
+            camera: RemodelWorldCamera::default(),
+            selection: RemodelSelection::default(),
+            layers: RemodelLayerVisibility::default(),
+            frame_cursor: RemodelFrameCursor::default(),
+            report_table: "frames".into(),
+            active_utility_id: "select".into(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl store::ConfigRecord for RemodelConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `remodel_op::RemodelConfigOperation` — mirrors
+/// `shooting_engine::ShootingConfig`'s identical impl (the orphan rule requires this to live beside the
+/// local `RemodelConfig` type, not in `remodel_op`).
+impl protocol::OperationDiff<RemodelConfig> for RemodelConfig {
+    fn apply(&self, _base: &RemodelConfig) -> RemodelConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
+/// `create_remodel_app` already declares via `.artifact_kind(...)`, plus the two Wave-2 port-recipe ports:
+/// `photos:in` (incoming source images for reconstruction) and `mesh:out` (the current reconstructed mesh).
+pub fn remodel_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: "remodel.scene".into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+        ports: vec![remodel_photos_in_port(), remodel_mesh_out_port()],
+        export_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Stl, OsMediaFormat::Ply, OsMediaFormat::Las, OsMediaFormat::Png],
+        import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.remodel".into(), name: "3D Remodel".into(), dimension: "3d".into(), component_kind: "remodel".into() },
+    }
+}
+
+/// 🔌️ `photos:in` — incoming photos to insert as source images for reconstruction; pinned to the
+/// `2d.image` kind (declared by `shooting`'s manifest — identical-shape duplicates are harmless, so this
+/// app does not redeclare it).
+pub fn remodel_photos_in_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "photos:in".into(),
+        label: "Photos".into(),
+        direction: semio_framework_plugin::MediaPortDirection::In,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Raster },
+        kind_id: Some("2d.image".into()),
+        required: false,
+        multiplicity: semio_framework_core::PortMultiplicity::Many,
+    }
+}
+
+/// 🔌️ `mesh:out` — the current reconstructed mesh; pinned to the `3d.mesh` kind (declared by `lowpoly`'s
+/// manifest — reused rather than redeclared, per the port recipe).
+pub fn remodel_mesh_out_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "mesh:out".into(),
+        label: "Mesh".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+        kind_id: Some("3d.mesh".into()),
+        required: false,
+        multiplicity: semio_framework_core::PortMultiplicity::Many,
+    }
+}
+//#endregion 🔖️Io
 
 //#region 🔖️EngineMapping
 /// ⚙️ Builds `remodel_engine::EngineParams` from the document's 8 param sub-structs. Fields with no
@@ -369,6 +539,56 @@ mod tests {
     use super::*;
     use remodel::default_remodel_scene;
     use semio_framework_plugin::mesh_from_kind;
+
+    //#region 🔖️ConfigTests
+    #[test]
+    fn remodel_config_default_matches_the_former_runtime_defaults() {
+        let config = RemodelConfig::default();
+        assert_eq!(config.camera, RemodelWorldCamera { position: [4.0, -4.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
+        assert_eq!(config.selection, RemodelSelection::default());
+        assert!(config.layers.mesh && config.layers.dense && config.layers.sparse && config.layers.cameras && config.layers.gcps);
+        assert_eq!(config.frame_cursor, RemodelFrameCursor::default());
+        assert_eq!(config.report_table, "frames");
+        assert_eq!(config.active_utility_id, "select");
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[test]
+    fn remodel_config_operation_diff_is_whole_record_replace() {
+        let base = RemodelConfig::default();
+        let mut next = base.clone();
+        next.report_table = "gcps".into();
+        assert_eq!(protocol::OperationDiff::apply(&next, &base), next, "apply ignores base entirely, like ShootingConfig");
+    }
+
+    #[test]
+    fn next_remodel_id_is_monotonic_and_prefixed() {
+        let a = next_remodel_id("stream");
+        let b = next_remodel_id("stream");
+        assert!(a.starts_with("stream-"));
+        assert!(b.starts_with("stream-"));
+        assert_ne!(a, b);
+    }
+    //#endregion 🔖️ConfigTests
+
+    //#region 🔖️IoTests
+    #[test]
+    fn remodel_io_declares_photos_in_and_mesh_out() {
+        let io = remodel_io();
+        assert_eq!(io.document_schema, "remodel.scene");
+        assert_eq!(io.artifact.id, "3d.remodel");
+        let photos_in = io.ports.iter().find(|port| port.id == "photos:in").expect("photos:in declared");
+        assert_eq!(photos_in.direction, semio_framework_plugin::MediaPortDirection::In);
+        assert_eq!(photos_in.kind_id.as_deref(), Some("2d.image"));
+        assert!(!photos_in.required);
+        assert_eq!(photos_in.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        let mesh_out = io.ports.iter().find(|port| port.id == "mesh:out").expect("mesh:out declared");
+        assert_eq!(mesh_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(mesh_out.kind_id.as_deref(), Some("3d.mesh"));
+        assert!(!mesh_out.required);
+        assert_eq!(mesh_out.multiplicity, semio_framework_core::PortMultiplicity::Many);
+    }
+    //#endregion 🔖️IoTests
 
     #[test]
     fn ply_exporter_writes_a_well_formed_ascii_header() {

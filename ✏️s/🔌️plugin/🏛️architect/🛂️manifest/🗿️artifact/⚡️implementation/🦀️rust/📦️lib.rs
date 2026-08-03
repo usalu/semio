@@ -9,7 +9,7 @@ use semio_s_plugin_architect_spine::{
 };
 use semio_framework_plugin::{
     create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionArgDef, ActionArgOption,
-    ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, BlockListScene, DocumentApp, DocumentView, HostEffect, NodeGraphScene, PanelGroup, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode,
+    ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, BlockListScene, DocumentApp, DocumentView, HostEffect, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiNumberStepperNode, UiPresence, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -1143,55 +1143,54 @@ fn render_adjacency_body(program: &Program, runtime: &ArchitectPlayRuntime) -> U
 //#endregion 🔖️AdjacencyRender
 
 //#region 🔖️GraphRender
-fn graph_media_json(program: &Program, _camera: &GraphCamera) -> (String, String) {
+fn graph_media_json(program: &Program, _camera: &GraphCamera) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let count = program.elements.len().max(1);
     let radius = 220.0;
     let center_x = 320.0;
     let center_y = 240.0;
-    let nodes: Vec<Value> = program
+    let nodes: Vec<NodeGraphNodeRecord> = program
         .elements
         .iter()
         .enumerate()
         .map(|(index, element)| {
             let angle = std::f64::consts::TAU * (index as f64) / (count as f64);
-            json!({
-                "id": element.header.id,
-                "label": element.header.name,
-                "x": center_x + radius * angle.cos(),
-                "y": center_y + radius * angle.sin(),
-                "width": 108.0,
-                "height": 44.0,
-                "inputs": [{"id": "in"}],
-                "outputs": [{"id": "out"}],
-            })
+            NodeGraphNodeRecord {
+                id: element.header.id.clone(),
+                label: Some(element.header.name.clone()),
+                x: center_x + radius * angle.cos(),
+                y: center_y + radius * angle.sin(),
+                width: 108.0,
+                height: 44.0,
+                inputs: vec![NodeGraphPortRecord { id: "in".into(), label: None, ..Default::default() }],
+                outputs: vec![NodeGraphPortRecord { id: "out".into(), label: None, ..Default::default() }],
+                ..Default::default()
+            }
         })
         .collect();
-    let edges: Vec<Value> = undirected_edges(program)
+    let edges: Vec<NodeGraphEdgeRecord> = undirected_edges(program)
         .iter()
         .enumerate()
-        .map(|(index, (source, target, weight))| {
-            json!({
-                "id": format!("edge-{index}"),
-                "sourceNodeId": source,
-                "sourcePortId": "out",
-                "targetNodeId": target,
-                "targetPortId": "in",
-                "label": format!("{weight:.1}"),
-            })
+        .map(|(index, (source, target, weight))| NodeGraphEdgeRecord {
+            id: format!("edge-{index}"),
+            source_node_id: source.clone(),
+            source_port_id: "out".into(),
+            target_node_id: target.clone(),
+            target_port_id: "in".into(),
+            label: Some(format!("{weight:.1}")),
         })
         .collect();
-    (serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()))
+    (nodes, edges)
 }
 
 fn render_graph_body(program: &Program, runtime: &ArchitectPlayRuntime) -> UiNode {
-    let (nodes_json, edges_json) = graph_media_json(program, &runtime.graph_camera);
-    let viewport_json = serde_json::to_string(&runtime.graph_camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+    let (nodes, edges) = graph_media_json(program, &runtime.graph_camera);
+    let viewport = NodeGraphViewport { x: runtime.graph_camera.x, y: runtime.graph_camera.y, zoom: runtime.graph_camera.zoom };
     let mut scene = empty_component_scene(ARCHITECT_BODY_GRAPH, SurfaceKind::NodeGraph);
     scene.node_graph = Some(NodeGraphScene {
         editable: Some(true),
         capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()),
-        selection_json: if runtime.selected_ids.is_empty() { None } else { Some(serde_json::to_string(&runtime.selected_ids).unwrap_or_else(|_| "[]".into())) },
-        ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
+        selection: runtime.selected_ids.clone(),
+        ..NodeGraphScene::base(nodes, edges, viewport)
     });
     UiNode::ComponentScene(scene)
 }

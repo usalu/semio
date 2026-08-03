@@ -12,3 +12,10 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📖️playbook/🎛️
 
 [dependencies]
 playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-playbook" }
+playbook_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-playbook-engine" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]

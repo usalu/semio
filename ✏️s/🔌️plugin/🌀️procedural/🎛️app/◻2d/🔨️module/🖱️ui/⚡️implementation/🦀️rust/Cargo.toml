@@ -14,8 +14,10 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛�
 procedural_2d = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-2d" }
 procedural_2d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-2d-engine" }
 procedural_2d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-2d-op" }
+procedural_2d_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-2d-protocol" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
 playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-playbook" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }

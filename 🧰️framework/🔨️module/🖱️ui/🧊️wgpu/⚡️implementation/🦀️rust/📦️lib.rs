@@ -2931,22 +2931,175 @@ pub fn world3d_camera_json(position: [f64; 3], target: [f64; 3], fov: f64) -> St
     .to_string()
 }
 
+//#region 🔖️NodeGraphRecords
+/// 🔌️ One port on a node-graph node: identity + display label. Direction is implied by whether the
+/// record lives in the owning node's `inputs` or `outputs` list, not carried as a field. `code`/
+/// `abbreviation`/`fullName`/`artifactKind` (wire key still `resourceKind` — the rename to
+/// `artifactKind` is W4/`OsWorkflowNodeGraphPayload` scope, not this ticket's) are set only for
+/// OS-workflow app-instance nodes; see `framework/surface/node-graph`'s `GraphPortRecord`, which this mirrors.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphPortRecord {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub abbreviation: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub full_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "resourceKind")]
+    pub artifact_kind: Option<String>,
+}
+
+/// 🕸️ One node-graph node: identity, label, layout rect, typed input/output ports.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphNodeRecord {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+    #[serde(default)]
+    pub inputs: Vec<NodeGraphPortRecord>,
+    #[serde(default)]
+    pub outputs: Vec<NodeGraphPortRecord>,
+    /// 🪐️ Set only for OS-workflow app-instance nodes (the space canvas's node-graph rides a richer
+    /// node shape than the generic plugin producers) — see `framework/surface/node-graph`'s
+    /// `GraphNodeRecord`, which this mirrors, and `NodeGraphError`-free `DagNodeKind::AppInstance` wiring.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instance_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub app_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+}
+
+/// 🕸️ One node-graph edge between two node/port endpoints.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphEdgeRecord {
+    pub id: String,
+    pub source_node_id: String,
+    pub source_port_id: String,
+    pub target_node_id: String,
+    pub target_port_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+}
+
+/// 📷️ Node-graph camera: pan position + zoom factor.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphViewport {
+    #[serde(default)]
+    pub x: f64,
+    #[serde(default)]
+    pub y: f64,
+    #[serde(default = "default_true_zoom")]
+    pub zoom: f64,
+}
+
+fn default_true_zoom() -> f64 {
+    1.0
+}
+
+/// 🔎️ One spotlight/find result row for a node-graph surface.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphFindItem {
+    pub id: String,
+    pub label: String,
+    pub category: String,
+}
+
+/// 🖱️ Hovered node id, if any.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphHover {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node_id: Option<String>,
+}
+
+/// ➕️ Variadic input/output slot on an operator catalogue entry (mirrors neural engine's `VariadicSpec` wire shape).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphOperatorVariadicRecord {
+    pub slot_key: String,
+    pub min: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max: Option<usize>,
+}
+
+/// 🔌️ Declared operator channel (input or output), mirrors neural engine's `ChannelSpec` wire shape —
+/// `cardinality` rides as its already-serialized symbol string (`"!"`/`"?"`/`"*"`/`"+"`/digits).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphOperatorChannelRecord {
+    pub code: String,
+    pub abbreviation: String,
+    pub name: String,
+    pub full_name: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub operators: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default)]
+    pub cardinality: String,
+}
+
+/// 🧠️ One operator catalogue entry offered to a flow-backed node-graph's spotlight/palette, mirrors
+/// neural engine's `OperatorInfo` wire shape (kept as a local mirror: `ui_wgpu` sits below the neural
+/// engine crate in the dependency graph, so it cannot import that type directly).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NodeGraphOperatorRecord {
+    pub id: String,
+    pub module: String,
+    pub name: String,
+    pub abbreviation: String,
+    pub icon: String,
+    pub summary: String,
+    #[serde(default)]
+    pub inputs: Vec<NodeGraphOperatorChannelRecord>,
+    #[serde(default)]
+    pub outputs: Vec<NodeGraphOperatorChannelRecord>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variadic_input: Option<NodeGraphOperatorVariadicRecord>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variadic_output: Option<NodeGraphOperatorVariadicRecord>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub group: Vec<String>,
+}
+//#endregion 🔖️NodeGraphRecords
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGraphScene {
-    pub nodes_json: String,
-    pub edges_json: String,
-    pub viewport_json: String,
+    #[serde(default)]
+    pub nodes: Vec<NodeGraphNodeRecord>,
+    #[serde(default)]
+    pub edges: Vec<NodeGraphEdgeRecord>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viewport: Option<NodeGraphViewport>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub editable: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub operators_json: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub find_items_json: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub selection_json: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub hover_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub operators: Vec<NodeGraphOperatorRecord>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub find_items: Vec<NodeGraphFindItem>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub selection: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hover: Option<NodeGraphHover>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub preview_off_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3588,16 +3741,16 @@ impl UiNode {
 
 impl NodeGraphScene {
     /** @emoji 🕸️ Builds a node-graph scene with optional extensions unset. */
-    pub fn base(nodes_json: String, edges_json: String, viewport_json: String) -> Self {
+    pub fn base(nodes: Vec<NodeGraphNodeRecord>, edges: Vec<NodeGraphEdgeRecord>, viewport: NodeGraphViewport) -> Self {
         Self {
-            nodes_json,
-            edges_json,
-            viewport_json,
+            nodes,
+            edges,
+            viewport: Some(viewport),
             editable: None,
-            operators_json: None,
-            find_items_json: None,
-            selection_json: None,
-            hover_json: None,
+            operators: Vec::new(),
+            find_items: Vec::new(),
+            selection: Vec::new(),
+            hover: None,
             preview_off_json: None,
             lod_json: None,
             catalogue_json: None,

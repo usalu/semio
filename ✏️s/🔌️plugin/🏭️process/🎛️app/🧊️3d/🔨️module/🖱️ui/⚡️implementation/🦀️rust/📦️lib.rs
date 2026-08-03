@@ -1,27 +1,35 @@
-//! 🪚️ Process 3d app — DocumentApp impl, render, manifest (constitutional: ui).
+//! 🖥️ Process 3d app — DocumentApp impl, render, manifest (constitutional: ui). B1: the pure-trait
+//! pilot — `Process3dPlayApp` is a unit struct; every former `Process3dRuntime` field (selection,
+//! hover, face pick, selection method, engagement input, camera, sun) now lives in
+//! `process_3d_engine::Process3dConfig`, written via `process_3d_op::Process3dConfigOperation`s; every
+//! action dispatches through the single typed `process_3d_protocol::Process3dCommand` channel via
+//! `DocumentApp::handle`.
 
+use base64::Engine;
 use process_3d::{Pose, Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin};
 use process_3d_engine::{
     axis_angle_from_up_to, default_document, export_process3d_model, find_modification, geometry_machine_for_measure, import_process3d_model, measure_for_modification, next_step_id, plate_document, processed_mesh, processed_volume,
-    validate_modification, validation_context_for_stock, validation_reason, MeasureKind, ALL_MODULES, GEOMETRY_ATTACHER, GEOMETRY_MODULE, GEOMETRY_SAW,
+    validate_modification, validation_context_for_stock, validation_reason, MeasureKind, Process3dConfig, ALL_MODULES, GEOMETRY_ATTACHER, GEOMETRY_MODULE, GEOMETRY_SAW,
 };
-use process_3d_op::Process3dOperation;
+use process_3d_op::{Process3dConfigOperation, Process3dOperation};
+use process_3d_protocol::Process3dCommand;
 use protocol::CollectionOperation;
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{
-    app_labels, apply_world3d_sun_action, build_world_3d_scene, create_default_layout, is_de_locale, localized_label_map, mesh_from_kind, resolve_labels, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, WorldSunConfig,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
+    app_labels, build_world_3d_scene, create_default_layout, localized_label_map, mesh_from_kind, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
+    ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
+    AppIo, AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup,
+    PanelTreeBuilder, SurfaceKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    WindowEngagementStatus, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::{Mutex, OnceLock};
+use store::DocumentPack;
 
 //#region 🔖️Constants
 const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
@@ -35,74 +43,31 @@ const PROCESS_3D_PLAY_WINDOW_MAIN: &str = "process-workpiece";
 const PROCESS3D_FALLBACK_MESH_KIND: &str = "box";
 const PROCESS3D_EXAMPLE_TIMBER: &str = "timber-beam-joinery";
 const PROCESS3D_EXAMPLE_PLATE: &str = "drilled-plate";
+/// 🧰️ The utility active when the config carries no explicit override — matches
+/// `process_3d_engine::Process3dConfig::default().active_utility_id`.
+const PROCESS3D_DEFAULT_UTILITY: &str = "select";
 //#endregion 🔖️Constants
 
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels`.
+fn is_de_locale(cfg: &Process3dConfig) -> bool {
+    cfg.locale.starts_with("de")
+}
+
+fn resolve_labels<L: LocaleLabels>(cfg: &Process3dConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+//#endregion 🔖️Locale
+
 //#region 🔖️DocumentHelpers
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Process3dCamera {
-    #[serde(default = "default_cam_position")]
-    position: [f64; 3],
-    #[serde(default)]
-    target: [f64; 3],
-    #[serde(default = "default_cam_fov")]
-    fov: f64,
-}
-
-impl Default for Process3dCamera {
-    fn default() -> Self {
-        Self { position: default_cam_position(), target: [0.0, 0.0, 0.0], fov: default_cam_fov() }
-    }
-}
-
-fn default_cam_position() -> [f64; 3] {
-    [3.0, -3.0, 2.0]
-}
-
-fn default_cam_fov() -> f64 {
-    45.0
-}
-
-fn default_selection_method() -> String {
-    "rectangle".into()
-}
-
-/// 🧰️ The utility active when the host has not yet set `view_state.active_utility_id`.
-const PROCESS3D_DEFAULT_UTILITY: &str = "select";
-
-/// 🧰️ Resolves the host-owned active utility from session view state, falling back to the default.
-fn process3d_active_utility(view_state: &ViewState) -> &str {
-    view_state.active_utility_id.as_deref().unwrap_or(PROCESS3D_DEFAULT_UTILITY)
-}
-
-/// 🎛️ Ephemeral view state (selection, camera, engagement scratch, sun) — lives in the app struct,
-/// not the document, so it never pollutes undo history. The active utility is host-owned
-/// (`view_state.active_utility_id`), never stored here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-struct Process3dRuntime {
-    selected_id: Option<String>,
-    hovered_id: Option<String>,
-    /// 🖱️ Id of the brep face currently picked in the viewport (drag-to-cut/attach target).
-    selected_face_id: Option<u32>,
-    selection_method: String,
-    engagement_input: String,
-    camera: Process3dCamera,
-    sun: WorldSunConfig,
-}
-
-impl Default for Process3dRuntime {
-    fn default() -> Self {
-        Self { selected_id: None, hovered_id: None, selected_face_id: None, selection_method: default_selection_method(), engagement_input: String::new(), camera: Process3dCamera::default(), sun: WorldSunConfig::default() }
-    }
-}
-
 fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: PROCESS_3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🧰️ Host effect that programmatically switches the workpiece window's active utility — the active
-/// utility is host-owned session state (`view_state.active_utility_id`), never a document operation.
+/// utility is also mirrored into `Process3dConfig::active_utility_id` (via `SetActiveUtility`) for
+/// rendering, but the window chrome itself is still driven by this host effect.
 fn set_active_utility_effect(utility: &str) -> HostEffect {
     HostEffect::SetActiveUtility { window_id: PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
 }
@@ -113,26 +78,21 @@ fn internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition 
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
-fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
-    let array = value.as_array()?;
-    Some([array.first()?.as_f64()?, array.get(1)?.as_f64()?, array.get(2)?.as_f64()?])
-}
-
-fn selected_ids(runtime: &Process3dRuntime) -> Vec<String> {
-    runtime.selected_id.clone().into_iter().collect()
+fn selected_ids(cfg: &Process3dConfig) -> Vec<String> {
+    cfg.selected_id.clone().into_iter().collect()
 }
 
 /// 🖱️ Extends the base object-selection JSON with face-picking/drag fields: `targets.face` lets the
 /// renderer hit-test individual triangles; `engagementSessionActive` gates the ground-click placement
 /// path used by the cut/drill/attach utilities; `faceDragActive` gates the push/pull drag gesture, only
 /// while the select utility is active (so a click-to-place utility doesn't also start a face drag).
-fn process3d_selection_json(runtime: &Process3dRuntime, active_utility: &str) -> String {
-    let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, &selected_ids(runtime), runtime.hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
+fn process3d_selection_json(cfg: &Process3dConfig, active_utility: &str) -> String {
+    let mut value: Value = serde_json::from_str(&world3d_selection_json(&cfg.selection_method, &selected_ids(cfg), cfg.hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("engagementSessionActive".into(), json!(active_utility != "select"));
         object.insert("selectionMode".into(), json!("face"));
         object.insert("targets".into(), json!({ "mesh": true, "face": true, "vertex": false, "edge": false }));
-        object.insert("componentIds".into(), json!(runtime.selected_face_id.map(|id| vec![id]).unwrap_or_default()));
+        object.insert("componentIds".into(), json!(cfg.selected_face_id.map(|id| vec![id]).unwrap_or_default()));
         object.insert("faceDragActive".into(), json!(active_utility == "select"));
     }
     value.to_string()
@@ -153,7 +113,7 @@ fn fixture_signature(fixture: &Process3dDocument) -> u64 {
 /// ✂️➕️🗑️ Read-only operation builders for the two structural collection edits every mutating action needs:
 /// inserting a step at the resolved-up-to cursor (and advancing it), and removing a step by id (and
 /// pulling the cursor back if it sat past the removed step). Building `Process3dOperation`s from an immutable
-/// `&Process3dDocument` keeps `handle_action` free of manual mutation — the VCS store applies them.
+/// `&Process3dDocument` keeps `handle` free of manual mutation — the VCS store applies them.
 fn insert_step_operations(fixture: &Process3dDocument, step: ProcessStep) -> Vec<Process3dOperation> {
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
     let id = step.id.clone();
@@ -545,11 +505,11 @@ fn text_field(id: impl Into<String>, label: impl Into<String>, value: &str, targ
     })
 }
 
-fn build_document_tree(fixture: &Process3dDocument, runtime: &Process3dRuntime, labels: &Process3dLabels) -> UiNode {
+fn build_document_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
     let stock = &fixture.stock;
     let stock_item = UiTreeItemNode {
         icon_id: Some("box".into()),
-        presence: UiPresence::selected(runtime.selected_id.as_deref() == Some(stock.id.as_str())),
+        presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(stock.id.as_str())),
         action: Some(process3d_action("setSelection", Some(json!({ "id": stock.id })))),
         menu: None,
         ..UiTreeItemNode::base(stock.id.clone(), stock.label.clone())
@@ -562,7 +522,7 @@ fn build_document_tree(fixture: &Process3dDocument, runtime: &Process3dRuntime, 
         .map(|(index, step)| UiTreeItemNode {
             description: if index >= cursor { Some("pending".into()) } else { None },
             icon_id: Some(process3d_measure_icon(&step.measure).into()),
-            presence: UiPresence::selected(runtime.selected_id.as_deref() == Some(step.id.as_str())),
+            presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(step.id.as_str())),
             action: Some(process3d_action("setSelection", Some(json!({ "id": step.id })))),
             hover_action: Some(process3d_action("setHover", Some(json!({ "id": step.id })))),
             unhover_action: Some(process3d_action("setHover", None)),
@@ -692,8 +652,8 @@ fn build_step_inspector(step: &ProcessStep, stock: &Stock, labels: &Process3dLab
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "process3d-inspector.step".into(), label: process3d_measure_label(&step.measure, labels).into(), default_open: Some(true), fields }])
 }
 
-fn build_inspector_tree(fixture: &Process3dDocument, runtime: &Process3dRuntime, labels: &Process3dLabels) -> UiNode {
-    let Some(selected_id) = runtime.selected_id.as_deref() else {
+fn build_inspector_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
+    let Some(selected_id) = cfg.selected_id.as_deref() else {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "process3d-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
@@ -721,7 +681,7 @@ fn build_inspector_tree(fixture: &Process3dDocument, runtime: &Process3dRuntime,
 //#endregion 🔖️Panels
 
 //#region 🔖️Engagement
-fn process3d_engagement(fixture: &Process3dDocument, runtime: &Process3dRuntime, active_utility: &str, labels: &Process3dLabels) -> WindowEngagement {
+fn process3d_engagement(fixture: &Process3dDocument, cfg: &Process3dConfig, active_utility: &str, labels: &Process3dLabels) -> WindowEngagement {
     let len = fixture.steps.len();
     let cursor = fixture.resolved_up_to.unwrap_or(len);
     let volume = processed_volume(fixture).unwrap_or(0.0);
@@ -732,7 +692,7 @@ fn process3d_engagement(fixture: &Process3dDocument, runtime: &Process3dRuntime,
         options: None,
         input: Some(WindowEngagementInput {
             id: Some("process3d-engagement".into()),
-            value: Some(runtime.engagement_input.clone()),
+            value: Some(cfg.engagement_input.clone()),
             placeholder: Some("cut, drill, attach, back, forward, all".into()),
             disabled: None,
             on_change: Some(process3d_action("engagementInput", None)),
@@ -760,21 +720,18 @@ fn process3d_engagement(fixture: &Process3dDocument, runtime: &Process3dRuntime,
 //#endregion 🔖️Engagement
 
 //#region 🔖️Process3dPlayApp
-pub struct Process3dPlayApp {
-    runtime: RefCell<Process3dRuntime>,
-}
-
-impl Default for Process3dPlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(Process3dRuntime::default()) }
-    }
-}
+/// 🧪️ B1: unit struct — every former `Process3dRuntime` field now lives in
+/// `process_3d_engine::Process3dConfig` (see `DocumentApp::Config`), written through
+/// `process_3d_op::Process3dConfigOperation`s.
+#[derive(Default)]
+pub struct Process3dPlayApp;
 
 impl DocumentApp for Process3dPlayApp {
     type Projection = Process3dDocument;
     type Operation = Process3dOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = Process3dConfig;
+    type ConfigOperation = Process3dConfigOperation;
+    type Command = Process3dCommand;
 
     fn app_id(&self) -> &str {
         PROCESS_3D_PLAY_APP_ID
@@ -788,57 +745,143 @@ impl DocumentApp for Process3dPlayApp {
         default_document()
     }
 
-    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Process3dDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> ActionEmit<Process3dOperation> {
-        match action {
-            "setDocument" => {
-                if let Some(document_value) = args.and_then(|value| value.get("document")) {
-                    if let Ok(document) = serde_json::from_value::<Process3dDocument>(document_value.clone()) {
-                        self.runtime.borrow_mut().selected_id = None;
-                        return ActionEmit::operations(vec![Process3dOperation::SetDocument { document }]);
-                    }
+    fn io(&self) -> Option<AppIo> {
+        Some(process_3d_engine::process3d_io())
+    }
+
+    //#region 🔖️Media
+    /// 🎞️ `brep:out` (see `process_3d_engine::export_process3d_model`, STEP text) plus the inherited
+    /// `document:out` default (the pack of `doc.projection`, replicated inline — overriding
+    /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, Process3dDocument>) -> Result<Media, MediaError> {
+        match port {
+            "brep:out" => match export_process3d_model(doc.projection, "step") {
+                Some(export) => {
+                    let text = match export.data {
+                        Value::String(text) => text,
+                        other => serde_json::to_string(&other).unwrap_or_default(),
+                    };
+                    Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.process".into(), json: text } })
                 }
-                ActionEmit::default()
+                None => Err(MediaError::Payload("brep:out".into(), "kernel replay failed".into())),
+            },
+            "document:out" => {
+                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let bytes = doc.projection.encode_pack();
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
-            "setActiveExample" => {
-                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                let document = match example_id {
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+
+    fn whole_document_operation(&self, projection: Process3dDocument) -> Option<Process3dOperation> {
+        Some(Process3dOperation::SetDocument { document: projection })
+    }
+
+    /// 📥️ `geometry:in` (best-effort STEP-text import, see the ticket notes on the cross-app wire
+    /// contract) plus the inherited `document:in` default (base64 pack via `whole_document_operation`,
+    /// replicated inline — overriding `import_media` shadows the trait's provided body for every port).
+    fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, Process3dDocument>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, MediaError> {
+        match port {
+            "geometry:in" => {
+                let MediaPayload::Structured { schema, json } = &media.payload else {
+                    return Err(MediaError::Payload("geometry:in".into(), "expected a structured payload".into()));
+                };
+                if schema != process_3d::PROCESS_3D_SCHEMA && schema != "3d.process" {
+                    return Err(MediaError::Payload("geometry:in".into(), format!("unrecognized schema: {schema}")));
+                }
+                // 📦️ `export_process3d_model("step")` hands back raw (non-base64) STEP text — see
+                // `OsMediaFormat::Step::is_binary() == false` — so this re-encodes it as base64 to
+                // satisfy `process3d_bytes_from_data_url`'s `data:...,<base64>` expectation.
+                let data_url = format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(json.as_bytes()));
+                match import_process3d_model("geometry-in.step", &data_url) {
+                    Some(document) => Ok(Emit::operations(vec![Process3dOperation::SetDocument { document }])),
+                    None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),
+                }
+            }
+            "document:in" => {
+                let MediaPayload::Structured { json, .. } = &media.payload else {
+                    return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+                };
+                let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let projection = <Process3dDocument as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                match self.whole_document_operation(projection) {
+                    Some(operation) => Ok(Emit::operations(vec![operation])),
+                    None => Err(MediaError::NotImplemented),
+                }
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+    //#endregion 🔖️Media
+
+    /// 🏷️ Maps each `Process3dCommand` variant back to the action id it was declared under in
+    /// `create_process3d_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check.
+    fn command_id(&self, command: &Process3dCommand) -> &str {
+        match command {
+            Process3dCommand::SetDocument { .. } => "setDocument",
+            Process3dCommand::SetActiveExample { .. } => "setActiveExample",
+            Process3dCommand::AddStep { .. } => "addStep",
+            Process3dCommand::RemoveStep { .. } => "removeStep",
+            Process3dCommand::RemoveSelectedStep => "removeSelectedStep",
+            Process3dCommand::MoveStep { .. } => "moveStep",
+            Process3dCommand::UpdateStep { .. } => "updateStep",
+            Process3dCommand::SetStepEnabled { .. } => "setStepEnabled",
+            Process3dCommand::SetStock { .. } => "setStock",
+            Process3dCommand::PatchInspector { .. } => "patchInspector",
+            Process3dCommand::SetCursor { .. } => "setCursor",
+            Process3dCommand::StepCursor { .. } => "stepCursor",
+            Process3dCommand::StepCursorBack => "stepCursorBack",
+            Process3dCommand::StepCursorForward => "stepCursorForward",
+            Process3dCommand::EngagementSubmit => "engagementSubmit",
+            Process3dCommand::WorldPointerDown { .. } => "worldPointerDown",
+            Process3dCommand::WorldFaceDragEnd { .. } => "worldFaceDragEnd",
+            Process3dCommand::ImportModelFile { .. } => "importModelFile",
+            Process3dCommand::SetActiveUtility { .. } => SET_ACTIVE_UTILITY_ACTION_ID,
+            Process3dCommand::EngagementInput { .. } => "engagementInput",
+            Process3dCommand::EngagementAbort => "engagementAbort",
+            Process3dCommand::SetSelection { .. } => "setSelection",
+            Process3dCommand::SetHover { .. } => "setHover",
+            Process3dCommand::SetCamera { .. } => "setCamera",
+            Process3dCommand::WorldPick { .. } => "worldPick",
+            Process3dCommand::ToggleSun => "toggleSun",
+            Process3dCommand::SetSunAzimuth { .. } => "setSunAzimuth",
+            Process3dCommand::SetSunElevation { .. } => "setSunElevation",
+            Process3dCommand::SetSunIntensity { .. } => "setSunIntensity",
+            Process3dCommand::SetLocale { .. } => "setLocale",
+            Process3dCommand::ExportModel { .. } => "exportModel",
+            Process3dCommand::LoadModelRequest => "loadModelRequest",
+        }
+    }
+
+    //#region 🔖️Handle
+    fn handle(&self, command: &Process3dCommand, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Emit<Process3dOperation, Process3dConfigOperation> {
+        let fixture = doc.projection;
+        let config = cfg.projection;
+        match command {
+            Process3dCommand::SetDocument { document } => Emit {
+                document_operations: vec![Process3dOperation::SetDocument { document: document.clone() }],
+                config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }],
+                ..Default::default()
+            },
+            Process3dCommand::SetActiveExample { example_id } => {
+                let document = match example_id.as_str() {
                     PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
                     "" => Process3dDocument::default(),
                     _ => default_document(),
                 };
-                self.runtime.borrow_mut().selected_id = None;
-                ActionEmit::operations(vec![Process3dOperation::SetDocument { document }])
-            }
-            "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
-                apply_world3d_sun_action(&mut self.runtime.borrow_mut().sun, action, args);
-                ActionEmit::default()
-            }
-            "setSelection" => {
-                self.runtime.borrow_mut().selected_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                ActionEmit::default()
-            }
-            "setHover" => {
-                self.runtime.borrow_mut().hovered_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                ActionEmit::default()
-            }
-            "setCamera" => {
-                if let Some(camera) = args.and_then(|value| value.get("camera")) {
-                    if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                        self.runtime.borrow_mut().camera = parsed;
-                    }
+                Emit {
+                    document_operations: vec![Process3dOperation::SetDocument { document }],
+                    config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }],
+                    ..Default::default()
                 }
-                ActionEmit::default()
             }
-            "addStep" => {
-                let position = args.and_then(|value| value.get("position")).and_then(value_as_vec3);
-                let module_id_arg = args.and_then(|value| value.get("moduleId")).and_then(|value| value.as_str());
-                let machine_id_arg = args.and_then(|value| value.get("machineId")).and_then(|value| value.as_str());
-                let modification_kind_id_arg = args.and_then(|value| value.get("modificationKindId")).and_then(|value| value.as_str());
-                let resolved = if let (Some(module_id), Some(machine_id), Some(modification_kind_id)) = (module_id_arg, machine_id_arg, modification_kind_id_arg) {
+            Process3dCommand::AddStep { measure, module_id, machine_id, modification_kind_id, position } => {
+                let resolved = if let (Some(module_id), Some(machine_id), Some(modification_kind_id)) = (module_id.as_deref(), machine_id.as_deref(), modification_kind_id.as_deref()) {
                     find_modification(module_id, machine_id, modification_kind_id)
                 } else {
-                    let measure_arg = args.and_then(|value| value.get("measure")).and_then(|value| value.as_str()).unwrap_or("cut");
-                    let measure_kind = match measure_arg {
+                    let measure_kind = match measure.as_deref().unwrap_or("cut") {
                         "drill" => MeasureKind::Drill,
                         "attach" => MeasureKind::Attach,
                         _ => MeasureKind::Cut,
@@ -847,215 +890,214 @@ impl DocumentApp for Process3dPlayApp {
                     Some((&GEOMETRY_MODULE, machine, kind))
                 };
                 let Some((module, machine, kind)) = resolved else {
-                    return ActionEmit::default();
+                    return Emit::default();
                 };
-                let failures = validate_modification(machine, kind, &validation_context_for_stock(&doc.projection.stock));
+                let failures = validate_modification(machine, kind, &validation_context_for_stock(&fixture.stock));
                 if !failures.is_empty() {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
                 let origin = StepOrigin { module_id: module.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
-                let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, position) };
-                self.runtime.borrow_mut().selected_id = Some(step.id.clone());
-                ActionEmit::operations(insert_step_operations(doc.projection, step))
+                let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, *position) };
+                let step_id = step.id.clone();
+                Emit { document_operations: insert_step_operations(fixture, step), config_operations: vec![Process3dConfigOperation::SetSelectedId { value: Some(step_id) }], ..Default::default() }
             }
-            "removeStep" => {
-                if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
-                    if let Some(operations) = remove_step_operations(doc.projection, id) {
-                        if self.runtime.borrow_mut().selected_id.as_deref() == Some(id) {
-                            self.runtime.borrow_mut().selected_id = None;
-                        }
-                        return ActionEmit::operations(operations);
+            Process3dCommand::RemoveStep { id } => match remove_step_operations(fixture, id) {
+                Some(operations) => {
+                    let mut config_operations = Vec::new();
+                    if config.selected_id.as_deref() == Some(id.as_str()) {
+                        config_operations.push(Process3dConfigOperation::SetSelectedId { value: None });
                     }
+                    Emit { document_operations: operations, config_operations, ..Default::default() }
                 }
-                ActionEmit::default()
-            }
-            "removeSelectedStep" => {
-                if let Some(id) = self.runtime.borrow_mut().selected_id.clone() {
-                    if let Some(operations) = remove_step_operations(doc.projection, &id) {
-                        self.runtime.borrow_mut().selected_id = None;
-                        return ActionEmit::operations(operations);
-                    }
+                None => Emit::default(),
+            },
+            Process3dCommand::RemoveSelectedStep => match config.selected_id.clone() {
+                Some(id) => match remove_step_operations(fixture, &id) {
+                    Some(operations) => Emit { document_operations: operations, config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() },
+                    None => Emit::default(),
+                },
+                None => Emit::default(),
+            },
+            Process3dCommand::MoveStep { id, index } => {
+                if fixture.steps.iter().any(|step| &step.id == id) {
+                    Emit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Move { id: id.clone(), to: *index } }])
+                } else {
+                    Emit::default()
                 }
-                ActionEmit::default()
             }
-            "moveStep" => {
-                if let (Some(id), Some(index)) = (args.and_then(|value| value.get("id")).and_then(|value| value.as_str()), args.and_then(|value| value.get("index")).and_then(|value| value.as_u64())) {
-                    if doc.projection.steps.iter().any(|step| step.id == id) {
-                        return ActionEmit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Move { id: id.to_string(), to: index as usize } }]);
-                    }
+            Process3dCommand::UpdateStep { step } => {
+                if fixture.steps.iter().any(|existing| existing.id == step.id) {
+                    let patch = ProcessStepPatch { label: Some(step.label.clone()), enabled: Some(step.enabled), measure: Some(step.measure.clone()), origin: Some(step.origin.clone()) };
+                    Emit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: step.id.clone(), patch } }])
+                } else {
+                    Emit::default()
                 }
-                ActionEmit::default()
             }
-            "updateStep" => {
-                if let Some(step_value) = args.and_then(|value| value.get("step")) {
-                    if let Ok(step) = serde_json::from_value::<ProcessStep>(step_value.clone()) {
-                        if doc.projection.steps.iter().any(|existing| existing.id == step.id) {
-                            let patch = ProcessStepPatch { label: Some(step.label.clone()), enabled: Some(step.enabled), measure: Some(step.measure.clone()), origin: Some(step.origin.clone()) };
-                            return ActionEmit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: step.id, patch } }]);
-                        }
-                    }
+            Process3dCommand::SetStepEnabled { id, enabled } => {
+                if fixture.steps.iter().any(|step| &step.id == id) {
+                    let patch = ProcessStepPatch { enabled: Some(*enabled), ..Default::default() };
+                    Emit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: id.clone(), patch } }])
+                } else {
+                    Emit::default()
                 }
-                ActionEmit::default()
             }
-            "setStepEnabled" => {
-                if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
-                    let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()).unwrap_or(true);
-                    if doc.projection.steps.iter().any(|step| step.id == id) {
-                        let patch = ProcessStepPatch { enabled: Some(enabled), ..Default::default() };
-                        return ActionEmit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: id.to_string(), patch } }]);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "setStock" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("box");
-                let solid = match kind {
+            Process3dCommand::SetStock { kind } => {
+                let solid = match kind.as_str() {
                     "cylinder" => SolidSpec::Cylinder { radius: 0.3, height: 1.0 },
                     "sphere" => SolidSpec::Sphere { radius: 0.5 },
                     _ => SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 },
                 };
-                let stock = Stock { id: doc.projection.stock.id.clone(), label: resolve_labels::<Process3dLabels>(view_state).stock.into(), solid, pose: Pose::default() };
+                let stock = Stock { id: fixture.stock.id.clone(), label: resolve_labels::<Process3dLabels>(config).stock.into(), solid, pose: Pose::default() };
                 let document = Process3dDocument { stock, steps: Vec::new(), resolved_up_to: None };
-                self.runtime.borrow_mut().selected_id = None;
-                ActionEmit::operations(vec![Process3dOperation::SetDocument { document }])
-            }
-            "patchInspector" => {
-                let target = args.and_then(|value| value.get("target")).and_then(|value| value.as_str()).unwrap_or("");
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args.and_then(|value| value.get("value"));
-                match process3d_inspector_patch_operation(doc.projection, target, field, value) {
-                    Some(operation) => ActionEmit::operations(vec![operation]),
-                    None => ActionEmit::default(),
+                Emit {
+                    document_operations: vec![Process3dOperation::SetDocument { document }],
+                    config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }],
+                    ..Default::default()
                 }
             }
-            "setCursor" => {
-                let resolved = match args.and_then(|value| value.get("value")) {
-                    None | Some(Value::Null) => None,
-                    Some(value) => value.as_u64().map(|n| n as usize),
-                };
-                ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: resolved.map(|n| n.min(doc.projection.steps.len())) }])
-            }
-            "stepCursor" | "stepCursorBack" | "stepCursorForward" => {
-                let delta = match action {
-                    "stepCursorBack" => -1,
-                    "stepCursorForward" => 1,
-                    _ => args.and_then(|value| value.get("delta")).and_then(|value| value.as_i64()).unwrap_or(0),
-                };
-                let len = doc.projection.steps.len();
-                let current = doc.projection.resolved_up_to.unwrap_or(len) as i64;
-                ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + delta).clamp(0, len as i64) as usize) }])
-            }
-            SET_ACTIVE_UTILITY_ACTION_ID => {
-                self.runtime.borrow_mut().selected_face_id = None;
-                ActionEmit::default()
-            }
-            "engagementInput" => {
-                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                    self.runtime.borrow_mut().engagement_input = value.into();
-                }
-                ActionEmit::default()
-            }
-            "engagementAbort" => {
-                self.runtime.borrow_mut().engagement_input = String::new();
-                ActionEmit::effect(set_active_utility_effect("select"))
-            }
-            "engagementSubmit" => {
-                let command = self.runtime.borrow_mut().engagement_input.trim().to_lowercase();
-                self.runtime.borrow_mut().engagement_input = String::new();
-                let len = doc.projection.steps.len();
-                let current = doc.projection.resolved_up_to.unwrap_or(len);
-                match command.split_whitespace().next() {
-                    Some("cut") => ActionEmit::effect(set_active_utility_effect("cut")),
-                    Some("drill") => ActionEmit::effect(set_active_utility_effect("drill")),
-                    Some("attach") => ActionEmit::effect(set_active_utility_effect("attach")),
-                    Some("back") => ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some(current.saturating_sub(1)) }]),
-                    Some("forward") => ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + 1).min(len)) }]),
-                    Some("all") => ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: None }]),
-                    _ => ActionEmit::default(),
+            Process3dCommand::PatchInspector { target, field, number, text } => {
+                let value = number.map(|n| json!(n)).or_else(|| text.clone().map(Value::String));
+                match process3d_inspector_patch_operation(fixture, target, field, value.as_ref()) {
+                    Some(operation) => Emit::operations(vec![operation]),
+                    None => Emit::default(),
                 }
             }
-            "worldPointerDown" => {
-                let utility = process3d_active_utility(view_state);
+            Process3dCommand::SetCursor { value } => {
+                let resolved = value.map(|n| (n as usize).min(fixture.steps.len()));
+                Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: resolved }])
+            }
+            Process3dCommand::StepCursor { delta } => {
+                let len = fixture.steps.len();
+                let current = fixture.resolved_up_to.unwrap_or(len) as i64;
+                Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + delta).clamp(0, len as i64) as usize) }])
+            }
+            Process3dCommand::StepCursorBack => {
+                let len = fixture.steps.len();
+                let current = fixture.resolved_up_to.unwrap_or(len) as i64;
+                Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current - 1).clamp(0, len as i64) as usize) }])
+            }
+            Process3dCommand::StepCursorForward => {
+                let len = fixture.steps.len();
+                let current = fixture.resolved_up_to.unwrap_or(len) as i64;
+                Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + 1).clamp(0, len as i64) as usize) }])
+            }
+            Process3dCommand::SetActiveUtility { utility_id } => {
+                Emit::config(vec![Process3dConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, Process3dConfigOperation::SetSelectedFaceId { value: None }])
+            }
+            Process3dCommand::EngagementInput { value } => Emit::config(vec![Process3dConfigOperation::SetEngagementInput { value: value.clone() }]),
+            Process3dCommand::EngagementAbort => {
+                Emit { config_operations: vec![Process3dConfigOperation::SetEngagementInput { value: String::new() }], effects: vec![set_active_utility_effect("select")], ..Default::default() }
+            }
+            Process3dCommand::EngagementSubmit => {
+                let command_word = config.engagement_input.trim().to_lowercase();
+                let len = fixture.steps.len();
+                let current = fixture.resolved_up_to.unwrap_or(len);
+                let clear_input = Process3dConfigOperation::SetEngagementInput { value: String::new() };
+                match command_word.split_whitespace().next() {
+                    Some("cut") => Emit { config_operations: vec![clear_input], effects: vec![set_active_utility_effect("cut")], ..Default::default() },
+                    Some("drill") => Emit { config_operations: vec![clear_input], effects: vec![set_active_utility_effect("drill")], ..Default::default() },
+                    Some("attach") => Emit { config_operations: vec![clear_input], effects: vec![set_active_utility_effect("attach")], ..Default::default() },
+                    Some("back") => Emit { document_operations: vec![Process3dOperation::SetCursor { resolved_up_to: Some(current.saturating_sub(1)) }], config_operations: vec![clear_input], ..Default::default() },
+                    Some("forward") => Emit { document_operations: vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + 1).min(len)) }], config_operations: vec![clear_input], ..Default::default() },
+                    Some("all") => Emit { document_operations: vec![Process3dOperation::SetCursor { resolved_up_to: None }], config_operations: vec![clear_input], ..Default::default() },
+                    _ => Emit::config(vec![clear_input]),
+                }
+            }
+            Process3dCommand::WorldPointerDown { position } => {
+                let utility = process3d_active_utility(config);
                 if utility == "select" {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
-                if let Some(point) = args.and_then(|value| value.get("position")).and_then(value_as_vec3) {
-                    let measure_kind = match utility {
-                        "drill" => MeasureKind::Drill,
-                        "attach" => MeasureKind::Attach,
-                        _ => MeasureKind::Cut,
-                    };
-                    let (machine, kind) = geometry_machine_for_measure(measure_kind);
-                    let origin = StepOrigin { module_id: GEOMETRY_MODULE.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
-                    let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, Some(point)) };
-                    self.runtime.borrow_mut().selected_id = Some(step.id.clone());
-                    let mut emit = ActionEmit::operations(insert_step_operations(doc.projection, step));
-                    emit.effects.push(set_active_utility_effect("select"));
-                    return emit;
-                }
-                ActionEmit::default()
-            }
-            "worldPick" => {
-                let granularity = args.and_then(|value| value.get("granularity")).and_then(|value| value.as_str()).unwrap_or("mesh");
-                if granularity == "face" {
-                    self.runtime.borrow_mut().selected_face_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).map(|id| id as u32);
-                }
-                ActionEmit::default()
-            }
-            "worldFaceDragEnd" => {
-                if process3d_active_utility(view_state) != "select" {
-                    return ActionEmit::default();
-                }
-                let normal = args.and_then(|value| value.get("normal")).and_then(value_as_vec3);
-                let point = args.and_then(|value| value.get("startPoint")).and_then(value_as_vec3);
-                let distance = args.and_then(|value| value.get("distance")).and_then(|value| value.as_f64());
-                let face_extent = args.and_then(|value| value.get("faceExtent")).and_then(|value| value.as_array()).and_then(|entries| Some([entries.first()?.as_f64()?, entries.get(1)?.as_f64()?]));
-                if let (Some(normal), Some(point), Some(distance)) = (normal, point, distance) {
-                    if let Some(step) = process3d_step_from_face_drag(normal, point, distance, face_extent, resolve_labels::<Process3dLabels>(view_state)) {
-                        self.runtime.borrow_mut().selected_id = Some(step.id.clone());
-                        self.runtime.borrow_mut().selected_face_id = None;
-                        return ActionEmit::operations(insert_step_operations(doc.projection, step));
-                    }
-                }
-                ActionEmit::default()
-            }
-            "exportModel" => {
-                let format = args.and_then(|value| value.get("format")).and_then(|value| value.as_str()).unwrap_or("step");
-                match export_process3d_model(doc.projection, format) {
-                    Some(export) => ActionEmit::effect(HostEffect::DownloadMediaExport {
-                        filename: export.filename,
-                        mime_type: export.mime_type,
-                        data: match export.data {
-                            Value::String(text) => text,
-                            other => serde_json::to_string(&other).unwrap_or_default(),
-                        },
-                        encoding: export.encoding,
-                    }),
-                    None => ActionEmit::default(),
-                }
-            }
-            "loadModelRequest" => ActionEmit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }),
-            "importModelFile" => {
-                let name = args.and_then(|value| value.get("name")).and_then(|value| value.as_str()).unwrap_or("").to_ascii_lowercase();
-                let payload = args.and_then(|value| value.get("payload")).cloned().or_else(|| args.cloned());
-                let Some(data_url) = payload.as_ref().and_then(Value::as_str) else {
-                    return ActionEmit::default();
+                let measure_kind = match utility {
+                    "drill" => MeasureKind::Drill,
+                    "attach" => MeasureKind::Attach,
+                    _ => MeasureKind::Cut,
                 };
-                match import_process3d_model(&name, data_url) {
-                    Some(document) => {
-                        self.runtime.borrow_mut().selected_id = None;
-                        ActionEmit::operations(vec![Process3dOperation::SetDocument { document }])
-                    }
-                    None => ActionEmit::default(),
+                let (machine, kind) = geometry_machine_for_measure(measure_kind);
+                let origin = StepOrigin { module_id: GEOMETRY_MODULE.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
+                let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, Some(*position)) };
+                let step_id = step.id.clone();
+                Emit {
+                    document_operations: insert_step_operations(fixture, step),
+                    config_operations: vec![Process3dConfigOperation::SetSelectedId { value: Some(step_id) }],
+                    effects: vec![set_active_utility_effect("select")],
+                    ..Default::default()
                 }
             }
-            _ => ActionEmit::default(),
+            Process3dCommand::WorldPick { granularity, id } => {
+                if granularity == "face" {
+                    Emit::config(vec![Process3dConfigOperation::SetSelectedFaceId { value: *id }])
+                } else {
+                    Emit::default()
+                }
+            }
+            Process3dCommand::WorldFaceDragEnd { normal, start_point, distance, face_extent } => {
+                if process3d_active_utility(config) != "select" {
+                    return Emit::default();
+                }
+                match process3d_step_from_face_drag(*normal, *start_point, *distance, *face_extent, resolve_labels::<Process3dLabels>(config)) {
+                    Some(step) => {
+                        let step_id = step.id.clone();
+                        Emit {
+                            document_operations: insert_step_operations(fixture, step),
+                            config_operations: vec![Process3dConfigOperation::SetSelectedId { value: Some(step_id) }, Process3dConfigOperation::SetSelectedFaceId { value: None }],
+                            ..Default::default()
+                        }
+                    }
+                    None => Emit::default(),
+                }
+            }
+            Process3dCommand::ExportModel { format } => match export_process3d_model(fixture, format) {
+                Some(export) => Emit::effect(HostEffect::DownloadMediaExport {
+                    filename: export.filename,
+                    mime_type: export.mime_type,
+                    data: match export.data {
+                        Value::String(text) => text,
+                        other => serde_json::to_string(&other).unwrap_or_default(),
+                    },
+                    encoding: export.encoding,
+                }),
+                None => Emit::default(),
+            },
+            Process3dCommand::LoadModelRequest => Emit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }),
+            Process3dCommand::ImportModelFile { name, payload } => match import_process3d_model(&name.to_ascii_lowercase(), payload) {
+                Some(document) => Emit {
+                    document_operations: vec![Process3dOperation::SetDocument { document }],
+                    config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }],
+                    ..Default::default()
+                },
+                None => Emit::default(),
+            },
+            Process3dCommand::ToggleSun => {
+                Emit::config(vec![Process3dConfigOperation::SetSun { enabled: !config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() }])
+            }
+            Process3dCommand::SetSunAzimuth { value } => {
+                Emit::config(vec![Process3dConfigOperation::SetSun { enabled: config.sun_enabled, azimuth: *value, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() }])
+            }
+            Process3dCommand::SetSunElevation { value } => {
+                Emit::config(vec![Process3dConfigOperation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: *value, intensity: config.sun_intensity, color: config.sun_color.clone() }])
+            }
+            Process3dCommand::SetSunIntensity { value } => {
+                Emit::config(vec![Process3dConfigOperation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: *value, color: config.sun_color.clone() }])
+            }
+            Process3dCommand::SetSelection { id } => Emit::config(vec![Process3dConfigOperation::SetSelectedId { value: id.clone() }]),
+            Process3dCommand::SetHover { id } => Emit::config(vec![Process3dConfigOperation::SetHoveredId { value: id.clone() }]),
+            Process3dCommand::SetCamera { position, target, fov } => Emit::config(vec![Process3dConfigOperation::SetCamera { position: *position, target: *target, fov: *fov }]),
+            Process3dCommand::SetLocale { value } => Emit::config(vec![Process3dConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
+    //#endregion 🔖️Handle
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Process3dDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
-        let labels = resolve_labels::<Process3dLabels>(view_state);
-        let runtime = self.runtime.borrow();
+    /// 🧮️ process3d exposes no genuinely settings-like sticky defaults (unlike shooting's default
+    /// shot/asset format) — every `Process3dConfig` field is session-only view state, so this stays at
+    /// the trait default.
+    fn config_spec(&self) -> semio_framework_plugin::ConfigSpec {
+        semio_framework_plugin::ConfigSpec::empty()
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
+        let config = cfg.projection;
+        let labels = resolve_labels::<Process3dLabels>(config);
         match body_key {
             PROCESS_3D_PLAY_BODY_MAIN => {
                 let (meshes_json, instances_json) = preview_payload_cached(doc.projection);
@@ -1063,39 +1105,52 @@ impl DocumentApp for Process3dPlayApp {
                     PROCESS_3D_PLAY_SURFACE_MAIN,
                     PROCESS_3D_PLAY_APP_ID,
                     world3d_scene(
-                        world3d_camera_json(runtime.camera.position, runtime.camera.target, runtime.camera.fov),
+                        world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov),
                         meshes_json,
                         instances_json,
-                        process3d_selection_json(&runtime, process3d_active_utility(view_state)),
-                        &runtime.sun,
+                        process3d_selection_json(config, process3d_active_utility(config)),
+                        &config_sun(config),
                     ),
                 )
             }
-            PROCESS_3D_PLAY_BODY_DOCUMENT => build_document_tree(doc.projection, &runtime, labels),
+            PROCESS_3D_PLAY_BODY_DOCUMENT => build_document_tree(doc.projection, config, labels),
             PROCESS_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(doc.projection, labels),
-            PROCESS_3D_PLAY_BODY_INSPECTION => build_inspector_tree(doc.projection, &runtime, labels),
+            PROCESS_3D_PLAY_BODY_INSPECTION => build_inspector_tree(doc.projection, config, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, Process3dDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let runtime = self.runtime.borrow();
-        HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, &runtime, process3d_active_utility(view_state), resolve_labels::<Process3dLabels>(view_state)))])
+    fn window_engagements(&self, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, WindowEngagement> {
+        HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, cfg.projection, process3d_active_utility(cfg.projection), resolve_labels::<Process3dLabels>(cfg.projection)))])
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<Process3dLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, Process3dConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<Process3dLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(PROCESS_3D_PLAY_WINDOW_MAIN, labels.window_main)
             .action_labels(localized_label_map(is_de, PROCESS3D_ACTION_LABEL_ENTRIES))
             .utility_labels(localized_label_map(is_de, PROCESS3D_UTILITY_LABEL_ENTRIES))
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, Process3dDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let runtime = self.runtime.borrow();
-        HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), vec![world3d_sun_measures("process3d", &runtime.sun, process3d_action)])])
+    fn window_measures(&self, _doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.projection;
+        HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), vec![world3d_sun_measures("process3d", &config_sun(config), process3d_action)])])
     }
+}
+
+/// 🧰️ Resolves the config-owned active utility, falling back to the default (matches
+/// `Process3dConfig::default().active_utility_id`, so the fallback only ever triggers if a config
+/// value somehow arrives empty).
+fn process3d_active_utility(cfg: &Process3dConfig) -> &str {
+    if cfg.active_utility_id.is_empty() { PROCESS3D_DEFAULT_UTILITY } else { cfg.active_utility_id.as_str() }
+}
+
+/// 🌞️ Reconstructs the shared framework `WorldSunConfig` shape from `Process3dConfig`'s flattened sun
+/// fields — `world3d_scene`/`world3d_sun_measures` are shared SDK primitives that still take the
+/// nested struct.
+fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
+    WorldSunConfig { enabled: cfg.sun_enabled, azimuth: cfg.sun_azimuth, elevation: cfg.sun_elevation, intensity: cfg.sun_intensity, color: cfg.sun_color.clone() }
 }
 //#endregion 🔖️Process3dPlayApp
 
@@ -1124,7 +1179,7 @@ pub fn create_process3d_app() -> App {
                 "Workpiece",
                 PROCESS_3D_PLAY_BODY_MAIN,
                 SurfaceKind::World3d,
-                process3d_engagement(&default_document(), &Process3dRuntime::default(), PROCESS3D_DEFAULT_UTILITY, &Process3dLabels::EN),
+                process3d_engagement(&default_document(), &Process3dConfig::default(), PROCESS3D_DEFAULT_UTILITY, &Process3dLabels::EN),
                 "process-workpiece",
             )
             .default_layout(create_default_layout(&[PROCESS_3D_PLAY_WINDOW_MAIN.into()], "row", None, Some(&["Workpiece".into()])))
@@ -1210,7 +1265,9 @@ pub fn create_process3d_app() -> App {
             .keybinding("bracketright", "stepCursorForward")
             .keybinding("escape", "engagementAbort")
             .keybinding("delete", "removeSelectedStep")
-            .keybinding("backspace", "removeSelectedStep"),
+            .keybinding("backspace", "removeSelectedStep")
+            .config(Process3dPlayApp::default().config_spec())
+            .io(process_3d_engine::process3d_io()),
     )
     .example(PROCESS3D_EXAMPLE_TIMBER, "Timber Beam Joinery", process_3d_engine::TIMBER_EXAMPLE_DSL, "file-text")
     .example(PROCESS3D_EXAMPLE_PLATE, "Drilled Plate", process_3d_engine::PLATE_EXAMPLE_DSL, "file-text")
@@ -1222,16 +1279,17 @@ pub fn create_process3d_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, HistoryView, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app() -> VcsDocumentApp<Process3dPlayApp> {
         testkit::new_app::<Process3dPlayApp>()
     }
 
-    /// 🧰️ A session view state with a specific host-owned active utility (mirrors how the shell threads
-    /// `active_utility_id` after a utility bar switch).
-    fn view_with_utility(utility: &str) -> ViewState {
-        ViewState { active_utility_id: Some(utility.into()), ..ViewState::default() }
+    /// 🧰️ Dispatches `SetActiveUtility` to persist a specific host-owned active utility into config —
+    /// mirrors how the shell threads `active_utility_id` after a utility bar switch (was constructing a
+    /// per-call `ViewState` before B1).
+    fn set_utility(app: &mut VcsDocumentApp<Process3dPlayApp>, utility: &str) {
+        app.dispatch_typed(Process3dCommand::SetActiveUtility { utility_id: utility.into() }, &testkit::meta("local")).expect("set utility");
     }
 
     #[test]
@@ -1250,16 +1308,16 @@ mod tests {
 
     #[test]
     fn labels_resolve_native_by_default_and_in_german() {
-        let mut view_state = ViewState::default();
-        assert_eq!(resolve_labels::<Process3dLabels>(&view_state).stock, "Stock");
-        view_state.locale = Some("de".into());
-        assert_eq!(resolve_labels::<Process3dLabels>(&view_state).stock, "Rohteil");
+        let mut config = Process3dConfig::default();
+        assert_eq!(resolve_labels::<Process3dLabels>(&config).stock, "Stock");
+        config.locale = "de".into();
+        assert_eq!(resolve_labels::<Process3dLabels>(&config).stock, "Rohteil");
     }
 
     #[test]
-    fn toggle_sun_round_trips_through_runtime_and_defaults_off() {
+    fn toggle_sun_round_trips_through_config_and_defaults_off() {
         let mut app = new_app();
-        let measures = app.window_measures(&ViewState::default());
+        let measures = app.window_measures();
         let sun_group = |measures: &HashMap<String, Vec<WindowMeasure>>| {
             measures[PROCESS_3D_PLAY_WINDOW_MAIN]
                 .iter()
@@ -1271,8 +1329,8 @@ mod tests {
         };
         let children = sun_group(&measures);
         assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if !*pressed)));
-        app.handle_action("toggleSun", None, &ViewState::default(), &testkit::meta("local")).expect("toggle");
-        let measures = app.window_measures(&ViewState::default());
+        app.dispatch_typed(Process3dCommand::ToggleSun, &testkit::meta("local")).expect("toggle");
+        let measures = app.window_measures();
         let children = sun_group(&measures);
         assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if *pressed)));
     }
@@ -1280,7 +1338,7 @@ mod tests {
     #[test]
     fn add_step_action_inserts_and_selects() {
         let mut app = new_app();
-        app.handle_action("addStep", Some(&json!({ "measure": "drill" })), &ViewState::default(), &testkit::meta("local")).expect("add step");
+        app.dispatch_typed(Process3dCommand::AddStep { measure: Some("drill".into()), module_id: None, machine_id: None, modification_kind_id: None, position: None }, &testkit::meta("local")).expect("add step");
         let document = app.projection().expect("projection");
         assert_eq!(document.steps.len(), 5);
         let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
@@ -1291,28 +1349,33 @@ mod tests {
     #[test]
     fn undo_after_add_step_restores_previous_step_count() {
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(&mut app, "addStep", Some(&json!({ "measure": "cut" })), |app| app.projection().expect("projection").steps.len(), 4, 5);
+        testkit::assert_undo_redo_round_trip(
+            &mut app,
+            Process3dCommand::AddStep { measure: Some("cut".into()), module_id: None, machine_id: None, modification_kind_id: None, position: None },
+            |app| app.projection().expect("projection").steps.len(),
+            4,
+            5,
+        );
     }
 
     #[test]
     fn set_active_utility_emits_no_operations() {
         let mut app = new_app();
-        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "cut" })), &view_with_utility("cut"), &testkit::meta("local")).expect("set utility");
-        assert!(result.operations.is_empty(), "utility selection is host-owned view state and must never emit document operations or history");
+        let result = app.dispatch_typed(Process3dCommand::SetActiveUtility { utility_id: "cut".into() }, &testkit::meta("local")).expect("set utility");
+        assert!(result.operations.is_empty(), "utility selection is host-owned config state and must never emit document operations or history");
     }
 
     #[test]
     fn engagement_exposes_no_utility_switch_options() {
-        let app = Process3dPlayApp::default();
         let doc = Process3dDocument::default();
-        let engagement = process3d_engagement(&doc, &app.runtime, "cut", &Process3dLabels::EN);
+        let engagement = process3d_engagement(&doc, &Process3dConfig::default(), "cut", &Process3dLabels::EN);
         assert!(engagement.options.is_none(), "select/cut/drill/attach switching lives only on the framework utility bar; the engagement must not duplicate it as options",);
     }
 
     #[test]
     fn arg_form_set_stock_emits_ops_reading_kind_arg() {
         let mut app = new_app();
-        let result = app.handle_action("setStock", Some(&json!({ "kind": "cylinder" })), &ViewState::default(), &testkit::meta("local")).expect("set stock");
+        let result = app.dispatch_typed(Process3dCommand::SetStock { kind: "cylinder".into() }, &testkit::meta("local")).expect("set stock");
         assert!(!result.operations.is_empty(), "the setStock arg form must materialize into document operations");
         let document = app.projection().expect("projection");
         assert!(matches!(document.stock.solid, SolidSpec::Cylinder { .. }), "setStock kind=cylinder must swap the stock solid");
@@ -1326,10 +1389,11 @@ mod tests {
     }
 
     #[test]
-    fn world_pointer_down_reads_position_key_not_point() {
+    fn world_pointer_down_reads_position_field_not_point() {
         let mut app = new_app();
-        let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &view_with_utility("cut"), &testkit::meta("local")).expect("pointer down");
-        assert!(!result.operations.is_empty(), "worldPointerDown must read the `position` key the renderer actually sends");
+        set_utility(&mut app, "cut");
+        let result = app.dispatch_typed(Process3dCommand::WorldPointerDown { position: [1.0, 2.0, 3.0] }, &testkit::meta("local")).expect("pointer down");
+        assert!(!result.operations.is_empty(), "worldPointerDown must read the position the renderer actually sends");
         let document = app.projection().expect("projection");
         let last = document.steps.last().expect("inserted step");
         assert_eq!(step_pose(last), [1.0, 2.0, 3.0]);
@@ -1338,7 +1402,8 @@ mod tests {
     #[test]
     fn world_pointer_down_resets_active_utility_to_select() {
         let mut app = new_app();
-        let result = app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 2.0, 3.0] })), &view_with_utility("cut"), &testkit::meta("local")).expect("pointer down");
+        set_utility(&mut app, "cut");
+        let result = app.dispatch_typed(Process3dCommand::WorldPointerDown { position: [1.0, 2.0, 3.0] }, &testkit::meta("local")).expect("pointer down");
         assert!(
             result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::SetActiveUtility { utility_id, .. } if utility_id == "select")),
             "placing a step must hand the host a SetActiveUtility(select) effect so the click-to-place utility disengages",
@@ -1348,8 +1413,10 @@ mod tests {
     #[test]
     fn repeated_world_pointer_down_places_steps_at_distinct_positions() {
         let mut app = new_app();
-        app.handle_action("worldPointerDown", Some(&json!({ "position": [1.0, 0.0, 0.0] })), &view_with_utility("cut"), &testkit::meta("local")).expect("pointer 1");
-        app.handle_action("worldPointerDown", Some(&json!({ "position": [2.0, 0.0, 0.0] })), &view_with_utility("cut"), &testkit::meta("local")).expect("pointer 2");
+        set_utility(&mut app, "cut");
+        app.dispatch_typed(Process3dCommand::WorldPointerDown { position: [1.0, 0.0, 0.0] }, &testkit::meta("local")).expect("pointer 1");
+        set_utility(&mut app, "cut");
+        app.dispatch_typed(Process3dCommand::WorldPointerDown { position: [2.0, 0.0, 0.0] }, &testkit::meta("local")).expect("pointer 2");
         let document = app.projection().expect("projection");
         let last_two: Vec<&ProcessStep> = document.steps.iter().rev().take(2).collect();
         assert_ne!(step_pose(last_two[0]), step_pose(last_two[1]), "repeated clicks at different points must produce distinct step poses");
@@ -1377,9 +1444,11 @@ mod tests {
     #[test]
     fn world_face_drag_end_cut_reduces_volume_end_to_end() {
         let mut app = new_app();
-        app.handle_action("setStock", Some(&json!({ "kind": "box" })), &ViewState::default(), &testkit::meta("local")).expect("set stock");
+        app.dispatch_typed(Process3dCommand::SetStock { kind: "box".into() }, &testkit::meta("local")).expect("set stock");
         let stock_volume = processed_volume(&app.projection().expect("projection")).expect("stock volume");
-        let result = app.handle_action("worldFaceDragEnd", Some(&json!({ "normal": [0.0, 0.0, 1.0], "startPoint": [0.5, 0.5, 1.0], "distance": -0.5, "faceExtent": [1.0, 1.0] })), &ViewState::default(), &testkit::meta("local")).expect("face drag");
+        let result = app
+            .dispatch_typed(Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }, &testkit::meta("local"))
+            .expect("face drag");
         assert!(!result.operations.is_empty());
         let document = app.projection().expect("projection");
         assert_eq!(document.steps.len(), 1);
@@ -1391,9 +1460,11 @@ mod tests {
     #[test]
     fn world_face_drag_end_attach_increases_volume_end_to_end() {
         let mut app = new_app();
-        app.handle_action("setStock", Some(&json!({ "kind": "box" })), &ViewState::default(), &testkit::meta("local")).expect("set stock");
+        app.dispatch_typed(Process3dCommand::SetStock { kind: "box".into() }, &testkit::meta("local")).expect("set stock");
         let stock_volume = processed_volume(&app.projection().expect("projection")).expect("stock volume");
-        let result = app.handle_action("worldFaceDragEnd", Some(&json!({ "normal": [0.0, 0.0, 1.0], "startPoint": [0.5, 0.5, 1.0], "distance": 0.5, "faceExtent": [0.2, 0.2] })), &ViewState::default(), &testkit::meta("local")).expect("face drag");
+        let result = app
+            .dispatch_typed(Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }, &testkit::meta("local"))
+            .expect("face drag");
         assert!(!result.operations.is_empty());
         let document = app.projection().expect("projection");
         assert_eq!(document.steps.len(), 1);
@@ -1405,7 +1476,10 @@ mod tests {
     #[test]
     fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
         let mut app = new_app();
-        let result = app.handle_action("worldFaceDragEnd", Some(&json!({ "normal": [0.0, 0.0, 1.0], "startPoint": [0.5, 0.5, 1.0], "distance": -0.5 })), &view_with_utility("cut"), &testkit::meta("local")).expect("face drag");
+        set_utility(&mut app, "cut");
+        let result = app
+            .dispatch_typed(Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: None }, &testkit::meta("local"))
+            .expect("face drag");
         assert!(result.operations.is_empty(), "worldFaceDragEnd should be a no-operation while a placement utility is active, not the select utility");
     }
 
@@ -1433,7 +1507,9 @@ mod tests {
     #[test]
     fn add_step_via_catalogue_sets_origin_and_builds_capability_sized_tool() {
         let mut app = new_app();
-        let result = app.handle_action("addStep", Some(&json!({ "moduleId": "wood", "machineId": "circularSaw", "modificationKindId": "crosscut" })), &ViewState::default(), &testkit::meta("local")).expect("add step");
+        let result = app
+            .dispatch_typed(Process3dCommand::AddStep { measure: None, module_id: Some("wood".into()), machine_id: Some("circularSaw".into()), modification_kind_id: Some("crosscut".into()), position: None }, &testkit::meta("local"))
+            .expect("add step");
         assert!(!result.operations.is_empty(), "circular saw crosscut should be valid against the default timber beam stock");
         let document = app.projection().expect("projection");
         let last = document.steps.last().expect("inserted step");
@@ -1451,14 +1527,16 @@ mod tests {
     #[test]
     fn add_step_via_catalogue_rejected_when_validation_fails() {
         let mut app = new_app();
-        let result = app.handle_action("addStep", Some(&json!({ "moduleId": "wood", "machineId": "tableSaw", "modificationKindId": "crosscut" })), &ViewState::default(), &testkit::meta("local")).expect("add step");
+        let result = app
+            .dispatch_typed(Process3dCommand::AddStep { measure: None, module_id: Some("wood".into()), machine_id: Some("tableSaw".into()), modification_kind_id: Some("crosscut".into()), position: None }, &testkit::meta("local"))
+            .expect("add step");
         assert!(result.operations.is_empty(), "table saw crosscut should be rejected server-side against undersized stock");
     }
 
     #[test]
     fn measure_arg_routes_to_geometry_module() {
         let mut app = new_app();
-        app.handle_action("addStep", Some(&json!({ "measure": "cut" })), &ViewState::default(), &testkit::meta("local")).expect("add step");
+        app.dispatch_typed(Process3dCommand::AddStep { measure: Some("cut".into()), module_id: None, machine_id: None, modification_kind_id: None, position: None }, &testkit::meta("local")).expect("add step");
         let document = app.projection().expect("projection");
         let last = document.steps.last().expect("inserted step");
         let origin = last.origin.as_ref().expect("origin");
@@ -1471,14 +1549,55 @@ mod tests {
     #[test]
     fn inspector_shows_validation_warning_after_stock_shrinks_below_step_requirement() {
         let mut app = new_app();
-        let add_result = app.handle_action("addStep", Some(&json!({ "moduleId": "wood", "machineId": "circularSaw", "modificationKindId": "crosscut" })), &ViewState::default(), &testkit::meta("local")).expect("add step");
+        let add_result = app
+            .dispatch_typed(Process3dCommand::AddStep { measure: None, module_id: Some("wood".into()), machine_id: Some("circularSaw".into()), modification_kind_id: Some("crosscut".into()), position: None }, &testkit::meta("local"))
+            .expect("add step");
         assert!(!add_result.operations.is_empty());
-        app.handle_action("patchInspector", Some(&json!({ "target": "beam", "field": "height", "value": 0.05 })), &ViewState::default(), &testkit::meta("local")).expect("shrink stock");
+        app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }, &testkit::meta("local")).expect("shrink stock");
         let step_id = app.projection().expect("projection").steps.last().expect("step").id.clone();
-        app.handle_action("setSelection", Some(&json!({ "id": step_id })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        app.dispatch_typed(Process3dCommand::SetSelection { id: Some(step_id) }, &testkit::meta("local")).expect("select");
         let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
         let node_json = serde_json::to_string(&node).expect("inspector json");
         assert!(node_json.contains("needs stock"), "expected a validation warning after shrinking stock below the step's requirement: {node_json}");
     }
+
+    //#region 🔖️MediaTests
+    #[test]
+    fn export_brep_out_returns_step_text_structured_payload() {
+        let app = new_app();
+        let document = app.projection().expect("projection");
+        let history = HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+        let media = Process3dPlayApp.export_media("brep:out", &doc).expect("export brep:out");
+        assert_eq!(media.media_type.class, MediaClass::ThreeD);
+        assert_eq!(media.media_type.form, MediaForm::Brep);
+        match media.payload {
+            MediaPayload::Structured { schema, json } => {
+                assert_eq!(schema, "3d.process");
+                assert!(!json.is_empty());
+            }
+            MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
+        }
+    }
+
+    #[test]
+    fn export_unknown_port_is_not_implemented() {
+        let app = new_app();
+        let document = app.projection().expect("projection");
+        let history = HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+        assert!(matches!(Process3dPlayApp.export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
+    }
+
+    #[test]
+    fn import_geometry_in_rejects_unrecognized_schema() {
+        let app = new_app();
+        let document = app.projection().expect("projection");
+        let history = HistoryView::empty();
+        let doc = DocumentView { projection: &document, history: &history };
+        let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };
+        assert!(matches!(Process3dPlayApp.import_media("geometry:in", &media, &doc), Err(MediaError::Payload(port, _)) if port == "geometry:in"));
+    }
+    //#endregion 🔖️MediaTests
 }
 //#endregion 🧪️Tests

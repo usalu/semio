@@ -100,16 +100,11 @@ pub struct CuratedItem {
     pub count: u32,
 }
 
-/// 🖱️ Ephemeral cross-window UI state — which single object is selected for the preview window.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct CurateRuntime {
-    #[serde(default)]
-    #[dsl(refs = "object")]
-    pub selected_object_id: Option<String>,
-}
-
-/// 🛒️ The curate document: a stock of catalogue kinds ∘ filters ∘ a curated set ∘ ephemeral runtime state.
+/// 🛒️ The curate document: a stock of catalogue kinds ∘ a curated set. `filters` (search/sort) and the
+/// selected-object runtime pointer used to live here (`Filters`/`CurateRuntime`) but are session-only
+/// view state, not VCS'd content — B1 moved both onto `sourcing_engine::SourcingCurateConfig` (the
+/// `filters` field reuses the `Filters` type above verbatim; the runtime pointer flattened to a plain
+/// `selected_object_id: Option<String>` config field — see that struct's doc).
 ///
 /// Query/mutation logic over this document (`filtered_stock`, `curated_count`, `curate_delta`,
 /// `curate_set`) lives in `sourcing_engine` as free functions, not as inherent methods here — Rust's
@@ -122,13 +117,7 @@ pub struct CurateDocument {
     #[serde(default)]
     pub stock: Vec<ObjectKind>,
     #[serde(default)]
-    #[dsl(block)]
-    pub filters: Filters,
-    #[serde(default)]
     #[dsl(table)]
     pub curated: Vec<CuratedItem>,
-    #[serde(default)]
-    #[dsl(block)]
-    pub runtime: CurateRuntime,
 }
 //#endregion 🔖️Document

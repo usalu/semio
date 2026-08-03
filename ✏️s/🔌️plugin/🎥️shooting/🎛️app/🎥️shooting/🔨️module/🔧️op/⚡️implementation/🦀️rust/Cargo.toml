@@ -12,6 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️
 
 [dependencies]
 shooting = { path = "../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/⚡️implementation/🦀️rust", package = "semio-s-app-shooting" }
+shooting_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-shooting-engine" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

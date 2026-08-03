@@ -1,7 +1,10 @@
-//! 🏠️ S Home launcher app — `DocumentApp` impl, render, manifest (constitutional: ui).
+//! 🏠️ S Home launcher app — `DocumentApp` impl, render, manifest (constitutional: ui). B1: unit
+//! struct, pure `handle`, real `HomeConfig` (see `home_engine`) replacing the deleted `ViewState`.
 
 use home::SHomeDocument;
-use home_op::SHomeOperation;
+use home_engine::HomeConfig;
+use home_op::{HomeConfigOperation, SHomeOperation};
+use home_protocol::HomeCommand;
 use space_shared::{ensure_space_fixtures_registered, parse_demo_space_document};
 use semio_framework_os::{
     create_ephemeral_os_space, create_os_space, delete_os_space, document_backbone_ref, encode_os_space_payload, export_os_space_pack, import_os_space_from_dsl,
@@ -10,9 +13,9 @@ use semio_framework_os::{
     OS_SPACE_BACKBONE_URI_PREFIX, VcsError,
 };
 use semio_framework_plugin::{
-    app_labels, build_virtual_file_system_scene, create_tab_stack_layout, is_de_locale, localized_label_map,
-    resolve_labels, ui_text, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView,
-    HostEffect, SurfaceKind, UiNode, ViewState, VirtualFileSystemScene,
+    app_labels, build_virtual_file_system_scene, create_tab_stack_layout, localized_label_map,
+    App, AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit,
+    HostEffect, LocaleLabels, SurfaceKind, UiNode, VirtualFileSystemScene,
 };
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
@@ -27,6 +30,18 @@ const S_HOME_BODY: &str = "s.home.vfs";
 const S_HOME_SURFACE: &str = "vfs:home:main";
 const OS_BOOT_STUDIO_ID: &str = "default";
 //#endregion 🔖️Constants
+
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — see `shooting_ui`'s identical pair.
+fn is_de_locale(cfg: &HomeConfig) -> bool {
+    cfg.locale.starts_with("de")
+}
+
+fn resolve_labels<L: LocaleLabels>(cfg: &HomeConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 static CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
@@ -151,7 +166,7 @@ fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpaceCatalogEnt
                 id: id.clone(),
                 name: document.name.clone(),
                 backbone_uri: String::new(),
-                app_count: projection.app_instances.len(),
+                app_count: projection.workflow.nodes.len(),
                 node_count: projection.workflow.nodes.len(),
                 updated_at: "0".into(),
             });
@@ -162,9 +177,9 @@ fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpaceCatalogEnt
 
 /// @emoji 🧭️ Builds the typed emit for a freshly-created studio: bump the catalog counter (operation) and
 /// navigate the shell to the new studio route (host effect).
-fn created_studio_emit(catalog_generation: u64, space_id: &str) -> ActionEmit<SHomeOperation> {
-    ActionEmit {
-        operations: vec![SHomeOperation::SetCatalogGeneration { value: catalog_generation + 1 }],
+fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeOperation, HomeConfigOperation> {
+    Emit {
+        document_operations: vec![SHomeOperation::SetCatalogGeneration { value: catalog_generation + 1 }],
         effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }],
         ..Default::default()
     }
@@ -262,8 +277,8 @@ app_labels! {
 
 //#region 🔖️CommandLabels
 /// 🗣️ (action id) -> localized label for every shell/view action declared in `create_home_app`'s static
-/// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the builder.
+/// manifest — the manifest itself has no locale parameter, so this overlay is how the command palette
+/// and Actions rail get a translated label without threading locale through the builder.
 fn s_home_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
         ("createStudio", "Create Studio", "Studio erstellen"),
@@ -298,13 +313,17 @@ fn render_home_vfs(labels: &SHomeLabels) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️HomeApp
+/// 🧪️ B1: unit struct — the Home launcher held no runtime state even pre-B1; `HomeConfig` (see
+/// `home_engine`) now carries `locale`/`active_panel_tab` (formerly `ViewState` reads).
+#[derive(Default)]
 pub struct HomeApp;
 
 impl DocumentApp for HomeApp {
     type Projection = SHomeDocument;
     type Operation = SHomeOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = HomeConfig;
+    type ConfigOperation = HomeConfigOperation;
+    type Command = HomeCommand;
 
     fn app_id(&self) -> &str {
         S_HOME_APP_ID
@@ -318,145 +337,111 @@ impl DocumentApp for HomeApp {
         SHomeDocument { schema: "s.home".into(), catalog_generation: 0 }
     }
 
-    fn handle_action(
+    /// 🏷️ Maps each `HomeCommand` variant back to the action id it was declared under in
+    /// `create_home_app`.
+    fn command_id(&self, command: &HomeCommand) -> &str {
+        match command {
+            HomeCommand::CreateStudio { .. } => "createStudio",
+            HomeCommand::BindSpaceFile { .. } => "bindSpaceFile",
+            HomeCommand::ImportSpace { .. } => "importSpace",
+            HomeCommand::OpenSpace { .. } => "openSpace",
+            HomeCommand::NavigateVirtualFileSystemNode { .. } => "navigateVirtualFileSystemNode",
+            HomeCommand::DeleteVirtualFileSystemNode { .. } => "deleteVirtualFileSystemNode",
+            HomeCommand::GoHome => "goHome",
+            HomeCommand::SetActivePanelTab { .. } => "setActivePanelTab",
+        }
+    }
+
+    fn handle(
         &self,
-        action: &str,
-        args: Option<&Value>,
+        command: &HomeCommand,
         doc: &DocumentView<'_, SHomeDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<SHomeOperation> {
+        _cfg: &ConfigView<'_, HomeConfig>,
+    ) -> Emit<SHomeOperation, HomeConfigOperation> {
         let generation = doc.projection.catalog_generation;
-        let bump = |value: u64| ActionEmit::operations(vec![SHomeOperation::SetCatalogGeneration { value }]);
+        let bump = |value: u64| Emit::operations(vec![SHomeOperation::SetCatalogGeneration { value }]);
         let port = catalog_port();
-        match action {
-            "createStudio" => {
-                let name = args
-                    .and_then(|value| value.get("name"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("Untitled Studio");
-                let kind = args
-                    .and_then(|value| value.get("kind"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("catalog");
-                match kind {
-                    "folder" => {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            if let Some(folder_path) = args
-                                .and_then(|value| value.get("folderPath"))
-                                .and_then(|value| value.as_str())
-                            {
-                                if let Ok(entry) = create_folder_studio(name, folder_path) {
-                                    eprintln!("[DEBUG] createStudio folder id={}", entry.id);
-                                    return created_studio_emit(generation, &entry.id);
-                                }
+        match command {
+            HomeCommand::CreateStudio { name, kind, folder_path } => match kind.as_str() {
+                "folder" => {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        if let Some(folder_path) = folder_path {
+                            if let Ok(entry) = create_folder_studio(name, folder_path) {
+                                eprintln!("[DEBUG] createStudio folder id={}", entry.id);
+                                return created_studio_emit(generation, &entry.id);
                             }
                         }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            let _ = name;
-                        }
                     }
-                    _ => {
-                        let space_id = create_and_register_ephemeral_studio(name);
-                        eprintln!("[DEBUG] createStudio ephemeral id={space_id}");
-                        return created_studio_emit(generation, &space_id);
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        let _ = (name, folder_path);
                     }
+                    Emit::default()
                 }
-                ActionEmit::default()
-            }
-            "bindSpaceFile" => {
+                _ => {
+                    let space_id = create_and_register_ephemeral_studio(name);
+                    eprintln!("[DEBUG] createStudio ephemeral id={space_id}");
+                    created_studio_emit(generation, &space_id)
+                }
+            },
+            HomeCommand::BindSpaceFile { space_id, file_path } => {
                 #[cfg(not(target_arch = "wasm32"))]
                 {
-                    let space_id = args
-                        .and_then(|value| value.get("spaceId"))
-                        .and_then(|value| value.as_str());
-                    let file_path = args
-                        .and_then(|value| value.get("filePath"))
-                        .and_then(|value| value.as_str());
-                    if let (Some(space_id), Some(file_path)) = (space_id, file_path) {
-                        let _ = bind_studio_file(space_id, file_path);
-                    }
+                    let _ = bind_studio_file(space_id, file_path);
                 }
-                ActionEmit::default()
-            }
-            "importSpace" => {
-                let dsl = args
-                    .and_then(|value| value.get("dsl"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .or_else(|| {
-                        args.and_then(|value| value.get("payload"))
-                            .and_then(|value| value.as_str())
-                            .map(str::to_string)
-                    });
-                match dsl {
-                    Some(dsl) => {
-                        if import_os_space_from_dsl(&dsl, port.clone()).is_ok() {
-                            bump(generation + 1)
-                        } else {
-                            ActionEmit::default()
-                        }
-                    }
-                    None => ActionEmit::effect(HostEffect::RequestFileOpen {
-                        accept: ".os".into(),
-                        read_as: None,
-                        import_action: "importSpace".into(),
-                        multiple: false,
-                    }),
+                #[cfg(target_arch = "wasm32")]
+                {
+                    let _ = (space_id, file_path);
                 }
+                Emit::default()
             }
-            "openSpace" | "navigateVirtualFileSystemNode" => {
-                let space_id = args
-                    .and_then(|value| value.get("spaceId").or_else(|| value.get("nodeId")))
-                    .and_then(|value| value.as_str())
-                    .and_then(|value| value.strip_prefix("studio:").or(Some(value)));
-                match space_id {
-                    Some(space_id) => ActionEmit::effect(HostEffect::Navigate {
-                        uri: format!("/spaces/{space_id}"),
-                    }),
-                    None => ActionEmit::default(),
-                }
-            }
-            "deleteVirtualFileSystemNode" => {
-                let space_id = args
-                    .and_then(|value| value.get("nodeId"))
-                    .and_then(|value| value.as_str())
-                    .and_then(|value| value.strip_prefix("studio:"));
-                match space_id {
-                    Some(space_id) => {
-                        if let Ok(mut guard) = EPHEMERAL_STUDIOS.lock() {
-                            guard.remove(space_id);
-                        }
-                        let _ = delete_os_space(space_id, port.clone());
+            HomeCommand::ImportSpace { dsl } => match dsl {
+                Some(dsl) => {
+                    if import_os_space_from_dsl(dsl, port.clone()).is_ok() {
                         bump(generation + 1)
+                    } else {
+                        Emit::default()
                     }
-                    None => ActionEmit::default(),
                 }
+                None => Emit::effect(HostEffect::RequestFileOpen {
+                    accept: ".os".into(),
+                    read_as: None,
+                    import_action: "importSpace".into(),
+                    multiple: false,
+                }),
+            },
+            HomeCommand::OpenSpace { space_id } => Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }),
+            HomeCommand::NavigateVirtualFileSystemNode { node_id } => {
+                let space_id = node_id.strip_prefix("studio:").unwrap_or(node_id);
+                Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") })
             }
-            "goHome" => ActionEmit::effect(HostEffect::Navigate { uri: "/".into() }),
-            _ => ActionEmit::default(),
+            HomeCommand::DeleteVirtualFileSystemNode { node_id } => match node_id.strip_prefix("studio:") {
+                Some(space_id) => {
+                    if let Ok(mut guard) = EPHEMERAL_STUDIOS.lock() {
+                        guard.remove(space_id);
+                    }
+                    let _ = delete_os_space(space_id, port.clone());
+                    bump(generation + 1)
+                }
+                None => Emit::default(),
+            },
+            HomeCommand::GoHome => Emit::effect(HostEffect::Navigate { uri: "/".into() }),
+            HomeCommand::SetActivePanelTab { tab_id } => Emit::config(vec![HomeConfigOperation::SetActivePanelTab { tab_id: tab_id.clone() }]),
         }
     }
 
-    fn render(
-        &self,
-        body_key: &str,
-        _doc: &DocumentView<'_, SHomeDocument>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-    ) -> UiNode {
-        let labels = resolve_labels::<SHomeLabels>(view_state);
+    fn render(&self, body_key: &str, _doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
+        let labels = resolve_labels::<SHomeLabels>(cfg.projection);
         match body_key {
             S_HOME_BODY => render_home_vfs(labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => semio_framework_plugin::ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<SHomeLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, HomeConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<SHomeLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(S_HOME_WINDOW, labels.window_main)
             .action_labels(s_home_action_labels(is_de))
@@ -496,7 +481,7 @@ pub fn create_home_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, HistoryView, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, HistoryView, VcsDocumentApp};
 
     fn empty_history() -> HistoryView {
         HistoryView::empty()
@@ -520,7 +505,7 @@ mod tests {
         let port = catalog_port();
         let before = list_os_space_catalog_entries(port.clone()).expect("list").len();
         let mut home = VcsDocumentApp::new(HomeApp);
-        home.handle_action("createStudio", Some(&json!({ "name": "Test Studio" })), &ViewState::default(), &testkit::meta("local"))
+        home.dispatch_typed(HomeCommand::CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }, &testkit::meta("local"))
             .expect("create");
         let after = list_os_space_catalog_entries(port).expect("list").len();
         assert!(after >= before);
@@ -534,11 +519,13 @@ mod tests {
 
     #[test]
     fn temporary_studio_uses_ephemeral_registry_not_catalog() {
-        let mut home = HomeApp;
+        let home = HomeApp;
         let projection = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
         let history = empty_history();
         let doc = DocumentView { projection: &projection, history: &history };
-        let emit = home.handle_action("createStudio", Some(&json!({ "name": "Temp Studio", "kind": "temporary" })), &doc, &ViewState::default());
+        let config = HomeConfig::default();
+        let cfg = ConfigView { projection: &config };
+        let emit = home.handle(&HomeCommand::CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg);
         assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
         assert!(
             !emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })),
@@ -560,7 +547,7 @@ mod tests {
         let document = resolve_studio_document(space_id).expect("ephemeral studio");
         assert_eq!(document.name, "Temp Studio");
         assert!(document.backbone.is_none());
-        assert!(document.vcs.initial_projection.app_instances.is_empty());
+        assert!(document.vcs.initial_projection.workflow.nodes.is_empty());
     }
 
     #[test]
@@ -581,19 +568,35 @@ mod tests {
         let home = HomeApp;
         let home_doc = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
         let home_view = DocumentView { projection: &home_doc, history: &history };
-        let home_node = home.render(S_HOME_BODY, &home_view, &ViewState::default());
+        let config = HomeConfig::default();
+        let cfg = ConfigView { projection: &config };
+        let home_node = home.render(S_HOME_BODY, &home_view, &cfg);
         assert!(serde_json::to_string(&home_node).unwrap().contains("No studios yet. Create one from the navbar."));
     }
 
     #[test]
     fn home_labels_resolve_native_german_locale() {
         let history = empty_history();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
         let home = HomeApp;
         let home_doc = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
         let home_view = DocumentView { projection: &home_doc, history: &history };
-        let home_node = home.render(S_HOME_BODY, &home_view, &view_state);
+        let config = HomeConfig { locale: "de".into(), ..HomeConfig::default() };
+        let cfg = ConfigView { projection: &config };
+        let home_node = home.render(S_HOME_BODY, &home_view, &cfg);
         assert!(serde_json::to_string(&home_node).unwrap().contains("Noch keine Studios vorhanden"));
+    }
+
+    #[test]
+    fn set_active_panel_tab_emits_config_operation() {
+        let home = HomeApp;
+        let projection = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
+        let history = empty_history();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let config = HomeConfig::default();
+        let cfg = ConfigView { projection: &config };
+        let emit = home.handle(&HomeCommand::SetActivePanelTab { tab_id: "tab-1".into() }, &doc, &cfg);
+        assert_eq!(emit.config_operations, vec![HomeConfigOperation::SetActivePanelTab { tab_id: "tab-1".into() }]);
+        assert!(emit.document_operations.is_empty());
     }
 }
 //#endregion 🧪️Tests

@@ -1,30 +1,34 @@
-//! ✍️ Writer app — DocumentApp impl, render, manifest (constitutional: ui).
+//! ✍️ Writer app — `DocumentApp` impl, render, manifest (constitutional: ui). B1: the pure-trait
+//! flip — `WriterPlayApp` is a unit struct; every former `WriterPlayRuntime` field (selection, hover,
+//! camera, editor settings, signals, engagement draft) now lives in `writer_engine::WriterConfig`,
+//! written via `writer_op::WriterConfigOperation`s (real `backwards`, no ad hoc `InverseAction`); every
+//! action dispatches through the single typed `writer_protocol::WriterCommand` channel via
+//! `DocumentApp::handle` — mirrors `shooting_ui::ShootingPlayApp` (the B1 pilot) exactly.
 
 use trinity_jack::{example_graph, lint, semantic_tokens, Diagnostic};
 use writer::{WriterCamera, WriterProjection, WRITER_DOCUMENT_SCHEMA};
 use writer_engine::{
     apply_jack_rename, dag_jack_example_document, dag_jack_example_json, empty_writer_projection, find_deepest_jack_ast_node_at, format_writer_text, jack_ast_node_by_id,
     jack_ast_node_for_selection, jack_ast_tree_icon, jack_completions_json, jack_editor_placeholders, jack_example_document, jack_example_json, jack_newline_gate_offsets, jack_symbol_at_offset,
-    parse_jack_ast, selectable_spans_for_jack, tokenize_language, JackAstNode, JackSymbolKind,
+    parse_jack_ast, selectable_spans_for_jack, tokenize_language, writer_chapter_payload, JackAstNode, JackSymbolKind, WriterConfig, WriterEditorSelection,
 };
-use writer_op::WriterOperation;
+use writer_op::{WriterConfigOperation, WriterOperation};
+use writer_protocol::WriterCommand;
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
-    build_text_editor_scene, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, strip_engagement_prefix,
+    build_text_editor_scene, engagement_token_matches, localized_label_map, strip_engagement_prefix,
     tree_item, ui_declarative_sections_to_tree, ui_text, App,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt,
-    DocumentApp, DocumentView, IconName, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
-    UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
-    WindowEngagementOption, WindowMeasure,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, AppIo, AppLabelsOverlay, AppLabelsOverlayExt,
+    DocumentApp, DocumentView, ConfigView, Emit, IconName, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
+    UiTreeItemNode, WindowEngagement, WindowEngagementInput,
+    WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, create_default_layout,
 };
-use semio_framework_plugin::{WindowEngagementPossible, WindowEngagementStatus};
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use std::collections::HashMap;
+use store::DocumentPack;
 
 //#region 🔖️Constants
 pub const WRITER_PLAY_APP_ID: &str = "writer-play";
@@ -40,80 +44,17 @@ const WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID: &str = "framework.panel.document.out
 const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";
 //#endregion 🔖️Constants
 
-//#region 🔖️Types
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WriterEditorSelection {
-    start: usize,
-    end: usize,
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
+fn is_de_locale(cfg: &WriterConfig) -> bool {
+    cfg.locale.starts_with("de")
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WriterEditorSettings {
-    #[serde(default)]
-    show_line_numbers: bool,
-    #[serde(default = "default_font_px")]
-    font_px: u32,
-    #[serde(default = "default_line_height")]
-    line_height: u32,
-    #[serde(default = "default_tab_size")]
-    tab_size: u32,
+fn resolve_labels<L: LocaleLabels>(cfg: &WriterConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
 }
-
-fn default_font_px() -> u32 {
-    14
-}
-
-/// 🪞️ Premigration writer canvas line height (writer/rs `WriterHost::build_scene`).
-fn default_line_height() -> u32 {
-    22
-}
-
-fn default_tab_size() -> u32 {
-    2
-}
-
-impl Default for WriterEditorSettings {
-    fn default() -> Self {
-        Self {
-            show_line_numbers: true,
-            font_px: default_font_px(),
-            line_height: default_line_height(),
-            tab_size: default_tab_size(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct WriterPlayRuntime {
-    #[serde(default)]
-    selected_ast_ids: Vec<String>,
-    #[serde(default)]
-    editor_selection: Option<WriterEditorSelection>,
-    #[serde(default)]
-    format_signal: u32,
-    #[serde(default)]
-    lint_signal: u32,
-    #[serde(default)]
-    revision: u32,
-    #[serde(default)]
-    editor_settings: WriterEditorSettings,
-    /// 🐁️ AST node id whose tree row is hovered (drives editor hover box + tree highlight).
-    #[serde(default)]
-    tree_hovered_ast_id: Option<String>,
-    /// 🐁️ Byte offset last reported as hovered by the editor surface (drives occurrence highlight + tree highlight).
-    #[serde(default)]
-    editor_hover_offset: Option<usize>,
-    #[serde(default)]
-    engagement_input: String,
-    /// 🎥️ Editor viewport pan/zoom — session-only view state (never a VCS-tracked document field):
-    /// see `"setCamera"` in `handle_action` below.
-    #[serde(default)]
-    camera: WriterCamera,
-}
-//#endregion 🔖️Types
+//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
@@ -145,15 +86,15 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
 }
 
 /// 🐁️ Resolves tree/editor hover cross-highlighting: (highlighted AST id, tree-hover span, hover occurrences).
-fn editor_hover_context(document: &WriterProjection, runtime: &WriterPlayRuntime) -> (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>) {
+fn editor_hover_context(document: &WriterProjection, config: &WriterConfig) -> (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>) {
     if document.language_id != "jack" {
         return (None, None, Vec::new());
     }
     let root = parse_jack_ast(&document.text);
-    let tree_span = runtime.tree_hovered_ast_id.as_ref().and_then(|id| jack_ast_node_by_id(&root, id)).map(|node| (node.start, node.end));
-    let editor_hovered_ast_id = runtime.editor_hover_offset.and_then(|offset| find_deepest_jack_ast_node_at(&root, offset)).map(|node| node.id.clone());
-    let highlighted = runtime.tree_hovered_ast_id.clone().or(editor_hovered_ast_id);
-    let hover_occurrences = runtime
+    let tree_span = config.tree_hovered_ast_id.as_ref().and_then(|id| jack_ast_node_by_id(&root, id)).map(|node| (node.start, node.end));
+    let editor_hovered_ast_id = config.editor_hover_offset.and_then(|offset| find_deepest_jack_ast_node_at(&root, offset)).map(|node| node.id.clone());
+    let highlighted = config.tree_hovered_ast_id.clone().or(editor_hovered_ast_id);
+    let hover_occurrences = config
         .editor_hover_offset
         .and_then(|offset| jack_symbol_at_offset(&document.text, offset))
         .filter(|symbol| symbol.kind == JackSymbolKind::Variable)
@@ -236,7 +177,7 @@ fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> Action
     }
 }
 
-fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntime, labels: &WriterPlayLabels) -> UiNode {
+fn render_document_panel(document: &WriterProjection, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
     if document.language_id != "jack" {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "writer-document".into(),
@@ -257,10 +198,10 @@ fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntim
     } else {
         vec![jack_ast_to_tree_item(&root)]
     };
-    let (highlighted_ast_id, _, _) = editor_hover_context(document, runtime);
+    let (highlighted_ast_id, _, _) = editor_hover_context(document, config);
     PanelTreeBuilder::new("writer-play-document")
         .section_or_placeholder("writer-play-document.ast", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, items, labels.empty_query)
-        .selected(runtime.selected_ast_ids.clone())
+        .selected(config.selected_ast_ids.clone())
         .highlighted(highlighted_ast_id.map(|id| vec![id]).unwrap_or_default())
         .selection_change(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstSelection", None))
         .build()
@@ -277,7 +218,7 @@ fn render_catalogue_panel(labels: &WriterPlayLabels) -> UiNode {
     }])
 }
 
-fn render_inspection_panel(document: &WriterProjection, runtime: &WriterPlayRuntime, labels: &WriterPlayLabels) -> UiNode {
+fn render_inspection_panel(document: &WriterProjection, config: &WriterConfig, labels: &WriterPlayLabels) -> UiNode {
     let mut sections = vec![
         UiSectionNode {
             id: "writer-inspector.document".into(),
@@ -298,9 +239,9 @@ fn render_inspection_panel(document: &WriterProjection, runtime: &WriterPlayRunt
             label: Some(labels.camera.into()),
             default_open: Some(false),
             children: vec![
-                ui_text(format!("x: {}", runtime.camera.x)),
-                ui_text(format!("y: {}", runtime.camera.y)),
-                ui_text(format!("zoom: {}", runtime.camera.zoom)),
+                ui_text(format!("x: {}", config.camera.x)),
+                ui_text(format!("y: {}", config.camera.y)),
+                ui_text(format!("zoom: {}", config.camera.zoom)),
             ],
             presence: UiPresence::default(),
             menu: None,
@@ -325,11 +266,11 @@ fn render_inspection_panel(document: &WriterProjection, runtime: &WriterPlayRunt
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
-fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -> UiNode {
+fn render_main_scene(document: &WriterProjection, config: &WriterConfig) -> UiNode {
     let is_jack = document.language_id == "jack";
-    let selection = runtime.editor_selection.clone().unwrap_or_default();
+    let selection = config.editor_selection.clone().unwrap_or(WriterEditorSelection { start: 0, end: 0 });
     let cursor = selection.end;
-    let selection_json = runtime.editor_selection.as_ref().map(|s| json!({ "start": s.start, "end": s.end }).to_string());
+    let selection_json = Some(json!({ "start": selection.start, "end": selection.end }).to_string());
 
     let grammar_tokens = tokenize_language(&document.text, &document.language_id);
     let tokens_json = if is_jack {
@@ -345,8 +286,8 @@ fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -
             .map(|diag: Diagnostic| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message }))
             .collect();
         Some(serde_json::to_string(&diagnostics).unwrap_or_else(|_| "[]".into()))
-    } else if runtime.lint_signal > 0 {
-        Some(json!([{ "start": 0, "end": document.text.len().max(1), "severity": "info", "message": format!("Lint pass #{}", runtime.lint_signal) }]).to_string())
+    } else if config.lint_signal > 0 {
+        Some(json!([{ "start": 0, "end": document.text.len().max(1), "severity": "info", "message": format!("Lint pass #{}", config.lint_signal) }]).to_string())
     } else {
         None
     };
@@ -355,7 +296,7 @@ fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -
     let placeholders_json = is_jack.then(|| serde_json::to_string(&jack_editor_placeholders(&document.text, cursor)).unwrap_or_else(|_| "[]".into()));
     let newline_gates_json = is_jack.then(|| serde_json::to_string(&jack_newline_gate_offsets(&document.text)).unwrap_or_else(|_| "[]".into()));
 
-    let (_, tree_hover_span, hover_occurrences) = editor_hover_context(document, runtime);
+    let (_, tree_hover_span, hover_occurrences) = editor_hover_context(document, config);
     let hover_json = Some(match tree_hover_span {
         Some((start, end)) => json!({ "start": start, "end": end }).to_string(),
         None => "null".to_string(),
@@ -397,12 +338,12 @@ fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -
             diagnostics_json,
             completions_json,
             occurrences_json,
-            overlays_json: runtime.editor_settings.show_line_numbers.then(|| json!({ "lineNumbers": true }).to_string()),
+            overlays_json: config.editor_settings.show_line_numbers.then(|| json!({ "lineNumbers": true }).to_string()),
             placeholders_json,
             extra_carets_json,
             selectable_spans_json,
-            settings_json: Some(serde_json::to_string(&runtime.editor_settings).unwrap_or_else(|_| "{}".into())),
-            camera_json: Some(json!({ "x": runtime.camera.x, "y": runtime.camera.y, "zoom": runtime.camera.zoom }).to_string()),
+            settings_json: Some(serde_json::to_string(&config.editor_settings).unwrap_or_else(|_| "{}".into())),
+            camera_json: Some(json!({ "x": config.camera.x, "y": config.camera.y, "zoom": config.camera.zoom }).to_string()),
             hover_json,
             newline_gates_json,
             rename_json,
@@ -412,59 +353,68 @@ fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -
 //#endregion 🔖️Render
 
 //#region 🔖️Engagement
+/// 📤️ What `apply_engagement` computes: an optional document text replacement plus the config
+/// operations the interaction always produces (mirrors `Emit`'s document/config split — `handle`
+/// below wires this straight into one `Emit`).
+struct WriterEngagementOutcome {
+    text: Option<String>,
+    config_operations: Vec<WriterConfigOperation>,
+}
+
 /// 💬️ Natural-language engagement parsing (premigration `applyEngagement`). Accepts both the
 /// spaced form (wgpu REPL) and the React shell's PascalCased, separator-stripped drafts (e.g.
-/// `"Font16"`, `"LineNumbers"` — see `strip_engagement_prefix`). Mutates ephemeral `runtime`
-/// state in place; returns `Some(new_text)` only for the `format` branch when the source changed,
-/// so the caller can emit a `SetText` operation — every other branch returns `None` (view-only).
-fn apply_engagement(runtime: &mut WriterPlayRuntime, current_text: &str, language_id: &str, value: &str) -> Option<String> {
+/// `"Font16"`, `"LineNumbers"` — see `strip_engagement_prefix`). B1: pure — computes the config
+/// operations this interaction produces instead of mutating a `&mut runtime` in place.
+fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str, value: &str) -> WriterEngagementOutcome {
     let trimmed = value.trim();
-    runtime.engagement_input.clear();
-    runtime.revision += 1;
+    let mut config_operations = vec![
+        WriterConfigOperation::SetEngagementInput { value: String::new() },
+        WriterConfigOperation::SetRevision { value: config.revision + 1 },
+    ];
     if trimmed.is_empty() {
-        return None;
+        return WriterEngagementOutcome { text: None, config_operations };
     }
     if engagement_token_matches(trimmed, "format") {
-        runtime.format_signal += 1;
+        config_operations.push(WriterConfigOperation::SetFormatSignal { value: config.format_signal + 1 });
         let formatted = format_writer_text(current_text, language_id);
-        return (formatted != current_text).then_some(formatted);
+        let text = (formatted != current_text).then_some(formatted);
+        return WriterEngagementOutcome { text, config_operations };
     }
     if engagement_token_matches(trimmed, "lint") {
-        runtime.lint_signal += 1;
-        return None;
+        config_operations.push(WriterConfigOperation::SetLintSignal { value: config.lint_signal + 1 });
+        return WriterEngagementOutcome { text: None, config_operations };
     }
     if engagement_token_matches(trimmed, "line numbers") || engagement_token_matches(trimmed, "numbers") || engagement_token_matches(trimmed, "gutter") {
-        runtime.editor_settings.show_line_numbers = !runtime.editor_settings.show_line_numbers;
-        return None;
+        let mut settings = config.editor_settings.clone();
+        settings.show_line_numbers = !settings.show_line_numbers;
+        config_operations.push(WriterConfigOperation::SetEditorSettings { settings });
+        return WriterEngagementOutcome { text: None, config_operations };
     }
     if let Some(rest) = strip_engagement_prefix(trimmed, "font size").or_else(|| strip_engagement_prefix(trimmed, "font")) {
         if let Ok(px) = rest.parse::<u32>() {
-            runtime.editor_settings.font_px = px;
+            let mut settings = config.editor_settings.clone();
+            settings.font_px = px;
+            config_operations.push(WriterConfigOperation::SetEditorSettings { settings });
         }
-        return None;
+        return WriterEngagementOutcome { text: None, config_operations };
     }
     if let Some(rest) = strip_engagement_prefix(trimmed, "tab size").or_else(|| strip_engagement_prefix(trimmed, "tab")) {
         if let Ok(size) = rest.parse::<u32>() {
-            runtime.editor_settings.tab_size = size.max(1);
+            let mut settings = config.editor_settings.clone();
+            settings.tab_size = size.max(1);
+            config_operations.push(WriterConfigOperation::SetEditorSettings { settings });
         }
     }
-    None
+    WriterEngagementOutcome { text: None, config_operations }
 }
 //#endregion 🔖️Engagement
 
 //#region 🔖️WriterPlayApp
-pub struct WriterPlayApp {
-    /// 🎛️ Ephemeral view state (selection, hover, editor settings, signals, engagement draft) that
-    /// lives on the app struct — never in the document projection, so it emits no history entries.
-    runtime: RefCell<WriterPlayRuntime>,
-}
-
-impl Default for WriterPlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(WriterPlayRuntime::default()) }
-    }
-}
-
+/// 🧪️ B1: unit struct — every former `WriterPlayRuntime` field now lives in
+/// `writer_engine::WriterConfig` (see `DocumentApp::Config`), written through
+/// `writer_op::WriterConfigOperation`s.
+#[derive(Default)]
+pub struct WriterPlayApp;
 
 /// 🖱️ On-demand writer text-editor context menu from caret/selection/completions context.
 fn writer_context_menu_items(
@@ -509,8 +459,9 @@ fn writer_context_menu_items(
 impl DocumentApp for WriterPlayApp {
     type Projection = WriterProjection;
     type Operation = WriterOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = WriterConfig;
+    type ConfigOperation = WriterConfigOperation;
+    type Command = WriterCommand;
 
     fn app_id(&self) -> &str {
         WRITER_PLAY_APP_ID
@@ -524,256 +475,255 @@ impl DocumentApp for WriterPlayApp {
         empty_writer_projection()
     }
 
-    fn handle_action(
+    fn io(&self) -> Option<AppIo> {
+        Some(writer_engine::writer_io())
+    }
+
+    fn whole_document_operation(&self, projection: WriterProjection) -> Option<WriterOperation> {
+        Some(WriterOperation::SetDocument { document: projection })
+    }
+
+    /// 🏷️ Maps each `WriterCommand` variant back to the action id it was declared under in
+    /// `create_writer_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check.
+    fn command_id(&self, command: &WriterCommand) -> &str {
+        match command {
+            WriterCommand::TextEdit { .. } => "textEdit",
+            WriterCommand::SetText { .. } => "setText",
+            WriterCommand::SetDocument { .. } => "setDocument",
+            WriterCommand::SetDocumentJson { .. } => "setDocumentJson",
+            WriterCommand::SetFixtureJson { .. } => "setFixtureJson",
+            WriterCommand::SetActiveExample { .. } => "setActiveExample",
+            WriterCommand::FormatDocument => "formatDocument",
+            WriterCommand::CommitRename { .. } => "commitRename",
+            WriterCommand::SetCamera { .. } => "setCamera",
+            WriterCommand::RequestCompletions => "requestCompletions",
+            WriterCommand::LintDocument => "lintDocument",
+            WriterCommand::TextSelect { .. } => "textSelect",
+            WriterCommand::SetEditorSelection { .. } => "setEditorSelection",
+            WriterCommand::SelectAstNode { .. } => "selectAstNode",
+            WriterCommand::SetAstSelection { .. } => "setAstSelection",
+            WriterCommand::SetAstHover { .. } => "setAstHover",
+            WriterCommand::TextHover { .. } => "textHover",
+            WriterCommand::ToggleLineNumbers => "toggleLineNumbers",
+            WriterCommand::SetFontPx { .. } | WriterCommand::SetLineHeight { .. } | WriterCommand::SetTabSize { .. } => "setEditorSetting",
+            WriterCommand::EngagementInput { .. } => "engagementInput",
+            WriterCommand::EngagementSubmit { .. } => "engagementSubmit",
+            WriterCommand::SetLocale { .. } => "setLocale",
+        }
+    }
+
+    fn handle(
         &self,
-        action: &str,
-        args: Option<&Value>,
+        command: &WriterCommand,
         doc: &DocumentView<'_, WriterProjection>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<WriterOperation> {
-        // undo/redo/checkpoint/alternative never reach here — `VcsDocumentApp` intercepts them.
+        cfg: &ConfigView<'_, WriterConfig>,
+    ) -> Emit<WriterOperation, WriterConfigOperation> {
         let document = doc.projection;
-        let str_arg = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str);
-        let usize_arg = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_u64).map(|value| value as usize);
-        match action {
-            "textEdit" => {
-                if let Some(text) = str_arg("text") {
-                    // ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into
-                    // a few undo steps, not one-per-keystroke. Any interrupting action (format, example
-                    // load, engagement submit) applies without this key and breaks the coalescing run.
-                    return ActionEmit::amend(vec![WriterOperation::SetText { text: text.into() }], "writer-text-edit");
-                }
-                ActionEmit::default()
+        let config = cfg.projection;
+        match command {
+            WriterCommand::TextEdit { text } => {
+                // ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into
+                // a few undo steps, not one-per-keystroke. Any interrupting command applies without this
+                // key and breaks the coalescing run.
+                Emit::amend(vec![WriterOperation::SetText { text: text.clone() }], "writer-text-edit")
             }
-            "setText" => {
-                if let Some(text) = str_arg("text") {
-                    // 🪙️ A discrete document replacement (unlike `textEdit`'s keystroke bursts) — each call
-                    // is its own undo step, so it must NOT share `textEdit`'s coalescing key.
-                    return ActionEmit::operations(vec![WriterOperation::SetText { text: text.into() }]);
-                }
-                ActionEmit::default()
+            WriterCommand::SetText { text } => {
+                // 🪙️ A discrete document replacement (unlike `TextEdit`'s keystroke bursts) — each call
+                // is its own undo step, so it must NOT share `TextEdit`'s coalescing key.
+                Emit::operations(vec![WriterOperation::SetText { text: text.clone() }])
             }
-            "setDocument" => {
-                if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value::<WriterProjection>(next.clone()) {
-                        return ActionEmit::operations(vec![WriterOperation::SetDocument { document: parsed }]);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "setDocumentJson" | "setFixtureJson" => {
-                if let Some(json_text) = str_arg("json") {
-                    if let Ok(parsed) = serde_json::from_str::<WriterProjection>(json_text) {
-                        return ActionEmit::operations(vec![WriterOperation::SetDocument { document: parsed }]);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "setActiveExample" => {
-                let example_id = str_arg("exampleId").unwrap_or("");
-                let document = match example_id {
+            WriterCommand::SetDocument { document } => Emit::operations(vec![WriterOperation::SetDocument { document: document.clone() }]),
+            WriterCommand::SetDocumentJson { json } | WriterCommand::SetFixtureJson { json } => match serde_json::from_str::<WriterProjection>(json) {
+                Ok(document) => Emit::operations(vec![WriterOperation::SetDocument { document }]),
+                Err(_) => Emit::default(),
+            },
+            WriterCommand::SetActiveExample { example_id } => {
+                let document = match example_id.as_str() {
                     "jack" => jack_example_document(),
                     "dag.jack" => dag_jack_example_document(),
                     _ => empty_writer_projection(),
                 };
-                ActionEmit::operations(vec![WriterOperation::SetDocument { document }])
+                Emit::operations(vec![WriterOperation::SetDocument { document }])
             }
-            // 🎥️ View action: the editor viewport never touches the document — it's written straight
-            // into `self.runtime`, session-only, no VCS edit, no undo entry.
-            "setCamera" => {
-                if let Some(camera) = args.and_then(|value| value.get("camera")) {
-                    if let Ok(parsed) = serde_json::from_value::<WriterCamera>(camera.clone()) {
-                        self.runtime.borrow_mut().camera = parsed;
-                    }
-                }
-                ActionEmit::default()
-            }
-            "formatDocument" => {
-                self.runtime.borrow_mut().format_signal += 1;
+            WriterCommand::FormatDocument => {
                 let formatted = format_writer_text(&document.text, &document.language_id);
+                let mut emit = Emit::config(vec![WriterConfigOperation::SetFormatSignal { value: config.format_signal + 1 }]);
                 if formatted != document.text {
-                    return ActionEmit::operations(vec![WriterOperation::SetText { text: formatted }]);
+                    emit.document_operations = vec![WriterOperation::SetText { text: formatted }];
                 }
-                ActionEmit::default()
+                emit
             }
-            "commitRename" => {
-                let Some(new_text) = str_arg("text") else {
-                    return ActionEmit::default();
-                };
-                let occurrences: Option<Vec<(usize, usize)>> = args
-                    .and_then(|value| value.get("occurrences"))
-                    .and_then(|value| value.as_array())
-                    .map(|items| {
-                        items
-                            .iter()
-                            .filter_map(|item| {
-                                let start = item.get("start")?.as_u64()? as usize;
-                                let end = item.get("end")?.as_u64()? as usize;
-                                Some((start, end))
-                            })
-                            .collect::<Vec<_>>()
-                    })
-                    .filter(|items| !items.is_empty());
-                if let Some(occurrences) = occurrences {
-                    let text = apply_jack_rename(&document.text, &occurrences, new_text);
-                    return ActionEmit::operations(vec![WriterOperation::SetText { text }]);
-                }
-                if let (Some(start), Some(end)) = (usize_arg("start"), usize_arg("end")) {
-                    if start <= end && end <= document.text.len() {
-                        let mut text = document.text.clone();
-                        text.replace_range(start..end, new_text);
-                        return ActionEmit::operations(vec![WriterOperation::SetText { text }]);
+            WriterCommand::CommitRename { text } => {
+                let selection = config.editor_selection.clone().unwrap_or(WriterEditorSelection { start: 0, end: 0 });
+                if selection.start == selection.end {
+                    if let Some(symbol) = jack_symbol_at_offset(&document.text, selection.start) {
+                        if symbol.kind == JackSymbolKind::Variable {
+                            let renamed = apply_jack_rename(&document.text, &symbol.occurrences, text);
+                            return Emit::operations(vec![WriterOperation::SetText { text: renamed }]);
+                        }
                     }
                 }
-                ActionEmit::default()
-            }
-            "requestCompletions" => {
-                self.runtime.borrow_mut().revision += 1;
-                ActionEmit::default()
-            }
-            "lintDocument" => {
-                self.runtime.borrow_mut().lint_signal += 1;
-                self.runtime.borrow_mut().revision += 1;
-                ActionEmit::default()
-            }
-            "textSelect" | "setEditorSelection" => {
-                let start = usize_arg("start").unwrap_or(0);
-                let end = usize_arg("end").unwrap_or(start);
-                self.runtime.borrow_mut().editor_selection = Some(WriterEditorSelection { start, end });
-                if document.language_id == "jack" {
-                    let root = parse_jack_ast(&document.text);
-                    self.runtime.borrow_mut().selected_ast_ids = jack_ast_node_for_selection(&root, start.min(end), start.max(end))
-                        .map(|node| vec![node.id.clone()])
-                        .unwrap_or_default();
-                } else {
-                    self.runtime.borrow_mut().selected_ast_ids.clear();
+                if selection.start <= selection.end && selection.end <= document.text.len() {
+                    let mut updated = document.text.clone();
+                    updated.replace_range(selection.start..selection.end, text);
+                    return Emit::operations(vec![WriterOperation::SetText { text: updated }]);
                 }
-                self.runtime.borrow_mut().revision += 1;
-                ActionEmit::default()
+                Emit::default()
             }
-            "selectAstNode" => {
-                let id = str_arg("id").unwrap_or("");
-                let start = usize_arg("start").unwrap_or(0);
-                let end = usize_arg("end").unwrap_or(0);
-                self.runtime.borrow_mut().selected_ast_ids = if id.is_empty() { Vec::new() } else { vec![id.into()] };
-                self.runtime.borrow_mut().editor_selection = Some(WriterEditorSelection { start, end });
-                self.runtime.borrow_mut().revision += 1;
-                ActionEmit::default()
+            // 🎥️ View command: the editor viewport never touches the document — config-only.
+            WriterCommand::SetCamera { camera } => Emit::config(vec![WriterConfigOperation::SetCamera { camera: camera.clone() }]),
+            WriterCommand::RequestCompletions => Emit::config(vec![WriterConfigOperation::SetRevision { value: config.revision + 1 }]),
+            WriterCommand::LintDocument => Emit::config(vec![
+                WriterConfigOperation::SetLintSignal { value: config.lint_signal + 1 },
+                WriterConfigOperation::SetRevision { value: config.revision + 1 },
+            ]),
+            WriterCommand::TextSelect { start, end } | WriterCommand::SetEditorSelection { start, end } => {
+                let mut ops = vec![WriterConfigOperation::SetEditorSelection { selection: Some(WriterEditorSelection { start: *start, end: *end }) }];
+                let ids = if document.language_id == "jack" {
+                    let root = parse_jack_ast(&document.text);
+                    jack_ast_node_for_selection(&root, (*start).min(*end), (*start).max(*end)).map(|node| vec![node.id.clone()]).unwrap_or_default()
+                } else {
+                    Vec::new()
+                };
+                ops.push(WriterConfigOperation::SetSelectedAstIds { ids });
+                ops.push(WriterConfigOperation::SetRevision { value: config.revision + 1 });
+                Emit::config(ops)
             }
-            "setAstSelection" => {
-                let ids: Vec<String> = args
-                    .and_then(|value| value.get("ids"))
-                    .and_then(|value| value.as_array())
-                    .map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
-                    .unwrap_or_default();
-                self.runtime.borrow_mut().selected_ast_ids = ids.clone();
+            WriterCommand::SelectAstNode { id, start, end } => {
+                let ids = if id.is_empty() { Vec::new() } else { vec![id.clone()] };
+                Emit::config(vec![
+                    WriterConfigOperation::SetSelectedAstIds { ids },
+                    WriterConfigOperation::SetEditorSelection { selection: Some(WriterEditorSelection { start: *start, end: *end }) },
+                    WriterConfigOperation::SetRevision { value: config.revision + 1 },
+                ])
+            }
+            WriterCommand::SetAstSelection { ids } => {
+                let mut ops = vec![WriterConfigOperation::SetSelectedAstIds { ids: ids.clone() }];
                 if let Some(id) = ids.first() {
                     if document.language_id == "jack" {
                         let root = parse_jack_ast(&document.text);
-                        self.runtime.borrow_mut().editor_selection = jack_ast_node_by_id(&root, id).map(|node| WriterEditorSelection { start: node.start, end: node.end });
+                        if let Some(node) = jack_ast_node_by_id(&root, id) {
+                            ops.push(WriterConfigOperation::SetEditorSelection { selection: Some(WriterEditorSelection { start: node.start, end: node.end }) });
+                        }
                     }
                 }
-                self.runtime.borrow_mut().revision += 1;
-                ActionEmit::default()
+                ops.push(WriterConfigOperation::SetRevision { value: config.revision + 1 });
+                Emit::config(ops)
             }
-            "setAstHover" => {
-                let id = str_arg("id").map(str::to_string);
-                if id != self.runtime.borrow_mut().tree_hovered_ast_id {
-                    self.runtime.borrow_mut().tree_hovered_ast_id = id;
-                    self.runtime.borrow_mut().revision += 1;
+            WriterCommand::SetAstHover { id } => {
+                if *id != config.tree_hovered_ast_id {
+                    Emit::config(vec![
+                        WriterConfigOperation::SetTreeHoveredAstId { id: id.clone() },
+                        WriterConfigOperation::SetRevision { value: config.revision + 1 },
+                    ])
+                } else {
+                    Emit::default()
                 }
-                ActionEmit::default()
             }
-            "textHover" => {
-                let start = usize_arg("start");
-                let end = usize_arg("end");
+            WriterCommand::TextHover { start, end } => {
                 let offset = match (start, end) {
-                    (Some(s), Some(e)) => Some(s + e.saturating_sub(s) / 2),
+                    (Some(s), Some(e)) => Some(s + e.saturating_sub(*s) / 2),
                     _ => None,
                 };
-                if offset != self.runtime.borrow_mut().editor_hover_offset {
-                    self.runtime.borrow_mut().editor_hover_offset = offset;
-                    self.runtime.borrow_mut().revision += 1;
-                }
-                ActionEmit::default()
-            }
-            "toggleLineNumbers" => {
-                self.runtime.borrow_mut().editor_settings.show_line_numbers = !self.runtime.borrow_mut().editor_settings.show_line_numbers;
-                self.runtime.borrow_mut().revision += 1;
-                ActionEmit::default()
-            }
-            "setEditorSetting" => {
-                let field = str_arg("field").unwrap_or("");
-                let value = args.and_then(|value| value.get("value"));
-                match field {
-                    "fontPx" => {
-                        if let Some(px) = value.and_then(Value::as_u64) {
-                            self.runtime.borrow_mut().editor_settings.font_px = px as u32;
-                        }
-                    }
-                    "lineHeight" => {
-                        if let Some(px) = value.and_then(Value::as_u64) {
-                            self.runtime.borrow_mut().editor_settings.line_height = px as u32;
-                        }
-                    }
-                    "tabSize" => {
-                        if let Some(px) = value.and_then(Value::as_u64) {
-                            self.runtime.borrow_mut().editor_settings.tab_size = px.max(1) as u32;
-                        }
-                    }
-                    _ => return ActionEmit::default(),
-                }
-                self.runtime.borrow_mut().revision += 1;
-                ActionEmit::default()
-            }
-            "engagementInput" => {
-                let value = str_arg("value").unwrap_or("").to_string();
-                if value != self.runtime.borrow_mut().engagement_input {
-                    self.runtime.borrow_mut().engagement_input = value;
-                    self.runtime.borrow_mut().revision += 1;
-                }
-                ActionEmit::default()
-            }
-            "engagementSubmit" => {
-                let value = str_arg("value").map(str::to_string).unwrap_or_else(|| self.runtime.borrow_mut().engagement_input.clone());
-                match apply_engagement(&mut *self.runtime.borrow_mut(), &document.text, &document.language_id, &value) {
-                    Some(text) => ActionEmit::operations(vec![WriterOperation::SetText { text }]),
-                    None => ActionEmit::default(),
+                if offset != config.editor_hover_offset {
+                    Emit::config(vec![
+                        WriterConfigOperation::SetEditorHoverOffset { offset },
+                        WriterConfigOperation::SetRevision { value: config.revision + 1 },
+                    ])
+                } else {
+                    Emit::default()
                 }
             }
-            _ => ActionEmit::default(),
+            WriterCommand::ToggleLineNumbers => {
+                let mut settings = config.editor_settings.clone();
+                settings.show_line_numbers = !settings.show_line_numbers;
+                Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+            }
+            WriterCommand::SetFontPx { value } => {
+                let mut settings = config.editor_settings.clone();
+                settings.font_px = *value;
+                Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+            }
+            WriterCommand::SetLineHeight { value } => {
+                let mut settings = config.editor_settings.clone();
+                settings.line_height = *value;
+                Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+            }
+            WriterCommand::SetTabSize { value } => {
+                let mut settings = config.editor_settings.clone();
+                settings.tab_size = (*value).max(1);
+                Emit::config(vec![WriterConfigOperation::SetEditorSettings { settings }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+            }
+            WriterCommand::EngagementInput { value } => {
+                if *value != config.engagement_input {
+                    Emit::config(vec![WriterConfigOperation::SetEngagementInput { value: value.clone() }, WriterConfigOperation::SetRevision { value: config.revision + 1 }])
+                } else {
+                    Emit::default()
+                }
+            }
+            WriterCommand::EngagementSubmit { value } => {
+                let value = value.clone().unwrap_or_else(|| config.engagement_input.clone());
+                let outcome = apply_engagement(config, &document.text, &document.language_id, &value);
+                Emit {
+                    document_operations: outcome.text.map(|text| vec![WriterOperation::SetText { text }]).unwrap_or_default(),
+                    config_operations: outcome.config_operations,
+                    ..Default::default()
+                }
+            }
+            WriterCommand::SetLocale { value } => Emit::config(vec![WriterConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, WriterProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
+    /// 🎞️ `"text:out"` exports the writer document's current text as one "chapter" payload (see
+    /// `writer_engine::writer_chapter_payload`) — `playbook`'s `"chapters:in"` is the intended
+    /// consumer. Falls through to the default whole-document-pack export for `"document:out"`
+    /// (duplicated inline, not delegated — Rust traits have no `super` call for an overridden default).
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, WriterProjection>) -> Result<Media, MediaError> {
+        if port == "text:out" {
+            let payload = writer_chapter_payload(doc.projection);
+            let json = serde_json::to_string(&payload).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            return Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json } });
+        }
+        if port != "document:out" {
+            return Err(MediaError::NotImplemented);
+        }
+        let bytes = doc.projection.encode_pack();
+        Ok(Media {
+            media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+            payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+        })
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> UiNode {
         let document = doc.projection;
-        let labels = resolve_labels::<WriterPlayLabels>(view_state);
+        let config = cfg.projection;
+        let labels = resolve_labels::<WriterPlayLabels>(config);
         match body_key {
-            WRITER_PLAY_BODY_MAIN => render_main_scene(document, &*self.runtime.borrow()),
-            WRITER_PLAY_BODY_DOCUMENT => render_document_panel(document, &*self.runtime.borrow(), labels),
+            WRITER_PLAY_BODY_MAIN => render_main_scene(document, config),
+            WRITER_PLAY_BODY_DOCUMENT => render_document_panel(document, config, labels),
             WRITER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
-            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(document, &*self.runtime.borrow(), labels),
+            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(document, config, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let settings = &self.runtime.borrow().editor_settings;
-        let labels = resolve_labels::<WriterPlayLabels>(view_state);
+    fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, WindowEngagement> {
+        let config = cfg.projection;
+        let labels = resolve_labels::<WriterPlayLabels>(config);
         let engagement = WindowEngagement {
             session_active: Some(false),
             options: Some(vec![WindowEngagementOption {
                 id: "writer-line-numbers".into(),
                 label: Some(labels.line_numbers.into()),
                 icon_id: Some("list-ordered".into()),
-                pressed: Some(settings.show_line_numbers),
+                pressed: Some(config.editor_settings.show_line_numbers),
                 disabled: None,
                 action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "toggleLineNumbers", None)),
             }]),
             input: Some(WindowEngagementInput {
                 id: Some("writer-engagement-input".into()),
-                value: Some(self.runtime.borrow_mut().engagement_input.clone()),
+                value: Some(config.engagement_input.clone()),
                 placeholder: Some(labels.engagement_placeholder.into()),
                 disabled: None,
                 on_change: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "engagementInput", None)),
@@ -793,9 +743,9 @@ impl DocumentApp for WriterPlayApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, WriterProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let settings = &self.runtime.borrow().editor_settings;
-        let labels = resolve_labels::<WriterPlayLabels>(view_state);
+    fn window_measures(&self, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let settings = &cfg.projection.editor_settings;
+        let labels = resolve_labels::<WriterPlayLabels>(cfg.projection);
         let measures = vec![
             WindowMeasure::Slider {
                 id: "writer-font-size-measure".into(),
@@ -851,9 +801,9 @@ impl DocumentApp for WriterPlayApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), measures)])
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<WriterPlayLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, WriterConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<WriterPlayLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(WRITER_PLAY_WINDOW_KIND, labels.window_main)
             .panel_tab_label(WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID, labels.panel_tab_content)
@@ -867,11 +817,10 @@ impl DocumentApp for WriterPlayApp {
         &self,
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &DocumentView<'_, WriterProjection>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
+        cfg: &ConfigView<'_, WriterConfig>,
         _registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let is_de = is_de_locale(view_state);
+        let is_de = is_de_locale(cfg.projection);
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(text, is_de)
     }
@@ -974,7 +923,12 @@ pub fn create_writer_app() -> App {
             .action_args("setDocumentJson", vec![ActionArgDef::text("json", "Document JSON")])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Fixture JSON")])
             .keybinding("mod+z", "undo")
-            .keybinding("mod+shift+z", "redo"),
+            .keybinding("mod+shift+z", "redo")
+            // 🎯️ Typed channel surface (mirrors `shooting_ui::create_shooting_app`'s identical wiring) —
+            // `writer_engine::writer_io()` is the single source of truth for both the trait's `io()`
+            // override and this manifest declaration.
+            .config(WriterPlayApp.config_spec())
+            .io(writer_engine::writer_io()),
     )
     .example("jack", "Jack", jack_example_json(), "file-text")
     .example("dag.jack", "Dag Jack", dag_jack_example_json(), "file-text")
@@ -987,47 +941,55 @@ pub fn create_writer_app() -> App {
 mod tests {
     use super::*;
     use semio_framework_plugin::{
-        testkit::{meta, new_app, new_app_with_registry},
-        PluginApp, VcsDocumentApp,
+        testkit::{self, meta},
+        PluginApp, VcsDocumentApp, ViewState,
     };
     use writer_engine::jack_variable_occurrences;
 
     const CANONICAL_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name";
 
+    fn new_app() -> VcsDocumentApp<WriterPlayApp> {
+        testkit::new_app::<WriterPlayApp>()
+    }
+
+    fn new_app_with_registry() -> VcsDocumentApp<WriterPlayApp> {
+        testkit::new_app_with_registry::<WriterPlayApp>(create_writer_app)
+    }
+
     /// ✍️ Loads the canonical jack fixture into the store, returning the app ready to exercise.
     fn app_with_jack() -> VcsDocumentApp<WriterPlayApp> {
-        let mut app = new_app::<WriterPlayApp>();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta("local")).expect("load jack");
+        let mut app = new_app();
+        app.dispatch_typed(WriterCommand::SetActiveExample { example_id: "jack".into() }, &meta("local")).expect("load jack");
         app
     }
 
     #[test]
     fn text_edit_burst_coalesces_into_one_undo_step() {
-        let mut app = new_app::<WriterPlayApp>();
+        let mut app = new_app();
         for text in ["h", "he", "hel", "hell", "hello"] {
-            app.handle_action("textEdit", Some(&json!({ "text": text })), &ViewState::default(), &meta("local")).expect("type");
+            app.dispatch_typed(WriterCommand::TextEdit { text: text.into() }, &meta("local")).expect("type");
         }
         assert_eq!(app.projection().expect("projection").text, "hello");
         // The whole typing burst shares one coalesce key, so a single undo restores the pre-burst buffer
         // rather than backing out one keystroke at a time.
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        app.handle_action("undo", None, &meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").text, "", "coalesced typing collapses to one undo step");
     }
 
     #[test]
     fn lint_is_a_view_action_and_example_default_materializes() {
-        let mut app = new_app_with_registry::<WriterPlayApp>(create_writer_app);
+        let mut app = new_app_with_registry();
         // lintDocument is a declared View action: registry kind discipline requires it emit no operations.
-        let result = app.handle_action("lintDocument", None, &ViewState::default(), &meta("local")).expect("lint");
+        let result = app.dispatch_typed(WriterCommand::LintDocument, &meta("local")).expect("lint");
         assert!(result.operations.is_empty(), "lint re-runs diagnostics into runtime, never the document");
-        // setActiveExample fired with no args materializes the declared default example ("jack").
-        app.handle_action("setActiveExample", None, &ViewState::default(), &meta("local")).expect("example");
+        // setActiveExample fired with the declared default example ("jack").
+        app.dispatch_typed(WriterCommand::SetActiveExample { example_id: "jack".into() }, &meta("local")).expect("example");
         assert!(!app.projection().expect("projection").text.is_empty(), "jack default materialized from the registry");
     }
 
     #[test]
     fn renders_text_editor_scene() {
-        let mut app = new_app::<WriterPlayApp>();
+        let mut app = new_app();
         let node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("text-editor"));
@@ -1035,7 +997,7 @@ mod tests {
 
     #[test]
     fn renders_document_tree_for_jack() {
-        let mut app = new_app::<WriterPlayApp>();
+        let mut app = new_app();
         let node = app.render(WRITER_PLAY_BODY_DOCUMENT, Some(&jack_example_json()), &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
@@ -1044,7 +1006,7 @@ mod tests {
 
     #[test]
     fn renders_catalogue_panel() {
-        let mut app = new_app::<WriterPlayApp>();
+        let mut app = new_app();
         let node = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("jack"));
@@ -1053,8 +1015,8 @@ mod tests {
     #[test]
     fn format_document_reformats_jack_query() {
         let mut app = app_with_jack();
-        app.handle_action("setText", Some(&json!({ "text": "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name" })), &ViewState::default(), &meta("local")).expect("set text");
-        let result = app.handle_action("formatDocument", None, &ViewState::default(), &meta("local")).expect("format");
+        app.dispatch_typed(WriterCommand::SetText { text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into() }, &meta("local")).expect("set text");
+        let result = app.dispatch_typed(WriterCommand::FormatDocument, &meta("local")).expect("format");
         assert_eq!(result.operations.len(), 1);
         assert!(app.projection().expect("projection").text.contains('\n'));
     }
@@ -1063,40 +1025,39 @@ mod tests {
     fn format_document_without_change_emits_no_operation() {
         // A no-operation format (already-formatted or non-jack empty doc) bumps the format signal but must
         // not record a history entry.
-        let mut app = new_app::<WriterPlayApp>();
-        let result = app.handle_action("formatDocument", None, &ViewState::default(), &meta("local")).expect("format");
+        let mut app = new_app();
+        let result = app.dispatch_typed(WriterCommand::FormatDocument, &meta("local")).expect("format");
         assert!(result.operations.is_empty());
     }
 
     #[test]
     fn set_text_action_updates_projection() {
-        let mut app = new_app::<WriterPlayApp>();
-        let result = app.handle_action("setText", Some(&json!({ "text": "MATCH (a) RETURN a" })), &ViewState::default(), &meta("local")).expect("set text");
+        let mut app = new_app();
+        let result = app.dispatch_typed(WriterCommand::SetText { text: "MATCH (a) RETURN a".into() }, &meta("local")).expect("set text");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(app.projection().expect("projection").text, "MATCH (a) RETURN a");
     }
 
     #[test]
     fn set_text_undo_redo_round_trips_through_the_wrapper() {
-        let mut app = new_app::<WriterPlayApp>();
-        app.handle_action("setText", Some(&json!({ "text": "first" })), &ViewState::default(), &meta("local")).expect("first");
-        app.handle_action("setText", Some(&json!({ "text": "second" })), &ViewState::default(), &meta("local")).expect("second");
+        let mut app = new_app();
+        app.dispatch_typed(WriterCommand::SetText { text: "first".into() }, &meta("local")).expect("first");
+        app.dispatch_typed(WriterCommand::SetText { text: "second".into() }, &meta("local")).expect("second");
         assert_eq!(app.projection().expect("projection").text, "second");
-        let undo = app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        let undo = app.handle_action("undo", None, &meta("local")).expect("undo");
         assert!(undo.operations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.projection().expect("projection").text, "first");
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        app.handle_action("redo", None, &meta("local")).expect("redo");
         assert_eq!(app.projection().expect("projection").text, "second");
     }
 
+    /// 🎥️ `SetCamera` is a config-only command — it must never emit a `WriterOperation` (no VCS edit,
+    /// no undo entry) and instead write into `WriterConfig`, reflected in render.
     #[test]
-    /// 🎥️ `"setCamera"` is a View action — it must never emit a `WriterOperation` (no VCS edit, no
-    /// undo entry) and instead write straight into the app's ephemeral runtime, reflected in render.
-    #[test]
-    fn set_camera_action_writes_runtime_not_operations() {
-        let mut app = new_app::<WriterPlayApp>();
-        let result = app.handle_action("setCamera", Some(&json!({ "camera": { "x": 3.0, "y": 4.0, "zoom": 2.0 } })), &ViewState::default(), &meta("local")).expect("set camera");
+    fn set_camera_command_writes_config_not_operations() {
+        let mut app = new_app();
+        let result = app.dispatch_typed(WriterCommand::SetCamera { camera: WriterCamera { x: 3.0, y: 4.0, zoom: 2.0 } }, &meta("local")).expect("set camera");
         assert!(result.operations.is_empty(), "setCamera must not emit a VCS operation");
         let node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
@@ -1107,24 +1068,21 @@ mod tests {
 
     #[test]
     fn view_action_emits_no_operations() {
-        let mut app = new_app::<WriterPlayApp>();
-        let result = app.handle_action("toggleLineNumbers", None, &ViewState::default(), &meta("local")).expect("toggle");
+        let mut app = new_app();
+        let result = app.dispatch_typed(WriterCommand::ToggleLineNumbers, &meta("local")).expect("toggle");
         assert!(result.operations.is_empty());
     }
 
     #[test]
-    fn commit_rename_with_occurrences_renames_all_spans() {
+    fn commit_rename_renames_all_spans_at_the_config_selection() {
         let mut app = app_with_jack();
         let occurrences = jack_variable_occurrences(CANONICAL_QUERY, "a");
         assert_eq!(occurrences.len(), 3);
-        let occurrences_json: Vec<Value> = occurrences.iter().map(|(s, e)| json!({ "start": s, "end": e })).collect();
-        let result = app.handle_action(
-            "commitRename",
-            Some(&json!({ "occurrences": occurrences_json, "text": "piece" })),
-            &ViewState::default(),
-            &meta("local"),
-        )
-        .expect("commit rename");
+        let (start, _) = occurrences[0];
+        // 🎯️ `CommitRename` reads the rename target off `WriterConfig::editor_selection` — set it via
+        // a real selection command first (mirrors what the editor surface does before offering rename).
+        app.dispatch_typed(WriterCommand::SetEditorSelection { start, end: start }, &meta("local")).expect("place caret");
+        let result = app.dispatch_typed(WriterCommand::CommitRename { text: "piece".into() }, &meta("local")).expect("commit rename");
         assert_eq!(result.operations.len(), 1);
         let text = app.projection().expect("projection").text;
         assert_eq!(text.matches("piece").count(), 3);
@@ -1133,11 +1091,11 @@ mod tests {
 
     #[test]
     fn engagement_submit_parses_font_size() {
-        let mut app = new_app::<WriterPlayApp>();
-        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "font 16" })), &ViewState::default(), &meta("local")).expect("submit");
-        // Font size is ephemeral view state — no history entry.
+        let mut app = new_app();
+        let result = app.dispatch_typed(WriterCommand::EngagementSubmit { value: Some("font 16".into()) }, &meta("local")).expect("submit");
+        // Font size is ephemeral config state — no history entry.
         assert!(result.operations.is_empty());
-        let measures = app.window_measures(&ViewState::default());
+        let measures = app.window_measures();
         let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-font-size-measure" && *value == 16.0)));
     }
@@ -1147,26 +1105,26 @@ mod tests {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "font 16" arrives as "Font16", "tab 4" as "Tab4",
         // and "line numbers" as "LineNumbers".
-        let mut app = new_app::<WriterPlayApp>();
+        let mut app = new_app();
         let before_toggle = app
-            .window_engagements(&ViewState::default())
+            .window_engagements()
             .get(WRITER_PLAY_WINDOW_KIND)
             .and_then(|engagement| engagement.options.as_ref())
             .and_then(|options| options.first())
             .and_then(|option| option.pressed)
             .expect("line-numbers pressed state");
 
-        app.handle_action("engagementSubmit", Some(&json!({ "value": "Font16" })), &ViewState::default(), &meta("local")).expect("font");
-        app.handle_action("engagementSubmit", Some(&json!({ "value": "Tab4" })), &ViewState::default(), &meta("local")).expect("tab");
-        app.handle_action("engagementSubmit", Some(&json!({ "value": "LineNumbers" })), &ViewState::default(), &meta("local")).expect("line numbers");
+        app.dispatch_typed(WriterCommand::EngagementSubmit { value: Some("Font16".into()) }, &meta("local")).expect("font");
+        app.dispatch_typed(WriterCommand::EngagementSubmit { value: Some("Tab4".into()) }, &meta("local")).expect("tab");
+        app.dispatch_typed(WriterCommand::EngagementSubmit { value: Some("LineNumbers".into()) }, &meta("local")).expect("line numbers");
 
-        let measures = app.window_measures(&ViewState::default());
+        let measures = app.window_measures();
         let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-font-size-measure" && *value == 16.0)));
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-tab-size-measure" && *value == 4.0)));
 
         let after_toggle = app
-            .window_engagements(&ViewState::default())
+            .window_engagements()
             .get(WRITER_PLAY_WINDOW_KIND)
             .and_then(|engagement| engagement.options.as_ref())
             .and_then(|options| options.first())
@@ -1177,8 +1135,8 @@ mod tests {
 
     #[test]
     fn window_measures_expose_font_line_height_tab_and_toggle() {
-        let mut app = new_app::<WriterPlayApp>();
-        let measures = app.window_measures(&ViewState::default());
+        let mut app = new_app();
+        let measures = app.window_measures();
         let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
         assert_eq!(main.len(), 4);
         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Toggle { id, .. } if id == "writer-line-numbers-measure")));
@@ -1186,8 +1144,8 @@ mod tests {
 
     #[test]
     fn window_engagements_expose_format_lint_placeholder() {
-        let mut app = new_app::<WriterPlayApp>();
-        let engagements = app.window_engagements(&ViewState::default());
+        let mut app = new_app();
+        let engagements = app.window_engagements();
         let main = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("main engagement");
         let placeholder = main.input.as_ref().and_then(|i| i.placeholder.as_ref()).expect("placeholder");
         assert!(placeholder.contains("Format"));
@@ -1201,8 +1159,8 @@ mod tests {
     // which is still the one surface for them — assert on that surface instead.
     #[test]
     fn window_engagements_include_format_and_lint_possible_engagements() {
-        let mut app = new_app::<WriterPlayApp>();
-        let engagements = app.window_engagements(&ViewState::default());
+        let mut app = new_app();
+        let engagements = app.window_engagements();
         let engagement = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("writer window engagement");
         let ids: Vec<&str> = engagement.possible_engagements.as_ref().expect("possible engagements").iter().map(|possible| possible.id.as_str()).collect();
         assert!(ids.contains(&"writer-format"));
@@ -1211,7 +1169,7 @@ mod tests {
 
     #[test]
     fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
-        let mut app = new_app::<WriterPlayApp>();
+        let mut app = new_app();
         let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&jack_example_json()), &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("placeholdersJson"));
@@ -1223,7 +1181,7 @@ mod tests {
     fn set_ast_hover_updates_tree_highlight_and_scene_hover() {
         let mut app = app_with_jack();
         let root = parse_jack_ast(&app.projection().expect("projection").text);
-        let result = app.handle_action("setAstHover", Some(&json!({ "id": root.id })), &ViewState::default(), &meta("local")).expect("hover");
+        let result = app.dispatch_typed(WriterCommand::SetAstHover { id: Some(root.id.clone()) }, &meta("local")).expect("hover");
         assert!(result.operations.is_empty());
         let tree_node = app.render(WRITER_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render tree");
         let tree_json = serde_json::to_string(&tree_node).unwrap();
@@ -1238,8 +1196,8 @@ mod tests {
 
     #[test]
     fn set_active_example_loads_jack_fixture() {
-        let mut app = new_app::<WriterPlayApp>();
-        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta("local")).expect("load");
+        let mut app = new_app();
+        let result = app.dispatch_typed(WriterCommand::SetActiveExample { example_id: "jack".into() }, &meta("local")).expect("load");
         assert_eq!(result.operations.len(), 1);
         let projection = app.projection().expect("projection");
         assert_eq!(projection.id, "jack");
@@ -1248,8 +1206,8 @@ mod tests {
 
     #[test]
     fn set_active_example_loads_dag_jack_fixture() {
-        let mut app = new_app::<WriterPlayApp>();
-        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "dag.jack" })), &ViewState::default(), &meta("local")).expect("load");
+        let mut app = new_app();
+        let result = app.dispatch_typed(WriterCommand::SetActiveExample { example_id: "dag.jack".into() }, &meta("local")).expect("load");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(app.projection().expect("projection").id, "dag-jack");
     }
@@ -1257,7 +1215,7 @@ mod tests {
     #[test]
     fn set_active_example_falls_back_to_empty_document() {
         let mut app = app_with_jack();
-        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("load");
+        let result = app.dispatch_typed(WriterCommand::SetActiveExample { example_id: String::new() }, &meta("local")).expect("load");
         assert_eq!(result.operations.len(), 1);
         let projection = app.projection().expect("projection");
         assert_eq!(projection.id, "empty");
@@ -1266,7 +1224,7 @@ mod tests {
 
     #[test]
     fn writer_labels_resolve_native_by_default() {
-        let mut app = new_app::<WriterPlayApp>();
+        let mut app = new_app();
         let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
         let inspection_json = serde_json::to_string(&inspection).unwrap();
         assert!(inspection_json.contains("\"Document\""));
@@ -1275,11 +1233,11 @@ mod tests {
         let catalogue_json = serde_json::to_string(&catalogue).unwrap();
         assert!(catalogue_json.contains("\"Language\""));
         assert!(catalogue_json.contains("Cypher-inspired"));
-        let engagements = app.window_engagements(&ViewState::default());
+        let engagements = app.window_engagements();
         let engagements_json = serde_json::to_string(&engagements).unwrap();
         assert!(engagements_json.contains("\"Format\""));
         assert!(engagements_json.contains("\"Lint\""));
-        let measures = app.window_measures(&ViewState::default());
+        let measures = app.window_measures();
         let measures_json = serde_json::to_string(&measures).unwrap();
         assert!(measures_json.contains("Font size"));
         assert!(measures_json.contains("Line numbers"));
@@ -1288,25 +1246,61 @@ mod tests {
 
     #[test]
     fn writer_labels_resolve_german_locale() {
-        let mut app = new_app::<WriterPlayApp>();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &view_state).expect("render");
+        let mut app = new_app();
+        app.dispatch_typed(WriterCommand::SetLocale { value: "de".into() }, &meta("local")).expect("set locale");
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
         let inspection_json = serde_json::to_string(&inspection).unwrap();
         assert!(inspection_json.contains("Dokument"));
         assert!(inspection_json.contains("Kamera"));
         assert!(!inspection_json.contains("\"Camera\""));
-        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue).unwrap();
         assert!(catalogue_json.contains("Sprache"));
-        let measures = app.window_measures(&view_state);
+        let measures = app.window_measures();
         let measures_json = serde_json::to_string(&measures).unwrap();
         assert!(measures_json.contains("Schriftgröße"));
         assert!(measures_json.contains("Zeilennummern"));
-        let engagements = app.window_engagements(&view_state);
+        let engagements = app.window_engagements();
         let engagements_json = serde_json::to_string(&engagements).unwrap();
         assert!(engagements_json.contains("Texteditor"));
         assert!(engagements_json.contains("Formatieren"));
         assert!(engagements_json.contains("Prüfen"));
     }
+
+    //#region 🔖️PortTests
+    #[test]
+    fn writer_io_declares_the_extra_text_out_port() {
+        let io = writer_engine::writer_io();
+        let ports = io.all_ports();
+        assert!(ports.iter().any(|port| port.id == "document:in"));
+        assert!(ports.iter().any(|port| port.id == "document:out"));
+        let text_out = ports.iter().find(|port| port.id == "text:out").expect("text:out port declared");
+        assert_eq!(text_out.kind_id.as_deref(), Some("text.document"));
+        assert_eq!(text_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
+    }
+
+    #[test]
+    fn export_media_text_out_projects_the_document_as_a_chapter() {
+        let app = WriterPlayApp;
+        let document = jack_example_document();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc_view = DocumentView { projection: &document, history: &history };
+        let media = app.export_media("text:out", &doc_view).expect("export text:out");
+        let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
+        assert_eq!(schema, "text.document");
+        let payload: writer_engine::WriterChapterPayload = serde_json::from_str(&json).expect("decode chapter payload");
+        assert_eq!(payload.text, document.text);
+        assert_eq!(payload.language_id, document.language_id);
+    }
+
+    #[test]
+    fn export_media_rejects_unknown_ports() {
+        let app = WriterPlayApp;
+        let document = empty_writer_projection();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc_view = DocumentView { projection: &document, history: &history };
+        assert!(matches!(app.export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
+    }
+    //#endregion 🔖️PortTests
 }
 //#endregion 🧪️Tests

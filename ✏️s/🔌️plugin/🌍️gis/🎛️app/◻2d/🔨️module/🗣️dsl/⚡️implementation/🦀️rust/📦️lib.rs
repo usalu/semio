@@ -33,18 +33,20 @@ mod tests {
         store::test_support::assert_dsl_round_trip(&GisMapDocument::default());
     }
 
-    /// 🧬️ `MapFeature::data` is an opaque `serde_json::Value` — round-trips every shape (nested
-    /// object/array, bool, null, negative number) the generic value grammar has to reconstruct.
-    /// `depth` is a float literal (not a bare int): `dsl::DslValue::Number` is a single `f64`
-    /// variant with no JSON int-vs-float distinction, so a bare-int JSON literal would come back
-    /// float-backed and fail `serde_json::Value`'s structural `PartialEq` even though it's the
-    /// same number — an accepted engine characteristic, not a round-trip bug.
+    /// 🧬️ `MapFeature::data` is `dsl::DslValue` (deliberately untyped — see `gis2d::MapFeature`'s doc
+    /// comment) — round-trips every shape (nested object/array, bool, null, negative number) the
+    /// generic value grammar has to reconstruct. `depth` is a float literal (not a bare int):
+    /// `dsl::DslValue::Number` is a single `f64` variant with no JSON int-vs-float distinction, so a
+    /// bare-int JSON literal would come back float-backed and fail `serde_json::Value`'s structural
+    /// `PartialEq` even though it's the same number — an accepted engine characteristic, not a
+    /// round-trip bug.
     #[test]
     fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
+        let dsl_of = |value: serde_json::Value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null);
         let document = GisMapDocument {
             positions: vec![MapFeature {
                 id: "p1".into(),
-                data: json!({
+                data: dsl_of(json!({
                     "id": "p1",
                     "lon": -0.1427,
                     "lat": 51.5142,
@@ -52,10 +54,10 @@ mod tests {
                     "missing": null,
                     "tags": ["a", "b"],
                     "meta": { "nested": { "depth": 2.0 } },
-                }),
+                })),
             }],
-            routes: vec![MapFeature { id: "r1".into(), data: json!({ "id": "r1", "points": [[1.0, 2.0], [3.0, 4.0]] }) }],
-            regions: vec![MapFeature { id: "g1".into(), data: json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] }) }],
+            routes: vec![MapFeature { id: "r1".into(), data: dsl_of(json!({ "id": "r1", "points": [[1.0, 2.0], [3.0, 4.0]] })) }],
+            regions: vec![MapFeature { id: "g1".into(), data: dsl_of(json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] })) }],
         };
         store::test_support::assert_dsl_round_trip(&document);
     }

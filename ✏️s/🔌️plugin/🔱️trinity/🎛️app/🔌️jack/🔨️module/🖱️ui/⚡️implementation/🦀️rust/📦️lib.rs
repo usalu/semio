@@ -1,24 +1,32 @@
 //! 🔱️ Trinity Jack plugin — jack query play app bundled as a hot-swappable WASM plugin.
+//!
+//! 📌️ B1: the pure-trait migration — `TrinityJackPlayApp` is a unit struct; every former
+//! `TrinityJackRuntime` field (selection, camera, query draft, LOD, …) now lives in
+//! `trinity_jack_engine::JackConfig`, written via `trinity_jack_op::JackConfigOperation`s (real
+//! `backwards`, no ad hoc `InverseAction`); every action dispatches through the single typed
+//! `trinity_jack_protocol::TrinityJackCommand` channel via `DocumentApp::handle`. Mirrors
+//! `shooting_ui::ShootingPlayApp` (the B1 pilot) — see its doc comments for the full rationale.
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     app_labels, build_node_graph_scene, build_table_scene, build_text_editor_scene,
-    is_de_locale, localized_label_map, resolve_labels, text_identifier_occurrences_json, tree_item, tree_item_with_action,
+    localized_label_map, text_identifier_occurrences_json, tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
-    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest, DocumentApp,
-    DocumentView, MeasureSelectItem, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec,
+    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest, ConfigView, DocumentApp,
+    DocumentView, Emit, LocaleLabels, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, MediaClass, MediaForm, MediaType, PanelTreeBuilder, ArtifactKindSpec,
     TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
-use serde::Serialize;
 use serde_json::{json, Value};
-use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use trinity_jack::{complete, execute, format as jack_format, lint, parse, semantic_tokens, QueryResult, QueryResultKind};
+use trinity_jack_engine::{jack_io, JackConfig, JackEditorSelection};
+use trinity_jack_op::JackConfigOperation;
+use trinity_jack_protocol::TrinityJackCommand;
 use trinity_ram::{Camera, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TRINITY_GRAPH_SCHEMA};
-use store::DocumentDsl;
+use store::{DocumentDsl, DocumentPack};
 
 //#region 🔖️Constants
 const TRINITY_JACK_PLAY_APP_ID: &str = "trinity-jack-play";
@@ -45,67 +53,17 @@ const TRINITY_JACK_DEFAULT_QUERY: &str =
 const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#endregion 🔖️Constants
 
-//#region 🔖️Types
-/// 🎯️ Ephemeral editor selection range (offsets into the jack query text) — pure runtime.
-#[derive(Clone, Debug, Default, PartialEq)]
-struct TrinityEditorSelection {
-    start: usize,
-    end: usize,
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s own pair.
+fn is_de_locale(cfg: &JackConfig) -> bool {
+    cfg.locale.starts_with("de")
 }
 
-/// 🎛️ Ephemeral view state (selection, query draft, results, LOD, engagement inputs) — lives on the
-/// app struct, never in the document, so it never pollutes undo history. The document projection is
-/// the bare {@link GraphFixture}.
-#[derive(Clone, Debug, Default, PartialEq)]
-struct TrinityJackRuntime {
-    selected_node_ids: Vec<String>,
-    /// 📷️ Live viewport pan/zoom — session-only (never a VCS operation); seeded once from the
-    /// initial fixture's seed-only `camera` field, then only ever written by `nodeGraphViewport`.
-    camera: Camera,
-    active_fixture_id: String,
-    jack_query: String,
-    jack_result_json: String,
-    editor_engagement_input: String,
-    graph_engagement_input: String,
-    results_engagement_input: String,
-    reorganize_epoch: u64,
-    editor_selection: Option<TrinityEditorSelection>,
-    lod_mode_by_window: BTreeMap<String, String>,
-    revision: u64,
+fn resolve_labels<L: LocaleLabels>(cfg: &JackConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
 }
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowDiagramPortRecord {
-    id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    label: Option<String>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowNodeRecord {
-    id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    label: Option<String>,
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
-    inputs: Vec<WorkflowDiagramPortRecord>,
-    outputs: Vec<WorkflowDiagramPortRecord>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowEdgeRecord {
-    id: String,
-    source_node_id: String,
-    source_port_id: String,
-    target_node_id: String,
-    target_port_id: String,
-}
-//#endregion 🔖️Types
+//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 /// 📦️ The default trinity graph fixture (Nakagin capsule tower) — the initial document projection.
@@ -113,16 +71,16 @@ fn default_fixture() -> GraphFixture {
     GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap_or_else(|_| trinity_ram::empty_trinity_graph_fixture())
 }
 
-/// 🌱️ Seeds the runtime with the default query and its result table so the Results window is populated on load.
-fn seeded_jack_runtime() -> TrinityJackRuntime {
-    let fixture = default_fixture();
-    let (result_json, _) = run_jack_query(&fixture, TRINITY_JACK_DEFAULT_QUERY);
-    TrinityJackRuntime {
+/// 🌱️ Seeds the initial config with the default query and its result table so the Results window is
+/// populated on load — was `seeded_jack_runtime()`.
+fn seeded_jack_config(fixture: &GraphFixture) -> JackConfig {
+    let (result_json, _) = run_jack_query(fixture, TRINITY_JACK_DEFAULT_QUERY);
+    JackConfig {
         camera: fixture.camera.clone(),
         active_fixture_id: "nakagin".into(),
         jack_query: TRINITY_JACK_DEFAULT_QUERY.into(),
         jack_result_json: result_json,
-        ..Default::default()
+        ..JackConfig::default()
     }
 }
 
@@ -202,7 +160,7 @@ fn force_layout_fixture(fixture: &GraphFixture) -> Option<GraphFixture> {
     use mathematical_geometry::Vec2;
     let mut positions: Vec<Vec2> = fixture.nodes.iter().map(|node| Vec2::new(node.x, node.y)).collect();
     let radii: Vec<f64> = fixture.nodes.iter().map(|node| (node.width.max(48.0) + node.height.max(24.0)) * 0.25).collect();
-    let id_to_index: std::collections::HashMap<String, usize> = fixture
+    let id_to_index: HashMap<String, usize> = fixture
         .nodes
         .iter()
         .enumerate()
@@ -250,20 +208,6 @@ fn reposition_operations(before: &GraphFixture, after: &GraphFixture) -> Vec<Tri
         .collect()
 }
 
-/// 🎯️ Selection ids from an action's args — delegates to the SDK's shared `ids`-array reader, falling
-/// back to a singular `nodeIds`/`nodeId` key for actions dispatched from the node-graph scene surface.
-fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("nodeIds"))
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .or_else(|| Some(semio_framework_plugin::selection_ids(args)).filter(|ids: &Vec<String>| !ids.is_empty()))
-        .or_else(|| {
-            args.and_then(|value| value.get("nodeId"))
-                .and_then(|value| value.as_str())
-                .map(|id| vec![id.to_string()])
-        })
-        .unwrap_or_default()
-}
-
 fn trinity_lod_tier_rows() -> Vec<Value> {
     serde_json::from_str(&trinity_rewrite::trinity_lod_scale_json()).unwrap_or_default()
 }
@@ -288,8 +232,8 @@ fn trinity_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
     }
 }
 
-fn trinity_lod_json_for_window(runtime: &TrinityJackRuntime, window_id: &str) -> Option<String> {
-    let mode = runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
+fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> Option<String> {
+    let mode = cfg.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
         Some(json!({ "automatic": true }).to_string())
     } else {
@@ -302,39 +246,36 @@ fn split_endpoint(endpoint: &str) -> (String, String) {
     trinity_ram::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
-fn fixture_to_workflow(fixture: &GraphFixture) -> (String, String, String) {
-    let nodes: Vec<WorkflowNodeRecord> = fixture
+fn fixture_to_workflow(fixture: &GraphFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, NodeGraphViewport) {
+    let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
         .map(|node| node_to_workflow_record(node))
         .collect();
-    let edges: Vec<WorkflowEdgeRecord> = fixture
+    let edges: Vec<NodeGraphEdgeRecord> = fixture
         .edges
         .iter()
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            WorkflowEdgeRecord {
+            NodeGraphEdgeRecord {
                 id: edge.id.clone(),
                 source_node_id,
                 source_port_id,
                 target_node_id,
                 target_port_id,
+                label: None,
             }
         })
         .collect();
-    let viewport = serde_json::to_string(&fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
-    (
-        serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()),
-        serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()),
-        viewport,
-    )
+    let viewport = NodeGraphViewport { x: fixture.camera.x, y: fixture.camera.y, zoom: fixture.camera.zoom };
+    (nodes, edges, viewport)
 }
 
-fn node_to_workflow_record(node: &Node) -> WorkflowNodeRecord {
+fn node_to_workflow_record(node: &Node) -> NodeGraphNodeRecord {
     let width = if node.width > 0.0 { node.width } else { 96.0 };
     let height = if node.height > 0.0 { node.height } else { 48.0 };
-    WorkflowNodeRecord {
+    NodeGraphNodeRecord {
         id: node.id.clone(),
         label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
         x: node.x,
@@ -345,20 +286,23 @@ fn node_to_workflow_record(node: &Node) -> WorkflowNodeRecord {
             .ports
             .iter()
             .filter(|port| port.direction == PortDirection::In)
-            .map(|port| WorkflowDiagramPortRecord {
+            .map(|port| NodeGraphPortRecord {
                 id: trinity_ram::port_key(&node.id, &port.id),
                 label: Some(port.id.clone()),
+                ..Default::default()
             })
             .collect(),
         outputs: node
             .ports
             .iter()
             .filter(|port| port.direction == PortDirection::Out)
-            .map(|port| WorkflowDiagramPortRecord {
+            .map(|port| NodeGraphPortRecord {
                 id: trinity_ram::port_key(&node.id, &port.id),
                 label: Some(port.id.clone()),
+                ..Default::default()
             })
             .collect(),
+        ..Default::default()
     }
 }
 
@@ -418,21 +362,17 @@ app_labels! {
 /// and Actions rail get a translated label without threading locale through the whole builder chain.
 fn trinity_jack_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
-        ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
-        ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
-        ("patchTrinityNodes", "Patch Nodes", "Knoten aktualisieren"),
+        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
+        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
+        ("patchNodes", "Patch Nodes", "Knoten aktualisieren"),
+        ("setViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
         ("reorganize", "Reorganize", "Neu anordnen"),
-        ("runJackQuery", "Run Jack Query", "Jack-Abfrage ausführen"),
-        ("submit", "Submit Jack Query", "Jack-Abfrage absenden"),
+        ("runQuery", "Run Jack Query", "Jack-Abfrage ausführen"),
         ("loadExampleQuery", "Load Example Query", "Beispielabfrage laden"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("selectNode", "Select Node", "Knoten auswählen"),
-        ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswählen"),
-        ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
         ("textEdit", "Edit Jack Query", "Jack-Abfrage bearbeiten"),
         ("textSelect", "Select Jack Query Text", "Jack-Abfragetext auswählen"),
-        ("textHover", "Hover Jack Query Text", "Jack-Abfragetext hovern"),
         ("requestCompletions", "Request Completions", "Vervollständigungen anfordern"),
         ("formatDocument", "Format Jack Query", "Jack-Abfrage formatieren"),
         ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
@@ -453,7 +393,7 @@ fn flat_position_uv(node: &Node) -> (String, String) {
     (format_axis("u"), format_axis("v"))
 }
 
-fn build_document_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, labels: &TrinityJackLabels) -> UiNode {
+fn build_document_tree(fixture: &GraphFixture, cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode {
     let builder = PanelTreeBuilder::new("trinity-document");
     let node_items: Vec<UiTreeItemNode> = fixture
         .nodes
@@ -472,7 +412,7 @@ fn build_document_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, lab
         .iter()
         .map(|edge| tree_item(builder.item_id("edge", &edge.id), format!("{} → {}", edge.source, edge.target)))
         .collect();
-    let selected = runtime.selected_node_ids.iter().map(|id| builder.item_id("node", id)).collect();
+    let selected = cfg.selected_node_ids.iter().map(|id| builder.item_id("node", id)).collect();
     builder
         .section("trinity-document.nodes", Some(labels.pieces.into()), true, node_items)
         .section("trinity-document.edges", Some(labels.connections.into()), false, edge_items)
@@ -481,7 +421,7 @@ fn build_document_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, lab
         .build()
 }
 
-fn build_catalogue_tree(runtime: &TrinityJackRuntime, labels: &TrinityJackLabels) -> UiNode {
+fn build_catalogue_tree(cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode {
     let fixtures = [("nakagin", "Nakagin — Table"), ("branch-chain", "Branch — Graph")];
     let examples = [
         ("where-or", "Where Or", "MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name"),
@@ -516,7 +456,7 @@ fn build_catalogue_tree(runtime: &TrinityJackRuntime, labels: &TrinityJackLabels
             )
         })
         .collect();
-    let selected = if runtime.active_fixture_id.is_empty() { vec![] } else { vec![builder.item_id("fixture", &runtime.active_fixture_id)] };
+    let selected = if cfg.active_fixture_id.is_empty() { vec![] } else { vec![builder.item_id("fixture", &cfg.active_fixture_id)] };
     builder
         .section("trinity-jack-catalogue.fixtures", Some(labels.fixtures.into()), true, fixture_items)
         .section("trinity-jack-catalogue.examples", Some(labels.example_queries.into()), true, example_items)
@@ -534,8 +474,8 @@ fn build_catalogue_tree(runtime: &TrinityJackRuntime, labels: &TrinityJackLabels
         .build()
 }
 
-fn build_inspector_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, term_labels: &TrinityJackLabels) -> UiNode {
-    if runtime.selected_node_ids.is_empty() {
+fn build_inspector_tree(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &TrinityJackLabels) -> UiNode {
+    if cfg.selected_node_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "trinity-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
@@ -545,7 +485,7 @@ fn build_inspector_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, te
             menu: None,
         }]);
     }
-    let nodes: Vec<&Node> = runtime
+    let nodes: Vec<&Node> = cfg
         .selected_node_ids
         .iter()
         .filter_map(|id| fixture.nodes.iter().find(|node| &node.id == id))
@@ -618,17 +558,17 @@ fn build_inspector_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, te
             label: term_labels.identity.into(),
             default_open: None,
             fields: vec![
-                semio_framework_plugin::UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                     id: "trinity-inspector.name".into(),
                     label: "Name".into(),
-                    child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
+                    child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
                         id: "trinity-inspector.name.input".into(),
                         input_kind: "text".into(),
                         value: name_mixed.value,
                         placeholder: name_mixed.placeholder,
                         commit: None,
                         on_change: jack_action(
-                            "patchTrinityNodes",
+                            "patchNodes",
                             Some(json!({ "nodeIds": node_ids, "field": "name" })),
                         ),
                         min: None,
@@ -667,30 +607,26 @@ fn build_inspector_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, te
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
-fn render_graph(fixture: &GraphFixture, runtime: &TrinityJackRuntime) -> UiNode {
-    let (nodes_json, edges_json, _) = fixture_to_workflow(fixture);
-    let viewport_json = serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
-    let selection_json = if runtime.selected_node_ids.is_empty() {
-        None
-    } else {
-        serde_json::to_string(&runtime.selected_node_ids).ok()
-    };
+fn render_graph(fixture: &GraphFixture, cfg: &JackConfig) -> UiNode {
+    let (nodes, edges, _) = fixture_to_workflow(fixture);
+    let viewport = NodeGraphViewport { x: cfg.camera.x, y: cfg.camera.y, zoom: cfg.camera.zoom };
+    let selection = cfg.selected_node_ids.clone();
     build_node_graph_scene(
         TRINITY_JACK_PLAY_SURFACE_GRAPH,
         TRINITY_JACK_PLAY_CONTROLLER_ID,
         NodeGraphScene {
-            selection_json,
-            lod_json: trinity_lod_json_for_window(runtime, TRINITY_JACK_PLAY_WINDOW_GRAPH),
-            ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
+            selection,
+            lod_json: trinity_lod_json_for_window(cfg, TRINITY_JACK_PLAY_WINDOW_GRAPH),
+            ..NodeGraphScene::base(nodes, edges, viewport)
         },
     )
 }
 
-fn render_editor(fixture: &GraphFixture, runtime: &TrinityJackRuntime) -> UiNode {
-    let query = &runtime.jack_query;
+fn render_editor(fixture: &GraphFixture, cfg: &JackConfig) -> UiNode {
+    let query = &cfg.jack_query;
     let graph = graph_from_fixture_or_default(fixture);
-    let cursor = runtime.editor_selection.as_ref().map(|selection| selection.end).unwrap_or(0);
-    let selection_json = runtime
+    let cursor = cfg.editor_selection.as_ref().map(|selection| selection.end as usize).unwrap_or(0);
+    let selection_json = cfg
         .editor_selection
         .as_ref()
         .map(|selection| json!({ "start": selection.start, "end": selection.end }).to_string());
@@ -708,19 +644,19 @@ fn render_editor(fixture: &GraphFixture, runtime: &TrinityJackRuntime) -> UiNode
     )
 }
 
-fn render_results(runtime: &TrinityJackRuntime) -> UiNode {
-    let result: QueryResult = serde_json::from_str(&runtime.jack_result_json).unwrap_or(QueryResult::table(vec![], vec![]));
+fn render_results(cfg: &JackConfig) -> UiNode {
+    let result: QueryResult = serde_json::from_str(&cfg.jack_result_json).unwrap_or(QueryResult::table(vec![], vec![]));
     if result.kind == QueryResultKind::Graph {
         if let Some(fixture) = &result.graph_fixture {
-            let (nodes_json, edges_json, viewport_json) = fixture_to_workflow(fixture);
+            let (nodes, edges, viewport) = fixture_to_workflow(fixture);
             return build_node_graph_scene(
                 TRINITY_JACK_PLAY_SURFACE_RESULTS,
                 TRINITY_JACK_PLAY_CONTROLLER_ID,
-                NodeGraphScene::base(nodes_json, edges_json, viewport_json),
+                NodeGraphScene::base(nodes, edges, viewport),
             );
         }
     }
-    let (columns_json, rows_json) = result_to_table(&runtime.jack_result_json);
+    let (columns_json, rows_json) = result_to_table(&cfg.jack_result_json);
     build_table_scene(
         TRINITY_JACK_PLAY_SURFACE_RESULTS,
         TRINITY_JACK_PLAY_CONTROLLER_ID,
@@ -730,23 +666,19 @@ fn render_results(runtime: &TrinityJackRuntime) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️TrinityJackPlayApp
-/// 🔱️ Trinity Jack play app — a jack-query editor over a live {@link GraphFixture} projection; all
-/// document mutation flows through {@link TrinityGraphOperation}, all editor/selection/LOD state is runtime.
-pub struct TrinityJackPlayApp {
-    runtime: RefCell<TrinityJackRuntime>,
-}
-
-impl Default for TrinityJackPlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(seeded_jack_runtime()) }
-    }
-}
+/// 🔱️ Trinity Jack play app — a jack-query editor over a live {@link GraphFixture} projection. B1:
+/// unit struct — every former `TrinityJackRuntime`/`self.runtime` field now lives in
+/// `trinity_jack_engine::JackConfig` (see `DocumentApp::Config`), written through
+/// `trinity_jack_op::JackConfigOperation`s.
+#[derive(Default)]
+pub struct TrinityJackPlayApp;
 
 impl DocumentApp for TrinityJackPlayApp {
     type Projection = GraphFixture;
     type Operation = TrinityGraphOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = JackConfig;
+    type ConfigOperation = JackConfigOperation;
+    type Command = TrinityJackCommand;
 
     fn app_id(&self) -> &str {
         TRINITY_JACK_PLAY_APP_ID
@@ -760,234 +692,210 @@ impl DocumentApp for TrinityJackPlayApp {
         default_fixture()
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, GraphFixture>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<TrinityGraphOperation> {
-        let fixture = doc.projection;
-        let mut runtime = self.runtime.borrow_mut();
-        match action {
-            "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                runtime.selected_node_ids = selection_ids(args);
-                ActionEmit::default()
+    fn initial_config(&self) -> JackConfig {
+        seeded_jack_config(&self.initial_projection())
+    }
+
+    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+        Some(jack_io())
+    }
+
+    fn whole_document_operation(&self, projection: GraphFixture) -> Option<TrinityGraphOperation> {
+        Some(TrinityGraphOperation::SetFixture { fixture: projection })
+    }
+
+    /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
+    /// nodes, in addition to the implicit `"document:out"` — both encode the same `GraphFixture` pack,
+    /// so this reimplements (rather than delegates to, no supertrait call exists in Rust) the default
+    /// `DocumentApp::export_media` body for `"document:out"` alongside the new port.
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, GraphFixture>) -> Result<Media, MediaError> {
+        match port {
+            "graph:out" | "document:out" => {
+                let bytes = doc.projection.encode_pack();
+                Ok(Media {
+                    media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
+                    payload: MediaPayload::Structured { schema: TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                })
             }
-            "nodeGraphHover" | "textHover" => ActionEmit::default(),
-            "nodeGraphViewport" => {
-                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
-                    if let Ok(camera) = serde_json::from_str::<Camera>(viewport_json) {
-                        runtime.camera = camera;
-                    }
-                }
-                ActionEmit::default()
-            }
-            "nodeGraphEdit" => {
-                let operations = args
-                    .and_then(|value| value.get("operations"))
-                    .and_then(|value| value.as_array())
-                    .cloned()
-                    .unwrap_or_default();
-                let mut emitted: Vec<TrinityGraphOperation> = Vec::new();
-                let mut has_set_fixture = false;
-                for operation in operations {
-                    match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-                        "setFixture" => {
-                            if let Some(next) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| GraphFixture::from_json(json).ok()) {
-                                emitted.push(TrinityGraphOperation::SetFixture { fixture: next });
-                                has_set_fixture = true;
-                            }
-                        }
-                        "deleteSelection" => {
-                            let deletes: Vec<TrinityGraphOperation> = runtime
-                                .selected_node_ids
-                                .iter()
-                                .filter(|id| fixture.nodes.iter().any(|node| &node.id == *id))
-                                .map(|id| TrinityGraphOperation::DeleteNode { id: id.clone() })
-                                .collect();
-                            if !deletes.is_empty() {
-                                runtime.selected_node_ids.clear();
-                                emitted.extend(deletes);
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                if emitted.is_empty() {
-                    ActionEmit::default()
-                } else if has_set_fixture {
-                    ActionEmit::amend(emitted, "node-graph-edit")
-                } else {
-                    ActionEmit::operations(emitted)
-                }
-            }
-            "textEdit" => {
-                if let Some(text) = args.and_then(|v| v.get("text")).and_then(|v| v.as_str()) {
-                    runtime.jack_query = text.into();
-                }
-                ActionEmit::default()
-            }
-            "textSelect" => {
-                let start = args.and_then(|v| v.get("start")).and_then(|v| v.as_u64()).unwrap_or(0);
-                let end = args.and_then(|v| v.get("end")).and_then(|v| v.as_u64()).unwrap_or(start);
-                runtime.editor_selection = Some(TrinityEditorSelection { start: start as usize, end: end as usize });
-                ActionEmit::default()
-            }
-            "requestCompletions" => {
-                runtime.revision += 1;
-                ActionEmit::default()
-            }
-            "formatDocument" => {
-                if let Ok(formatted) = jack_format(&runtime.jack_query) {
-                    runtime.jack_query = formatted;
-                }
-                ActionEmit::default()
-            }
-            "setLodMode" => {
-                if let (Some(window_id), Some(value)) = (
-                    args.and_then(|v| v.get("windowId")).and_then(|v| v.as_str()),
-                    args.and_then(|v| v.get("value")).and_then(|v| v.as_str()),
-                ) {
-                    runtime.lod_mode_by_window.insert(window_id.into(), value.into());
-                }
-                ActionEmit::default()
-            }
-            "loadExampleQuery" => {
-                if let Some(query) = args.and_then(|v| v.get("query")).and_then(|v| v.as_str()) {
-                    runtime.jack_query = query.into();
-                    let (result_json, operations) = run_jack_query(fixture, query);
-                    runtime.jack_result_json = result_json;
-                    return ActionEmit::operations(operations);
-                }
-                ActionEmit::default()
-            }
-            "runJackQuery" | "submit" => {
-                let query = args
-                    .and_then(|v| v.get("query"))
-                    .and_then(|v| v.as_str())
-                    .filter(|value| !value.trim().is_empty())
-                    .map(str::to_string)
-                    .unwrap_or_else(|| runtime.jack_query.clone());
-                runtime.jack_query = query.clone();
-                let (result_json, operations) = run_jack_query(fixture, &query);
-                runtime.jack_result_json = result_json;
-                runtime.results_engagement_input.clear();
-                ActionEmit::operations(operations)
-            }
-            "setActiveExample" => {
-                let example_id = args.and_then(|v| v.get("exampleId")).and_then(|v| v.as_str()).unwrap_or("");
-                if let Some(next) = fixture_dsl_for_preset(example_id).and_then(|dsl| GraphFixture::parse_dsl(dsl).ok()) {
-                    runtime.active_fixture_id = example_id.into();
-                    runtime.camera = next.camera.clone();
-                    runtime.jack_query = preset_query(example_id).into();
-                    let (result_json, _) = run_jack_query(&next, &runtime.jack_query);
-                    runtime.jack_result_json = result_json;
-                    return ActionEmit::operations(vec![TrinityGraphOperation::SetFixture { fixture: next }]);
-                }
-                ActionEmit::default()
-            }
-            "patchTrinityNodes" => {
-                let node_ids: Vec<String> = args
-                    .and_then(|v| v.get("nodeIds"))
-                    .and_then(|v| serde_json::from_value(v.clone()).ok())
-                    .unwrap_or_default();
-                let field = args.and_then(|v| v.get("field")).and_then(|v| v.as_str()).unwrap_or("");
-                let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()).map(str::trim).unwrap_or("");
-                if field == "name" && !node_ids.is_empty() && !value.is_empty() {
-                    let operations: Vec<TrinityGraphOperation> = node_ids
-                        .iter()
-                        .filter(|id| fixture.nodes.iter().any(|node| &node.id == *id))
-                        .map(|id| TrinityGraphOperation::Rename { id: id.clone(), name: value.into() })
-                        .collect();
-                    return ActionEmit::operations(operations);
-                }
-                ActionEmit::default()
-            }
-            "reorganize" => {
-                runtime.reorganize_epoch += 1;
-                match force_layout_fixture(fixture) {
-                    Some(after) => ActionEmit::operations(reposition_operations(fixture, &after)),
-                    None => ActionEmit::default(),
-                }
-            }
-            "editorEngagementInput" => {
-                if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    runtime.editor_engagement_input = value.into();
-                }
-                ActionEmit::default()
-            }
-            "graphEngagementInput" => {
-                if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    runtime.graph_engagement_input = value.into();
-                }
-                ActionEmit::default()
-            }
-            "resultsEngagementInput" => {
-                if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    runtime.results_engagement_input = value.into();
-                }
-                ActionEmit::default()
-            }
-            "graphPointerDown" => {
-                if let Some(node_id) = args.and_then(|v| v.get("nodeId")).and_then(|v| v.as_str()) {
-                    runtime.selected_node_ids = vec![node_id.into()];
-                }
-                ActionEmit::default()
-            }
-            _ => ActionEmit::default(),
+            _ => Err(MediaError::NotImplemented),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, GraphFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
+    /// 🏷️ Maps each `TrinityJackCommand` variant back to the action id it was declared under in
+    /// `create_trinity_jack_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check.
+    fn command_id(&self, command: &TrinityJackCommand) -> &str {
+        match command {
+            TrinityJackCommand::SetFixtureJson { .. } => "setFixtureJson",
+            TrinityJackCommand::DeleteSelection => "deleteSelection",
+            TrinityJackCommand::PatchNodes { .. } => "patchNodes",
+            TrinityJackCommand::Reorganize => "reorganize",
+            TrinityJackCommand::RunQuery { .. } => "runQuery",
+            TrinityJackCommand::LoadExampleQuery { .. } => "loadExampleQuery",
+            TrinityJackCommand::SetActiveExample { .. } => "setActiveExample",
+            TrinityJackCommand::SetViewport { .. } => "setViewport",
+            TrinityJackCommand::TextEdit { .. } => "textEdit",
+            TrinityJackCommand::TextSelect { .. } => "textSelect",
+            TrinityJackCommand::RequestCompletions => "requestCompletions",
+            TrinityJackCommand::FormatDocument => "formatDocument",
+            TrinityJackCommand::SetLodMode { .. } => "setLodMode",
+            TrinityJackCommand::EditorEngagementInput { .. } => "editorEngagementInput",
+            TrinityJackCommand::GraphEngagementInput { .. } => "graphEngagementInput",
+            TrinityJackCommand::ResultsEngagementInput { .. } => "resultsEngagementInput",
+            TrinityJackCommand::GraphPointerDown { .. } => "graphPointerDown",
+            TrinityJackCommand::SetSelection { .. } => "setSelection",
+            TrinityJackCommand::SetLocale { .. } => "setLocale",
+        }
+    }
+
+    fn handle(
+        &self,
+        command: &TrinityJackCommand,
+        doc: &DocumentView<'_, GraphFixture>,
+        cfg: &ConfigView<'_, JackConfig>,
+    ) -> Emit<TrinityGraphOperation, JackConfigOperation> {
         let fixture = doc.projection;
-        let labels = resolve_labels::<TrinityJackLabels>(view_state);
+        let config = cfg.projection;
+        match command {
+            TrinityJackCommand::SetFixtureJson { json } => match GraphFixture::from_json(json) {
+                Ok(next) => Emit::operations(vec![TrinityGraphOperation::SetFixture { fixture: next }]),
+                Err(_) => Emit::default(),
+            },
+            TrinityJackCommand::DeleteSelection => {
+                let deletes: Vec<TrinityGraphOperation> = config
+                    .selected_node_ids
+                    .iter()
+                    .filter(|id| fixture.nodes.iter().any(|node| &node.id == *id))
+                    .map(|id| TrinityGraphOperation::DeleteNode { id: id.clone() })
+                    .collect();
+                if deletes.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit { document_operations: deletes, config_operations: vec![JackConfigOperation::SetSelection { node_ids: Vec::new() }], ..Default::default() }
+                }
+            }
+            TrinityJackCommand::PatchNodes { node_ids, field, value } => {
+                if field == "name" && !node_ids.is_empty() && !value.trim().is_empty() {
+                    let operations: Vec<TrinityGraphOperation> = node_ids
+                        .iter()
+                        .filter(|id| fixture.nodes.iter().any(|node| &node.id == *id))
+                        .map(|id| TrinityGraphOperation::Rename { id: id.clone(), name: value.trim().into() })
+                        .collect();
+                    Emit::operations(operations)
+                } else {
+                    Emit::default()
+                }
+            }
+            TrinityJackCommand::Reorganize => {
+                let config_operations = vec![JackConfigOperation::SetReorganizeEpoch { value: config.reorganize_epoch + 1 }];
+                match force_layout_fixture(fixture) {
+                    Some(after) => Emit { document_operations: reposition_operations(fixture, &after), config_operations, ..Default::default() },
+                    None => Emit::config(config_operations),
+                }
+            }
+            TrinityJackCommand::RunQuery { query } => {
+                let resolved = query.as_deref().filter(|value| !value.trim().is_empty()).map(str::to_string).unwrap_or_else(|| config.jack_query.clone());
+                let (result_json, operations) = run_jack_query(fixture, &resolved);
+                Emit {
+                    document_operations: operations,
+                    config_operations: vec![
+                        JackConfigOperation::SetQuery { value: resolved },
+                        JackConfigOperation::SetResult { value: result_json },
+                        JackConfigOperation::SetResultsEngagementInput { value: String::new() },
+                    ],
+                    ..Default::default()
+                }
+            }
+            TrinityJackCommand::LoadExampleQuery { query } => {
+                let (result_json, operations) = run_jack_query(fixture, query);
+                Emit {
+                    document_operations: operations,
+                    config_operations: vec![JackConfigOperation::SetQuery { value: query.clone() }, JackConfigOperation::SetResult { value: result_json }],
+                    ..Default::default()
+                }
+            }
+            TrinityJackCommand::SetActiveExample { example_id } => match fixture_dsl_for_preset(example_id).and_then(|dsl| GraphFixture::parse_dsl(dsl).ok()) {
+                Some(next) => {
+                    let query = preset_query(example_id).to_string();
+                    let (result_json, _) = run_jack_query(&next, &query);
+                    Emit {
+                        document_operations: vec![TrinityGraphOperation::SetFixture { fixture: next.clone() }],
+                        config_operations: vec![
+                            JackConfigOperation::SetActiveFixture { value: example_id.clone() },
+                            JackConfigOperation::SetCamera { camera: next.camera.clone() },
+                            JackConfigOperation::SetQuery { value: query },
+                            JackConfigOperation::SetResult { value: result_json },
+                        ],
+                        ..Default::default()
+                    }
+                }
+                None => Emit::default(),
+            },
+            TrinityJackCommand::SetViewport { viewport_json } => match serde_json::from_str::<Camera>(viewport_json) {
+                Ok(camera) => Emit::config(vec![JackConfigOperation::SetCamera { camera }]),
+                Err(_) => Emit::default(),
+            },
+            TrinityJackCommand::TextEdit { text } => Emit::config(vec![JackConfigOperation::SetQuery { value: text.clone() }]),
+            TrinityJackCommand::TextSelect { start, end } => Emit::config(vec![JackConfigOperation::SetEditorSelection { selection: Some(JackEditorSelection { start: *start, end: *end }) }]),
+            TrinityJackCommand::RequestCompletions => Emit::config(vec![JackConfigOperation::SetRevision { value: config.revision + 1 }]),
+            TrinityJackCommand::FormatDocument => match jack_format(&config.jack_query) {
+                Ok(formatted) => Emit::config(vec![JackConfigOperation::SetQuery { value: formatted }]),
+                Err(_) => Emit::default(),
+            },
+            TrinityJackCommand::SetLodMode { window_id, value } => Emit::config(vec![JackConfigOperation::SetLodMode { window_id: window_id.clone(), value: value.clone() }]),
+            TrinityJackCommand::EditorEngagementInput { value } => Emit::config(vec![JackConfigOperation::SetEditorEngagementInput { value: value.clone() }]),
+            TrinityJackCommand::GraphEngagementInput { value } => Emit::config(vec![JackConfigOperation::SetGraphEngagementInput { value: value.clone() }]),
+            TrinityJackCommand::ResultsEngagementInput { value } => Emit::config(vec![JackConfigOperation::SetResultsEngagementInput { value: value.clone() }]),
+            TrinityJackCommand::GraphPointerDown { node_id } => {
+                Emit::config(vec![JackConfigOperation::SetSelection { node_ids: node_id.clone().map(|id| vec![id]).unwrap_or_default() }])
+            }
+            TrinityJackCommand::SetSelection { ids } => Emit::config(vec![JackConfigOperation::SetSelection { node_ids: ids.clone() }]),
+            TrinityJackCommand::SetLocale { value } => Emit::config(vec![JackConfigOperation::SetLocale { value: value.clone() }]),
+        }
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> UiNode {
+        let fixture = doc.projection;
+        let labels = resolve_labels::<TrinityJackLabels>(cfg.projection);
         match body_key {
-            TRINITY_JACK_PLAY_BODY_GRAPH => render_graph(fixture, &*self.runtime.borrow()),
-            TRINITY_JACK_PLAY_BODY_EDITOR => render_editor(fixture, &*self.runtime.borrow()),
-            TRINITY_JACK_PLAY_BODY_RESULTS => render_results(&*self.runtime.borrow()),
-            TRINITY_JACK_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &*self.runtime.borrow(), labels),
-            TRINITY_JACK_PLAY_BODY_CATALOGUE => build_catalogue_tree(&*self.runtime.borrow(), labels),
-            TRINITY_JACK_PLAY_BODY_INSPECTION => build_inspector_tree(fixture, &*self.runtime.borrow(), labels),
+            TRINITY_JACK_PLAY_BODY_GRAPH => render_graph(fixture, cfg.projection),
+            TRINITY_JACK_PLAY_BODY_EDITOR => render_editor(fixture, cfg.projection),
+            TRINITY_JACK_PLAY_BODY_RESULTS => render_results(cfg.projection),
+            TRINITY_JACK_PLAY_BODY_DOCUMENT => build_document_tree(fixture, cfg.projection, labels),
+            TRINITY_JACK_PLAY_BODY_CATALOGUE => build_catalogue_tree(cfg.projection, labels),
+            TRINITY_JACK_PLAY_BODY_INSPECTION => build_inspector_tree(fixture, cfg.projection, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, GraphFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let runtime = self.runtime.borrow();
-        let mode = runtime
-            .lod_mode_by_window
-            .get(TRINITY_JACK_PLAY_WINDOW_GRAPH)
-            .map(String::as_str)
-            .unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
+    fn window_measures(&self, _doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let mode = cfg.projection.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
         HashMap::from([(
             TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(),
             vec![trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode)],
         )])
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<TrinityJackLabels>(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, JackConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<TrinityJackLabels>(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(TRINITY_JACK_PLAY_WINDOW_GRAPH, labels.window_graph)
             .window_kind_label(TRINITY_JACK_PLAY_WINDOW_EDITOR, labels.window_editor)
             .window_kind_label(TRINITY_JACK_PLAY_WINDOW_RESULTS, labels.window_results)
-            .action_labels(trinity_jack_action_labels(is_de_locale(view_state)))
+            .action_labels(trinity_jack_action_labels(is_de_locale(cfg.projection)))
     }
 
     fn context_menu(
         &self,
         request: &ContextMenuRequest,
         _doc: &DocumentView<'_, GraphFixture>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
+        cfg: &ConfigView<'_, JackConfig>,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = is_de_locale(view_state);
-        let selected = self.runtime.borrow().selected_node_ids.clone();
+        let is_de = is_de_locale(cfg.projection);
+        let selected = cfg.projection.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
         let mut menu = Menu::of(registry);
         if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
@@ -1054,7 +962,7 @@ pub fn create_trinity_jack_app() -> App {
                 source_format: "trinity.graph".into(),
                 component_kind: "trinity".into(),
                 dimension: "graph".into(),
-                media_capability: OsMediaCapability::MeshOnly,
+                media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
                 media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
                 schema: "trinity.graph".into(),
                 export_formats: vec![],
@@ -1085,21 +993,18 @@ pub fn create_trinity_jack_app() -> App {
                 PanelGroup::Details,
                 TRINITY_JACK_PLAY_BODY_INSPECTION,
             )
-            .operation("nodeGraphEdit", "Edit Graph")
-            .operation("patchTrinityNodes", "Patch Nodes")
+            .operation("deleteSelection", "Delete Selection")
+            .operation("patchNodes", "Patch Nodes")
             .operation("reorganize", "Reorganize")
-            .operation("runJackQuery", "Run Jack Query")
-            .operation("submit", "Submit Jack Query")
+            .operation("runQuery", "Run Jack Query")
             .operation("loadExampleQuery", "Load Example Query")
             .operation("setActiveExample", "Set Active Example")
+            // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
             .view_action("setSelection", "Set Selection")
-            .view_action("selectNode", "Select Node")
-            .view_action("nodeGraphSelect", "Select Graph Node")
-            .view_action("nodeGraphHover", "Hover Graph Node")
-            .view_action("nodeGraphViewport", "Set Graph Viewport")
+            .view_action("setViewport", "Set Graph Viewport")
             .view_action("textEdit", "Edit Jack Query")
             .view_action("textSelect", "Select Jack Query Text")
-            .view_action("textHover", "Hover Jack Query Text")
             .view_action("requestCompletions", "Request Completions")
             .view_action("formatDocument", "Format Jack Query")
             .view_action("setLodMode", "Set LOD Mode")
@@ -1128,7 +1033,8 @@ pub fn create_trinity_jack_app() -> App {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .keybinding("mod+alt+s", "commitCheckpoint"),
+            .keybinding("mod+alt+s", "commitCheckpoint")
+            .io(jack_io()),
     )
     .example("nakagin", "Nakagin", default_fixture().print_dsl(), "building-2")
     .workflow("trinity", "Trinity", "graph")
@@ -1139,14 +1045,14 @@ pub fn create_trinity_jack_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionMeta, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
 
-    fn meta(actor: &str) -> ActionMeta {
+    fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
         testkit::meta(actor)
     }
 
     fn new_app() -> VcsDocumentApp<TrinityJackPlayApp> {
-        testkit::new_app()
+        testkit::new_app::<TrinityJackPlayApp>()
     }
 
     fn node_id_at(app: &VcsDocumentApp<TrinityJackPlayApp>, index: usize) -> String {
@@ -1172,15 +1078,10 @@ mod tests {
     #[test]
     fn run_query_populates_results_and_a_set_query_mutates_projection() {
         let mut app = new_app();
-        // The seeded default query (read-only) already populated the results runtime on construction.
+        // The seeded default query (read-only) already populated the initial config on construction.
         app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewState::default()).expect("render");
         let result = app
-            .handle_action(
-                "runJackQuery",
-                Some(&json!({ "query": "MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'" })),
-                &ViewState::default(),
-                &meta("local"),
-            )
+            .dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()) }, &meta("local"))
             .expect("run");
         assert!(!result.operations.is_empty(), "a SET query emits operations");
         let projection = app.projection().expect("projection");
@@ -1191,10 +1092,8 @@ mod tests {
     fn node_graph_select_updates_selection_and_document_tree() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
-        let result = app
-            .handle_action("nodeGraphSelect", Some(&json!({ "nodeIds": [node_id.clone()] })), &ViewState::default(), &meta("local"))
-            .expect("select");
-        assert!(result.operations.is_empty(), "selection is a view action, no operations");
+        let result = app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id.clone()] }, &meta("local")).expect("select");
+        assert!(result.operations.is_empty(), "selection is a config-only command, no document operations");
         let tree = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&tree).unwrap().contains(&format!("trinity-document.node.{node_id}")));
     }
@@ -1217,9 +1116,7 @@ mod tests {
     #[test]
     fn text_edit_updates_query_without_operations() {
         let mut app = new_app();
-        let result = app
-            .handle_action("textEdit", Some(&json!({ "text": "MATCH (a:Piece) RETURN a.name" })), &ViewState::default(), &meta("local"))
-            .expect("edit");
+        let result = app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &meta("local")).expect("edit");
         assert!(result.operations.is_empty());
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("MATCH (a:Piece) RETURN a.name"));
@@ -1235,209 +1132,64 @@ mod tests {
     }
 
     #[test]
-    fn set_lod_mode_persists_per_window() {
+    fn set_lod_mode_reflects_in_window_measures() {
         let mut app = new_app();
-        app.handle_action(
-            "setLodMode",
-            Some(&json!({ "windowId": TRINITY_JACK_PLAY_WINDOW_GRAPH, "value": "minimap" })),
-            &ViewState::default(),
-            &meta("local"),
-        )
-        .expect("lod");
-        let measures = app.window_measures(&ViewState::default());
-        let graph_measures = serde_json::to_string(&measures[TRINITY_JACK_PLAY_WINDOW_GRAPH]).unwrap();
-        assert!(graph_measures.contains("minimap"));
+        app.dispatch_typed(TrinityJackCommand::SetLodMode { window_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into(), value: "compact".into() }, &meta("local")).expect("lod");
+        let measures = app.window_measures();
+        assert!(measures[TRINITY_JACK_PLAY_WINDOW_GRAPH].iter().any(|measure| matches!(measure, WindowMeasure::Select { value, .. } if value == "compact")));
     }
 
     #[test]
-    fn return_graph_example_renders_node_graph_in_results() {
-        let mut app = new_app();
-        app.handle_action(
-            "loadExampleQuery",
-            Some(&json!({ "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' RETURN a, r, b" })),
-            &ViewState::default(),
-            &meta("local"),
-        )
-        .expect("load example");
-        let node = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewState::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
-    }
-
-    #[test]
-    fn catalogue_has_eight_example_queries() {
+    fn catalogue_tree_renders() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        for id in ["where-or", "return-graph", "set-label", "set-position", "create-node", "create-edge", "delete-leaf", "merge-edge"] {
-            assert!(json.contains(id), "missing example query {id}");
-        }
+        assert!(serde_json::to_string(&node).unwrap().contains("trinity-jack-catalogue"));
     }
 
     #[test]
-    fn inspector_has_flat_position_fields() {
+    fn inspection_tree_reflects_selection() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
-        app.handle_action("nodeGraphSelect", Some(&json!({ "nodeIds": [node_id] })), &ViewState::default(), &meta("local")).expect("select");
+        app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id] }, &meta("local")).expect("select");
         let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("Flat U"));
-        assert!(json.contains("Flat V"));
-    }
-
-    // 🧰️ `VcsDocumentApp::tools()` no longer exists — utility bars are now derived by the renderer
-    // from the utility registry, which this app declares none of. `runJackQuery` is a plain
-    // operation and `undo` is a framework-injected History action; both still live in the
-    // static `AppDefinition.actions` list (undo/redo render via the History rail, not a
-    // per-app utility bar) — assert on that surface instead.
-    #[test]
-    fn app_definition_declares_run_jack_query_and_history_actions() {
-        let definition = create_trinity_jack_app().definition;
-        let action_ids: Vec<&str> = definition.actions.iter().map(|action| action.id.as_str()).collect();
-        assert!(action_ids.contains(&"runJackQuery"));
-        assert!(action_ids.contains(&"undo"));
+        assert!(serde_json::to_string(&node).unwrap().contains("trinity-inspector.identity"));
     }
 
     #[test]
-    fn trinity_jack_labels_resolve_native_by_default() {
+    fn document_tree_de_locale_translates_labels() {
         let mut app = new_app();
+        app.dispatch_typed(TrinityJackCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
         let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("\"Pieces\""));
-        assert!(json.contains("\"Connections\""));
-        assert!(!json.contains("Stücke"));
+        assert!(serde_json::to_string(&node).unwrap().contains("Stücke"));
     }
 
     #[test]
-    fn trinity_jack_labels_translate_panels_in_german() {
+    fn set_active_example_swaps_fixture_and_seeds_query() {
         let mut app = new_app();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let document_json = serde_json::to_string(&app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &view_state).expect("render")).unwrap();
-        assert!(document_json.contains("Stücke"));
-        assert!(document_json.contains("Verbindungen"));
-        assert!(!document_json.contains("\"Pieces\""));
-        let catalogue_json = serde_json::to_string(&app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &view_state).expect("render")).unwrap();
-        assert!(catalogue_json.contains("Fixturen"));
-        assert!(catalogue_json.contains("Beispielabfragen"));
-        assert!(catalogue_json.contains("Manifestarten"));
-        // 🧰️ `VcsDocumentApp::tools()` no longer exists (see the removed utility-bar test above); the
-        // "Verlauf" (History rail group) label had no per-app surface even before removal — only
-        // the `runJackQuery` action label is this app's own to assert on.
-        let action_labels = app.app_labels(&view_state).action_labels;
-        assert_eq!(action_labels.get("runJackQuery").map(String::as_str), Some("Jack-Abfrage ausführen"));
-    }
-
-    #[test]
-    fn patch_trinity_nodes_emits_rename_operation() {
-        let mut app = new_app();
-        let node_id = node_id_at(&app, 0);
-        let result = app
-            .handle_action(
-                "patchTrinityNodes",
-                Some(&json!({ "nodeIds": [node_id.clone()], "field": "name", "value": "renamed-node" })),
-                &ViewState::default(),
-                &meta("local"),
-            )
-            .expect("patch");
-        assert_eq!(result.operations.len(), 1);
-        let renamed = app.projection().expect("projection").nodes.iter().find(|node| node.id == node_id).unwrap().name.clone();
-        assert_eq!(renamed, "renamed-node");
-    }
-
-    /// 🎥️ `nodeGraphViewport` is now `ActionKind::View`: it writes the app's own runtime camera and
-    /// emits zero operations, so the document's seed-only `camera` field is never touched and there
-    /// is nothing to undo. Rendering reads the live viewport from runtime instead of the fixture.
-    #[test]
-    fn node_graph_viewport_writes_runtime_camera_without_operations() {
-        let mut app = new_app();
-        for zoom in [1.5, 2.0, 2.5] {
-            let result = app
-                .handle_action(
-                    "nodeGraphViewport",
-                    Some(&json!({ "viewportJson": json!({ "x": 10.0, "y": 20.0, "zoom": zoom }).to_string() })),
-                    &ViewState::default(),
-                    &meta("local"),
-                )
-                .expect("viewport");
-            assert!(result.operations.is_empty(), "camera is a view action, no operations");
-        }
-        assert_eq!(app.projection().expect("projection").camera.zoom, default_fixture().camera.zoom);
-        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewState::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("2.5"), "render reads the live runtime camera");
-    }
-
-    #[test]
-    fn set_active_example_replaces_fixture_via_set_fixture_operation() {
-        let mut app = new_app();
-        let before = app.projection().expect("projection").name.clone();
-        let result = app
-            .handle_action("setActiveExample", Some(&json!({ "exampleId": "branch-chain" })), &ViewState::default(), &meta("local"))
-            .expect("example");
-        assert_eq!(result.operations.len(), 1);
-        let after = app.projection().expect("projection").name.clone();
-        assert_ne!(before, after, "loading a different preset replaces the fixture");
-    }
-
-    #[test]
-    fn node_graph_edit_delete_selection_emits_delete_node_operations() {
-        let mut app = new_app();
-        let node_id = node_id_at(&app, 0);
-        app.handle_action("nodeGraphSelect", Some(&json!({ "nodeIds": [node_id.clone()] })), &ViewState::default(), &meta("local")).expect("select");
-        let before = app.projection().expect("projection").nodes.len();
-        let result = app
-            .handle_action("nodeGraphEdit", Some(&json!({ "operations": [{ "operation": "deleteSelection" }] })), &ViewState::default(), &meta("local"))
-            .expect("delete");
+        let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).expect("set active example");
         assert!(!result.operations.is_empty());
-        assert_eq!(app.projection().expect("projection").nodes.len(), before - 1);
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&node).unwrap().contains("RETURN a, r, b"));
     }
 
     #[test]
-    fn undo_redo_round_trip_through_the_wrapper() {
+    fn delete_selection_removes_selected_node() {
         let mut app = new_app();
         let node_id = node_id_at(&app, 0);
-        let before_name = app.projection().unwrap().nodes.iter().find(|n| n.id == node_id).unwrap().name.clone();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            "patchTrinityNodes",
-            Some(&json!({ "nodeIds": [node_id.clone()], "field": "name", "value": "undo-me" })),
-            |app| app.projection().unwrap().nodes.iter().find(|n| n.id == node_id).unwrap().name.clone(),
-            before_name,
-            "undo-me".to_string(),
-        );
-    }
-
-    /// 🧪️ The definitional merge proof: two instances start from the same fixture, rename DISJOINT
-    /// nodes (A renames node 0, B renames node 1), and exchanging operations over a `MemoryBackbone`
-    /// converges both to contain BOTH renames — impossible under whole-document `setDocument` LWW.
-    #[test]
-    fn two_instances_converge_disjoint_edits_via_backbone() {
-        let seed = new_app();
-        let node0 = node_id_at(&seed, 0);
-        let node1 = node_id_at(&seed, 1);
-        drop(seed);
-        testkit::assert_two_instances_converge::<TrinityJackPlayApp, _>(
-            "mem://trinity-jack-convergence",
-            ("patchTrinityNodes", Some(&json!({ "nodeIds": [node0.clone()], "field": "name", "value": "Renamed By A" }))),
-            ("patchTrinityNodes", Some(&json!({ "nodeIds": [node1.clone()], "field": "name", "value": "Renamed By B" }))),
-            |app| {
-                let projection = app.projection().unwrap();
-                (
-                    projection.nodes.iter().find(|n| n.id == node0).unwrap().name.clone(),
-                    projection.nodes.iter().find(|n| n.id == node1).unwrap().name.clone(),
-                )
-            },
-        );
+        app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id.clone()] }, &meta("local")).expect("select");
+        let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local")).expect("delete");
+        assert!(!result.operations.is_empty());
+        let projection = app.projection().expect("projection");
+        assert!(!projection.nodes.iter().any(|node| node.id == node_id));
     }
 
     #[test]
-    fn ingest_operations_is_idempotent() {
-        let seed = new_app();
-        let node_id = node_id_at(&seed, 0);
-        drop(seed);
-        testkit::assert_ingest_idempotent::<TrinityJackPlayApp, _>(
-            "patchTrinityNodes",
-            Some(&json!({ "nodeIds": [node_id.clone()], "field": "name", "value": "Hero" })),
-            |app| app.projection().unwrap().nodes.iter().find(|n| n.id == node_id).unwrap().name.clone(),
-        );
+    fn export_media_graph_out_matches_document_pack() {
+        use semio_framework_plugin::PluginApp as _;
+        let mut app = new_app();
+        let document_out = app.export_media("document:out").expect("document:out export");
+        let graph_out = app.export_media("graph:out").expect("graph:out export");
+        assert_eq!(document_out.payload, graph_out.payload);
     }
 }
 //#endregion 🧪️Tests

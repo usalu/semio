@@ -34,6 +34,7 @@ mod tests {
             spreads: Vec::new(),
             pages: Vec::new(),
             print_target: None,
+            data_fields_json: None,
         }
     }
 
@@ -70,6 +71,7 @@ mod tests {
                 ],
             }],
             print_target: None,
+            data_fields_json: None,
         }
     }
 

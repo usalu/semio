@@ -106,7 +106,150 @@ pub use grammar::{tokenize_language, GrammarToken};
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use writer::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
+use writer::{WriterCamera, WriterProjection, WRITER_DOCUMENT_SCHEMA};
+
+//#region 🔖️Config
+/// 📐️ Was a private `WriterEditorSelection` on the ui crate's now-deleted `WriterPlayRuntime` — moved
+/// here so `WriterConfig` (below) can carry it: a document-app `Config` type can only reference types
+/// its own crate or a dependency defines, and `ui` depends on `engine`, never the reverse.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct WriterEditorSelection {
+    pub start: usize,
+    pub end: usize,
+}
+
+/// ⚙️ Was a private `WriterEditorSettings` on the ui crate's now-deleted `WriterPlayRuntime` — see
+/// `WriterEditorSelection`'s doc comment for why it moved here.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WriterEditorSettings {
+    pub show_line_numbers: bool,
+    pub font_px: u32,
+    pub line_height: u32,
+    pub tab_size: u32,
+}
+
+impl Default for WriterEditorSettings {
+    fn default() -> Self {
+        Self { show_line_numbers: true, font_px: 14, line_height: 22, tab_size: 2 }
+    }
+}
+
+/// 🧮️ B1: writer's real `DocumentApp::Config` — absorbs every former `WriterPlayRuntime` app-struct
+/// field (selection, editor selection, format/lint signals, revision, editor settings, AST hover,
+/// engagement draft, and the session-only viewport camera — see `WriterCamera`'s doc comment) plus
+/// `locale`, the one `ViewState` field the writer UI actually reads (`resolve_labels`/`is_de_locale`
+/// — see `writer_ui::WriterPlayApp::render`), mirroring `shooting_engine::ShootingConfig`'s B1 shape.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "writercfg")]
+#[dsl(layout = "lines")]
+pub struct WriterConfig {
+    /// 👁️ Selected AST node ids — was `WriterPlayRuntime::selected_ast_ids`.
+    pub selected_ast_ids: Vec<String>,
+    /// 👁️ Editor text selection range — was `WriterPlayRuntime::editor_selection`.
+    #[dsl(block)]
+    pub editor_selection: Option<WriterEditorSelection>,
+    /// 🔔️ Bumped on every format pass — was `WriterPlayRuntime::format_signal`.
+    pub format_signal: u32,
+    /// 🔔️ Bumped on every lint pass — was `WriterPlayRuntime::lint_signal`.
+    pub lint_signal: u32,
+    /// 🔔️ Bumped on every ephemeral view mutation — was `WriterPlayRuntime::revision`.
+    pub revision: u32,
+    /// ⚙️ Editor chrome settings (line numbers, font/line/tab size) — was `WriterPlayRuntime::editor_settings`.
+    #[dsl(block)]
+    pub editor_settings: WriterEditorSettings,
+    /// 🐁️ AST node id whose tree row is hovered — was `WriterPlayRuntime::tree_hovered_ast_id`.
+    pub tree_hovered_ast_id: Option<String>,
+    /// 🐁️ Byte offset last reported as hovered by the editor surface — was `WriterPlayRuntime::editor_hover_offset`.
+    pub editor_hover_offset: Option<usize>,
+    /// 💬️ In-progress engagement-bar input draft — was `WriterPlayRuntime::engagement_input`.
+    pub engagement_input: String,
+    /// 🎥️ Editor viewport pan/zoom — session-only, never a document field. Was `WriterPlayRuntime::camera`.
+    #[dsl(block)]
+    pub camera: WriterCamera,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+impl Default for WriterConfig {
+    fn default() -> Self {
+        Self {
+            selected_ast_ids: Vec::new(),
+            editor_selection: None,
+            format_signal: 0,
+            lint_signal: 0,
+            revision: 0,
+            editor_settings: WriterEditorSettings::default(),
+            tree_hovered_ast_id: None,
+            editor_hover_offset: None,
+            engagement_input: String::new(),
+            camera: WriterCamera::default(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl store::ConfigRecord for WriterConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `writer_op::WriterConfigOperation` — mirrors
+/// `shooting_engine::ShootingConfig`'s own `OperationDiff` impl (`apply` ignores `base` entirely).
+impl protocol::OperationDiff<WriterConfig> for WriterConfig {
+    fn apply(&self, _base: &WriterConfig) -> WriterConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports plus one
+/// extra output, `text:out` (Text×Document, kind `text.document`, `Many` — a workflow may fan this
+/// writer's text out to several consumers, e.g. `playbook`'s `chapters:in`).
+pub fn writer_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: WRITER_DOCUMENT_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Text, form: semio_framework_plugin::MediaForm::Document },
+        ports: vec![semio_framework_plugin::MediaPortSpec {
+            id: "text:out".into(),
+            label: "Text".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Text, form: semio_framework_plugin::MediaForm::Document },
+            kind_id: Some("text.document".into()),
+            required: false,
+            multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+        }],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation {
+            id: "text.document".into(),
+            name: "Text Document".into(),
+            dimension: "text".into(),
+            component_kind: "writer".into(),
+        },
+    }
+}
+
+/// 📤️ The JSON shape `"text:out"` exports and `playbook`'s `"chapters:in"` imports — one writer
+/// document's text as one "chapter" (`title` mirrors the document id, `language_id` lets an importer
+/// route jack/wire content differently from prose if it ever wants to).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WriterChapterPayload {
+    pub id: String,
+    pub title: String,
+    pub text: String,
+    pub language_id: String,
+}
+
+/// 🎞️ Projects a `WriterProjection` onto the `"text:out"` chapter payload shape.
+pub fn writer_chapter_payload(document: &WriterProjection) -> WriterChapterPayload {
+    WriterChapterPayload { id: document.id.clone(), title: document.id.clone(), text: document.text.clone(), language_id: document.language_id.clone() }
+}
+//#endregion 🔖️Io
 
 //#region 🔖️Examples
 /// 📄️ The `jack` example, parsed once from {@link writer_dsl::JACK_EXAMPLE_TEXT} — the source of truth

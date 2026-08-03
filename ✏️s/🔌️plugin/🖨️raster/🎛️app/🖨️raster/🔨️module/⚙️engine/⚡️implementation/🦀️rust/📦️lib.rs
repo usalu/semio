@@ -1,6 +1,7 @@
 //! ⚙️ Raster app — headless compute (constitutional: engine).
 
-use raster::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterProjection, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use raster::{RasterCamera, RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterProjection, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -260,7 +261,171 @@ pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
     };
     serde_json::to_value(&document).map_err(|error| error.to_string())
 }
+
+/// 📥️ Builds the whole-document replacement that appends the incoming `image:in` media as one new
+/// pixel layer + embedded asset — `RasterOperation` has no granular "add asset" step (assets are
+/// seeded with the document today), so this mirrors `raster_document_json_from_dwg`'s "compute the
+/// whole next document, then `ReplaceDocument`" shape rather than inventing a narrower op. `png_base64`
+/// is raw (unprefixed) base64 PNG bytes — the same convention `shooting_engine::shooting_photo_media`
+/// produces on `photos:out` and the Vector→Raster run-crate converter produces for a draw `vector:out`
+/// source.
+pub fn raster_append_image_layer(document: &RasterProjection, png_base64: &str) -> RasterProjection {
+    let asset_key = create_raster_id("image-in-asset");
+    let mut layer = create_pixel_layer("Imported Image", 0, 0);
+    if let RasterLayerNode::Pixel { image_key, width, height, .. } = &mut layer {
+        *image_key = Some(asset_key.clone());
+        *width = None;
+        *height = None;
+    }
+    let mut next = document.clone();
+    next.assets.insert(asset_key, RasterImageAsset { mime: "image/png".into(), data: png_base64.to_string() });
+    next.layers.push(layer);
+    next
+}
 //#endregion 🔖️MediaImport
+
+//#region 🔖️Config
+/// 🧮️ B1: raster's real `DocumentApp::Config` — absorbs every former `RasterPlayRuntime` (`ui`-crate
+/// `RefCell`) field (selection, hover, brush size/opacity, navigator composite-viewport size, the
+/// session-only free camera) plus the two former `ViewState`-driven fields the raster UI actually
+/// reads (`active_utility_id`/`locale` — mirrors `shooting_engine::ShootingConfig`'s identical B1
+/// migration).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "rastercfg")]
+#[dsl(layout = "lines")]
+pub struct RasterConfig {
+    /// 👁️ Selected layer ids — was `RasterPlayRuntime::selected_ids`.
+    pub selected_ids: Vec<String>,
+    /// 👁️ Hovered layer id — was `RasterPlayRuntime::hovered_id`.
+    pub hovered_id: Option<String>,
+    /// 🖌️ Brush diameter (px) — was `RasterPlayRuntime::brush_size`.
+    pub brush_size: f64,
+    /// 🖌️ Brush opacity (0..1) — was `RasterPlayRuntime::brush_opacity`.
+    pub brush_opacity: f64,
+    /// 🔭️ Navigator's last-known composite-window viewport size — was
+    /// `RasterPlayRuntime::composite_viewport`.
+    #[dsl(block)]
+    pub composite_viewport: Option<RasterConfigViewportSize>,
+    /// 🎥️ The free/live composite camera — session-only, never a document field. Was
+    /// `RasterPlayRuntime::camera`.
+    #[dsl(block)]
+    pub camera: RasterCamera,
+    /// 🧰️ The active composite-window utility — was read off `view_state.active_utility_id`
+    /// (host-pushed `ViewState`, deleted by B1). Default mirrors `ui`'s `RASTER_DEFAULT_UTILITY`.
+    pub active_utility_id: String,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct RasterConfigViewportSize {
+    pub width: f64,
+    pub height: f64,
+}
+
+impl Default for RasterConfig {
+    fn default() -> Self {
+        Self {
+            selected_ids: Vec::new(),
+            hovered_id: None,
+            brush_size: 24.0,
+            brush_opacity: 1.0,
+            composite_viewport: None,
+            camera: RasterCamera::default(),
+            active_utility_id: "selectMarquee".into(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl store::ConfigRecord for RasterConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `raster_op::RasterConfigOperation` (lives here, not in `raster_op`,
+/// since `protocol::OperationDiff`/`RasterConfig` are both foreign to that crate — the orphan rule
+/// requires at least one local type). Mirrors `RasterOperation::ReplaceDocument`'s existing
+/// "whole-document replace" pattern.
+impl protocol::OperationDiff<RasterConfig> for RasterConfig {
+    fn apply(&self, _base: &RasterConfig) -> RasterConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `2d.raster`
+/// `ArtifactKindSpec` literal `create_raster_app` already declares via `.artifact_kind(...)`, plus
+/// the app-specific `image:in`/`image:out` ports (see below).
+pub fn raster_io() -> semio_framework_core::AppIo {
+    semio_framework_core::AppIo {
+        document_schema: RASTER_DOCUMENT_SCHEMA.into(),
+        document_media_type: semio_framework_core::MediaType {
+            class: semio_framework_core::MediaClass::TwoD,
+            form: semio_framework_core::MediaForm::Raster,
+        },
+        ports: vec![raster_image_in_port(), raster_image_out_port()],
+        export_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
+        import_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
+        artifact: semio_framework_core::ArtifactPresentation {
+            id: "2d.raster".into(),
+            name: "2D Raster".into(),
+            dimension: "2d".into(),
+            component_kind: "raster".into(),
+        },
+    }
+}
+
+/// 🔌️ `image:in` — accepts raster imagery from upstream producers (e.g. draw's `vector:out`,
+/// converted Vector→Raster) as a new composited layer. `Many`/optional: several upstream images may
+/// feed in, and the port may sit unconnected.
+pub fn raster_image_in_port() -> semio_framework_core::MediaPortSpec {
+    semio_framework_core::MediaPortSpec {
+        id: "image:in".into(),
+        label: "Image".into(),
+        direction: semio_framework_core::MediaPortDirection::In,
+        media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Raster },
+        kind_id: None,
+        required: false,
+        multiplicity: semio_framework_core::PortMultiplicity::Many,
+    }
+}
+
+/// 🔌️ `image:out` — the raster document's current composited raster, as `2d.image` media (workflow
+/// port surface; WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). `kind_id: "2d.image"` — the
+/// shared framework-builtin interchange kind (declared on this app's `.artifact_kind(...)` below;
+/// `shooting`'s `photos:out` declares the identical shape, harmless duplicate registrations).
+pub fn raster_image_out_port() -> semio_framework_core::MediaPortSpec {
+    semio_framework_core::MediaPortSpec {
+        id: "image:out".into(),
+        label: "Image".into(),
+        direction: semio_framework_core::MediaPortDirection::Out,
+        media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Raster },
+        kind_id: Some("2d.image".into()),
+        required: false,
+        multiplicity: semio_framework_core::PortMultiplicity::Many,
+    }
+}
+
+/// 🖼️ Composites the current raster document to a PNG `Media` payload for the `image:out` port —
+/// reuses the same flat-SVG-then-rasterize pipeline `raster_document_json_from_dwg`'s inverse
+/// (`dwg_drawing_to_svg`) doesn't apply here, so this renders the document's own composite instead:
+/// `title_card_svg` is a placeholder card today (see `raster_document_json_to_svg`'s doc — real pixel
+/// compositing is wgpu/canvas-host-side, out of this pure headless compute crate's reach), rasterized
+/// to PNG for a real, always-available (if generic) `image:out` value.
+pub fn raster_composite_media(document: &RasterProjection) -> Result<semio_framework_core::Media, semio_framework_core::MediaError> {
+    let value = serde_json::to_value(document).map_err(|error| semio_framework_core::MediaError::Payload("image:out".into(), error.to_string()))?;
+    let (svg, _width, _height) = raster_document_json_to_svg(&value).map_err(|error| semio_framework_core::MediaError::Payload("image:out".into(), error))?;
+    let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, 0, 0).map_err(|error| semio_framework_core::MediaError::Payload("image:out".into(), error))?;
+    Ok(semio_framework_core::Media {
+        media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Raster },
+        payload: semio_framework_core::MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 },
+    })
+}
+//#endregion 🔖️Io
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -309,6 +474,60 @@ mod tests {
         let asset_key = image_key.as_ref().expect("image key set");
         let asset = document.assets.get(asset_key).expect("asset present");
         assert!(!asset.data.is_empty());
+    }
+
+    #[test]
+    fn raster_config_default_matches_ui_selectmarquee_utility() {
+        let config = RasterConfig::default();
+        assert_eq!(config.active_utility_id, "selectMarquee");
+        assert_eq!(config.locale, "en-US");
+        assert_eq!(config.brush_size, 24.0);
+        assert_eq!(config.brush_opacity, 1.0);
+    }
+
+    #[test]
+    fn raster_config_dsl_round_trips() {
+        let config = RasterConfig {
+            selected_ids: vec!["l1".into(), "l2".into()],
+            hovered_id: Some("l3".into()),
+            brush_size: 40.0,
+            brush_opacity: 0.5,
+            composite_viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }),
+            camera: RasterCamera { x: 5.0, y: -3.0, zoom: 2.0 },
+            active_utility_id: "paintBrush".into(),
+            locale: "de-DE".into(),
+        };
+        store::test_support::assert_dsl_round_trip(&config);
+    }
+
+    #[test]
+    fn raster_io_declares_image_in_and_image_out() {
+        let io = raster_io();
+        assert_eq!(io.document_schema, RASTER_DOCUMENT_SCHEMA);
+        assert_eq!(io.artifact.id, "2d.raster");
+        assert!(io.ports.iter().any(|p| p.id == "image:in"));
+        let out_port = raster_image_out_port();
+        assert_eq!(out_port.kind_id.as_deref(), Some("2d.image"));
+    }
+
+    #[test]
+    fn raster_append_image_layer_inserts_layer_and_asset() {
+        let document = empty_raster_document();
+        let before_layers = document.layers.len();
+        let next = raster_append_image_layer(&document, "aGVsbG8=");
+        assert_eq!(next.layers.len(), before_layers + 1);
+        let RasterLayerNode::Pixel { image_key, .. } = next.layers.last().unwrap() else { panic!("expected pixel layer") };
+        let asset = next.assets.get(image_key.as_ref().unwrap()).expect("asset inserted");
+        assert_eq!(asset.data, "aGVsbG8=");
+    }
+
+    #[test]
+    fn raster_composite_media_exports_structured_2d_image_payload() {
+        let document = empty_raster_document();
+        let media = raster_composite_media(&document).expect("export image:out");
+        let semio_framework_core::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
+        assert_eq!(schema, "2d.image");
+        assert!(!json.is_empty());
     }
 }
 //#endregion 🧪️Tests

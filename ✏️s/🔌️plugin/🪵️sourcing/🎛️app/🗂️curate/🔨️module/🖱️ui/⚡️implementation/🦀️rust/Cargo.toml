@@ -14,6 +14,10 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️
 sourcing = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate" }
 sourcing_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate-engine" }
 sourcing_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate-op" }
+sourcing_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate-protocol" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 serde = { version = "1.0.219", features = ["derive"] }

@@ -596,16 +596,110 @@ export type World3dScene = {
   readonly statusJson?: string;
 };
 
+/** 🔌️ One port on a node-graph node: identity + display label (direction is implied by whether the
+ * record lives in the owning node's `inputs` or `outputs` array). `code`/`abbreviation`/`fullName`/
+ * `resourceKind` are set only for OS-workflow app-instance nodes (the wire key stays `resourceKind` —
+ * the rename to `artifactKind` is W4/`OsWorkflowNodeGraphPayload` scope, not this ticket's). */
+export type NodeGraphPortRecord = {
+  readonly id: string;
+  readonly label?: string;
+  readonly code?: string;
+  readonly abbreviation?: string;
+  readonly fullName?: string;
+  readonly resourceKind?: string;
+};
+
+/** 🕸️ One node-graph node: identity, label, layout rect, typed ports. `instanceId`/`pluginId`/`appId`/
+ * `icon` are set only for OS-workflow app-instance nodes (the space canvas's node-graph). */
+export type NodeGraphNodeRecord = {
+  readonly id: string;
+  readonly label?: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly inputs: readonly NodeGraphPortRecord[];
+  readonly outputs: readonly NodeGraphPortRecord[];
+  readonly instanceId?: string;
+  readonly pluginId?: string;
+  readonly appId?: string;
+  readonly icon?: string;
+};
+
+/** 🕸️ One node-graph edge between two node/port endpoints. */
+export type NodeGraphEdgeRecord = {
+  readonly id: string;
+  readonly sourceNodeId: string;
+  readonly sourcePortId: string;
+  readonly targetNodeId: string;
+  readonly targetPortId: string;
+  readonly label?: string;
+};
+
+/** 📷️ Node-graph camera: pan position + zoom factor. */
+export type NodeGraphViewport = {
+  readonly x: number;
+  readonly y: number;
+  readonly zoom: number;
+};
+
+/** 🔎️ One spotlight/find result row for a node-graph surface. */
+export type NodeGraphFindItem = {
+  readonly id: string;
+  readonly label: string;
+  readonly category: string;
+};
+
+/** 🖱️ Hovered node id, if any. */
+export type NodeGraphHover = {
+  readonly nodeId?: string;
+};
+
+/** ➕️ Variadic input/output slot on an operator catalogue entry. */
+export type NodeGraphOperatorVariadicRecord = {
+  readonly slotKey: string;
+  readonly min: number;
+  readonly max?: number;
+};
+
+/** 🔌️ Declared operator channel (input or output); `cardinality` rides as its serialized symbol
+ * string (`"!"`/`"?"`/`"*"`/`"+"`/digits). */
+export type NodeGraphOperatorChannelRecord = {
+  readonly code: string;
+  readonly abbreviation: string;
+  readonly name: string;
+  readonly fullName: string;
+  readonly operators?: readonly string[];
+  readonly default?: unknown;
+  readonly label?: string;
+  readonly cardinality: string;
+};
+
+/** 🧠️ One operator catalogue entry offered to a flow-backed node-graph's spotlight/palette. */
+export type NodeGraphOperatorRecord = {
+  readonly id: string;
+  readonly module: string;
+  readonly name: string;
+  readonly abbreviation: string;
+  readonly icon: string;
+  readonly summary: string;
+  readonly inputs: readonly NodeGraphOperatorChannelRecord[];
+  readonly outputs: readonly NodeGraphOperatorChannelRecord[];
+  readonly variadicInput?: NodeGraphOperatorVariadicRecord;
+  readonly variadicOutput?: NodeGraphOperatorVariadicRecord;
+  readonly group?: readonly string[];
+};
+
 /** 🕸️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
 export type NodeGraphScene = {
-  readonly nodesJson: string;
-  readonly edgesJson: string;
-  readonly viewportJson: string;
+  readonly nodes: readonly NodeGraphNodeRecord[];
+  readonly edges: readonly NodeGraphEdgeRecord[];
+  readonly viewport?: NodeGraphViewport;
   readonly editable?: boolean;
-  readonly operatorsJson?: string;
-  readonly findItemsJson?: string;
-  readonly selectionJson?: string;
-  readonly hoverJson?: string;
+  readonly operators?: readonly NodeGraphOperatorRecord[];
+  readonly findItems?: readonly NodeGraphFindItem[];
+  readonly selection?: readonly string[];
+  readonly hover?: NodeGraphHover;
   readonly previewOffJson?: string;
   readonly lodJson?: string;
   readonly catalogueJson?: string;

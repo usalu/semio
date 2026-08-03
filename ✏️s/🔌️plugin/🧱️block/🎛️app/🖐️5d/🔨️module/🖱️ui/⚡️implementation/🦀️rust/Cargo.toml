@@ -15,6 +15,7 @@ block_5d = { path = "../../../../../../../../../✏️s/🔌️plugin/🧱️blo
 block_5d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-block-5d-dsl" }
 block_5d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-block-5d-engine" }
 block_5d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-block-5d-op" }
+block_5d_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-block-5d-protocol" }
 block_shared = { path = "../../../../../../../../../✏️s/🔌️plugin/🧱️block/🔨️module/🤝️shared/⚡️implementation/🦀️rust", package = "semio-s-plugin-block-shared" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

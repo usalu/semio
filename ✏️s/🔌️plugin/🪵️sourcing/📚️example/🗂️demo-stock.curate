@@ -9,11 +9,6 @@ frame width=1.2m height=1.4m depth=0.09m profile=0.09m id=slab-concrete-240 name
 slab width=2.4m depth=1.2m thickness=0.24m id=slab-clt-160 name="CLT Slab 160mm" module-id=slabs availability=20 typology-path=[ slabs clt ]
 slab width=2.95m depth=1.25m thickness=0.16m id=slab-hollow-core-265 name="Hollow Core Slab 265mm" module-id=slabs availability=16 typology-path=[ slabs hollow-core ]
 slab width=1.2m depth=6m thickness=0.265m ]
-filters {
-  query="" min-availability=0 module-ids=[ ] typology-path=[ ]
-}
-runtime {
-}
 curated [object-id:REF count:UINT] {
   beam-glulam-gl24h 3
   window-casement-100x120 2

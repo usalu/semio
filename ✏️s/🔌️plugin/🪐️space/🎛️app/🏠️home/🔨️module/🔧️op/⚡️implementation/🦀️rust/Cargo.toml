@@ -12,6 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app
 
 [dependencies]
 home = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/⚡️implementation/🦀️rust", package = "semio-s-app-space-home" }
+home_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-space-home-engine" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

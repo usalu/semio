@@ -6,9 +6,9 @@ use procedural_3d::{
     camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_id, widget_to_dsl,
     CameraJsonDsl, FormGenerationDsl, Procedural3dDocument, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl,
 };
+use procedural_3d_engine::Procedural3dConfig;
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
-use store::{DocumentEnvelope, DocumentStore};
 
 //#region 🔖️Collections
 /// 🩹️ Sparse id-keyed collection diff — removals plus id-or-index `set`s (replace when the id already
@@ -345,8 +345,83 @@ impl protocol::OpBinary for Procedural3dOperation {
 }
 //#endregion 🔖️OpText
 
-pub type Procedural3dEnvelope = DocumentEnvelope<Procedural3dDocument, Procedural3dOperation>;
-pub type Procedural3dStore = DocumentStore<Procedural3dDocument, Procedural3dOperation>;
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `procedural_3d_engine::Procedural3dConfig`'s operation enum — one variant per settled
+/// interaction (mirrors the pre-B1 `Procedural3dRuntime` field writes), plus a generic `Snapshot`
+/// every variant's `backwards()` returns: since a config-only dispatch is a plain `Apply` (not an
+/// `AmendLast` — see `Procedural3dPlayApp::handle`), each tick is its own distinct, real config edit,
+/// and "undo this tick" is exactly "restore the whole-config snapshot from just before it". Mirrors
+/// `shooting_op::ShootingConfigOperation`'s identical shape/reasoning exactly.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Procedural3dConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: Procedural3dConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { node_ids: Vec<String> },
+    #[dsl(key = "hover")]
+    SetHover { node_id: Option<String> },
+    #[dsl(key = "selection-method")]
+    SetSelectionMethod { method: String },
+    #[dsl(key = "lod-mode")]
+    SetLodMode { value: String },
+    #[dsl(key = "show-mode")]
+    SetShowMode { value: String },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: CameraJson,
+    },
+    #[dsl(key = "preview-camera")]
+    SetPreviewCamera {
+        #[dsl(block)]
+        camera: procedural_3d_engine::Procedural3dPreviewCamera,
+    },
+    #[dsl(key = "sun")]
+    SetSun { json: String },
+    #[dsl(key = "generation")]
+    SetGeneration { selected_generation_id: Option<String>, generation_preview_text: Option<String> },
+    #[dsl(key = "eval-driver")]
+    SetEvalDriver { json: String },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<Procedural3dConfig> for Procedural3dConfigOperation {
+    type Diff = Procedural3dConfig;
+
+    fn diff(&self, base: &Procedural3dConfig) -> Procedural3dConfig {
+        let mut next = base.clone();
+        match self {
+            Procedural3dConfigOperation::Snapshot { config } => return config.clone(),
+            Procedural3dConfigOperation::SetSelection { node_ids } => next.selected_node_ids = node_ids.clone(),
+            Procedural3dConfigOperation::SetHover { node_id } => next.hovered_node_id = node_id.clone(),
+            Procedural3dConfigOperation::SetSelectionMethod { method } => next.selection_method = method.clone(),
+            Procedural3dConfigOperation::SetLodMode { value } => next.lod_mode = value.clone(),
+            Procedural3dConfigOperation::SetShowMode { value } => next.show_mode = value.clone(),
+            Procedural3dConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            Procedural3dConfigOperation::SetPreviewCamera { camera } => next.preview_camera = camera.clone(),
+            Procedural3dConfigOperation::SetSun { json } => next.sun_json = json.clone(),
+            Procedural3dConfigOperation::SetGeneration { selected_generation_id, generation_preview_text } => {
+                next.selected_generation_id = selected_generation_id.clone();
+                next.generation_preview_text = generation_preview_text.clone();
+            }
+            Procedural3dConfigOperation::SetEvalDriver { json } => next.eval_driver_json = json.clone(),
+            Procedural3dConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            Procedural3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &Procedural3dConfig) -> Vec<Self> {
+        vec![Procedural3dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -370,7 +445,7 @@ mod tests {
 
     #[test]
     fn store_applies_widget_add() {
-        let mut store = Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None));
+        let mut store = store::DocumentStore::<Procedural3dDocument, Procedural3dOperation>::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None));
         store.dispatch(DocumentCommand::Apply { operations: vec![Procedural3dOperation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         assert!(store.projection().expect("projection").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
@@ -638,5 +713,90 @@ mod tests {
         let error = Procedural3dOperation::parse_op("bogus-op id=\"w-1\"").expect_err("unknown operation must fail to parse");
         assert!(error.to_string().contains("unknown operation"), "unexpected error: {error}");
     }
+
+    //#region 🔖️ConfigOperationTests
+    fn config_round_trip(base: &Procedural3dConfig, operation: &Procedural3dConfigOperation) -> Procedural3dConfig {
+        let forward = operation.diff(base);
+        let backwards = operation.backwards(base);
+        let mut restored = forward.clone();
+        for back in &backwards {
+            restored = back.diff(&restored);
+        }
+        assert_eq!(&restored, base, "backwards() must exactly restore the pre-operation config");
+        forward
+    }
+
+    #[test]
+    fn config_set_selection_round_trips() {
+        let base = Procedural3dConfig::default();
+        let next = config_round_trip(&base, &Procedural3dConfigOperation::SetSelection { node_ids: vec!["a".into(), "b".into()] });
+        assert_eq!(next.selected_node_ids, vec!["a".to_string(), "b".to_string()]);
+    }
+
+    #[test]
+    fn config_set_hover_round_trips() {
+        let base = Procedural3dConfig::default();
+        let next = config_round_trip(&base, &Procedural3dConfigOperation::SetHover { node_id: Some("extrude".into()) });
+        assert_eq!(next.hovered_node_id, Some("extrude".to_string()));
+    }
+
+    #[test]
+    fn config_set_camera_and_preview_camera_round_trip() {
+        let base = Procedural3dConfig::default();
+        let next = config_round_trip(&base, &Procedural3dConfigOperation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
+        assert_eq!(next.camera, CameraJson { x: 1.0, y: 2.0, zoom: 3.0 });
+        let camera = procedural_3d_engine::Procedural3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 60.0 };
+        let next2 = config_round_trip(&next, &Procedural3dConfigOperation::SetPreviewCamera { camera: camera.clone() });
+        assert_eq!(next2.preview_camera, camera);
+    }
+
+    #[test]
+    fn config_set_sun_and_eval_driver_round_trip_as_raw_json() {
+        let base = Procedural3dConfig::default();
+        let next = config_round_trip(&base, &Procedural3dConfigOperation::SetSun { json: "{\"enabled\":true}".into() });
+        assert_eq!(next.sun_json, "{\"enabled\":true}");
+        let next2 = config_round_trip(&next, &Procedural3dConfigOperation::SetEvalDriver { json: "{\"evalJson\":\"{}\"}".into() });
+        assert_eq!(next2.eval_driver_json, "{\"evalJson\":\"{}\"}");
+    }
+
+    #[test]
+    fn config_set_generation_round_trips() {
+        let base = Procedural3dConfig::default();
+        let next = config_round_trip(
+            &base,
+            &Procedural3dConfigOperation::SetGeneration { selected_generation_id: Some("generation-1".into()), generation_preview_text: Some("42".into()) },
+        );
+        assert_eq!(next.selected_generation_id, Some("generation-1".to_string()));
+        assert_eq!(next.generation_preview_text, Some("42".to_string()));
+    }
+
+    #[test]
+    fn config_set_active_utility_and_locale_round_trip() {
+        let base = Procedural3dConfig::default();
+        let next = config_round_trip(&base, &Procedural3dConfigOperation::SetActiveUtility { utility_id: "rotate".into() });
+        assert_eq!(next.active_utility_id, "rotate");
+        let next2 = config_round_trip(&next, &Procedural3dConfigOperation::SetLocale { value: "de-DE".into() });
+        assert_eq!(next2.locale, "de-DE");
+    }
+
+    #[test]
+    fn config_op_text_round_trips_every_variant() {
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetSelection { node_ids: vec!["a".into()] });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetHover { node_id: None });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetSelectionMethod { method: "lasso".into() });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetLodMode { value: "coarse".into() });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetShowMode { value: "wireframe".into() });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetPreviewCamera {
+            camera: procedural_3d_engine::Procedural3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 },
+        });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetSun { json: "{}".into() });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetEvalDriver { json: "{}".into() });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetActiveUtility { utility_id: "scale".into() });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::SetLocale { value: "de-DE".into() });
+        test_support::assert_op_line_round_trip(&Procedural3dConfigOperation::Snapshot { config: Procedural3dConfig::default() });
+    }
+    //#endregion 🔖️ConfigOperationTests
 }
 //#endregion 🧪️Tests

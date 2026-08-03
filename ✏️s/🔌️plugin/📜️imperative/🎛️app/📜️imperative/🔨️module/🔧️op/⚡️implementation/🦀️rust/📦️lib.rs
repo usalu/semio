@@ -163,6 +163,49 @@ impl protocol::OpBinary for ImperativeOperation {
 }
 //#endregion 🔖️OpText
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `imperative_engine::ImperativeConfig`'s operation enum — one variant per settled
+/// interaction (mirrors the pre-B1 `ImperativePlayRuntime` field writes), plus a generic `Snapshot`
+/// every variant's `backwards()` returns — mirrors `shooting_op::ShootingConfigOperation`'s "undo this
+/// tick is exactly restore the whole-config snapshot from just before it" pattern: `Operation::Diff` is
+/// the WHOLE `ImperativeConfig` (not a granular patch type), `diff()` returns "the full config after
+/// this op", and `protocol::OperationDiff<ImperativeConfig>::apply` for `ImperativeConfig` itself (see
+/// `imperative_engine`) just returns that snapshot verbatim, ignoring `base`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum ImperativeConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: imperative_engine::ImperativeConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelectedSteps { ids: Vec<String> },
+    #[dsl(key = "run-output")]
+    SetRunOutput { json: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl protocol::Operation<imperative_engine::ImperativeConfig> for ImperativeConfigOperation {
+    type Diff = imperative_engine::ImperativeConfig;
+
+    fn diff(&self, base: &imperative_engine::ImperativeConfig) -> imperative_engine::ImperativeConfig {
+        let mut next = base.clone();
+        match self {
+            ImperativeConfigOperation::Snapshot { config } => return config.clone(),
+            ImperativeConfigOperation::SetSelectedSteps { ids } => next.selected_step_ids = ids.clone(),
+            ImperativeConfigOperation::SetRunOutput { json } => next.run_output_json = json.clone(),
+            ImperativeConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &imperative_engine::ImperativeConfig) -> Vec<Self> {
+        vec![ImperativeConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -324,5 +367,33 @@ mod tests {
         assert_eq!(parsed, operation);
     }
     //#endregion op text
+
+    //#region ImperativeConfigOperation
+    #[test]
+    fn config_operation_snapshot_diff_ignores_base() {
+        let base = imperative_engine::ImperativeConfig::default();
+        let mut snapshot = base.clone();
+        snapshot.selected_step_ids = vec!["step-1".into()];
+        let operation = ImperativeConfigOperation::Snapshot { config: snapshot.clone() };
+        assert_eq!(protocol::Operation::diff(&operation, &base), snapshot);
+    }
+
+    #[test]
+    fn config_operation_set_selected_steps_round_trips() {
+        let base = imperative_engine::ImperativeConfig::default();
+        let operation = ImperativeConfigOperation::SetSelectedSteps { ids: vec!["step-1".into(), "step-2".into()] };
+        let next = protocol::Operation::diff(&operation, &base);
+        assert_eq!(next.selected_step_ids, vec!["step-1".to_string(), "step-2".to_string()]);
+        let backwards = protocol::Operation::backwards(&operation, &base);
+        assert_eq!(backwards, vec![ImperativeConfigOperation::Snapshot { config: base }]);
+        store::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn config_operation_set_run_output_and_locale_round_trip() {
+        store::test_support::assert_op_line_round_trip(&ImperativeConfigOperation::SetRunOutput { json: r#"{"counter":1}"#.into() });
+        store::test_support::assert_op_line_round_trip(&ImperativeConfigOperation::SetLocale { value: "de-DE".into() });
+    }
+    //#endregion ImperativeConfigOperation
 }
 //#endregion 🧪️Tests

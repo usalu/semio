@@ -1201,11 +1201,89 @@ pub const FLOW_LOD_MODE_AUTOMATIC: &str = "automatic";
 #[derive(Clone, Debug)]
 pub struct FlowBackedNodeGraphExtras {
     pub fixture_json: Option<String>,
-    pub operators_json: Option<String>,
+    pub operators: Vec<ui_wgpu::NodeGraphOperatorRecord>,
     pub capabilities_json: Option<String>,
     pub lod_json: Option<String>,
     pub eval_json: Option<String>,
     pub computing_json: Option<String>,
+}
+
+/// 🌊️ Mirrors a neural engine `VariadicSpec` onto the `ui_wgpu` `NodeGraphScene` wire record.
+fn variadic_spec_to_node_graph_record(spec: &neural::VariadicSpec) -> ui_wgpu::NodeGraphOperatorVariadicRecord {
+    ui_wgpu::NodeGraphOperatorVariadicRecord { slot_key: spec.slot_key.clone(), min: spec.min, max: spec.max }
+}
+
+/// 🌊️ Mirrors a neural engine `ChannelSpec` onto the `ui_wgpu` `NodeGraphScene` wire record —
+/// `cardinality` rides as its already-serialized symbol string.
+fn channel_spec_to_node_graph_record(spec: &ChannelSpec) -> ui_wgpu::NodeGraphOperatorChannelRecord {
+    ui_wgpu::NodeGraphOperatorChannelRecord {
+        code: spec.code.clone(),
+        abbreviation: spec.abbreviation.clone(),
+        name: spec.name.clone(),
+        full_name: spec.full_name.clone(),
+        operators: spec.operators.clone(),
+        default: spec.default.as_ref().and_then(|value| serde_json::to_value(value).ok()),
+        label: spec.label.clone(),
+        cardinality: spec.cardinality.symbol(),
+    }
+}
+
+/// 🌊️ Mirrors a neural engine `OperatorInfo` catalogue entry onto the `ui_wgpu` `NodeGraphScene` wire record.
+fn operator_info_to_node_graph_record(info: &OperatorInfo) -> ui_wgpu::NodeGraphOperatorRecord {
+    ui_wgpu::NodeGraphOperatorRecord {
+        id: info.id.clone(),
+        module: info.module.clone(),
+        name: info.name.clone(),
+        abbreviation: info.abbreviation.clone(),
+        icon: info.icon.clone(),
+        summary: info.summary.clone(),
+        inputs: info.inputs.iter().map(channel_spec_to_node_graph_record).collect(),
+        outputs: info.outputs.iter().map(channel_spec_to_node_graph_record).collect(),
+        variadic_input: info.variadic_input.as_ref().map(variadic_spec_to_node_graph_record),
+        variadic_output: info.variadic_output.as_ref().map(variadic_spec_to_node_graph_record),
+        group: info.group.clone(),
+    }
+}
+
+/// 🌊️ Typed operator catalogue (module-grouped) for `NodeGraphScene.operators` seeding.
+pub fn flow_operator_catalogue_records() -> Vec<ui_wgpu::NodeGraphOperatorRecord> {
+    flow_registry().operator_catalogue().iter().map(operator_info_to_node_graph_record).collect()
+}
+
+/// 🌊️ Inverse of `variadic_spec_to_node_graph_record`.
+fn node_graph_record_to_variadic_spec(record: &ui_wgpu::NodeGraphOperatorVariadicRecord) -> neural::VariadicSpec {
+    neural::VariadicSpec { slot_key: record.slot_key.clone(), min: record.min, max: record.max }
+}
+
+/// 🌊️ Inverse of `channel_spec_to_node_graph_record`.
+fn node_graph_record_to_channel_spec(record: &ui_wgpu::NodeGraphOperatorChannelRecord) -> ChannelSpec {
+    ChannelSpec {
+        code: record.code.clone(),
+        abbreviation: record.abbreviation.clone(),
+        name: record.name.clone(),
+        full_name: record.full_name.clone(),
+        operators: record.operators.clone(),
+        default: record.default.as_ref().and_then(|value| serde_json::from_value(value.clone()).ok()),
+        label: record.label.clone(),
+        cardinality: neural::Cardinality::from_symbol(&record.cardinality).unwrap_or_default(),
+    }
+}
+
+/// 🌊️ Inverse of `operator_info_to_node_graph_record` — feeds `FlowHost::set_neuron_kind_infos`.
+fn node_graph_operator_record_to_operator_info(record: &ui_wgpu::NodeGraphOperatorRecord) -> OperatorInfo {
+    OperatorInfo {
+        id: record.id.clone(),
+        module: record.module.clone(),
+        name: record.name.clone(),
+        abbreviation: record.abbreviation.clone(),
+        icon: record.icon.clone(),
+        summary: record.summary.clone(),
+        inputs: record.inputs.iter().map(node_graph_record_to_channel_spec).collect(),
+        outputs: record.outputs.iter().map(node_graph_record_to_channel_spec).collect(),
+        variadic_input: record.variadic_input.as_ref().map(node_graph_record_to_variadic_spec),
+        variadic_output: record.variadic_output.as_ref().map(node_graph_record_to_variadic_spec),
+        group: record.group.clone(),
+    }
 }
 
 /// 🌊️ Builds shared NodeGraphScene fields for flow-backed plugins. `driver`, when set, contributes
@@ -1222,7 +1300,7 @@ pub fn flow_backed_node_graph_extras(
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
     FlowBackedNodeGraphExtras {
         fixture_json: serde_json::to_string(fixture).ok(),
-        operators_json: Some(flow_neuron_kind_infos_json()),
+        operators: flow_operator_catalogue_records(),
         capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
         lod_json: Some(
             serde_json::json!({
@@ -1872,6 +1950,12 @@ impl FlowHost {
 
     pub fn set_neuron_kind_infos_json(&mut self, json: &str) {
         self.kind_infos = if json.trim().is_empty() { HashMap::new() } else { serde_json::from_str::<Vec<OperatorInfo>>(json).map(|items| items.into_iter().map(|info| (info.id.clone(), info)).collect()).unwrap_or_default() };
+        self.rebuild_dag();
+    }
+
+    /// 🧠️ Same as `set_neuron_kind_infos_json` but over the typed `NodeGraphScene.operators` records.
+    pub fn set_neuron_kind_infos(&mut self, infos: &[ui_wgpu::NodeGraphOperatorRecord]) {
+        self.kind_infos = infos.iter().map(|record| (record.id.clone(), node_graph_operator_record_to_operator_info(record))).collect();
         self.rebuild_dag();
     }
 
@@ -2690,6 +2774,12 @@ impl FlowHost {
     /// ✅️ Replaces selection from domain JSON or a legacy widget-id array.
     pub fn set_selection_json(&mut self, json: &str) {
         self.dag.set_selection_domains_json(json);
+    }
+
+    /// ✅️ Same as `set_selection_json` but over a flat node-id list (the `NodeGraphScene.selection` wire shape).
+    pub fn set_selection(&mut self, ids: &[String]) {
+        let json = serde_json::json!({ "nodes": ids, "edges": [], "handles": [] }).to_string();
+        self.dag.set_selection_domains_json(&json);
     }
 
     /// 📦️ Screen-space union bounds of the current selection for DOM overlays.
@@ -5963,7 +6053,7 @@ mod tests {
         let host = host_with_test_bridge();
         let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
         assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
-        assert!(extras.operators_json.as_ref().is_some_and(|json| json.contains("math.add")));
+        assert!(extras.operators.iter().any(|info| info.id == "math.add"));
         assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
         assert!(extras.lod_json.as_ref().is_some_and(|json| json.contains(r#""automatic":true"#)));
     }

@@ -15,6 +15,10 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app
 block_3d = { path = "../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-block-3d" }
 block_shared = { path = "../../../../../../../../../✏️s/🔌️plugin/🧱️block/🔨️module/🤝️shared/⚡️implementation/🦀️rust", package = "semio-s-plugin-block-shared" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

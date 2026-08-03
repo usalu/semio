@@ -15,6 +15,7 @@ fem2d = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/�
 fem2d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-fem-2d-engine" }
 fem2d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-fem-2d-op" }
 fem2d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-fem-2d-dsl" }
+fem2d_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-fem-2d-protocol" }
 fem_shared = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🤝️shared/⚡️implementation/🦀️rust", package = "semio-s-plugin-fem-shared" }
 fem_core = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-fem-core" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

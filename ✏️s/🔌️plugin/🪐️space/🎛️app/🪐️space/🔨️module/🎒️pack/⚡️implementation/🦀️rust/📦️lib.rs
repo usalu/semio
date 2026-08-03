@@ -34,5 +34,12 @@ mod tests {
         let bytes = encode(&projection);
         assert_eq!(decode(&bytes).expect("decode"), projection);
     }
+
+    /// 🧮️ Per-app recipe item 3: `SpaceConfig` round-trips dsl<->pack independently of the
+    /// `OsProjection` document grammar above.
+    #[test]
+    fn space_config_dsl_pack_equivalence() {
+        store::test_support::assert_dsl_pack_equivalence(&space_engine::SpaceConfig::default());
+    }
 }
 //#endregion 🧪️Tests

@@ -302,6 +302,60 @@ pub type Fem2dEnvelope = DocumentEnvelope<Fem2dDocument, Fem2dOperation>;
 pub type Fem2dStore = DocumentStore<Fem2dDocument, Fem2dOperation>;
 // #endregion 🔖️Operations
 
+// #region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `fem2d_engine::Fem2dConfig`'s operation enum — one variant per settled interaction
+/// (mirrors the pre-B1 `Fem2dPlayApp` `RefCell` field writes), plus a generic `Snapshot` every variant's
+/// `backwards()` returns — mirrors `shooting_op::ShootingConfigOperation`'s identical B1 pilot recipe:
+/// since a config-only dispatch is a plain `Apply` (not an `AmendLast`), each tick is its own distinct,
+/// real config edit, and "undo this tick" is exactly "restore the whole-config snapshot from just
+/// before it". `Operation::Diff` is the WHOLE `Fem2dConfig` (not a granular patch type): `diff()`
+/// returns "the full config after this op", and `OperationDiff<Fem2dConfig>::apply` for `Fem2dConfig`
+/// itself (`fem2d_engine`) just returns that snapshot verbatim, ignoring `base`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Fem2dConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: fem2d_engine::Fem2dConfig,
+    },
+    /// 👁️ Was the `setResultDisplay` view action writing `Fem2dPlayApp::result_display`.
+    #[dsl(key = "result-display")]
+    SetResultDisplay { source_id: Option<String>, mode: String, mode_index: u32 },
+    /// 🎥️ Was the `setCamera` view action writing `Fem2dPlayApp::camera`.
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: fem2d::FemCamera,
+    },
+    /// 🗣️ Was read off the deleted `ViewState::locale` in `app_labels`.
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<fem2d_engine::Fem2dConfig> for Fem2dConfigOperation {
+    type Diff = fem2d_engine::Fem2dConfig;
+
+    fn diff(&self, base: &fem2d_engine::Fem2dConfig) -> fem2d_engine::Fem2dConfig {
+        let mut next = base.clone();
+        match self {
+            Fem2dConfigOperation::Snapshot { config } => return config.clone(),
+            Fem2dConfigOperation::SetResultDisplay { source_id, mode, mode_index } => {
+                next.result_source_id = source_id.clone();
+                next.result_mode = mode.clone();
+                next.result_mode_index = *mode_index;
+            }
+            Fem2dConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            Fem2dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &fem2d_engine::Fem2dConfig) -> Vec<Self> {
+        vec![Fem2dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+// #endregion 🔖️ConfigOperations
+
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -491,5 +545,45 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetDocument { document: simply_supported_beam_doc() });
     }
     // #endregion 🔖️OpText
+
+    // #region 🔖️ConfigOperations
+    #[test]
+    fn config_operation_backwards_always_restores_the_pre_operation_snapshot() {
+        let base = fem2d_engine::Fem2dConfig::default();
+        let camera = fem2d::FemCamera { x: 1.0, y: 2.0, zoom: 3.0 };
+        let op = Fem2dConfigOperation::SetCamera { camera: camera.clone() };
+        let next = op.diff(&base);
+        assert_eq!(next.camera, camera);
+        let backwards = op.backwards(&base);
+        assert_eq!(backwards, vec![Fem2dConfigOperation::Snapshot { config: base.clone() }]);
+        assert_eq!(backwards[0].diff(&next), base);
+    }
+
+    #[test]
+    fn set_result_display_config_operation_round_trips() {
+        let base = fem2d_engine::Fem2dConfig::default();
+        let op = Fem2dConfigOperation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2 };
+        let next = op.diff(&base);
+        assert_eq!(next.result_source_id.as_deref(), Some("dead"));
+        assert_eq!(next.result_mode, "modal");
+        assert_eq!(next.result_mode_index, 2);
+    }
+
+    #[test]
+    fn set_locale_config_operation_round_trips() {
+        let base = fem2d_engine::Fem2dConfig::default();
+        let op = Fem2dConfigOperation::SetLocale { value: "de-DE".into() };
+        let next = op.diff(&base);
+        assert_eq!(next.locale, "de-DE");
+    }
+
+    #[test]
+    fn fem2d_config_operation_text_round_trips_every_variant() {
+        store::test_support::assert_op_line_round_trip(&Fem2dConfigOperation::Snapshot { config: fem2d_engine::Fem2dConfig::default() });
+        store::test_support::assert_op_line_round_trip(&Fem2dConfigOperation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
+        store::test_support::assert_op_line_round_trip(&Fem2dConfigOperation::SetCamera { camera: fem2d::FemCamera { x: 1.0, y: 2.0, zoom: 1.5 } });
+        store::test_support::assert_op_line_round_trip(&Fem2dConfigOperation::SetLocale { value: "de-DE".into() });
+    }
+    // #endregion 🔖️ConfigOperations
 }
 // #endregion 🧪️Tests

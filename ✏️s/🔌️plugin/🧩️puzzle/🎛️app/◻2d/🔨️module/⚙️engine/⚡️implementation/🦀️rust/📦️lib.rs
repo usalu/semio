@@ -3886,7 +3886,7 @@ mod force_graph_tests {
 
     #[test]
     fn board_icon_codec_resolves_catalog_key_via_themed_lookup() {
-        let r = super::board_icon_codec::board_resolve_icon_kind("capsule_J");
+        let r = crate::canvas::icon_codec::board_resolve_icon_kind("capsule_J", crate::puzzle_themed_icon_lookup);
         match r {
             crate::canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
                 assert!(s.contains("<svg"), "catalog metabolism key should resolve via themed lookup");
@@ -3897,9 +3897,9 @@ mod force_graph_tests {
 
     #[test]
     fn board_icon_codec_resolves_typst_math_to_svg_plain() {
-        let r = super::board_icon_codec::board_resolve_icon_kind("typst:$x^2$");
+        let r = crate::canvas::icon_codec::board_resolve_icon_kind("typst:$x^2$", crate::puzzle_themed_icon_lookup);
         match r {
-            super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+            crate::canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
                 assert!(s.contains("<svg"), "{}", &s[..s.len().min(240)]);
             }
             other => panic!("unexpected resolution: {other:?}"),
@@ -3908,9 +3908,9 @@ mod force_graph_tests {
 
     #[test]
     fn board_icon_codec_resolves_emoji_prefix_without_tofu() {
-        let r = super::board_icon_codec::board_resolve_icon_kind("emoji:☺️");
+        let r = crate::canvas::icon_codec::board_resolve_icon_kind("emoji:☺️", crate::puzzle_themed_icon_lookup);
         match r {
-            super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+            crate::canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
                 assert!(s.contains("<svg"), "{}", &s[..s.len().min(240)]);
                 assert!(!s.contains('\u{fffd}'), "expected no U+FFFD replacement in emoji SVG, got {}", &s[..s.len().min(400)]);
             }

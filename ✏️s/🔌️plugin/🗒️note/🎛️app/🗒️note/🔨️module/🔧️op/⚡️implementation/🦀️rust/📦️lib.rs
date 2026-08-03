@@ -1,6 +1,6 @@
 //! ⚡️ Note app — operation enum + laws (constitutional: op).
 
-use note::{NoteBlockNode, NoteDocument, NoteImageAsset};
+use note::{NoteBlockNode, NoteCamera, NoteDocument, NoteImageAsset};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 
@@ -120,6 +120,59 @@ impl Operation<NoteDocument> for NoteOperation {
 }
 //#endregion 🔖️Types
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ `note_engine::NoteConfig`'s operation enum — mirrors `shooting_op::ShootingConfigOperation`'s
+/// pilot shape exactly: one variant per settled interaction (the pre-migration `NotePlayRuntime` field
+/// writes), plus a generic `Snapshot` every variant's `backwards()` returns — since a config-only "View"
+/// dispatch is a plain `Apply` (not an `AmendLast`), each tick is its own distinct, real config edit, and
+/// "undo this tick" is exactly "restore the whole-config snapshot from just before it".
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum NoteConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: note_engine::NoteConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { block_ids: Vec<String> },
+    #[dsl(key = "hovered-block")]
+    SetHoveredBlock { block_id: Option<String> },
+    #[dsl(key = "engagement-input")]
+    SetEngagementInput { value: String },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: NoteCamera,
+    },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<note_engine::NoteConfig> for NoteConfigOperation {
+    type Diff = note_engine::NoteConfig;
+
+    fn diff(&self, base: &note_engine::NoteConfig) -> note_engine::NoteConfig {
+        let mut next = base.clone();
+        match self {
+            NoteConfigOperation::Snapshot { config } => return config.clone(),
+            NoteConfigOperation::SetSelection { block_ids } => next.selected_block_ids = block_ids.clone(),
+            NoteConfigOperation::SetHoveredBlock { block_id } => next.hovered_block_id = block_id.clone(),
+            NoteConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            NoteConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            NoteConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            NoteConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &note_engine::NoteConfig) -> Vec<Self> {
+        vec![NoteConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -228,6 +281,41 @@ mod tests {
         // Removing an already-absent key is a no-op with a no-op (empty) inverse.
         let remove_missing = NoteOperation::RemoveAsset { key: "never-existed".into() };
         assert_eq!(remove_missing.backwards(&pre), Vec::new());
+    }
+
+    /// 🧮️ B1 ConfigOperation OpText/OpBinary round-trip law (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE),
+    /// one assertion per `NoteConfigOperation` variant.
+    #[test]
+    fn note_config_operation_text_and_binary_round_trip_every_variant() {
+        let config = note_engine::NoteConfig {
+            selected_block_ids: vec!["text-1".into()],
+            hovered_block_id: Some("image-2".into()),
+            engagement_input: "Renaming…".into(),
+            camera: NoteCamera { x: 3.0, y: -1.5, zoom: 1.75 },
+            active_utility_id: "pencil".into(),
+            locale: "de-DE".into(),
+        };
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::Snapshot { config });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetSelection { block_ids: vec!["text-1".into(), "table-2".into()] });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetHoveredBlock { block_id: Some("image-2".into()) });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetHoveredBlock { block_id: None });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetEngagementInput { value: "Renaming…".into() });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetActiveUtility { utility_id: "eraserStroke".into() });
+        store::test_support::assert_op_text_binary_equivalence(&NoteConfigOperation::SetLocale { value: "de-DE".into() });
+    }
+
+    /// 🧮️ Every `NoteConfigOperation`'s `backwards()` is the whole-config snapshot from just before it —
+    /// mirrors `shooting_op`'s analogous coverage.
+    #[test]
+    fn note_config_operation_backwards_is_always_a_snapshot_of_the_prior_config() {
+        let base = note_engine::NoteConfig::default();
+        let operation = NoteConfigOperation::SetActiveUtility { utility_id: "pencil".into() };
+        assert_eq!(operation.backwards(&base), vec![NoteConfigOperation::Snapshot { config: base.clone() }]);
+        let next = operation.diff(&base);
+        assert_eq!(next.active_utility_id, "pencil");
+        let restored = NoteConfigOperation::Snapshot { config: base.clone() }.diff(&next);
+        assert_eq!(restored, base);
     }
 }
 //#endregion 🧪️Tests

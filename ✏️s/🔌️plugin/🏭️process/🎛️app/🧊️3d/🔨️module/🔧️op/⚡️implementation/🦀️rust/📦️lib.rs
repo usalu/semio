@@ -248,6 +248,79 @@ impl protocol::OpBinary for Process3dOperation {
 }
 //#endregion 🔖️OpText
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `process_3d_engine::Process3dConfig`'s operation enum — one variant per settled
+/// interaction (mirrors the pre-B1 `Process3dRuntime` field writes), plus a generic `Snapshot` every
+/// variant's `backwards()` returns — mirrors `shooting_op::ShootingConfigOperation`/
+/// `lowpoly_op::LowpolyConfigOperation`'s identical pattern: a config-only dispatch is always a plain
+/// `Apply` (never `AmendLast`), so "undo this tick" = "restore the whole-config snapshot from just
+/// before it", the simplest correct inverse.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Process3dConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: process_3d_engine::Process3dConfig,
+    },
+    #[dsl(key = "selected-id")]
+    SetSelectedId { value: Option<String> },
+    #[dsl(key = "hovered-id")]
+    SetHoveredId { value: Option<String> },
+    #[dsl(key = "selected-face-id")]
+    SetSelectedFaceId { value: Option<u32> },
+    #[dsl(key = "engagement-input")]
+    SetEngagementInput { value: String },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(coord)]
+        position: [f64; 3],
+        #[dsl(coord)]
+        target: [f64; 3],
+        fov: f64,
+    },
+    #[dsl(key = "sun")]
+    SetSun { enabled: bool, azimuth: f64, elevation: f64, intensity: f64, color: String },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<process_3d_engine::Process3dConfig> for Process3dConfigOperation {
+    type Diff = process_3d_engine::Process3dConfig;
+
+    fn diff(&self, base: &process_3d_engine::Process3dConfig) -> process_3d_engine::Process3dConfig {
+        let mut next = base.clone();
+        match self {
+            Process3dConfigOperation::Snapshot { config } => return config.clone(),
+            Process3dConfigOperation::SetSelectedId { value } => next.selected_id = value.clone(),
+            Process3dConfigOperation::SetHoveredId { value } => next.hovered_id = value.clone(),
+            Process3dConfigOperation::SetSelectedFaceId { value } => next.selected_face_id = *value,
+            Process3dConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            Process3dConfigOperation::SetCamera { position, target, fov } => {
+                next.camera_position = *position;
+                next.camera_target = *target;
+                next.camera_fov = *fov;
+            }
+            Process3dConfigOperation::SetSun { enabled, azimuth, elevation, intensity, color } => {
+                next.sun_enabled = *enabled;
+                next.sun_azimuth = *azimuth;
+                next.sun_elevation = *elevation;
+                next.sun_intensity = *intensity;
+                next.sun_color = color.clone();
+            }
+            Process3dConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            Process3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &process_3d_engine::Process3dConfig) -> Vec<Self> {
+        vec![Process3dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -351,5 +424,47 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&Process3dOperation::SetDocument { document: sample_document() });
     }
     //#endregion 🔖️OpTextTests
+
+    //#region 🔖️ConfigOperationsTests
+    #[test]
+    fn process3d_config_operation_backwards_is_always_a_snapshot_of_base() {
+        let base = process_3d_engine::Process3dConfig::default();
+        let operation = Process3dConfigOperation::SetSelectedId { value: Some("step-0".into()) };
+        let inverse = operation.backwards(&base);
+        assert_eq!(inverse, vec![Process3dConfigOperation::Snapshot { config: base }]);
+    }
+
+    #[test]
+    fn process3d_config_operation_diff_applies_expected_fields() {
+        let base = process_3d_engine::Process3dConfig::default();
+        let next = Process3dConfigOperation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base);
+        assert_eq!(next.camera_position, [1.0, 2.0, 3.0]);
+        assert_eq!(next.camera_target, [0.1, 0.2, 0.3]);
+        assert_eq!(next.camera_fov, 60.0);
+
+        let next = Process3dConfigOperation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() }.diff(&base);
+        assert!(next.sun_enabled);
+        assert_eq!(next.sun_azimuth, 10.0);
+        assert_eq!(next.sun_elevation, 20.0);
+        assert_eq!(next.sun_intensity, 0.5);
+        assert_eq!(next.sun_color, "#123456");
+    }
+
+    #[test]
+    fn process3d_config_op_text_round_trips_every_variant() {
+        let config = process_3d_engine::Process3dConfig { selected_id: Some("stock".into()), hovered_id: Some("step-0".into()), selected_face_id: Some(2), active_utility_id: "cut".into(), ..process_3d_engine::Process3dConfig::default() };
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::Snapshot { config });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedId { value: Some("stock".into()) });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedId { value: None });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetHoveredId { value: Some("step-0".into()) });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedFaceId { value: Some(3) });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSelectedFaceId { value: None });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetEngagementInput { value: "cut".into() });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetActiveUtility { utility_id: "cut".into() });
+        store::test_support::assert_op_line_round_trip(&Process3dConfigOperation::SetLocale { value: "de-DE".into() });
+    }
+    //#endregion 🔖️ConfigOperationsTests
 }
 //#endregion 🧪️Tests

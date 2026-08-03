@@ -6,9 +6,9 @@ use puzzle_2d_op::{puzzle2d_document_delta_operations, Puzzle2dOperation, Puzzle
 use semio_framework_plugin::{
     build_board2d_scene, create_default_layout,
     MeasureSelectItem, WindowEngagementStatus,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, Board2dScene, SurfaceKind, ToolRef, UiInspectorFieldGroup, UiPresence, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ActionDescriptor, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, ArtifactPresentation, Board2dScene, PortMultiplicity, SurfaceKind, ToolRef, UiInspectorFieldGroup, UiPresence, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
     WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
-    is_de_locale, tree_item, tree_item_with_action,
+    tree_item, tree_item_with_action,
 };
 use semio_framework_plugin::kernel::HostEffect;
 use serde::{Deserialize, Serialize};
@@ -110,7 +110,7 @@ fn default_camera_zoom() -> f64 {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Puzzle2dPlayRuntime {
+pub struct Puzzle2dPlayRuntime {
     #[serde(default)]
     selected_ids: Vec<String>,
     /// 🎥️ The canvas camera (pan/zoom) — session-only view state, never a document/fixture field
@@ -145,6 +145,25 @@ struct Puzzle2dPlayRuntime {
     node_kind_weights: BTreeMap<String, f64>,
     #[serde(default)]
     handle_kind_weights: BTreeMap<String, f64>,
+    /// 🧰️ B1: host-owned active utility per pane — was host-pushed `view_state.active_utility_by_window_id`;
+    /// now the app itself persists it (see `SET_ACTIVE_UTILITY_ACTION_ID`'s arm in `handle_action_impl`).
+    #[serde(default)]
+    active_utility_by_window_id: BTreeMap<String, String>,
+    /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale` (read via the deleted
+    /// `semio_framework_plugin::is_de_locale(&ViewState)`; see the local `is_de_locale` below).
+    #[serde(default = "default_locale")]
+    locale: String,
+    /// 🗣️ B1: terminology id ("native" default, or "reuse") — was host-pushed `view_state.terminology`.
+    #[serde(default = "default_terminology")]
+    terminology: String,
+}
+
+fn default_locale() -> String {
+    "en-US".into()
+}
+
+fn default_terminology() -> String {
+    "native".into()
 }
 
 /// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
@@ -167,19 +186,115 @@ impl Default for Puzzle2dPlayRuntime {
             suggestion_offset: default_suggestion_offset(),
             node_kind_weights: BTreeMap::new(),
             handle_kind_weights: BTreeMap::new(),
+            active_utility_by_window_id: BTreeMap::new(),
+            locale: default_locale(),
+            terminology: default_terminology(),
         }
     }
 }
 
+//#region 🔖️Config
+/// 🧮️ B1: puzzle2d's real `DocumentApp::Config` — `Puzzle2dPlayRuntime` itself doubles as the config
+/// record (an alias, not a new type), mirroring `puzzle_3d_ui::Puzzle3dConfig = Puzzle3dRuntime`, so
+/// every existing helper taking `&Puzzle2dPlayRuntime` throughout this file keeps working unchanged;
+/// only `Puzzle2dPlayApp`'s own ambient `RefCell<Puzzle2dPlayRuntime>` field is gone — every read now
+/// comes from `cfg.projection`, every write flows out as a `Puzzle2dConfigOperation` in the returned
+/// `Emit` instead of a silent `self` mutation.
+pub type Puzzle2dConfig = Puzzle2dPlayRuntime;
+
+impl store::DocumentDsl for Puzzle2dPlayRuntime {
+    const EXTENSION: &'static str = "puzzle2dcfg";
+
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    }
+
+    fn print_dsl(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
+}
+
+impl store::DocumentPack for Puzzle2dPlayRuntime {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let value = dsl::DslValue::decode_pack_with(bytes, options)?;
+        dsl::from_dsl_value(value).map_err(store::PackError::Schema)
+    }
+}
+
+impl store::ConfigRecord for Puzzle2dPlayRuntime {}
+
+/// @emoji 🧮️ Whole-record diff — every `Puzzle2dConfigOperation` is a full-config `Snapshot`, matching
+/// `puzzle_3d_ui::Puzzle3dConfigOperation`'s identical pattern.
+impl protocol::OperationDiff<Puzzle2dPlayRuntime> for Puzzle2dPlayRuntime {
+    fn apply(&self, _base: &Puzzle2dPlayRuntime) -> Puzzle2dPlayRuntime {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+
+/// @emoji 🧮️ B1: `Puzzle2dConfig`'s operation enum — lives here (in `ui`, not a lower `op`/`engine`
+/// crate) since `Puzzle2dConfig` is a type alias for the ui-crate-local `Puzzle2dPlayRuntime`. Mirrors
+/// `puzzle_3d_ui::Puzzle3dConfigOperation`'s single-generic-`Snapshot`-variant pattern exactly: every
+/// real config edit is captured as "the whole config after this edit"; `backwards()` restores the
+/// whole-config snapshot from just before, regardless of what changed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum Puzzle2dConfigOperation {
+    Snapshot { config: Puzzle2dConfig },
+}
+
+impl protocol::Operation<Puzzle2dConfig> for Puzzle2dConfigOperation {
+    type Diff = Puzzle2dConfig;
+
+    fn diff(&self, _base: &Puzzle2dConfig) -> Puzzle2dConfig {
+        match self {
+            Puzzle2dConfigOperation::Snapshot { config } => config.clone(),
+        }
+    }
+
+    fn backwards(&self, base: &Puzzle2dConfig) -> Vec<Self> {
+        vec![Puzzle2dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+
+impl protocol::OpBinary for Puzzle2dConfigOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+}
+
+impl protocol::OpText for Puzzle2dConfigOperation {
+    fn print_op(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    }
+}
+//#endregion 🔖️Config
+
+/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewState)`.
+fn is_de_locale(config: &Puzzle2dConfig) -> bool {
+    config.locale.starts_with("de")
+}
+
 /// 🧾️ Transient render/mutation bundle pairing the persisted projection (the bare fixture json)
 /// with the app's ephemeral view state. It is never persisted — the {@link VcsDocumentApp} store
-/// owns the fixture as its projection and {@link Puzzle2dPlayApp} owns the runtime — but rebuilding
+/// owns the fixture as its projection and {@link Puzzle2dConfig} owns the runtime — but rebuilding
 /// it per call lets the panel/canvas/engagement helpers keep their existing `&scene` signatures.
 struct Puzzle2dScene {
     fixture: Value,
     runtime: Puzzle2dPlayRuntime,
-    /// 🧰️ The host-owned active utility for this render/mutation, sourced from `ViewState.active_utility_id`
-    /// (defaulting to `select`) — never persisted in the runtime and never a document field.
+    /// 🧰️ The host-owned active utility for this render/mutation, sourced from
+    /// `Puzzle2dConfig::active_utility_by_window_id` (defaulting to `select`) — never a document field.
     active_utility: String,
 }
 
@@ -199,23 +314,26 @@ fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
-/// 🪟️ Live window-instance ids of `kind_id` from `view_state.window_instances`, falling back to
-/// `vec![kind_id]` when the list is empty — a headless/test call that never threads instances still
-/// gets exactly the one entry today's single-instance-per-pane callers expect.
-fn window_instance_ids(view_state: &ViewState, kind_id: &str) -> Vec<String> {
-    let ids: Vec<String> = view_state.window_instances.iter().filter(|instance| instance.window_kind_id == kind_id).map(|instance| instance.id.clone()).collect();
-    if ids.is_empty() { vec![kind_id.to_string()] } else { ids }
+/// 🪟️ B1: was host-pushed `view_state.window_instances` filtered by `window_kind_id`; puzzle2d has
+/// three DISTINCT pane kinds (unlike puzzle3d's split-top/perspective, which are several instances of
+/// ONE kind), and — unlike puzzle3d's per-window `window_options` — `Puzzle2dConfig` carries no field
+/// that ever differs between two instances of the SAME pane kind, so a self-maintained multi-instance
+/// registry (puzzle3d's `window_ids`) would only ever produce byte-identical duplicate entries here.
+/// Always exactly one instance, keyed by the pane kind id itself.
+fn window_instance_ids(pane: &str) -> Vec<String> {
+    vec![pane.to_string()]
 }
 
-/// 🧰️ The host-owned active utility for this view — per window instance via
-/// `active_utility_by_window_id`, then the per-call `active_utility_id` overlay, then `select`.
-fn puzzle2d_active_utility(view_state: &ViewState, window_id: Option<&str>) -> String {
+/// 🧰️ B1: the host-owned active utility for `window_id`'s pane, now real VCS'd config (was host-pushed
+/// `view_state.active_utility_by_window_id`/`view_state.active_utility_id`) — see
+/// `SET_ACTIVE_UTILITY_ACTION_ID`'s arm in `handle_action_impl`, the only writer.
+fn puzzle2d_active_utility(config: &Puzzle2dConfig, window_id: Option<&str>) -> String {
     if let Some(wid) = window_id {
-        if let Some(utility) = view_state.active_utility_by_window_id.get(wid) {
+        if let Some(utility) = config.active_utility_by_window_id.get(wid) {
             return utility.clone();
         }
     }
-    view_state.active_utility_id.clone().unwrap_or_else(|| PUZZLE2D_UTILITY_SELECT.into())
+    PUZZLE2D_UTILITY_SELECT.into()
 }
 
 /// 🎯️ `semio_framework_plugin::selection_ids`'s "ids" array plus a singular "id" fallback —
@@ -1256,14 +1374,14 @@ const PUZZLE2D_LABELS_REUSE_DE: Puzzle2dLabels = Puzzle2dLabels {
     ..PUZZLE2D_LABELS_NATIVE_DE
 };
 
-/// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
-/// ⚠️ Not routed through `semio_framework_plugin`'s `LocaleLabels`/`app_labels!`/`resolve_labels` — those
-/// only resolve a locale (en/de) axis, but this app additionally resolves a "terminology" (native/reuse)
-/// axis via `ViewState.terminology`, which the SDK's `Terminology` region does not model. Uses the SDK's
-/// `is_de_locale` for the locale leg of the match, since that much is a drop-in match.
-fn puzzle2d_labels(view_state: &ViewState) -> &'static Puzzle2dLabels {
-    let terminology = view_state.terminology.as_deref().unwrap_or("native");
-    let is_de = is_de_locale(view_state);
+/// 🗣️ Resolves the active label set from `Puzzle2dConfig`'s locale/terminology; unknown terminology
+/// ids fall back to native. ⚠️ Not routed through `semio_framework_plugin`'s
+/// `LocaleLabels`/`app_labels!`/`resolve_labels` — those only resolve a locale (en/de) axis, but this
+/// app additionally resolves a "terminology" (native/reuse) axis via `Puzzle2dConfig::terminology`
+/// (B1: was `view_state.terminology`), which the SDK's `Terminology` region does not model.
+fn puzzle2d_labels(config: &Puzzle2dConfig) -> &'static Puzzle2dLabels {
+    let terminology = config.terminology.as_str();
+    let is_de = is_de_locale(config);
     match (terminology, is_de) {
         ("reuse", true) => &PUZZLE2D_LABELS_REUSE_DE,
         ("reuse", false) => &PUZZLE2D_LABELS_REUSE_EN,
@@ -1596,8 +1714,7 @@ fn puzzle2d_window_measures(pane: &str, envelope: &Puzzle2dScene, labels: &Puzzl
 /// the granular operation delta (`puzzle2d_document_delta_operations`) turning the old fixture into the new.
 pub struct Puzzle2dPlayApp {
     host: RefCell<BoardHost>,
-    runtime: RefCell<Puzzle2dPlayRuntime>,
-    /// 🗄️ The fixture content last parsed into `host` via `parse_fixture_v1` — lets `handle_action`
+    /// 🗄️ The fixture content last parsed into `host` via `parse_fixture_v1` — lets `handle_action_impl`
     /// skip that full clear-scene-and-rebuild (and the kind-catalog/kind-compat re-push) on the
     /// large majority of actions (select/camera/utility/…) that never touch fixture content.
     last_synced_fixture: RefCell<Option<Value>>,
@@ -1605,7 +1722,7 @@ pub struct Puzzle2dPlayApp {
 
 impl Default for Puzzle2dPlayApp {
     fn default() -> Self {
-        Self { host: RefCell::new(puzzle_board_host()), runtime: RefCell::new(Puzzle2dPlayRuntime::default()), last_synced_fixture: RefCell::new(None) }
+        Self { host: RefCell::new(puzzle_board_host()), last_synced_fixture: RefCell::new(None) }
     }
 }
 
@@ -1671,11 +1788,123 @@ fn puzzle2d_context_menu_items(
     ]
 }
 
+//#region 🔖️Puzzle2dCommand
+/// @emoji 🎯️ B1: `Puzzle2dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
+/// action (mirrors every `.operation(...)`/`.view_action(...)`/`.action_with(...)` id
+/// `create_puzzle2d_app` registers below, plus the framework-injected `setActiveUtility` and the new
+/// `setLocale`/`setTerminology` — B1 additions now that `ViewState` no longer carries them). Each
+/// variant carries `window_id` (was host-pushed `view_state.window_id`) plus `args` (the action's
+/// original `{...}` JSON payload, unchanged) — `handle` reconstructs the exact `(action, args,
+/// window_id)` triple `handle_action_impl` (the preserved pre-B1 business logic) already expects, so
+/// every arm's internal `args.get("field")` extraction stays byte-for-byte identical to the pre-B1
+/// implementation. `OpBinary` is a plain JSON-bytes bridge (not `#[derive(dsl::DslOps)]`) — mirrors
+/// `puzzle_3d_ui::Puzzle3dCommand`'s identical "local JSON bridge" idiom: a generic `args: Value` field
+/// is not representable in the DSL grammar the `#[derive(dsl::DslOps)]` macro targets.
+macro_rules! puzzle2d_command_variants {
+    ($($Variant:ident = $id:tt),* $(,)?) => {
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        pub enum Puzzle2dCommand {
+            $($Variant { window_id: Option<String>, args: Option<Value> }),*
+        }
+
+        impl Puzzle2dCommand {
+            /// 🏷️ The action id this variant was declared under — used both for `command_id()`
+            /// (command-log labeling / registry kind-discipline) and to reconstruct the exact
+            /// `action: &str` `handle_action_impl` dispatches on.
+            fn action_id(&self) -> &'static str {
+                match self {
+                    $(Puzzle2dCommand::$Variant { .. } => $id),*
+                }
+            }
+
+            fn window_id(&self) -> Option<&str> {
+                match self {
+                    $(Puzzle2dCommand::$Variant { window_id, .. } => window_id.as_deref()),*
+                }
+            }
+
+            fn args(&self) -> Option<&Value> {
+                match self {
+                    $(Puzzle2dCommand::$Variant { args, .. } => args.as_ref()),*
+                }
+            }
+
+            /// 🧪️ Test-only reverse of `action_id()` — builds the variant for a given action id, for
+            /// the existing test module's `dispatch_action(...)` helper (see `//#region 🧪️Tests`).
+            /// Panics on an unknown action id (a test bug, not a runtime path).
+            #[cfg(test)]
+            fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
+                match action {
+                    $($id => Puzzle2dCommand::$Variant { window_id, args }),*,
+                    other => panic!("unknown puzzle2d action id in test: {other}"),
+                }
+            }
+        }
+    };
+}
+
+puzzle2d_command_variants! {
+    AddNode = "addNode",
+    SetActiveExample = "setActiveExample",
+    DeleteSelection = "deleteSelection",
+    DuplicateSelection = "duplicateSelection",
+    ForceLayout = "forceLayout",
+    FocusSelection = "focusSelection",
+    SelectAll = "selectAll",
+    ClearSelection = "clearSelection",
+    SelectSameKind = "selectSameKind",
+    SetSelectionFlag = "setSelectionFlag",
+    PatchInspectorNodes = "patchInspectorNodes",
+    RedrawHandles = "redrawHandles",
+    Reorganize = "reorganize",
+    ApplyBoardEvents = "applyBoardEvents",
+    SetFillCount = "setFillCount",
+    BrushFillSessionStep = "brushFillSessionStep",
+    BrushCommitSlot = "brushCommitSlot",
+    SetCamera = "setCamera",
+    SetSelection = "setSelection",
+    DocumentSelect = "documentSelect",
+    EngagementInput = "engagementInput",
+    EngagementSubmit = "engagementSubmit",
+    EngagementAbort = "engagementAbort",
+    EngagementControlSelect = "engagementControlSelect",
+    SetLodModeForPane = "setLodModeForPane",
+    SetGridSnapEnabled = "setGridSnapEnabled",
+    SetGridFactor = "setGridFactor",
+    SetSelectionMethod = "setSelectionMethod",
+    SetBrushKindWeights = "setBrushKindWeights",
+    SetBrushNodeSize = "setBrushNodeSize",
+    SetSuggestionOffset = "setSuggestionOffset",
+    BrushCycleCandidate = "brushCycleCandidate",
+    BrushSetCandidateIndex = "brushSetCandidateIndex",
+    BrushOpenSlot = "brushOpenSlot",
+    BrushCancelSlot = "brushCancelSlot",
+    BrushFillSessionBegin = "brushFillSessionBegin",
+    BrushFillSessionClear = "brushFillSessionClear",
+    LodScaleJson = "lodScaleJson",
+    SetActiveUtility = SET_ACTIVE_UTILITY_ACTION_ID,
+    // 🗣️ B1: locale/terminology used to be host-pushed `ViewState` fields with no app-level action of
+    // their own; now that `ViewState` is gone from the app-facing surface, they need a real Command.
+    SetLocale = "setLocale",
+    SetTerminology = "setTerminology",
+}
+
+impl protocol::OpBinary for Puzzle2dCommand {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+}
+//#endregion 🔖️Puzzle2dCommand
+
 impl DocumentApp for Puzzle2dPlayApp {
     type Projection = Puzzle2dPlayProjection;
     type Operation = Puzzle2dOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = Puzzle2dConfig;
+    type ConfigOperation = Puzzle2dConfigOperation;
+    type Command = Puzzle2dCommand;
 
     fn app_id(&self) -> &str {
         PUZZLE2D_PLAY_APP_ID
@@ -1689,10 +1918,175 @@ impl DocumentApp for Puzzle2dPlayApp {
         Puzzle2dPlayProjection(default_empty_fixture())
     }
 
-    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> ActionEmit<Puzzle2dOperation> {
+    /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
+    fn command_id(&self, command: &Puzzle2dCommand) -> &str {
+        command.action_id()
+    }
+
+    /// @emoji 🧩️ B1: thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
+    /// triple the preserved pre-B1 `handle_action_impl` (see its doc comment, in the `impl
+    /// Puzzle2dPlayApp` block below) already expects, from the typed `Puzzle2dCommand`.
+    fn handle(&self, command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> Emit<Puzzle2dOperation, Puzzle2dConfigOperation> {
+        self.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, cfg.projection)
+    }
+
+    /// 🔌️ Declares puzzle2d's typed media I/O surface — the implicit document ports plus `kit:in`
+    /// (see `import_media` below for why it stays `NotImplemented`) and `design:out`.
+    fn io(&self) -> Option<AppIo> {
+        Some(
+            AppIo::from_document(
+                "puzzle.2d",
+                MediaType { class: MediaClass::TwoD, form: MediaForm::Design },
+                ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() },
+            )
+            .with_ports(vec![
+                MediaPortSpec {
+                    id: "kit:in".into(),
+                    label: "Kit Catalog".into(),
+                    direction: MediaPortDirection::In,
+                    media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+                    kind_id: Some("kit.catalog".into()),
+                    required: false,
+                    multiplicity: PortMultiplicity::Many,
+                },
+                MediaPortSpec {
+                    id: "design:out".into(),
+                    label: "Puzzle Design".into(),
+                    direction: MediaPortDirection::Out,
+                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Design },
+                    kind_id: Some("2d.puzzle".into()),
+                    required: false,
+                    multiplicity: PortMultiplicity::Many,
+                },
+            ]),
+        )
+    }
+
+    /// 🚧️ `kit:in` is declared (see `io()`) so a future producer/consumer pairing is possible, but
+    /// puzzle2d's own "kind catalogs" (node/handle kind weights, keyed by this app's own node/handle
+    /// kind vocabulary) are structurally UNRELATED to `kit.catalog`'s shape (block3d's object/vortex-kind
+    /// vocabulary — meshes, 3D vortex positions, cable/attraction kinds), unlike puzzle3d's `kit:in`,
+    /// which DOES share block3d's object-kind vocabulary. There is no honest mapping to fabricate, so
+    /// this always reports `NotImplemented` — no normalization is attempted.
+    fn import_media(&self, _port: &str, _media: &Media, _doc: &DocumentView<'_, Puzzle2dPlayProjection>) -> Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation>, MediaError> {
+        Err(MediaError::NotImplemented)
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> UiNode {
+        let config = cfg.projection;
+        let document_json = doc.projection.0.to_string();
+        // 🪟️ B1: `body_key` already determines the pane deterministically (unlike puzzle3d's
+        // single-window-kind `render`, which has to fall back to `config.window_ids.first()`), so the
+        // active utility resolves off the real targeted pane instead of an ambiguous stand-in.
+        let pane = match body_key {
+            PUZZLE2D_PLAY_BODY_OVERVIEW => Some(PUZZLE2D_PANE_OVERVIEW),
+            PUZZLE2D_PLAY_BODY_DETAIL => Some(PUZZLE2D_PANE_DETAIL),
+            PUZZLE2D_PLAY_BODY_SELECTION => Some(PUZZLE2D_PANE_SELECTION),
+            _ => None,
+        };
+        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: config.clone(), active_utility: puzzle2d_active_utility(config, pane) };
+        let labels = puzzle2d_labels(config);
+        match body_key {
+            PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_OVERVIEW),
+            PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_DETAIL),
+            PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_SELECTION),
+            PUZZLE2D_PLAY_BODY_LAYERS => render_document_panel(&envelope, labels),
+            PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture, labels),
+            PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope, labels),
+            _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, WindowEngagement> {
+        let config = cfg.projection;
+        let labels = puzzle2d_labels(config);
+        // 🪟️ One entry per live window INSTANCE of each pane kind — see `window_instance_ids`'s
+        // docstring for why puzzle2d always has exactly one instance per pane (no split tracking).
+        PUZZLE2D_PANES
+            .iter()
+            .flat_map(|pane| {
+                window_instance_ids(pane).into_iter().map(|wid| {
+                    let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: config.clone(), active_utility: puzzle2d_active_utility(config, Some(&wid)) };
+                    (wid, puzzle2d_engagement(&envelope, &self.host.borrow(), pane, labels))
+                })
+            })
+            .collect()
+    }
+
+    fn window_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.projection;
+        let labels = puzzle2d_labels(config);
+        PUZZLE2D_PANES
+            .iter()
+            .flat_map(|pane| {
+                window_instance_ids(pane).into_iter().map(|wid| {
+                    let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: config.clone(), active_utility: puzzle2d_active_utility(config, Some(&wid)) };
+                    (wid, puzzle2d_window_measures(pane, &envelope, labels))
+                })
+            })
+            .collect()
+    }
+
+    fn tool_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.projection;
+        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: config.clone(), active_utility: puzzle2d_active_utility(config, None) };
+        let labels = puzzle2d_labels(config);
+        HashMap::from([(PUZZLE2D_UTILITY_FILL.to_string(), vec![puzzle2d_fill_tool_measures(&envelope, labels)])])
+    }
+
+    fn app_labels(&self, cfg: &ConfigView<'_, Puzzle2dConfig>) -> semio_framework_plugin::AppLabelsOverlay {
+        let config = cfg.projection;
+        let labels = puzzle2d_labels(config);
+        semio_framework_plugin::AppLabelsOverlay {
+            window_kind_labels: HashMap::from([
+                (PUZZLE2D_PANE_OVERVIEW.to_string(), labels.window_overview.to_string()),
+                (PUZZLE2D_PANE_DETAIL.to_string(), labels.window_detail.to_string()),
+                (PUZZLE2D_PANE_SELECTION.to_string(), labels.window_selection.to_string()),
+            ]),
+            panel_tab_labels: HashMap::new(),
+            mode_labels: HashMap::new(),
+            action_labels: puzzle2d_action_labels(is_de_locale(config)),
+            utility_labels: puzzle2d_utility_labels(labels),
+            example_labels: HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+            action_arg_labels: HashMap::new(),
+            dialog_labels: HashMap::new(),
+            introduction_labels: HashMap::new(),
+            tutorial_labels: HashMap::new(),
+            group_labels: HashMap::new(),
+        }
+    }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &DocumentView<'_, Puzzle2dPlayProjection>,
+        cfg: &ConfigView<'_, Puzzle2dConfig>,
+        _registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let config = cfg.projection;
+        let is_de = is_de_locale(config);
+        let mut selected = config.selected_ids.clone();
+        if let Some(surface) = request.surface.as_ref() {
+            let ids: Vec<String> = surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect();
+            if !ids.is_empty() {
+                selected = ids;
+            }
+        }
+        puzzle2d_context_menu_items(&doc.projection.0, &selected, is_de)
+    }
+}
+
+impl Puzzle2dPlayApp {
+    /// @emoji 🧩️ B1: the pure per-action core, dispatched into by `DocumentApp::handle` above with
+    /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle2dCommand` — everything past
+    /// this adapter boundary is the ORIGINAL pre-B1 business logic, unchanged, now reading a passed-in
+    /// `Puzzle2dConfig` snapshot instead of an ambient `self.runtime` `RefCell` and returning a real
+    /// `Emit` (document + config operations) instead of mutating `self` and returning a bare
+    /// document-only `ActionEmit`.
+    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, config: &Puzzle2dConfig) -> Emit<Puzzle2dOperation, Puzzle2dConfigOperation> {
         let before = doc.projection.0.clone();
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE2D_UTILITY_SELECT).to_string();
-        let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.borrow().clone(), active_utility: active_utility.clone() };
+        let active_utility = puzzle2d_active_utility(config, window_id);
+        let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: config.clone(), active_utility: active_utility.clone() };
         // 🐢️ `sync_host_fixture_content` (`parse_fixture_v1`) does a full `clear_scene()` + rebuild of
         // every node/handle/edge — skip it when the fixture content is byte-identical to what `host`
         // already has (the common case: select/camera/utility/… actions never touch fixture content).
@@ -1785,20 +2179,24 @@ impl DocumentApp for Puzzle2dPlayApp {
                 {}
             }
             SET_ACTIVE_UTILITY_ACTION_ID => {
-                // 🧰️ Host-owned utility switch (framework-injected View action): the new utility already lives in
-                // `view_state.active_utility_id`; here we only clear any in-progress brush/fill scratch and
-                // emit nothing. The host engine was re-pointed at the new utility by `sync_host_runtime_state`.
+                // 🧰️ B1: this Command IS the utility switch now (was host-applied ambient
+                // `view_state.active_utility_id`/`active_utility_by_window_id` — the host no longer owns
+                // that state, `Puzzle2dConfig` does), so this arm must itself persist the new value
+                // before clearing any in-progress brush/fill scratch.
+                if let Some(utility_id) = args.and_then(|value| value.get("utilityId")).and_then(|value| value.as_str()) {
+                    let wid = window_id.unwrap_or(PUZZLE2D_PANE_OVERVIEW).to_string();
+                    envelope.runtime.active_utility_by_window_id.insert(wid, utility_id.to_string());
+                }
                 self.host.borrow_mut().brush_fill_session_clear();
                 self.host.borrow_mut().brush_cancel_slot();
                 let _ = self.host.borrow_mut().drain_events_json();
-                self.runtime.borrow_mut().fill_count = 0;
-                self.runtime.borrow_mut().brush_candidates.clear();
-                self.runtime.borrow_mut().brush_candidate_index = 0;
-                self.runtime.borrow_mut().brush_candidate_source_handle_id = String::new();
+                envelope.runtime.fill_count = 0;
+                envelope.runtime.brush_candidates.clear();
+                envelope.runtime.brush_candidate_index = 0;
+                envelope.runtime.brush_candidate_source_handle_id = String::new();
                 for pane in PUZZLE2D_PANES {
-                    self.runtime.borrow_mut().engagement_input_by_pane.insert(pane.to_string(), String::new());
+                    envelope.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
                 }
-                return ActionEmit::default();
             }
             "engagementInput" => {
                 let pane = args.and_then(|value| value.get("pane")).and_then(|value| value.as_str()).unwrap_or(PUZZLE2D_PANE_OVERVIEW);
@@ -2100,110 +2498,32 @@ impl DocumentApp for Puzzle2dPlayApp {
                 let _ = puzzle_2d_lod_scale_json();
                 ui_scope = semio_framework_core::kernel::UiDirtyScope::None;
             }
+            "setLocale" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    envelope.runtime.locale = value.into();
+                }
+            }
+            "setTerminology" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    envelope.runtime.terminology = value.into();
+                }
+            }
             _ => {}
         }
         apply_host_events(&mut self.host.borrow_mut(), &mut envelope);
-        *self.runtime.borrow_mut() = envelope.runtime;
         let operations = puzzle2d_document_delta_operations(&before, &envelope.fixture);
         // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
         // actual document mutation (would silently desync remote clients' UI from the committed operation).
         if !operations.is_empty() && matches!(ui_scope, semio_framework_core::kernel::UiDirtyScope::None) {
             ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
         }
-        ActionEmit { operations, coalesce_key, effects, ui_scope, ..Default::default() }
-    }
-
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
-        let document_json = doc.projection.0.to_string();
-        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.borrow().clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
-        let labels = puzzle2d_labels(view_state);
-        match body_key {
-            PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_OVERVIEW),
-            PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_DETAIL),
-            PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_SELECTION),
-            PUZZLE2D_PLAY_BODY_LAYERS => render_document_panel(&envelope, labels),
-            PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture, labels),
-            PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
-        }
-    }
-
-    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let labels = puzzle2d_labels(view_state);
-        // 🪟️ One entry per live window INSTANCE of each pane kind — a split/extra instance of e.g. the
-        // overview pane gets its own entry (built from the same pane's per-pane state) instead of being
-        // silently absent, which is what a bare `PUZZLE2D_PANES` iteration would produce.
-        PUZZLE2D_PANES
-            .iter()
-            .flat_map(|pane| {
-                window_instance_ids(view_state, pane).into_iter().map(|wid| {
-                    let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.borrow().clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
-                    (wid, puzzle2d_engagement(&envelope, &self.host.borrow(), pane, labels))
-                })
-            })
-            .collect()
-    }
-
-    fn window_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let labels = puzzle2d_labels(view_state);
-        PUZZLE2D_PANES
-            .iter()
-            .flat_map(|pane| {
-                window_instance_ids(view_state, pane).into_iter().map(|wid| {
-                    let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.borrow().clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
-                    (wid, puzzle2d_window_measures(pane, &envelope, labels))
-                })
-            })
-            .collect()
-    }
-
-    fn tool_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.borrow().clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
-        let labels = puzzle2d_labels(view_state);
-        HashMap::from([(PUZZLE2D_UTILITY_FILL.to_string(), vec![puzzle2d_fill_tool_measures(&envelope, labels)])])
-    }
-
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = puzzle2d_labels(view_state);
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: HashMap::from([
-                (PUZZLE2D_PANE_OVERVIEW.to_string(), labels.window_overview.to_string()),
-                (PUZZLE2D_PANE_DETAIL.to_string(), labels.window_detail.to_string()),
-                (PUZZLE2D_PANE_SELECTION.to_string(), labels.window_selection.to_string()),
-            ]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::new(),
-            action_labels: puzzle2d_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-            utility_labels: puzzle2d_utility_labels(labels),
-            example_labels: HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-            tutorial_labels: HashMap::new(),
-            group_labels: HashMap::new(),
-        }
-    }
-
-    fn context_menu(
-        &self,
-        request: &semio_framework_plugin::ContextMenuRequest,
-        doc: &DocumentView<'_, Puzzle2dPlayProjection>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-        _registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let is_de = is_de_locale(view_state);
-        let runtime = self.runtime.borrow();
-        let mut selected = runtime.selected_ids.clone();
-        if let Some(surface) = request.surface.as_ref() {
-            let ids: Vec<String> = surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect();
-            if !ids.is_empty() {
-                selected = ids;
-            }
-        }
-        puzzle2d_context_menu_items(&doc.projection.0, &selected, is_de)
+        // 🧮️ B1: only a REAL config change becomes a `Puzzle2dConfigOperation` — `PartialEq` (derived)
+        // makes this cheap, and keeps a pure read-only action from creating a no-op undo entry.
+        let config_operations = if &envelope.runtime != config { vec![Puzzle2dConfigOperation::Snapshot { config: envelope.runtime }] } else { Vec::new() };
+        Emit { document_operations: operations, config_operations, coalesce_key, effects, ui_scope, ..Default::default() }
     }
 }
+
 //#endregion 🔖️Puzzle2dPlayApp
 
 //#region 🔖️CommandLabels
@@ -2281,7 +2601,7 @@ pub fn create_puzzle2d_app() -> App {
     let mut host = puzzle_board_host();
     let envelope = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default(), active_utility: PUZZLE2D_UTILITY_SELECT.into() };
     sync_host_from_envelope(&mut host, &envelope);
-    let labels = puzzle2d_labels(&ViewState::default());
+    let labels = puzzle2d_labels(&Puzzle2dConfig::default());
     let mut app = App::from_builder(
         App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D")
             .document(["semio", "puzzle", "2d"])
@@ -2424,13 +2744,23 @@ mod tests {
         testkit::new_app_with_registry::<Puzzle2dPlayApp>(create_puzzle2d_app)
     }
 
-    fn brush_view_state() -> ViewState {
-        ViewState { active_utility_id: Some(PUZZLE2D_UTILITY_BRUSH.into()), ..ViewState::default() }
+    /// 🧪️ B1: test-only replacement for the deleted `VcsDocumentApp::handle_action` app-dispatch path
+    /// (that method is FRAMEWORK-reserved now — see its doc comment in `semio_framework_plugin`; an
+    /// app's own actions go exclusively through the typed `Self::Command` channel). Reconstructs the
+    /// `Puzzle2dCommand` from the same `(action, args, window_id)` triple every pre-B1 test already
+    /// passed and dispatches it via `VcsDocumentApp::dispatch_typed`.
+    fn dispatch_action(app: &mut VcsDocumentApp<Puzzle2dPlayApp>, action: &str, args: Option<&Value>, window_id: Option<&str>, meta: &semio_framework_plugin::ActionMeta) -> Result<semio_framework_plugin::InvocationResult, String> {
+        // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…) stay on `handle_action` — B1 keeps that
+        // path FRAMEWORK-only, an app's own actions go through the typed `Self::Command` channel below.
+        if matches!(action, "undo" | "redo" | "commitCheckpoint" | "createAlternative" | "switchAlternative" | "checkoutCheckpoint" | "copy" | "cut" | "paste" | "revertToCommand" | "historyFilter" | "noteShellCommand") {
+            return app.handle_action(action, args, meta);
+        }
+        app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), meta)
     }
 
     fn concrete_forest_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load concrete forest");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None, &testkit::meta("local")).expect("load concrete forest");
         app
     }
 
@@ -2465,7 +2795,7 @@ mod tests {
     #[test]
     fn add_node_action_emits_upsert_op_and_appends_node() {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add node");
+        let result = dispatch_action(&mut app, "addNode", Some(&json!({ "kind": "node" })), None, &testkit::meta("local")).expect("add node");
         assert_eq!(result.operations.len(), 1, "addNode must emit exactly one granular operation");
         assert_eq!(fixture_nodes(&app.projection().expect("projection").0).len(), 1);
     }
@@ -2473,7 +2803,7 @@ mod tests {
     #[test]
     fn set_active_example_loads_concrete_forest_via_operations() {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load example");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None, &testkit::meta("local")).expect("load example");
         assert!(!fixture_nodes(&app.projection().expect("projection").0).is_empty());
     }
 
@@ -2490,21 +2820,21 @@ mod tests {
     #[test]
     fn select_then_delete_selection_removes_the_node() {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add node");
+        dispatch_action(&mut app, "addNode", Some(&json!({ "kind": "node" })), None, &testkit::meta("local")).expect("add node");
         let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
-        app.handle_action("setSelection", Some(&json!({ "ids": [node_id] })), &ViewState::default(), &testkit::meta("local")).expect("select");
-        app.handle_action("deleteSelection", None, &ViewState::default(), &testkit::meta("local")).expect("delete");
+        dispatch_action(&mut app, "setSelection", Some(&json!({ "ids": [node_id] })), None, &testkit::meta("local")).expect("select");
+        dispatch_action(&mut app, "deleteSelection", None, None, &testkit::meta("local")).expect("delete");
         assert!(fixture_nodes(&app.projection().expect("projection").0).is_empty());
     }
 
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add");
+        dispatch_action(&mut app, "addNode", Some(&json!({ "kind": "node" })), None, &testkit::meta("local")).expect("add");
         assert_eq!(fixture_nodes(&app.projection().expect("projection").0).len(), 1);
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        dispatch_action(&mut app, "undo", None, None, &testkit::meta("local")).expect("undo");
         assert_eq!(fixture_nodes(&app.projection().expect("projection").0).len(), 0);
-        app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
+        dispatch_action(&mut app, "redo", None, None, &testkit::meta("local")).expect("redo");
         assert_eq!(fixture_nodes(&app.projection().expect("projection").0).len(), 1);
     }
 
@@ -2514,12 +2844,12 @@ mod tests {
     fn set_camera_is_session_only_and_never_undoable() {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
         for x in [1.0, 2.0, 3.0] {
-            let result = app.handle_action("setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), &ViewState::default(), &testkit::meta("local")).expect("camera");
+            let result = dispatch_action(&mut app, "setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), None, &testkit::meta("local")).expect("camera");
             assert!(result.operations.is_empty(), "setCamera must never produce a document operation");
         }
         let rendered = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render");
         assert_eq!(rendered_camera(&rendered).0, 3.0, "the camera must update immediately in the rendered scene");
-        let undo = app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        let undo = dispatch_action(&mut app, "undo", None, None, &testkit::meta("local")).expect("undo");
         assert!(undo.operations.is_empty(), "there is no document edit to undo");
         let rendered_after_undo = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render");
         assert_eq!(rendered_camera(&rendered_after_undo).0, 3.0, "the camera is session state — undo must not revert it");
@@ -2533,13 +2863,13 @@ mod tests {
     #[test]
     fn repeated_actions_do_not_duplicate_edges() {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), None, &testkit::meta("local")).expect("load nakagin");
         let edge_count = |app: &VcsDocumentApp<Puzzle2dPlayApp>| fixture_edges(&app.projection().expect("projection").0).len();
         let before = edge_count(&app);
         assert!(before > 0, "fixture must have edges for this regression test to be meaningful");
         let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
         for _ in 0..5 {
-            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
+            dispatch_action(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None, &testkit::meta("local")).expect("select");
         }
         assert_eq!(edge_count(&app), before, "selecting repeatedly must not grow the edges array");
     }
@@ -2551,11 +2881,11 @@ mod tests {
     fn apply_board_events_select_persists_across_the_next_action() {
         let mut app = concrete_forest_app();
         let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
-        app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        dispatch_action(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None, &testkit::meta("local")).expect("select");
         let rendered_once = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render")).unwrap();
         assert!(rendered_once.contains(&node_id), "selection must be visible immediately after the select action");
         // A second, unrelated action used to silently clear the selection via the stale `host.selection` re-sync.
-        app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-operation");
+        dispatch_action(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), None, &testkit::meta("local")).expect("no-operation");
         let rendered_twice = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render")).unwrap();
         assert!(rendered_twice.contains(&node_id), "selection must survive a subsequent unrelated action");
     }
@@ -2568,7 +2898,7 @@ mod tests {
     #[test]
     fn apply_board_events_camera_event_commits() {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("camera event");
+        let result = dispatch_action(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), None, &testkit::meta("local")).expect("camera event");
         assert!(result.operations.is_empty(), "a camera board event must never produce a document operation");
         let rendered = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render");
         let (x, y, zoom) = rendered_camera(&rendered);
@@ -2584,7 +2914,7 @@ mod tests {
     fn select_action_emits_no_operations() {
         let mut app = concrete_forest_app();
         let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
-        let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        let result = dispatch_action(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None, &testkit::meta("local")).expect("select");
         assert!(result.operations.is_empty(), "selection must not produce document operations");
     }
 
@@ -2596,7 +2926,7 @@ mod tests {
         use semio_framework_core::kernel::UiDirtyScope;
         let mut app = concrete_forest_app();
         let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
-        let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        let result = dispatch_action(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None, &testkit::meta("local")).expect("select");
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                 // 🐢️ Regression: `window_bodies` must list the window *body keys* (matched against
@@ -2621,7 +2951,7 @@ mod tests {
     fn camera_event_declares_window_only_ui_scope() {
         use semio_framework_core::kernel::UiDirtyScope;
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("camera event");
+        let result = dispatch_action(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), None, &testkit::meta("local")).expect("camera event");
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                 assert_eq!(window_bodies.len(), 3);
@@ -2638,7 +2968,7 @@ mod tests {
     fn empty_board_events_declare_none_ui_scope() {
         use semio_framework_core::kernel::UiDirtyScope;
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-operation");
+        let result = dispatch_action(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), None, &testkit::meta("local")).expect("no-operation");
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                 assert!(window_bodies.is_empty(), "empty board events must not dirty any window body");
@@ -2655,7 +2985,7 @@ mod tests {
     fn add_node_action_declares_full_ui_scope() {
         use semio_framework_core::kernel::UiDirtyScope;
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add node");
+        let result = dispatch_action(&mut app, "addNode", Some(&json!({ "kind": "node" })), None, &testkit::meta("local")).expect("add node");
         assert!(matches!(result.ui_scope, UiDirtyScope::Full), "addNode must stay Full, got {:?}", result.ui_scope);
     }
 
@@ -2667,14 +2997,19 @@ mod tests {
         assert!(json.contains("seed-left-001"));
     }
 
+    /// 🗣️ B1: locale/terminology are now real VCS'd `Puzzle2dConfig` state (was a per-call `ViewState`
+    /// override) — dispatch `setLocale`/`setTerminology` to change them, then render.
     #[test]
     fn labels_resolve_native_english_and_german_and_reuse() {
         let mut app = concrete_forest_app();
         let english = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render")).unwrap();
         assert!(english.contains("\"Nodes\"") && english.contains("\"Edges\""));
-        let german = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_LAYERS, None, &ViewState { locale: Some("de".into()), ..ViewState::default() }).expect("render")).unwrap();
+        dispatch_action(&mut app, "setLocale", Some(&json!({ "value": "de" })), None, &testkit::meta("local")).expect("setLocale");
+        let german = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render")).unwrap();
         assert!(german.contains("\"Knoten\"") && german.contains("\"Kanten\""));
-        let reuse = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_LAYERS, None, &ViewState { terminology: Some("reuse".into()), locale: Some("en".into()), ..ViewState::default() }).expect("render")).unwrap();
+        dispatch_action(&mut app, "setLocale", Some(&json!({ "value": "en" })), None, &testkit::meta("local")).expect("setLocale");
+        dispatch_action(&mut app, "setTerminology", Some(&json!({ "value": "reuse" })), None, &testkit::meta("local")).expect("setTerminology");
+        let reuse = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render")).unwrap();
         assert!(reuse.contains("Building components"));
     }
 
@@ -2714,12 +3049,12 @@ mod tests {
         instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-        instance_a.handle_action("addNode", Some(&json!({ "kind": "seed" })), &ViewState::default(), &testkit::meta("actor-a")).expect("a adds node");
-        instance_b.handle_action("addNode", Some(&json!({ "kind": "other" })), &ViewState::default(), &testkit::meta("actor-b")).expect("b adds node");
+        dispatch_action(&mut instance_a, "addNode", Some(&json!({ "kind": "seed" })), None, &testkit::meta("actor-a")).expect("a adds node");
+        dispatch_action(&mut instance_b, "addNode", Some(&json!({ "kind": "other" })), None, &testkit::meta("actor-b")).expect("b adds node");
 
         // A neutral history action always calls store.dispatch(), which pumps inbound operations first.
-        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-b")).expect("pump b");
+        dispatch_action(&mut instance_a, "commitCheckpoint", None, None, &testkit::meta("actor-a")).expect("pump a");
+        dispatch_action(&mut instance_b, "commitCheckpoint", None, None, &testkit::meta("actor-b")).expect("pump b");
 
         assert_eq!(fixture_nodes(&instance_a.projection().expect("projection").0).len(), 2, "instance A must contain both nodes");
         assert_eq!(fixture_nodes(&instance_b.projection().expect("projection").0).len(), 2, "instance B must contain both nodes");
@@ -2730,7 +3065,7 @@ mod tests {
         let mut sender = testkit::new_app::<Puzzle2dPlayApp>();
         let (near, mut far) = MemoryBackbone::pair("mem://puzzle2d-doc", "mem://puzzle2d-doc");
         sender.attach_backbone(Box::new(near)).expect("attach");
-        sender.handle_action("addNode", Some(&json!({ "kind": "seed" })), &ViewState::default(), &testkit::meta("local")).expect("add");
+        dispatch_action(&mut sender, "addNode", Some(&json!({ "kind": "seed" })), None, &testkit::meta("local")).expect("add");
 
         let mut envelopes = Vec::new();
         for message in far.receive().expect("receive") {
@@ -2747,15 +3082,18 @@ mod tests {
         assert_eq!(fixture_nodes(&receiver.projection().expect("projection").0).len(), 1, "feeding the same operation twice must not double-apply");
     }
 
-    /// 🧰️ The framework-injected `setActiveUtility` View action is host-owned: switching utilities must emit no
-    /// document operations and add no undo history — the active utility lives in `ViewState.active_utility_id`.
+    /// 🧰️ B1: `setActiveUtility` is a real typed `Puzzle2dCommand` now (was a host-applied `ViewState`
+    /// notification): switching utilities must still emit no DOCUMENT operations — the new value lands
+    /// in `Puzzle2dConfig::active_utility_by_window_id` as a config operation instead, never re-emits a
+    /// `SetActiveUtility` effect (the caller already knows), and the document's own undo stack is
+    /// untouched by it.
     #[test]
     fn utility_switch_emits_no_ops_and_no_history() {
         let mut app = registry_app();
-        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": PUZZLE2D_UTILITY_BRUSH })), &brush_view_state(), &testkit::meta("local")).expect("switch utility");
+        let result = dispatch_action(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": PUZZLE2D_UTILITY_BRUSH })), Some(PUZZLE2D_PANE_OVERVIEW), &testkit::meta("local")).expect("switch utility");
         assert!(result.operations.is_empty(), "a utility switch must not produce document operations");
-        let can_undo = app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local"));
-        assert!(can_undo.map(|r| r.operations.is_empty()).unwrap_or(true), "a utility switch must not have created an undo step");
+        let can_undo = dispatch_action(&mut app, "undo", None, None, &testkit::meta("local"));
+        assert!(can_undo.map(|r| r.operations.is_empty()).unwrap_or(true), "a utility switch must not have created a document undo step");
     }
 
     /// 🧰️ The app declares exactly the select/brush canvas utilities and binds them to the interactive
@@ -2790,7 +3128,7 @@ mod tests {
     /// 🛠️ Fill's count slider is a tool measure keyed by the fill tool id, not a window utility-options group.
     #[test]
     fn fill_count_slider_is_a_tool_measure() {
-        let labels = puzzle2d_labels(&ViewState::default());
+        let labels = puzzle2d_labels(&Puzzle2dConfig::default());
         let host = puzzle_board_host();
         let mut fill_runtime = Puzzle2dPlayRuntime::default();
         fill_runtime.fill_count = 3;
@@ -2803,7 +3141,7 @@ mod tests {
 
     #[test]
     fn brush_params_are_tagged_utility_options_not_engagement_controls() {
-        let labels = puzzle2d_labels(&ViewState::default());
+        let labels = puzzle2d_labels(&Puzzle2dConfig::default());
         let host = puzzle_board_host();
         let group_tag = |measures: &[WindowMeasure], id: &str| {
             measures.iter().find_map(|measure| match measure {
@@ -2838,7 +3176,7 @@ mod tests {
     #[test]
     fn view_actions_emit_no_ops_through_the_registry() {
         let mut app = registry_app();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load example");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), None, &testkit::meta("local")).expect("load example");
         let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
         let view_dispatches: Vec<(&str, Value)> = vec![
             ("setSelection", json!({ "ids": [node_id.clone()] })),
@@ -2864,7 +3202,7 @@ mod tests {
         ];
         for (action, args) in view_dispatches {
             let args_ref = (!args.is_null()).then_some(&args);
-            let result = app.handle_action(action, args_ref, &brush_view_state(), &testkit::meta("local")).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error}"));
+            let result = dispatch_action(&mut app, action, args_ref, None, &testkit::meta("local")).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error}"));
             assert!(result.operations.is_empty(), "view action '{action}' must not emit document operations");
         }
     }

@@ -30,5 +30,12 @@ mod tests {
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
     }
+
+    /// 🧮️ Per-app recipe item 3: `HomeConfig` round-trips dsl<->pack independently of the
+    /// `SHomeDocument` document grammar above.
+    #[test]
+    fn home_config_dsl_pack_equivalence() {
+        store::test_support::assert_dsl_pack_equivalence(&home_engine::HomeConfig::default());
+    }
 }
 //#endregion 🧪️Tests

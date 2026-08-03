@@ -75,7 +75,7 @@ pub mod app {
 //! 🧩️ Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    clipboard_action_definitions, effective_action_args, element_id_segment, history_action_definitions, is_element_id, missing_required_args, kernel::{
+    clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id, kernel::{
         ActorId, AppEvent, CapabilityRequirement, ClipboardError, ClipboardFragment, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp,
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, PastePlacement, Rights,
         ArtifactKind, SchemaId, Scope, UndoGroup, UndoPolicy,
@@ -84,7 +84,7 @@ use semio_framework_core::{
     start_tutorial_action_definition, note_shell_command_action_definition, ActionArgDef, ActionRef, AppDefinition, IconName,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
-    ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WorkflowDefinition, ToolDefinition, ToolRef, TutorialDefinition,
+    ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ToolDefinition, ToolRef, TutorialDefinition,
     UtilityDefinition, UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
     START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID,
     NOTE_SHELL_COMMAND_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID,
@@ -103,7 +103,7 @@ use serde_json::Value;
 use dsl::{to_dsl_value, DslValue};
 use std::collections::{HashMap, HashSet};
 use protocol::OpText;
-use store::{build_history_columns, create_config_envelope, create_document_envelope, ConfigStore, DocumentCommand, DocumentStore, HistoryColumn, SpaceConflict};
+use store::{build_history_columns, create_config_envelope, create_document_envelope, ConfigStore, DocumentCommand, DocumentPack, DocumentStore, HistoryColumn, SpaceConflict};
 
 pub struct ModeSpec {
     pub id: String,
@@ -1891,7 +1891,6 @@ pub mod testkit {
 //! themselves inline.
 
 use super::{ActionMeta, App, AppActionRegistry, DocumentApp, PluginApp, VcsDocumentApp};
-use semio_framework_core::ViewState;
 use store::{Backbone, BackboneMessage, MemoryBackbone, SpaceConflict};
 
 /// 🪪️ A local-actor `ActionMeta` for test dispatch (`instance_id: 1`).
@@ -1977,12 +1976,13 @@ pub fn paired_apps<A: DocumentApp + Default>(channel: &str) -> (VcsDocumentApp<A
     (a, b)
 }
 
-/// 🧪️ Runs `action` once, asserts `probe(app)` matches `after`, undoes and asserts `before`, redoes and
-/// asserts `after` again — the repeated undo/redo round-trip test body.
+/// 🧪️ Runs `command` once via the typed channel, asserts `probe(app)` matches `after`, undoes (still
+/// the framework-reserved `"undo"` action) and asserts `before`, redoes and asserts `after` again — the
+/// repeated undo/redo round-trip test body. B1: takes a typed `A::Command` value (`dispatch_typed`) —
+/// `DocumentApp::handle_action`'s stringly-typed dispatch no longer exists.
 pub fn assert_undo_redo_round_trip<A, P>(
     app: &mut VcsDocumentApp<A>,
-    action: &str,
-    args: Option<&serde_json::Value>,
+    command: A::Command,
     probe: impl Fn(&VcsDocumentApp<A>) -> P,
     before: P,
     after: P,
@@ -1990,45 +1990,45 @@ pub fn assert_undo_redo_round_trip<A, P>(
     A: DocumentApp,
     P: PartialEq + std::fmt::Debug,
 {
-    app.handle_action(action, args, &ViewState::default(), &meta("local")).expect("apply action");
-    assert_eq!(probe(app), after, "action did not produce the expected projection");
-    app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+    app.dispatch_typed(command, &meta("local")).expect("apply command");
+    assert_eq!(probe(app), after, "command did not produce the expected projection");
+    app.handle_action("undo", None, &meta("local")).expect("undo");
     assert_eq!(probe(app), before, "undo did not revert to the expected projection");
-    app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+    app.handle_action("redo", None, &meta("local")).expect("redo");
     assert_eq!(probe(app), after, "redo did not reapply the expected projection");
 }
 
-/// 🧪️ `action_a`/`action_b` are applied to two `paired_apps` instances, a neutral history action
+/// 🧪️ `command_a`/`command_b` are applied to two `paired_apps` instances, a neutral history action
 /// (`commitCheckpoint`) pumps each side's inbound operations, then `probe` must agree on both — the repeated
 /// two-instance-convergence test body (see `playbook-plugin`'s
 /// `two_instances_converge_disjoint_edits_via_backbone` for the original, app-specific version).
 pub fn assert_two_instances_converge<A, P>(
     channel: &str,
-    action_a: (&str, Option<&serde_json::Value>),
-    action_b: (&str, Option<&serde_json::Value>),
+    command_a: A::Command,
+    command_b: A::Command,
     probe: impl Fn(&VcsDocumentApp<A>) -> P,
 ) where
     A: DocumentApp + Default,
     P: PartialEq + std::fmt::Debug,
 {
     let (mut instance_a, mut instance_b) = paired_apps::<A>(channel);
-    instance_a.handle_action(action_a.0, action_a.1, &ViewState::default(), &meta("actor-a")).expect("a applies its edit");
-    instance_b.handle_action(action_b.0, action_b.1, &ViewState::default(), &meta("actor-b")).expect("b applies its edit");
-    instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-    instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+    instance_a.dispatch_typed(command_a, &meta("actor-a")).expect("a applies its edit");
+    instance_b.dispatch_typed(command_b, &meta("actor-b")).expect("b applies its edit");
+    instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
+    instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
     assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same projection");
 }
 
-/// 🧪️ The `Operation::reconcile` counterpart to `assert_two_instances_converge`: `action_delete`/
-/// `action_wire` race on two `paired_apps` instances (typically one deletes a graph node, the other
+/// 🧪️ The `Operation::reconcile` counterpart to `assert_two_instances_converge`: `command_delete`/
+/// `command_wire` race on two `paired_apps` instances (typically one deletes a graph node, the other
 /// concurrently wires an edge to it), a `commitCheckpoint` pumps each side's inbound operations, then both
 /// sides' post-reconcile `probe` results (`(projection, conflicts)`) must agree, `has_dangling_ref`
 /// must be false for the converged projection, and at least one `SpaceConflict` must have been
 /// reported (dropping a dangling reference silently, with no conflict, would hide real data loss).
 pub fn assert_graph_merge_preserves_referential_integrity<A, P>(
     channel: &str,
-    action_delete: (&str, Option<&serde_json::Value>),
-    action_wire: (&str, Option<&serde_json::Value>),
+    command_delete: A::Command,
+    command_wire: A::Command,
     probe: impl Fn(&VcsDocumentApp<A>) -> (P, Vec<SpaceConflict>),
     has_dangling_ref: impl Fn(&P) -> bool,
 ) where
@@ -2036,10 +2036,10 @@ pub fn assert_graph_merge_preserves_referential_integrity<A, P>(
     P: PartialEq + std::fmt::Debug,
 {
     let (mut instance_a, mut instance_b) = paired_apps::<A>(channel);
-    instance_a.handle_action(action_delete.0, action_delete.1, &ViewState::default(), &meta("actor-a")).expect("a deletes the node");
-    instance_b.handle_action(action_wire.0, action_wire.1, &ViewState::default(), &meta("actor-b")).expect("b wires the edge");
-    instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-    instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+    instance_a.dispatch_typed(command_delete, &meta("actor-a")).expect("a deletes the node");
+    instance_b.dispatch_typed(command_wire, &meta("actor-b")).expect("b wires the edge");
+    instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
+    instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
     let (projection_a, conflicts_a) = probe(&instance_a);
     let (projection_b, conflicts_b) = probe(&instance_b);
     assert_eq!(projection_a, projection_b, "both instances must converge on the same reconciled projection");
@@ -2048,12 +2048,11 @@ pub fn assert_graph_merge_preserves_referential_integrity<A, P>(
     assert_eq!(conflicts_a, conflicts_b, "both instances must report the same reconciliation conflicts");
 }
 
-/// 🧪️ Applies `action` on a sender attached to a backbone, replays the resulting envelopes onto a
+/// 🧪️ Applies `command` on a sender attached to a backbone, replays the resulting envelopes onto a
 /// fresh receiver twice, and asserts `probe` sees the same result both times — feeding the same operation
 /// twice must not double-apply.
 pub fn assert_ingest_idempotent<A, P>(
-    action: &str,
-    args: Option<&serde_json::Value>,
+    command: A::Command,
     probe: impl Fn(&VcsDocumentApp<A>) -> P,
 ) where
     A: DocumentApp + Default,
@@ -2062,7 +2061,7 @@ pub fn assert_ingest_idempotent<A, P>(
     let mut sender = new_app::<A>();
     let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent");
     sender.attach_backbone(Box::new(near)).expect("attach sender");
-    sender.handle_action(action, args, &ViewState::default(), &meta("local")).expect("apply action");
+    sender.dispatch_typed(command, &meta("local")).expect("apply command");
 
     let mut envelopes = Vec::new();
     for message in far.receive().expect("receive") {
@@ -2085,10 +2084,9 @@ mod testkit_tests {
     //! adopts them.
     use super::super::{ConfigView, NoConfig, NoConfigOperation};
     use super::*;
-    use crate::app::{ActionEmit, DocumentView};
+    use crate::app::{Emit, DocumentView};
     use crate::{ui_text, UiNode};
     use serde::{Deserialize, Serialize};
-    use serde_json::Value;
     use protocol::{Operation, OperationDiff};
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -2135,6 +2133,12 @@ mod testkit_tests {
         }
     }
 
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    enum DummyCommand {
+        #[dsl(key = "increment")]
+        Increment,
+    }
+
     #[derive(Default)]
     struct DummyApp;
 
@@ -2143,6 +2147,7 @@ mod testkit_tests {
         type Operation = DummyOperation;
         type Config = NoConfig;
         type ConfigOperation = NoConfigOperation;
+        type Command = DummyCommand;
 
         fn app_id(&self) -> &str {
             "testkit-dummy"
@@ -2156,25 +2161,22 @@ mod testkit_tests {
             DummyProjection::default()
         }
 
-        fn handle_action(
+        fn handle(
             &self,
-            action: &str,
-            _args: Option<&Value>,
+            command: &DummyCommand,
             doc: &DocumentView<'_, DummyProjection>,
             _cfg: &ConfigView<'_, NoConfig>,
-            _view_state: &ViewState,
-        ) -> ActionEmit<DummyOperation> {
-            match action {
-                "increment" => ActionEmit {
-                    operations: vec![DummyOperation::SetCount { value: doc.projection.count + 1 }],
+        ) -> Emit<DummyOperation> {
+            match command {
+                DummyCommand::Increment => Emit {
+                    document_operations: vec![DummyOperation::SetCount { value: doc.projection.count + 1 }],
                     description: Some("increment".into()),
                     ..Default::default()
                 },
-                _ => ActionEmit::default(),
             }
         }
 
-        fn render(&self, _body_key: &str, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewState) -> UiNode {
+        fn render(&self, _body_key: &str, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
             ui_text(format!("count={}", doc.projection.count))
         }
     }
@@ -2189,29 +2191,29 @@ mod testkit_tests {
     #[test]
     fn new_app_constructs_a_registry_less_wrapper() {
         let mut app = new_app::<DummyApp>();
-        app.handle_action("increment", None, &ViewState::default(), &meta("local")).expect("increment");
+        app.dispatch_typed(DummyCommand::Increment, &meta("local")).expect("increment");
         assert_eq!(app.projection().unwrap().count, 1);
     }
 
     #[test]
     fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
         let mut app = new_app::<DummyApp>();
-        assert_undo_redo_round_trip(&mut app, "increment", None, |app| app.projection().unwrap().count, 0, 1);
+        assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.projection().unwrap().count, 0, 1);
     }
 
     #[test]
     fn assert_two_instances_converge_on_disjoint_edits() {
         assert_two_instances_converge::<DummyApp, i32>(
             "mem://testkit-converge",
-            ("increment", None),
-            ("increment", None),
+            DummyCommand::Increment,
+            DummyCommand::Increment,
             |app| app.projection().unwrap().count,
         );
     }
 
     #[test]
     fn assert_ingest_idempotent_does_not_double_apply() {
-        assert_ingest_idempotent::<DummyApp, i32>("increment", None, |app| app.projection().unwrap().count);
+        assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| app.projection().unwrap().count);
     }
 }
 }
@@ -2996,7 +2998,6 @@ mod app_builder_tests {
 pub struct App {
     pub definition: AppDefinition,
     pub examples: Vec<ExampleDefinition>,
-    pub workflow: Option<WorkflowDefinition>,
 }
 
 impl App {
@@ -3011,7 +3012,6 @@ impl App {
         Self {
             definition: builder.build_definition(),
             examples: Vec::new(),
-            workflow: None,
         }
     }
 
@@ -3033,14 +3033,12 @@ impl App {
         self
     }
 
-    pub fn workflow(mut self, workflow_step_id: impl Into<String>, label: impl Into<String>, yields: impl Into<String>) -> Self {
-        self.workflow = Some(WorkflowDefinition {
-            workflow_step_id: workflow_step_id.into(),
-            app_id: self.definition.id.clone(),
-            label: label.into(),
-            document: self.definition.document.clone(),
-            yields: yields.into(),
-        });
+    /// 🚧️ B1 stub: `WorkflowDefinition` + `PluginManifest.workflows` were deleted from framework-core
+    /// (WP-0.1, concurrent) — real workflow-palette derivation moves to `register_app_io`/
+    /// `workflow_palette()` in Wave 1 (`AppIo`-driven, not this free-text `yields`). Kept as a no-op
+    /// so the ~50 existing `.workflow(...)` call sites across every app manifest keep compiling
+    /// unchanged until their own wave touches them.
+    pub fn workflow(self, _workflow_step_id: impl Into<String>, _label: impl Into<String>, _yields: impl Into<String>) -> Self {
         self
     }
 }
@@ -3079,7 +3077,7 @@ impl store::DocumentDsl for NoConfig {
     }
 }
 
-impl store::DocumentPack for NoConfig {
+impl DocumentPack for NoConfig {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(Vec::new())
     }
@@ -3147,14 +3145,25 @@ pub struct CommandLogEntry {
     pub label: String,
     pub kind: ActionKind,
     pub timestamp: String,
-    /// @emoji 🔗️ Set iff this command created/amended a VCS edit — `None` for pure cursor motion
-    /// (undo/redo/revert) and view-kind commands that never reach `dispatch_emit`.
+    /// @emoji 🔗️ Set iff this command created/amended a DOCUMENT VCS edit — `None` for pure cursor
+    /// motion (undo/redo/revert) and config-only dispatches that never touch the document store.
     pub edit_id: Option<String>,
+    /// @emoji 🧮️ B1: the CONFIG-store twin of `edit_id` — every CONFIG edit this command created
+    /// (the former "View"-kind self-computed `InverseAction` path: a config op carries a real
+    /// `backwards`, so reverting it is a real config-store undo-to-position, not a memory replay). A
+    /// `Vec` (not a single id) because a folded row may accumulate several distinct config edits — one
+    /// per fold tick, since a config-only "View" dispatch is a plain `Apply`, not an `AmendLast` (unlike
+    /// the document side, which reuses one edit id for a whole coalesced gesture) — `backfill_command_log`
+    /// needs every one of them to correctly recognize "already logged". `CommandView::config_edit_id`
+    /// exposes just the LATEST for display/revert purposes. A single dispatch may also set `edit_id`
+    /// (touching both stores at once); `revertToCommand` prefers `edit_id` when both are present.
+    pub config_edit_ids: Vec<String>,
     /// @emoji 🔢️ How many consecutive identical `View`/`Shell` dispatches folded into this one row —
     /// see `VcsDocumentApp::record_command`. Always `1` for `Operation`/`History`/`Clipboard` entries
     /// and for anything carrying an `edit_id`, which never fold.
     pub count: u32,
-    /// @emoji ⏪️ A real inverse for an `edit_id: None` row (`View`/`Shell` kind only) — see
+    /// @emoji ⏪️ A real inverse for a `Shell`-kind row with neither `edit_id` nor `config_edit_ids`
+    /// (`noteShellCommand`-authored — shell-owned state this plugin cannot touch itself) — see
     /// `InverseAction`. `None` means this row has no working backwards (not just unauthored/foreign).
     pub inverse: Option<InverseAction>,
 }
@@ -3169,13 +3178,17 @@ pub struct CommandView {
     pub kind: ActionKind,
     pub timestamp: String,
     pub edit_id: Option<String>,
+    /// @emoji 🧮️ The LATEST of `CommandLogEntry::config_edit_ids` — the id `revertToCommand` targets.
+    pub config_edit_id: Option<String>,
     /// @emoji 📜️ This entry's edit's forward operations, printed via `OpText::print_op` — empty for
     /// cursor-motion entries and for a dangling `edit_id` (document replaced mid-session).
     pub op_lines: Vec<String>,
-    /// @emoji ✅️ The linked edit is currently on the applied stack (`false` once undone).
+    /// @emoji ✅️ The linked DOCUMENT edit is currently on the applied stack (`false` once undone) —
+    /// `false` (not meaningful) for a row with no `edit_id`.
     pub applied: bool,
-    /// @emoji ⏪️ Either (edit-linked) `applied` AND authored by the local actor, or (memory-only) this
-    /// row carries a stored `inverse` — only these entries offer "backwards".
+    /// @emoji ⏪️ Either (document edit-linked) `applied` AND authored by the local actor, (config
+    /// edit-linked) the config edit is similarly applied+local, or (memory-only) this row carries a
+    /// stored `inverse` — only these entries offer "backwards".
     pub revertible: bool,
     /// @emoji 🔢️ See `CommandLogEntry::count`.
     pub count: u32,
@@ -3342,12 +3355,16 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
 }
 //#endregion 🔖️HistoryPanel
 
-/// @emoji 📤️ What a typed `DocumentApp::handle_action` emits: zero-or-more typed operations (applied
-/// through the store with a true inverse), an optional description/coalesce key for the resulting
-/// edit, host effects (navigate/export/spawn…), and app events. A view action returns an empty
-/// `operations` (no history entry); an operation action returns one or more `operations`.
-pub struct ActionEmit<Operation, ConfigOperation = NoConfigOperation> {
-    pub operations: Vec<Operation>,
+/// @emoji 📤️ What a pure `DocumentApp::handle` emits: zero-or-more typed document operations (applied
+/// through the document store with a true inverse) and zero-or-more typed config operations (applied
+/// through the config store, also with a true inverse via `ConfigOperation::backwards` — the config-op
+/// twin of a document op, replacing the old `ActionEmit::inverse`/`InverseAction` ad hoc self-computed
+/// inverse: a former "View"-kind action now just emits a `ConfigOperation` and gets a real backwards
+/// for free), plus an optional description/coalesce key for the resulting edit(s), host effects
+/// (navigate/export/spawn…), and app events. `B1` rename: was `ActionEmit`, `operations` renamed
+/// `document_operations` to sit next to `config_operations` unambiguously.
+pub struct Emit<Operation, ConfigOperation = NoConfigOperation> {
+    pub document_operations: Vec<Operation>,
     pub config_operations: Vec<ConfigOperation>,
     pub description: Option<String>,
     pub coalesce_key: Option<String>,
@@ -3356,47 +3373,58 @@ pub struct ActionEmit<Operation, ConfigOperation = NoConfigOperation> {
     /// 🐢️ Which rendered UI sections this action actually invalidates — `Full` (the default) preserves
     /// today's whole-shell-refresh behavior for every app that doesn't opt in to narrower scopes.
     pub ui_scope: semio_framework_core::kernel::UiDirtyScope,
-    /// @emoji ⏪️ A real backwards for a `View`-kind action with no document operations: the app computes
-    /// its OWN inverse from state it already holds (e.g. `setCamera`'s inverse is another `setCamera`
-    /// carrying the pre-dispatch pose) and hands it back here. `dispatch_emit` stores it on the
-    /// resulting `CommandLogEntry`; `revertToCommand` replays it via `dispatch_action`. Ignored for
-    /// `Operation`-kind emits (the VCS edit's own `Operation::backwards` is already the real inverse).
-    pub inverse: Option<InverseAction>,
 }
 
-impl<Operation, ConfigOperation> Default for ActionEmit<Operation, ConfigOperation> {
+impl<Operation, ConfigOperation> Default for Emit<Operation, ConfigOperation> {
     fn default() -> Self {
         Self {
-            operations: Vec::new(),
+            document_operations: Vec::new(),
             config_operations: Vec::new(),
             description: None,
             coalesce_key: None,
             effects: Vec::new(),
             events: Vec::new(),
             ui_scope: semio_framework_core::kernel::UiDirtyScope::default(),
-            inverse: None,
         }
     }
 }
 
-impl<Operation, ConfigOperation> ActionEmit<Operation, ConfigOperation> {
-    /// @emoji ✏️ An operation emission carrying `operations` and nothing else.
-    pub fn operations(operations: Vec<Operation>) -> Self {
-        Self { operations, ..Default::default() }
+impl<Operation, ConfigOperation> Emit<Operation, ConfigOperation> {
+    /// @emoji ✏️ A document-operation emission carrying `document_operations` and nothing else.
+    pub fn operations(document_operations: Vec<Operation>) -> Self {
+        Self { document_operations, ..Default::default() }
     }
 
-    /// @emoji 🔁️ Preview pattern (a): a per-tick coalesced emission. The `coalesce_key` folds every
-    /// tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is one
-    /// undo. Use for cheap per-tick operations (camera/opacity). See the `🔖️UtilityPreviewContract` doc region.
-    pub fn amend(operations: Vec<Operation>, coalesce_key: impl Into<String>) -> Self {
-        Self { operations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
+    /// @emoji 🔁️ Preview pattern (a): a per-tick coalesced DOCUMENT emission. The `coalesce_key` folds
+    /// every tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is
+    /// one undo. Use for cheap per-tick document operations. See `🔖️UtilityPreviewContract`.
+    pub fn amend(document_operations: Vec<Operation>, coalesce_key: impl Into<String>) -> Self {
+        Self { document_operations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
     }
 
     /// @emoji 📌️ Preview pattern (b): the gesture-end commit of an app-runtime scratch draft as one
-    /// described edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick amending
-    /// would be O(N²) (draw drafts, lowpoly strokes). See the `🔖️UtilityPreviewContract` doc region.
-    pub fn commit(operations: Vec<Operation>, description: impl Into<String>) -> Self {
-        Self { operations, description: Some(description.into()), ..Default::default() }
+    /// described DOCUMENT edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick
+    /// amending would be O(N²) (draw drafts, lowpoly strokes). See `🔖️UtilityPreviewContract`.
+    pub fn commit(document_operations: Vec<Operation>, description: impl Into<String>) -> Self {
+        Self { document_operations, description: Some(description.into()), ..Default::default() }
+    }
+
+    /// @emoji 🧮️ A config-operation emission carrying `config_operations` and nothing else — the
+    /// replacement for a former "View"-kind `ActionEmit::view_with_inverse`: selection/camera/hover/…
+    /// changes now flow through the config store, which computes their real `backwards` itself.
+    pub fn config(config_operations: Vec<ConfigOperation>) -> Self {
+        Self { config_operations, ..Default::default() }
+    }
+
+    /// @emoji 🔁️ `amend`'s CONFIG-targeted twin — coalesces one live gesture's ticks into a single
+    /// amendable config edit (e.g. a live camera drag).
+    pub fn amend_config(config_operations: Vec<ConfigOperation>, coalesce_key: impl Into<String>) -> Self {
+        Self { config_operations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
+    }
+
+    /// @emoji 📌️ `commit`'s CONFIG-targeted twin — a described, non-coalesced config edit.
+    pub fn commit_config(config_operations: Vec<ConfigOperation>, description: impl Into<String>) -> Self {
+        Self { config_operations, description: Some(description.into()), ..Default::default() }
     }
 
     /// @emoji 🐚️ A single host effect and no operations (a shell action).
@@ -3407,12 +3435,6 @@ impl<Operation, ConfigOperation> ActionEmit<Operation, ConfigOperation> {
     /// @emoji 📣️ A single app event and no operations.
     pub fn event(event: AppEvent) -> Self {
         Self { events: vec![event], ..Default::default() }
-    }
-
-    /// @emoji ⏪️ A `View`-kind emission with a real backwards: no document operations, but a stored
-    /// `InverseAction` that `revertToCommand` can replay. See `ActionEmit::inverse`'s doc.
-    pub fn view_with_inverse(inverse: InverseAction) -> Self {
-        Self { inverse: Some(inverse), ..Default::default() }
     }
 }
 
@@ -3481,10 +3503,17 @@ macro_rules! app_action_enum {
 /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
 ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
 pub trait DocumentApp: Send + 'static {
-    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + store::DocumentPack;
+    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + DocumentPack;
     type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
-    type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + store::DocumentPack;
+    type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + DocumentPack;
     type ConfigOperation: ::protocol::Operation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+    /// @emoji 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
+    /// `handle` below, replacing the deleted stringly-typed `handle_action`/`handle_command`/
+    /// `handle_typed_command` trio. Decoded off the wire once, by `VcsDocumentApp::dispatch_typed_command`,
+    /// via `OpBinary::decode_op`; framework-reserved verbs (undo/redo/checkpoint/alternative/clipboard/
+    /// revert/history-filter/noteShellCommand) never reach here — the wrapper intercepts those itself
+    /// (see `VcsDocumentApp::dispatch_framework_action`) since they are host mechanics, not app behavior.
+    type Command: ::protocol::OpBinary + Send;
 
     fn app_id(&self) -> &str;
     fn document_schema(&self) -> &str;
@@ -3495,54 +3524,31 @@ pub trait DocumentApp: Send + 'static {
     fn initial_config(&self) -> Self::Config {
         Self::Config::default()
     }
-    fn handle_action(
+    /// @emoji 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
+    /// `(command, document, config)` to an {@link Emit}. No `&mut self`, no `ViewState` (ephemeral
+    /// per-window/locale/selection state now lives in `Self::Config`, keyed by window-instance id where
+    /// it varies per window). `View`-kind interactions from the pre-B1 world (camera/selection/hover/…)
+    /// emit `config_operations` here instead of mutating an app-struct field — the config store computes
+    /// their real `backwards`, so undo/redo works without any ad hoc `InverseAction`.
+    fn handle(
         &self,
-        action: &str,
-        args: Option<&Value>,
+        command: &Self::Command,
         doc: &DocumentView<'_, Self::Projection>,
         cfg: &ConfigView<'_, Self::Config>,
-        view_state: &ViewState,
-    ) -> ActionEmit<Self::Operation, Self::ConfigOperation>;
-    /// 🎛️ Handles a dispatched `CommandDefinition` (os/plugin/app/mode-scoped — never window-level).
-    /// Default no-operation: apps that declare no `AppDefinition.commands` never need to override this.
-    fn handle_command(
-        &self,
-        _command: &str,
-        _args: Option<&Value>,
-        _doc: &DocumentView<'_, Self::Projection>,
-        _cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<Self::Operation, Self::ConfigOperation> {
-        ActionEmit::default()
-    }
-    //#region 🔖️TypedChannel
-    /// 🎯️ Typed binary command dispatch — the eventual replacement for `handle_action`/`handle_command`'s
-    /// stringly-typed dispatch. `None` (the default) means "this app hasn't migrated to typed commands
-    /// yet" — the caller (`VcsDocumentApp::handle_command_frame`) falls back to decoding the frame bytes
-    /// as a `{kind,name,args}` wire-value envelope and routing through the existing `handle_action`/
-    /// `handle_command` unchanged. An app's later conversion overrides this: decode `command_bytes` via
-    /// `<Self::TypedCommand as protocol::OpBinary>::decode_op(...)` (a per-app enum it declares) and
-    /// dispatch for real.
-    fn handle_typed_command(
-        &self,
-        _command_bytes: &[u8],
-        _doc: &DocumentView<'_, Self::Projection>,
-        _cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &ViewState,
-    ) -> Option<Result<ActionEmit<Self::Operation, Self::ConfigOperation>, String>> {
-        None
+    ) -> Emit<Self::Operation, Self::ConfigOperation>;
+    /// @emoji 🏷️ `command`'s action/command id string — used for command-log labeling and
+    /// `AppActionRegistry` kind-discipline lookup (`View`/`Shell`-kind must not emit
+    /// `document_operations`; `VcsDocumentApp::dispatch_typed_command_inner` enforces this when the
+    /// registry has a matching declaration). Default: `"typed-command"` for every command (correct but
+    /// generic — an app that wants per-command labels/kind-discipline overrides this to match the id
+    /// the command was declared under in its `AppDefinition`, e.g. via `.operation`/`.view_action`).
+    fn command_id(&self, _command: &Self::Command) -> &str {
+        "typed-command"
     }
     /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
     fn config_spec(&self) -> ConfigSpec {
         ConfigSpec::empty()
     }
-    /// 🧮️ Applies wire-value-decoded config bytes directly to in-app state — legacy path until all apps
-    /// route config through `ConfigOperation`s on the config store. Default decodes into `initial_config`.
-    fn apply_config_bytes(&self, config_bytes: &[u8]) -> Result<(), String> {
-        let _ = config_bytes;
-        Ok(())
-    }
-    //#endregion 🔖️TypedChannel
     /// 📋️ The `MediaType` this app copies fragments as and accepts pastes of by default — `None` (the
     /// default) means this app doesn't participate in the clipboard mechanism, and `VcsDocumentApp`'s
     /// injected `copy`/`cut`/`paste` actions silently no-op. Override alongside `copy_fragment`/
@@ -3556,32 +3562,30 @@ pub trait DocumentApp: Send + 'static {
     fn clipboard_accepts(&self) -> Vec<MediaType> {
         self.clipboard_media_type().into_iter().collect()
     }
-    /// 📋️ Builds a `ClipboardFragment` from the current selection (read from `view_state`). Called by
-    /// `VcsDocumentApp`'s injected `copy` and `cut` actions; `cut` additionally calls
-    /// `cut_operations`. Default: always empty (apps that don't override `clipboard_media_type` never
-    /// reach here in practice, since the interception only calls this when a media type is declared).
-    fn copy_fragment(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
+    /// 📋️ Builds a `ClipboardFragment` from the current selection. Called by `VcsDocumentApp`'s
+    /// injected `copy` and `cut` actions; `cut` additionally calls `cut_operations`. Default: always
+    /// empty (apps that don't override `clipboard_media_type` never reach here in practice, since the
+    /// interception only calls this when a media type is declared).
+    fn copy_fragment(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Result<ClipboardFragment, ClipboardError> {
         Err(ClipboardError::EmptySelection)
     }
-    fn cut_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewState) -> Vec<Self::Operation> {
+    fn cut_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Self::Operation> {
         Vec::new()
     }
     fn paste_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Operation>, ClipboardError> {
         Ok(Vec::new())
     }
-    fn pending_effects(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewState) -> Vec<HostEffect> {
+    fn pending_effects(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
         Vec::new()
     }
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewState) -> UiNode;
-    /// 🪟️ Keyed by window INSTANCE id (from `view_state.window_instances`), not window kind — an app with
-    /// two open instances of the same kind (e.g. split panes) returns one entry per instance so their
-    /// chrome/options never collapse together. Apps with a single window kind and no splitting return
-    /// `vec![kind_id]`-worth of entries either way.
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
+    /// 🪟️ Keyed by window INSTANCE id — an app with two open instances of the same kind (e.g. split
+    /// panes) returns one entry per instance so their chrome/options never collapse together. Apps with
+    /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
     fn window_engagements(
         &self,
         _doc: &DocumentView<'_, Self::Projection>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &ViewState,
     ) -> HashMap<String, WindowEngagement> {
         HashMap::new()
     }
@@ -3590,7 +3594,6 @@ pub trait DocumentApp: Send + 'static {
         &self,
         _doc: &DocumentView<'_, Self::Projection>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &ViewState,
     ) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
     }
@@ -3602,15 +3605,15 @@ pub trait DocumentApp: Send + 'static {
         &self,
         _doc: &DocumentView<'_, Self::Projection>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &ViewState,
     ) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
     }
-    /// 🗣️ Locale/terminology-aware overlay for this app's window-kind/mode labels, resolved fresh per `ViewState`
-    /// (unlike the static `AppDefinition` labels baked in at manifest-build time). Framework panel-tab labels
-    /// (Document/Catalogue/Inspection/Parameters) are merged in automatically by `plugin_runtime::plugin_app_labels`
-    /// and do not need to be supplied here.
-    fn app_labels(&self, _view_state: &ViewState) -> AppLabelsOverlay {
+    /// 🗣️ Locale/terminology-aware overlay for this app's window-kind/mode labels — resolved from
+    /// `Self::Config` now (locale/terminology moved off the deleted `ViewState` per B1), not baked in
+    /// statically at manifest-build time. Framework panel-tab labels (Document/Catalogue/Inspection/
+    /// Parameters) are merged in automatically by `plugin_runtime::plugin_app_labels` and do not need to
+    /// be supplied here.
+    fn app_labels(&self, _cfg: &ConfigView<'_, Self::Config>) -> AppLabelsOverlay {
         AppLabelsOverlay::default()
     }
     /// 🖱️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
@@ -3627,7 +3630,6 @@ pub trait DocumentApp: Send + 'static {
         _request: &ContextMenuRequest,
         _doc: &DocumentView<'_, Self::Projection>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _view_state: &ViewState,
         _registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
         Vec::new()
@@ -3639,30 +3641,70 @@ pub trait DocumentApp: Send + 'static {
     /// by user actions leaves it untouched.
     fn seed(&self, _store: &mut DocumentStore<Self::Projection, Self::Operation>) {}
 
-    /// 🎞️ Declares this app's workflow ports (empty by default — an app with no ports simply
-    /// cannot be wired into a workflow; every other capability is unaffected).
+    /// 🔌️ This app's typed media I/O surface — `None` (the default) means "declares no ports beyond
+    /// the implicit document ports" (`media_ports` below still returns those two). Override to return
+    /// a real `AppIo` (e.g. `shooting_engine::shooting_io()`) to declare extra workflow ports.
+    fn io(&self) -> Option<AppIo> {
+        None
+    }
+    /// 🎞️ Declares this app's workflow ports — delegates to `self.io().all_ports()` (implicit
+    /// `document:in`/`document:out` plus any app-specific ports) when `io()` is overridden; an app that
+    /// never overrides `io()` still gets no ports (matches the old `Vec::new()` default) since there is
+    /// no document media type to synthesize the implicit pair from.
     fn media_ports(&self) -> Vec<MediaPortSpec> {
-        Vec::new()
+        self.io().map(|io| io.all_ports()).unwrap_or_default()
     }
     /// 🎞️ Pure projection of the current document onto one declared output port — must not mutate
     /// anything. Called by both the UI (preview/export) and a headless runner (moving media along a
-    /// workflow edge). Default: `MediaError::NotImplemented` for apps that declare no ports.
+    /// workflow edge). Default: the whole document pack, base64-wrapped, for `"document:out"`;
+    /// `MediaError::NotImplemented` for any other port (apps declaring extra output ports override
+    /// this to handle them, falling through to `DocumentApp::export_media`'s default via `_ =>` for
+    /// `"document:out"` if desired).
     fn export_media(
         &self,
-        _port: &str,
-        _doc: &DocumentView<'_, Self::Projection>,
+        port: &str,
+        doc: &DocumentView<'_, Self::Projection>,
     ) -> Result<Media, MediaError> {
-        Err(MediaError::NotImplemented)
+        if port != "document:out" {
+            return Err(MediaError::NotImplemented);
+        }
+        let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+        let bytes = doc.projection.encode_pack();
+        Ok(Media {
+            media_type,
+            payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+        })
+    }
+    /// 🎞️ Builds the operation that replaces the whole document with `projection` — the seam the
+    /// default `import_media("document:in")` below needs to turn a decoded document pack into a real,
+    /// undoable operation. `None` (the default) means "not implemented" (there is no generic "replace
+    /// whole projection" operation); an app whose `Operation` enum has such a variant (e.g.
+    /// `SetFixture`/`SetDocument`) overrides this one-liner to unlock the default `import_media`.
+    fn whole_document_operation(&self, _projection: Self::Projection) -> Option<Self::Operation> {
+        None
     }
     /// 🎞️ Translates an incoming media value on one declared input port into operations — never mutates
-    /// state directly, so a headless import is exactly as undoable/syncable as a UI edit.
+    /// state directly, so a headless import is exactly as undoable/syncable as a UI edit. Default:
+    /// decodes a `"document:in"` structured (base64 pack) payload via `whole_document_operation`;
+    /// `MediaError::NotImplemented` for any other port or when `whole_document_operation` is `None`.
     fn import_media(
         &self,
-        _port: &str,
-        _media: &Media,
+        port: &str,
+        media: &Media,
         _doc: &DocumentView<'_, Self::Projection>,
-    ) -> Result<ActionEmit<Self::Operation, Self::ConfigOperation>, MediaError> {
-        Err(MediaError::NotImplemented)
+    ) -> Result<Emit<Self::Operation, Self::ConfigOperation>, MediaError> {
+        if port != "document:in" {
+            return Err(MediaError::NotImplemented);
+        }
+        let MediaPayload::Structured { json, .. } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+        };
+        let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let projection = <Self::Projection as DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        match self.whole_document_operation(projection) {
+            Some(operation) => Ok(Emit::operations(vec![operation])),
+            None => Err(MediaError::NotImplemented),
+        }
     }
     /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
     /// Default re-derives it from `export_media`; override when a fingerprint is derivable without
@@ -3727,25 +3769,40 @@ pub enum MediaArtifactError {
 pub trait PluginApp: Send {
     fn app_id(&self) -> &str;
     fn document_schema(&self) -> &str;
+    /// @emoji 🕰️ FRAMEWORK-reserved action dispatch only (undo/redo/checkpoint/alternative/clipboard/
+    /// revert-to-command/history-filter/noteShellCommand) — B1 deleted the generic app-declared-action
+    /// fallback this used to carry (`DocumentApp::handle_action` no longer exists; an app's own
+    /// behavior is reached exclusively through `handle_command_frame`'s typed `Self::Command` decode).
+    /// An unrecognized `action` id is a hard error pointing at the typed channel.
     fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        view_state: &ViewState,
         meta: &ActionMeta,
     ) -> Result<InvocationResult, String>;
+    /// @emoji 🕰️ Same FRAMEWORK-reserved scope as `handle_action` above — kept as a distinct entry
+    /// point for `CommandDefinition`-shaped host calls (a command has no `ActionKind` of its own).
     fn handle_command(
         &mut self,
         command: &str,
         args: Option<&Value>,
-        view_state: &ViewState,
         meta: &ActionMeta,
     ) -> Result<InvocationResult, String>;
-    /// 🎯️ Object-safe counterpart to `DocumentApp::handle_typed_command` + legacy fallback — the single
-    /// dispatch point `plugin_runtime::plugin_exchange` calls for every `AppCommand::Command` frame.
-    fn handle_command_frame(&mut self, command_bytes: &[u8], view_state: &ViewState, meta: &ActionMeta) -> Result<InvocationResult, String>;
-    /// 🧮️ Object-safe counterpart to `DocumentApp::apply_config_bytes`.
-    fn apply_config_bytes(&mut self, config_bytes: &[u8]) -> Result<(), String>;
+    /// 🎯️ The single dispatch point `plugin_runtime::plugin_exchange` calls for every
+    /// `AppCommand::Command` frame: recognizes a framework-reserved `{kind,name,args}` wire-value
+    /// envelope (routed through `handle_action`/`handle_command` above) and otherwise decodes
+    /// `command_bytes` directly as the app's typed `DocumentApp::Command` via `OpBinary::decode_op`
+    /// and calls the pure `DocumentApp::handle`.
+    fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String>;
+    /// 🧮️ Object-safe counterpart to `DocumentApp::Config`'s binary-pack encoding — the config-store
+    /// twin of `document_pack` below.
+    fn config_pack(&self) -> Result<store::DocumentPackFiles, String>;
+    /// 🧮️ Object-safe counterpart to `load_document_pack`, targeting the config store.
+    fn load_config_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), String>;
+    /// 🧮️ Dispatches one binary-encoded `store::DocumentCommand<Self::ConfigOperation>` against the
+    /// config store — the `AppCommand::ConfigCommand` wire frame's real handler (replaces the deleted
+    /// `apply_config_bytes` whole-record-replace legacy path).
+    fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String>;
     /// @emoji 📥️ Ingests binary-encoded remote `OperationEnvelope`s (`protocol::decode_envelopes`)
     /// into the causal DAG (idempotent — duplicate operation ids are dropped).
     fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), String>;
@@ -3774,32 +3831,35 @@ pub trait PluginApp: Send {
     fn load_document_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), String>;
     fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), String>;
     fn detach_backbone(&mut self);
+    /// @emoji 🕰️ `view_state` is kept here ONLY for wrapper-owned framework chrome (the injected
+    /// history panel body's `is_de_locale` — see `VcsDocumentApp::render`); it is never forwarded into
+    /// `DocumentApp::render`, which dropped `ViewState` entirely in B1.
     fn render(
         &mut self,
         body_key: &str,
         projection_override_json: Option<&str>,
         view_state: &ViewState,
     ) -> Result<UiNode, String>;
-    fn window_engagements(&mut self, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
         HashMap::new()
     }
-    fn window_measures(&mut self, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
     }
     /// 🛠️ Object-safe counterpart to `DocumentApp::tool_measures` — keyed by tool id.
-    fn tool_measures(&mut self, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
     }
     /// ⏱️ Object-safe counterpart to `DocumentApp::pending_effects` — called once per `refreshUi` pass.
-    fn pending_effects(&mut self, _view_state: &ViewState) -> Vec<HostEffect> {
+    fn pending_effects(&mut self) -> Vec<HostEffect> {
         Vec::new()
     }
-    fn app_labels(&mut self, _view_state: &ViewState) -> AppLabelsOverlay {
+    fn app_labels(&mut self) -> AppLabelsOverlay {
         AppLabelsOverlay::default()
     }
     /// 🖱️ Object-safe counterpart to `DocumentApp::context_menu` — the WIT `context-menu` export's
     /// dispatch target.
-    fn context_menu(&mut self, _request: &ContextMenuRequest, _view_state: &ViewState) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(&mut self, _request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
         Vec::new()
     }
     /// 🎞️ Object-safe counterpart to `DocumentApp::export_media` — the seam a headless workflow
@@ -4220,6 +4280,12 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         self.store.projection().expect("materialize projection")
     }
 
+    /// @emoji 🧪️ The config-store twin of `test_projection`.
+    #[cfg(test)]
+    pub(crate) fn test_config(&self) -> A::Config {
+        self.config_store.projection().expect("materialize config projection")
+    }
+
     /// @emoji 🧪️ Direct access to the wrapped app — used to assert on app-private test fixtures (e.g.
     /// `TestApp::received_actions`) that a framework-owned interception must never populate.
     #[cfg(test)]
@@ -4256,7 +4322,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// @emoji 🧾️ Appends one entry to the session command log. `timestamp: None` stamps "now"
     /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill). Always a
     /// fresh row (`count: 1`) — folding consecutive `View`/`Shell` dispatches is `record_command`'s job.
-    fn push_log_entry(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, timestamp: Option<String>, inverse: Option<InverseAction>) {
+    fn push_log_entry(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, config_edit_id: Option<String>, timestamp: Option<String>, inverse: Option<InverseAction>) {
         self.next_command_seq += 1;
         self.command_log.push(CommandLogEntry {
             seq: self.next_command_seq,
@@ -4265,6 +4331,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             kind,
             timestamp: timestamp.unwrap_or_else(store::now_iso),
             edit_id,
+            config_edit_ids: config_edit_id.into_iter().collect(),
             count: 1,
             inverse,
         });
@@ -4279,7 +4346,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// `inverse` (computed from state BEFORE this dispatch) is only stored on a FRESH row — a folded
     /// row keeps its original inverse, since backwards on a folded "×N" row must undo the whole run,
     /// not just the last dispatch that folded into it.
-    fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>, inverse: Option<InverseAction>) {
+    fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>, config_edit_id: Option<String>, inverse: Option<InverseAction>) {
         let label = label
             .or_else(|| self.registry.get(action_id).map(|def| def.label.clone()))
             .or_else(|| self.registry.get_command(action_id).map(|def| def.label.clone()))
@@ -4292,10 +4359,17 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             last.count += 1;
             last.label = label;
             last.timestamp = store::now_iso();
+            // 🧮️ APPEND (never overwrite) — a folded row accumulates one distinct config edit per
+            // tick (each tick's config dispatch is a plain `Apply`, not an `AmendLast`); overwriting
+            // would drop earlier ticks' edit ids from `config_edit_ids`, making `backfill_command_log`
+            // wrongly think they were never logged and re-append them as phantom rows.
+            if let Some(id) = config_edit_id {
+                last.config_edit_ids.push(id);
+            }
             self.log_generation += 1;
             return;
         }
-        self.push_log_entry(action_id, label, kind, edit_id, None, inverse);
+        self.push_log_entry(action_id, label, kind, edit_id, config_edit_id, None, inverse);
     }
 
     /// @emoji 🕰️ Appends a command-log entry for every VCS edit not yet referenced by the log —
@@ -4319,13 +4393,33 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             })
             .collect();
         for (edit_id, label, timestamp) in missing {
-            self.push_log_entry("apply", label, ActionKind::Operation, Some(edit_id), Some(timestamp), None);
+            self.push_log_entry("apply", label, ActionKind::Operation, Some(edit_id), None, Some(timestamp), None);
+        }
+        // 🧮️ Same backfill, for the CONFIG store's own edits — a config edit reached via `seed`/
+        // `load_config_pack`/ingest never passes through `dispatch_emit` either.
+        let logged_config: HashSet<&str> = self.command_log.iter().flat_map(|entry| entry.config_edit_ids.iter().map(String::as_str)).collect();
+        let missing_config: Vec<(String, String, String)> = self
+            .config_store
+            .envelope()
+            .vcs
+            .edits
+            .iter()
+            .filter(|edit| !logged_config.contains(edit.id.as_str()))
+            .map(|edit| {
+                let label = edit.description.clone().unwrap_or_else(|| edit.forwards.first().map(OpText::print_op).unwrap_or_else(|| edit.id.clone()));
+                (edit.id.clone(), label, edit.started_at.clone())
+            })
+            .collect();
+        for (config_edit_id, label, timestamp) in missing_config {
+            self.push_log_entry("configApply", label, ActionKind::Operation, None, Some(config_edit_id), Some(timestamp), None);
         }
     }
 
     fn build_history_view(&self) -> HistoryView {
         let applied_ids: HashSet<&str> = self.store.applied_edit_ids().iter().map(String::as_str).collect();
         let local_actor = self.store.local_actor_id();
+        let config_applied_ids: HashSet<&str> = self.config_store.applied_edit_ids().iter().map(String::as_str).collect();
+        let config_local_actor = self.config_store.local_actor_id();
         let mut commands: Vec<CommandView> = self
             .command_log
             .iter()
@@ -4335,9 +4429,15 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                 // 🪞️ Mirrors `store::DocumentStore::edit_is_local` (private to that crate): an edit
                 // with no recorded actor is treated as local, same as a real undo would.
                 let applied = entry.edit_id.as_deref().is_some_and(|edit_id| applied_ids.contains(edit_id));
-                // ⏪️ Two disjoint ways a row earns "backwards": edit-linked (applied + locally authored,
-                // the persisted VCS path) or memory-only (a stored `InverseAction`, the `View`/`Shell` path).
+                let latest_config_edit_id = entry.config_edit_ids.last().map(String::as_str);
+                let config_edit = latest_config_edit_id.and_then(|edit_id| self.config_store.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id));
+                let config_applied = latest_config_edit_id.is_some_and(|edit_id| config_applied_ids.contains(edit_id));
+                // ⏪️ Three disjoint ways a row earns "backwards": document edit-linked (applied +
+                // locally authored), config edit-linked (same, on the config store — B1's replacement
+                // for the old memory-only "View"-kind inverse), or memory-only (a stored
+                // `InverseAction`, the remaining `Shell`-kind `noteShellCommand` path).
                 let revertible = (applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor))
+                    || (config_applied && config_edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == config_local_actor))
                     || entry.inverse.is_some();
                 CommandView {
                     seq: entry.seq,
@@ -4346,6 +4446,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                     kind: entry.kind,
                     timestamp: entry.timestamp.clone(),
                     edit_id: entry.edit_id.clone(),
+                    config_edit_id: latest_config_edit_id.map(str::to_string),
                     op_lines,
                     applied,
                     revertible,
@@ -4523,62 +4624,56 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         }
     }
 
-    /// @emoji 🧮️ Shared arg materialization for `handle_action`/`handle_command`: fills declared
-    /// defaults over the staged args and rejects if any required arg is still missing.
-    fn materialize_args(label: &str, defs: &[ActionArgDef], args: Option<&Value>) -> Result<Value, String> {
-        let staged_dsl = args
-            .map(|value| to_dsl_value(value).unwrap_or(DslValue::Null))
-            .unwrap_or(DslValue::Object(Vec::new()));
-        let effective_dsl = effective_action_args(defs, &staged_dsl);
-        let missing = missing_required_args(defs, &effective_dsl);
-        if !missing.is_empty() {
-            return Err(format!("{label} missing required args: {missing:?}"));
-        }
-        semio_framework_core::from_dsl_value::<Value>(effective_dsl).map_err(|error| error)
-    }
+    // 🧮️ B1: `materialize_args` (JSON-args default-fill + required-arg enforcement for app-declared
+    // actions/commands, plus its now-unused `effective_action_args`/`missing_required_args` imports)
+    // was deleted — dead code once `dispatch_action`'s generic app-action fallback and
+    // `dispatch_command`'s registry-backed dispatch were removed (an app's own behavior now dispatches
+    // exclusively through the typed `Self::Command` channel, where a Rust caller supplies a complete
+    // value — there is no "missing arg" to materialize).
 
     /// @emoji 🧬️ Shared dispatch tail for `handle_action`/`handle_command`/`import_media`: given the
     /// app's `ActionEmit`, either records the op-less dispatch and returns an empty result, or commits
     /// `Apply`/`AmendLast`, records the resulting edit, and builds the `InvocationResult` from it.
     /// `verb` is the action/command id, used to resolve the registry kind/label and to synthesize the
     /// `InvocationId`.
-    fn dispatch_emit(&mut self, verb: &str, emit: ActionEmit<A::Operation, A::ConfigOperation>, meta: &ActionMeta) -> Result<InvocationResult, String> {
-        let ActionEmit { operations, config_operations, description, coalesce_key, effects, events, ui_scope, inverse } = emit;
+    /// @emoji 🧬️ B1: the single dispatch tail for BOTH `dispatch_typed_command` (the app's own
+    /// `Emit`) and the framework-reserved clipboard actions below — commits `document_operations` to
+    /// the document store and `config_operations` to the config store (independently, each its own
+    /// undo stack), records exactly one command-log row carrying whichever edit id(s) were produced,
+    /// and builds the resulting `InvocationResult` from the document side (config-only dispatches
+    /// never touch `KernelOperation`/space-sync — see `🔖️CommandLog`'s doc region for why).
+    fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Operation, A::ConfigOperation>, meta: &ActionMeta) -> Result<InvocationResult, String> {
+        let Emit { document_operations, config_operations, description, coalesce_key, effects, events, ui_scope } = emit;
+
+        // 🧮️ Config side dispatches first, independent of whether this verb ALSO touches the document
+        // — captures the resulting (possibly amended) config edit id for the command-log row below.
+        let mut config_edit_id: Option<String> = None;
         if !config_operations.is_empty() {
             self.config_store.set_local_actor_id(Some(meta.actor.clone()));
-            let config_coalesce = coalesce_key.clone();
-            let config_command = match config_coalesce {
-                Some(key) => DocumentCommand::AmendLast {
-                    operations: config_operations,
-                    coalesce_key: Some(format!("config:{key}")),
-                },
-                None => DocumentCommand::Apply {
-                    operations: config_operations,
-                    description: description.clone(),
-                },
+            let before_config_edit_id = self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
+            let config_command = match &coalesce_key {
+                Some(key) => DocumentCommand::AmendLast { operations: config_operations, coalesce_key: Some(format!("config:{key}")) },
+                None => DocumentCommand::Apply { operations: config_operations, description: description.clone() },
             };
             self.config_store.dispatch(config_command).map_err(|error| error.to_string())?;
             self.cache = None;
+            let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
+            config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
         }
-        if operations.is_empty() {
-            // 🧾️ The bugfix this ticket is about: an op-less dispatch used to return here without ever
-            // reaching the command log. An app-declared action logs under its declared kind (so an
-            // `Operation`-kind action that happened to produce zero operations — e.g. paste with no
-            // clipboard fragment — still gets a real row, `edit_id: None`, correctly filed under
-            // "Without Operations"); a declared command (no `ActionKind` of its own) logs as `Shell`;
-            // anything unresolved (registry-less test construction, an ad-hoc verb like an
-            // import-media port id) logs as `View`.
+
+        if document_operations.is_empty() {
+            // 🧾️ An app-declared action logs under its declared kind (so an `Operation`-kind action
+            // that happened to produce zero document operations — e.g. paste with no clipboard
+            // fragment, or a pure config-op dispatch — still gets a real row, `edit_id: None`,
+            // correctly filed under "Without Operations"); a declared command (no `ActionKind` of its
+            // own) logs as `Shell`; anything unresolved (registry-less test construction, an ad-hoc
+            // verb like an import-media port id) logs as `View`.
             let kind = match self.registry.get(verb) {
                 Some(def) => def.kind,
                 None if self.registry.get_command(verb).is_some() => ActionKind::Shell,
                 None => ActionKind::View,
             };
-            // ⏪️ `inverse` only makes sense for a `View` row this app computed itself — an unresolved or
-            // `Shell`-kind verb dispatched straight through `dispatch_emit` (rather than the
-            // `noteShellCommand` interception, which builds its own inverse from its own args) has no
-            // app behind it to have computed one, so it's dropped rather than stored misleadingly.
-            let inverse = matches!(kind, ActionKind::View).then_some(inverse).flatten();
-            self.record_command(verb, kind, description.clone(), None, inverse);
+            self.record_command(verb, kind, description.clone(), None, config_edit_id, None);
             return Ok(Self::empty_result(verb, meta, effects, events, ui_scope));
         }
         self.store.set_local_actor_id(Some(meta.actor.clone()));
@@ -4591,11 +4686,11 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         let log_label = description.clone();
         let vcs_command = match coalesce_key {
             Some(key) => DocumentCommand::AmendLast {
-                operations: operations,
+                operations: document_operations,
                 coalesce_key: Some(key),
             },
             None => DocumentCommand::Apply {
-                operations: operations,
+                operations: document_operations,
                 description,
             },
         };
@@ -4606,13 +4701,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         // existing entry's `op_lines` live (see `build_history_view`), it never appends a new entry.
         if !amended_same_edit {
             if let Some(edit_id) = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) {
-                // 🧾️ `verb` is an action id (`handle_action`) or a command id (`handle_command`) —
-                // `CommandDefinition` has no `ActionKind` (commands aren't View/Shell/History), and
-                // reaching here means operations were dispatched, so `Operation` is always correct.
+                // 🧾️ `verb` is the app's typed-command tag or a framework command id — `CommandDefinition`
+                // has no `ActionKind` (commands aren't View/Shell/History), and reaching here means
+                // operations were dispatched, so `Operation` is always correct.
                 let kind = self.registry.get(verb).map(|def| def.kind).unwrap_or(ActionKind::Operation);
                 // ⏪️ No memory `inverse` for an edit-linked row — the VCS edit's own `Operation::backwards`
                 // is already the real inverse, and `revertToCommand`'s edit_id branch replays that.
-                self.record_command(verb, kind, log_label, Some(edit_id), None);
+                self.record_command(verb, kind, log_label, Some(edit_id), config_edit_id, None);
             }
         }
         let tail_offset = if amended_same_edit { (before_forwards_len, before_backwards_len) } else { (0, 0) };
@@ -4620,14 +4715,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     }
 
     /// @emoji 🕰️ The actual body of `PluginApp::handle_action` — renamed to an inherent method so
-    /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖️CommandLog`). Intercepts
-    /// the injected history/revert/filter/`noteShellCommand` actions before the app ever sees them;
-    /// everything else (clipboard, and the app's own declared actions) falls through to `dispatch_emit`.
+    /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖️CommandLog`). B1:
+    /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard) — an app's own
+    /// behavior is dispatched exclusively through `dispatch_typed_command` now.
     fn dispatch_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        view_state: &ViewState,
         meta: &ActionMeta,
     ) -> Result<InvocationResult, String> {
         if HISTORY_ACTION_IDS.contains(&action) {
@@ -4638,7 +4732,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                     self.cache = None;
                     // 🧾️ Undo/redo/checkpoint/alternative are pure cursor motion (`edit_id: None`) —
                     // append-only: this NEVER removes a prior entry, including undo's.
-                    self.record_command(action, ActionKind::History, None, None, None);
+                    self.record_command(action, ActionKind::History, None, None, None, None);
                     // 🐢️ History actions (undo/redo/checkpoint/alternative) can touch any part of the
                     // document — always Full, never opt into a narrower scope.
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
@@ -4656,17 +4750,18 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             self.refresh_cache()?;
             let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(Value::as_u64);
             // ⏪️ Only a `revertible` entry has a real anchor to revert to — see `CommandView::revertible`
-            // in `build_history_view`. Three disjoint shapes, branched below: (1) edit-linked (VCS undo
-            // to position), (2) `View`-kind memory-only (replay the inverse locally), (3) `Shell`-kind
-            // memory-only (bubble the inverse out — the plugin can't touch shell-owned state itself).
+            // in `build_history_view`. Four disjoint shapes, branched below: (1) document edit-linked
+            // (VCS undo to position), (2) config edit-linked (config-store undo to position — B1's
+            // replacement for the old memory-only "View"-kind inverse), (3) `Shell`-kind memory-only
+            // (bubble the inverse out — the plugin can't touch shell-owned state itself).
             let target = entry_seq.and_then(|seq| {
                 self.cache
                     .as_ref()
                     .and_then(|(_, _, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible))
-                    .map(|entry| (entry.edit_id.clone(), entry.kind, entry.inverse.clone()))
+                    .map(|entry| (entry.edit_id.clone(), entry.config_edit_id.clone(), entry.kind, entry.inverse.clone()))
             });
             match target {
-                Some((Some(edit_id), _, _)) => {
+                Some((Some(edit_id), _, _, _)) => {
                     let target_position = self.store.applied_edit_ids().iter().position(|id| *id == edit_id);
                     match target_position {
                         Some(position) => {
@@ -4683,20 +4778,36 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                             self.cache = None;
                             // 🧾️ One entry for the revert itself — the internal undos it performs are an
                             // implementation detail, not separately logged commands.
-                            self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None);
+                            self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None, None);
                             Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
                         }
                         None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
                     }
                 }
-                // ⏪️ `View`-kind memory-only: replay the stored inverse through the normal dispatch path —
-                // it logs its own new row (append-only, same invariant as VCS undo), so "backwards of
-                // backwards" naturally redoes. The app's own `handle_action` computes what happens.
-                Some((None, ActionKind::View, Some(inverse))) => self.dispatch_action(&inverse.action_id, inverse.args.as_ref(), view_state, meta),
+                // 🧮️ B1: config edit-linked — the config-store twin of the document branch above.
+                Some((None, Some(config_edit_id), _, _)) => {
+                    let target_position = self.config_store.applied_edit_ids().iter().position(|id| *id == config_edit_id);
+                    match target_position {
+                        Some(position) => {
+                            let undo_count = self.config_store.applied_edit_ids().len() - (position + 1);
+                            for _ in 0..undo_count {
+                                match self.config_store.dispatch(DocumentCommand::Undo) {
+                                    Ok(()) => {}
+                                    Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
+                                    Err(error) => return Err(error.to_string()),
+                                }
+                            }
+                            self.cache = None;
+                            self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None, None);
+                            Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
+                        }
+                        None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
+                    }
+                }
                 // ⏪️ `Shell`-kind memory-only: the plugin has no access to shell-owned state (theme/dock/
                 // panel layout live client-side), so it can't replay this itself — bubble the inverse out
                 // as a `HostEffect` for the shell to redispatch through its own command funnel.
-                Some((None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(
+                Some((None, None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(
                     action,
                     meta,
                     vec![HostEffect::ReplayShellCommand {
@@ -4734,7 +4845,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         } else if action == NOTE_SHELL_COMMAND_ACTION_ID {
             // 🗒️ Interception happens BEFORE the app ever sees this action — records a shell effect
             // that already happened (dock drag, window resize/close, theme/locale change, …) into the
-            // session command log for effects dispatched outside the normal `ActionEmit`/`dispatch_emit` path.
+            // session command log for effects dispatched outside the normal `Emit`/`dispatch_emit` path.
             let command_id = args.and_then(|value| value.get("commandId")).and_then(Value::as_str)
                 .ok_or_else(|| "noteShellCommand missing required commandId".to_string())?;
             let label = args.and_then(|value| value.get("label")).and_then(Value::as_str).unwrap_or(command_id);
@@ -4753,7 +4864,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                     action_id: inverse_command_id.to_string(),
                     args: args.and_then(|value| value.get("inverseArgs")).cloned(),
                 });
-            self.record_command(command_id, ActionKind::Shell, Some(label), None, inverse);
+            self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse);
             Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None))
         } else if CLIPBOARD_ACTION_IDS.contains(&action) {
             self.refresh_cache()?;
@@ -4762,14 +4873,14 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                 let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
                 match action {
-                    "copy" => match app.copy_fragment(&doc, &cfg, view_state) {
-                        Ok(fragment) => ActionEmit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..ActionEmit::default() },
-                        Err(_) => ActionEmit::default(),
+                    "copy" => match app.copy_fragment(&doc, &cfg) {
+                        Ok(fragment) => Emit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..Emit::default() },
+                        Err(_) => Emit::default(),
                     },
                     "cut" => {
-                        let fragment = app.copy_fragment(&doc, &cfg, view_state).ok();
-                        let operations = app.cut_operations(&doc, &cfg, view_state);
-                        let mut emit = ActionEmit::operations(operations);
+                        let fragment = app.copy_fragment(&doc, &cfg).ok();
+                        let operations = app.cut_operations(&doc, &cfg);
+                        let mut emit = Emit::operations(operations);
                         emit.description = Some("Cut".into());
                         if let Some(fragment) = fragment {
                             emit.effects.push(HostEffect::ClipboardWrite { fragment });
@@ -4784,13 +4895,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                         match fragment {
                             Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
                                 Ok(operations) => {
-                                    let mut emit = ActionEmit::operations(operations);
+                                    let mut emit = Emit::operations(operations);
                                     emit.description = Some("Paste".into());
                                     emit
                                 }
-                                Err(_) => ActionEmit::default(),
+                                Err(_) => Emit::default(),
                             },
-                            None => ActionEmit::default(),
+                            None => Emit::default(),
                         }
                     }
                     _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
@@ -4798,79 +4909,83 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             };
             self.dispatch_emit(action, emit, meta)
         } else {
-            self.refresh_cache()?;
-            let definition = self.registry.get(action).cloned();
-            let materialized_args: Option<Value> = definition.as_ref()
-                .map(|def| Self::materialize_args(&format!("action '{action}'"), &def.args, args))
-                .transpose()?;
-            let dispatch_args = materialized_args.as_ref().or(args);
-            let emit = {
-                let VcsDocumentApp { app, cache, .. } = self;
-                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-                let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
-                app.handle_action(action, dispatch_args, &doc, &cfg, view_state)
-            };
-            if let Some(def) = &definition {
-                if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.operations.is_empty() {
-                    return Err(format!(
-                        "{:?}-kind action '{action}' must not emit operations",
-                        def.kind
-                    ));
-                }
-            }
-            self.dispatch_emit(action, emit, meta)
+            Err(format!(
+                "action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+            ))
         }
     }
 
-    /// @emoji 🕰️ The actual body of `PluginApp::handle_command` — see `dispatch_action`'s doc.
+    /// @emoji 🕰️ FRAMEWORK-reserved command dispatch — see `dispatch_action`'s doc. There are currently
+    /// no framework-reserved COMMANDS (only actions), so this always errors pointing at the typed
+    /// channel; kept as a distinct entry point so `PluginApp::handle_command`'s object-safe shape (used
+    /// by `CommandDefinition`-driven host call sites) stays stable.
     fn dispatch_command(
         &mut self,
         command: &str,
-        args: Option<&Value>,
-        view_state: &ViewState,
-        meta: &ActionMeta,
+        _args: Option<&Value>,
+        _meta: &ActionMeta,
     ) -> Result<InvocationResult, String> {
-        self.refresh_cache()?;
-        let definition = self.registry.get_command(command).cloned()
-            .ok_or_else(|| format!("unknown command '{command}'"))?;
-        let materialized_args = Self::materialize_args(&format!("command '{command}'"), &definition.args, args)?;
-        let emit = {
-            let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
-            app.handle_command(command, Some(&materialized_args), &doc, &cfg, view_state)
-        };
-        self.dispatch_emit(command, emit, meta)
+        Err(format!("command '{command}' — app commands are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"))
     }
 
-    /// 🎯️ The actual body of `PluginApp::handle_command_frame` — see `dispatch_action`'s doc. Prefers
-    /// `DocumentApp::handle_typed_command`; when the app returns `None` (hasn't migrated to typed
-    /// commands yet) falls back to decoding `command_bytes` as a `store::pack_rt::decode_wire_value`
-    /// `{kind, name, args}` envelope and routing through `dispatch_action`/`dispatch_command` unchanged
-    /// — so an unmigrated app keeps working byte-identically over the new binary channel.
-    fn dispatch_command_frame(&mut self, command_bytes: &[u8], view_state: &ViewState, meta: &ActionMeta) -> Result<InvocationResult, String> {
+    /// 🎯️ The actual body of `PluginApp::handle_command_frame`. `command_bytes.first() == Some(1)`
+    /// (the `OpBinary` format tag) means "typed `A::Command`" — decoded and dispatched via
+    /// `dispatch_typed_command`. Anything else is the legacy `{kind,name,args}` wire-value envelope,
+    /// routed through `dispatch_action`/`dispatch_command` — now FRAMEWORK-reserved verbs only.
+    fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+        if command_bytes.first().copied() == Some(1) {
+            return self.dispatch_typed_command(command_bytes, meta);
+        }
+        let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+        let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+        let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+        let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+        if kind == "command" {
+            self.dispatch_command(&name, args.as_ref(), meta)
+        } else {
+            self.dispatch_action(&name, args.as_ref(), meta)
+        }
+    }
+
+    /// @emoji 🎯️ B1: decodes `command_bytes` as the app's typed `A::Command` (`OpBinary::decode_op`)
+    /// and calls the pure `DocumentApp::handle` — the sole surface for an app's own behavior now.
+    fn dispatch_typed_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+        let command = <A::Command as ::protocol::OpBinary>::decode_op(command_bytes).map_err(|error| error.to_string())?;
+        self.dispatch_typed_command_inner(command, meta)
+    }
+
+    /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
+    /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
+    fn dispatch_typed_command_inner(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
         self.refresh_cache()?;
-        let typed = {
+        let (verb, emit) = {
             let VcsDocumentApp { app, cache, .. } = self;
             let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
-            app.handle_typed_command(command_bytes, &doc, &cfg, view_state)
+            let verb = app.command_id(&command).to_string();
+            (verb, app.handle(&command, &doc, &cfg))
         };
-        match typed {
-            Some(Ok(emit)) => self.dispatch_emit("typed-command", emit, meta),
-            Some(Err(message)) => Err(message),
-            None => {
-                let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
-                let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
-                let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
-                let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
-                if kind == "command" {
-                    self.dispatch_command(&name, args.as_ref(), view_state, meta)
-                } else {
-                    self.dispatch_action(&name, args.as_ref(), view_state, meta)
-                }
+        // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
+        // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
+        // typed rather than stringly. Only enforced when the registry actually declares `verb` (a
+        // registry-less construction, or a command whose id isn't declared, skips this check).
+        if let Some(def) = self.registry.get(&verb) {
+            if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.document_operations.is_empty() {
+                return Err(format!("{:?}-kind command '{verb}' must not emit operations", def.kind));
             }
         }
+        self.dispatch_emit(&verb, emit, meta)
+    }
+
+    /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
+    /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
+    /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
+    /// already holds a concrete `A::Command` value.
+    pub fn dispatch_typed(&mut self, command: A::Command, meta: &ActionMeta) -> Result<InvocationResult, String> {
+        let log_generation_before = self.log_generation;
+        let result = self.dispatch_typed_command_inner(command, meta)?;
+        Ok(self.finish_recorded(log_generation_before, "typed-command", result))
     }
 
     /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
@@ -4883,6 +4998,18 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             app.import_media(port, media, &doc).map_err(|error| error.to_string())?
         };
         self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+    }
+
+    /// @emoji 🧮️ B1: dispatches a binary-encoded `store::DocumentCommand<A::ConfigOperation>` against
+    /// the config store — real work for `AppCommand::ConfigCommand` (replaces the deleted
+    /// `apply_config_bytes` whole-record-replace legacy path).
+    fn dispatch_config_command_inner(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+        self.config_store.set_local_actor_id(Some(meta.actor.clone()));
+        self.config_store.dispatch_binary(command_bytes).map_err(|error| error.to_string())?;
+        self.cache = None;
+        let config_edit_id = self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
+        self.record_command("configCommand", ActionKind::Shell, None, None, config_edit_id, None);
+        Ok(Self::empty_result("configCommand", meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::Full))
     }
 
     /// @emoji 🕰️ Upgrades `result.ui_scope` to also refresh the framework history panel body whenever
@@ -4947,11 +5074,10 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         &mut self,
         action: &str,
         args: Option<&Value>,
-        view_state: &ViewState,
         meta: &ActionMeta,
     ) -> Result<InvocationResult, String> {
         let log_generation_before = self.log_generation;
-        let result = self.dispatch_action(action, args, view_state, meta)?;
+        let result = self.dispatch_action(action, args, meta)?;
         Ok(self.finish_recorded(log_generation_before, action, result))
     }
 
@@ -4959,22 +5085,39 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         &mut self,
         command: &str,
         args: Option<&Value>,
-        view_state: &ViewState,
         meta: &ActionMeta,
     ) -> Result<InvocationResult, String> {
         let log_generation_before = self.log_generation;
-        let result = self.dispatch_command(command, args, view_state, meta)?;
+        let result = self.dispatch_command(command, args, meta)?;
         Ok(self.finish_recorded(log_generation_before, command, result))
     }
 
-    fn handle_command_frame(&mut self, command_bytes: &[u8], view_state: &ViewState, meta: &ActionMeta) -> Result<InvocationResult, String> {
+    fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
         let log_generation_before = self.log_generation;
-        let result = self.dispatch_command_frame(command_bytes, view_state, meta)?;
+        let result = self.dispatch_command_frame(command_bytes, meta)?;
         Ok(self.finish_recorded(log_generation_before, "typed-command", result))
     }
 
-    fn apply_config_bytes(&mut self, config_bytes: &[u8]) -> Result<(), String> {
-        self.app.apply_config_bytes(config_bytes)
+    fn config_pack(&self) -> Result<store::DocumentPackFiles, String> {
+        store::print_document_pack(self.config_store.envelope()).map_err(|error| error.to_string())
+    }
+
+    fn load_config_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), String> {
+        let parsed: store::ParsedDocumentText<A::Config, A::ConfigOperation> =
+            store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.to_string())?;
+        let (applied, redo) = match &parsed.envelope.cursor {
+            Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
+            None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+        };
+        self.config_store.set_state(parsed.envelope, applied, redo);
+        self.cache = None;
+        Ok(())
+    }
+
+    fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta) -> Result<InvocationResult, String> {
+        let log_generation_before = self.log_generation;
+        let result = self.dispatch_config_command_inner(command_bytes, meta)?;
+        Ok(self.finish_recorded(log_generation_before, "configCommand", result))
     }
 
     fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), String> {
@@ -5065,63 +5208,63 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             let doc = DocumentView { projection: &projection, history: &history };
             let config = self.config_store.projection().unwrap_or_else(|_| A::Config::default());
             let cfg = ConfigView { projection: &config };
-            return Ok(self.app.render(body_key, &doc, &cfg, view_state));
+            return Ok(self.app.render(body_key, &doc, &cfg));
         }
         let VcsDocumentApp { app, cache, .. } = self;
         let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history };
         let cfg = ConfigView { projection: config };
-        Ok(app.render(body_key, &doc, &cfg, view_state))
+        Ok(app.render(body_key, &doc, &cfg))
     }
 
-    fn window_engagements(&mut self, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
         if self.refresh_cache().is_err() {
             return HashMap::new();
         }
         let VcsDocumentApp { app, cache, .. } = self;
         let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
-        app.window_engagements(&doc, &cfg, view_state)
+        app.window_engagements(&doc, &cfg)
     }
 
-    fn window_measures(&mut self, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
         if self.refresh_cache().is_err() {
             return HashMap::new();
         }
         let VcsDocumentApp { app, cache, .. } = self;
         let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
-        app.window_measures(&doc, &cfg, view_state)
+        app.window_measures(&doc, &cfg)
     }
 
-    fn tool_measures(&mut self, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
         if self.refresh_cache().is_err() {
             return HashMap::new();
         }
         let VcsDocumentApp { app, cache, .. } = self;
         let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
-        app.tool_measures(&doc, &cfg, view_state)
+        app.tool_measures(&doc, &cfg)
     }
 
-    fn pending_effects(&mut self, view_state: &ViewState) -> Vec<HostEffect> {
+    fn pending_effects(&mut self) -> Vec<HostEffect> {
         if self.refresh_cache().is_err() {
             return Vec::new();
         }
         let VcsDocumentApp { app, cache, .. } = self;
         let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
-        app.pending_effects(&doc, &cfg, view_state)
+        app.pending_effects(&doc, &cfg)
     }
 
-    fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewState) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(&mut self, request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
         if self.refresh_cache().is_err() {
             return Vec::new();
         }
         let VcsDocumentApp { app, cache, registry, .. } = self;
         let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
-        app.context_menu(request, &doc, &cfg, view_state, registry)
+        app.context_menu(request, &doc, &cfg, registry)
     }
 
     fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
@@ -5146,8 +5289,12 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         app.media_fingerprint(port, &doc)
     }
 
-    fn app_labels(&mut self, view_state: &ViewState) -> AppLabelsOverlay {
-        self.app.app_labels(view_state)
+    fn app_labels(&mut self) -> AppLabelsOverlay {
+        if self.refresh_cache().is_err() {
+            return AppLabelsOverlay::default();
+        }
+        let config = self.cache.as_ref().map(|(_, _, config, _)| config.clone()).unwrap_or_default();
+        self.app.app_labels(&ConfigView { projection: &config })
     }
 }
 
@@ -5175,7 +5322,6 @@ impl PluginBundle {
                 label: label.into(),
                 version: version.into(),
                 apps: Vec::new(),
-                workflows: Vec::new(),
                 examples: Vec::new(),
                 capabilities: Vec::new(),
                 contributions: Vec::new(),
@@ -5236,9 +5382,6 @@ impl PluginBundle {
         for mut example in app.examples {
             example.app_id = app_id.clone();
             self.manifest.examples.push(example);
-        }
-        if let Some(workflow) = app.workflow {
-            self.manifest.workflows.push(workflow);
         }
         self.apps
             .insert(self.manifest.apps.last().unwrap().id.clone(), Box::new(factory));
@@ -5343,12 +5486,6 @@ fn set_instance_view_state(instance_id: u32, view_state: ViewState) {
     INSTANCE_VIEW_STATES.with(|slot| { slot.borrow_mut().insert(instance_id, view_state); });
 }
 
-/// 🪟️ The `ViewState` last recorded for `instance_id` via `set_instance_view_state`, or
-/// `ViewState::default()` when no `Command` has been processed yet.
-fn instance_view_state(instance_id: u32) -> ViewState {
-    INSTANCE_VIEW_STATES.with(|slot| slot.borrow().get(&instance_id).cloned()).unwrap_or_default()
-}
-
 /// 🗣️ Decodes a packed `ViewState` payload (empty → default) and records it for `instance_id`.
 fn adopt_instance_view_state(instance_id: u32, view_state_bytes: &[u8]) -> ViewState {
     let view_state = if view_state_bytes.is_empty() {
@@ -5451,7 +5588,6 @@ pub fn plugin_manifest() -> PluginManifest {
                 label: "Empty".into(),
                 version: "0.0.0".into(),
                 apps: vec![],
-                workflows: vec![],
                 examples: vec![],
                 capabilities: vec![],
                 contributions: vec![],
@@ -5502,11 +5638,6 @@ pub fn plugin_handle_action(
         serde_json::from_str(action_json).map_err(|error| error.to_string())?;
     let context: Value =
         serde_json::from_str(context_json).map_err(|error| error.to_string())?;
-    let view_state: ViewState = context
-        .get("viewState")
-        .cloned()
-        .map(|value| serde_json::from_value(value).unwrap_or_default())
-        .unwrap_or_default();
     let action_name = action.get("action").and_then(|value| value.as_str()).unwrap_or("");
     let args = action.get("args").cloned();
     let actor = context
@@ -5517,7 +5648,7 @@ pub fn plugin_handle_action(
     let meta = ActionMeta { actor, instance_id };
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
-        instance.app.handle_action(action_name, args.as_ref(), &view_state, &meta)
+        instance.app.handle_action(action_name, args.as_ref(), &meta)
     })
 }
 
@@ -5532,11 +5663,6 @@ pub fn plugin_handle_command(
         serde_json::from_str(command_json).map_err(|error| error.to_string())?;
     let context: Value =
         serde_json::from_str(context_json).map_err(|error| error.to_string())?;
-    let view_state: ViewState = context
-        .get("viewState")
-        .cloned()
-        .map(|value| serde_json::from_value(value).unwrap_or_default())
-        .unwrap_or_default();
     let command_name = command.get("command").and_then(|value| value.as_str()).unwrap_or("");
     let args = command.get("args").cloned();
     let actor = context
@@ -5547,7 +5673,7 @@ pub fn plugin_handle_command(
     let meta = ActionMeta { actor, instance_id };
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
-        instance.app.handle_command(command_name, args.as_ref(), &view_state, &meta)
+        instance.app.handle_command(command_name, args.as_ref(), &meta)
     })
 }
 
@@ -5839,7 +5965,7 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         // chain's `computing_json` must be fresh by the time this same pass renders the graph, or a
         // cold-start load would render one full refresh cycle behind (nothing flagged as computing
         // until the *next* refresh).
-        response.requested_effects = instance.app.pending_effects(&request.view_state);
+        response.requested_effects = instance.app.pending_effects();
 
         for entry in &request.windows {
             // 🪟️ Stamp this window's instance id and its own active utility into the view state before
@@ -5869,22 +5995,22 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         // practice; wire this up once the utilities API refactor lands.
         let _ = &request.utilities;
         if let Some(requested) = &request.engagements {
-            let engagements = instance.app.window_engagements(&request.view_state);
+            let engagements = instance.app.window_engagements();
             let (hash, value) = ui_refresh_section(&engagements, requested.hash.as_deref());
             response.engagements = Some(SectionResponse { key: "engagements".into(), hash, value });
         }
         if let Some(requested) = &request.measures {
-            let measures = instance.app.window_measures(&request.view_state);
+            let measures = instance.app.window_measures();
             let (hash, value) = ui_refresh_section(&measures, requested.hash.as_deref());
             response.measures = Some(SectionResponse { key: "measures".into(), hash, value });
         }
         if let Some(requested) = &request.tools {
-            let tool_measures = instance.app.tool_measures(&request.view_state);
+            let tool_measures = instance.app.tool_measures();
             let (hash, value) = ui_refresh_section(&tool_measures, requested.hash.as_deref());
             response.tools = Some(SectionResponse { key: "tools".into(), hash, value });
         }
         if let Some(requested) = &request.labels {
-            let mut overlay = instance.app.app_labels(&request.view_state);
+            let mut overlay = instance.app.app_labels();
             for id in &panel_tab_ids {
                 if let Some(label) = framework_panel_tab_label(id, is_de) {
                     overlay.panel_tab_labels.entry(id.clone()).or_insert_with(|| label.into());
@@ -5909,6 +6035,9 @@ pub fn plugin_context_menu(instance_id: u32, request_json: &str) -> Result<Strin
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct ContextMenuWireRequest {
+        // 🧮️ B1: kept for wire-shape compatibility with the host's request payload (still sent) but no
+        // longer forwarded into `DocumentApp::context_menu`, which dropped `ViewState` entirely.
+        #[allow(dead_code)]
         view_state: ViewState,
         menu: UiMenuRef,
         #[serde(default)]
@@ -5928,7 +6057,7 @@ pub fn plugin_context_menu(instance_id: u32, request_json: &str) -> Result<Strin
     };
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
-        let items = instance.app.context_menu(&request, &wire.view_state);
+        let items = instance.app.context_menu(&request);
         Ok(serde_json::to_string(&ContextMenuResponse { items }).unwrap_or_else(|_| r#"{"items":[]}"#.into()))
     })
 }
@@ -6005,11 +6134,19 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 }
                 set_instance_actor(instance_id, actor);
                 if !config.is_empty() {
-                    let applied = with_instances_mut(|list| {
-                        let instance = find_instance(list, instance_id)?;
-                        instance.app.apply_config_bytes(&config)
-                    });
-                    if let Err(message) = applied {
+                    // 🧮️ B1: `Hello.config` carries the SAME `store::encode_document_pack_bytes(pack,
+                    // spr)` wire shape `AppCommand::LoadConfig` does — a whole config-artifact snapshot,
+                    // loaded through the real config `DocumentStore` rather than the deleted
+                    // `apply_config_bytes` whole-record-replace legacy path.
+                    let loaded = store::decode_document_pack_bytes(&config)
+                        .map_err(|error| error.to_string())
+                        .and_then(|(pack, spr)| {
+                            with_instances_mut(|list| {
+                                let instance = find_instance(list, instance_id)?;
+                                instance.app.load_config_pack(&store::DocumentPackFiles { pack, spr, ops: String::new() })
+                            })
+                        });
+                    if let Err(message) = loaded {
                         frames.push(protocol::AppFrame::Error { in_reply_to: None, code: "config".into(), message });
                         continue;
                     }
@@ -6018,21 +6155,29 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 frames.push(protocol::AppFrame::Welcome { channel_version: protocol::CHANNEL_VERSION, instance: instance_id, manifest: manifest_bytes });
             }
             protocol::AppCommand::ConfigCommand { seq, command } => {
-                let applied = with_instances_mut(|list| {
+                // 🧮️ B1: `command` is a binary-encoded `store::DocumentCommand<A::ConfigOperation>` —
+                // real dispatch against the config store (replaces the deleted `apply_config_bytes`
+                // whole-record-replace legacy path); undo/redo/checkpoint all work on config now.
+                let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
+                let dispatched = with_instances_mut(|list| {
                     let instance = find_instance(list, instance_id)?;
-                    instance.app.apply_config_bytes(&command)
+                    instance.app.dispatch_config_command(&command, &meta)
                 });
-                match applied {
-                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                match dispatched {
+                    Ok(result) => {
+                        mutated = true;
+                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                        push_invocation_side_frames(&mut frames, seq, &result);
+                    }
                     Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "config".into(), message }),
                 }
             }
             protocol::AppCommand::Command { seq, command, view_state } => {
-                let view_state = adopt_instance_view_state(instance_id, &view_state);
+                adopt_instance_view_state(instance_id, &view_state);
                 let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
                 let dispatched = with_instances_mut(|list| {
                     let instance = find_instance(list, instance_id)?;
-                    instance.app.handle_command_frame(&command, &view_state, &meta)
+                    instance.app.handle_command_frame(&command, &meta)
                 });
                 match dispatched {
                     Ok(result) => {
@@ -6069,11 +6214,11 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                                 let node = instance.app.render(&probe.key, None, &view_state)?;
                                 channel_refresh_section(&node, probe.hash)
                             }
-                            SECTION_KIND_ENGAGEMENTS => channel_refresh_section(&instance.app.window_engagements(&view_state), probe.hash),
-                            SECTION_KIND_MEASURES => channel_refresh_section(&instance.app.window_measures(&view_state), probe.hash),
-                            SECTION_KIND_TOOLS => channel_refresh_section(&instance.app.tool_measures(&view_state), probe.hash),
+                            SECTION_KIND_ENGAGEMENTS => channel_refresh_section(&instance.app.window_engagements(), probe.hash),
+                            SECTION_KIND_MEASURES => channel_refresh_section(&instance.app.window_measures(), probe.hash),
+                            SECTION_KIND_TOOLS => channel_refresh_section(&instance.app.tool_measures(), probe.hash),
                             SECTION_KIND_LABELS => {
-                                let mut overlay = instance.app.app_labels(&view_state);
+                                let mut overlay = instance.app.app_labels();
                                 for id in &panel_tab_ids {
                                     if let Some(label) = framework_panel_tab_label(id, is_de) {
                                         overlay.panel_tab_labels.entry(id.clone()).or_insert_with(|| label.into());
@@ -6124,11 +6269,10 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                     });
                     continue;
                 }
-                let view_state = instance_view_state(instance_id);
                 let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
                 let dispatched = with_instances_mut(|list| {
                     let instance = find_instance(list, instance_id)?;
-                    instance.app.handle_action(&action, args.as_ref(), &view_state, &meta)
+                    instance.app.handle_action(&action, args.as_ref(), &meta)
                 });
                 match dispatched {
                     Ok(result) => {
@@ -6164,10 +6308,11 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
             },
             protocol::AppCommand::LoadConfig { seq, pack, spr } => {
-                let wire = store::encode_document_pack_bytes(&pack, &spr);
+                // 🧮️ B1: real work — loads straight into the config `DocumentStore` (was routed
+                // through the deleted `apply_config_bytes` whole-record-replace legacy path).
                 let applied = with_instances_mut(|list| {
                     let instance = find_instance(list, instance_id)?;
-                    instance.app.apply_config_bytes(&wire)
+                    instance.app.load_config_pack(&store::DocumentPackFiles { pack, spr, ops: String::new() })
                 });
                 match applied {
                     Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
@@ -6175,7 +6320,16 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 }
             }
             protocol::AppCommand::ReadConfig { seq } => {
-                frames.push(protocol::AppFrame::Config { in_reply_to: seq, pack: Vec::new(), spr: Vec::new(), ops: String::new() });
+                // 🧮️ B1: real work — the config store's current pack+spr+ops (was a stub always
+                // returning empty bytes).
+                let read = with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    instance.app.config_pack()
+                });
+                match read {
+                    Ok(files) => frames.push(protocol::AppFrame::Config { in_reply_to: seq, pack: files.pack, spr: files.spr, ops: files.ops }),
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "config".into(), message }),
+                }
             },
             protocol::AppCommand::AttachBackbone { seq, uri } => match plugin_attach_backbone(instance_id, &uri) {
                 Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
@@ -6221,10 +6375,9 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
     }
 
     if mutated {
-        let view_state = instance_view_state(instance_id);
         let effects = with_instances_mut(|list| {
             let instance = find_instance(list, instance_id)?;
-            Ok(instance.app.pending_effects(&view_state))
+            Ok(instance.app.pending_effects())
         })
         .unwrap_or_default();
         if !effects.is_empty() {
@@ -6316,13 +6469,16 @@ macro_rules! semio_plugin {
 
 #[cfg(test)]
 mod semio_plugin_macro_tests {
-    //! 🧪️ The plugin contract's own unit test: a `TestApp` implementing the typed `DocumentApp`
-    //! surface, wrapped in `VcsDocumentApp`, exercising typed operations with true inverses, view
-    //! actions that emit no operations, history interception, and remote-operation ingest idempotency.
+    //! 🧪️ The plugin contract's own unit test: a `TestApp` implementing the pure `DocumentApp`
+    //! surface (B1), wrapped in `VcsDocumentApp`, exercising typed operations with true inverses, config
+    //! operations that emit no document operations, history interception, and remote-operation ingest
+    //! idempotency. `TestCommand` is `TestApp`'s typed `Self::Command`; framework-reserved verbs
+    //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
+    //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
 
     use crate::app::{
-        ActionEmit, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, HistoryCommandFilter, HistoryView,
-        InverseAction, Menu, NoConfig, NoConfigOperation, PluginApp, VcsDocumentApp, ui_history_panel,
+        ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, Emit, HistoryCommandFilter, HistoryView,
+        Menu, PluginApp, VcsDocumentApp, ui_history_panel,
     };
     use crate::{selection_count_phrase, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState, ui_text};
     use ui_wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
@@ -6330,7 +6486,7 @@ mod semio_plugin_macro_tests {
     use semio_framework_core::{ActionArgDef, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
     use ui_wgpu::FRAMEWORK_HISTORY_BODY_KEY;
     use serde::{Deserialize, Serialize};
-    use serde_json::{json, Value};
+    use serde_json::json;
     use store::{Backbone, BackboneMessage, MemoryBackbone};
     use protocol::{Operation, OperationDiff};
 
@@ -6392,21 +6548,96 @@ mod semio_plugin_macro_tests {
         }
     }
 
-    /// 🧪️ App under test: `selected` is ephemeral view state living in the app struct (never in the
-    /// document), demonstrating that view actions mutate the struct and emit no operations.
-    /// `received_actions` records every action id THIS app's own `handle_action` was actually called
-    /// with — used to prove framework-owned interceptions (e.g. `noteShellCommand`) never reach it.
+    /// 🧪️ B1: `TestApp`'s config — `selected` moved out of an app-struct `RefCell` into a real config
+    /// artifact (was ephemeral view state demonstrated via `ActionEmit::view_with_inverse`; now a
+    /// config operation with a real `backwards`, proving the B1 replacement end to end).
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+    #[dsl(extension = "testkit-macro-cfg")]
+    struct TestConfig {
+        selected: Option<String>,
+    }
+
+    impl store::ConfigRecord for TestConfig {}
+
+    impl OperationDiff<TestConfig> for TestConfig {
+        fn apply(&self, _base: &TestConfig) -> TestConfig {
+            self.clone()
+        }
+        fn absorb(&mut self, other: Self) {
+            *self = other;
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    enum TestConfigOperation {
+        #[dsl(key = "set-selected")]
+        SetSelected { value: Option<String> },
+        /// 🧮️ Full-snapshot restore — every `backwards()` below returns this, mirroring the
+        /// `ShootingConfigOperation` pilot pattern (see `shooting_op`).
+        #[dsl(key = "snapshot")]
+        Snapshot { selected: Option<String> },
+    }
+
+    impl Operation<TestConfig> for TestConfigOperation {
+        type Diff = TestConfig;
+
+        fn diff(&self, _base: &TestConfig) -> TestConfig {
+            match self {
+                TestConfigOperation::SetSelected { value } => TestConfig { selected: value.clone() },
+                TestConfigOperation::Snapshot { selected } => TestConfig { selected: selected.clone() },
+            }
+        }
+
+        fn backwards(&self, base: &TestConfig) -> Vec<Self> {
+            vec![TestConfigOperation::Snapshot { selected: base.selected.clone() }]
+        }
+    }
+
+    /// 🧪️ B1: `TestApp`'s typed command enum — the sole dispatch surface for its own behavior.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+    enum TestCommand {
+        #[dsl(key = "increment")]
+        Increment,
+        #[dsl(key = "set-label")]
+        SetLabel { value: String },
+        #[dsl(key = "amend-label")]
+        AmendLabel { value: String },
+        #[dsl(key = "commit-label")]
+        CommitLabel { value: String },
+        #[dsl(key = "bad-view")]
+        BadView,
+        #[dsl(key = "select")]
+        Select { id: Option<String> },
+        #[dsl(key = "navigate")]
+        Navigate,
+        #[dsl(key = "noop-operation")]
+        NoopOperation,
+        #[dsl(key = "view-no-scope")]
+        ViewNoScope,
+        #[dsl(key = "view-partial-scope")]
+        ViewPartialScope,
+        #[dsl(key = "increment-via-command")]
+        IncrementViaCommand,
+        #[dsl(key = "set-label-via-command")]
+        SetLabelViaCommand { value: String },
+        #[dsl(key = "set-active-utility")]
+        SetActiveUtility { utility_id: String },
+    }
+
+    /// 🧪️ App under test. `received_actions` records every command id THIS app's own `handle` was
+    /// actually called with — used to prove framework-owned interceptions (e.g. `noteShellCommand`)
+    /// never reach it.
     #[derive(Default)]
     struct TestApp {
-        selected: std::cell::RefCell<Option<String>>,
         received_actions: std::cell::RefCell<Vec<String>>,
     }
 
     impl DocumentApp for TestApp {
         type Projection = TestProjection;
         type Operation = TestOperation;
-        type Config = NoConfig;
-        type ConfigOperation = NoConfigOperation;
+        type Config = TestConfig;
+        type ConfigOperation = TestConfigOperation;
+        type Command = TestCommand;
 
         fn app_id(&self) -> &str {
             "synthetic-play"
@@ -6420,65 +6651,65 @@ mod semio_plugin_macro_tests {
             TestProjection::default()
         }
 
-        fn handle_action(
+        fn command_id(&self, command: &TestCommand) -> &str {
+            match command {
+                TestCommand::Increment => "increment",
+                TestCommand::SetLabel { .. } => "setLabel",
+                TestCommand::AmendLabel { .. } => "amendLabel",
+                TestCommand::CommitLabel { .. } => "commitLabel",
+                TestCommand::BadView => "badView",
+                TestCommand::Select { .. } => "select",
+                TestCommand::Navigate => "navigate",
+                TestCommand::NoopOperation => "noopOperation",
+                TestCommand::ViewNoScope => "viewNoScope",
+                TestCommand::ViewPartialScope => "viewPartialScope",
+                TestCommand::IncrementViaCommand => "incrementViaCommand",
+                TestCommand::SetLabelViaCommand { .. } => "setLabelViaCommand",
+                TestCommand::SetActiveUtility { .. } => "setActiveUtility",
+            }
+        }
+
+        fn handle(
             &self,
-            action: &str,
-            args: Option<&Value>,
+            command: &TestCommand,
             doc: &DocumentView<'_, TestProjection>,
-            _cfg: &ConfigView<'_, NoConfig>,
-            view_state: &ViewState,
-        ) -> ActionEmit<TestOperation> {
-            self.received_actions.borrow_mut().push(action.to_string());
-            let label_arg = || {
-                args.and_then(|value| value.get("value"))
-                    .and_then(Value::as_str)
-                    .unwrap_or_default()
-                    .to_string()
-            };
-            match action {
-                "increment" => ActionEmit {
-                    operations: vec![TestOperation::SetCount { value: doc.projection.count + 1 }],
+            _cfg: &ConfigView<'_, TestConfig>,
+        ) -> Emit<TestOperation, TestConfigOperation> {
+            self.received_actions.borrow_mut().push(self.command_id(command).to_string());
+            match command {
+                TestCommand::Increment | TestCommand::IncrementViaCommand => Emit {
+                    document_operations: vec![TestOperation::SetCount { value: doc.projection.count + 1 }],
                     description: Some("increment".into()),
                     ..Default::default()
                 },
-                "setLabel" | "setLabelRequired" | "setLabelDefault" => {
-                    ActionEmit {
-                        operations: vec![TestOperation::SetLabel { value: label_arg() }],
-                        coalesce_key: Some("label".into()),
-                        ..Default::default()
-                    }
-                }
-                "amendLabel" => ActionEmit::amend(vec![TestOperation::SetLabel { value: label_arg() }], "label"),
-                "commitLabel" => ActionEmit::commit(vec![TestOperation::SetLabel { value: label_arg() }], "commit label"),
-                // 🧪️ A deliberately mis-behaving View action: emits operations it must not — the registry-backed
-                // kind-discipline check rejects it.
-                "badView" => ActionEmit::operations(vec![TestOperation::SetCount { value: 99 }]),
-                // 🧪️ Reads the host-owned active utility from view state (never the document) and echoes it
-                // as an event — proving `setActiveUtility` forwards `view_state.active_utility_id` and emits no operations.
-                "setActiveUtility" => ActionEmit::event(AppEvent {
+                TestCommand::SetLabel { value } => Emit {
+                    document_operations: vec![TestOperation::SetLabel { value: value.clone() }],
+                    coalesce_key: Some("label".into()),
+                    ..Default::default()
+                },
+                TestCommand::SetLabelViaCommand { value } => Emit::operations(vec![TestOperation::SetLabel { value: value.clone() }]),
+                TestCommand::AmendLabel { value } => Emit::amend(vec![TestOperation::SetLabel { value: value.clone() }], "label"),
+                TestCommand::CommitLabel { value } => Emit::commit(vec![TestOperation::SetLabel { value: value.clone() }], "commit label"),
+                // 🧪️ A deliberately mis-behaving View command: emits document operations it must not —
+                // the registry-backed kind-discipline check in `dispatch_typed_command_inner` rejects it.
+                TestCommand::BadView => Emit::operations(vec![TestOperation::SetCount { value: 99 }]),
+                // 🧪️ B1: the utility id now arrives directly in the typed command payload (the sender
+                // already knows it) rather than being read back off a host-pushed `ViewState` — echoes
+                // it as an event, proving `setActiveUtility` emits no operations.
+                TestCommand::SetActiveUtility { utility_id } => Emit::event(AppEvent {
                     kind: "active-utility".into(),
-                    payload: dsl::to_dsl_value(&json!({ "utilityId": view_state.active_utility_id.clone().unwrap_or_default() })).unwrap_or(dsl::DslValue::Null),
+                    payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null),
                 }),
-                // 🧪️ A real `View`-kind inverse, computed from the app's own runtime state (mirrors
-                // camera-style apps): captures the pre-dispatch selection so backwards can restore it.
-                "select" => {
-                    let previous = self.selected.borrow().clone();
-                    *self.selected.borrow_mut() = args
-                        .and_then(|value| value.get("id"))
-                        .and_then(Value::as_str)
-                        .map(str::to_string);
-                    ActionEmit::view_with_inverse(InverseAction {
-                        action_id: "select".into(),
-                        args: Some(json!({ "id": previous })),
-                    })
-                }
-                "navigate" => ActionEmit::effect(HostEffect::Navigate { uri: "semio://home".into() }),
+                // 🧪️ B1: the config-op replacement for the old `ActionEmit::view_with_inverse` — a real
+                // `ConfigOperation` with a real `backwards`, no ad hoc `InverseAction`.
+                TestCommand::Select { id } => Emit::config(vec![TestConfigOperation::SetSelected { value: id.clone() }]),
+                TestCommand::Navigate => Emit::effect(HostEffect::Navigate { uri: "semio://home".into() }),
                 // 🧪️ Declared `Operation`-kind (see `contract_registry`) but deliberately emits nothing.
-                "noopOperation" => ActionEmit::default(),
-                // 🧪️ Op-less View actions that explicitly opt into a narrow `ui_scope` — fixtures for the
-                // `finish_recorded`/`with_history_panel_scope` upgrade matrix.
-                "viewNoScope" => ActionEmit { ui_scope: UiDirtyScope::None, ..Default::default() },
-                "viewPartialScope" => ActionEmit {
+                TestCommand::NoopOperation => Emit::default(),
+                // 🧪️ Op-less View commands that explicitly opt into a narrow `ui_scope` — fixtures for
+                // the `finish_recorded`/`with_history_panel_scope` upgrade matrix.
+                TestCommand::ViewNoScope => Emit { ui_scope: UiDirtyScope::None, ..Default::default() },
+                TestCommand::ViewPartialScope => Emit {
                     ui_scope: UiDirtyScope::Partial {
                         window_bodies: vec!["some.window".into()],
                         panel_bodies: Vec::new(),
@@ -6490,33 +6721,10 @@ mod semio_plugin_macro_tests {
                     },
                     ..Default::default()
                 },
-                _ => ActionEmit::default(),
             }
         }
 
-        fn handle_command(
-            &self,
-            command: &str,
-            args: Option<&Value>,
-            doc: &DocumentView<'_, TestProjection>,
-            _cfg: &ConfigView<'_, NoConfig>,
-            _view_state: &ViewState,
-        ) -> ActionEmit<TestOperation> {
-            match command {
-                "incrementViaCommand" => ActionEmit {
-                    operations: vec![TestOperation::SetCount { value: doc.projection.count + 1 }],
-                    description: Some("increment via command".into()),
-                    ..Default::default()
-                },
-                "setLabelViaCommand" => {
-                    let value = args.and_then(|value| value.get("value")).and_then(Value::as_str).unwrap_or_default().to_string();
-                    ActionEmit::operations(vec![TestOperation::SetLabel { value }])
-                }
-                _ => ActionEmit::default(),
-            }
-        }
-
-        fn render(&self, _body_key: &str, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewState) -> UiNode {
+        fn render(&self, _body_key: &str, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> UiNode {
             ui_text(format!("count={}", doc.projection.count))
         }
 
@@ -6524,7 +6732,7 @@ mod semio_plugin_macro_tests {
             Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
         }
 
-        fn copy_fragment(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
+        fn copy_fragment(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Result<ClipboardFragment, ClipboardError> {
             if doc.projection.label.is_empty() {
                 return Err(ClipboardError::EmptySelection);
             }
@@ -6538,7 +6746,7 @@ mod semio_plugin_macro_tests {
             })
         }
 
-        fn cut_operations(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewState) -> Vec<TestOperation> {
+        fn cut_operations(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, TestConfig>) -> Vec<TestOperation> {
             if doc.projection.label.is_empty() {
                 Vec::new()
             } else {
@@ -6563,8 +6771,7 @@ mod semio_plugin_macro_tests {
             &self,
             _request: &ContextMenuRequest,
             doc: &DocumentView<'_, TestProjection>,
-            _cfg: &ConfigView<'_, NoConfig>,
-            _view_state: &ViewState,
+            _cfg: &ConfigView<'_, TestConfig>,
             registry: &AppActionRegistry,
         ) -> Vec<ContextMenuItemSpec> {
             Menu::of(registry)
@@ -6587,9 +6794,14 @@ mod semio_plugin_macro_tests {
         )
     }
 
-    /// 🧪️ A registry-backed app declaring the contract-enforcement fixtures: an operation with a
-    /// required arg, one with a defaulted optional arg, a mis-behaving View action, and a utility (which
-    /// auto-injects the `setActiveUtility` View action).
+    /// 🧪️ A registry-backed app declaring the contract-enforcement fixtures: an operation resolved by
+    /// the context-menu label lookup, a declared-but-empty operation, a mis-behaving View action, and a
+    /// utility (which auto-injects the `setActiveUtility` View action). B1: `setLabelRequired`'s
+    /// required/default-arg materialization tests were deleted — that mechanism was JSON-args-specific
+    /// (`AppActionRegistry`/`materialize_args`) and has no meaning for a typed `Self::Command` value a
+    /// Rust caller constructs directly (a "missing required field" is a compile error, not a runtime
+    /// one). `setLabelRequired` stays declared here purely as a registry fixture for the context-menu
+    /// label-resolution test below.
     fn contract_registry() -> AppActionRegistry {
         let app = App::from_builder(
             App::builder("synthetic-play", "Synthetic")
@@ -6598,16 +6810,13 @@ mod semio_plugin_macro_tests {
                 .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .operation("setLabelRequired", "Set Label")
                 .action_args("setLabelRequired", vec![ActionArgDef::text("value", "Value").required()])
-                .operation("setLabelDefault", "Set Label Default")
-                .action_args("setLabelDefault", vec![ActionArgDef::text("value", "Value").default_value("seed")])
                 // 🧪️ `Operation`-kind by declaration, but `TestApp` emits zero operations for it — the
                 // "declared Operation action that happened to produce nothing" fixture.
                 .operation("noopOperation", "Noop Operation")
                 .view_action("badView", "Bad View")
                 .utility_simple("brush", "Brush", IconName::Paintbrush)
                 .app_command("incrementViaCommand", "Increment", "counter")
-                .app_command("setLabelViaCommand", "Set Label", "counter")
-                .command_args("setLabelViaCommand", vec![ActionArgDef::text("value", "Value").required()]),
+                .app_command("setLabelViaCommand", "Set Label", "counter"),
         );
         AppActionRegistry::from_definition(&app.definition)
     }
@@ -6644,7 +6853,7 @@ mod semio_plugin_macro_tests {
     #[test]
     fn operation_action_emits_kernel_op_with_true_inverse() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        let result = app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        let result = app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(result.operations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 1 }).unwrap());
         assert_eq!(
@@ -6659,11 +6868,11 @@ mod semio_plugin_macro_tests {
     fn view_action_emits_no_operations() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let result = app
-            .handle_action("select", Some(&json!({ "id": "node-1" })), &ViewState::default(), &meta())
+            .dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta())
             .expect("select");
         assert!(result.operations.is_empty());
         assert!(result.requested_effects.is_empty());
-        // A view action never advances the document.
+        // A view command never advances the document.
         assert_eq!(app.test_projection(), TestProjection::default());
     }
 
@@ -6671,33 +6880,35 @@ mod semio_plugin_macro_tests {
     fn view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         // Keep the two selects from folding into one row by dispatching an unrelated Operation between them.
-        app.handle_action("select", Some(&json!({ "id": "a" })), &ViewState::default(), &meta()).expect("select a");
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
-        app.handle_action("select", Some(&json!({ "id": "b" })), &ViewState::default(), &meta()).expect("select b");
-        assert_eq!(*app.test_app().selected.borrow(), Some("b".to_string()));
+        app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).expect("select a");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
+        app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).expect("select b");
+        assert_eq!(app.test_config().selected, Some("b".to_string()));
 
         let history = app.test_history();
-        let select_b = history
+        // 🧾️ Revert-to-command semantics are VCS-consistent (same as the document side): "leave the
+        // TARGET row applied, undo everything after it" — so to land back on `selected == "a"`, target
+        // the "select a" row itself (the one with the SMALLEST seq — `history.commands` is newest-first).
+        let select_a = history
             .commands
             .iter()
-            .find(|entry| entry.action_id == "select" && entry.inverse.as_ref().is_some_and(|inverse| inverse.args.as_ref().and_then(|value| value.get("id")).and_then(Value::as_str) == Some("a")))
-            .expect("select-b row carrying the a-restoring inverse");
-        assert!(select_b.revertible, "a View row with a stored inverse must be revertible");
-        let seq = select_b.seq;
+            .filter(|entry| entry.action_id == "select")
+            .min_by_key(|entry| entry.seq)
+            .expect("select-a row carrying a config edit id");
+        assert!(select_a.revertible, "a config edit-linked row must be revertible");
+        let seq = select_a.seq;
         let log_len_before = history.commands.len();
 
-        app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &ViewState::default(), &meta())
-            .expect("revertToCommand on a View row");
+        app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &meta())
+            .expect("revertToCommand on a config-edit row");
 
-        assert_eq!(*app.test_app().selected.borrow(), Some("a".to_string()), "backwards must replay the stored inverse and restore runtime state");
+        assert_eq!(app.test_config().selected, Some("a".to_string()), "reverting to the select-a row must leave it applied and undo select-b");
         let after = app.test_history();
-        // ⏪️ The replay redispatches "select" through the normal `dispatch_action` path, which folds
-        // consecutive identical (action_id, kind, edit_id: None) rows just like any other View dispatch
-        // — so this does NOT append a new row, it grows the existing one's `count` (append-only still
-        // holds: nothing is ever REMOVED, the row that already represented "select" absorbs it).
-        assert_eq!(after.commands.len(), log_len_before, "the replay folds into the existing select row rather than appending");
-        let folded = after.commands.iter().find(|entry| entry.seq == seq).expect("original row survives the fold");
-        assert_eq!(folded.count, 2, "the fold counter reflects both the original select-b and the replayed select-a");
+        // 🧾️ Unlike the pre-B1 memory-replay (which redispatched "select" and folded a new row), a
+        // config-store undo-to-position is pure cursor motion on the config store — it appends its own
+        // "revertToCommand" row, exactly like the document-edit branch above it.
+        assert_eq!(after.commands.len(), log_len_before + 1, "the revert appends one History-kind row");
+        assert_eq!(after.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
     }
 
     #[test]
@@ -6706,7 +6917,6 @@ mod semio_plugin_macro_tests {
         app.handle_action(
             NOTE_SHELL_COMMAND_ACTION_ID,
             Some(&json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } })),
-            &ViewState::default(),
             &meta(),
         )
         .expect("noteShellCommand with inverse");
@@ -6718,7 +6928,7 @@ mod semio_plugin_macro_tests {
         let seq = entry.seq;
 
         let result = app
-            .handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &ViewState::default(), &meta())
+            .handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &meta())
             .expect("revertToCommand on a Shell row");
 
         // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
@@ -6733,7 +6943,7 @@ mod semio_plugin_macro_tests {
     #[test]
     fn shell_action_emits_host_effect_without_operations() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        let result = app.handle_action("navigate", None, &ViewState::default(), &meta()).expect("navigate");
+        let result = app.dispatch_typed(TestCommand::Navigate, &meta()).expect("navigate");
         assert!(result.operations.is_empty());
         assert_eq!(result.requested_effects, vec![HostEffect::Navigate { uri: "semio://home".into() }]);
     }
@@ -6741,8 +6951,8 @@ mod semio_plugin_macro_tests {
     #[test]
     fn copy_emits_clipboard_write_effect_with_no_operations() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("setLabel", Some(&json!({ "value": "hello" })), &ViewState::default(), &meta()).expect("setLabel");
-        let result = app.handle_action("copy", None, &ViewState::default(), &meta()).expect("copy");
+        app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).expect("setLabel");
+        let result = app.handle_action("copy", None, &meta()).expect("copy");
         assert!(result.operations.is_empty(), "copy must not record an undo entry");
         assert_eq!(result.requested_effects.len(), 1);
         let HostEffect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
@@ -6753,7 +6963,7 @@ mod semio_plugin_macro_tests {
     #[test]
     fn copy_on_empty_selection_is_a_benign_no_operation() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        let result = app.handle_action("copy", None, &ViewState::default(), &meta()).expect("copy");
+        let result = app.handle_action("copy", None, &meta()).expect("copy");
         assert!(result.operations.is_empty());
         assert!(result.requested_effects.is_empty());
     }
@@ -6761,13 +6971,13 @@ mod semio_plugin_macro_tests {
     #[test]
     fn cut_removes_label_and_emits_clipboard_write_as_one_undo_unit() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("setLabel", Some(&json!({ "value": "hello" })), &ViewState::default(), &meta()).expect("setLabel");
-        let result = app.handle_action("cut", None, &ViewState::default(), &meta()).expect("cut");
+        app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta()).expect("setLabel");
+        let result = app.handle_action("cut", None, &meta()).expect("cut");
         assert_eq!(app.test_projection().label, "");
         assert_eq!(result.requested_effects.len(), 1);
         assert!(matches!(&result.requested_effects[0], HostEffect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
         // One undo restores the cut label — cut is a single coalesced edit, not two.
-        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        app.handle_action("undo", None, &meta()).expect("undo");
         assert_eq!(app.test_projection().label, "hello");
     }
 
@@ -6783,7 +6993,7 @@ mod semio_plugin_macro_tests {
             label: "pasted".into(),
         };
         let args = json!({ "fragment": fragment, "anchor": "original" });
-        app.handle_action("paste", Some(&args), &ViewState::default(), &meta()).expect("paste");
+        app.handle_action("paste", Some(&args), &meta()).expect("paste");
         assert_eq!(app.test_projection().label, "pasted");
     }
 
@@ -6799,14 +7009,14 @@ mod semio_plugin_macro_tests {
             label: "pasted".into(),
         };
         let args = json!({ "fragment": fragment, "anchor": "centroid" });
-        app.handle_action("paste", Some(&args), &ViewState::default(), &meta()).expect("paste");
+        app.handle_action("paste", Some(&args), &meta()).expect("paste");
         assert_eq!(app.test_projection().label, format!("pasted-{:?}", PasteAnchor::Centroid));
     }
 
     #[test]
     fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        let result = app.handle_action("paste", None, &ViewState::default(), &meta()).expect("paste");
+        let result = app.handle_action("paste", None, &meta()).expect("paste");
         assert!(result.operations.is_empty());
         assert_eq!(app.test_projection().label, "");
     }
@@ -6824,31 +7034,31 @@ mod semio_plugin_macro_tests {
     fn coalesced_operations_amend_a_single_edit() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         for value in ["a", "ab", "abc"] {
-            app.handle_action("setLabel", Some(&json!({ "value": value })), &ViewState::default(), &meta())
+            app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta())
                 .expect("setLabel");
         }
         assert_eq!(app.test_projection().label, "abc");
         // One undo reverts the whole coalesced gesture back to the empty label.
-        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        app.handle_action("undo", None, &meta()).expect("undo");
         assert_eq!(app.test_projection().label, "");
     }
 
     #[test]
     fn history_actions_round_trip_through_the_store() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc1");
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc2");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc1");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc2");
         assert_eq!(app.test_projection().count, 2);
 
-        let undo = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        let undo = app.handle_action("undo", None, &meta()).expect("undo");
         assert!(undo.operations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.test_projection().count, 1);
 
-        app.handle_action("redo", None, &ViewState::default(), &meta()).expect("redo");
+        app.handle_action("redo", None, &meta()).expect("redo");
         assert_eq!(app.test_projection().count, 2);
 
-        let checkpoint = app.handle_action("commitCheckpoint", None, &ViewState::default(), &meta()).expect("checkpoint");
+        let checkpoint = app.handle_action("commitCheckpoint", None, &meta()).expect("checkpoint");
         assert!(checkpoint.operations.is_empty());
         assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
     }
@@ -6857,7 +7067,7 @@ mod semio_plugin_macro_tests {
     #[test]
     fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
         let history = app.test_history();
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
@@ -6873,7 +7083,7 @@ mod semio_plugin_macro_tests {
     fn a_coalesced_gesture_appends_exactly_one_command_log_entry() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         for value in ["a", "ab", "abc"] {
-            app.handle_action("setLabel", Some(&json!({ "value": value })), &ViewState::default(), &meta()).expect("setLabel");
+            app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta()).expect("setLabel");
         }
         let history = app.test_history();
         let set_label_entries: Vec<&CommandView> = history.commands.iter().filter(|entry| entry.action_id == "setLabel").collect();
@@ -6883,13 +7093,13 @@ mod semio_plugin_macro_tests {
     #[test]
     fn undo_and_redo_append_entries_and_never_shrink_the_log() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
         assert_eq!(app.test_history().commands.len(), 1);
-        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        app.handle_action("undo", None, &meta()).expect("undo");
         let after_undo = app.test_history();
         assert_eq!(after_undo.commands.len(), 2, "undo appends, it does not remove the increment entry");
         assert!(after_undo.commands.iter().any(|entry| entry.action_id == "increment"));
-        app.handle_action("redo", None, &ViewState::default(), &meta()).expect("redo");
+        app.handle_action("redo", None, &meta()).expect("redo");
         let after_redo = app.test_history();
         assert_eq!(after_redo.commands.len(), 3, "redo appends a third entry");
         assert!(after_redo.commands.iter().any(|entry| entry.action_id == "undo"));
@@ -6898,15 +7108,15 @@ mod semio_plugin_macro_tests {
     #[test]
     fn revert_to_command_restores_the_projection_and_appends_one_entry() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc1");
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc2");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc1");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc2");
         assert_eq!(app.test_projection().count, 2);
         // 🧾️ `commands` is newest-first — take the MINIMUM seq among "increment" entries to target inc1, not inc2.
         let first_increment_seq = app.test_history().commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
         let before_len = app.test_history().commands.len();
 
         let result = app
-            .handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": first_increment_seq })), &ViewState::default(), &meta())
+            .handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": first_increment_seq })), &meta())
             .expect("revertToCommand");
         assert!(result.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.test_projection().count, 1, "revert leaves the target edit applied, undoing only what came after it");
@@ -6921,7 +7131,7 @@ mod semio_plugin_macro_tests {
         let mut sender = VcsDocumentApp::new(TestApp::default());
         let (near, mut far) = MemoryBackbone::pair("mem://doc-history-backfill", "mem://doc-history-backfill");
         sender.attach_backbone(Box::new(near)).expect("attach");
-        sender.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        sender.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
 
         let mut envelopes = Vec::new();
         for message in far.receive().expect("receive") {
@@ -6944,7 +7154,7 @@ mod semio_plugin_macro_tests {
     fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let result = app
-            .handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyOperations" })), &ViewState::default(), &meta())
+            .handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyOperations" })), &meta())
             .expect("setHistoryCommandFilter");
         assert!(result.operations.is_empty());
         assert_eq!(app.test_history().command_filter, HistoryCommandFilter::OnlyOperations);
@@ -6966,6 +7176,7 @@ mod semio_plugin_macro_tests {
                     kind: ActionKind::Operation,
                     timestamp: "0".into(),
                     edit_id: Some("e1".into()),
+                    config_edit_id: None,
                     op_lines: vec!["set-count value=1".into()],
                     applied: true,
                     revertible: true,
@@ -6979,6 +7190,7 @@ mod semio_plugin_macro_tests {
                     kind: ActionKind::History,
                     timestamp: "1".into(),
                     edit_id: None,
+                    config_edit_id: None,
                     op_lines: Vec::new(),
                     applied: false,
                     revertible: false,
@@ -7011,13 +7223,14 @@ mod semio_plugin_macro_tests {
     #[test]
     fn an_op_less_view_action_is_logged_with_edit_id_none_and_count_one() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("select", Some(&json!({ "id": "node-1" })), &ViewState::default(), &meta()).expect("select");
+        app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).expect("select");
         let history = app.test_history();
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
         assert_eq!(entry.action_id, "select");
         assert_eq!(entry.kind, ActionKind::View);
         assert!(entry.edit_id.is_none());
+        assert!(entry.config_edit_id.is_some(), "select is a config-op emission");
         assert_eq!(entry.count, 1);
     }
 
@@ -7025,7 +7238,7 @@ mod semio_plugin_macro_tests {
     fn consecutive_identical_view_dispatches_fold_into_one_entry_with_a_growing_count() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         for id in ["node-1", "node-2", "node-3"] {
-            app.handle_action("select", Some(&json!({ "id": id })), &ViewState::default(), &meta()).expect("select");
+            app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta()).expect("select");
         }
         let history = app.test_history();
         assert_eq!(history.commands.len(), 1, "folding must not grow the log");
@@ -7035,10 +7248,10 @@ mod semio_plugin_macro_tests {
     #[test]
     fn folding_breaks_across_an_interleaved_different_entry() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("select", Some(&json!({ "id": "a" })), &ViewState::default(), &meta()).expect("select a");
-        app.handle_action("select", Some(&json!({ "id": "b" })), &ViewState::default(), &meta()).expect("select b");
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
-        app.handle_action("select", Some(&json!({ "id": "c" })), &ViewState::default(), &meta()).expect("select c");
+        app.dispatch_typed(TestCommand::Select { id: Some("a".into()) }, &meta()).expect("select a");
+        app.dispatch_typed(TestCommand::Select { id: Some("b".into()) }, &meta()).expect("select b");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
+        app.dispatch_typed(TestCommand::Select { id: Some("c".into()) }, &meta()).expect("select c");
         let history = app.test_history();
         assert_eq!(history.commands.len(), 3, "folded select x2, one increment, one fresh select — the interleaved operation breaks the fold");
         let select_counts: Vec<u32> = history.commands.iter().filter(|entry| entry.action_id == "select").map(|entry| entry.count).collect();
@@ -7051,7 +7264,7 @@ mod semio_plugin_macro_tests {
     fn note_shell_command_is_intercepted_before_the_app_and_folds_on_repeat() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let args = json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" });
-        app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &ViewState::default(), &meta()).expect("noteShellCommand");
+        app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).expect("noteShellCommand");
         assert!(app.test_app().received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
         let history = app.test_history();
         assert_eq!(history.commands.len(), 1);
@@ -7060,7 +7273,7 @@ mod semio_plugin_macro_tests {
         assert_eq!(entry.kind, ActionKind::Shell);
         assert!(entry.label.contains("dark"));
 
-        app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &ViewState::default(), &meta()).expect("noteShellCommand again");
+        app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).expect("noteShellCommand again");
         assert!(app.test_app().received_actions.borrow().is_empty());
         let history = app.test_history();
         assert_eq!(history.commands.len(), 1, "the same commandId folds instead of appending");
@@ -7070,7 +7283,7 @@ mod semio_plugin_macro_tests {
     #[test]
     fn scope_upgrade_none_becomes_partial_naming_the_history_body() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        let result = app.handle_action("viewNoScope", None, &ViewState::default(), &meta()).expect("viewNoScope");
+        let result = app.dispatch_typed(TestCommand::ViewNoScope, &meta()).expect("viewNoScope");
         let UiDirtyScope::Partial { panel_bodies, .. } = result.ui_scope else { panic!("expected an upgraded Partial scope") };
         assert!(panel_bodies.iter().any(|key| key == FRAMEWORK_HISTORY_BODY_KEY));
     }
@@ -7078,7 +7291,7 @@ mod semio_plugin_macro_tests {
     #[test]
     fn scope_upgrade_partial_keeps_window_bodies_and_gains_the_history_body() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        let result = app.handle_action("viewPartialScope", None, &ViewState::default(), &meta()).expect("viewPartialScope");
+        let result = app.dispatch_typed(TestCommand::ViewPartialScope, &meta()).expect("viewPartialScope");
         let UiDirtyScope::Partial { window_bodies, panel_bodies, .. } = result.ui_scope else { panic!("expected a Partial scope") };
         assert_eq!(window_bodies, vec!["some.window".to_string()], "the app's own window_bodies must survive the upgrade");
         assert!(panel_bodies.iter().any(|key| key == FRAMEWORK_HISTORY_BODY_KEY));
@@ -7087,7 +7300,7 @@ mod semio_plugin_macro_tests {
     #[test]
     fn scope_upgrade_full_stays_full() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        let result = app.handle_action("select", Some(&json!({ "id": "x" })), &ViewState::default(), &meta()).expect("select");
+        let result = app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).expect("select");
         assert_eq!(result.ui_scope, UiDirtyScope::Full);
     }
 
@@ -7095,7 +7308,7 @@ mod semio_plugin_macro_tests {
     fn benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let before_len = app.test_history().commands.len();
-        let result = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        let result = app.handle_action("undo", None, &meta()).expect("undo");
         assert_eq!(result.ui_scope, UiDirtyScope::None, "nothing was logged, so the scope must not be upgraded either");
         assert_eq!(app.test_history().commands.len(), before_len);
     }
@@ -7104,7 +7317,7 @@ mod semio_plugin_macro_tests {
     fn set_history_command_filter_is_never_logged() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let before_len = app.test_history().commands.len();
-        app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyOperations" })), &ViewState::default(), &meta())
+        app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyOperations" })), &meta())
             .expect("setHistoryCommandFilter");
         assert_eq!(app.test_history().commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
     }
@@ -7113,7 +7326,7 @@ mod semio_plugin_macro_tests {
     fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewState::default()).expect("render before");
-        app.handle_action("select", Some(&json!({ "id": "x" })), &ViewState::default(), &meta()).expect("select");
+        app.dispatch_typed(TestCommand::Select { id: Some("x".into()) }, &meta()).expect("select");
         let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewState::default()).expect("render after");
         let UiNode::Stack(stack) = rendered else { panic!("expected a Stack root") };
         let UiNode::Tree(tree) = &stack.children[2] else { panic!("expected the tree as the third child") };
@@ -7123,7 +7336,7 @@ mod semio_plugin_macro_tests {
     #[test]
     fn an_operation_kind_action_with_zero_operations_still_logs_one_entry() {
         let mut app = contract_app_under_test();
-        app.handle_action("noopOperation", None, &ViewState::default(), &meta()).expect("noopOperation");
+        app.dispatch_typed(TestCommand::NoopOperation, &meta()).expect("noopOperation");
         let history = app.test_history();
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
@@ -7137,7 +7350,7 @@ mod semio_plugin_macro_tests {
     #[test]
     fn undo_on_empty_history_is_a_benign_no_operation() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        let result = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        let result = app.handle_action("undo", None, &meta()).expect("undo");
         assert!(result.operations.is_empty());
         assert!(result.events.is_empty());
     }
@@ -7145,8 +7358,8 @@ mod semio_plugin_macro_tests {
     #[test]
     fn document_round_trips_through_serialization() {
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc");
-        app.handle_action("setLabel", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta()).expect("label");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("inc");
+        app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).expect("label");
         let files = app.document_pack().expect("document pack");
 
         let mut restored = VcsDocumentApp::new(TestApp::default());
@@ -7159,7 +7372,7 @@ mod semio_plugin_macro_tests {
         let mut sender = VcsDocumentApp::new(TestApp::default());
         let (near, mut far) = MemoryBackbone::pair("mem://doc", "mem://doc");
         sender.attach_backbone(Box::new(near)).expect("attach");
-        sender.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        sender.dispatch_typed(TestCommand::Increment, &meta()).expect("increment");
 
         let mut envelopes = Vec::new();
         for message in far.receive().expect("receive") {
@@ -7183,43 +7396,24 @@ mod semio_plugin_macro_tests {
 
         let (near, mut far) = MemoryBackbone::pair("mem://reattach", "mem://reattach");
         app.attach_backbone(Box::new(near)).expect("attach");
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment while attached");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment while attached");
         assert!(!far.receive().expect("receive after attach").is_empty(), "attached edits reach the peer");
 
         app.detach_backbone();
         assert!(app.backbone_ref().is_none());
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment while detached");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment while detached");
         assert_eq!(app.test_projection().count, 2, "detached edits still land on the in-memory graph");
         assert!(far.receive().expect("receive while detached").is_empty(), "detached edits never reach the peer");
 
         let (near_again, mut far_again) = MemoryBackbone::pair("mem://reattach-2", "mem://reattach-2");
         app.attach_backbone(Box::new(near_again)).expect("re-attach");
         assert!(app.backbone_ref().is_some());
-        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment after re-attach");
+        app.dispatch_typed(TestCommand::Increment, &meta()).expect("increment after re-attach");
         assert_eq!(app.test_projection().count, 3);
         assert!(
             !far_again.receive().expect("receive after re-attach").is_empty(),
             "re-attaching resumes outbound convergence on the new backbone"
         );
-    }
-
-    #[test]
-    fn required_arg_missing_is_rejected() {
-        let mut app = contract_app_under_test();
-        let error = app
-            .handle_action("setLabelRequired", None, &ViewState::default(), &meta())
-            .expect_err("missing required arg must be a hard error");
-        assert!(error.contains("missing required args"), "unexpected error: {error}");
-        assert!(error.contains("value"));
-        assert_eq!(app.test_projection(), TestProjection::default(), "nothing dispatched on rejection");
-    }
-
-    #[test]
-    fn required_arg_present_is_accepted() {
-        let mut app = contract_app_under_test();
-        app.handle_action("setLabelRequired", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta())
-            .expect("required arg provided");
-        assert_eq!(app.test_projection().label, "hi");
     }
 
     #[test]
@@ -7250,7 +7444,7 @@ mod semio_plugin_macro_tests {
             .to_string();
         let increment_icon = catalog_command_icon_id("incrementViaCommand").as_str().to_string();
 
-        let empty_label = app.context_menu(&request, &ViewState::default());
+        let empty_label = app.context_menu(&request);
         assert_eq!(empty_label.len(), 1, "the gated command must be absent with no label set: {empty_label:?}");
         assert_eq!(
             empty_label[0],
@@ -7263,8 +7457,8 @@ mod semio_plugin_macro_tests {
             }
         );
 
-        app.handle_action("setLabelRequired", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta()).expect("set label");
-        let with_label = app.context_menu(&request, &ViewState::default());
+        app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).expect("set label");
+        let with_label = app.context_menu(&request);
         assert_eq!(with_label.len(), 2, "the guard must open once a label is set: {with_label:?}");
         assert_eq!(
             with_label[1],
@@ -7279,30 +7473,21 @@ mod semio_plugin_macro_tests {
     }
 
     #[test]
-    fn default_arg_is_materialized_when_absent() {
-        let mut app = contract_app_under_test();
-        app.handle_action("setLabelDefault", None, &ViewState::default(), &meta())
-            .expect("default materialized");
-        assert_eq!(app.test_projection().label, "seed", "declared default fills the missing arg");
-    }
-
-    #[test]
     fn view_action_emitting_ops_is_rejected() {
         let mut app = contract_app_under_test();
         let error = app
-            .handle_action("badView", None, &ViewState::default(), &meta())
-            .expect_err("a View action emitting operations must be rejected");
+            .dispatch_typed(TestCommand::BadView, &meta())
+            .expect_err("a View command emitting operations must be rejected");
         assert!(error.contains("must not emit operations"), "unexpected error: {error}");
         assert_eq!(app.test_projection(), TestProjection::default());
     }
 
     #[test]
-    fn set_active_utility_forwards_view_state_active_utility_and_emits_no_operations() {
+    fn set_active_utility_carries_its_value_directly_and_emits_no_operations() {
         let mut app = contract_app_under_test();
-        let view_state = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
         let result = app
-            .handle_action("setActiveUtility", Some(&json!({ "utilityId": "brush" })), &view_state, &meta())
-            .expect("setActiveUtility is a valid View action");
+            .dispatch_typed(TestCommand::SetActiveUtility { utility_id: "brush".into() }, &meta())
+            .expect("setActiveUtility is a valid View command");
         assert!(result.operations.is_empty(), "utility switching must not create history");
         let event = result.events.iter().find(|event| event.kind == "active-utility").expect("echoed active utility");
         assert_eq!(event.payload, dsl::to_dsl_value(&json!({ "utilityId": "brush" })).unwrap());
@@ -7312,21 +7497,21 @@ mod semio_plugin_macro_tests {
     fn action_emit_amend_coalesces_while_commit_does_not() {
         let mut app = contract_app_under_test();
         for value in ["a", "ab", "abc"] {
-            app.handle_action("amendLabel", Some(&json!({ "value": value })), &ViewState::default(), &meta())
+            app.dispatch_typed(TestCommand::AmendLabel { value: value.into() }, &meta())
                 .expect("amendLabel");
         }
         assert_eq!(app.test_projection().label, "abc");
         // One undo reverts the whole coalesced amend gesture.
-        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo amend");
+        app.handle_action("undo", None, &meta()).expect("undo amend");
         assert_eq!(app.test_projection().label, "");
 
         for value in ["x", "xy"] {
-            app.handle_action("commitLabel", Some(&json!({ "value": value })), &ViewState::default(), &meta())
+            app.dispatch_typed(TestCommand::CommitLabel { value: value.into() }, &meta())
                 .expect("commitLabel");
         }
         assert_eq!(app.test_projection().label, "xy");
         // Each commit is its own edit: one undo only reverts the last commit.
-        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo commit");
+        app.handle_action("undo", None, &meta()).expect("undo commit");
         assert_eq!(app.test_projection().label, "x");
     }
 
@@ -7337,10 +7522,10 @@ mod semio_plugin_macro_tests {
         // `InvocationResult` must report only the operation IT just added — never re-serializing the whole
         // growing edit into every `KernelOperation`/`UndoGroup` on every single dispatch.
         let mut app = contract_app_under_test();
-        app.handle_action("amendLabel", Some(&json!({ "value": "a" })), &ViewState::default(), &meta()).expect("amendLabel a");
-        app.handle_action("amendLabel", Some(&json!({ "value": "ab" })), &ViewState::default(), &meta()).expect("amendLabel ab");
+        app.dispatch_typed(TestCommand::AmendLabel { value: "a".into() }, &meta()).expect("amendLabel a");
+        app.dispatch_typed(TestCommand::AmendLabel { value: "ab".into() }, &meta()).expect("amendLabel ab");
         let result = app
-            .handle_action("amendLabel", Some(&json!({ "value": "abc" })), &ViewState::default(), &meta())
+            .dispatch_typed(TestCommand::AmendLabel { value: "abc".into() }, &meta())
             .expect("amendLabel abc");
         assert_eq!(result.operations.len(), 1, "must report only this dispatch's new operation, not the whole coalesced edit");
         assert_eq!(result.operations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestOperation::SetLabel { value: "abc".into() }).unwrap());
@@ -7353,7 +7538,7 @@ mod semio_plugin_macro_tests {
         assert_eq!(result.inverse_group.inverse_operations.len(), 1);
         assert_eq!(app.test_projection().label, "abc");
         // The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
-        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo amend");
+        app.handle_action("undo", None, &meta()).expect("undo amend");
         assert_eq!(app.test_projection().label, "");
     }
 
@@ -7361,7 +7546,7 @@ mod semio_plugin_macro_tests {
     fn operation_command_emits_kernel_op_with_true_inverse() {
         let mut app = contract_app_under_test();
         let result = app
-            .handle_command("incrementViaCommand", None, &ViewState::default(), &meta())
+            .dispatch_typed(TestCommand::IncrementViaCommand, &meta())
             .expect("incrementViaCommand");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(result.operations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 1 }).unwrap());
@@ -7373,42 +7558,31 @@ mod semio_plugin_macro_tests {
     }
 
     #[test]
-    fn unknown_command_is_a_hard_error() {
+    fn unknown_string_command_is_a_hard_error() {
+        // B1: `PluginApp::handle_command` (string-keyed) is FRAMEWORK-reserved only now — there are no
+        // framework-reserved commands, so it always errors, pointing callers at the typed channel.
         let mut app = contract_app_under_test();
         let error = app
-            .handle_command("nope", None, &ViewState::default(), &meta())
-            .expect_err("an undeclared command id must be rejected");
-        assert!(error.contains("unknown command"), "unexpected error: {error}");
-    }
-
-    #[test]
-    fn command_required_arg_is_enforced_and_materialized_like_an_action() {
-        let mut app = contract_app_under_test();
-        let error = app
-            .handle_command("setLabelViaCommand", None, &ViewState::default(), &meta())
-            .expect_err("missing required arg must be a hard error");
-        assert!(error.contains("missing required args"), "unexpected error: {error}");
-
-        app.handle_command("setLabelViaCommand", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta())
-            .expect("required arg provided");
-        assert_eq!(app.test_projection().label, "hi");
+            .handle_command("nope", None, &meta())
+            .expect_err("the string command channel always rejects now");
+        assert!(error.contains("typed command channel"), "unexpected error: {error}");
     }
 
     #[test]
     fn command_op_records_history_exactly_like_an_operation_action() {
         let mut app = contract_app_under_test();
-        app.handle_command("incrementViaCommand", None, &ViewState::default(), &meta()).expect("inc");
-        app.handle_command("incrementViaCommand", None, &ViewState::default(), &meta()).expect("inc");
+        app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).expect("inc");
+        app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).expect("inc");
         assert_eq!(app.test_projection().count, 2);
-        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        app.handle_action("undo", None, &meta()).expect("undo");
         assert_eq!(app.test_projection().count, 1);
     }
 
     #[test]
     fn registry_less_construction_skips_enforcement() {
-        // The empty-registry path (VcsDocumentApp::new) passes actions through unchecked.
+        // The empty-registry path (VcsDocumentApp::new) passes commands through unchecked.
         let mut app = VcsDocumentApp::new(TestApp::default());
-        app.handle_action("badView", None, &ViewState::default(), &meta())
+        app.dispatch_typed(TestCommand::BadView, &meta())
             .expect("no registry ⇒ kind discipline skipped");
     }
 }
@@ -8453,7 +8627,7 @@ mod tests {
 }
 
 pub use app::{
-    ActionEmit, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ConfigView, DocumentApp, DocumentView, HistoryView,
+    ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ConfigView, DocumentApp, DocumentView, Emit, HistoryView,
     KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp,
     PluginBundle, ArtifactKindSpec, VcsDocumentApp, WindowKindSpec, node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, NodeGraphDeleteDispatch,
 };

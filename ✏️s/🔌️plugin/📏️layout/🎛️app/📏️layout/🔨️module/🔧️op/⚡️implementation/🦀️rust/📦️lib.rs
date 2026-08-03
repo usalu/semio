@@ -85,7 +85,11 @@ pub enum LayoutOperation {
     Links(CollectionOperation<String, ImageLink, ImageLinkPatch>),
     AddFrame { page_id: String, index: usize, frame: Frame, layer_id: Option<String> },
     RemoveFrame { page_id: String, frame_id: String },
-    PatchFrame { page_id: String, frame_id: String, patch: FramePatch }
+    PatchFrame { page_id: String, frame_id: String, patch: FramePatch },
+    /// 🔠️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: whole-field replace for
+    /// `LayoutDocument::data_fields_json` — the `fields:in` workflow port's real, undoable write (see
+    /// `layout_ui::LayoutPlayApp::import_media`).
+    SetDataFields { json: Option<String> }
 }
 
 fn apply_layout_operation(doc: &mut LayoutDocument, operation: &LayoutOperation) {
@@ -119,6 +123,9 @@ fn apply_layout_operation(doc: &mut LayoutDocument, operation: &LayoutOperation)
                 }
             }
         }
+        LayoutOperation::SetDataFields { json } => {
+            doc.data_fields_json = json.clone();
+        }
     }
 }
 
@@ -150,6 +157,7 @@ fn backwards_layout_operation(doc: &LayoutDocument, operation: &LayoutOperation)
             }
             Vec::new()
         }
+        LayoutOperation::SetDataFields { .. } => vec![LayoutOperation::SetDataFields { json: doc.data_fields_json.clone() }],
     }
 }
 
@@ -331,7 +339,9 @@ enum LayoutOperationDsl {
         frame_id: String,
         #[dsl(block)]
         patch: FramePatchDsl,
-    }
+    },
+    #[dsl(key = "data-fields")]
+    SetDataFields { json: Option<String> }
 }
 
 fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
@@ -355,6 +365,7 @@ fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
         LayoutOperation::PatchFrame { page_id, frame_id, patch } => {
             LayoutOperationDsl::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: frame_patch_to_dsl(patch) }
         }
+        LayoutOperation::SetDataFields { json } => LayoutOperationDsl::SetDataFields { json: json.clone() },
     }
 }
 
@@ -375,6 +386,7 @@ fn layout_operation_from_dsl(operation: LayoutOperationDsl) -> LayoutOperation {
         LayoutOperationDsl::AddFrame { page_id, index, frame, layer_id } => LayoutOperation::AddFrame { page_id, index, frame: *frame, layer_id },
         LayoutOperationDsl::RemoveFrame { page_id, frame_id } => LayoutOperation::RemoveFrame { page_id, frame_id },
         LayoutOperationDsl::PatchFrame { page_id, frame_id, patch } => LayoutOperation::PatchFrame { page_id, frame_id, patch: frame_patch_from_dsl(patch) },
+        LayoutOperationDsl::SetDataFields { json } => LayoutOperation::SetDataFields { json },
     }
 }
 
@@ -400,6 +412,72 @@ impl OpBinary for LayoutOperation {
     }
 }
 //#endregion 🔖️OpText
+
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS Config recipe: `layout_engine::LayoutConfig`'s
+/// operation enum — mirrors `shooting_op::ShootingConfigOperation`'s shape exactly: one variant per
+/// settled interaction (was a `LayoutPlayRuntime` field write pre-B1), plus a generic `Snapshot` every
+/// variant's `backwards()` returns. `Operation::Diff` is the WHOLE `LayoutConfig` (not a granular patch
+/// type): `diff()` returns "the full config after this op", and `OperationDiff<LayoutConfig>::apply`
+/// for `LayoutConfig` itself (below) just returns that snapshot verbatim, ignoring `base`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum LayoutConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: layout_engine::LayoutConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "active-page")]
+    SetActivePage { page_id: String },
+    #[dsl(key = "hover")]
+    SetHover { id: Option<String> },
+    #[dsl(key = "drop-preview")]
+    SetDropPreview {
+        #[dsl(block)]
+        preview: layout_engine::LayoutDropPreviewState,
+    },
+    #[dsl(key = "engagement-input")]
+    SetEngagementInput { value: String },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: layout::LayoutCamera,
+    },
+    #[dsl(key = "preview-camera")]
+    SetPreviewCamera {
+        #[dsl(block)]
+        camera: layout::LayoutCamera,
+    },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<layout_engine::LayoutConfig> for LayoutConfigOperation {
+    type Diff = layout_engine::LayoutConfig;
+
+    fn diff(&self, base: &layout_engine::LayoutConfig) -> layout_engine::LayoutConfig {
+        let mut next = base.clone();
+        match self {
+            LayoutConfigOperation::Snapshot { config } => return config.clone(),
+            LayoutConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            LayoutConfigOperation::SetActivePage { page_id } => next.active_page_id = page_id.clone(),
+            LayoutConfigOperation::SetHover { id } => next.hovered_id = id.clone(),
+            LayoutConfigOperation::SetDropPreview { preview } => next.drop_preview = preview.clone(),
+            LayoutConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            LayoutConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            LayoutConfigOperation::SetPreviewCamera { camera } => next.preview_camera = camera.clone(),
+            LayoutConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &layout_engine::LayoutConfig) -> Vec<Self> {
+        vec![LayoutConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -608,5 +686,71 @@ mod tests {
     fn op_text_rejects_unknown_operation_name() {
         assert!(LayoutOperation::parse_op("bogusOp id=x").is_err(), "unknown op keyword must fail");
     }
+
+    #[test]
+    fn set_data_fields_round_trips_and_restores_previous_value() {
+        let doc = sample_doc();
+        let set = LayoutOperation::SetDataFields { json: Some(r#"{"key":"value"}"#.into()) };
+        let with_fields = round_trip(&doc, &set);
+        assert_eq!(with_fields.data_fields_json.as_deref(), Some(r#"{"key":"value"}"#));
+
+        let clear = LayoutOperation::SetDataFields { json: None };
+        let cleared = round_trip(&with_fields, &clear);
+        assert!(cleared.data_fields_json.is_none());
+
+        store::test_support::assert_op_line_round_trip(&LayoutOperation::SetDataFields { json: Some("{}".into()) });
+        store::test_support::assert_op_line_round_trip(&LayoutOperation::SetDataFields { json: None });
+    }
+
+    //#region 🧪️ConfigOperations
+    fn sample_config() -> layout_engine::LayoutConfig {
+        layout_engine::LayoutConfig {
+            active_page_id: "page-2".into(),
+            selected_ids: vec!["frame-1".into()],
+            hovered_id: Some("frame-2".into()),
+            drop_preview: layout_engine::LayoutDropPreviewState { kind: "rect".into(), x: 1.0, y: 2.0 },
+            engagement_input: "export png".into(),
+            camera: layout::LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 },
+            preview_camera: layout::LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 },
+            locale: "de-DE".into(),
+        }
+    }
+
+    fn config_round_trip(base: &layout_engine::LayoutConfig, operation: &LayoutConfigOperation) -> layout_engine::LayoutConfig {
+        let forward = operation.diff(base);
+        let backwards = operation.backwards(base);
+        let mut restored = forward.clone();
+        for back in &backwards {
+            restored = back.diff(&restored);
+        }
+        assert_eq!(&restored, base, "backwards() must exactly restore the pre-operation config");
+        forward
+    }
+
+    #[test]
+    fn config_operations_apply_and_restore_every_field() {
+        let base = layout_engine::LayoutConfig::default();
+        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetSelection { ids: vec!["a".into()] }).selected_ids, vec!["a".to_string()]);
+        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");
+        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetHover { id: Some("frame-9".into()) }).hovered_id, Some("frame-9".to_string()));
+        let previewed = config_round_trip(&base, &LayoutConfigOperation::SetDropPreview { preview: layout_engine::LayoutDropPreviewState { kind: "rect".into(), x: 5.0, y: 6.0 } });
+        assert_eq!(previewed.drop_preview.kind, "rect");
+        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetEngagementInput { value: "undo".into() }).engagement_input, "undo");
+        let cam = config_round_trip(&base, &LayoutConfigOperation::SetCamera { camera: layout::LayoutCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+        assert_eq!(cam.camera, layout::LayoutCamera { x: 1.0, y: 2.0, zoom: 3.0 });
+        let preview_cam = config_round_trip(&base, &LayoutConfigOperation::SetPreviewCamera { camera: layout::LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 } });
+        assert_eq!(preview_cam.preview_camera, layout::LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 });
+        assert_eq!(config_round_trip(&base, &LayoutConfigOperation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
+    }
+
+    #[test]
+    fn config_snapshot_op_text_round_trips() {
+        let config = sample_config();
+        store::test_support::assert_op_line_round_trip(&LayoutConfigOperation::Snapshot { config });
+        store::test_support::assert_op_line_round_trip(&LayoutConfigOperation::SetSelection { ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&LayoutConfigOperation::SetHover { id: None });
+        store::test_support::assert_op_line_round_trip(&LayoutConfigOperation::SetLocale { value: "en-US".into() });
+    }
+    //#endregion 🧪️ConfigOperations
 }
 //#endregion 🧪️Tests

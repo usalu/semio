@@ -3,9 +3,10 @@
 //! (from `cad_document_op`) alongside `CadScene` (from `cad_document`), so this is the first
 //! constitutional crate in the stack where that pairing is available.
 
-use cad_document::CadScene;
+use cad_document::{CadCamera, CadScene};
 use cad_document_op::CadOperation;
 use protocol::OpBinary;
+use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
 
 /// 📦️ Encodes a `CadOperation` to its binary command form.
@@ -17,6 +18,125 @@ pub fn encode_op(operation: &CadOperation) -> Result<Vec<u8>, protocol::Protocol
 pub fn decode_op(bytes: &[u8]) -> Result<CadOperation, protocol::ProtocolError> {
     CadOperation::decode_op(bytes)
 }
+
+//#region 🔖️CadCommand
+/// 🎯️ WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2: `CadPlayApp::Command` — the SOLE dispatch surface for
+/// cad's own behavior (mirrors `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s shooting
+/// pilot, `shooting_protocol::ShootingCommand`), covering every declared action in `create_cad_app`'s
+/// static manifest. Field shapes mirror each action's real JSON `args` object, typed instead of loose
+/// `serde_json::Value`: numeric/boolean edits that used to accept either an absolute JSON value or a
+/// JSON delta (`cad_ui::resolve_number_edit`) become a plain string `value` (parsed per-field, same as
+/// `PatchShots`/`PatchAssets` already do in `shooting_protocol`) plus a typed `delta: Option<f64>`;
+/// window/pane targeting that used to read the host-pushed `ViewState.window_id` (deleted by B1) is now
+/// an explicit `pane` field (the pane-suffix convention `cad_ui::cad_pane_id_from_suffix` already uses),
+/// defaulting to the Shape pane exactly like the pre-B1 fallback did.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum CadCommand {
+    // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
+    #[dsl(key = "add-object")]
+    AddObject { typology: Option<String> },
+    #[dsl(key = "patch-object")]
+    PatchObject { object_id: String, field: String, value: Option<String>, delta: Option<f64> },
+    #[dsl(key = "patch-selection")]
+    PatchSelection { object_ids: Vec<String>, field: String, value: Option<String>, delta: Option<f64> },
+    #[dsl(key = "delete-object")]
+    DeleteObject { object_id: String },
+    #[dsl(key = "duplicate-object")]
+    DuplicateObject { object_id: String },
+    #[dsl(key = "add-node")]
+    AddNode { kind: String },
+    #[dsl(key = "rename-node")]
+    RenameNode { node_id: String, value: String },
+    #[dsl(key = "translate-selection")]
+    TranslateSelection { object_ids: Vec<String>, dx: f64, dy: f64, dz: f64 },
+    #[dsl(key = "rotate-selection")]
+    RotateSelection { object_ids: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64 },
+    #[dsl(key = "scale-selection")]
+    ScaleSelection { object_ids: Vec<String>, sx: f64, sy: f64, sz: f64 },
+    #[dsl(key = "apply-transformation")]
+    ApplyTransformation { qid: String },
+    #[dsl(key = "import-cad-file")]
+    ImportCadFile { name: String, payload: String },
+    #[dsl(key = "patch-cad-play-reference")]
+    PatchCadPlayReference { model_definition_id: String, reference_id: String, field: String, value: Option<String>, delta: Option<f64> },
+    #[dsl(key = "engagement-submit")]
+    EngagementSubmit { pane: Option<String> },
+    #[dsl(key = "focus-model-definition")]
+    FocusModelDefinition { model_definition_id: String },
+    #[dsl(key = "set-active-example")]
+    SetActiveExample { example_id: String },
+    #[dsl(key = "world-pointer-down")]
+    WorldPointerDown { pane: Option<String>, surface_id: Option<String>, x: Option<f64>, y: Option<f64>, z: Option<f64> },
+
+    // 👁️ Config-only (was ephemeral `CadPlayRuntime` state) — emit `config_operations`, never document
+    // operations.
+    #[dsl(key = "camera")]
+    SetCamera { pane: Option<String>, #[dsl(block)] camera: CadCamera },
+    /// 🧮️ `value_str`/`value_num` mirror `semio_framework_plugin::apply_world3d_projection_action`'s
+    /// dual-typed JSON `value` key (a select field like `orthographicView` sends a string, a slider
+    /// param sends a number) — split into two typed optionals instead of one loose `serde_json::Value`.
+    #[dsl(key = "projection")]
+    SetProjection { pane: Option<String>, field: Option<String>, value_str: Option<String>, value_num: Option<f64>, param: Option<String> },
+    #[dsl(key = "projection-param")]
+    SetProjectionParam { pane: Option<String>, field: Option<String>, value_str: Option<String>, value_num: Option<f64>, param: Option<String> },
+    #[dsl(key = "dislocate-option")]
+    SetDislocateOption { pane: Option<String>, option: String, pressed: Option<bool> },
+    #[dsl(key = "set-selection")]
+    SetSelection { object_ids: Vec<String> },
+    #[dsl(key = "set-node-selection")]
+    SetNodeSelection { node_ids: Vec<String> },
+    #[dsl(key = "world-select")]
+    WorldSelect { ids: Vec<String>, merge: String },
+    #[dsl(key = "world-hover")]
+    WorldHover { object_id: Option<String> },
+    #[dsl(key = "set-hover")]
+    SetHover { object_id: Option<String>, mode: Option<String>, id: Option<u32> },
+    #[dsl(key = "world-pick")]
+    WorldPick { id: Option<u64>, merge: String, granularity: String, object_id: Option<String>, surface_id: Option<String>, pane: Option<String> },
+    #[dsl(key = "selection-method")]
+    SetSelectionMethod { method: String },
+    #[dsl(key = "reference-selection")]
+    SetReferenceSelection { pane: Option<String>, model_definition_id: Option<String>, reference_id: Option<String> },
+    #[dsl(key = "reference-hover")]
+    ReferenceHover { reference_id: Option<String> },
+    #[dsl(key = "engagement-input")]
+    EngagementInput { value: String, pane: Option<String> },
+    #[dsl(key = "engagement-possible-select")]
+    EngagementPossibleSelect { pane: Option<String>, possible_id: String },
+    #[dsl(key = "engagement-repeat-last")]
+    EngagementRepeatLast { pane: Option<String> },
+    #[dsl(key = "engagement-abort")]
+    EngagementAbort,
+    #[dsl(key = "world-pointer-move")]
+    WorldPointerMove { x: Option<f64>, y: Option<f64>, z: Option<f64> },
+    #[dsl(key = "set-primitive-selection")]
+    SetPrimitiveSelection { object_id: String, primitive_id: Option<String>, kind: Option<String> },
+    #[dsl(key = "toggle-sun")]
+    ToggleSun,
+    #[dsl(key = "sun-azimuth")]
+    SetSunAzimuth { value: f64 },
+    #[dsl(key = "sun-elevation")]
+    SetSunElevation { value: f64 },
+    #[dsl(key = "sun-intensity")]
+    SetSunIntensity { value: f64 },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+    #[dsl(key = "terminology")]
+    SetTerminology { value: String },
+
+    // 🐚️ Shell effects — export/import round-trips through the host, no operations either way.
+    #[dsl(key = "save-selected")]
+    SaveSelected,
+    #[dsl(key = "save-in-play")]
+    SaveInPlay,
+    #[dsl(key = "save-current")]
+    SaveCurrent { format: Option<String> },
+    #[dsl(key = "load-raw-request")]
+    LoadRawRequest,
+}
+//#endregion 🔖️CadCommand
 
 //#region 🔖️Store
 pub type CadEnvelope = DocumentEnvelope<CadScene, CadOperation>;
@@ -72,9 +192,29 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cad_document::{CadNode, CadObject, CadPaneId, CadPrimitiveSlot};
+    use cad_document::{empty_cad_projection, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CAD_DOCUMENT_SCHEMA};
     use cad_document_op::CadOperation;
     use store::{create_document_envelope, DocumentCommand};
+
+    #[test]
+    fn cad_command_op_text_round_trips_a_representative_sample() {
+        store::test_support::assert_op_line_round_trip(&CadCommand::AddObject { typology: Some("spatial.shape.primitive.box".into()) });
+        store::test_support::assert_op_line_round_trip(&CadCommand::PatchObject { object_id: "object-1".into(), field: "origin.x".into(), value: None, delta: Some(1.5) });
+        store::test_support::assert_op_line_round_trip(&CadCommand::WorldSelect { ids: vec!["object-1".into(), "object-2".into()], merge: "replace".into() });
+        store::test_support::assert_op_line_round_trip(&CadCommand::SetCamera { pane: Some("building".into()), camera: CadCamera::default() });
+        store::test_support::assert_op_line_round_trip(&CadCommand::SetActiveUtility { utility_id: "rotate".into() });
+        store::test_support::assert_op_line_round_trip(&CadCommand::SetLocale { value: "de-DE".into() });
+        store::test_support::assert_op_line_round_trip(&CadCommand::EngagementAbort);
+        store::test_support::assert_op_line_round_trip(&CadCommand::SaveCurrent { format: Some("step".into()) });
+    }
+
+    #[test]
+    fn cad_command_op_binary_round_trips_and_agrees_with_text() {
+        let command = CadCommand::TranslateSelection { object_ids: vec!["object-1".into()], dx: 1.0, dy: -2.0, dz: 3.5 };
+        store::test_support::assert_op_text_binary_equivalence(&command);
+        let bytes = command.encode_op().expect("encode");
+        assert_eq!(CadCommand::decode_op(&bytes).expect("decode"), command);
+    }
 
     #[test]
     fn cad_projection_defaults() {

@@ -5,10 +5,10 @@ use puzzle_5d_engine::{import_compose_design_json, BrushPlacePayload, Puzzle5dPr
 use puzzle_5d_op::{puzzle5d_document_delta_operations, Puzzle5dOperation, Puzzle5dPlayProjection};
 use semio_framework_plugin::{
     apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ConfigView, DocumentApp, DocumentView, Emit, MeasureSelectItem, WindowEngagementStatus,
     merge_world_selection_ids, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-    ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, ui_tree_stamp_presence, IconName,
-    WindowEngagementInput, WindowMeasure, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    ActionDescriptor, AppIo, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, OsMediaCapability, PanelGroup, PortMultiplicity, ArtifactKindSpec, ArtifactPresentation, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, WindowEngagement, ui_tree_stamp_presence, IconName,
+    WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, SelectionSet};
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
 use serde::{Deserialize, Serialize};
@@ -253,9 +253,9 @@ const PUZZLE5D_LABELS_REUSE_DE: Puzzle5dLabels = Puzzle5dLabels {
 /// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native — mirrors `puzzle3d_labels`.
 /// ⚠️ Not routed through the SDK's `LocaleLabels`/`app_labels!`/`resolve_labels` — see `puzzle2d_labels`'s
 /// doc comment for why (an extra terminology axis the SDK's `Terminology` region does not model).
-fn puzzle5d_labels(view_state: &ViewState) -> &'static Puzzle5dLabels {
-    let terminology = view_state.terminology.as_deref().unwrap_or("native");
-    let is_de = is_de_locale(view_state);
+fn puzzle5d_labels(config: &Puzzle5dConfig) -> &'static Puzzle5dLabels {
+    let terminology = config.terminology.as_str();
+    let is_de = puzzle5d_is_de_locale(config);
     match (terminology, is_de) {
         ("reuse", true) => &PUZZLE5D_LABELS_REUSE_DE,
         ("reuse", false) => &PUZZLE5D_LABELS_REUSE_EN,
@@ -457,9 +457,9 @@ struct Puzzle5dSelection {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Puzzle5dRuntime {
+pub struct Puzzle5dRuntime {
     /// 📷️ Camera pose — session-only view state (`ActionKind::View`), never a VCS document field:
-    /// see `setCamera`/`setCamera2d`/`setCamera3d` in `Puzzle5dPlayApp::handle_action`.
+    /// see `setCamera`/`setCamera2d`/`setCamera3d` in `Puzzle5dPlayApp::handle_action_impl`.
     #[serde(default)]
     camera2d: Puzzle5dCamera2d,
     #[serde(default)]
@@ -492,6 +492,31 @@ struct Puzzle5dRuntime {
     vortex_kind_weights: HashMap<String, f64>,
     #[serde(default)]
     sun: WorldSunConfig,
+    /// 🧰️ B1: per-window (kind-keyed — puzzle5d's two window KINDS are each single-instance, see
+    /// `window_instance_ids`) active utility — was host-pushed `view_state.active_utility_by_window_id`,
+    /// now real VCS'd config (see `SET_ACTIVE_UTILITY_ACTION_ID` in `handle_action_impl`).
+    #[serde(default)]
+    active_utility_by_window_id: BTreeMap<String, String>,
+    /// 🗣️ B1: terminology overlay (native/reuse) — was host-pushed `view_state.terminology`.
+    #[serde(default = "default_terminology")]
+    terminology: String,
+    /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale` (read via the deleted
+    /// `semio_framework_plugin::is_de_locale(&ViewState)`; see the local `puzzle5d_is_de_locale` below).
+    #[serde(default = "default_locale")]
+    locale: String,
+}
+
+fn default_terminology() -> String {
+    "native".into()
+}
+
+fn default_locale() -> String {
+    "en-US".into()
+}
+
+/// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewState)`.
+fn puzzle5d_is_de_locale(config: &Puzzle5dRuntime) -> bool {
+    config.locale.starts_with("de")
 }
 
 /// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
@@ -514,9 +539,101 @@ impl Default for Puzzle5dRuntime {
             object_kind_weights: HashMap::new(),
             vortex_kind_weights: HashMap::new(),
             sun: WorldSunConfig::default(),
+            active_utility_by_window_id: BTreeMap::new(),
+            terminology: default_terminology(),
+            locale: default_locale(),
         }
     }
 }
+
+//#region 🔖️Config
+/// 🧮️ B1: puzzle5d's real `DocumentApp::Config` — `Puzzle5dRuntime` itself doubles as the config
+/// record (an alias, not a new type), mirroring `puzzle_3d_ui::Puzzle3dConfig`'s identical recipe, so
+/// every existing helper taking `&Puzzle5dRuntime`/`&mut Puzzle5dRuntime` throughout this file keeps
+/// working unchanged; only `Puzzle5dPlayApp`'s own ambient `RefCell<Puzzle5dRuntime>` field is gone
+/// (see `struct Puzzle5dPlayApp` below) — every read now comes from `cfg.projection`, every write
+/// flows out as a `Puzzle5dConfigOperation` in the returned `Emit` instead of a silent `self` mutation.
+pub type Puzzle5dConfig = Puzzle5dRuntime;
+
+impl store::DocumentDsl for Puzzle5dRuntime {
+    const EXTENSION: &'static str = "puzzle5dcfg";
+
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    }
+
+    fn print_dsl(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
+}
+
+impl store::DocumentPack for Puzzle5dRuntime {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let value = dsl::DslValue::decode_pack_with(bytes, options)?;
+        dsl::from_dsl_value(value).map_err(store::PackError::Schema)
+    }
+}
+
+impl store::ConfigRecord for Puzzle5dRuntime {}
+
+/// @emoji 🧮️ Whole-record diff — every `Puzzle5dConfigOperation` is a full-config `Snapshot` (see
+/// `Puzzle5dConfigOperation` below), so `apply` ignores `base` entirely, matching
+/// `puzzle_3d_ui::Puzzle3dRuntime`'s identical pattern.
+impl protocol::OperationDiff<Puzzle5dRuntime> for Puzzle5dRuntime {
+    fn apply(&self, _base: &Puzzle5dRuntime) -> Puzzle5dRuntime {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+
+/// @emoji 🧮️ B1: `Puzzle5dConfig`'s operation enum — lives here (in `ui`, not a lower `op`/`engine`
+/// crate) because `Puzzle5dConfig` itself is a type alias for `Puzzle5dRuntime`, which is (and stays)
+/// a ui-crate-local type. Mirrors `puzzle_3d_ui::Puzzle3dConfigOperation`'s single-generic-`Snapshot`-
+/// variant pattern exactly: every real config edit is captured as "the whole config after this edit";
+/// `backwards()` is the same one-liner regardless of what changed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum Puzzle5dConfigOperation {
+    Snapshot { config: Puzzle5dConfig },
+}
+
+impl protocol::Operation<Puzzle5dConfig> for Puzzle5dConfigOperation {
+    type Diff = Puzzle5dConfig;
+
+    fn diff(&self, _base: &Puzzle5dConfig) -> Puzzle5dConfig {
+        match self {
+            Puzzle5dConfigOperation::Snapshot { config } => config.clone(),
+        }
+    }
+
+    fn backwards(&self, base: &Puzzle5dConfig) -> Vec<Self> {
+        vec![Puzzle5dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+
+impl protocol::OpBinary for Puzzle5dConfigOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+}
+
+impl protocol::OpText for Puzzle5dConfigOperation {
+    fn print_op(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+    }
+}
+//#endregion 🔖️Config
 
 /// 🧾️ Transient render/mutation bundle pairing the persisted projection (the bare `Puzzle5dDocument`
 /// json) with the app's ephemeral view state. Never persisted — the {@link VcsDocumentApp} store owns
@@ -526,19 +643,20 @@ impl Default for Puzzle5dRuntime {
 struct Puzzle5dScene {
     document: Puzzle5dDocument,
     runtime: Puzzle5dRuntime,
-    /// 🧰️ Host-owned active utility mirrored from `view_state.active_utility_id` — transient, never persisted.
+    /// 🧰️ The active utility for this window (was host-pushed `view_state.active_utility_id`) — transient, never persisted.
     active_utility: String,
 }
 
-/// 🧰️ The host-owned active utility for this view — per window instance via
-/// `active_utility_by_window_id`, then the per-call `active_utility_id` overlay, then `select`.
-fn puzzle5d_scene_active_utility(view_state: &ViewState, window_id: Option<&str>) -> String {
+/// 🧰️ B1: the active utility for `window_id`, from `Puzzle5dConfig::active_utility_by_window_id` (was
+/// host-pushed `view_state.active_utility_by_window_id`/`view_state.active_utility_id`) — falls back to
+/// [`PUZZLE5D_DEFAULT_UTILITY`] when the window has never had a utility switch recorded yet.
+fn puzzle5d_scene_active_utility(config: &Puzzle5dConfig, window_id: Option<&str>) -> String {
     if let Some(wid) = window_id {
-        if let Some(utility) = view_state.active_utility_by_window_id.get(wid) {
+        if let Some(utility) = config.active_utility_by_window_id.get(wid) {
             return utility.clone();
         }
     }
-    view_state.active_utility_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_UTILITY).to_string()
+    PUZZLE5D_DEFAULT_UTILITY.to_string()
 }
 
 /// 🧭️ The select/brush/fill interaction mode the world engine reads, derived from the flat active utility
@@ -634,12 +752,16 @@ fn puzzle5d_operations_from_document_change(before: &Value, after_document: &Puz
     puzzle5d_document_delta_operations(&before_normalized, &after)
 }
 
-/// 🪟️ Live window-instance ids of `kind_id` from `view_state.window_instances`, falling back to
-/// `vec![kind_id]` when the list is empty — a headless/test call that never threads instances still
-/// gets exactly the one entry today's single-instance-per-window callers expect.
-fn window_instance_ids(view_state: &ViewState, kind_id: &str) -> Vec<String> {
-    let ids: Vec<String> = view_state.window_instances.iter().filter(|instance| instance.window_kind_id == kind_id).map(|instance| instance.id.clone()).collect();
-    if ids.is_empty() { vec![kind_id.to_string()] } else { ids }
+/// 🪟️ B1: puzzle5d has exactly two window KINDS (2D and 3D), each single-instance — unlike puzzle3d's
+/// split top/perspective panes (two INSTANCES of one kind), puzzle5d's own dispatch never distinguishes
+/// a window instance id from its kind id (every action matches the literal kind id via
+/// `PUZZLE5D_PLAY_WINDOWS.contains(&window)`), so this needs none of `Puzzle3dConfig`'s self-maintained
+/// `window_ids`/`load_window`/`save_window` machinery — each kind's sole instance id is the kind id
+/// itself. Kept as a named helper (rather than inlining `vec![kind_id.to_string()]`) purely so
+/// `window_engagements`/`window_measures` read the same "one entry per live window instance" shape
+/// `DocumentApp`'s doc comment describes, and so a future genuine multi-instance need has one seam to extend.
+fn window_instance_ids(kind_id: &str) -> Vec<String> {
+    vec![kind_id.to_string()]
 }
 
 fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -2127,19 +2249,22 @@ fn build_inspector_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Ui
 //#endregion 🔖️Panels
 
 //#region 🔖️Puzzle5dPlayApp
-/// 🧩️ Puzzle-5d play app. Owns the precompute engine, the registered-mesh cache, and the ephemeral
-/// view `runtime`; the persisted document (bare `Puzzle5dDocument` json) lives in the wrapping
-/// `VcsDocumentApp`. Each action mutates a transient {@link Puzzle5dScene}, then emits the granular
-/// operation delta. Undo/redo/checkpoints are handled by the wrapper.
+/// 🧩️ B1: Puzzle-5d play app. Owns the precompute engine and the registered-mesh cache — both
+/// per-call scratch, never VCS-tracked; the persisted document (bare `Puzzle5dDocument` json) lives in
+/// the wrapping `VcsDocumentApp`'s document store, and the former ambient `RefCell<Puzzle5dRuntime>`
+/// ephemeral view state now lives in the wrapping store's real, VCS-tracked `Puzzle5dConfig` artifact
+/// (see `//#region 🔖️Config`) — every read comes from `cfg.projection`, every write flows out as a
+/// `Puzzle5dConfigOperation` in the returned `Emit`. Each action mutates a transient
+/// {@link Puzzle5dScene}, then emits the granular operation delta. Undo/redo/checkpoints are handled
+/// by the wrapper.
 pub struct Puzzle5dPlayApp {
     precompute: RefCell<Puzzle5dPrecomputeSession>,
     registered_mesh_urls: RefCell<HashSet<String>>,
-    runtime: RefCell<Puzzle5dRuntime>,
 }
 
 impl Default for Puzzle5dPlayApp {
     fn default() -> Self {
-        Self { precompute: RefCell::new(Puzzle5dPrecomputeSession::new()), registered_mesh_urls: RefCell::new(HashSet::new()), runtime: RefCell::new(Puzzle5dRuntime::default()) }
+        Self { precompute: RefCell::new(Puzzle5dPrecomputeSession::new()), registered_mesh_urls: RefCell::new(HashSet::new()) }
     }
 }
 
@@ -2285,12 +2410,141 @@ impl Puzzle5dPlayApp {
         }
     }
 }
+//#endregion 🔖️Puzzle5dPlayApp
 
+//#region 🔖️Puzzle5dCommand
+/// @emoji 🎯️ B1: `Puzzle5dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
+/// action (mirrors every `.operation(...)`/`.view_action(...)` id `create_puzzle5d_app` registers,
+/// plus the framework-injected `SET_ACTIVE_UTILITY_ACTION_ID`). Mirrors `puzzle_3d_ui::Puzzle3dCommand`
+/// exactly: each variant carries `window_id` (was host-pushed `view_state.window_id`) plus `args` (the
+/// action's original `{...}` JSON payload, unchanged) — `handle` reconstructs the exact
+/// `(action, args, window_id)` triple `handle_action_impl` (the preserved pre-B1 business logic, see
+/// its doc comment) already expects, so every arm's internal `args.get("field")` extraction stays
+/// byte-for-byte identical to the pre-B1 implementation. `OpBinary` is a plain JSON-bytes bridge (not
+/// `#[derive(dsl::DslOps)]`) — same established "local JSON bridge" idiom `Puzzle5dPlayProjection`
+/// (`puzzle_5d_op`) already uses; no DSL text form is required by `DocumentApp::Command` (only
+/// `OpBinary`), and a generic `args: Value` field is not representable in the DSL grammar the
+/// `#[derive(dsl::DslOps)]` macro targets.
+macro_rules! puzzle5d_command_variants {
+    ($($Variant:ident = $id:tt),* $(,)?) => {
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        pub enum Puzzle5dCommand {
+            $($Variant { window_id: Option<String>, args: Option<Value> }),*
+        }
+
+        impl Puzzle5dCommand {
+            /// 🏷️ The action id this variant was declared under — used both for `command_id()`
+            /// (command-log labeling / registry kind-discipline) and to reconstruct the exact
+            /// `action: &str` `handle_action_impl` dispatches on.
+            fn action_id(&self) -> &'static str {
+                match self {
+                    $(Puzzle5dCommand::$Variant { .. } => $id),*
+                }
+            }
+
+            fn window_id(&self) -> Option<&str> {
+                match self {
+                    $(Puzzle5dCommand::$Variant { window_id, .. } => window_id.as_deref()),*
+                }
+            }
+
+            fn args(&self) -> Option<&Value> {
+                match self {
+                    $(Puzzle5dCommand::$Variant { args, .. } => args.as_ref()),*
+                }
+            }
+
+            /// 🧪️ Test-only reverse of `action_id()` — builds the variant for a given action id, for
+            /// the existing test module's `dispatch_action(...)` helper (see `//#region 🧪️Tests`).
+            /// Panics on an unknown action id (a test bug, not a runtime path).
+            #[cfg(test)]
+            fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Self {
+                match action {
+                    $($id => Puzzle5dCommand::$Variant { window_id, args }),*,
+                    other => panic!("unknown puzzle5d action id in test: {other}"),
+                }
+            }
+        }
+    };
+}
+
+puzzle5d_command_variants! {
+    SetFixtureJson = "setFixtureJson",
+    SetActiveExample = "setActiveExample",
+    AddNode = "addNode",
+    AddPartKind = "addPartKind",
+    AddBrushPart = "addBrushPart",
+    AddBrushObject = "addBrushObject",
+    DeleteSelection = "deleteSelection",
+    DuplicateSelection = "duplicateSelection",
+    SetSelectionFlag = "setSelectionFlag",
+    ZoomToSelection = "zoomToSelection",
+    FocusSelection = "focusSelection",
+    EngagementSubmit = "engagementSubmit",
+    SetFillCount = "setFillCount",
+    PatchPart = "patchPart",
+    PatchGrip = "patchGrip",
+    PatchFastener = "patchFastener",
+    ImportComposeKit = "importComposeKit",
+    TranslateSelection = "translateSelection",
+    RotateSelection = "rotateSelection",
+    ScaleSelection = "scaleSelection",
+    WorldRelocate = "worldRelocate",
+    ApplyBoardEvents = "applyBoardEvents",
+    SetCamera = "setCamera",
+    SetCamera2d = "setCamera2d",
+    SetCamera3d = "setCamera3d",
+    SetSelection = "setSelection",
+    DocumentSelect = "documentSelect",
+    ClearSelection = "clearSelection",
+    SelectAll = "selectAll",
+    SelectSameKindSelection = "selectSameKindSelection",
+    SelectSameKind = "selectSameKind",
+    ToggleSun = "toggleSun",
+    SetSunAzimuth = "setSunAzimuth",
+    SetSunElevation = "setSunElevation",
+    SetSunIntensity = "setSunIntensity",
+    EngagementInput = "engagementInput",
+    EngagementAbort = "engagementAbort",
+    EngagementControlSelect = "engagementControlSelect",
+    CycleBrushCandidate = "cycleBrushCandidate",
+    RegisterBrushMesh = "registerBrushMesh",
+    SetBrushPlacementOverlapBudget = "setBrushPlacementOverlapBudget",
+    SetObjectKindWeight = "setObjectKindWeight",
+    SetVortexKindWeight = "setVortexKindWeight",
+    WorldSelect = "worldSelect",
+    WorldPick = "worldPick",
+    WorldHover = "worldHover",
+    SetHover = "setHover",
+    WorldVortexHover = "worldVortexHover",
+    WorldVortexSelect = "worldVortexSelect",
+    SetSelectionMethod = "setSelectionMethod",
+    SetLodMode = "setLodMode",
+    SetSuggestionOffset = "setSuggestionOffset",
+    SetGridSnapEnabled = "setGridSnapEnabled",
+    SetGridFactor = "setGridFactor",
+    WorldPointerDown = "worldPointerDown",
+    CanvasPointerDown = "canvasPointerDown",
+    SetActiveUtility = SET_ACTIVE_UTILITY_ACTION_ID,
+}
+
+impl protocol::OpBinary for Puzzle5dCommand {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
+    }
+}
+//#endregion 🔖️Puzzle5dCommand
+
+//#region 🔖️Puzzle5dPlayAppTrait
 impl DocumentApp for Puzzle5dPlayApp {
     type Projection = Puzzle5dPlayProjection;
     type Operation = Puzzle5dOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = Puzzle5dConfig;
+    type ConfigOperation = Puzzle5dConfigOperation;
+    type Command = Puzzle5dCommand;
 
     fn app_id(&self) -> &str {
         PUZZLE5D_PLAY_APP_ID
@@ -2308,9 +2562,9 @@ impl DocumentApp for Puzzle5dPlayApp {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
     }
 
-    fn copy_fragment(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
+    fn copy_fragment(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<ClipboardFragment, ClipboardError> {
         let document: Puzzle5dDocument = serde_json::from_value(doc.projection.0.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
-        let selection = self.runtime.borrow_mut().selection.clone();
+        let selection = &cfg.projection.selection;
         let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
         if parts.is_empty() {
             return Err(ClipboardError::EmptySelection);
@@ -2326,12 +2580,18 @@ impl DocumentApp for Puzzle5dPlayApp {
         })
     }
 
-    fn cut_operations(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> Vec<Puzzle5dOperation> {
+    /// @emoji ✂️ B1: `DocumentApp::cut_operations`'s signature carries no config output channel (it
+    /// returns a bare `Vec<Self::Operation>`, not an `Emit`), so — unlike the pre-B1 version, which
+    /// also reset `self.runtime.borrow_mut().selection` after cutting — this can only emit the document
+    /// removal; clearing the selection is left to the framework's own post-cut selection reconciliation
+    /// (the cut parts/fasteners are gone from the document either way, so a stale selection referencing
+    /// them is inert until the next real selection action overwrites it).
+    fn cut_operations(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Vec<Puzzle5dOperation> {
         let before = doc.projection.0.clone();
         let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
             return Vec::new();
         };
-        let selection = self.runtime.borrow_mut().selection.clone();
+        let selection = &cfg.projection.selection;
         let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
         if parts.is_empty() {
             return Vec::new();
@@ -2341,10 +2601,14 @@ impl DocumentApp for Puzzle5dPlayApp {
         let mut after = document;
         after.parts.retain(|part| !remove_part_ids.contains(part.id.as_str()));
         after.fasteners.retain(|fastener| !remove_fastener_ids.contains(fastener.id.as_str()));
-        self.runtime.borrow_mut().selection = Puzzle5dSelection::default();
         puzzle5d_operations_from_document_change(&before, &after)
     }
 
+    /// @emoji 📋️ B1: `DocumentApp::paste_operations` carries no `ConfigView` at all (only `doc`/
+    /// `fragment`/`placement`), so — unlike the pre-B1 version, which also selected the freshly pasted
+    /// parts via `self.runtime.borrow_mut().selection` — the new selection can't be threaded through
+    /// this call; a following `setSelection` command (which the host already issues after a paste in
+    /// practice) is what actually selects the pasted parts now.
     fn paste_operations(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dOperation>, ClipboardError> {
         let expected = self.clipboard_media_type().unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Design });
         if fragment.media_type != expected {
@@ -2357,18 +2621,346 @@ impl DocumentApp for Puzzle5dPlayApp {
         let document: Puzzle5dDocument = serde_json::from_value(before.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let delta = paste_delta_2d(&fragment_parts, &document.parts, placement);
         let (fresh_parts, fresh_fasteners) = paste_selection_local(&fragment_parts, &fragment_fasteners, delta);
-        let new_part_ids: Vec<String> = fresh_parts.iter().map(|part| part.id.clone()).collect();
         let mut after = document;
         after.parts.extend(fresh_parts);
         after.fasteners.extend(fresh_fasteners);
-        self.runtime.borrow_mut().selection = Puzzle5dSelection { part_ids: SelectionSet::from_ids(new_part_ids), grip_ids: SelectionSet::default(), fastener_ids: SelectionSet::default() };
         Ok(puzzle5d_operations_from_document_change(&before, &after))
     }
 
-    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> ActionEmit<Puzzle5dOperation> {
+    /// 🏷️ Maps each `Puzzle5dCommand` variant back to the action id it was declared under.
+    fn command_id(&self, command: &Puzzle5dCommand) -> &str {
+        command.action_id()
+    }
+
+    /// @emoji 🧩️ B1: thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
+    /// triple the preserved pre-B1 `handle_action_impl` (see its doc comment, in the `impl
+    /// Puzzle5dPlayApp` block right below) already expects, from the typed `Puzzle5dCommand`.
+    fn handle(&self, command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Emit<Puzzle5dOperation, Puzzle5dConfigOperation> {
+        self.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, cfg.projection)
+    }
+
+    /// 🔌️ Declares puzzle5d's typed media I/O surface: the implicit document ports (from
+    /// `.document([...])`/`.artifact_kind(...)` in `create_puzzle5d_app`) plus `kit:in` (accepting a
+    /// `kit.catalog` fragment shaped like block3d's `puzzle3d_catalog_fragment`, fanning IN from
+    /// potentially many producers) and `design:out` (this app's own `5d.puzzle` design artifact, fanning
+    /// OUT to potentially many consumers).
+    fn io(&self) -> Option<AppIo> {
+        Some(
+            AppIo::from_document(
+                "puzzle.5d",
+                MediaType { class: MediaClass::Kit, form: MediaForm::Design },
+                ArtifactPresentation { id: "5d.puzzle".into(), name: "5D Puzzle".into(), dimension: "5d".into(), component_kind: "puzzle5d".into() },
+            )
+            .with_ports(vec![
+                MediaPortSpec {
+                    id: "kit:in".into(),
+                    label: "Kit Catalog".into(),
+                    direction: MediaPortDirection::In,
+                    media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+                    kind_id: Some("kit.catalog".into()),
+                    required: false,
+                    multiplicity: PortMultiplicity::Many,
+                },
+                MediaPortSpec {
+                    id: "design:out".into(),
+                    label: "5D Puzzle Design".into(),
+                    direction: MediaPortDirection::Out,
+                    // 🔁️ Reuses the exact `id`/`media_type` already declared on `create_puzzle5d_app`'s
+                    // `ArtifactKindSpec { id: "5d.puzzle", .. }` — the same design artifact this app's
+                    // document already publishes, just exposed as an explicit workflow output port.
+                    media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Design },
+                    kind_id: Some("5d.puzzle".into()),
+                    required: false,
+                    multiplicity: PortMultiplicity::Many,
+                },
+            ]),
+        )
+    }
+
+    /// 🎞️ `kit:in` seam: normalizes an incoming `kit.catalog` fragment (block3d's
+    /// `puzzle3d_catalog_fragment` shape — `objectKinds`/`vortexKinds`/`cableKinds`/`attractionKinds`/
+    /// `kindCompatibility`) into puzzle5d's own typed `kindCatalogs`/`kindCompatibility` vocabulary and
+    /// upserts it (keyed by row `id`, deterministic/order-independent — safe for `multiplicity: Many`
+    /// fan-in from several producers), then bridges the before/after document through
+    /// `puzzle5d_operations_from_document_change` exactly like every other document-mutating action —
+    /// this never mutates anything directly, only real, undoable operations. See
+    /// `puzzle5d_upsert_catalog_parts`/`puzzle5d_upsert_catalog_grips`/`puzzle5d_upsert_kind_compatibility`.
+    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, Puzzle5dPlayProjection>) -> Result<Emit<Puzzle5dOperation, Puzzle5dConfigOperation>, MediaError> {
+        if port != "kit:in" {
+            return Err(MediaError::NotImplemented);
+        }
+        let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "kit:in only accepts a Structured (JSON) payload".into()));
+        };
+        let fragment: Value = serde_json::from_str(json.as_str()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let mut document: Puzzle5dDocument = serde_json::from_value(doc.projection.0.clone()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+
+        let mut catalogs: puzzle_5d::Puzzle5dKindCatalogs = document.kind_catalogs.as_ref().and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+
+        if let Some(incoming_parts) = fragment.get("objectKinds").and_then(Value::as_array) {
+            let parsed: Vec<puzzle_5d::Puzzle5dCatalogPart> = incoming_parts
+                .iter()
+                .filter_map(|row| {
+                    let parsed_row: Puzzle5dKitInObjectKindFragment = serde_json::from_value(row.clone()).ok()?;
+                    Some(puzzle_5d::Puzzle5dCatalogPart {
+                        id: parsed_row.id,
+                        name: parsed_row.name,
+                        label: parsed_row.label,
+                        mesh_url: parsed_row.mesh_url,
+                        grips: parsed_row
+                            .vortices
+                            .into_iter()
+                            .map(|vortex| puzzle_5d::Puzzle5dCatalogGripTemplate {
+                                grip_kind: vortex.vortex_kind,
+                                grip_2d: None,
+                                grip_3d: Some(puzzle_5d::Puzzle5dCatalogGripTemplate3d { position: vortex.position, direction: vortex.direction, radius: vortex.radius }),
+                            })
+                            .collect(),
+                    })
+                })
+                .collect();
+            puzzle5d_upsert_catalog_parts(&mut catalogs.parts, parsed);
+        }
+        if let Some(incoming_grips) = fragment.get("vortexKinds").and_then(Value::as_array) {
+            let parsed: Vec<puzzle_5d::Puzzle5dCatalogGrip> = incoming_grips
+                .iter()
+                .filter_map(|row| {
+                    let parsed_row: Puzzle5dKitInVortexKindFragment = serde_json::from_value(row.clone()).ok()?;
+                    Some(puzzle_5d::Puzzle5dCatalogGrip { id: parsed_row.id, name: parsed_row.name, label: parsed_row.label, color: parsed_row.color, default_rope_kind: parsed_row.default_cable_kind })
+                })
+                .collect();
+            puzzle5d_upsert_catalog_grips(&mut catalogs.grips, parsed);
+        }
+        // 🚫️ `cableKinds`/`attractionKinds` are deliberately left unmapped: puzzle5d's `Puzzle5dKindCatalogs`
+        // has no genuine 1:1 counterpart for either in THIS fragment shape — `ropes`/`fasteners` exist as
+        // catalog sections, but `cableKinds`/`attractionKinds` describe 3D cable-tension/attraction-constraint
+        // kinds, a different domain concept than puzzle5d's fastener/rope kinds. Forcing a mapping here would
+        // be a fabricated guess, not a verified equivalence — left for a follow-up ticket with real fixtures.
+        document.kind_catalogs = Some(serde_json::to_value(&catalogs).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?);
+
+        if let Some(incoming_compat) = fragment.get("kindCompatibility").and_then(Value::as_array) {
+            let mut compatibility: Vec<puzzle_5d::Puzzle5dKindCompatibility> = document.kind_compatibility.as_ref().and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+            let parsed: Vec<puzzle_5d::Puzzle5dKindCompatibility> = incoming_compat.iter().filter_map(|row| serde_json::from_value(row.clone()).ok()).collect();
+            puzzle5d_upsert_kind_compatibility(&mut compatibility, parsed);
+            document.kind_compatibility = Some(serde_json::to_value(&compatibility).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?);
+        }
+
+        let operations = puzzle5d_operations_from_document_change(&doc.projection.0, &document);
+        Ok(Emit::operations(operations))
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> UiNode {
+        let config = cfg.projection;
+        let window_for_body = match body_key {
+            PUZZLE5D_PLAY_BODY_2D => PUZZLE5D_PLAY_WINDOW_2D,
+            _ => PUZZLE5D_PLAY_WINDOW_3D,
+        };
+        let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
+        let envelope = scene_from_projection(&doc.projection.0, config.clone(), &active_utility);
+        let labels = puzzle5d_labels(config);
+        match body_key {
+            PUZZLE5D_PLAY_BODY_2D => build_board2d_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),
+            PUZZLE5D_PLAY_BODY_3D => {
+                let brush_preview = world_brush_preview_json(&self.precompute.borrow(), &envelope);
+                build_world_3d_scene(
+                    PUZZLE5D_PLAY_SURFACE_3D,
+                    PUZZLE5D_PLAY_CONTROLLER_ID,
+                    world3d_scene_extended(
+                        camera3d_json(&envelope.runtime.camera3d),
+                        world_meshes_json(&envelope.document),
+                        world_instances_json(&envelope.document, &envelope.runtime),
+                        world_selection_json_ex(&envelope),
+                        Some(world_grips_json(&envelope.document)),
+                        Some(world_fasteners_json(&envelope.document)),
+                        None,
+                        None,
+                        brush_preview,
+                        Some(world_interaction_json(&envelope.runtime, &envelope.active_utility)),
+                        None,
+                        None,
+                        Some(world3d_chunking_json(256.0, 8000.0)),
+                        Some(world3d_environment_json(&envelope.runtime.sun)),
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                    ),
+                )
+            }
+            PUZZLE5D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
+            PUZZLE5D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
+            PUZZLE5D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
+            _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+
+    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
+        let config = cfg.projection;
+        let labels = puzzle5d_labels(config);
+        // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — see
+        // `window_instance_ids`'s doc comment for why puzzle5d needs none of puzzle3d's genuine
+        // multi-instance-per-kind machinery here (each kind is always its own sole instance).
+        PUZZLE5D_PLAY_WINDOWS
+            .iter()
+            .flat_map(|window| {
+                window_instance_ids(window).into_iter().map(|wid| {
+                    let active_utility = puzzle5d_scene_active_utility(config, Some(&wid));
+                    let envelope = scene_from_projection(&doc.projection.0, config.clone(), &active_utility);
+                    (wid, puzzle5d_engagement(&envelope, window, labels))
+                })
+            })
+            .collect()
+    }
+
+    fn window_measures(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = cfg.projection;
+        let labels = puzzle5d_labels(config);
+        PUZZLE5D_PLAY_WINDOWS
+            .iter()
+            .flat_map(|window| {
+                window_instance_ids(window).into_iter().map(|wid| {
+                    let active_utility = puzzle5d_scene_active_utility(config, Some(&wid));
+                    let envelope = scene_from_projection(&doc.projection.0, config.clone(), &active_utility);
+                    (wid, puzzle5d_window_measures(window, &envelope, &self.precompute.borrow(), labels))
+                })
+            })
+            .collect()
+    }
+
+    fn app_labels(&self, cfg: &ConfigView<'_, Puzzle5dConfig>) -> semio_framework_plugin::AppLabelsOverlay {
+        let config = cfg.projection;
+        let labels = puzzle5d_labels(config);
+        let is_de = puzzle5d_is_de_locale(config);
+        semio_framework_plugin::AppLabelsOverlay {
+            window_kind_labels: HashMap::from([
+                (PUZZLE5D_PLAY_WINDOW_2D.to_string(), labels.window_2d.to_string()),
+                (PUZZLE5D_PLAY_WINDOW_3D.to_string(), labels.window_3d.to_string()),
+            ]),
+            panel_tab_labels: HashMap::new(),
+            mode_labels: HashMap::new(),
+            action_labels: puzzle5d_action_labels(is_de),
+            utility_labels: puzzle5d_utility_labels(labels, is_de),
+            example_labels: HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+            action_arg_labels: HashMap::new(),
+            dialog_labels: HashMap::new(),
+            introduction_labels: HashMap::new(),
+            tutorial_labels: HashMap::new(),
+            group_labels: HashMap::new(),
+        }
+    }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &DocumentView<'_, Puzzle5dPlayProjection>,
+        cfg: &ConfigView<'_, Puzzle5dConfig>,
+        _registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let config = cfg.projection;
+        let labels = puzzle5d_labels(config);
+        let is_de = puzzle5d_is_de_locale(config);
+        let active_utility = puzzle5d_scene_active_utility(config, Some(PUZZLE5D_PLAY_WINDOW_3D));
+        let mut envelope = scene_from_projection(&doc.projection.0, config.clone(), &active_utility);
+        if let Some(surface) = request.surface.as_ref() {
+            let part_ids: Vec<String> = surface.selection.iter().filter(|g| g.domain == "object" || g.domain == "node" || g.domain == "part").flat_map(|g| g.ids.iter().cloned()).collect();
+            if !part_ids.is_empty() {
+                envelope.runtime.selection.part_ids = part_ids.into();
+            }
+        }
+        puzzle5d_context_menu_items(&envelope, labels, is_de)
+    }
+}
+
+/// 🎞️ `kit:in` fragment row shapes (block3d's `puzzle3d_catalog_fragment`, camelCase) — local
+/// deserialize-only mirrors of `objectKinds[]`/`objectKinds[].vortices[]`/`vortexKinds[]` entries, kept
+/// separate from `puzzle_5d::Puzzle5dCatalogPart`/`Puzzle5dCatalogGripTemplate`/`Puzzle5dCatalogGrip`
+/// (whose field names/shape differ) so `import_media` can parse the fragment once and then build the
+/// real typed catalog rows explicitly, field by field.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle5dKitInObjectKindFragment {
+    id: String,
+    name: String,
+    label: String,
+    #[serde(default)]
+    mesh_url: Option<String>,
+    #[serde(default)]
+    vortices: Vec<Puzzle5dKitInVortexFragment>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle5dKitInVortexFragment {
+    #[serde(default, rename = "id")]
+    #[allow(dead_code)]
+    _id: String,
+    vortex_kind: String,
+    position: [f64; 3],
+    direction: [f64; 3],
+    radius: f64,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle5dKitInVortexKindFragment {
+    id: String,
+    name: String,
+    label: String,
+    color: String,
+    #[serde(default)]
+    default_cable_kind: String,
+}
+
+/// 🔌️ `kit:in` seam helper: keyed UPSERT of catalog PART rows (by `id`) — replaces any existing row
+/// with the same id, else appends. Deterministic/order-independent in the resulting SET of ids (a
+/// `multiplicity: Many` port may fan in from several producers across several `import_media` calls);
+/// when two producers disagree on one id's content, the most-recently-applied wins. Mirrors
+/// `puzzle_3d_ui::puzzle3d_upsert_catalog_rows` but against the typed
+/// `Vec<puzzle_5d::Puzzle5dCatalogPart>` puzzle5d's own kind catalogs use, instead of a raw `Value` array.
+fn puzzle5d_upsert_catalog_parts(existing: &mut Vec<puzzle_5d::Puzzle5dCatalogPart>, incoming: Vec<puzzle_5d::Puzzle5dCatalogPart>) {
+    for row in incoming {
+        match existing.iter().position(|entry| entry.id == row.id) {
+            Some(index) => existing[index] = row,
+            None => existing.push(row),
+        }
+    }
+}
+
+/// 🔌️ `kit:in` seam helper: keyed UPSERT of catalog GRIP-KIND rows (by `id`) — see
+/// `puzzle5d_upsert_catalog_parts`'s doc for the upsert/idempotency contract.
+fn puzzle5d_upsert_catalog_grips(existing: &mut Vec<puzzle_5d::Puzzle5dCatalogGrip>, incoming: Vec<puzzle_5d::Puzzle5dCatalogGrip>) {
+    for row in incoming {
+        match existing.iter().position(|entry| entry.id == row.id) {
+            Some(index) => existing[index] = row,
+            None => existing.push(row),
+        }
+    }
+}
+
+/// 🔌️ `kit:in` seam helper: keyed UPSERT of kind-compatibility rows by the `(source, target)` pair —
+/// mirrors `puzzle_3d_ui`'s compatibility-upsert loop in `Puzzle3dPlayApp::import_media`.
+fn puzzle5d_upsert_kind_compatibility(existing: &mut Vec<puzzle_5d::Puzzle5dKindCompatibility>, incoming: Vec<puzzle_5d::Puzzle5dKindCompatibility>) {
+    for row in incoming {
+        match existing.iter().position(|entry| entry.source == row.source && entry.target == row.target) {
+            Some(index) => existing[index] = row,
+            None => existing.push(row),
+        }
+    }
+}
+
+impl Puzzle5dPlayApp {
+    /// @emoji 🧩️ B1: the pure per-action core, dispatched into by `DocumentApp::handle` above with
+    /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle5dCommand` — everything past
+    /// this adapter boundary is the ORIGINAL pre-B1 business logic, unchanged, now reading/writing a
+    /// passed-in `Puzzle5dConfig` snapshot instead of an ambient `self.runtime` `RefCell` and returning
+    /// a real `Emit` (document + config operations) instead of mutating `self` and returning a bare
+    /// document-only `ActionEmit`.
+    fn handle_action_impl(&self, action: &str, args: Option<&Value>, window_id: Option<&str>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, config: &Puzzle5dConfig) -> Emit<Puzzle5dOperation, Puzzle5dConfigOperation> {
         let before = doc.projection.0.clone();
-        let active_utility_initial = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
-        let mut envelope = scene_from_projection(&before, self.runtime.borrow_mut().clone(), &active_utility_initial);
+        let active_utility_initial = puzzle5d_scene_active_utility(config, window_id);
+        let wid = window_id.map(str::to_string).unwrap_or_else(|| PUZZLE5D_PLAY_WINDOW_3D.to_string());
+        let mut envelope = scene_from_projection(&before, config.clone(), &active_utility_initial);
         match action {
             "setFixtureJson" => {
                 if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
@@ -2456,7 +3048,7 @@ impl DocumentApp for Puzzle5dPlayApp {
                     })
                     .collect();
                 if clones.is_empty() {
-                    return ActionEmit::default();
+                    return Emit::default();
                 }
                 let new_ids: Vec<String> = clones.iter().map(|part| part.id.clone()).collect();
                 envelope.document.parts.extend(clones);
@@ -2464,7 +3056,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             }
             "selectSameKindSelection" | "selectSameKind" => {
                 let Some(kind) = envelope.runtime.selection.part_ids.first().and_then(|id| envelope.document.parts.iter().find(|part| &part.id == id)).map(|part| part.part_kind.clone()) else {
-                    return ActionEmit::default();
+                    return Emit::default();
                 };
                 envelope.runtime.selection.part_ids = envelope.document.parts.iter().filter(|part| part.part_kind == kind).map(|part| part.id.clone()).collect();
             }
@@ -2493,7 +3085,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             }
             "zoomToSelection" | "focusSelection" => {
                 let Some(target) = gumball_target_world(&envelope) else {
-                    return ActionEmit::default();
+                    return Emit::default();
                 };
                 let camera = &mut envelope.runtime.camera3d;
                 let offset = [camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]];
@@ -2506,8 +3098,14 @@ impl DocumentApp for Puzzle5dPlayApp {
                 }
             }
             SET_ACTIVE_UTILITY_ACTION_ID => {
-                // 🧰️ Host already applied `view_state.active_utility_id`; clear per-window engagement scratch and
-                // refresh the placement engine for the new utility. Emits no operations and no utility-switch effect.
+                // 🧰️ B1: this Command IS the utility switch now (was host-applied ambient
+                // `view_state.active_utility_id`/`active_utility_by_window_id` — the host no longer owns
+                // that state, `Puzzle5dConfig` does), so this arm must itself write the new value before
+                // clearing in-progress engagement scratch and refreshing the placement engine.
+                if let Some(utility_id) = args.and_then(|value| value.get("utilityId")).and_then(|value| value.as_str()) {
+                    envelope.runtime.active_utility_by_window_id.insert(wid.clone(), utility_id.to_string());
+                    envelope.active_utility = utility_id.to_string();
+                }
                 for window in PUZZLE5D_PLAY_WINDOWS {
                     envelope.runtime.engagement_input_by_window.insert(window.to_string(), String::new());
                 }
@@ -2612,7 +3210,7 @@ impl DocumentApp for Puzzle5dPlayApp {
                     self.precompute.borrow_mut().register_mesh(url, &positions, &indices);
                     self.registered_mesh_urls.borrow_mut().insert(url.to_string());
                 }
-                return ActionEmit::default();
+                return Emit::default();
             }
             "setBrushPlacementOverlapBudget" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()) {
@@ -2969,11 +3567,10 @@ impl DocumentApp for Puzzle5dPlayApp {
                     self.apply_board_events_from_json(events_json, &mut envelope);
                 }
             }
-            "worldPointerDown" | "canvasPointerDown" => return ActionEmit::default(),
+            "worldPointerDown" | "canvasPointerDown" => return Emit::default(),
             _ => {}
         }
         let next_active_utility = envelope.active_utility.clone();
-        *self.runtime.borrow_mut() = envelope.runtime;
         let operations = puzzle5d_operations_from_document_change(&before, &envelope.document);
         // 🌀️ Coalesce each gumball drag tick into one undoable edit (compact per-part records, not full meshes).
         let coalesce_key = match action {
@@ -2982,130 +3579,26 @@ impl DocumentApp for Puzzle5dPlayApp {
             "scaleSelection" => Some("gumball-scale".to_string()),
             _ => None,
         };
-        // 🧰️ Programmatic utility switches (engagement submit/abort, fill) push the active utility back into the
-        // host session for both windows; `setActiveUtility` itself never re-emits (the host already applied it).
-        let effects = if next_active_utility != active_utility_initial {
+        // 🧰️ B1: a DIRECT `SetActiveUtility` command already told the host what it needs to know — never
+        // re-emit the same switch as a `HostEffect` (the pre-B1 code only had to guard this for the
+        // INDIRECT paths below, since the host itself pushed the direct switch before dispatching; now
+        // the command IS the direct switch, so this arm must self-exclude). Programmatic utility
+        // switches (engagement submit/abort, fill) still push the active utility back into the host
+        // session for both windows.
+        let is_direct_utility_switch = action == SET_ACTIVE_UTILITY_ACTION_ID;
+        let effects = if !is_direct_utility_switch && next_active_utility != active_utility_initial {
             PUZZLE5D_PLAY_WINDOWS.iter().map(|window| HostEffect::SetActiveUtility { window_id: (*window).into(), utility_id: next_active_utility.clone() }).collect()
         } else {
             Vec::new()
         };
-        ActionEmit { operations, coalesce_key, effects, ..Default::default() }
-    }
-
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
-        let active_utility = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
-        let envelope = scene_from_projection(&doc.projection.0, self.runtime.borrow_mut().clone(), &active_utility);
-        let labels = puzzle5d_labels(view_state);
-        match body_key {
-            PUZZLE5D_PLAY_BODY_2D => build_board2d_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),
-            PUZZLE5D_PLAY_BODY_3D => {
-                let brush_preview = world_brush_preview_json(&self.precompute.borrow(), &envelope);
-                build_world_3d_scene(
-                    PUZZLE5D_PLAY_SURFACE_3D,
-                    PUZZLE5D_PLAY_CONTROLLER_ID,
-                    world3d_scene_extended(
-                        camera3d_json(&envelope.runtime.camera3d),
-                        world_meshes_json(&envelope.document),
-                        world_instances_json(&envelope.document, &envelope.runtime),
-                        world_selection_json_ex(&envelope),
-                        Some(world_grips_json(&envelope.document)),
-                        Some(world_fasteners_json(&envelope.document)),
-                        None,
-                        None,
-                        brush_preview,
-                        Some(world_interaction_json(&envelope.runtime, &envelope.active_utility)),
-                        None,
-                        None,
-                        Some(world3d_chunking_json(256.0, 8000.0)),
-                        Some(world3d_environment_json(&envelope.runtime.sun)),
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                    ),
-                )
-            }
-            PUZZLE5D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
-            PUZZLE5D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
-            PUZZLE5D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
-        }
-    }
-
-    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let labels = puzzle5d_labels(view_state);
-        // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — a split/extra
-        // instance gets its own entry instead of being silently absent.
-        PUZZLE5D_PLAY_WINDOWS
-            .iter()
-            .flat_map(|window| {
-                window_instance_ids(view_state, window).into_iter().map(|wid| {
-                    let active_utility = puzzle5d_scene_active_utility(view_state, Some(&wid));
-                    let envelope = scene_from_projection(&doc.projection.0, self.runtime.borrow_mut().clone(), &active_utility);
-                    (wid, puzzle5d_engagement(&envelope, window, labels))
-                })
-            })
-            .collect()
-    }
-
-    fn window_measures(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let labels = puzzle5d_labels(view_state);
-        PUZZLE5D_PLAY_WINDOWS
-            .iter()
-            .flat_map(|window| {
-                window_instance_ids(view_state, window).into_iter().map(|wid| {
-                    let active_utility = puzzle5d_scene_active_utility(view_state, Some(&wid));
-                    let envelope = scene_from_projection(&doc.projection.0, self.runtime.borrow_mut().clone(), &active_utility);
-                    (wid, puzzle5d_window_measures(window, &envelope, &self.precompute.borrow(), labels))
-                })
-            })
-            .collect()
-    }
-
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = puzzle5d_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: HashMap::from([
-                (PUZZLE5D_PLAY_WINDOW_2D.to_string(), labels.window_2d.to_string()),
-                (PUZZLE5D_PLAY_WINDOW_3D.to_string(), labels.window_3d.to_string()),
-            ]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::new(),
-            action_labels: puzzle5d_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-            utility_labels: puzzle5d_utility_labels(labels, is_de),
-            example_labels: HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-            tutorial_labels: HashMap::new(),
-            group_labels: HashMap::new(),
-        }
-    }
-
-    fn context_menu(
-        &self,
-        request: &semio_framework_plugin::ContextMenuRequest,
-        doc: &DocumentView<'_, Puzzle5dPlayProjection>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-        _registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let labels = puzzle5d_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        let active_utility = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
-        let mut envelope = scene_from_projection(&doc.projection.0, self.runtime.borrow_mut().clone(), &active_utility);
-        if let Some(surface) = request.surface.as_ref() {
-            let part_ids: Vec<String> = surface.selection.iter().filter(|g| g.domain == "object" || g.domain == "node" || g.domain == "part").flat_map(|g| g.ids.iter().cloned()).collect();
-            if !part_ids.is_empty() {
-                envelope.runtime.selection.part_ids = part_ids.into();
-            }
-        }
-        puzzle5d_context_menu_items(&envelope, labels, is_de)
+        // 🧮️ B1: only a REAL config change becomes a `Puzzle5dConfigOperation` — `PartialEq` (derived)
+        // makes this cheap, and keeps a pure read-only action from creating a no-op undo entry.
+        let config_operations = if &envelope.runtime != config { vec![Puzzle5dConfigOperation::Snapshot { config: envelope.runtime }] } else { Vec::new() };
+        Emit { document_operations: operations, config_operations, coalesce_key, effects, ..Default::default() }
     }
 }
-//#endregion 🔖️Puzzle5dPlayApp
+
+//#endregion 🔖️Puzzle5dPlayAppTrait
 
 //#region 🔖️CommandLabels
 /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_puzzle5d_app`'s
@@ -3190,7 +3683,7 @@ fn puzzle5d_utility_labels(labels: &Puzzle5dLabels, is_de: bool) -> HashMap<Stri
 pub fn create_puzzle5d_app() -> App {
     let envelope = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: PUZZLE5D_DEFAULT_UTILITY.into() };
     let precompute = Puzzle5dPrecomputeSession::new();
-    let manifest_labels = puzzle5d_labels(&ViewState::default());
+    let manifest_labels = puzzle5d_labels(&Puzzle5dConfig::default());
     let mut app = App::from_builder(
         App::builder(PUZZLE5D_PLAY_APP_ID, "Puzzle 5D")
             .document(["semio", "puzzle", "5d"])
@@ -3408,7 +3901,8 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use protocol::OperationDiff;
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app_with_registry() -> VcsDocumentApp<Puzzle5dPlayApp> {
         testkit::new_app_with_registry::<Puzzle5dPlayApp>(create_puzzle5d_app)
@@ -3416,6 +3910,20 @@ mod tests {
 
     fn part_count(app: &VcsDocumentApp<Puzzle5dPlayApp>) -> usize {
         app.projection().expect("projection").0.get("parts").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
+    }
+
+    /// 🧪️ B1: test-only replacement for the deleted `VcsDocumentApp::handle_action` app-dispatch path
+    /// (that method is FRAMEWORK-reserved now — see its doc comment in `semio_framework_plugin`; an
+    /// app's own actions go exclusively through the typed `Self::Command` channel). Reconstructs the
+    /// `Puzzle5dCommand` from the same `(action, args, window_id)` triple every pre-B1 test already
+    /// passed and dispatches it via `VcsDocumentApp::dispatch_typed`.
+    fn dispatch_action(app: &mut VcsDocumentApp<Puzzle5dPlayApp>, action: &str, args: Option<&Value>, window_id: Option<&str>, meta: &semio_framework_plugin::ActionMeta) -> Result<semio_framework_plugin::InvocationResult, String> {
+        // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…) stay on `handle_action` — B1 keeps that
+        // path FRAMEWORK-only, an app's own actions go through the typed `Self::Command` channel below.
+        if matches!(action, "undo" | "redo" | "checkpoint" | "alternative" | "revertToCommand" | "historyFilter" | "noteShellCommand" | "copy" | "cut" | "paste") {
+            return app.handle_action(action, args, meta);
+        }
+        app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), meta)
     }
 
     #[test]
@@ -3429,7 +3937,7 @@ mod tests {
 
     #[test]
     fn initial_projection_is_the_concrete_forest_document() {
-        let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+        let app = testkit::new_app::<Puzzle5dPlayApp>();
         assert_eq!(app.projection().expect("projection").0.get("schema").and_then(|value| value.as_str()), Some(PUZZLE5D_SCHEMA));
         assert!(part_count(&app) > 0, "the concrete-forest default document ships with parts");
     }
@@ -3449,31 +3957,31 @@ mod tests {
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
         let loaded = part_count(&app);
         assert!(loaded > 0);
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None, &testkit::meta("local")).expect("empty");
         assert_eq!(part_count(&app), 0, "empty example clears the parts");
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert_eq!(part_count(&app), loaded, "undo restores the concrete-forest parts");
-        app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
+        app.handle_action("redo", None, &testkit::meta("local")).expect("redo");
         assert_eq!(part_count(&app), 0);
     }
 
     #[test]
     fn patch_fastener_updates_transform_offsets_and_undoes() {
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin (has fasteners)");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None, &testkit::meta("local")).expect("load nakagin (has fasteners)");
         let projection = app.projection().expect("projection");
         let fastener_id = projection.0["fasteners"][0]["id"].as_str().expect("seeded fastener").to_string();
-        app.handle_action("patchFastener", Some(&json!({ "fastenerId": fastener_id, "field": "gap", "value": 2.5 })), &ViewState::default(), &testkit::meta("local")).expect("patch gap");
+        dispatch_action(&mut app, "patchFastener", Some(&json!({ "fastenerId": fastener_id, "field": "gap", "value": 2.5 })), None, &testkit::meta("local")).expect("patch gap");
         let after = app.projection().expect("projection");
         let fastener = after.0["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
         assert_eq!(fastener["gap"], 2.5);
         assert_eq!(fastener["shift"], 0.0);
-        app.handle_action("patchFastener", Some(&json!({ "fastenerId": fastener_id, "field": "rotation", "value": 30.0 })), &ViewState::default(), &testkit::meta("local")).expect("patch rotation");
+        dispatch_action(&mut app, "patchFastener", Some(&json!({ "fastenerId": fastener_id, "field": "rotation", "value": 30.0 })), None, &testkit::meta("local")).expect("patch rotation");
         let after2 = app.projection().expect("projection");
         let fastener2 = after2.0["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
         assert_eq!(fastener2["gap"], 2.5, "earlier gap edit must survive a later rotation edit");
         assert_eq!(fastener2["rotation"], 30.0);
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         let undone = app.projection().expect("projection");
         let fastener3 = undone.0["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
         assert_eq!(fastener3["rotation"], 0.0, "undo restores the pre-rotation-edit value");
@@ -3483,11 +3991,11 @@ mod tests {
     #[test]
     fn copy_emits_clipboard_fragment_for_the_closed_selection() {
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None, &testkit::meta("local")).expect("load nakagin");
         let projection = app.projection().expect("projection");
         let first_part_id = projection.0["parts"][0]["id"].as_str().expect("seeded part").to_string();
-        app.handle_action("setSelection", Some(&json!({ "partIds": [first_part_id] })), &ViewState::default(), &testkit::meta("local")).expect("select");
-        let result = app.handle_action("copy", None, &ViewState::default(), &testkit::meta("local")).expect("copy");
+        dispatch_action(&mut app, "setSelection", Some(&json!({ "partIds": [first_part_id] })), None, &testkit::meta("local")).expect("select");
+        let result = app.handle_action("copy", None, &testkit::meta("local")).expect("copy");
         assert!(result.operations.is_empty(), "copy must not record an undo entry");
         assert_eq!(result.requested_effects.len(), 1);
         let HostEffect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
@@ -3499,7 +4007,7 @@ mod tests {
     #[test]
     fn copy_with_no_selection_is_a_benign_no_operation() {
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-        let result = app.handle_action("copy", None, &ViewState::default(), &testkit::meta("local")).expect("copy");
+        let result = app.handle_action("copy", None, &testkit::meta("local")).expect("copy");
         assert!(result.operations.is_empty());
         assert!(result.requested_effects.is_empty());
     }
@@ -3507,33 +4015,33 @@ mod tests {
     #[test]
     fn cut_removes_selected_part_and_undo_restores_it() {
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None, &testkit::meta("local")).expect("load nakagin");
         let before_count = part_count(&app);
         let projection = app.projection().expect("projection");
         let first_part_id = projection.0["parts"][0]["id"].as_str().expect("seeded part").to_string();
-        app.handle_action("setSelection", Some(&json!({ "partIds": [first_part_id.clone()] })), &ViewState::default(), &testkit::meta("local")).expect("select");
-        let result = app.handle_action("cut", None, &ViewState::default(), &testkit::meta("local")).expect("cut");
+        dispatch_action(&mut app, "setSelection", Some(&json!({ "partIds": [first_part_id.clone()] })), None, &testkit::meta("local")).expect("select");
+        let result = app.handle_action("cut", None, &testkit::meta("local")).expect("cut");
         assert_eq!(result.requested_effects.len(), 1, "cut must also copy to the clipboard");
         assert_eq!(part_count(&app), before_count - 1);
         let after = app.projection().expect("projection");
         assert!(!after.0["parts"].as_array().unwrap().iter().any(|part| part["id"] == first_part_id));
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert_eq!(part_count(&app), before_count, "one undo restores the cut part as a single edit");
     }
 
     #[test]
     fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None, &testkit::meta("local")).expect("load nakagin");
         let projection = app.projection().expect("projection");
         let first_part_id = projection.0["parts"][0]["id"].as_str().expect("seeded part").to_string();
-        app.handle_action("setSelection", Some(&json!({ "partIds": [first_part_id.clone()] })), &ViewState::default(), &testkit::meta("local")).expect("select");
-        let copy_result = app.handle_action("copy", None, &ViewState::default(), &testkit::meta("local")).expect("copy");
+        dispatch_action(&mut app, "setSelection", Some(&json!({ "partIds": [first_part_id.clone()] })), None, &testkit::meta("local")).expect("select");
+        let copy_result = app.handle_action("copy", None, &testkit::meta("local")).expect("copy");
         let HostEffect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
         let before_count = part_count(&app);
         let before_ids: HashSet<String> = projection.0["parts"].as_array().unwrap().iter().map(|part| part["id"].as_str().unwrap_or_default().to_string()).collect();
         let paste_args = json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] });
-        app.handle_action("paste", Some(&paste_args), &ViewState::default(), &testkit::meta("local")).expect("paste");
+        app.handle_action("paste", Some(&paste_args), &testkit::meta("local")).expect("paste");
         assert_eq!(part_count(&app), before_count + 1);
         let after = app.projection().expect("projection");
         let pasted_parts: Vec<&Value> = after.0["parts"].as_array().unwrap().iter().filter(|part| !before_ids.contains(part["id"].as_str().unwrap_or_default())).collect();
@@ -3541,7 +4049,7 @@ mod tests {
         // "original" anchor uses the raw position override verbatim as the 2D delta.
         let original_x = projection.0["parts"][0]["2d"]["x"].as_f64().unwrap_or(0.0);
         assert_eq!(pasted_parts[0]["2d"]["x"].as_f64().unwrap(), original_x + 10.0);
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert_eq!(part_count(&app), before_count, "one undo removes the whole pasted fragment");
     }
 
@@ -3549,7 +4057,7 @@ mod tests {
     fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
         let before_count = part_count(&app);
-        let result = app.handle_action("paste", None, &ViewState::default(), &testkit::meta("local")).expect("paste");
+        let result = app.handle_action("paste", None, &testkit::meta("local")).expect("paste");
         assert!(result.operations.is_empty());
         assert_eq!(part_count(&app), before_count);
     }
@@ -3569,14 +4077,14 @@ mod tests {
                 { "id": "conn-1", "parent": { "piece": { "id": "piece-a" }, "connector": { "id": "c1" } }, "child": { "piece": { "id": "piece-b" }, "connector": { "id": "c2" } }, "gap": 0.5, "shift": 0.0, "rise": 0.0, "rotation": 0.0, "turn": 0.0, "tilt": 0.0 },
             ] },
         });
-        app.handle_action("importComposeKit", Some(&json!({ "design": compose_design })), &ViewState::default(), &testkit::meta("local")).expect("import");
+        dispatch_action(&mut app, "importComposeKit", Some(&json!({ "design": compose_design })), None, &testkit::meta("local")).expect("import");
         assert_eq!(part_count(&app), 2);
         let projection = app.projection().expect("projection");
         assert_eq!(projection.0["label"], "Imported Tower");
         assert_eq!(projection.0["fasteners"].as_array().unwrap().len(), 1);
         assert_eq!(projection.0["fasteners"][0]["gap"], 0.5);
         assert_eq!(projection.0["fasteners"][0]["source"], "piece-a:c1");
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert_eq!(part_count(&app), before_count, "one undo restores the pre-import document");
     }
 
@@ -3620,7 +4128,7 @@ mod tests {
     #[test]
     fn window_engagements_cover_both_windows() {
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-        let engagements = app.window_engagements(&ViewState::default());
+        let engagements = app.window_engagements();
         assert!(engagements.contains_key(PUZZLE5D_PLAY_WINDOW_2D));
         assert!(engagements.contains_key(PUZZLE5D_PLAY_WINDOW_3D));
     }
@@ -3630,9 +4138,9 @@ mod tests {
     fn add_part_kind_materializes_the_declared_kind_default() {
         // 📝️ P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.
         let mut app = new_app_with_registry();
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
+        dispatch_action(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None, &testkit::meta("local")).expect("empty");
         let before = part_count(&app);
-        let result = app.handle_action("addPartKind", None, &ViewState::default(), &testkit::meta("local")).expect("addPartKind");
+        let result = dispatch_action(&mut app, "addPartKind", None, None, &testkit::meta("local")).expect("addPartKind");
         assert!(!result.operations.is_empty(), "addPartKind is an Operation that emits operations");
         assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
         let projection = app.projection().expect("projection").0;
@@ -3645,8 +4153,7 @@ mod tests {
         // 🧰️ Switching utilities is the framework View action: no document operations, no undo entry, no re-emitted effect.
         let mut app = new_app_with_registry();
         let before = app.projection().expect("projection").0;
-        let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
-        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), &brush_view, &testkit::meta("local")).expect("switch utility");
+        let result = dispatch_action(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), None, &testkit::meta("local")).expect("switch utility");
         assert!(result.operations.is_empty(), "utility switching never emits document operations");
         assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
         assert_eq!(app.projection().expect("projection").0, before, "utility switching does not mutate the document");
@@ -3659,12 +4166,12 @@ mod tests {
         // VCS-tracked document or emitting an operation.
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
         let before = app.projection().expect("projection").0;
-        let camera2d_result = app.handle_action("setCamera2d", Some(&json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), &ViewState::default(), &testkit::meta("local")).expect("setCamera2d");
+        let camera2d_result = dispatch_action(&mut app, "setCamera2d", Some(&json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), None, &testkit::meta("local")).expect("setCamera2d");
         assert!(camera2d_result.operations.is_empty(), "setCamera2d is a View action and must never emit a document operation");
         assert_eq!(app.projection().expect("projection").0, before, "setCamera2d must not mutate the document");
         let board = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_2D, None, &ViewState::default()).expect("render 2d")).unwrap();
         assert!(board.contains("12.5") && board.contains("-6.5"), "the new 2D camera pose must be reflected in the rendered runtime state");
-        let camera3d_result = app.handle_action("setCamera3d", Some(&json!({ "camera": { "position": [42.5, 7.5, 3.5], "target": [1.5, 2.5, 3.5], "zoom": 5.5 } })), &ViewState::default(), &testkit::meta("local")).expect("setCamera3d");
+        let camera3d_result = dispatch_action(&mut app, "setCamera3d", Some(&json!({ "camera": { "position": [42.5, 7.5, 3.5], "target": [1.5, 2.5, 3.5], "zoom": 5.5 } })), None, &testkit::meta("local")).expect("setCamera3d");
         assert!(camera3d_result.operations.is_empty(), "setCamera3d is a View action and must never emit a document operation");
         assert_eq!(app.projection().expect("projection").0, before, "setCamera3d must not mutate the document");
         let world = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_3D, None, &ViewState::default()).expect("render 3d")).unwrap();
@@ -3676,7 +4183,7 @@ mod tests {
         // 🧰️ select/brush/fill switching lives only on the framework utility bar; neither the 2D nor the 3D
         // engagement HUD may duplicate it as options.
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-        let engagements = app.window_engagements(&ViewState::default());
+        let engagements = app.window_engagements();
         for window in [PUZZLE5D_PLAY_WINDOW_2D, PUZZLE5D_PLAY_WINDOW_3D] {
             assert!(engagements.get(window).expect("engagement").options.is_none(), "the {window} engagement must not re-expose utility switching as options");
         }
@@ -3687,7 +4194,7 @@ mod tests {
     /// never `WindowEngagementControl`s on the HUD — for both the 2D and 3D windows.
     #[test]
     fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
-        let labels = puzzle5d_labels(&ViewState::default());
+        let labels = puzzle5d_labels(&Puzzle5dConfig::default());
         let session = Puzzle5dPrecomputeSession::new();
         let group_tag = |measures: &[WindowMeasure], id: &str| {
             measures.iter().find_map(|measure| match measure {
@@ -3727,7 +4234,7 @@ mod tests {
     fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
         // 🧰️ Reconciled dual entry point: the engagement token drives the same host-owned utility switch, once per window.
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-        let result = app.handle_action("engagementSubmit", Some(&json!({ "window": PUZZLE5D_PLAY_WINDOW_3D, "value": "brush" })), &ViewState::default(), &testkit::meta("local")).expect("submit");
+        let result = dispatch_action(&mut app, "engagementSubmit", Some(&json!({ "window": PUZZLE5D_PLAY_WINDOW_3D, "value": "brush" })), None, &testkit::meta("local")).expect("submit");
         let windows: Vec<&str> = result.requested_effects.iter().filter_map(|effect| match effect { HostEffect::SetActiveUtility { window_id, utility_id } if utility_id == "brush" => Some(window_id.as_str()), _ => None }).collect();
         assert!(windows.contains(&PUZZLE5D_PLAY_WINDOW_2D) && windows.contains(&PUZZLE5D_PLAY_WINDOW_3D), "brush switch is pushed to both windows, got {windows:?}");
     }
@@ -3741,14 +4248,118 @@ mod tests {
             app.projection().expect("projection").0.get("parts").and_then(Value::as_array).and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(part_id.as_str()))).and_then(|part| part.pointer("/3d/origin/0")).and_then(Value::as_f64).unwrap_or(0.0)
         };
         let start = origin_x(&app);
-        let move_view = ViewState { active_utility_id: Some("move".into()), ..ViewState::default() };
         for dx in [1.0, 2.0, 3.0] {
-            app.handle_action("translateSelection", Some(&json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), &move_view, &testkit::meta("local")).expect("drag tick");
+            dispatch_action(&mut app, "translateSelection", Some(&json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), None, &testkit::meta("local")).expect("drag tick");
         }
         assert!((origin_x(&app) - start - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert!((origin_x(&app) - start).abs() < 1e-9, "one undo restores the whole coalesced gumball drag");
     }
     //#endregion 🧰️ Window Actions & Utilities contract
+
+    //#region 🔖️KitInPort
+    /// 🔌️ The flagship `kit:in` seam: feeding a `kit.catalog` fragment shaped exactly like
+    /// block3d's `puzzle3d_catalog_fragment` (`objectKinds`/`vortexKinds`, camelCase) through
+    /// `Puzzle5dPlayApp::import_media` must normalize `objectKinds` into the typed
+    /// `kindCatalogs.parts` (with each per-object `vortices[]` entry becoming a grip template) and
+    /// `vortexKinds` into `kindCatalogs.grips`, and land both after applying the returned operations.
+    #[test]
+    fn kit_in_import_media_upserts_part_and_grip_kinds_into_kind_catalogs() {
+        let app = Puzzle5dPlayApp::default();
+        let projection = app.initial_projection();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &projection, history: &history };
+
+        let fragment = json!({
+            "schema": "manifest",
+            "objectKinds": [{
+                "id": "capsule",
+                "name": "capsule",
+                "label": "Capsule",
+                "meshUrl": "/mesh/capsule.glb",
+                "vortices": [{ "id": "v0", "vortexKind": "door", "position": [0.0, 0.0, 0.0], "direction": [0.0, 1.0, 0.0], "radius": 0.3 }],
+            }],
+            "vortexKinds": [{ "id": "door", "name": "door", "label": "Door", "color": "#ff0000", "defaultCableKind": "" }],
+            "cableKinds": [],
+            "attractionKinds": [],
+            "kindCompatibility": [{ "source": "door", "target": "door", "bidirectional": true }],
+        });
+        let media = Media {
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+            payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() },
+        };
+
+        let emit = app.import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
+        assert!(!emit.document_operations.is_empty(), "importing a non-empty fragment must emit real operations");
+
+        let mut next_projection = projection.0.clone();
+        for operation in &emit.document_operations {
+            next_projection = protocol::Operation::<Value>::diff(operation, &next_projection).apply(&next_projection);
+        }
+
+        let parts = next_projection.pointer("/kindCatalogs/parts").and_then(Value::as_array).expect("parts catalog present");
+        let capsule = parts.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).expect("the imported part kind must appear in kindCatalogs.parts");
+        assert_eq!(capsule.get("meshUrl").and_then(Value::as_str), Some("/mesh/capsule.glb"));
+        assert_eq!(capsule.pointer("/grips/0/gripKind").and_then(Value::as_str), Some("door"), "the per-part grip template keeps its gripKind after normalization");
+        assert_eq!(capsule.pointer("/grips/0/3d/position").and_then(Value::as_array), Some(&vec![json!(0.0), json!(0.0), json!(0.0)]));
+        assert_eq!(capsule.pointer("/grips/0/3d/direction").and_then(Value::as_array), Some(&vec![json!(0.0), json!(1.0), json!(0.0)]));
+        assert_eq!(capsule.pointer("/grips/0/3d/radius").and_then(Value::as_f64), Some(0.3));
+
+        let grips = next_projection.pointer("/kindCatalogs/grips").and_then(Value::as_array).expect("grips catalog present");
+        let door = grips.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("door")).expect("the imported grip kind must appear in kindCatalogs.grips");
+        assert_eq!(door.get("defaultRopeKind").and_then(Value::as_str), Some(""), "defaultCableKind maps onto defaultRopeKind (a naming judgment call — see import_media's doc comment)");
+
+        let compatibility = next_projection.pointer("/kindCompatibility").and_then(Value::as_array).expect("kind compatibility present");
+        assert!(compatibility.iter().any(|entry| entry.get("source").and_then(Value::as_str) == Some("door") && entry.get("target").and_then(Value::as_str) == Some("door")));
+    }
+
+    /// 🔁️ Re-importing the SAME fragment (simulating a second producer edge, or a redelivered
+    /// message on a `multiplicity: Many` port) must upsert idempotently — no duplicate rows.
+    #[test]
+    fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
+        let app = Puzzle5dPlayApp::default();
+        let projection = app.initial_projection();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let mut current = projection.0.clone();
+
+        let fragment = json!({
+            "objectKinds": [{ "id": "capsule", "name": "capsule", "label": "Capsule", "meshUrl": "/mesh/capsule.glb", "vortices": [] }],
+            "vortexKinds": [],
+            "cableKinds": [],
+            "attractionKinds": [],
+            "kindCompatibility": [],
+        });
+        let media = Media {
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+            payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() },
+        };
+
+        for _ in 0..2 {
+            let doc_projection = Puzzle5dPlayProjection(current.clone());
+            let doc = DocumentView { projection: &doc_projection, history: &history };
+            let emit = app.import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
+            for operation in &emit.document_operations {
+                current = protocol::Operation::<Value>::diff(operation, &current).apply(&current);
+            }
+        }
+
+        let parts = current.pointer("/kindCatalogs/parts").and_then(Value::as_array).expect("parts catalog present");
+        assert_eq!(parts.iter().filter(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
+    }
+
+    #[test]
+    fn kit_in_port_is_declared_on_the_app_io() {
+        let app = Puzzle5dPlayApp::default();
+        let io = app.io().expect("puzzle5d declares an AppIo");
+        let kit_in = io.ports.iter().find(|port| port.id == "kit:in").expect("kit:in port declared");
+        assert_eq!(kit_in.kind_id.as_deref(), Some("kit.catalog"));
+        assert_eq!(kit_in.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
+        assert!(matches!(kit_in.multiplicity, PortMultiplicity::Many));
+        let design_out = io.ports.iter().find(|port| port.id == "design:out").expect("design:out port declared");
+        assert_eq!(design_out.kind_id.as_deref(), Some("5d.puzzle"));
+        assert_eq!(design_out.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Design });
+        assert!(matches!(design_out.multiplicity, PortMultiplicity::Many));
+    }
+    //#endregion 🔖️KitInPort
 }
 //#endregion 🧪️Tests

@@ -160,6 +160,56 @@ impl Operation<MindmapWiresDocument> for MindmapWiresOperation {
 }
 //#endregion 🔖️Operations
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `reasoning_wires_engine::WiresConfig`'s operation enum — one variant per settled
+/// interaction (mirrors the pre-B1 `WiresPlayRuntime` field writes), plus a generic `Snapshot` every
+/// variant's `backwards()` returns — mirrors `shooting_op::ShootingConfigOperation`'s identical
+/// "undo is the whole-config snapshot from just before this tick" shape: since a config-only dispatch
+/// is a plain `Apply` (not an `AmendLast`, except when explicitly coalesced via `Emit::amend`/
+/// `Emit::amend_config` — see `ReasoningWiresPlayApp::handle`), each tick is its own distinct, real
+/// config edit, and the simplest correct inverse needs no per-field reverse-patch bookkeeping.
+/// `Operation::Diff` is the WHOLE `WiresConfig` (not a granular patch type): `diff()` returns "the
+/// full config after this op", and `OperationDiff<WiresConfig>::apply` for `WiresConfig` itself (in
+/// `reasoning_wires_engine`) just returns that snapshot verbatim, ignoring `base`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum WiresConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: reasoning_wires_engine::WiresConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { ids: Vec<String> },
+    #[dsl(key = "drag")]
+    SetDrag { node_id: Option<String>, last_x: f64, last_y: f64 },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<reasoning_wires_engine::WiresConfig> for WiresConfigOperation {
+    type Diff = reasoning_wires_engine::WiresConfig;
+
+    fn diff(&self, base: &reasoning_wires_engine::WiresConfig) -> reasoning_wires_engine::WiresConfig {
+        let mut next = base.clone();
+        match self {
+            WiresConfigOperation::Snapshot { config } => return config.clone(),
+            WiresConfigOperation::SetSelection { ids } => next.selected_ids = ids.clone(),
+            WiresConfigOperation::SetDrag { node_id, last_x, last_y } => {
+                next.drag_node_id = node_id.clone();
+                next.drag_last_x = *last_x;
+                next.drag_last_y = *last_y;
+            }
+            WiresConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &reasoning_wires_engine::WiresConfig) -> Vec<Self> {
+        vec![WiresConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -249,5 +299,36 @@ mod tests {
         });
     }
     //#endregion 🔖️OpTextTests
+
+    //#region 🔖️ConfigOperationTests
+    #[test]
+    fn config_snapshot_and_selection_op_text_round_trip() {
+        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::Snapshot { config: reasoning_wires_engine::WiresConfig::default() });
+        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::SetSelection { ids: vec!["node-1".into(), "edge-1".into()] });
+    }
+
+    #[test]
+    fn config_drag_op_text_round_trip() {
+        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 });
+        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 });
+    }
+
+    #[test]
+    fn config_locale_op_text_round_trip() {
+        store::test_support::assert_op_line_round_trip(&WiresConfigOperation::SetLocale { value: "de-DE".into() });
+    }
+
+    /// ⏪️ `backwards()` always returns a single whole-config `Snapshot` of the pre-op state, regardless
+    /// of which field the forward op touched — the same "undo restores the prior snapshot" law
+    /// `shooting_op::ShootingConfigOperation` establishes.
+    #[test]
+    fn config_backwards_always_snapshots_the_base() {
+        let base = reasoning_wires_engine::WiresConfig { selected_ids: vec!["node-1".into()], ..Default::default() };
+        let forward = WiresConfigOperation::SetSelection { ids: vec!["node-2".into()] };
+        let inverse = forward.backwards(&base);
+        assert_eq!(inverse, vec![WiresConfigOperation::Snapshot { config: base.clone() }]);
+        assert_eq!(forward.diff(&base), reasoning_wires_engine::WiresConfig { selected_ids: vec!["node-2".into()], ..base });
+    }
+    //#endregion 🔖️ConfigOperationTests
 }
 //#endregion 🧪️Tests

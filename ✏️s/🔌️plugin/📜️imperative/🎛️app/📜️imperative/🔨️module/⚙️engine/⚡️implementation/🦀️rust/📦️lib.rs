@@ -2,6 +2,84 @@
 
 use imperative::{Dictionary, ImperativeDocument, Path, PathRef, Registry, Step};
 use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, RunResult};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Config
+/// 🧮️ B1: imperative's real `DocumentApp::Config` — absorbs the former app-struct `RefCell`
+/// (`ImperativePlayRuntime`'s `selected_step_ids`/`run_output_json`) plus the locale the UI used to
+/// read off the deleted `ViewState` — session-only view state now round-trips through the config
+/// `DocumentStore` exactly like document content, with a real `backwards` per
+/// `imperative_op::ImperativeConfigOperation` instead of never being VCS'd at all.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "imperativecfg")]
+#[dsl(layout = "lines")]
+pub struct ImperativeConfig {
+    /// 👁️ Selected step ids — was `ImperativePlayRuntime::selected_step_ids`.
+    pub selected_step_ids: Vec<String>,
+    /// 📤️ Last `run` output, JSON-encoded scope — was `ImperativePlayRuntime::run_output_json`.
+    pub run_output_json: String,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+impl Default for ImperativeConfig {
+    fn default() -> Self {
+        Self { selected_step_ids: Vec::new(), run_output_json: String::new(), locale: "en-US".into() }
+    }
+}
+
+impl store::ConfigRecord for ImperativeConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `imperative_op::ImperativeConfigOperation` (lives here, not in
+/// `imperative_op`, since `protocol::OperationDiff`/`ImperativeConfig` are both foreign to that crate —
+/// the orphan rule requires at least one local type). Mirrors `shooting_engine::ShootingConfig`'s
+/// pattern: `apply` ignores `base` entirely.
+impl protocol::OperationDiff<ImperativeConfig> for ImperativeConfig {
+    fn apply(&self, _base: &ImperativeConfig) -> ImperativeConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
+/// `create_imperative_app` already declares via `.artifact_kind(...)` (`computation.imperative`, reused
+/// verbatim as this port's `kind_id`), plus one extra output port: `result:out`, the imperative path's
+/// last `run` scope as a generic data value (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe).
+pub fn imperative_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: "imperative.document/v1".into(),
+        document_media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::Computation,
+            form: semio_framework_plugin::MediaForm::Imperative,
+        },
+        ports: vec![semio_framework_plugin::MediaPortSpec {
+            id: "result:out".into(),
+            label: "Result".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: semio_framework_plugin::MediaType {
+                class: semio_framework_plugin::MediaClass::Data,
+                form: semio_framework_plugin::MediaForm::Value,
+            },
+            kind_id: Some("computation.imperative".into()),
+            required: false,
+            multiplicity: semio_framework_core::PortMultiplicity::Many,
+        }],
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: semio_framework_plugin::ArtifactPresentation {
+            id: "computation.imperative".into(),
+            name: "Imperative".into(),
+            dimension: "graph".into(),
+            component_kind: "imperative".into(),
+        },
+    }
+}
+//#endregion 🔖️Io
 
 //#region ⚠️ Errors
 /// 🚨️ Imperative core's fallible operations.
@@ -149,6 +227,40 @@ impl ImperativeHost {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    //#region ImperativeConfig / imperative_io
+    #[test]
+    fn imperative_config_default_is_empty_english_selection() {
+        let config = ImperativeConfig::default();
+        assert!(config.selected_step_ids.is_empty());
+        assert!(config.run_output_json.is_empty());
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[test]
+    fn imperative_config_dsl_round_trips() {
+        let mut config = ImperativeConfig::default();
+        config.selected_step_ids = vec!["step-1".into(), "step-2".into()];
+        config.run_output_json = r#"{"counter":1}"#.into();
+        config.locale = "de-DE".into();
+        store::test_support::assert_dsl_round_trip(&config);
+        store::test_support::assert_dsl_pack_equivalence(&config);
+    }
+
+    #[test]
+    fn imperative_io_declares_result_out_reusing_the_computation_imperative_kind() {
+        let io = imperative_io();
+        assert_eq!(io.document_schema, "imperative.document/v1");
+        assert_eq!(io.artifact.id, "computation.imperative");
+        assert_eq!(io.ports.len(), 1);
+        let port = &io.ports[0];
+        assert_eq!(port.id, "result:out");
+        assert_eq!(port.kind_id.as_deref(), Some("computation.imperative"));
+        assert_eq!(port.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(port.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert!(!port.required);
+    }
+    //#endregion ImperativeConfig / imperative_io
 
     #[test]
     fn host_runs_default_document() {

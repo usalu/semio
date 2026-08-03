@@ -1,12 +1,122 @@
 //! ⚙️ FEM 2D app — headless compute (constitutional: engine).
 
-use fem2d::{Fem2dDocument, FemElement, FemLoad};
+use fem2d::{Fem2dDocument, FemCamera, FemElement, FemLoad};
 use fem_core::{Bar2, BeamEb2, Dof, Element, MemberUdl, Model, NodalLoad, Node, Support};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub fn empty_fem2d_projection() -> Fem2dDocument {
     Fem2dDocument::default()
 }
+
+// #region 🔖️Config
+/// 🧮️ B1: fem2d's real `DocumentApp::Config` — the pure-trait pilot's config artifact. Absorbs both
+/// former `Fem2dPlayApp` `RefCell` fields (`result_display`, `camera`) plus the locale the deleted
+/// `ViewState` used to carry into `app_labels` (see `fem2d_ui::Fem2dPlayApp::app_labels`) — session-only
+/// view state now round-trips through the config `DocumentStore` exactly like document content, with a
+/// real `backwards` per `fem2d_op::Fem2dConfigOperation` instead of never being VCS'd at all.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "fem2dcfg")]
+#[dsl(layout = "lines")]
+pub struct Fem2dConfig {
+    /// 👁️ The results window's selected case/combination id — was `fem_shared::ResultDisplay::source_id`.
+    pub result_source_id: Option<String>,
+    /// 👁️ The results window's display mode (`"static"`/`"modal"`/`"buckling"`) — was
+    /// `fem_shared::DisplayMode`'s discriminant. Kept as a flat string rather than depending on
+    /// `fem_shared` from `engine` (documented as ui-scoped) — `fem2d_ui` translates to/from
+    /// `fem_shared::DisplayMode` at the render boundary.
+    pub result_mode: String,
+    /// 👁️ The selected modal/buckling mode index — was `fem_shared::DisplayMode::Modal`/`Buckling`'s payload.
+    pub result_mode_index: u32,
+    /// 🎥️ The canvas camera (pan/zoom) — was `Fem2dPlayApp::camera`.
+    #[dsl(block)]
+    pub camera: FemCamera,
+    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState::locale` in `app_labels`.
+    pub locale: String,
+}
+
+impl Default for Fem2dConfig {
+    fn default() -> Self {
+        Self { result_source_id: None, result_mode: "static".into(), result_mode_index: 0, camera: FemCamera::default(), locale: "en-US".into() }
+    }
+}
+
+impl store::ConfigRecord for Fem2dConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `fem2d_op::Fem2dConfigOperation` (lives here, not in `fem2d_op`,
+/// since `protocol::OperationDiff`/`Fem2dConfig` are both foreign to that crate — the orphan rule
+/// requires at least one local type). Mirrors `Fem2dOperation::SetDocument`'s existing "whole-document
+/// replace" pattern: `apply` ignores `base` entirely.
+impl protocol::OperationDiff<Fem2dConfig> for Fem2dConfig {
+    fn apply(&self, _base: &Fem2dConfig) -> Fem2dConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+// #endregion 🔖️Config
+
+// #region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document port pair
+/// (`fem.2d` × 2D-Vector) plus `geometry:in` (importing an externally authored 2D outline as a new
+/// `FemRegion` — see `fem2d_ui::Fem2dPlayApp::import_media`) and `results:out` (every load
+/// case/combination's solved `fem_core::StaticResult`, pinned to the `computation.fem2d` artifact kind
+/// declared in `fem2d_ui::create_fem2d_app` — see `fem2d_ui::Fem2dPlayApp::export_media`).
+pub fn fem2d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: fem2d::FEM_2D_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::TwoD,
+            form: semio_framework_plugin::MediaForm::Vector,
+        },
+        ports: vec![fem2d_geometry_in_port(), fem2d_results_out_port()],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation {
+            id: "2d.fem".into(),
+            name: "FEM 2D".into(),
+            dimension: "2d".into(),
+            component_kind: "fem2d".into(),
+        },
+    }
+}
+
+/// 🔌️ `geometry:in` — an externally authored 2D polygon-with-holes outline, imported as a new
+/// `FemRegion`.
+pub fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "geometry:in".into(),
+        label: "Geometry".into(),
+        direction: semio_framework_plugin::MediaPortDirection::In,
+        media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::TwoD,
+            form: semio_framework_plugin::MediaForm::Vector,
+        },
+        kind_id: None,
+        required: true,
+        multiplicity: semio_framework_core::PortMultiplicity::One,
+    }
+}
+
+/// 🔌️ `results:out` — every load case/combination's solved `fem_core::StaticResult`, pinned to the
+/// `computation.fem2d` artifact kind.
+pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "results:out".into(),
+        label: "Results".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::Data,
+            form: semio_framework_plugin::MediaForm::Value,
+        },
+        kind_id: Some("computation.fem2d".into()),
+        required: false,
+        multiplicity: semio_framework_core::PortMultiplicity::One,
+    }
+}
+// #endregion 🔖️Io
 
 // #region 🔖️Bridge
 
@@ -415,6 +525,62 @@ mod tests {
     use super::*;
     use fem2d::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
     use fem_core::ElementResult;
+
+    // #region 🔖️Config
+    #[test]
+    fn fem2d_config_default_is_static_display_with_default_camera_and_locale() {
+        let config = Fem2dConfig::default();
+        assert_eq!(config.result_mode, "static");
+        assert!(config.result_source_id.is_none());
+        assert_eq!(config.result_mode_index, 0);
+        assert_eq!(config.camera, FemCamera::default());
+        assert_eq!(config.locale, "en-US");
+    }
+
+    /// 🧮️ `Fem2dConfig`'s `OperationDiff` is a whole-record replace, mirroring
+    /// `ShootingConfig`'s identical B1 pilot pattern: `apply` ignores `base` entirely.
+    #[test]
+    fn fem2d_config_operation_diff_is_a_whole_record_replace() {
+        let base = Fem2dConfig::default();
+        let mut replacement = Fem2dConfig::default();
+        replacement.locale = "de-DE".into();
+        replacement.camera = FemCamera { x: 1.0, y: 2.0, zoom: 3.0 };
+        let applied = protocol::OperationDiff::apply(&replacement, &base);
+        assert_eq!(applied, replacement);
+        let mut absorbed = base.clone();
+        protocol::OperationDiff::absorb(&mut absorbed, replacement.clone());
+        assert_eq!(absorbed, replacement);
+    }
+    // #endregion 🔖️Config
+
+    // #region 🔖️Io
+    /// 🔌️ Wave-1's `required: true` unwired-input enforcement (`validate_edge_kinds`) lives in the run
+    /// crate, not here — this test only proves the port DECLARATION is correct; the cross-crate
+    /// enforcement is exercised at the run-crate level.
+    #[test]
+    fn fem2d_io_declares_geometry_in_and_results_out_ports() {
+        let io = fem2d_io();
+        assert_eq!(io.document_schema, fem2d::FEM_2D_SCHEMA);
+        assert_eq!(io.document_media_type.class, semio_framework_plugin::MediaClass::TwoD);
+        assert_eq!(io.document_media_type.form, semio_framework_plugin::MediaForm::Vector);
+        assert_eq!(io.artifact.id, "2d.fem");
+        assert_eq!(io.artifact.component_kind, "fem2d");
+
+        let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
+        assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
+        assert!(geometry_in.required, "geometry:in is a required input port");
+        assert_eq!(geometry_in.media_type.class, semio_framework_plugin::MediaClass::TwoD);
+        assert_eq!(geometry_in.media_type.form, semio_framework_plugin::MediaForm::Vector);
+        assert_eq!(geometry_in.multiplicity, semio_framework_core::PortMultiplicity::One);
+
+        let results_out = io.ports.iter().find(|port| port.id == "results:out").expect("results:out declared");
+        assert_eq!(results_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert!(!results_out.required, "results:out is optional");
+        assert_eq!(results_out.kind_id.as_deref(), Some("computation.fem2d"));
+        assert_eq!(results_out.media_type.class, semio_framework_plugin::MediaClass::Data);
+        assert_eq!(results_out.media_type.form, semio_framework_plugin::MediaForm::Value);
+    }
+    // #endregion 🔖️Io
 
     // #region 🔖️Fixtures
     fn simply_supported_beam_doc() -> Fem2dDocument {

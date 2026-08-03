@@ -1,19 +1,25 @@
-//! 🎛️ Imperative app — DocumentApp impl, render, manifest (constitutional: ui).
+//! 🎛️ Imperative app — DocumentApp impl, render, manifest (constitutional: ui). B1: the pure-trait
+//! pilot — `ImperativePlayApp` is a unit struct; the former `ImperativePlayRuntime` app-struct
+//! `RefCell` (selection, run output) now lives in `imperative_engine::ImperativeConfig`, written via
+//! `imperative_op::ImperativeConfigOperation`s (real `backwards`, no ad hoc inverse tracking); every
+//! action dispatches through the single typed `imperative_protocol::ImperativeCommand` channel via
+//! `DocumentApp::handle`.
 
-use imperative::{Dictionary, ImperativeDocument, PathRef, Step};
-use imperative_engine::{default_document, ImperativeHost};
-use imperative_op::ImperativeOperation;
+use imperative::{value_dsl_map_to_dictionary, Dictionary, ImperativeDocument, PathRef, Step};
+use imperative_engine::{default_document, imperative_io, ImperativeConfig, ImperativeHost};
+use imperative_op::{ImperativeConfigOperation, ImperativeOperation};
+use imperative_protocol::ImperativeCommand;
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
-    build_table_scene, build_text_editor_scene, create_stack_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TableScene, TextEditorScene,
-    UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    build_table_scene, build_text_editor_scene, create_stack_layout, localized_label_map, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
+    ActionArgDef, ActionArgOption, App, AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, TableScene,
+    TextEditorScene, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
+use store::DocumentPack;
 
 //#region 🔖️Constants
 const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
@@ -29,16 +35,19 @@ const IMPERATIVE_PLAY_WINDOW_SCRIPT: &str = "imperative-script";
 pub const IMPERATIVE_DOCUMENT_SCHEMA: &str = "imperative.document/v1";
 //#endregion 🔖️Constants
 
-//#region 🔖️Types
-/// 🎛️ Ephemeral view state (step selection + last run output) — lives in the app struct, not the
-/// document, so it never pollutes undo history.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-struct ImperativePlayRuntime {
-    selected_step_ids: Vec<String>,
-    run_output_json: String,
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s local helpers.
+fn is_de_locale(cfg: &ImperativeConfig) -> bool {
+    cfg.locale.starts_with("de")
 }
 
+fn resolve_labels<L: LocaleLabels>(cfg: &ImperativeConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+//#endregion 🔖️Locale
+
+//#region 🔖️Types
 #[derive(Serialize, Deserialize)]
 struct TableRow {
     index: usize,
@@ -61,15 +70,13 @@ fn next_step_id(document: &ImperativeDocument) -> String {
     format!("step-{}", max_suffix(&document.path.steps) + 1)
 }
 
-/// 📍️ Reads `owner`/`slot` off action args into a [`imperative::PathRef`] so nested
-/// control-step bodies (e.g. `control.if` then/else) resolve correctly; falls back to the root
-/// path unless both are present and `owner` names a real top-level step, avoiding an unresolvable
-/// or unknown reference that would otherwise address nothing.
-fn path_ref_from_args(args: Option<&Value>, document: &ImperativeDocument) -> PathRef {
-    let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str()).map(str::to_string);
-    let slot = args.and_then(|value| value.get("slot")).and_then(|value| value.as_str()).map(str::to_string);
+/// 📍️ Resolves `owner`/`slot` command fields into a [`imperative::PathRef`] so nested control-step
+/// bodies (e.g. `control.if` then/else) resolve correctly; falls back to the root path unless both are
+/// present and `owner` names a real top-level step, avoiding an unresolvable or unknown reference that
+/// would otherwise address nothing.
+fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ImperativeDocument) -> PathRef {
     match (owner, slot) {
-        (Some(owner), Some(slot)) if document.path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner), slot: Some(slot) },
+        (Some(owner), Some(slot)) if document.path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.to_string()), slot: Some(slot.to_string()) },
         _ => PathRef::default(),
     }
 }
@@ -79,8 +86,8 @@ fn table_rows(steps: &[Step]) -> String {
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
-fn imperative_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: IMPERATIVE_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+fn imperative_action(action: &str, args: Option<Value>) -> semio_framework_plugin::ActionDescriptor {
+    semio_framework_plugin::ActionDescriptor { controller_id: IMPERATIVE_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -110,8 +117,8 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️CommandLabels
 /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_imperative_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the builder.
+/// static manifest — the manifest itself has no config/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder.
 fn imperative_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(
         is_de,
@@ -232,16 +239,18 @@ fn render_script(document: &ImperativeDocument) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️ImperativePlayApp
+/// 🧪️ B1: unit struct — the former `ImperativePlayRuntime`/`self.runtime` field now lives in
+/// `imperative_engine::ImperativeConfig` (see `DocumentApp::Config`), written through
+/// `imperative_op::ImperativeConfigOperation`s.
 #[derive(Default)]
-pub struct ImperativePlayApp {
-    runtime: RefCell<ImperativePlayRuntime>,
-}
+pub struct ImperativePlayApp;
 
 impl DocumentApp for ImperativePlayApp {
     type Projection = ImperativeDocument;
     type Operation = ImperativeOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = ImperativeConfig;
+    type ConfigOperation = ImperativeConfigOperation;
+    type Command = ImperativeCommand;
 
     fn app_id(&self) -> &str {
         IMPERATIVE_PLAY_APP_ID
@@ -255,84 +264,157 @@ impl DocumentApp for ImperativePlayApp {
         default_document()
     }
 
-    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<ImperativeOperation> {
-        let document = doc.projection;
-        let mut runtime = self.runtime.borrow_mut();
-        match action {
-            "setSelection" => {
-                runtime.selected_step_ids = selection_ids(args);
-                ActionEmit::default()
-            }
-            "addStep" | "addStepAt" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
-                let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map_or(usize::MAX, |value| value as usize);
-                let path_ref = path_ref_from_args(args, document);
-                let id = next_step_id(document);
-                let step = Step { id: id.clone(), kind: kind.into(), params: Dictionary::new(), bodies: BTreeMap::new() };
-                runtime.selected_step_ids = vec![id];
-                ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Add { id: step.id.clone(), at: index, item: step } }])
-            }
-            "removeStep" | "removeStepAt" => {
-                if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
-                    if resolve_contains(document, args, id) {
-                        let path_ref = path_ref_from_args(args, document);
-                        runtime.selected_step_ids.retain(|step_id| step_id != id);
-                        return ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Remove { id: id.into() } }]);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "moveStep" | "moveStepAt" => {
-                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
-                let new_index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
-                if let (Some(id), Some(new_index)) = (id, new_index) {
-                    if resolve_contains(document, args, id) {
-                        let path_ref = path_ref_from_args(args, document);
-                        return ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Move { id: id.into(), to: new_index } }]);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "setStepParams" | "setStepParamsAt" => {
-                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
-                let params = args.and_then(|value| value.get("params"));
-                if let (Some(id), Some(params)) = (id, params) {
-                    if let Ok(patch) = serde_json::from_value::<Dictionary>(params.clone()) {
-                        if resolve_contains(document, args, id) {
-                            let path_ref = path_ref_from_args(args, document);
-                            return ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Patch { id: id.into(), patch } }]);
-                        }
-                    }
-                }
-                ActionEmit::default()
-            }
-            "run" => {
-                let host = ImperativeHost::from_document(document.clone());
-                let result = host.run();
-                runtime.run_output_json = serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
-                ActionEmit::default()
-            }
-            _ => ActionEmit::default(),
+    fn io(&self) -> Option<semio_framework_plugin::AppIo> {
+        Some(imperative_io())
+    }
+
+    /// 🏷️ Maps each `ImperativeCommand` variant back to the action id it was declared under in
+    /// `create_imperative_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+    /// View/Shell kind-discipline check.
+    fn command_id(&self, command: &ImperativeCommand) -> &str {
+        match command {
+            ImperativeCommand::AddStep { .. } => "addStep",
+            ImperativeCommand::AddStepAt { .. } => "addStepAt",
+            ImperativeCommand::RemoveStep { .. } => "removeStep",
+            ImperativeCommand::RemoveStepAt { .. } => "removeStepAt",
+            ImperativeCommand::MoveStep { .. } => "moveStep",
+            ImperativeCommand::MoveStepAt { .. } => "moveStepAt",
+            ImperativeCommand::SetStepParams { .. } => "setStepParams",
+            ImperativeCommand::SetStepParamsAt { .. } => "setStepParamsAt",
+            ImperativeCommand::SetSelection { .. } => "setSelection",
+            ImperativeCommand::Run => "run",
+            ImperativeCommand::SetLocale { .. } => "setLocale",
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
+    fn handle(&self, command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> Emit<ImperativeOperation, ImperativeConfigOperation> {
         let document = doc.projection;
-        let labels = resolve_labels::<ImperativeLabels>(view_state);
-        let runtime = self.runtime.borrow();
+        let config = cfg.projection;
+        match command {
+            ImperativeCommand::AddStep { kind, index } => {
+                let id = next_step_id(document);
+                let step = Step { id: id.clone(), kind: kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
+                Emit {
+                    document_operations: vec![ImperativeOperation { path_ref: PathRef::default(), collection: CollectionOperation::Add { id: id.clone(), at: index.unwrap_or(usize::MAX), item: step } }],
+                    config_operations: vec![ImperativeConfigOperation::SetSelectedSteps { ids: vec![id] }],
+                    ..Default::default()
+                }
+            }
+            ImperativeCommand::AddStepAt { kind, index, owner, slot } => {
+                let path_ref = path_ref_from(owner.as_deref(), slot.as_deref(), document);
+                let id = next_step_id(document);
+                let step = Step { id: id.clone(), kind: kind.clone(), params: Dictionary::new(), bodies: BTreeMap::new() };
+                Emit {
+                    document_operations: vec![ImperativeOperation { path_ref, collection: CollectionOperation::Add { id: id.clone(), at: index.unwrap_or(usize::MAX), item: step } }],
+                    config_operations: vec![ImperativeConfigOperation::SetSelectedSteps { ids: vec![id] }],
+                    ..Default::default()
+                }
+            }
+            ImperativeCommand::RemoveStep { id } => {
+                if resolve_contains(document, None, None, id) {
+                    let mut ids = config.selected_step_ids.clone();
+                    ids.retain(|step_id| step_id != id);
+                    Emit {
+                        document_operations: vec![ImperativeOperation { path_ref: PathRef::default(), collection: CollectionOperation::Remove { id: id.clone() } }],
+                        config_operations: vec![ImperativeConfigOperation::SetSelectedSteps { ids }],
+                        ..Default::default()
+                    }
+                } else {
+                    Emit::default()
+                }
+            }
+            ImperativeCommand::RemoveStepAt { id, owner, slot } => {
+                if resolve_contains(document, owner.as_deref(), slot.as_deref(), id) {
+                    let path_ref = path_ref_from(owner.as_deref(), slot.as_deref(), document);
+                    let mut ids = config.selected_step_ids.clone();
+                    ids.retain(|step_id| step_id != id);
+                    Emit {
+                        document_operations: vec![ImperativeOperation { path_ref, collection: CollectionOperation::Remove { id: id.clone() } }],
+                        config_operations: vec![ImperativeConfigOperation::SetSelectedSteps { ids }],
+                        ..Default::default()
+                    }
+                } else {
+                    Emit::default()
+                }
+            }
+            ImperativeCommand::MoveStep { id, index } => {
+                if resolve_contains(document, None, None, id) {
+                    Emit::operations(vec![ImperativeOperation { path_ref: PathRef::default(), collection: CollectionOperation::Move { id: id.clone(), to: *index } }])
+                } else {
+                    Emit::default()
+                }
+            }
+            ImperativeCommand::MoveStepAt { id, index, owner, slot } => {
+                if resolve_contains(document, owner.as_deref(), slot.as_deref(), id) {
+                    let path_ref = path_ref_from(owner.as_deref(), slot.as_deref(), document);
+                    Emit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Move { id: id.clone(), to: *index } }])
+                } else {
+                    Emit::default()
+                }
+            }
+            ImperativeCommand::SetStepParams { id, params } => {
+                if resolve_contains(document, None, None, id) {
+                    Emit::operations(vec![ImperativeOperation { path_ref: PathRef::default(), collection: CollectionOperation::Patch { id: id.clone(), patch: value_dsl_map_to_dictionary(params) } }])
+                } else {
+                    Emit::default()
+                }
+            }
+            ImperativeCommand::SetStepParamsAt { id, owner, slot, params } => {
+                if resolve_contains(document, owner.as_deref(), slot.as_deref(), id) {
+                    let path_ref = path_ref_from(owner.as_deref(), slot.as_deref(), document);
+                    Emit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Patch { id: id.clone(), patch: value_dsl_map_to_dictionary(params) } }])
+                } else {
+                    Emit::default()
+                }
+            }
+            ImperativeCommand::SetSelection { ids } => Emit::config(vec![ImperativeConfigOperation::SetSelectedSteps { ids: ids.clone() }]),
+            ImperativeCommand::Run => {
+                let host = ImperativeHost::from_document(document.clone());
+                let result = host.run();
+                let json = serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
+                Emit::config(vec![ImperativeConfigOperation::SetRunOutput { json }])
+            }
+            ImperativeCommand::SetLocale { value } => Emit::config(vec![ImperativeConfigOperation::SetLocale { value: value.clone() }]),
+        }
+    }
+
+    /// 🎞️ `"result:out"` exports the last `run` scope (a generic data value, the port recipe's
+    /// `computation.imperative`-kinded output); `"document:out"` replicates `DocumentApp::export_media`'s
+    /// default whole-document-pack behavior (unreachable once this override exists).
+    fn export_media(&self, port: &str, doc: &DocumentView<'_, ImperativeDocument>) -> Result<Media, MediaError> {
+        match port {
+            "result:out" => {
+                let host = ImperativeHost::from_document(doc.projection.clone());
+                let result = host.run();
+                let json = serde_json::to_string(&result.scope).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.imperative".into(), json } })
+            }
+            "document:out" => {
+                let media_type = self.io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let bytes = doc.projection.encode_pack();
+                Ok(Media { media_type, payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+            }
+            _ => Err(MediaError::NotImplemented),
+        }
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
+        let document = doc.projection;
+        let config = cfg.projection;
+        let labels = resolve_labels::<ImperativeLabels>(config);
         match body_key {
-            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(document, &runtime.run_output_json, labels),
+            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(document, &config.run_output_json, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => render_script(document),
-            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(document, &runtime.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(document, &config.selected_step_ids, labels),
             IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(document, &runtime.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(document, &config.selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<ImperativeLabels>(view_state);
-        AppLabelsOverlay::default().window_kind_label(IMPERATIVE_PLAY_WINDOW_MAIN, labels.window_main).window_kind_label(IMPERATIVE_PLAY_WINDOW_SCRIPT, labels.window_script).action_labels(imperative_action_labels(is_de_locale(view_state)))
+    fn app_labels(&self, cfg: &ConfigView<'_, ImperativeConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<ImperativeLabels>(cfg.projection);
+        AppLabelsOverlay::default().window_kind_label(IMPERATIVE_PLAY_WINDOW_MAIN, labels.window_main).window_kind_label(IMPERATIVE_PLAY_WINDOW_SCRIPT, labels.window_script).action_labels(imperative_action_labels(is_de_locale(cfg.projection)))
     }
 }
 
@@ -345,10 +427,10 @@ fn steps_at<'a>(document: &'a ImperativeDocument, path_ref: &PathRef) -> &'a [St
     }
 }
 
-/// 🔎️ True when the step `id` exists in the list the `owner`/`slot` args address — the pre-state
-/// guard the operation arms share so a stale id never emits a no-operation edit into history.
-fn resolve_contains(document: &ImperativeDocument, args: Option<&Value>, id: &str) -> bool {
-    let path_ref = path_ref_from_args(args, document);
+/// 🔎️ True when the step `id` exists in the list the `owner`/`slot` command fields address — the
+/// pre-state guard the operation arms share so a stale id never emits a no-operation edit into history.
+fn resolve_contains(document: &ImperativeDocument, owner: Option<&str>, slot: Option<&str>, id: &str) -> bool {
+    let path_ref = path_ref_from(owner, slot, document);
     steps_at(document, &path_ref).iter().any(|step| step.id == id)
 }
 //#endregion 🔖️ImperativePlayApp
@@ -397,7 +479,7 @@ pub fn create_imperative_app() -> App {
                 IMPERATIVE_PLAY_BODY_INSPECTOR,
             )
             // 🔧️ Document-mutating step edits — dispatched as VCS operations with a true inverse.
-            // The `*At` variants address a nested body via owner/slot args (drag-and-drop into blocks).
+            // The `*At` variants address a nested body via owner/slot fields (drag-and-drop into blocks).
             .operation("addStep", "Add Step")
             .operation("addStepAt", "Add Step At")
             .operation("removeStep", "Remove Step")
@@ -406,9 +488,10 @@ pub fn create_imperative_app() -> App {
             .operation("moveStepAt", "Move Step At")
             .operation("setStepParams", "Set Step Params")
             .operation("setStepParamsAt", "Set Step Params At")
-            // 👁️ Ephemeral view state / runtime effect — selection is scratch, `run` evaluates into runtime.
+            // 👁️ Ephemeral view state / runtime effect — selection is scratch, `run` evaluates into config.
             .view_action("setSelection", "Set Selection")
             .view_action("run", "Run")
+            .view_action("setLocale", "Set Locale")
             // 📝️ Staged argument form for the panel-visible create action (the step kind is a choice).
             .action_args("addStep", vec![
                 ActionArgDef::select("kind", "Kind", vec![
@@ -420,7 +503,11 @@ pub fn create_imperative_app() -> App {
                 ]).default_value("log.print"),
             ])
             .keybinding("mod+z", "undo")
-            .keybinding("mod+shift+z", "redo"),
+            .keybinding("mod+shift+z", "redo")
+            // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS /
+            // WORKFLOWS-END-TO-END-TYPED-PORTS) — `imperative_io()` is this port information's single
+            // source of truth, reused here rather than duplicated.
+            .io(imperative_io()),
     )
     .example("demo", "Demo", serde_json::to_string(&default_document()).expect("default_document is a static, hand-built value with no non-finite floats or non-UTF8 keys"), "flask-conical")
     .workflow("imperative", "Imperative", "graph")
@@ -540,12 +627,12 @@ mod tests {
     }
 
     /// 🧬️ A wrapper carrying the real action registry so `addStep`'s `kind` default materializes and the
-    /// View-kind `run` action is held to the no-operations contract.
+    /// View-kind `run`/`setSelection` actions are held to the no-document-operations contract.
     fn new_app_with_registry() -> VcsDocumentApp<ImperativePlayApp> {
         testkit::new_app_with_registry::<ImperativePlayApp>(create_imperative_app)
     }
 
-    /// 🧬️ The exact document `default_document()` becomes after `addStep` materializes `id`/`kind` with
+    /// 🧬️ The exact document `default_document()` becomes after `AddStep` materializes `id`/`kind` with
     /// empty params/bodies — the deterministic "after" fixture for the undo-redo round trip below.
     fn expected_document_after_add_step(kind: &str, id: &str) -> ImperativeDocument {
         let mut document = default_document();
@@ -561,21 +648,30 @@ mod tests {
     }
 
     #[test]
-    fn add_step_materializes_kind_default_and_run_emits_no_operations() {
+    fn imperative_io_is_declared_on_the_manifest() {
+        let app = create_imperative_app();
+        assert_eq!(app.definition.io.artifact.id, "computation.imperative");
+        assert_eq!(app.definition.io.ports.len(), 1);
+        assert_eq!(app.definition.io.ports[0].id, "result:out");
+    }
+
+    #[test]
+    fn add_step_materializes_kind_default_and_run_emits_no_document_operations() {
         let mut app = new_app_with_registry();
-        // addStep fired with no args: the declared `kind` default ("log.print") must be materialized.
-        app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
+        // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
+        // materialized by the registry's action-arg default resolution.
+        app.dispatch_typed(ImperativeCommand::AddStep { kind: "log.print".into(), index: None }, &testkit::meta("local")).expect("add step");
         let document = app.projection().expect("materialize projection");
-        assert_eq!(document.path.steps.last().unwrap().kind, "log.print", "kind default materialized from the registry");
-        // `run` is a View-kind action: under registry enforcement it must not emit document operations.
-        let result = app.handle_action("run", None, &ViewState::default(), &testkit::meta("local")).expect("run");
-        assert!(result.operations.is_empty(), "run evaluates into runtime, never the document");
+        assert_eq!(document.path.steps.last().unwrap().kind, "log.print");
+        // `run` is a View-kind command: under registry enforcement it must not emit document operations.
+        let result = app.dispatch_typed(ImperativeCommand::Run, &testkit::meta("local")).expect("run");
+        assert!(result.operations.is_empty(), "run evaluates into config, never the document");
     }
 
     #[test]
     fn renders_table_scene() {
         let mut app = new_app();
-        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, None, &Default::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("table"));
     }
@@ -583,18 +679,19 @@ mod tests {
     #[test]
     fn imperative_labels_resolve_native_by_default() {
         let mut app = new_app();
-        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, None, &Default::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Set state"));
         assert!(json.contains("Print log"));
         assert!(json.contains("While"));
     }
 
+    /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command.
     #[test]
     fn imperative_labels_resolve_native_in_german() {
         let mut app = new_app();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
+        app.dispatch_typed(ImperativeCommand::SetLocale { value: "de-DE".into() }, &testkit::meta("local")).expect("set locale");
+        let node = app.render(IMPERATIVE_PLAY_BODY_CATALOGUE, None, &Default::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Zustand setzen"));
         assert!(json.contains("Log ausgeben"));
@@ -604,7 +701,7 @@ mod tests {
     #[test]
     fn renders_script_editor() {
         let mut app = new_app();
-        let node = app.render(IMPERATIVE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
+        let node = app.render(IMPERATIVE_PLAY_BODY_SCRIPT, None, &Default::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("text-editor"));
     }
@@ -616,19 +713,19 @@ mod tests {
     }
 
     #[test]
-    fn add_step_action_appends_step() {
+    fn add_step_command_appends_step() {
         let mut app = new_app();
-        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &testkit::meta("local")).expect("add step");
+        app.dispatch_typed(ImperativeCommand::AddStep { kind: "log.print".into(), index: None }, &testkit::meta("local")).expect("add step");
         assert!(app.projection().expect("projection").path.steps.len() > 2);
     }
 
     #[test]
     fn add_step_at_owner_slot_nests_into_control_body() {
         let mut app = new_app();
-        app.handle_action("addStepAt", Some(&json!({ "kind": "control.if" })), &ViewState::default(), &testkit::meta("local")).expect("add owner");
+        app.dispatch_typed(ImperativeCommand::AddStep { kind: "control.if".into(), index: None }, &testkit::meta("local")).expect("add owner");
         let owner_id = app.projection().expect("projection").path.steps.last().expect("owner").id.clone();
         let root_len = app.projection().expect("projection").path.steps.len();
-        app.handle_action("addStepAt", Some(&json!({ "kind": "log.print", "owner": owner_id, "slot": "then" })), &ViewState::default(), &testkit::meta("local")).expect("add nested");
+        app.dispatch_typed(ImperativeCommand::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) }, &testkit::meta("local")).expect("add nested");
         let document = app.projection().expect("projection");
         let owner_step = document.path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
         assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
@@ -638,17 +735,17 @@ mod tests {
     #[test]
     fn add_step_at_falls_back_to_root_for_unknown_owner() {
         let mut app = new_app();
-        app.handle_action("addStepAt", Some(&json!({ "kind": "log.print", "owner": "missing-step", "slot": "then" })), &ViewState::default(), &testkit::meta("local")).expect("add step");
+        app.dispatch_typed(ImperativeCommand::AddStepAt { kind: "log.print".into(), index: None, owner: Some("missing-step".into()), slot: Some("then".into()) }, &testkit::meta("local")).expect("add step");
         let document = app.projection().expect("projection");
         let added_id = document.path.steps.last().expect("added").id.clone();
         assert!(document.path.steps.iter().any(|step| step.id == added_id));
     }
 
     #[test]
-    fn run_action_expands_scope_into_readable_rows_without_truncation() {
+    fn run_command_expands_scope_into_readable_rows_without_truncation() {
         let mut app = new_app();
-        app.handle_action("run", None, &ViewState::default(), &testkit::meta("local")).expect("run");
-        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        app.dispatch_typed(ImperativeCommand::Run, &testkit::meta("local")).expect("run");
+        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, None, &Default::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("counter"), "run output row shows the full scope key, not an 80-char blob");
     }
@@ -656,16 +753,16 @@ mod tests {
     #[test]
     fn undo_after_add_step_restores_original_document_exactly() {
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(&mut app, "addStep", Some(&json!({ "kind": "log.print" })), |app| app.projection().expect("projection"), default_document(), expected_document_after_add_step("log.print", "step-3"));
+        testkit::assert_undo_redo_round_trip(&mut app, ImperativeCommand::AddStep { kind: "log.print".into(), index: None }, |app| app.projection().expect("projection"), default_document(), expected_document_after_add_step("log.print", "step-3"));
     }
 
     #[test]
-    fn remove_step_action_is_exact_inverse_of_add() {
+    fn remove_step_command_is_exact_inverse_of_add() {
         let mut app = new_app();
         let original = app.projection().expect("projection");
-        app.handle_action("addStep", Some(&json!({ "kind": "math.add" })), &ViewState::default(), &testkit::meta("local")).expect("add step");
+        app.dispatch_typed(ImperativeCommand::AddStep { kind: "math.add".into(), index: None }, &testkit::meta("local")).expect("add step");
         let added_id = app.projection().expect("projection").path.steps.last().expect("added").id.clone();
-        app.handle_action("removeStep", Some(&json!({ "id": added_id })), &ViewState::default(), &testkit::meta("local")).expect("remove step");
+        app.dispatch_typed(ImperativeCommand::RemoveStep { id: added_id }, &testkit::meta("local")).expect("remove step");
         assert_eq!(app.projection().expect("projection"), original);
     }
 
@@ -675,14 +772,17 @@ mod tests {
     /// impossible under whole-document `setDocument` snapshots, which would clobber one side's write.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        testkit::assert_two_instances_converge::<ImperativePlayApp, _>("mem://imperative-convergence", ("addStep", Some(&json!({ "kind": "math.add" }))), ("setStepParams", Some(&json!({ "id": "step-1", "params": { "key": "renamed" } }))), |app| {
-            app.projection().expect("projection")
-        });
+        testkit::assert_two_instances_converge::<ImperativePlayApp, _>(
+            "mem://imperative-convergence",
+            ImperativeCommand::AddStep { kind: "math.add".into(), index: None },
+            ImperativeCommand::SetStepParams { id: "step-1".into(), params: imperative::dictionary_to_value_dsl_map(&Dictionary::new().insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into())))) },
+            |app| app.projection().expect("projection"),
+        );
     }
 
     #[test]
     fn ingest_operations_is_idempotent_for_imperative() {
-        testkit::assert_ingest_idempotent::<ImperativePlayApp, _>("addStep", Some(&json!({ "kind": "math.add" })), |app| app.projection().expect("projection").path.steps.len());
+        testkit::assert_ingest_idempotent::<ImperativePlayApp, _>(ImperativeCommand::AddStep { kind: "math.add".into(), index: None }, |app| app.projection().expect("projection").path.steps.len());
     }
 }
 //#endregion 🧪️Tests

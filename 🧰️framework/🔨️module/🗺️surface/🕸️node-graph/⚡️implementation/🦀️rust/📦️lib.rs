@@ -10,7 +10,7 @@ use serde_json::Value;
 //#region 🔖️ScenePayload
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct GraphPortRecord {
+pub struct GraphPortRecord {
     id: String,
     #[serde(default)]
     label: Option<String>,
@@ -26,7 +26,7 @@ struct GraphPortRecord {
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct GraphNodeRecord {
+pub struct GraphNodeRecord {
     id: String,
     #[serde(default)]
     label: Option<String>,
@@ -54,7 +54,7 @@ struct GraphNodeRecord {
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct GraphEdgeRecord {
+pub struct GraphEdgeRecord {
     id: String,
     source_node_id: String,
     source_port_id: String,
@@ -64,7 +64,7 @@ struct GraphEdgeRecord {
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct GraphViewport {
+pub struct GraphViewport {
     #[serde(default)]
     x: f64,
     #[serde(default)]
@@ -75,6 +75,14 @@ struct GraphViewport {
 
 fn default_zoom() -> f64 {
     1.0
+}
+
+/// 🖱️ Hovered node id, mirrors `ui_wgpu::NodeGraphHover`'s wire shape.
+#[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphHoverRecord {
+    #[serde(default)]
+    node_id: Option<String>,
 }
 
 //#region ⚠️ Errors
@@ -150,21 +158,28 @@ pub fn fixture_from_node_graph_json(nodes_json: &str, edges_json: &str, viewport
     let nodes: Vec<GraphNodeRecord> = if nodes_json.trim().is_empty() { vec![] } else { serde_json::from_str(nodes_json)? };
     let edges: Vec<GraphEdgeRecord> = if edges_json.trim().is_empty() { vec![] } else { serde_json::from_str(edges_json)? };
     let viewport: GraphViewport = if viewport_json.trim().is_empty() { GraphViewport::default() } else { serde_json::from_str(viewport_json)? };
-    Ok(DagFixture {
+    Ok(fixture_from_node_graph_records(&nodes, &edges, Some(&viewport)))
+}
+
+/// 🕸️ Same as [`fixture_from_node_graph_json`] but over already-typed records (the `NodeGraphScene`
+/// wire shape decodes straight into these, no per-field JSON-string hop).
+pub fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[GraphEdgeRecord], viewport: Option<&GraphViewport>) -> DagFixture {
+    let viewport = viewport.cloned().unwrap_or_default();
+    DagFixture {
         schema: "dag.fixture".into(),
         camera: DagCamera { x: viewport.x, y: viewport.y, zoom: viewport.zoom },
         nodes: nodes.iter().map(node_record_to_spec).collect(),
         edges: edges.iter().map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}@{}", edge.source_node_id, edge.source_port_id), target: format!("{}@{}", edge.target_node_id, edge.target_port_id), ..Default::default() }).collect(),
-    })
+    }
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct NodeGraphScenePayload {
-    pub nodes_json: String,
-    pub edges_json: String,
-    pub viewport_json: String,
-    pub selection_json: Option<String>,
-    pub hover_json: Option<String>,
+    pub nodes: Vec<GraphNodeRecord>,
+    pub edges: Vec<GraphEdgeRecord>,
+    pub viewport: Option<GraphViewport>,
+    pub selection: Vec<String>,
+    pub hover: Option<GraphHoverRecord>,
     pub preview_off_json: Option<String>,
     pub lod_json: Option<String>,
     pub catalogue_json: Option<String>,
@@ -176,15 +191,6 @@ pub struct NodeGraphScenePayload {
 }
 
 fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(), NodeGraphError> {
-    payload.nodes_json = store::pack_rt::scene_field_json_text(&payload.nodes_json)?;
-    payload.edges_json = store::pack_rt::scene_field_json_text(&payload.edges_json)?;
-    payload.viewport_json = store::pack_rt::scene_field_json_text(&payload.viewport_json)?;
-    if let Some(json) = payload.selection_json.as_mut() {
-        *json = store::pack_rt::scene_field_json_text(json)?;
-    }
-    if let Some(json) = payload.hover_json.as_mut() {
-        *json = store::pack_rt::scene_field_json_text(json)?;
-    }
     if let Some(json) = payload.preview_off_json.as_mut() {
         *json = store::pack_rt::scene_field_json_text(json)?;
     }
@@ -215,11 +221,11 @@ fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(),
 impl NodeGraphScenePayload {
     pub fn from_json(value: &Value) -> Self {
         Self {
-            nodes_json: value.get("nodesJson").and_then(|v| v.as_str()).unwrap_or("[]").to_string(),
-            edges_json: value.get("edgesJson").and_then(|v| v.as_str()).unwrap_or("[]").to_string(),
-            viewport_json: value.get("viewportJson").and_then(|v| v.as_str()).unwrap_or(r#"{"x":0,"y":0,"zoom":1}"#).to_string(),
-            selection_json: value.get("selectionJson").and_then(|v| v.as_str()).map(str::to_string),
-            hover_json: value.get("hoverJson").and_then(|v| v.as_str()).map(str::to_string),
+            nodes: value.get("nodes").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
+            edges: value.get("edges").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
+            viewport: value.get("viewport").cloned().and_then(|v| serde_json::from_value(v).ok()),
+            selection: value.get("selection").cloned().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default(),
+            hover: value.get("hover").cloned().and_then(|v| serde_json::from_value(v).ok()),
             preview_off_json: value.get("previewOffJson").and_then(|v| v.as_str()).map(str::to_string),
             lod_json: value.get("lodJson").and_then(|v| v.as_str()).map(str::to_string),
             catalogue_json: value.get("catalogueJson").and_then(|v| v.as_str()).map(str::to_string),
@@ -258,11 +264,11 @@ impl GraphHost {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
         let mut hasher = DefaultHasher::new();
-        payload.nodes_json.hash(&mut hasher);
-        payload.edges_json.hash(&mut hasher);
-        payload.viewport_json.hash(&mut hasher);
-        payload.selection_json.hash(&mut hasher);
-        payload.hover_json.hash(&mut hasher);
+        format!("{:?}", payload.nodes).hash(&mut hasher);
+        format!("{:?}", payload.edges).hash(&mut hasher);
+        format!("{:?}", payload.viewport).hash(&mut hasher);
+        payload.selection.hash(&mut hasher);
+        format!("{:?}", payload.hover).hash(&mut hasher);
         payload.preview_off_json.hash(&mut hasher);
         payload.lod_json.hash(&mut hasher);
         payload.computing_json.hash(&mut hasher);
@@ -272,24 +278,12 @@ impl GraphHost {
     pub fn sync_from_payload(&mut self, payload: &NodeGraphScenePayload) -> Result<(), NodeGraphError> {
         let signature = Self::payload_signature(payload);
         if signature != self.last_payload_signature {
-            let fixture = fixture_from_node_graph_json(&payload.nodes_json, &payload.edges_json, &payload.viewport_json)?;
+            let fixture = fixture_from_node_graph_records(&payload.nodes, &payload.edges, payload.viewport.as_ref());
             self.dag = DagHost::from_fixture_without_layout(fixture);
             self.last_payload_signature = signature;
         }
-        if let Some(selection_json) = &payload.selection_json {
-            if let Ok(ids) = serde_json::from_str::<Vec<String>>(selection_json) {
-                self.dag.set_selection(&ids);
-            }
-        }
-        if let Some(hover_json) = &payload.hover_json {
-            if let Ok(value) = serde_json::from_str::<Value>(hover_json) {
-                if let (Some(widget_id), Some(port_id)) = (value.get("nodeId").and_then(|v| v.as_str()), value.get("portId").and_then(|v| v.as_str())) {
-                    self.dag.set_hover_channel(Some(widget_id), Some(port_id));
-                } else if let Some(node_id) = value.get("nodeId").and_then(|v| v.as_str()) {
-                    self.dag.set_hover(Some(node_id));
-                }
-            }
-        }
+        self.dag.set_selection(&payload.selection);
+        self.dag.set_hover(payload.hover.as_ref().and_then(|hover| hover.node_id.as_deref()));
         if let Some(preview_off_json) = &payload.preview_off_json {
             if let Ok(ids) = serde_json::from_str::<Vec<String>>(preview_off_json) {
                 self.dag.set_dimmed(&ids);
@@ -731,10 +725,10 @@ mod tests {
     fn graph_host_syncs_selection() {
         let mut host = GraphHost::default();
         let payload = NodeGraphScenePayload {
-            nodes_json: r#"[{"id":"a","label":"A","outputs":[{"id":"out"}]}]"#.into(),
-            edges_json: "[]".into(),
-            viewport_json: r#"{"x":0,"y":0,"zoom":1}"#.into(),
-            selection_json: Some(r#"["a"]"#.into()),
+            nodes: vec![GraphNodeRecord { id: "a".into(), label: Some("A".into()), outputs: Some(vec![GraphPortRecord { id: "out".into(), ..Default::default() }]), ..Default::default() }],
+            edges: Vec::new(),
+            viewport: Some(GraphViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
+            selection: vec!["a".into()],
             ..Default::default()
         };
         host.sync_from_payload(&payload).expect("sync");
@@ -874,22 +868,22 @@ mod tests {
     fn node_graph_scene_payload_from_json_defaults_missing_fields() {
         let value = serde_json::json!({});
         let payload = NodeGraphScenePayload::from_json(&value);
-        assert_eq!(payload.nodes_json, "[]");
-        assert_eq!(payload.edges_json, "[]");
-        assert_eq!(payload.viewport_json, r#"{"x":0,"y":0,"zoom":1}"#);
-        assert!(payload.selection_json.is_none());
-        assert!(payload.hover_json.is_none());
+        assert!(payload.nodes.is_empty());
+        assert!(payload.edges.is_empty());
+        assert!(payload.viewport.is_none());
+        assert!(payload.selection.is_empty());
+        assert!(payload.hover.is_none());
         assert!(payload.catalogue_json.is_none());
     }
 
     #[test]
     fn node_graph_scene_payload_from_json_reads_optional_fields() {
         let value = serde_json::json!({
-            "nodesJson": "[1]",
-            "edgesJson": "[2]",
-            "viewportJson": "{}",
-            "selectionJson": "[\"a\"]",
-            "hoverJson": "{}",
+            "nodes": [{"id": "1", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}],
+            "edges": [{"id": "2", "sourceNodeId": "a", "sourcePortId": "out", "targetNodeId": "b", "targetPortId": "in"}],
+            "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0},
+            "selection": ["a"],
+            "hover": {"nodeId": "a"},
             "previewOffJson": "[]",
             "lodJson": "{}",
             "catalogueJson": "cat",
@@ -900,9 +894,9 @@ mod tests {
             "fixtureJson": "fix",
         });
         let payload = NodeGraphScenePayload::from_json(&value);
-        assert_eq!(payload.nodes_json, "[1]");
-        assert_eq!(payload.edges_json, "[2]");
-        assert_eq!(payload.selection_json.as_deref(), Some("[\"a\"]"));
+        assert_eq!(payload.nodes.len(), 1);
+        assert_eq!(payload.edges.len(), 1);
+        assert_eq!(payload.selection, vec!["a".to_string()]);
         assert_eq!(payload.catalogue_json.as_deref(), Some("cat"));
         assert_eq!(payload.controls_json.as_deref(), Some("ctl"));
         assert_eq!(payload.clusters_json.as_deref(), Some("clu"));
@@ -913,7 +907,12 @@ mod tests {
 
     //#region 🔖️GraphHostSync
     fn payload_with_node(id: &str) -> NodeGraphScenePayload {
-        NodeGraphScenePayload { nodes_json: format!(r#"[{{"id":"{id}","label":"A","x":0,"y":0,"outputs":[{{"id":"out"}}],"inputs":[{{"id":"in"}}]}}]"#), edges_json: "[]".into(), viewport_json: r#"{"x":0,"y":0,"zoom":1}"#.into(), ..Default::default() }
+        NodeGraphScenePayload {
+            nodes: vec![GraphNodeRecord { id: id.into(), label: Some("A".into()), x: Some(0.0), y: Some(0.0), outputs: Some(vec![GraphPortRecord { id: "out".into(), ..Default::default() }]), inputs: Some(vec![GraphPortRecord { id: "in".into(), ..Default::default() }]), ..Default::default() }],
+            edges: Vec::new(),
+            viewport: Some(GraphViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
+            ..Default::default()
+        }
     }
 
     #[test]
@@ -932,22 +931,22 @@ mod tests {
     fn graph_host_sync_from_payload_sets_hover_node_only() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
-        payload.hover_json = Some(r#"{"nodeId":"a"}"#.into());
+        payload.hover = Some(GraphHoverRecord { node_id: Some("a".into()) });
         host.sync_from_payload(&payload).expect("sync");
         assert_eq!(host.hovered_node_id().as_deref(), Some("a"));
         assert_eq!(host.hovered_channel_json(), "null");
     }
 
     #[test]
-    fn graph_host_sync_from_payload_sets_hover_channel_when_port_present() {
+    fn graph_host_sync_from_payload_clears_hover_when_absent() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
-        // 🔬️ automatic LOD at high zoom resolves to `micro`/`detail`, which is required for
-        // `hover_json`'s nodeId+portId branch to hit channel-row pick instead of node-only hover.
-        payload.viewport_json = r#"{"x":0,"y":0,"zoom":3}"#.into();
-        payload.hover_json = Some(r#"{"nodeId":"a","portId":"out"}"#.into());
+        payload.hover = Some(GraphHoverRecord { node_id: Some("a".into()) });
         host.sync_from_payload(&payload).expect("sync");
-        assert_eq!(host.hovered_channel_json(), r#"{"widgetId":"a","port":"out","direction":"out"}"#);
+        assert_eq!(host.hovered_node_id().as_deref(), Some("a"));
+        payload.hover = None;
+        host.sync_from_payload(&payload).expect("sync");
+        assert_eq!(host.hovered_node_id(), None);
     }
 
     #[test]
@@ -980,7 +979,7 @@ mod tests {
     #[test]
     fn graph_host_sync_from_scene_json_parses_raw_json() {
         let mut host = GraphHost::default();
-        let scene = r#"{"nodesJson":"[{\"id\":\"a\",\"outputs\":[{\"id\":\"out\"}]}]","edgesJson":"[]","viewportJson":"{\"x\":0,\"y\":0,\"zoom\":1}","selectionJson":"[\"a\"]"}"#;
+        let scene = r#"{"nodes":[{"id":"a","x":0.0,"y":0.0,"width":1.0,"height":1.0,"outputs":[{"id":"out"}]}],"edges":[],"viewport":{"x":0,"y":0,"zoom":1},"selection":["a"]}"#;
         host.sync_from_scene_json(scene).expect("sync");
         assert_eq!(host.dag.selected_node_ids(), vec!["a"]);
     }
@@ -989,10 +988,10 @@ mod tests {
     fn graph_host_sync_from_scene_pack_decodes_pack_shell() {
         let mut host = GraphHost::default();
         let scene = serde_json::json!({
-            "nodesJson": "[{\"id\":\"a\",\"outputs\":[{\"id\":\"out\"}]}]",
-            "edgesJson": "[]",
-            "viewportJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
-            "selectionJson": "[\"a\"]"
+            "nodes": [{"id": "a", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0, "outputs": [{"id": "out"}]}],
+            "edges": [],
+            "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0},
+            "selection": ["a"]
         });
         let dsl = dsl::to_dsl_value(&scene).expect("dsl");
         let bytes = store::pack_rt::encode_pack_value(&dsl);
@@ -1013,7 +1012,7 @@ mod tests {
     fn graph_host_camera_json_reflects_viewport() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
-        payload.viewport_json = r#"{"x":11,"y":22,"zoom":3}"#.into();
+        payload.viewport = Some(GraphViewport { x: 11.0, y: 22.0, zoom: 3.0 });
         host.sync_from_payload(&payload).expect("sync");
         assert_eq!(host.camera_json(), r#"{"x":11.0,"y":22.0,"zoom":3.0}"#);
     }
@@ -1022,7 +1021,7 @@ mod tests {
     fn graph_host_selected_node_ids_json_matches_selection() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
-        payload.selection_json = Some(r#"["a"]"#.into());
+        payload.selection = vec!["a".into()];
         host.sync_from_payload(&payload).expect("sync");
         assert_eq!(host.selected_node_ids_json(), r#"["a"]"#);
     }
@@ -1087,7 +1086,7 @@ mod tests {
     fn graph_host_align_selection_errors_on_unknown_mode() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
-        payload.selection_json = Some(r#"["a"]"#.into());
+        payload.selection = vec!["a".into()];
         host.sync_from_payload(&payload).expect("sync");
         let err = host.align_selection("bogusMode").unwrap_err();
         assert!(matches!(err, NodeGraphError::Dag(_)));
@@ -1097,7 +1096,7 @@ mod tests {
     fn graph_host_align_selection_ok_for_single_node() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
-        payload.selection_json = Some(r#"["a"]"#.into());
+        payload.selection = vec!["a".into()];
         host.sync_from_payload(&payload).expect("sync");
         host.align_selection("alignLeft").expect("align");
     }

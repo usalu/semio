@@ -304,6 +304,82 @@ impl Operation<RemodelScene> for RemodelOperation {
 }
 //#endregion 🔖️Operations
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `remodel_engine::RemodelConfig`'s operation enum — one variant per settled interaction
+/// (mirrors the pre-B1 `RemodelPlayRuntime` field writes), plus a generic `Snapshot` every variant's
+/// `backwards()` returns. Mirrors `shooting_op::ShootingConfigOperation` exactly: a config-only "View"
+/// dispatch is a plain `Apply` (never `AmendLast`), so each tick is its own distinct, real config edit
+/// and "undo this tick" is exactly "restore the whole-config snapshot from just before it" — no
+/// per-field reverse-patch bookkeeping needed. `Operation::Diff` is the WHOLE `RemodelConfig`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum RemodelConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: remodel_engine::RemodelConfig,
+    },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: remodel_engine::RemodelWorldCamera,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { mode: String, ids: Vec<String> },
+    #[dsl(key = "layer-visibility")]
+    SetLayerVisibility { layer: String, visible: bool },
+    #[dsl(key = "frame-cursor")]
+    SetFrameCursor {
+        #[serde(default)]
+        stream_id: Option<String>,
+        frame_index: u32,
+    },
+    #[dsl(key = "report-table")]
+    SetReportTable { table: String },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<remodel_engine::RemodelConfig> for RemodelConfigOperation {
+    type Diff = remodel_engine::RemodelConfig;
+
+    fn diff(&self, base: &remodel_engine::RemodelConfig) -> remodel_engine::RemodelConfig {
+        let mut next = base.clone();
+        match self {
+            RemodelConfigOperation::Snapshot { config } => return config.clone(),
+            RemodelConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            RemodelConfigOperation::SetSelection { mode, ids } => {
+                next.selection.mode = mode.clone();
+                next.selection.ids = ids.clone();
+            }
+            RemodelConfigOperation::SetLayerVisibility { layer, visible } => match layer.as_str() {
+                "mesh" => next.layers.mesh = *visible,
+                "dense" => next.layers.dense = *visible,
+                "sparse" => next.layers.sparse = *visible,
+                "cameras" => next.layers.cameras = *visible,
+                "gcps" => next.layers.gcps = *visible,
+                _ => {}
+            },
+            RemodelConfigOperation::SetFrameCursor { stream_id, frame_index } => {
+                if stream_id.is_some() {
+                    next.frame_cursor.stream_id = stream_id.clone();
+                }
+                next.frame_cursor.frame_index = *frame_index;
+            }
+            RemodelConfigOperation::SetReportTable { table } => next.report_table = table.clone(),
+            RemodelConfigOperation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
+            RemodelConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &remodel_engine::RemodelConfig) -> Vec<Self> {
+        vec![RemodelConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -719,5 +795,57 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&RemodelOperation::SetQc { qc: None });
     }
     //#endregion 🔖️OpText
+
+    //#region 🔖️ConfigOperations
+    #[test]
+    fn config_operations_apply_and_backwards_restore_the_pre_edit_snapshot() {
+        let base = remodel_engine::RemodelConfig::default();
+
+        let camera = remodel_engine::RemodelWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 60.0 };
+        let op = RemodelConfigOperation::SetCamera { camera: camera.clone() };
+        let next = op.diff(&base);
+        assert_eq!(next.camera, camera);
+        assert_eq!(op.backwards(&base), vec![RemodelConfigOperation::Snapshot { config: base.clone() }]);
+        assert_eq!(op.backwards(&base)[0].diff(&next), base, "backwards restores the exact pre-edit config");
+
+        let op = RemodelConfigOperation::SetSelection { mode: "rectangle".into(), ids: vec!["a".into()] };
+        let next = op.diff(&base);
+        assert_eq!(next.selection.mode, "rectangle");
+        assert_eq!(next.selection.ids, vec!["a".to_string()]);
+
+        let op = RemodelConfigOperation::SetLayerVisibility { layer: "dense".into(), visible: false };
+        let next = op.diff(&base);
+        assert!(!next.layers.dense);
+        assert!(next.layers.mesh, "only the named layer flips");
+
+        let op = RemodelConfigOperation::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 4 };
+        let next = op.diff(&base);
+        assert_eq!(next.frame_cursor.stream_id.as_deref(), Some("stream-1"));
+        assert_eq!(next.frame_cursor.frame_index, 4);
+
+        let op = RemodelConfigOperation::SetReportTable { table: "gcps".into() };
+        assert_eq!(op.diff(&base).report_table, "gcps");
+
+        let op = RemodelConfigOperation::SetActiveUtility { utility_id: "measure".into() };
+        assert_eq!(op.diff(&base).active_utility_id, "measure");
+
+        let op = RemodelConfigOperation::SetLocale { value: "de-DE".into() };
+        assert_eq!(op.diff(&base).locale, "de-DE");
+    }
+
+    #[test]
+    fn config_operations_roundtrip_through_op_text() {
+        let config = remodel_engine::RemodelConfig::default();
+        store::test_support::assert_op_line_round_trip(&RemodelConfigOperation::Snapshot { config });
+        store::test_support::assert_op_line_round_trip(&RemodelConfigOperation::SetCamera { camera: remodel_engine::RemodelWorldCamera::default() });
+        store::test_support::assert_op_line_round_trip(&RemodelConfigOperation::SetSelection { mode: "rectangle".into(), ids: vec!["a".into(), "b".into()] });
+        store::test_support::assert_op_line_round_trip(&RemodelConfigOperation::SetLayerVisibility { layer: "gcps".into(), visible: false });
+        store::test_support::assert_op_line_round_trip(&RemodelConfigOperation::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 });
+        store::test_support::assert_op_line_round_trip(&RemodelConfigOperation::SetFrameCursor { stream_id: None, frame_index: 0 });
+        store::test_support::assert_op_line_round_trip(&RemodelConfigOperation::SetReportTable { table: "tracks".into() });
+        store::test_support::assert_op_line_round_trip(&RemodelConfigOperation::SetActiveUtility { utility_id: "gcpPlace".into() });
+        store::test_support::assert_op_line_round_trip(&RemodelConfigOperation::SetLocale { value: "de-DE".into() });
+    }
+    //#endregion 🔖️ConfigOperations
 }
 //#endregion 🧪️Tests

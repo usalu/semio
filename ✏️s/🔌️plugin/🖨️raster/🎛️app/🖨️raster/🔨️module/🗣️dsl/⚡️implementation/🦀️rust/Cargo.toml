@@ -14,3 +14,8 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️ap
 raster = { path = "../../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/⚡️implementation/🦀️rust", package = "semio-s-app-raster" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 serde_json = "1.0.140"
+
+[dev-dependencies]
+# 🌱️ `RasterLayerNode::Adjustment.params: BTreeMap<String, dsl::DslValue>`'s test fixture builder
+# needs `dsl::to_dsl_value` to turn `serde_json::json!(...)` literals into real `DslValue`s.
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }

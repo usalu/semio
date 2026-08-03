@@ -2,10 +2,14 @@
 //! the `Process3dEnvelope`/`Process3dStore` type aliases and the WASM VCS bridge — both need
 //! `Process3dOperation` (from `process_3d_op`) alongside `Process3dDocument` (from `process_3d`), so
 //! this is the first constitutional crate in the stack where that pairing is available.
+//!
+//! 🎯️ Also hosts `Process3dCommand` — the `DocumentApp::Command` binary command envelope, the SOLE
+//! dispatch surface for `process_3d_ui::Process3dPlayApp::handle` (mirrors `shooting_protocol::ShootingCommand`).
 
-use process_3d::Process3dDocument;
+use process_3d::{Process3dDocument, ProcessStep};
 use process_3d_op::Process3dOperation;
 use protocol::OpBinary;
+use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
 
 /// 📦️ Encodes a `Process3dOperation` to its binary command form.
@@ -17,6 +21,118 @@ pub fn encode_op(operation: &Process3dOperation) -> Result<Vec<u8>, protocol::Pr
 pub fn decode_op(bytes: &[u8]) -> Result<Process3dOperation, protocol::ProtocolError> {
     Process3dOperation::decode_op(bytes)
 }
+
+//#region 🔖️Process3dCommand
+/// 🎯️ B1: `Process3dPlayApp::Command` — the SOLE dispatch surface for process3d's own behavior. One
+/// variant per action previously matched in `Process3dPlayApp::handle_action`'s string/`args` match.
+/// Field shapes mirror each action's real `args` object exactly. `#[derive(dsl::DslOps)]` gives this a
+/// binary (`OpBinary`) AND text (`OpText`) codec, matching `Process3dOperationDsl`'s (`process_3d_op`)
+/// derive/attribute conventions exactly.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Process3dCommand {
+    // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
+    #[dsl(key = "document")]
+    SetDocument {
+        #[dsl(block)]
+        document: Process3dDocument,
+    },
+    #[dsl(key = "active-example")]
+    SetActiveExample { example_id: String },
+    #[dsl(key = "add-step")]
+    AddStep {
+        measure: Option<String>,
+        module_id: Option<String>,
+        machine_id: Option<String>,
+        modification_kind_id: Option<String>,
+        #[dsl(coord)]
+        position: Option<[f64; 3]>,
+    },
+    #[dsl(key = "remove-step")]
+    RemoveStep { id: String },
+    #[dsl(key = "remove-selected-step")]
+    RemoveSelectedStep,
+    #[dsl(key = "move-step")]
+    MoveStep { id: String, index: usize },
+    #[dsl(key = "update-step")]
+    UpdateStep {
+        #[dsl(block)]
+        step: ProcessStep,
+    },
+    #[dsl(key = "set-step-enabled")]
+    SetStepEnabled { id: String, enabled: bool },
+    #[dsl(key = "stock")]
+    SetStock { kind: String },
+    /// 🩹️ Mirrors `patchInspector`'s `{ target, field, value }` args — `value` is either a number (most
+    /// fields) or text (the `label` field); the two are mutually exclusive at any one call site.
+    #[dsl(key = "patch-inspector")]
+    PatchInspector { target: String, field: String, number: Option<f64>, text: Option<String> },
+    #[dsl(key = "cursor")]
+    SetCursor { value: Option<u64> },
+    #[dsl(key = "step-cursor")]
+    StepCursor { delta: i64 },
+    #[dsl(key = "step-cursor-back")]
+    StepCursorBack,
+    #[dsl(key = "step-cursor-forward")]
+    StepCursorForward,
+    #[dsl(key = "engagement-submit")]
+    EngagementSubmit,
+    #[dsl(key = "world-pointer-down")]
+    WorldPointerDown {
+        #[dsl(coord)]
+        position: [f64; 3],
+    },
+    #[dsl(key = "world-face-drag-end")]
+    WorldFaceDragEnd {
+        #[dsl(coord)]
+        normal: [f64; 3],
+        #[dsl(coord)]
+        start_point: [f64; 3],
+        distance: f64,
+        face_extent: Option<[f64; 2]>,
+    },
+    #[dsl(key = "import-model-file")]
+    ImportModelFile { name: String, payload: String },
+
+    // 👁️ Config-only (was ephemeral `Process3dRuntime` state) — emit `config_operations`, never
+    // document operations.
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "engagement-input")]
+    EngagementInput { value: String },
+    #[dsl(key = "engagement-abort")]
+    EngagementAbort,
+    #[dsl(key = "set-selection")]
+    SetSelection { id: Option<String> },
+    #[dsl(key = "set-hover")]
+    SetHover { id: Option<String> },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(coord)]
+        position: [f64; 3],
+        #[dsl(coord)]
+        target: [f64; 3],
+        fov: f64,
+    },
+    #[dsl(key = "world-pick")]
+    WorldPick { granularity: String, id: Option<u32> },
+    #[dsl(key = "toggle-sun")]
+    ToggleSun,
+    #[dsl(key = "sun-azimuth")]
+    SetSunAzimuth { value: f64 },
+    #[dsl(key = "sun-elevation")]
+    SetSunElevation { value: f64 },
+    #[dsl(key = "sun-intensity")]
+    SetSunIntensity { value: f64 },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+
+    // 🐚️ Shell effects — export/import round-trips through the host.
+    #[dsl(key = "export-model")]
+    ExportModel { format: String },
+    #[dsl(key = "load-model-request")]
+    LoadModelRequest,
+}
+//#endregion 🔖️Process3dCommand
 
 //#region 🔖️Store
 pub type Process3dEnvelope = DocumentEnvelope<Process3dDocument, Process3dOperation>;
@@ -215,5 +331,49 @@ mod tests {
         test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖️DocumentTextTests
+
+    //#region 🔖️Process3dCommandTests
+    #[test]
+    fn process3d_command_op_text_and_binary_round_trip_every_variant() {
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetDocument { document: empty_process3d_projection() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetActiveExample { example_id: "drilled-plate".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::AddStep { measure: Some("cut".into()), module_id: None, machine_id: None, modification_kind_id: None, position: Some([1.0, 2.0, 3.0]) });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::AddStep { measure: None, module_id: Some("wood".into()), machine_id: Some("circularSaw".into()), modification_kind_id: Some("crosscut".into()), position: None });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::RemoveStep { id: "cut-1".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::RemoveSelectedStep);
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::MoveStep { id: "cut-1".into(), index: 2 });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::UpdateStep { step: cut_step("cut-1") });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetStepEnabled { id: "cut-1".into(), enabled: false });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetStock { kind: "cylinder".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::PatchInspector { target: "beam".into(), field: "width".into(), number: Some(1.5), text: None });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::PatchInspector { target: "beam".into(), field: "label".into(), number: None, text: Some("Beam".into()) });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetCursor { value: Some(3) });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetCursor { value: None });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::StepCursor { delta: -1 });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::StepCursorBack);
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::StepCursorForward);
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::EngagementSubmit);
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::WorldPointerDown { position: [1.0, 2.0, 3.0] });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: None });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::ImportModelFile { name: "beam.step".into(), payload: "data:application/octet-stream;base64,AAAA".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetActiveUtility { utility_id: "cut".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::EngagementInput { value: "cut".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::EngagementAbort);
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetSelection { id: Some("stock".into()) });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetSelection { id: None });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetHover { id: Some("step-0".into()) });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::WorldPick { granularity: "face".into(), id: Some(7) });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::WorldPick { granularity: "mesh".into(), id: None });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::ToggleSun);
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetSunAzimuth { value: 90.0 });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetSunElevation { value: 45.0 });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetSunIntensity { value: 1.0 });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::SetLocale { value: "de-DE".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::ExportModel { format: "step".into() });
+        test_support::assert_op_text_binary_equivalence(&Process3dCommand::LoadModelRequest);
+    }
+    //#endregion 🔖️Process3dCommandTests
 }
 //#endregion 🧪️Tests

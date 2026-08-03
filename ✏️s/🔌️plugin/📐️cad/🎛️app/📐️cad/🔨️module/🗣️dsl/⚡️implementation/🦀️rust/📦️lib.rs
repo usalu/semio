@@ -43,7 +43,7 @@ mod tests {
 
     fn sample_geometry() -> CadGeometry {
         CadGeometry {
-            anchors: vec![json!({ "id": "anchor-1", "position": [0.0, 0.0, 0.0] })],
+            anchors: vec![serde_json::from_value(json!({ "id": "anchor-1", "position": [0.0, 0.0, 0.0] })).expect("dsl value")],
             vertices: vec![CadVertex { id: "v1".into(), position: [0.0, 0.0, 0.0] }, CadVertex { id: "v2".into(), position: [1.0, 0.0, 0.0] }],
             edges: vec![CadEdge { id: "e1".into(), vertex_ids: vec!["v1".into(), "v2".into()], curve: CadEdgeCurve { kind: "line".into() } }],
             wires: vec![CadWire { id: "w1".into(), edge_ids: vec!["e1".into()] }],

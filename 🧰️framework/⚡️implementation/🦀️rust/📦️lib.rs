@@ -900,7 +900,7 @@ fn stl_face_normal(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> [f32; 3] {
 //#endregion Stl
 
 //#region MediaFormat
-/// 🗂️ OS-level media export/import format. Lives here (not in `framework/product/os/core`) because `framework/core` sits below `framework/product/os/core` in the dependency graph — `os/core` depends on `framework-core`, never the reverse — so the `MeshExporter`/`MeshImporter` traits below, and every OS registration site, share one definition; `framework/product/os/core` re-exports it verbatim. Serialize/Deserialize/TS derives added alongside the `//#region MediaType` lattice below since `MediaWireFormat`/`MediaKindDescriptor` carry this on the wire.
+/// 🗂️ OS-level media export/import format. Lives here (not in `framework/product/os/core`) because `framework/core` sits below `framework/product/os/core` in the dependency graph — `os/core` depends on `framework-core`, never the reverse — so the `MeshExporter`/`MeshImporter` traits below, and every OS registration site, share one definition; `framework/product/os/core` re-exports it verbatim. Serialize/Deserialize/TS derives added alongside the `//#region MediaType` lattice below since `MediaWireFormat`/`ArtifactKindSpec` carry this on the wire.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -990,8 +990,8 @@ pub enum OsMediaCapability {
 /// 🗂️ An app-declared OS resource kind (e.g. a 3D mesh format, a raster format) — the manifest-level
 /// counterpart to `AppBuilder::artifact_kind(...)` (`framework/plugin/rs`), letting `framework/product/os/core`
 /// build its artifact catalog from `AppDefinition.artifact_kinds` at plugin registration time instead of
-/// hardcoding a per-app match on kind-id strings. Absorbs the manifest-level media-kind fields
-/// (`media_type`/`schema`/`export_formats`/`import_formats`, matching `MediaKindDescriptor` below field-for-field)
+/// hardcoding a per-app match on kind-id strings. Carries the manifest-level media-kind fields
+/// (`media_type`/`schema`/`export_formats`/`import_formats`) directly
 /// so one spec carries both the OS-catalog presentation shape and the `MediaType` a wire actually negotiates
 /// — see `crate::media_types_compatible`. `OsArtifactDescriptor` (`framework/product/os/core`) threads
 /// `media_type` through so registry lookups return it alongside the rest of the descriptor.
@@ -1060,27 +1060,13 @@ pub struct MediaType {
     pub form: MediaForm,
 }
 
-/// 🔌️ How a `MediaType` is actually encoded once it crosses a process boundary — binary payloads reuse `OsMediaFormat`, structured payloads carry a schema id instead (see `MediaKindDescriptor::schema`).
+/// 🔌️ How a `MediaType` is actually encoded once it crosses a process boundary — binary payloads reuse `OsMediaFormat`, structured payloads carry a schema id instead (see `ArtifactKindSpec::schema`).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum MediaWireFormat {
     Binary { format: OsMediaFormat },
     Document { schema: String }
-}
-
-/// 📇️ An app-declared media kind — the manifest-level counterpart to `MediaType`, naming a concrete component/schema an app can produce or consume plus which `OsMediaFormat`s it can export/import. `ArtifactKindSpec` (see the `ArtifactKind` region above) now carries these same four fields directly, so this shape has no live producer — kept for now as the standalone media-kind vocabulary dependent tickets (edge contracts, WIT/SDK) may still key off of.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase")]
-pub struct MediaKindDescriptor {
-    pub id: String,
-    pub name: String,
-    pub media_type: MediaType,
-    pub schema: String,
-    pub component_kind: String,
-    pub export_formats: Vec<OsMediaFormat>,
-    pub import_formats: Vec<OsMediaFormat>,
 }
 
 /// 🔀️ Which side of a wire a `MediaPortSpec` sits on.
@@ -1092,7 +1078,16 @@ pub enum MediaPortDirection {
     Out,
 }
 
-/// 🔌️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `MediaKindDescriptor.id` when the port is more specific than its `media_type` alone conveys.
+/// 🔢️ Whether a `MediaPortSpec` accepts/produces exactly one media value or a stream/collection of them — e.g. a mesh-array input that fans in from several upstream producers.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum PortMultiplicity {
+    One,
+    Many,
+}
+
+/// 🔌️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `ArtifactKindSpec.id` when the port is more specific than its `media_type` alone conveys.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -1105,6 +1100,7 @@ pub struct MediaPortSpec {
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub kind_id: Option<String>,
     pub required: bool,
+    pub multiplicity: PortMultiplicity,
 }
 
 /// ⚖️ Result of checking whether a producer's `MediaType` can feed a consumer's accepted `MediaType`: exact match, a known lossy-but-allowed conversion, or outright rejection.
@@ -1183,6 +1179,7 @@ impl AppIo {
             media_type: self.document_media_type,
             kind_id: None,
             required: true,
+            multiplicity: PortMultiplicity::One,
         }
     }
 
@@ -1195,14 +1192,33 @@ impl AppIo {
             media_type: self.document_media_type,
             kind_id: None,
             required: true,
+            multiplicity: PortMultiplicity::One,
         }
     }
 
-    /// 🔌️ The full port list: the implicit document ports followed by every app-specific port.
+    /// 🔌️ The full port list, in stable order: the implicit document ports first, followed by every app-specific port declared in `self.ports`.
     pub fn all_ports(&self) -> Vec<MediaPortSpec> {
         let mut ports = vec![self.document_in_port(), self.document_out_port()];
         ports.extend(self.ports.clone());
         ports
+    }
+
+    /// 🏗️ Builds an `AppIo` from just its implicit document surface, with no extra ports/formats declared yet — chain `.with_ports(...)` to add app-specific ports.
+    pub fn from_document(schema: impl Into<String>, media_type: MediaType, artifact: ArtifactPresentation) -> Self {
+        Self {
+            document_schema: schema.into(),
+            document_media_type: media_type,
+            ports: Vec::new(),
+            export_formats: Vec::new(),
+            import_formats: Vec::new(),
+            artifact,
+        }
+    }
+
+    /// 🔌️ Attaches app-specific ports (beyond the implicit document ports) to this `AppIo`.
+    pub fn with_ports(mut self, ports: Vec<MediaPortSpec>) -> Self {
+        self.ports = ports;
+        self
     }
 }
 
@@ -5975,17 +5991,6 @@ pub fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a 
 }
 //#endregion 🔖️action-args
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase")]
-pub struct WorkflowDefinition {
-    pub workflow_step_id: String,
-    pub app_id: String,
-    pub label: String,
-    pub document: Vec<String>,
-    pub yields: String,
-}
-
 /// 🪜️ Formats a canonical app document for chrome.
 pub fn app_document_label(document: &[String]) -> String {
     document.join(" · ")
@@ -6066,7 +6071,6 @@ pub struct PluginManifest {
     pub label: String,
     pub version: String,
     pub apps: Vec<AppDefinition>,
-    pub workflows: Vec<WorkflowDefinition>,
     pub examples: Vec<ExampleDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub capabilities: Vec<kernel::CapabilityRequirement>,
@@ -8280,7 +8284,6 @@ mod app_document_tests {
         crate::ui::TutorialGestureCue::export().unwrap();
         crate::ui::DialogDefinition::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
-        crate::ui::WorkflowDefinition::export().unwrap();
         crate::ui::ExampleDefinition::export().unwrap();
         crate::ui::Contribution::export().unwrap();
         crate::ui::PluginManifest::export().unwrap();
@@ -8298,8 +8301,8 @@ mod app_document_tests {
         crate::mesh::MediaForm::export().unwrap();
         crate::mesh::MediaType::export().unwrap();
         crate::mesh::MediaWireFormat::export().unwrap();
-        crate::mesh::MediaKindDescriptor::export().unwrap();
         crate::mesh::MediaPortDirection::export().unwrap();
+        crate::mesh::PortMultiplicity::export().unwrap();
         crate::mesh::MediaPortSpec::export().unwrap();
     }
 }
@@ -8326,7 +8329,7 @@ pub use mesh::{
     MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
     OsMediaFormat,
     OsMediaCapability, ArtifactKindSpec,
-    MediaClass, MediaForm, MediaType, MediaWireFormat, MediaKindDescriptor, MediaPortDirection, MediaPortSpec,
+    MediaClass, MediaForm, MediaType, MediaWireFormat, MediaPortDirection, PortMultiplicity, MediaPortSpec,
     MediaCompat, media_types_compatible,
     Media, MediaPayload, MediaFingerprint, MediaError, MediaConverter,
     AppIo, ArtifactPresentation,

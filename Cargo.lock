@@ -7289,6 +7289,7 @@ dependencies = [
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-framework-ui-styling",
+ "semio-framework-ui-wgpu",
  "semio-s-kernel-flow-module-bim",
  "semio-s-kernel-flow-module-brep",
  "semio-s-kernel-flow-module-core",
@@ -8434,6 +8435,7 @@ dependencies = [
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel-workflow",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "serde",
@@ -8631,6 +8633,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-s-app-animate-present",
  "semio-s-plugin-animate-core",
@@ -8667,11 +8672,13 @@ dependencies = [
 name = "semio-s-app-animate-present-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-animate-present",
  "semio-s-app-animate-present-engine",
  "semio-s-app-animate-present-op",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -8686,6 +8693,7 @@ dependencies = [
  "semio-s-app-animate-present",
  "semio-s-app-animate-present-engine",
  "semio-s-app-animate-present-op",
+ "semio-s-app-animate-present-protocol",
  "serde",
  "serde_json",
 ]
@@ -8714,9 +8722,13 @@ dependencies = [
 name = "semio-s-app-block-2d-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-block-2d",
  "semio-s-plugin-block-shared",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -8748,12 +8760,14 @@ dependencies = [
 name = "semio-s-app-block-2d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-block-2d",
  "semio-s-app-block-2d-engine",
  "semio-s-app-block-2d-op",
  "semio-s-plugin-block-shared",
+ "serde",
 ]
 
 [[package]]
@@ -8766,6 +8780,7 @@ dependencies = [
  "semio-s-app-block-2d-dsl",
  "semio-s-app-block-2d-engine",
  "semio-s-app-block-2d-op",
+ "semio-s-app-block-2d-protocol",
  "semio-s-plugin-block-shared",
  "serde",
  "serde_json",
@@ -8796,9 +8811,13 @@ dependencies = [
 name = "semio-s-app-block-3d-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-block-3d",
  "semio-s-plugin-block-shared",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -8830,12 +8849,14 @@ dependencies = [
 name = "semio-s-app-block-3d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-block-3d",
  "semio-s-app-block-3d-engine",
  "semio-s-app-block-3d-op",
  "semio-s-plugin-block-shared",
+ "serde",
 ]
 
 [[package]]
@@ -8848,6 +8869,7 @@ dependencies = [
  "semio-s-app-block-3d-dsl",
  "semio-s-app-block-3d-engine",
  "semio-s-app-block-3d-op",
+ "semio-s-app-block-3d-protocol",
  "semio-s-plugin-block-shared",
  "serde",
  "serde_json",
@@ -8878,9 +8900,13 @@ dependencies = [
 name = "semio-s-app-block-5d-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-block-5d",
  "semio-s-plugin-block-shared",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -8912,12 +8938,14 @@ dependencies = [
 name = "semio-s-app-block-5d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-block-5d",
  "semio-s-app-block-5d-engine",
  "semio-s-app-block-5d-op",
  "semio-s-plugin-block-shared",
+ "serde",
 ]
 
 [[package]]
@@ -8930,6 +8958,7 @@ dependencies = [
  "semio-s-app-block-5d-dsl",
  "semio-s-app-block-5d-engine",
  "semio-s-app-block-5d-op",
+ "semio-s-app-block-5d-protocol",
  "semio-s-plugin-block-shared",
  "serde",
  "serde_json",
@@ -8963,8 +8992,11 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-os-kernel-3d-brep",
  "semio-framework-os-kernel-3d-brep-engine",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-math-graph-dsl",
  "semio-framework-os-kernel-math-graph-manifest",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-cad",
  "serde",
@@ -8979,6 +9011,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-cad",
+ "semio-s-app-cad-engine",
  "serde",
  "serde_json",
 ]
@@ -8997,6 +9030,7 @@ dependencies = [
 name = "semio-s-app-cad-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-cad",
@@ -9014,6 +9048,7 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-os-kernel-3d-brep",
  "semio-framework-os-kernel-3d-brep-engine",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
@@ -9021,6 +9056,7 @@ dependencies = [
  "semio-s-app-cad",
  "semio-s-app-cad-engine",
  "semio-s-app-cad-op",
+ "semio-s-app-cad-protocol",
  "serde",
  "serde_json",
 ]
@@ -9044,7 +9080,11 @@ dependencies = [
 name = "semio-s-app-dag-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-board-port-directed-dag",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-framework-ui-wgpu",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -9054,7 +9094,13 @@ dependencies = [
 name = "semio-s-app-dag-op"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-board-port-directed-dag",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-s-app-dag-engine",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -9071,9 +9117,11 @@ dependencies = [
 name = "semio-s-app-dag-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-dag-op",
+ "serde",
 ]
 
 [[package]]
@@ -9087,6 +9135,7 @@ dependencies = [
  "semio-s-app-dag",
  "semio-s-app-dag-engine",
  "semio-s-app-dag-op",
+ "semio-s-app-dag-protocol",
  "serde",
  "serde_json",
 ]
@@ -9117,6 +9166,9 @@ dependencies = [
  "base64 0.22.1",
  "image",
  "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-s-app-draw",
  "semio-s-app-draw-dsl",
  "semio-s-kernel-geometry-2d",
@@ -9153,11 +9205,13 @@ dependencies = [
 name = "semio-s-app-draw-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-draw",
  "semio-s-app-draw-engine",
  "semio-s-app-draw-op",
+ "serde",
 ]
 
 [[package]]
@@ -9169,6 +9223,7 @@ dependencies = [
  "semio-s-app-draw",
  "semio-s-app-draw-engine",
  "semio-s-app-draw-op",
+ "semio-s-app-draw-protocol",
  "semio-s-plugin-draw-fsm",
  "serde",
  "serde_json",
@@ -9198,10 +9253,15 @@ dependencies = [
 name = "semio-s-app-fem-2d-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-fem-2d",
  "semio-s-app-fem-2d-dsl",
  "semio-s-plugin-fem-core",
+ "serde",
  "thiserror 2.0.18",
 ]
 
@@ -9214,6 +9274,7 @@ dependencies = [
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-s-app-fem-2d",
+ "semio-s-app-fem-2d-engine",
  "serde",
  "serde_json",
 ]
@@ -9232,11 +9293,13 @@ dependencies = [
 name = "semio-s-app-fem-2d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-fem-2d",
  "semio-s-app-fem-2d-engine",
  "semio-s-app-fem-2d-op",
+ "serde",
 ]
 
 [[package]]
@@ -9249,6 +9312,7 @@ dependencies = [
  "semio-s-app-fem-2d-dsl",
  "semio-s-app-fem-2d-engine",
  "semio-s-app-fem-2d-op",
+ "semio-s-app-fem-2d-protocol",
  "semio-s-plugin-fem-core",
  "semio-s-plugin-fem-shared",
  "serde_json",
@@ -9354,7 +9418,12 @@ dependencies = [
 name = "semio-s-app-flow-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
+ "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-framework-ui-wgpu",
  "serde",
  "serde_json",
 ]
@@ -9363,7 +9432,13 @@ dependencies = [
 name = "semio-s-app-flow-op"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-s-app-flow-engine",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -9380,22 +9455,29 @@ dependencies = [
 name = "semio-s-app-flow-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-flow",
  "semio-s-app-flow-op",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "semio-s-app-flow-ui"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-flow",
  "semio-s-app-flow-engine",
  "semio-s-app-flow-op",
+ "semio-s-app-flow-protocol",
  "serde",
  "serde_json",
 ]
@@ -9421,10 +9503,15 @@ dependencies = [
 name = "semio-s-app-forms-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-forms",
  "semio-s-app-forms-dsl",
+ "serde",
  "serde_json",
 ]
 
@@ -9432,9 +9519,13 @@ dependencies = [
 name = "semio-s-app-forms-op"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-s-app-forms",
  "semio-s-app-forms-engine",
+ "serde",
 ]
 
 [[package]]
@@ -9451,25 +9542,30 @@ dependencies = [
 name = "semio-s-app-forms-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-playbook",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-forms",
  "semio-s-app-forms-engine",
  "semio-s-app-forms-op",
+ "serde",
 ]
 
 [[package]]
 name = "semio-s-app-forms-ui"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-forms",
  "semio-s-app-forms-dsl",
  "semio-s-app-forms-engine",
  "semio-s-app-forms-op",
+ "semio-s-app-forms-protocol",
  "serde",
  "serde_json",
 ]
@@ -9489,6 +9585,7 @@ dependencies = [
 name = "semio-s-app-gis-2d-dsl"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-store",
  "semio-s-app-gis-2d",
  "serde_json",
@@ -9498,12 +9595,15 @@ dependencies = [
 name = "semio-s-app-gis-2d-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os",
  "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-gis-2d",
  "semio-s-app-gis-2d-dsl",
+ "serde",
  "serde_json",
 ]
 
@@ -9525,6 +9625,7 @@ dependencies = [
 name = "semio-s-app-gis-2d-pack"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-store",
  "semio-s-app-gis-2d",
@@ -9536,11 +9637,13 @@ dependencies = [
 name = "semio-s-app-gis-2d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-gis-2d",
  "semio-s-app-gis-2d-engine",
  "semio-s-app-gis-2d-op",
+ "serde",
  "serde_json",
 ]
 
@@ -9556,6 +9659,7 @@ dependencies = [
  "semio-s-app-gis-2d",
  "semio-s-app-gis-2d-engine",
  "semio-s-app-gis-2d-op",
+ "semio-s-app-gis-2d-protocol",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -9582,9 +9686,15 @@ dependencies = [
 name = "semio-s-app-gis-3d-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-gis-3d",
  "semio-s-app-gis-3d-dsl",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -9595,6 +9705,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-gis-3d",
+ "semio-s-app-gis-3d-engine",
  "serde",
 ]
 
@@ -9612,22 +9723,27 @@ dependencies = [
 name = "semio-s-app-gis-3d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-gis-3d",
  "semio-s-app-gis-3d-op",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "semio-s-app-gis-3d-ui"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-surface-terrain",
  "semio-framework-plugin",
  "semio-s-app-gis-3d",
  "semio-s-app-gis-3d-dsl",
  "semio-s-app-gis-3d-engine",
  "semio-s-app-gis-3d-op",
+ "semio-s-app-gis-3d-protocol",
  "serde",
  "serde_json",
 ]
@@ -9657,11 +9773,16 @@ dependencies = [
 name = "semio-s-app-imperative-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-imperative",
  "semio-s-app-imperative-dsl",
  "semio-s-kernel-imperative",
+ "serde",
  "serde_json",
  "thiserror 2.0.18",
 ]
@@ -9694,22 +9815,28 @@ dependencies = [
 name = "semio-s-app-imperative-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-neural-engine",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-imperative",
  "semio-s-app-imperative-engine",
  "semio-s-app-imperative-op",
+ "serde",
 ]
 
 [[package]]
 name = "semio-s-app-imperative-ui"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-neural-engine",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-imperative",
  "semio-s-app-imperative-engine",
  "semio-s-app-imperative-op",
+ "semio-s-app-imperative-protocol",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -9743,11 +9870,16 @@ dependencies = [
  "image",
  "parley",
  "png 0.17.16",
+ "semio-framework-core",
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-canvas",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-layout",
  "semio-s-app-layout-dsl",
+ "serde",
  "serde_json",
  "sha2",
  "swash",
@@ -9783,11 +9915,13 @@ dependencies = [
 name = "semio-s-app-layout-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-layout",
  "semio-s-app-layout-engine",
  "semio-s-app-layout-op",
+ "serde",
 ]
 
 [[package]]
@@ -9799,11 +9933,13 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-layout",
  "semio-s-app-layout-dsl",
  "semio-s-app-layout-engine",
  "semio-s-app-layout-op",
+ "semio-s-app-layout-protocol",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -9839,11 +9975,14 @@ dependencies = [
  "semio-framework-os-kernel-3d-brep",
  "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-3d-mesh",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-cad-engine",
  "semio-s-app-lowpoly",
  "semio-s-app-lowpoly-dsl",
+ "serde",
  "serde_json",
  "thiserror 2.0.18",
 ]
@@ -9876,11 +10015,13 @@ dependencies = [
 name = "semio-s-app-lowpoly-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-lowpoly",
  "semio-s-app-lowpoly-engine",
  "semio-s-app-lowpoly-op",
+ "serde",
 ]
 
 [[package]]
@@ -9890,10 +10031,12 @@ dependencies = [
  "base64 0.22.1",
  "png 0.17.16",
  "semio-framework-os-kernel-3d-mesh",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-lowpoly",
  "semio-s-app-lowpoly-engine",
  "semio-s-app-lowpoly-op",
+ "semio-s-app-lowpoly-protocol",
  "serde",
  "serde_json",
 ]
@@ -9920,9 +10063,16 @@ dependencies = [
 name = "semio-s-app-mathematical-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-math-geometry",
  "semio-framework-os-kernel-math-graph",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
+ "semio-framework-ui-wgpu",
  "semio-s-app-mathematical",
+ "serde",
  "serde_json",
 ]
 
@@ -9934,6 +10084,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-mathematical",
+ "semio-s-app-mathematical-engine",
  "serde",
 ]
 
@@ -9950,21 +10101,25 @@ dependencies = [
 name = "semio-s-app-mathematical-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-mathematical",
  "semio-s-app-mathematical-op",
+ "serde",
 ]
 
 [[package]]
 name = "semio-s-app-mathematical-ui"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-mathematical",
  "semio-s-app-mathematical-engine",
  "semio-s-app-mathematical-op",
+ "semio-s-app-mathematical-protocol",
  "serde",
  "serde_json",
 ]
@@ -10958,6 +11113,8 @@ dependencies = [
 name = "semio-s-app-note-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-note",
@@ -10992,11 +11149,13 @@ dependencies = [
 name = "semio-s-app-note-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-note",
  "semio-s-app-note-engine",
  "semio-s-app-note-op",
+ "serde",
 ]
 
 [[package]]
@@ -11009,6 +11168,7 @@ dependencies = [
  "semio-s-app-note-dsl",
  "semio-s-app-note-engine",
  "semio-s-app-note-op",
+ "semio-s-app-note-protocol",
  "serde",
  "serde_json",
 ]
@@ -11033,14 +11193,24 @@ dependencies = [
 name = "semio-s-app-playbook-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-playbook",
+ "serde",
 ]
 
 [[package]]
 name = "semio-s-app-playbook-op"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-s-app-playbook-engine",
+ "serde",
 ]
 
 [[package]]
@@ -11056,8 +11226,11 @@ dependencies = [
 name = "semio-s-app-playbook-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-s-app-playbook-op",
+ "serde",
 ]
 
 [[package]]
@@ -11069,6 +11242,7 @@ dependencies = [
  "semio-s-app-playbook",
  "semio-s-app-playbook-engine",
  "semio-s-app-playbook-op",
+ "semio-s-app-playbook-protocol",
  "serde_json",
 ]
 
@@ -11101,9 +11275,13 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
+ "semio-framework-ui-wgpu",
  "semio-s-app-procedural-2d",
  "semio-s-app-procedural-2d-dsl",
  "semio-s-kernel-flow-module-draw",
@@ -11144,12 +11322,14 @@ dependencies = [
 name = "semio-s-app-procedural-2d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-procedural-2d",
  "semio-s-app-procedural-2d-engine",
  "semio-s-app-procedural-2d-op",
+ "serde",
  "serde_json",
 ]
 
@@ -11158,6 +11338,7 @@ name = "semio-s-app-procedural-2d-ui"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-playbook",
  "semio-framework-os-kernel-protocol",
@@ -11167,6 +11348,7 @@ dependencies = [
  "semio-s-app-procedural-2d",
  "semio-s-app-procedural-2d-engine",
  "semio-s-app-procedural-2d-op",
+ "semio-s-app-procedural-2d-protocol",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -11201,8 +11383,10 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os-kernel-3d-scene",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-framework-ui-wgpu",
@@ -11246,12 +11430,14 @@ dependencies = [
 name = "semio-s-app-procedural-3d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-procedural-3d",
  "semio-s-app-procedural-3d-engine",
  "semio-s-app-procedural-3d-op",
+ "serde",
  "serde_json",
 ]
 
@@ -11260,6 +11446,7 @@ name = "semio-s-app-procedural-3d-ui"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-playbook",
  "semio-framework-os-kernel-protocol",
@@ -11270,6 +11457,7 @@ dependencies = [
  "semio-s-app-procedural-3d",
  "semio-s-app-procedural-3d-engine",
  "semio-s-app-procedural-3d-op",
+ "semio-s-app-procedural-3d-protocol",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -11301,6 +11489,8 @@ dependencies = [
  "base64 0.22.1",
  "semio-framework-os-kernel-3d-brep",
  "semio-framework-os-kernel-3d-brep-engine",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-process-3d",
@@ -11317,6 +11507,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-process-3d",
+ "semio-s-app-process-3d-engine",
  "serde",
 ]
 
@@ -11334,11 +11525,13 @@ dependencies = [
 name = "semio-s-app-process-3d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-s-app-process-3d",
  "semio-s-app-process-3d-op",
+ "serde",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -11347,12 +11540,16 @@ dependencies = [
 name = "semio-s-app-process-3d-ui"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-process-3d",
  "semio-s-app-process-3d-engine",
  "semio-s-app-process-3d-op",
+ "semio-s-app-process-3d-protocol",
  "serde",
  "serde_json",
 ]
@@ -11428,6 +11625,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
@@ -11515,6 +11713,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-puzzle-3d",
@@ -11600,7 +11800,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-board-port-directed-normal",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-puzzle-5d",
@@ -11626,6 +11828,7 @@ dependencies = [
 name = "semio-s-app-raster-dsl"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-store",
  "semio-s-app-raster",
  "serde_json",
@@ -11635,7 +11838,10 @@ dependencies = [
 name = "semio-s-app-raster-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-raster",
  "semio-s-app-raster-dsl",
@@ -11661,6 +11867,7 @@ dependencies = [
 name = "semio-s-app-raster-pack"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-store",
  "semio-s-app-raster",
@@ -11672,11 +11879,13 @@ dependencies = [
 name = "semio-s-app-raster-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-raster",
  "semio-s-app-raster-engine",
  "semio-s-app-raster-op",
+ "serde",
  "serde_json",
 ]
 
@@ -11689,6 +11898,7 @@ dependencies = [
  "semio-s-app-raster",
  "semio-s-app-raster-engine",
  "semio-s-app-raster-op",
+ "semio-s-app-raster-protocol",
  "serde",
  "serde_json",
 ]
@@ -11718,10 +11928,12 @@ dependencies = [
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-board-normal-undirected",
  "semio-framework-os-kernel-infinite-canvas",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-reasoning-wires",
  "semio-s-app-reasoning-wires-dsl",
  "semio-s-kernel-reasoning-mindmap",
+ "serde",
  "serde_json",
  "thiserror 2.0.18",
 ]
@@ -11753,11 +11965,13 @@ dependencies = [
 name = "semio-s-app-reasoning-wires-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-reasoning-wires",
  "semio-s-app-reasoning-wires-engine",
  "semio-s-app-reasoning-wires-op",
+ "serde",
  "serde_json",
 ]
 
@@ -11772,6 +11986,7 @@ dependencies = [
  "semio-s-app-reasoning-wires",
  "semio-s-app-reasoning-wires-engine",
  "semio-s-app-reasoning-wires-op",
+ "semio-s-app-reasoning-wires-protocol",
  "serde",
  "serde_json",
 ]
@@ -11802,7 +12017,11 @@ name = "semio-s-app-remodel-engine"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "semio-framework-core",
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-remodel",
  "semio-s-plugin-remodel-camera",
@@ -11812,6 +12031,7 @@ dependencies = [
  "semio-s-plugin-remodel-mesh",
  "semio-s-plugin-remodel-sfm",
  "semio-s-plugin-remodel-video",
+ "serde",
  "serde_json",
 ]
 
@@ -11824,6 +12044,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-remodel",
+ "semio-s-app-remodel-engine",
  "serde",
 ]
 
@@ -11841,10 +12062,13 @@ dependencies = [
 name = "semio-s-app-remodel-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-remodel",
+ "semio-s-app-remodel-engine",
  "semio-s-app-remodel-op",
+ "serde",
 ]
 
 [[package]]
@@ -11857,6 +12081,7 @@ dependencies = [
  "semio-s-app-remodel",
  "semio-s-app-remodel-engine",
  "semio-s-app-remodel-op",
+ "semio-s-app-remodel-protocol",
  "semio-s-plugin-remodel-engine",
  "semio-s-plugin-remodel-image",
  "semio-s-plugin-remodel-video",
@@ -11888,14 +12113,17 @@ dependencies = [
 name = "semio-s-app-sequence-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-board-port-directed-dag",
  "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-os-kernel-math-graph-manifest",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-sequence",
  "semio-s-kernel-imperative",
+ "serde",
  "serde_json",
  "thiserror 2.0.18",
 ]
@@ -11929,10 +12157,12 @@ dependencies = [
 name = "semio-s-app-sequence-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-sequence",
  "semio-s-app-sequence-op",
+ "serde",
 ]
 
 [[package]]
@@ -11944,6 +12174,7 @@ dependencies = [
  "semio-s-app-sequence",
  "semio-s-app-sequence-engine",
  "semio-s-app-sequence-op",
+ "semio-s-app-sequence-protocol",
  "serde",
  "serde_json",
 ]
@@ -11972,7 +12203,10 @@ dependencies = [
 name = "semio-s-app-shooting-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-shooting",
@@ -11990,6 +12224,7 @@ dependencies = [
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-s-app-shooting",
+ "semio-s-app-shooting-engine",
  "serde",
  "serde_json",
 ]
@@ -12058,7 +12293,11 @@ dependencies = [
 name = "semio-s-app-sourcing-curate-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-sourcing-curate",
  "semio-s-app-sourcing-curate-dsl",
  "serde",
@@ -12091,11 +12330,13 @@ dependencies = [
 name = "semio-s-app-sourcing-curate-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-sourcing-curate",
  "semio-s-app-sourcing-curate-engine",
  "semio-s-app-sourcing-curate-op",
+ "serde",
 ]
 
 [[package]]
@@ -12103,10 +12344,14 @@ name = "semio-s-app-sourcing-curate-ui"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-sourcing-curate",
  "semio-s-app-sourcing-curate-engine",
  "semio-s-app-sourcing-curate-op",
+ "semio-s-app-sourcing-curate-protocol",
  "serde",
  "serde_json",
 ]
@@ -12133,9 +12378,12 @@ dependencies = [
 name = "semio-s-app-space-home-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-space-home",
  "semio-s-app-space-home-dsl",
+ "serde",
 ]
 
 [[package]]
@@ -12146,6 +12394,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-space-home",
+ "semio-s-app-space-home-engine",
  "serde",
  "serde_json",
 ]
@@ -12157,16 +12406,19 @@ dependencies = [
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-store",
  "semio-s-app-space-home",
+ "semio-s-app-space-home-engine",
 ]
 
 [[package]]
 name = "semio-s-app-space-home-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-space-home",
  "semio-s-app-space-home-op",
+ "serde",
 ]
 
 [[package]]
@@ -12179,6 +12431,7 @@ dependencies = [
  "semio-s-app-space-home",
  "semio-s-app-space-home-engine",
  "semio-s-app-space-home-op",
+ "semio-s-app-space-home-protocol",
  "semio-s-plugin-space-shared",
  "serde",
  "serde_json",
@@ -12189,6 +12442,7 @@ name = "semio-s-app-space-space"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
  "serde",
 ]
 
@@ -12198,6 +12452,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel-store",
+ "semio-s-app-space-space-engine",
  "semio-s-plugin-space-shared",
 ]
 
@@ -12206,16 +12461,30 @@ name = "semio-s-app-space-space-engine"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-board-port-directed-dag",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-space-space",
  "semio-s-plugin-space-shared",
+ "serde",
  "serde_json",
 ]
 
 [[package]]
 name = "semio-s-app-space-space-op"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel-vcs",
+ "semio-s-app-space-space",
+ "semio-s-app-space-space-engine",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "semio-s-app-space-space-pack"
@@ -12224,6 +12493,7 @@ dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-store",
+ "semio-s-app-space-space-engine",
  "semio-s-plugin-space-shared",
 ]
 
@@ -12232,8 +12502,10 @@ name = "semio-s-app-space-space-protocol"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "serde",
 ]
 
 [[package]]
@@ -12244,13 +12516,18 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-os-kernel-infinite-board-port-directed-dag",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
+ "semio-s-app-space-home-engine",
+ "semio-s-app-space-home-protocol",
  "semio-s-app-space-home-ui",
  "semio-s-app-space-space",
  "semio-s-app-space-space-engine",
  "semio-s-app-space-space-op",
+ "semio-s-app-space-space-protocol",
  "semio-s-plugin-space-shared",
+ "serde",
  "serde_json",
 ]
 
@@ -12274,16 +12551,27 @@ dependencies = [
 name = "semio-s-app-trinity-jack-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-trinity-jack",
  "semio-s-plugin-trinity-ram",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "semio-s-app-trinity-jack-op"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-s-app-trinity-jack-engine",
  "semio-s-plugin-trinity-ram",
+ "serde",
 ]
 
 [[package]]
@@ -12299,21 +12587,28 @@ dependencies = [
 name = "semio-s-app-trinity-jack-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-trinity-jack-engine",
  "semio-s-app-trinity-jack-op",
  "semio-s-plugin-trinity-ram",
+ "serde",
 ]
 
 [[package]]
 name = "semio-s-app-trinity-jack-ui"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-math-geometry",
  "semio-framework-os-kernel-math-graph-drawing",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
+ "semio-s-app-trinity-jack-engine",
+ "semio-s-app-trinity-jack-op",
+ "semio-s-app-trinity-jack-protocol",
  "semio-s-app-trinity-rewrite-engine",
  "semio-s-plugin-trinity-jack",
  "semio-s-plugin-trinity-ram",
@@ -12348,10 +12643,14 @@ name = "semio-s-app-trinity-rewrite-engine"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-infinite-board-port-directed",
  "semio-framework-os-kernel-infinite-board-port-directed-normal",
  "semio-framework-os-kernel-infinite-canvas",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-trinity-rewrite",
  "semio-s-plugin-trinity-jack",
  "semio-s-plugin-trinity-ram",
@@ -12370,6 +12669,8 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-trinity-rewrite",
+ "semio-s-app-trinity-rewrite-engine",
+ "semio-s-plugin-trinity-ram",
  "serde",
 ]
 
@@ -12387,22 +12688,27 @@ dependencies = [
 name = "semio-s-app-trinity-rewrite-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-trinity-rewrite",
  "semio-s-app-trinity-rewrite-op",
  "semio-s-plugin-trinity-ram",
+ "serde",
 ]
 
 [[package]]
 name = "semio-s-app-trinity-rewrite-ui"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-trinity-rewrite",
  "semio-s-app-trinity-rewrite-engine",
  "semio-s-app-trinity-rewrite-op",
+ "semio-s-app-trinity-rewrite-protocol",
  "semio-s-plugin-trinity-jack",
  "semio-s-plugin-trinity-ram",
  "serde",
@@ -12432,8 +12738,11 @@ dependencies = [
 name = "semio-s-app-vcs-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-vcs",
+ "serde",
 ]
 
 [[package]]
@@ -12444,6 +12753,7 @@ dependencies = [
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-vcs",
+ "semio-s-app-vcs-engine",
  "serde",
 ]
 
@@ -12461,10 +12771,12 @@ dependencies = [
 name = "semio-s-app-vcs-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-vcs",
  "semio-s-app-vcs-op",
+ "serde",
 ]
 
 [[package]]
@@ -12477,6 +12789,7 @@ dependencies = [
  "semio-s-app-vcs",
  "semio-s-app-vcs-engine",
  "semio-s-app-vcs-op",
+ "semio-s-app-vcs-protocol",
  "serde",
  "serde_json",
 ]
@@ -12504,7 +12817,10 @@ name = "semio-s-app-writer-engine"
 version = "0.1.0"
 dependencies = [
  "regex",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-writer",
  "semio-s-app-writer-dsl",
  "semio-s-plugin-trinity-jack",
@@ -12538,21 +12854,27 @@ dependencies = [
 name = "semio-s-app-writer-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-writer",
  "semio-s-app-writer-engine",
  "semio-s-app-writer-op",
+ "serde",
 ]
 
 [[package]]
 name = "semio-s-app-writer-ui"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-writer",
  "semio-s-app-writer-engine",
  "semio-s-app-writer-op",
+ "semio-s-app-writer-protocol",
  "semio-s-plugin-trinity-jack",
  "serde",
  "serde_json",
@@ -13032,6 +13354,8 @@ dependencies = [
 name = "semio-s-plugin-norm"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-framework-plugin",

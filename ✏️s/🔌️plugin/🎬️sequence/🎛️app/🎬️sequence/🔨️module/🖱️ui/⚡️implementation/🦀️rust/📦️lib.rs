@@ -1,18 +1,23 @@
-//! 🖥️ Sequence app — DocumentApp impl, render, manifest (constitutional: ui).
+//! 🖥️ Sequence app — DocumentApp impl, render, manifest (constitutional: ui). B1: the pure-trait
+//! pivot — `SequencePlayApp` is a unit struct; every former `SequencePlayRuntime` field (selection,
+//! last-run output, layout orientation, node-graph viewport camera) now lives in
+//! `sequence_engine::SequenceConfig`, written via `sequence_op::SequenceConfigOperation`s (real
+//! `backwards`, no ad hoc `InverseAction`); every action dispatches through the single typed
+//! `sequence_protocol::SequenceCommand` channel via `DocumentApp::handle`.
 
 use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use semio_framework_plugin::{
-    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids as sdk_selection_ids, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppActionRegistry, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup,
-    PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, localized_label_map, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, AppIo, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppActionRegistry, AppLabelsOverlay, AppLabelsOverlayExt, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
+    ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, DslValue, Emit, LocaleLabels, Media, MediaError, MediaPayload, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup,
+    PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use sequence::{default_fixture, SequenceCamera, SequenceFixture, SequenceStep, SlotRef, SEQUENCE_FIXTURE_SCHEMA};
-use sequence_engine::{control_slots, is_control_kind, sequence_example_json, SequenceHost};
-use sequence_op::{sequence_fixture_operations, SequenceOperation};
-use serde::{Deserialize, Serialize};
+use sequence::{default_fixture, SequenceFixture, SequenceStep, SlotRef, StepParams, SEQUENCE_FIXTURE_SCHEMA};
+use sequence_engine::{control_slots, is_control_kind, sequence_example_json, SequenceConfig, SequenceHost};
+use sequence_op::{sequence_fixture_operations, SequenceConfigOperation, SequenceOperation};
+use sequence_protocol::SequenceCommand;
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -31,93 +36,81 @@ const SEQUENCE_PLAY_WINDOW_SCRIPT: &str = "sequence-script";
 const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";
 //#endregion 🔖️Constants
 
-//#region 🔖️Types
-/// 🎛️ Ephemeral view state (selection, last run output, layout orientation) held in the app struct,
-/// never in the document — so it stays out of undo history and off the operation channel.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct SequencePlayRuntime {
-    selected_step_ids: Vec<String>,
-    last_run_json: String,
-    orientation: DagLayoutOrientation,
-    /// 🎥️ The node-graph viewport pan/zoom — session-only view state (never a VCS-tracked document
-    /// field): see `"nodeGraphViewport"` in `handle_action` below.
-    camera: SequenceCamera,
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s pilot helpers.
+fn is_de_locale(cfg: &SequenceConfig) -> bool {
+    cfg.locale.starts_with("de")
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowDiagramPortRecord {
-    id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    label: Option<String>,
+fn resolve_labels<L: LocaleLabels>(cfg: &SequenceConfig) -> &'static L {
+    if is_de_locale(cfg) {
+        L::locale_labels_de()
+    } else {
+        L::locale_labels_en()
+    }
 }
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowNodeRecord {
-    id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    label: Option<String>,
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
-    inputs: Vec<WorkflowDiagramPortRecord>,
-    outputs: Vec<WorkflowDiagramPortRecord>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowEdgeRecord {
-    id: String,
-    source_node_id: String,
-    source_port_id: String,
-    target_node_id: String,
-    target_port_id: String,
-}
-//#endregion 🔖️Types
+//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 fn sequence_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor { controller_id: SEQUENCE_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
-/// 🧰️ Builds a {@link SequenceHost} seeded from a projection so an action can mutate it (with all the
+/// 🧰️ Builds a {@link SequenceHost} seeded from a projection so a command can mutate it (with all the
 /// host's cycle/slot/layout logic) and then diff the result into typed operations.
 fn host_from_fixture(fixture: &SequenceFixture) -> SequenceHost {
     SequenceHost::from_fixture(fixture.clone())
+}
+
+/// 🔀️ Runs a host mutation seeded from `fixture` and diffs the result into typed operations — a free
+/// function (not a method) since `SequencePlayApp` is a unit struct with nothing to borrow.
+fn ops_from_host_mutation(fixture: &SequenceFixture, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceOperation> {
+    let mut host = host_from_fixture(fixture);
+    mutate(&mut host);
+    sequence_fixture_operations(fixture, &host.fixture)
+}
+
+/// 🌳️ `SequenceConfig::orientation`'s string encoding <-> the DAG kernel's real
+/// `DagLayoutOrientation` — see `SequenceConfig::orientation`'s doc comment for why the config field
+/// itself stays a string.
+fn orientation_from_config(value: &str) -> DagLayoutOrientation {
+    match value {
+        "topBottom" => DagLayoutOrientation::TopBottom,
+        _ => DagLayoutOrientation::LeftRight,
+    }
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "next".into()))
 }
 
-fn fixture_to_workflow(fixture: &DagFixture) -> (String, String) {
-    let nodes: Vec<WorkflowNodeRecord> = fixture
+fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+    let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
-        .map(|node| WorkflowNodeRecord {
+        .map(|node| NodeGraphNodeRecord {
             id: node.id.clone(),
             label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
             x: node.x,
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| WorkflowDiagramPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| WorkflowDiagramPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            ..Default::default()
         })
         .collect();
-    let edges: Vec<WorkflowEdgeRecord> = fixture
+    let edges: Vec<NodeGraphEdgeRecord> = fixture
         .edges
         .iter()
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            WorkflowEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id }
+            NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
-    (serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()))
+    (nodes, edges)
 }
 
 /// 🗣️ Localizes a control-flow slot name ("then"/"else"/"body") for tree display; unknown slot names fall back to the raw id.
@@ -223,22 +216,19 @@ fn sequence_action_labels(is_de: bool) -> HashMap<String, String> {
             ("addStepDropped", "Add Step Dropped", "Schritt per Ablegen hinzufügen"),
             ("removeStep", "Remove Step", "Schritt entfernen"),
             ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-            ("moveMediaNode", "Move Step", "Schritt verschieben"),
-            ("connectMediaPorts", "Connect Steps", "Schritte verbinden"),
+            ("moveStep", "Move Step", "Schritt verschieben"),
+            ("connectSteps", "Connect Steps", "Schritte verbinden"),
             ("disconnectSteps", "Disconnect Steps", "Schritte trennen"),
             ("setStepParams", "Set Step Params", "Schrittparameter festlegen"),
             ("setStepCollapsed", "Set Step Collapsed", "Schritt einklappen"),
             ("reorganize", "Reorganize", "Neu anordnen"),
             ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
-            ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
+            ("setViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswählen"),
-            ("nodeGraphSelect", "Node Graph Select", "Knotengraph-Auswahl"),
-            ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
-            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
             ("setOrientation", "Set Orientation", "Ausrichtung festlegen"),
             ("run", "Run", "Ausführen"),
             ("stop", "Stop", "Stopp"),
+            ("setLocale", "Set Locale", "Sprache festlegen"),
         ],
     )
 }
@@ -319,29 +309,29 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
-fn render_main_graph(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -> UiNode {
+fn render_main_graph(fixture: &SequenceFixture, config: &SequenceConfig) -> UiNode {
     let mut host = host_from_fixture(fixture);
     host.layout_expanded_slots();
-    let (nodes_json, edges_json) = fixture_to_workflow(&host.dag.fixture);
-    let viewport_json = serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
-    let selection_json = if runtime.selected_step_ids.is_empty() { None } else { serde_json::to_string(&runtime.selected_step_ids).ok() };
+    let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
+    let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
+    let selection = config.selected_step_ids.clone();
     build_node_graph_scene(
         SEQUENCE_PLAY_SURFACE_MAIN,
         SEQUENCE_PLAY_APP_ID,
         NodeGraphScene {
             editable: Some(true),
-            selection_json,
-            ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
+            selection,
+            ..NodeGraphScene::base(nodes, edges, viewport)
         },
     )
 }
 
-fn render_script(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -> UiNode {
+fn render_script(fixture: &SequenceFixture, config: &SequenceConfig) -> UiNode {
     let host = host_from_fixture(fixture);
     let mut text = host.compile_text();
-    if !runtime.last_run_json.is_empty() {
+    if !config.last_run_json.is_empty() {
         text.push_str("\n\n# run result\n");
-        text.push_str(&runtime.last_run_json);
+        text.push_str(&config.last_run_json);
     }
     build_text_editor_scene(SEQUENCE_PLAY_SURFACE_SCRIPT, SEQUENCE_PLAY_APP_ID, TextEditorScene::base(text, Some("imperative".into()), None))
 }
@@ -353,30 +343,18 @@ fn render_compiled_dag(fixture: &SequenceFixture) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️SequencePlayApp
-pub struct SequencePlayApp {
-    runtime: RefCell<SequencePlayRuntime>,
-}
-
-impl Default for SequencePlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(SequencePlayRuntime::default()) }
-    }
-}
-
-impl SequencePlayApp {
-    /// 🔀️ Runs a host mutation seeded from the current projection and diffs the result into typed operations.
-    fn ops_from_host_mutation(&self, fixture: &SequenceFixture, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceOperation> {
-        let mut host = host_from_fixture(fixture);
-        mutate(&mut host);
-        sequence_fixture_operations(fixture, &host.fixture)
-    }
-}
+/// 🧪️ B1: unit struct — every former `SequencePlayRuntime` field now lives in
+/// `sequence_engine::SequenceConfig` (see `DocumentApp::Config`), written through
+/// `sequence_op::SequenceConfigOperation`s.
+#[derive(Default)]
+pub struct SequencePlayApp;
 
 impl DocumentApp for SequencePlayApp {
     type Projection = SequenceFixture;
     type Operation = SequenceOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = SequenceConfig;
+    type ConfigOperation = SequenceConfigOperation;
+    type Command = SequenceCommand;
 
     fn app_id(&self) -> &str {
         SEQUENCE_PLAY_APP_ID
@@ -390,164 +368,140 @@ impl DocumentApp for SequencePlayApp {
         default_fixture()
     }
 
-    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, SequenceFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<SequenceOperation> {
+    fn io(&self) -> Option<AppIo> {
+        Some(sequence_engine::sequence_io())
+    }
+
+    /// 🎞️ `steps:in` (Wave-2 port recipe): inserts incoming computation results as a new step at the
+    /// far right of the flow — an object payload becomes that step's params verbatim, a bare
+    /// scalar/array is wrapped under a single `"value"` key. Never mutates anything directly (matches
+    /// every other `import_media` override): the caller (a headless runner or the UI) applies the
+    /// returned `StepsAdd` through the ordinary, undoable document store.
+    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, SequenceFixture>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, MediaError> {
+        if port != "steps:in" {
+            return Err(MediaError::NotImplemented);
+        }
+        let MediaPayload::Structured { json, .. } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "steps:in importer only accepts a Structured (JSON) payload".into()));
+        };
+        let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let params_value = if value.is_object() { value } else { json!({ "value": value }) };
+        let params: StepParams = serde_json::from_value(params_value).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let fixture = doc.projection;
-        match action {
-            // 👁️ View actions — mutate ephemeral runtime, emit no operations.
-            "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                self.runtime.borrow_mut().selected_step_ids = node_graph_selection_ids(args);
-                ActionEmit::default()
-            }
-            "nodeGraphHover" => ActionEmit::default(),
-            "graphPointerDown" => {
-                self.runtime.borrow_mut().selected_step_ids.clear();
-                ActionEmit::default()
-            }
-            "setOrientation" => {
-                let orientation = args.and_then(|value| value.get("orientation")).and_then(|value| value.as_str());
-                self.runtime.borrow_mut().orientation = match orientation {
-                    Some("topBottom") => DagLayoutOrientation::TopBottom,
-                    Some("leftRight") => DagLayoutOrientation::LeftRight,
-                    _ => return ActionEmit::default(),
-                };
-                ActionEmit::default()
-            }
-            "run" => {
-                let result = host_from_fixture(fixture).run();
-                self.runtime.borrow_mut().last_run_json = serde_json::to_string(&result).unwrap_or_default();
-                ActionEmit::default()
-            }
-            "stop" => {
-                self.runtime.borrow_mut().last_run_json.clear();
-                ActionEmit::default()
-            }
-            // 👁️ View action: the node-graph viewport never touches the document — it's written
-            // straight into `self.runtime`, session-only, no VCS edit, no undo entry.
-            "nodeGraphViewport" => {
-                if let Some(camera) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()).and_then(|json| serde_json::from_str(json).ok()) {
-                    self.runtime.borrow_mut().camera = camera;
-                }
-                ActionEmit::default()
-            }
-            // ✏️ Operations — compute the target fixture via the host, emit granular operations.
-            "addStep" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print").to_string();
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+        let id = sequence_engine::next_available_step_id(fixture);
+        let x = fixture.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if fixture.steps.is_empty() { 0.0 } else { 280.0 };
+        let step = SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false };
+        Ok(Emit::operations(vec![SequenceOperation::StepsAdd { index: fixture.steps.len(), item: step }]))
+    }
+
+    /// 🏷️ Maps each `SequenceCommand` variant back to the action id it was declared under in
+    /// `create_sequence_app`.
+    fn command_id(&self, command: &SequenceCommand) -> &str {
+        match command {
+            SequenceCommand::AddStep { .. } => "addStep",
+            SequenceCommand::AddStepToSlot { .. } => "addStepToSlot",
+            SequenceCommand::AddStepDropped { .. } => "addStepDropped",
+            SequenceCommand::RemoveStep { .. } => "removeStep",
+            SequenceCommand::DeleteSelection => "deleteSelection",
+            SequenceCommand::MoveStep { .. } => "moveStep",
+            SequenceCommand::ConnectSteps { .. } => "connectSteps",
+            SequenceCommand::DisconnectSteps { .. } => "disconnectSteps",
+            SequenceCommand::SetStepParams { .. } => "setStepParams",
+            SequenceCommand::SetStepCollapsed { .. } => "setStepCollapsed",
+            SequenceCommand::Reorganize => "reorganize",
+            SequenceCommand::NodeGraphEdit { .. } => "nodeGraphEdit",
+            SequenceCommand::SetSelection { .. } => "setSelection",
+            SequenceCommand::SetOrientation { .. } => "setOrientation",
+            SequenceCommand::Run => "run",
+            SequenceCommand::Stop => "stop",
+            SequenceCommand::SetViewport { .. } => "setViewport",
+            SequenceCommand::SetLocale { .. } => "setLocale",
+        }
+    }
+
+    fn handle(&self, command: &SequenceCommand, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> Emit<SequenceOperation, SequenceConfigOperation> {
+        let fixture = doc.projection;
+        let config = cfg.projection;
+        match command {
+            SequenceCommand::AddStep { kind, x, y } => {
                 let mut host = host_from_fixture(fixture);
-                let id = host.add_step(&kind, x, y);
-                self.runtime.borrow_mut().selected_step_ids = vec![id];
-                ActionEmit::operations(sequence_fixture_operations(fixture, &host.fixture))
+                let id = host.add_step(kind, *x, *y);
+                Emit { document_operations: sequence_fixture_operations(fixture, &host.fixture), config_operations: vec![SequenceConfigOperation::SetSelection { step_ids: vec![id] }], ..Default::default() }
             }
-            "addStepToSlot" | "addStepDropped" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print").to_string();
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                let picked = args.and_then(|value| value.get("pickedStepId")).or_else(|| args.and_then(|value| value.get("owner"))).and_then(|value| value.as_str()).map(str::to_string);
-                let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str()).map(str::to_string);
-                let slot = args.and_then(|value| value.get("slotName")).and_then(|value| value.as_str()).map(str::to_string);
-                let is_slot = action == "addStepToSlot";
+            SequenceCommand::AddStepToSlot { kind, x, y, owner, slot_name } => {
                 let mut host = host_from_fixture(fixture);
-                let id = if is_slot {
-                    match (owner, slot) {
-                        (Some(owner), Some(slot)) => host.add_step_in_slot(&kind, x, y, Some(SlotRef { owner, name: slot })),
-                        _ => host.add_step(&kind, x, y),
-                    }
+                let id = host.add_step_in_slot(kind, *x, *y, Some(SlotRef { owner: owner.clone(), name: slot_name.clone() }));
+                Emit { document_operations: sequence_fixture_operations(fixture, &host.fixture), config_operations: vec![SequenceConfigOperation::SetSelection { step_ids: vec![id] }], ..Default::default() }
+            }
+            SequenceCommand::AddStepDropped { kind, x, y, picked_step_id } => {
+                let mut host = host_from_fixture(fixture);
+                let id = host.add_step_dropped(kind, *x, *y, picked_step_id.as_deref());
+                Emit { document_operations: sequence_fixture_operations(fixture, &host.fixture), config_operations: vec![SequenceConfigOperation::SetSelection { step_ids: vec![id] }], ..Default::default() }
+            }
+            SequenceCommand::RemoveStep { id } => {
+                let ops = ops_from_host_mutation(fixture, |host| {
+                    host.remove_step(id);
+                });
+                if ops.is_empty() {
+                    Emit::default()
                 } else {
-                    host.add_step_dropped(&kind, x, y, picked.as_deref())
-                };
-                self.runtime.borrow_mut().selected_step_ids = vec![id];
-                ActionEmit::operations(sequence_fixture_operations(fixture, &host.fixture))
+                    let step_ids = config.selected_step_ids.iter().filter(|selected| *selected != id).cloned().collect();
+                    Emit { document_operations: ops, config_operations: vec![SequenceConfigOperation::SetSelection { step_ids }], ..Default::default() }
+                }
             }
-            "removeStep" => {
-                let step_id = args.and_then(|value| value.get("id")).or_else(|| args.and_then(|value| value.get("stepId"))).and_then(|value| value.as_str()).map(str::to_string);
-                let Some(step_id) = step_id else { return ActionEmit::default() };
-                self.runtime.borrow_mut().selected_step_ids.retain(|id| id != &step_id);
-                ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
-                    host.remove_step(&step_id);
-                }))
-            }
-            "deleteSelection" => {
-                let selected = self.runtime.borrow().selected_step_ids.clone();
-                let operations = self.ops_from_host_mutation(fixture, |host| {
+            SequenceCommand::DeleteSelection => {
+                let selected = config.selected_step_ids.clone();
+                let ops = ops_from_host_mutation(fixture, |host| {
                     for step_id in &selected {
                         host.remove_step(step_id);
                     }
                 });
-                if !operations.is_empty() {
-                    self.runtime.borrow_mut().selected_step_ids.clear();
+                if ops.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit { document_operations: ops, config_operations: vec![SequenceConfigOperation::SetSelection { step_ids: Vec::new() }], ..Default::default() }
                 }
-                ActionEmit::operations(operations)
             }
-            "moveMediaNode" => {
-                let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(str::to_string);
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
-                if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
-                    if fixture.steps.iter().any(|step| step.id == node_id) {
-                        let operations = self.ops_from_host_mutation(fixture, |host| {
-                            let mut next = host.fixture.clone();
-                            if let Some(step) = next.steps.iter_mut().find(|step| step.id == node_id) {
-                                step.x = x;
-                                step.y = y;
-                            }
-                            let _ = host.replace_fixture(next);
-                        });
-                        return ActionEmit::operations(operations);
+            SequenceCommand::MoveStep { node_id, x, y } => {
+                if !fixture.steps.iter().any(|step| &step.id == node_id) {
+                    return Emit::default();
+                }
+                Emit::operations(ops_from_host_mutation(fixture, |host| {
+                    let mut next = host.fixture.clone();
+                    if let Some(step) = next.steps.iter_mut().find(|step| &step.id == node_id) {
+                        step.x = *x;
+                        step.y = *y;
                     }
-                }
-                ActionEmit::default()
-            }
-            "connectMediaPorts" => {
-                let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str()).map(str::to_string);
-                let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str()).map(str::to_string);
-                if let (Some(from), Some(to)) = (from, to) {
-                    return ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
-                        let _ = host.connect_steps(&from, &to);
-                    }));
-                }
-                ActionEmit::default()
-            }
-            "disconnectSteps" => {
-                let from_id = args.and_then(|value| value.get("fromId")).and_then(|value| value.as_str()).map(str::to_string);
-                let to_id = args.and_then(|value| value.get("toId")).and_then(|value| value.as_str()).map(str::to_string);
-                if let (Some(from_id), Some(to_id)) = (from_id, to_id) {
-                    return ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
-                        host.disconnect_steps(&from_id, &to_id);
-                    }));
-                }
-                ActionEmit::default()
-            }
-            "setStepParams" => {
-                let step_id = args.and_then(|value| value.get("id")).or_else(|| args.and_then(|value| value.get("stepId"))).and_then(|value| value.as_str()).map(str::to_string);
-                let params = args.and_then(|value| value.get("params")).map(|value| value.to_string());
-                if let (Some(step_id), Some(params)) = (step_id, params) {
-                    return ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
-                        let _ = host.set_step_params_json(&step_id, &params);
-                    }));
-                }
-                ActionEmit::default()
-            }
-            "setStepCollapsed" => {
-                let step_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                let Some(step_id) = step_id else { return ActionEmit::default() };
-                let collapsed = fixture.steps.iter().find(|step| step.id == step_id).map(|step| !step.collapsed).unwrap_or(true);
-                ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
-                    host.set_step_collapsed(&step_id, collapsed);
+                    let _ = host.replace_fixture(next);
                 }))
             }
-            "reorganize" => {
-                let orientation = self.runtime.borrow().orientation;
-                ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
+            SequenceCommand::ConnectSteps { source_node_id, target_node_id } => Emit::operations(ops_from_host_mutation(fixture, |host| {
+                let _ = host.connect_steps(source_node_id, target_node_id);
+            })),
+            SequenceCommand::DisconnectSteps { from_id, to_id } => Emit::operations(ops_from_host_mutation(fixture, |host| {
+                host.disconnect_steps(from_id, to_id);
+            })),
+            SequenceCommand::SetStepParams { id, params_json } => Emit::operations(ops_from_host_mutation(fixture, |host| {
+                let _ = host.set_step_params_json(id, params_json);
+            })),
+            SequenceCommand::SetStepCollapsed { id } => {
+                let collapsed = fixture.steps.iter().find(|step| &step.id == id).map(|step| !step.collapsed).unwrap_or(true);
+                Emit::operations(ops_from_host_mutation(fixture, |host| {
+                    host.set_step_collapsed(id, collapsed);
+                }))
+            }
+            SequenceCommand::Reorganize => {
+                let orientation = orientation_from_config(&config.orientation);
+                Emit::operations(ops_from_host_mutation(fixture, |host| {
                     let opts = DagLayoutOptions { orientation, ..DagLayoutOptions::default() };
                     let _ = host.reorganize(&opts);
                 }))
             }
-            "nodeGraphEdit" => {
-                let sub_operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
-                let selected = self.runtime.borrow().selected_step_ids.clone();
+            SequenceCommand::NodeGraphEdit { operations_json } => {
+                let sub_operations: Vec<Value> = serde_json::from_str(operations_json).unwrap_or_default();
+                let selected = config.selected_step_ids.clone();
                 let mut cleared = false;
-                let operations = self.ops_from_host_mutation(fixture, |host| {
+                let ops = ops_from_host_mutation(fixture, |host| {
                     for operation in &sub_operations {
                         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                             "setFixture" => {
@@ -574,31 +528,54 @@ impl DocumentApp for SequencePlayApp {
                     }
                 });
                 if cleared {
-                    self.runtime.borrow_mut().selected_step_ids.clear();
+                    Emit { document_operations: ops, config_operations: vec![SequenceConfigOperation::SetSelection { step_ids: Vec::new() }], ..Default::default() }
+                } else {
+                    Emit::operations(ops)
                 }
-                ActionEmit::operations(operations)
             }
-            _ => ActionEmit::default(),
+            SequenceCommand::SetSelection { step_ids } => Emit::config(vec![SequenceConfigOperation::SetSelection { step_ids: step_ids.clone() }]),
+            SequenceCommand::SetOrientation { value } => Emit::config(vec![SequenceConfigOperation::SetOrientation { value: value.clone() }]),
+            SequenceCommand::Run => {
+                let result = host_from_fixture(fixture).run();
+                let json = serde_json::to_string(&result).unwrap_or_default();
+                Emit::config(vec![SequenceConfigOperation::SetLastRun { json }])
+            }
+            SequenceCommand::Stop => Emit::config(vec![SequenceConfigOperation::SetLastRun { json: String::new() }]),
+            SequenceCommand::SetViewport { camera } => Emit::config(vec![SequenceConfigOperation::SetCamera { camera: camera.clone() }]),
+            SequenceCommand::SetLocale { value } => Emit::config(vec![SequenceConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, SequenceFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
+    /// 🧮️ This app's typed configuration spec — the layout orientation `reorganize` reads.
+    fn config_spec(&self) -> ConfigSpec {
+        ConfigSpec {
+            fields: vec![ConfigFieldSpec {
+                key: "orientation".into(),
+                label: "Layout Orientation".into(),
+                shape: ConfigFieldShape::Select { options: vec!["leftRight".into(), "topBottom".into()] },
+                default: Some(DslValue::String("leftRight".into())),
+            }],
+        }
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> UiNode {
         let fixture = doc.projection;
-        let labels = resolve_labels::<SequenceLabels>(view_state);
+        let config = cfg.projection;
+        let labels = resolve_labels::<SequenceLabels>(config);
         match body_key {
-            SEQUENCE_PLAY_BODY_MAIN => render_main_graph(fixture, &self.runtime.borrow()),
-            SEQUENCE_PLAY_BODY_SCRIPT => render_script(fixture, &self.runtime.borrow()),
+            SEQUENCE_PLAY_BODY_MAIN => render_main_graph(fixture, config),
+            SEQUENCE_PLAY_BODY_SCRIPT => render_script(fixture, config),
             SEQUENCE_PLAY_BODY_COMPILED => render_compiled_dag(fixture),
-            SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &self.runtime.borrow().selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_step_ids, labels),
             SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, labels),
-            SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &self.runtime.borrow().selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &config.selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<SequenceLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, SequenceConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<SequenceLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(SEQUENCE_PLAY_WINDOW_MAIN, labels.window_main)
             .window_kind_label(SEQUENCE_PLAY_WINDOW_SCRIPT, labels.window_script)
@@ -607,39 +584,18 @@ impl DocumentApp for SequencePlayApp {
             .utility_labels(sequence_utility_labels(is_de))
     }
 
-    fn context_menu(
-        &self,
-        request: &ContextMenuRequest,
-        _doc: &DocumentView<'_, SequenceFixture>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        view_state: &ViewState,
-        registry: &AppActionRegistry,
-    ) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = is_de_locale(view_state);
-        let selected = self.runtime.borrow().selected_step_ids.clone();
+        let is_de = is_de_locale(cfg.projection);
+        let selected = cfg.projection.selected_step_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
         let mut menu = Menu::of(registry);
-        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::Direct) {
             menu = menu.item(spec);
         }
         menu.build()
     }
-}
-
-fn node_graph_selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("nodeIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_else(|| selection_ids(args))
-}
-
-/// 🎯️ Falls back to a singular `nodeId` key when the SDK's `ids`-array parsing comes up empty — this
-/// app's node-graph pointer actions address a step by `nodeId`, not `ids`.
-fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    let ids = sdk_selection_ids(args);
-    if !ids.is_empty() {
-        return ids;
-    }
-    args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()]).unwrap_or_default()
 }
 //#endregion 🔖️SequencePlayApp
 
@@ -699,23 +655,20 @@ pub fn create_sequence_app() -> App {
             .operation("addStepDropped", "Add Step Dropped")
             .operation("removeStep", "Remove Step")
             .operation("deleteSelection", "Delete Selection")
-            .operation("moveMediaNode", "Move Step")
-            .operation("connectMediaPorts", "Connect Steps")
+            .operation("moveStep", "Move Step")
+            .operation("connectSteps", "Connect Steps")
             .operation("disconnectSteps", "Disconnect Steps")
             .operation("setStepParams", "Set Step Params")
             .operation("setStepCollapsed", "Set Step Collapsed")
             .operation("reorganize", "Reorganize")
             .operation("nodeGraphEdit", "Node Graph Edit")
-            .view_action("nodeGraphViewport", "Node Graph Viewport")
-            // 👁️ Ephemeral view state — selection, run output, layout orientation.
+            .view_action("setViewport", "Node Graph Viewport")
+            // 👁️ Ephemeral view state — selection, run output, layout orientation, locale.
             .view_action("setSelection", "Set Selection")
-            .view_action("selectNode", "Select Node")
-            .view_action("nodeGraphSelect", "Node Graph Select")
-            .view_action("nodeGraphHover", "Node Graph Hover")
-            .view_action("graphPointerDown", "Graph Pointer Down")
             .view_action("setOrientation", "Set Orientation")
             .view_action("run", "Run")
             .view_action("stop", "Stop")
+            .view_action("setLocale", "Set Locale")
             // 📝️ Staged argument forms for the panel-visible create + layout actions.
             .action_args("addStep", vec![
                 ActionArgDef::select("kind", "Kind", vec![
@@ -733,7 +686,9 @@ pub fn create_sequence_app() -> App {
                 ]).required(),
             ])
             .keybinding("mod+z", "undo")
-            .keybinding("mod+shift+z", "redo"),
+            .keybinding("mod+shift+z", "redo")
+            .config(SequencePlayApp.config_spec())
+            .io(sequence_engine::sequence_io()),
     )
     .example("demo", "Demo", sequence_example_json(), "flask-conical")
     .workflow("sequence", "Sequence", "graph")
@@ -744,10 +699,14 @@ pub fn create_sequence_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
 
     fn new_app() -> VcsDocumentApp<SequencePlayApp> {
         testkit::new_app::<SequencePlayApp>()
+    }
+
+    fn new_app_with_registry() -> VcsDocumentApp<SequencePlayApp> {
+        testkit::new_app_with_registry::<SequencePlayApp>(create_sequence_app)
     }
 
     #[test]
@@ -770,82 +729,71 @@ mod tests {
     }
 
     #[test]
-    fn add_step_action_appends_step() {
+    fn add_step_command_appends_step() {
         let mut app = new_app();
-        app.handle_action("addStep", Some(&json!({ "kind": "log.print" })), &ViewState::default(), &testkit::meta("local")).expect("add");
+        app.dispatch_typed(SequenceCommand::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }, &testkit::meta("local")).expect("add");
         assert!(app.projection().expect("projection").steps.len() > 2);
     }
 
     #[test]
     fn run_stores_result_and_renders_in_script() {
         let mut app = new_app();
-        let result = app.handle_action("run", None, &ViewState::default(), &testkit::meta("local")).expect("run");
-        assert!(result.operations.is_empty(), "run is a view action and emits no operations");
+        let result = app.dispatch_typed(SequenceCommand::Run, &testkit::meta("local")).expect("run");
+        assert!(result.operations.is_empty(), "run is config-only and emits no document operations");
         let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("run result"));
     }
 
-    /// 🎥️ `"nodeGraphViewport"` is a View action — it must never emit a `SequenceOperation` (no VCS
-    /// edit, no undo entry) and instead write straight into `self.runtime`.
+    /// 🎥️ `SetViewport` is config-only — it must never emit a `SequenceOperation` (no VCS edit, no
+    /// undo entry) and instead write straight into the config store.
     #[test]
-    fn node_graph_viewport_writes_runtime_not_operations() {
+    fn set_viewport_writes_config_not_operations() {
         let mut app = new_app();
-        let result = app
-            .handle_action("nodeGraphViewport", Some(&json!({ "viewportJson": r#"{"x":5.0,"y":6.0,"zoom":2.0}"# })), &ViewState::default(), &testkit::meta("local"))
-            .expect("viewport pan/zoom");
-        assert!(result.operations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
+        let result = app.dispatch_typed(SequenceCommand::SetViewport { camera: sequence::SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } }, &testkit::meta("local")).expect("viewport pan/zoom");
+        assert!(result.operations.is_empty(), "setViewport must not emit a VCS operation");
         let node = app.render(SEQUENCE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
-        let viewport: Value = serde_json::from_str(payload["nodeGraph"]["viewportJson"].as_str().unwrap()).unwrap();
-        assert_eq!(viewport["zoom"], json!(2.0));
+        assert_eq!(payload["nodeGraph"]["viewport"]["zoom"], json!(2.0));
     }
 
     #[test]
-    fn remove_step_action_deletes_step() {
+    fn remove_step_command_deletes_step() {
         let mut app = new_app();
         let step_id = app.projection().expect("projection").steps[0].id.clone();
-        app.handle_action("removeStep", Some(&json!({ "id": step_id })), &ViewState::default(), &testkit::meta("local")).expect("remove");
+        app.dispatch_typed(SequenceCommand::RemoveStep { id: step_id.clone() }, &testkit::meta("local")).expect("remove");
         assert!(app.projection().expect("projection").steps.iter().all(|step| step.id != step_id));
     }
 
-    // 🧰️ `footer_tools_include_run_stop_reorganize_and_orientation` asserted on `VcsDocumentApp::tools()`,
-    // which no longer exists (utility bars are derived by the renderer from the utility registry now — see
-    // `sequence_utility_labels` above; this manifest declares no utilities, so run/stop/reorganize have
-    // no utility-bar equivalent to assert on). Its behavioral coverage lives on in
-    // `run_stores_result_and_renders_in_script`, `stop_action_clears_last_run_result`, and
-    // `reorganize_action_spreads_step_positions_apart`.
-
     #[test]
-    fn set_orientation_action_changes_reorganize_layout_axis() {
+    fn set_orientation_command_changes_reorganize_layout_axis() {
         let mut app = new_app();
-        app.handle_action("setOrientation", Some(&json!({ "orientation": "topBottom" })), &ViewState::default(), &testkit::meta("local")).expect("orientation");
+        app.dispatch_typed(SequenceCommand::SetOrientation { value: "topBottom".into() }, &testkit::meta("local")).expect("orientation");
         let ids: Vec<String> = app.projection().expect("projection").steps.iter().map(|step| step.id.clone()).collect();
         for id in &ids {
-            app.handle_action("moveMediaNode", Some(&json!({ "nodeId": id, "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("move");
+            app.dispatch_typed(SequenceCommand::MoveStep { node_id: id.clone(), x: 0.0, y: 0.0 }, &testkit::meta("local")).expect("move");
         }
-        app.handle_action("reorganize", None, &ViewState::default(), &testkit::meta("local")).expect("reorganize");
+        app.dispatch_typed(SequenceCommand::Reorganize, &testkit::meta("local")).expect("reorganize");
         let ys: Vec<f64> = app.projection().expect("projection").steps.iter().map(|step| step.y).collect();
         assert!(ys.iter().any(|y| *y != 0.0), "topBottom orientation should spread steps vertically, got {ys:?}");
     }
 
     #[test]
-    fn reorganize_action_spreads_step_positions_apart() {
+    fn reorganize_command_spreads_step_positions_apart() {
         let mut app = new_app();
-        // Collapse both steps onto the origin, then reorganize.
         let ids: Vec<String> = app.projection().expect("projection").steps.iter().map(|step| step.id.clone()).collect();
         for id in &ids {
-            app.handle_action("moveMediaNode", Some(&json!({ "nodeId": id, "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("move");
+            app.dispatch_typed(SequenceCommand::MoveStep { node_id: id.clone(), x: 0.0, y: 0.0 }, &testkit::meta("local")).expect("move");
         }
-        app.handle_action("reorganize", None, &ViewState::default(), &testkit::meta("local")).expect("reorganize");
+        app.dispatch_typed(SequenceCommand::Reorganize, &testkit::meta("local")).expect("reorganize");
         let xs: Vec<f64> = app.projection().expect("projection").steps.iter().map(|step| step.x).collect();
         assert!(xs.iter().any(|x| *x != 0.0), "reorganize should spread steps apart, got {xs:?}");
     }
 
     #[test]
-    fn stop_action_clears_last_run_result() {
+    fn stop_command_clears_last_run_result() {
         let mut app = new_app();
-        app.handle_action("run", None, &ViewState::default(), &testkit::meta("local")).expect("run");
-        app.handle_action("stop", None, &ViewState::default(), &testkit::meta("local")).expect("stop");
+        app.dispatch_typed(SequenceCommand::Run, &testkit::meta("local")).expect("run");
+        app.dispatch_typed(SequenceCommand::Stop, &testkit::meta("local")).expect("stop");
         let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
         assert!(!serde_json::to_string(&node).unwrap().contains("run result"));
     }
@@ -853,7 +801,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        testkit::assert_undo_redo_round_trip(&mut app, "addStep", Some(&json!({ "kind": "log.print" })), |app| app.projection().expect("projection").steps.len(), 2, 3);
+        testkit::assert_undo_redo_round_trip(&mut app, SequenceCommand::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }, |app| app.projection().expect("projection").steps.len(), 2, 3);
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same fixture,
@@ -863,15 +811,10 @@ mod tests {
     fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<SequencePlayApp, _>(
             "mem://sequence-convergence",
-            ("moveMediaNode", Some(&json!({ "nodeId": "step-1", "x": 111.0, "y": 0.0 }))),
-            ("moveMediaNode", Some(&json!({ "nodeId": "step-2", "x": 222.0, "y": 0.0 }))),
+            SequenceCommand::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 },
+            SequenceCommand::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 },
             |app| app.projection().expect("projection"),
         );
-    }
-
-    #[test]
-    fn ingest_operations_is_idempotent() {
-        testkit::assert_ingest_idempotent::<SequencePlayApp, _>("moveMediaNode", Some(&json!({ "nodeId": "step-1", "x": 99.0, "y": 0.0 })), |app| app.projection().expect("projection").steps.iter().find(|step| step.id == "step-1").unwrap().x);
     }
 
     #[test]
@@ -880,10 +823,7 @@ mod tests {
         let document_json = serde_json::to_string(&app.render(SEQUENCE_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
         assert!(document_json.contains("\"Steps\""));
         assert!(document_json.contains("\"Flow edges\""));
-        // 🧰️ Run/stop/reorganize no longer render as utility bar utilities (see note on the removed
-        // `footer_tools_include_run_stop_reorganize_and_orientation` test above) — their locale
-        // translation now surfaces only through the action-label overlay.
-        let action_labels = app.app_labels(&ViewState::default()).action_labels;
+        let action_labels = app.app_labels().action_labels;
         for (id, label) in [("run", "Run"), ("stop", "Stop"), ("reorganize", "Reorganize")] {
             assert_eq!(action_labels.get(id).map(String::as_str), Some(label), "{id} action label");
         }
@@ -892,15 +832,55 @@ mod tests {
     #[test]
     fn sequence_labels_render_german_locale() {
         let mut app = new_app();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let document_json = serde_json::to_string(&app.render(SEQUENCE_PLAY_BODY_DOCUMENT, None, &view_state).expect("render")).unwrap();
+        app.dispatch_typed(SequenceCommand::SetLocale { value: "de".into() }, &testkit::meta("local")).expect("locale");
+        let document_json = serde_json::to_string(&app.render(SEQUENCE_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
         assert!(document_json.contains("Schritte"));
         assert!(document_json.contains("Ablaufkanten"));
         assert!(!document_json.contains("\"Steps\""));
-        let action_labels = app.app_labels(&view_state).action_labels;
+        let action_labels = app.app_labels().action_labels;
         for (id, label) in [("run", "Ausführen"), ("stop", "Stopp"), ("reorganize", "Neu anordnen")] {
             assert_eq!(action_labels.get(id).map(String::as_str), Some(label), "{id} action label");
         }
     }
+
+    //#region 🔖️PortTests
+    #[test]
+    fn sequence_io_declares_steps_in_and_document_ports() {
+        let ports = SequencePlayApp.io().expect("io").all_ports();
+        assert!(ports.iter().any(|port| port.id == "document:in"));
+        assert!(ports.iter().any(|port| port.id == "document:out"));
+        assert!(ports.iter().any(|port| port.id == "steps:in"));
+    }
+
+    #[test]
+    fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
+        let mut app = new_app_with_registry();
+        let before = app.projection().expect("projection").steps.len();
+        let media = Media { media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Any }, payload: MediaPayload::Structured { schema: "computation.value".into(), json: json!({ "message": "from upstream" }).to_string() } };
+        app.import_media("steps:in", &media, &testkit::meta("local")).expect("import steps:in");
+        let after = app.projection().expect("projection");
+        assert_eq!(after.steps.len(), before + 1);
+        let imported = after.steps.last().expect("imported step");
+        assert_eq!(imported.kind, "computation.import");
+        assert_eq!(imported.params.get("message").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()), Some("from upstream"));
+    }
+
+    #[test]
+    fn import_media_steps_in_wraps_a_bare_scalar_payload() {
+        let mut app = new_app_with_registry();
+        let media = Media { media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Any }, payload: MediaPayload::Structured { schema: "computation.value".into(), json: "42".into() } };
+        app.import_media("steps:in", &media, &testkit::meta("local")).expect("import steps:in");
+        let after = app.projection().expect("projection");
+        let imported = after.steps.last().expect("imported step");
+        assert_eq!(imported.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(42.0));
+    }
+
+    #[test]
+    fn import_media_rejects_unknown_port() {
+        let mut app = new_app_with_registry();
+        let media = Media { media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Any }, payload: MediaPayload::Structured { schema: "computation.value".into(), json: "{}".into() } };
+        assert!(app.import_media("not-a-port", &media, &testkit::meta("local")).is_err());
+    }
+    //#endregion 🔖️PortTests
 }
 //#endregion 🧪️Tests

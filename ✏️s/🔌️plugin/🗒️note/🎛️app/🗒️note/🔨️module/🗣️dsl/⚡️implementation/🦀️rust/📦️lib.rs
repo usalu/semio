@@ -19,6 +19,8 @@ pub fn print_dsl(document: &NoteDocument) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+    use std::collections::BTreeMap;
 
     #[test]
     fn semio_example_dsl_round_trips() {

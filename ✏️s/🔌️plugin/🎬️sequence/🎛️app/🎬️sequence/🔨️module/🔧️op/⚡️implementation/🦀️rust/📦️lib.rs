@@ -1,7 +1,7 @@
 //! ⚡️ Sequence app — operation enum + laws (constitutional: op).
 
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Operation, OperationDiff};
-use sequence::{sequence_edge_from_dsl, sequence_edge_to_dsl, SequenceEdge, SequenceEdgeDsl, SequenceEdgePatch, SequenceFixture, SequenceStep, SequenceStepPatch};
+use sequence::{sequence_edge_from_dsl, sequence_edge_to_dsl, SequenceCamera, SequenceEdge, SequenceEdgeDsl, SequenceEdgePatch, SequenceFixture, SequenceStep, SequenceStepPatch};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Store
@@ -293,6 +293,55 @@ impl protocol::OpBinary for SequenceOperation {
 }
 //#endregion 🔖️OpText
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `sequence_engine::SequenceConfig`'s operation enum — one variant per settled
+/// interaction (mirrors the pre-B1 `SequencePlayRuntime` field writes), plus a generic `Snapshot`
+/// every variant's `backwards()` returns — same "whole-config snapshot is the simplest correct
+/// inverse" shape as `shooting_op::ShootingConfigOperation`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum SequenceConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: sequence_engine::SequenceConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelection { step_ids: Vec<String> },
+    #[dsl(key = "last-run")]
+    SetLastRun { json: String },
+    #[dsl(key = "orientation")]
+    SetOrientation { value: String },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: SequenceCamera,
+    },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<sequence_engine::SequenceConfig> for SequenceConfigOperation {
+    type Diff = sequence_engine::SequenceConfig;
+
+    fn diff(&self, base: &sequence_engine::SequenceConfig) -> sequence_engine::SequenceConfig {
+        let mut next = base.clone();
+        match self {
+            SequenceConfigOperation::Snapshot { config } => return config.clone(),
+            SequenceConfigOperation::SetSelection { step_ids } => next.selected_step_ids = step_ids.clone(),
+            SequenceConfigOperation::SetLastRun { json } => next.last_run_json = json.clone(),
+            SequenceConfigOperation::SetOrientation { value } => next.orientation = value.clone(),
+            SequenceConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            SequenceConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &sequence_engine::SequenceConfig) -> Vec<Self> {
+        vec![SequenceConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -410,5 +459,61 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesPatch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } });
     }
 
+    //#region 🔖️ConfigOperationTests
+    fn round_trip_config(config: &sequence_engine::SequenceConfig, operation: &SequenceConfigOperation) -> sequence_engine::SequenceConfig {
+        let forward = operation.diff(config);
+        let backwards = operation.backwards(config);
+        assert_eq!(backwards.len(), 1);
+        let restored = backwards[0].diff(&forward);
+        assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
+        forward
+    }
+
+    #[test]
+    fn config_set_selection_round_trips() {
+        let config = sequence_engine::SequenceConfig::default();
+        let next = round_trip_config(&config, &SequenceConfigOperation::SetSelection { step_ids: vec!["step-1".into()] });
+        assert_eq!(next.selected_step_ids, vec!["step-1".to_string()]);
+    }
+
+    #[test]
+    fn config_set_last_run_round_trips() {
+        let config = sequence_engine::SequenceConfig::default();
+        let next = round_trip_config(&config, &SequenceConfigOperation::SetLastRun { json: "{\"ok\":true}".into() });
+        assert_eq!(next.last_run_json, "{\"ok\":true}");
+    }
+
+    #[test]
+    fn config_set_orientation_round_trips() {
+        let config = sequence_engine::SequenceConfig::default();
+        let next = round_trip_config(&config, &SequenceConfigOperation::SetOrientation { value: "topBottom".into() });
+        assert_eq!(next.orientation, "topBottom");
+    }
+
+    #[test]
+    fn config_set_camera_round_trips() {
+        let config = sequence_engine::SequenceConfig::default();
+        let camera = SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 };
+        let next = round_trip_config(&config, &SequenceConfigOperation::SetCamera { camera: camera.clone() });
+        assert_eq!(next.camera, camera);
+    }
+
+    #[test]
+    fn config_set_locale_round_trips() {
+        let config = sequence_engine::SequenceConfig::default();
+        let next = round_trip_config(&config, &SequenceConfigOperation::SetLocale { value: "de-DE".into() });
+        assert_eq!(next.locale, "de-DE");
+    }
+
+    #[test]
+    fn config_op_text_round_trips_every_variant() {
+        store::test_support::assert_op_line_round_trip(&SequenceConfigOperation::Snapshot { config: sequence_engine::SequenceConfig::default() });
+        store::test_support::assert_op_line_round_trip(&SequenceConfigOperation::SetSelection { step_ids: vec!["step-1".into(), "step-2".into()] });
+        store::test_support::assert_op_line_round_trip(&SequenceConfigOperation::SetLastRun { json: "{}".into() });
+        store::test_support::assert_op_line_round_trip(&SequenceConfigOperation::SetOrientation { value: "leftRight".into() });
+        store::test_support::assert_op_line_round_trip(&SequenceConfigOperation::SetCamera { camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+        store::test_support::assert_op_line_round_trip(&SequenceConfigOperation::SetLocale { value: "en-US".into() });
+    }
+    //#endregion 🔖️ConfigOperationTests
 }
 //#endregion 🧪️Tests

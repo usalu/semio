@@ -2,11 +2,16 @@
 //! hosts the `PresentEnvelope`/`PresentStore` type aliases and the WASM VCS bridge — both need
 //! `PresentOperation` (from `present_op`) alongside `PresentDeck` (from `present`), so this is the
 //! first constitutional crate in the stack where that pairing is available.
+//!
+//! 🎯️ Also hosts `PresentCommand` — the app-engine `DocumentApp::Command` binary command envelope
+//! (B1 pure-trait pivot, mirrors `shooting_protocol::ShootingCommand`). One variant per real declared
+//! action in `present_ui::create_animate_present_app`.
 
-use present::{PresentDeck, PRESENT_DECK_SCHEMA};
+use present::{FigureTileFrame, FigureTileSource, PresentDeck, PRESENT_DECK_SCHEMA};
 use present_engine::empty_present_deck;
 use present_op::PresentOperation;
 use protocol::OpBinary;
+use serde::{Deserialize, Serialize};
 use store::{create_document_envelope, materialize_document_projection, DocumentEnvelope, DocumentStore};
 
 /// 📦️ Encodes a `PresentOperation` to its binary command form.
@@ -37,6 +42,71 @@ pub fn materialize_present_projection_json(envelope_json: &str) -> Result<Presen
     Ok(materialize_document_projection(&envelope, &edit_ids)?)
 }
 //#endregion 🔖️VcsEnvelope
+
+//#region 🔖️PresentCommand
+/// 🎯️ B1: `AnimatePresentPlayApp::Command` — the SOLE dispatch surface for animate present's own
+/// behavior. `ResetGrid` mirrors the pre-B1 `handle_command`-only `"animate.resetGrid"` app-scope
+/// command (see `present_ui::create_animate_present_app`'s `.app_command(...)`); every other variant
+/// mirrors a real declared action.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum PresentCommand {
+    // ✏️ Document-mutating — dispatched as VCS operations with a true inverse.
+    #[dsl(key = "seed-grid")]
+    SeedGrid { rows: u32, columns: u32 },
+    #[dsl(key = "add-tile")]
+    AddTile {
+        #[dsl(block)]
+        crop: Option<FigureTileFrame>,
+    },
+    #[dsl(key = "delete-tile")]
+    DeleteTile { id: String },
+    #[dsl(key = "delete-selection")]
+    DeleteSelection,
+    #[dsl(key = "rename-tiles")]
+    RenameTiles { ids: Vec<String>, value: String },
+    #[dsl(key = "patch-tile-crops")]
+    PatchTileCrops { ids: Vec<String>, field: String, value: f64 },
+    #[dsl(key = "set-source")]
+    SetSource {
+        #[dsl(block)]
+        source: FigureTileSource,
+    },
+    #[dsl(key = "set-frame")]
+    SetFrame {
+        #[dsl(block)]
+        frame: FigureTileFrame,
+    },
+    #[dsl(key = "set-active-example")]
+    SetActiveExample { example_id: String },
+    #[dsl(key = "clear-tiles")]
+    ClearTiles,
+    #[dsl(key = "engagement-submit")]
+    EngagementSubmit { value: String },
+    #[dsl(key = "reset-grid")]
+    ResetGrid,
+
+    // 👁️ Config-only (was ephemeral `AnimatePresentPlayRuntime` state) — emit `config_operations`,
+    // never document operations.
+    #[dsl(key = "set-selected-ids")]
+    SetSelectedIds { ids: Vec<String> },
+    #[dsl(key = "engagement-input")]
+    EngagementInput { value: String },
+    #[dsl(key = "canvas-pointer-down")]
+    CanvasPointerDown { layer_id: Option<String> },
+    #[dsl(key = "set-locale")]
+    SetLocale { value: String },
+    /// 👁️ Decorative no-op wired to the read-only "active source" catalogue field's `on_change` —
+    /// never mutates anything (mirrors the pre-B1 `"noOperation"` view action verbatim).
+    #[dsl(key = "no-op")]
+    NoOperation,
+
+    // 🐚️ Shell effects — export round-trips through the host, no operations either way.
+    #[dsl(key = "copy-prompt")]
+    CopyPrompt,
+    #[dsl(key = "export-video-from-deck")]
+    ExportVideoFromDeck { output_dir: String, scene_json: String },
+}
+//#endregion 🔖️PresentCommand
 
 //#region 🔖️WasmBridge
 #[cfg(target_arch = "wasm32")]
@@ -144,5 +214,38 @@ mod tests {
         test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖️DocumentTextTests
+
+    //#region 🔖️PresentCommandTests
+    #[test]
+    fn present_command_text_round_trips_every_variant() {
+        test_support::assert_op_line_round_trip(&PresentCommand::SeedGrid { rows: 2, columns: 3 });
+        test_support::assert_op_line_round_trip(&PresentCommand::AddTile { crop: Some(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) });
+        test_support::assert_op_line_round_trip(&PresentCommand::AddTile { crop: None });
+        test_support::assert_op_line_round_trip(&PresentCommand::DeleteTile { id: "t1".into() });
+        test_support::assert_op_line_round_trip(&PresentCommand::DeleteSelection);
+        test_support::assert_op_line_round_trip(&PresentCommand::RenameTiles { ids: vec!["t1".into(), "t2".into()], value: "Hero".into() });
+        test_support::assert_op_line_round_trip(&PresentCommand::PatchTileCrops { ids: vec!["t1".into()], field: "width".into(), value: 0.4 });
+        test_support::assert_op_line_round_trip(&PresentCommand::SetSource { source: present::default_figure_tile_source() });
+        test_support::assert_op_line_round_trip(&PresentCommand::SetFrame { frame: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } });
+        test_support::assert_op_line_round_trip(&PresentCommand::SetActiveExample { example_id: "demo".into() });
+        test_support::assert_op_line_round_trip(&PresentCommand::ClearTiles);
+        test_support::assert_op_line_round_trip(&PresentCommand::EngagementSubmit { value: "2x2".into() });
+        test_support::assert_op_line_round_trip(&PresentCommand::ResetGrid);
+        test_support::assert_op_line_round_trip(&PresentCommand::SetSelectedIds { ids: vec!["t1".into()] });
+        test_support::assert_op_line_round_trip(&PresentCommand::EngagementInput { value: "add".into() });
+        test_support::assert_op_line_round_trip(&PresentCommand::CanvasPointerDown { layer_id: Some("t1".into()) });
+        test_support::assert_op_line_round_trip(&PresentCommand::CanvasPointerDown { layer_id: None });
+        test_support::assert_op_line_round_trip(&PresentCommand::SetLocale { value: "de-DE".into() });
+        test_support::assert_op_line_round_trip(&PresentCommand::NoOperation);
+        test_support::assert_op_line_round_trip(&PresentCommand::CopyPrompt);
+        test_support::assert_op_line_round_trip(&PresentCommand::ExportVideoFromDeck { output_dir: "output/x".into(), scene_json: "{}".into() });
+    }
+
+    #[test]
+    fn present_command_binary_round_trips() {
+        let command = PresentCommand::SeedGrid { rows: 2, columns: 2 };
+        test_support::assert_op_text_binary_equivalence(&command);
+    }
+    //#endregion 🔖️PresentCommandTests
 }
 //#endregion 🧪️Tests

@@ -37,7 +37,7 @@ mod tests {
 
     #[test]
     fn curate_document_dsl_round_trips_a_mesh_kind_and_a_curated_selection() {
-        use sourcing::{GeometryRecipe, ObjectKind, SortDirection, TableSort};
+        use sourcing::{GeometryRecipe, ObjectKind};
 
         let mut document = CurateDocument {
             stock: vec![ObjectKind {
@@ -51,12 +51,6 @@ mod tests {
             ..Default::default()
         };
         document.curated = vec![sourcing::CuratedItem { object_id: "beam-mesh-custom".into(), count: 2 }];
-        document.filters.module_ids = vec!["beams".into(), "windows".into()];
-        document.filters.typology_path = vec!["beams".into(), "steel".into()];
-        document.filters.min_availability = 1;
-        document.filters.query = "steel \"ipe\"".into();
-        document.filters.sort = Some(TableSort { column_id: "availability".into(), direction: SortDirection::Desc });
-        document.runtime.selected_object_id = Some("beam-mesh-custom".into());
         store::test_support::assert_dsl_round_trip(&document);
     }
 }

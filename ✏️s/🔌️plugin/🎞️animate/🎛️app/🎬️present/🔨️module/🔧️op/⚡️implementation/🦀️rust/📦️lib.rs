@@ -203,6 +203,46 @@ impl protocol::OpBinary for PresentOperation {
 }
 //#endregion 🔖️OpText
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `present_engine::PresentConfig`'s operation enum — one variant per settled
+/// interaction (mirrors the pre-B1 `AnimatePresentPlayRuntime` field writes), plus a generic
+/// `Snapshot` every variant's `backwards()` returns — same "whole-config snapshot is the simplest
+/// correct inverse" shape as `shooting_op::ShootingConfigOperation`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum PresentConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: present_engine::PresentConfig,
+    },
+    #[dsl(key = "selection")]
+    SetSelectedIds { ids: Vec<String> },
+    #[dsl(key = "engagement-input")]
+    SetEngagementInput { value: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<present_engine::PresentConfig> for PresentConfigOperation {
+    type Diff = present_engine::PresentConfig;
+
+    fn diff(&self, base: &present_engine::PresentConfig) -> present_engine::PresentConfig {
+        let mut next = base.clone();
+        match self {
+            PresentConfigOperation::Snapshot { config } => return config.clone(),
+            PresentConfigOperation::SetSelectedIds { ids } => next.selected_ids = ids.clone(),
+            PresentConfigOperation::SetEngagementInput { value } => next.engagement_input = value.clone(),
+            PresentConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &present_engine::PresentConfig) -> Vec<Self> {
+        vec![PresentConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -291,5 +331,45 @@ mod tests {
         test_support::assert_op_line_round_trip(&PresentOperation::SetDeck { deck: default_present_deck() });
     }
     //#endregion 🔖️OpTextTests
+
+    //#region 🔖️ConfigOperationTests
+    fn round_trip_config(config: &present_engine::PresentConfig, operation: &PresentConfigOperation) -> present_engine::PresentConfig {
+        let forward = operation.diff(config);
+        let backwards = operation.backwards(config);
+        assert_eq!(backwards.len(), 1);
+        let restored = backwards[0].diff(&forward);
+        assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
+        forward
+    }
+
+    #[test]
+    fn config_set_selected_ids_round_trips() {
+        let config = present_engine::PresentConfig::default();
+        let next = round_trip_config(&config, &PresentConfigOperation::SetSelectedIds { ids: vec!["t1".into()] });
+        assert_eq!(next.selected_ids, vec!["t1".to_string()]);
+    }
+
+    #[test]
+    fn config_set_engagement_input_round_trips() {
+        let config = present_engine::PresentConfig::default();
+        let next = round_trip_config(&config, &PresentConfigOperation::SetEngagementInput { value: "2x2".into() });
+        assert_eq!(next.engagement_input, "2x2");
+    }
+
+    #[test]
+    fn config_set_locale_round_trips() {
+        let config = present_engine::PresentConfig::default();
+        let next = round_trip_config(&config, &PresentConfigOperation::SetLocale { value: "de-DE".into() });
+        assert_eq!(next.locale, "de-DE");
+    }
+
+    #[test]
+    fn config_op_text_round_trips_every_variant() {
+        test_support::assert_op_line_round_trip(&PresentConfigOperation::Snapshot { config: present_engine::PresentConfig::default() });
+        test_support::assert_op_line_round_trip(&PresentConfigOperation::SetSelectedIds { ids: vec!["t1".into(), "t2".into()] });
+        test_support::assert_op_line_round_trip(&PresentConfigOperation::SetEngagementInput { value: "add".into() });
+        test_support::assert_op_line_round_trip(&PresentConfigOperation::SetLocale { value: "en-US".into() });
+    }
+    //#endregion 🔖️ConfigOperationTests
 }
 //#endregion 🧪️Tests

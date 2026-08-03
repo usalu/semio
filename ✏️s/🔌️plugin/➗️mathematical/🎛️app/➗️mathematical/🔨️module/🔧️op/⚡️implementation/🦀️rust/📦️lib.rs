@@ -1,6 +1,6 @@
 //! ⚡️ Mathematical app — operation enum + laws (constitutional: op).
 
-use mathematical::{math_graph_from_dsl, math_graph_to_dsl, MathGeometry, MathGraph, MathGraphDsl, MathProjection};
+use mathematical::{math_graph_from_dsl, math_graph_to_dsl, MathCamera, MathGeometry, MathGraph, MathGraphDsl, MathProjection};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 
@@ -123,6 +123,49 @@ impl protocol::OpBinary for MathOperation {
 }
 //#endregion 🔖️OpText
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ B1: `mathematical_engine::MathConfig`'s operation enum — one variant per settled
+/// interaction (mirrors the pre-B1 `MathPlayRuntime` field writes), plus a generic `Snapshot` every
+/// variant's `backwards()` returns — mirrors `shooting_op::ShootingConfigOperation`'s "undo this tick is
+/// exactly restore the whole-config snapshot from just before it" pattern: `Operation::Diff` is the
+/// WHOLE `MathConfig` (not a granular patch type), `diff()` returns "the full config after this op", and
+/// `protocol::OperationDiff<MathConfig>::apply` for `MathConfig` itself (see `mathematical_engine`) just
+/// returns that snapshot verbatim, ignoring `base`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum MathConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: mathematical_engine::MathConfig,
+    },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: MathCamera,
+    },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
+}
+
+impl Operation<mathematical_engine::MathConfig> for MathConfigOperation {
+    type Diff = mathematical_engine::MathConfig;
+
+    fn diff(&self, base: &mathematical_engine::MathConfig) -> mathematical_engine::MathConfig {
+        let mut next = base.clone();
+        match self {
+            MathConfigOperation::Snapshot { config } => return config.clone(),
+            MathConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+            MathConfigOperation::SetLocale { value } => next.locale = value.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &mathematical_engine::MathConfig) -> Vec<Self> {
+        vec![MathConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -137,5 +180,33 @@ mod tests {
     fn math_set_geometry_op_round_trips() {
         store::test_support::assert_op_line_round_trip(&MathOperation::SetGeometry { geometry: MathGeometry::default() });
     }
+
+    //#region MathConfigOperation
+    #[test]
+    fn config_operation_snapshot_diff_ignores_base() {
+        let base = mathematical_engine::MathConfig::default();
+        let mut snapshot = base.clone();
+        snapshot.locale = "de-DE".into();
+        let operation = MathConfigOperation::Snapshot { config: snapshot.clone() };
+        assert_eq!(Operation::diff(&operation, &base), snapshot);
+    }
+
+    #[test]
+    fn config_operation_set_camera_round_trips() {
+        let base = mathematical_engine::MathConfig::default();
+        let camera = MathCamera { x: 5.0, y: 6.0, zoom: 2.0 };
+        let operation = MathConfigOperation::SetCamera { camera: camera.clone() };
+        let next = Operation::diff(&operation, &base);
+        assert_eq!(next.camera, camera);
+        let backwards = Operation::backwards(&operation, &base);
+        assert_eq!(backwards, vec![MathConfigOperation::Snapshot { config: base }]);
+        store::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn config_operation_set_locale_round_trips() {
+        store::test_support::assert_op_line_round_trip(&MathConfigOperation::SetLocale { value: "de-DE".into() });
+    }
+    //#endregion MathConfigOperation
 }
 //#endregion 🧪️Tests

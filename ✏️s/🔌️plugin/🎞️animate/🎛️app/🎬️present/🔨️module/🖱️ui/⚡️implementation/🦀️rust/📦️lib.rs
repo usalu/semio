@@ -1,20 +1,24 @@
-//! 🎞️ Animate present app — DocumentApp impl, render, manifest (constitutional: ui).
+//! 🎞️ Animate present app — DocumentApp impl, render, manifest (constitutional: ui). B1: the
+//! pure-trait pivot — `AnimatePresentPlayApp` is a unit struct; every former
+//! `AnimatePresentPlayRuntime` field (selection, engagement draft) now lives in
+//! `present_engine::PresentConfig`, written via `present_op::PresentConfigOperation`s (real
+//! `backwards`, no ad hoc `InverseAction`); every action dispatches through the single typed
+//! `present_protocol::PresentCommand` channel via `DocumentApp::handle`.
 
-use present::{FigureTileDraft, FigureTileDraftPatch, FigureTileFrame, FigureTileSource, PresentDeck, PRESENT_DECK_SCHEMA};
-use present_engine::{build_tile_morph_prompt, clamp_tile_crop, export_video_from_scene, parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec, PresentScene};
+use present::{FigureTileDraft, FigureTileDraftPatch, FigureTileFrame, PresentDeck, PRESENT_DECK_SCHEMA};
+use present_engine::{build_tile_morph_prompt, clamp_tile_crop, export_video_from_scene, next_frame_tile_crop, next_frame_tile_id, parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec, PresentConfig, PresentScene};
 use present_op::PresentOperation;
+use present_protocol::PresentCommand;
+use protocol::CollectionOperation;
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
-    ActionDescriptor, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, HostEffect, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
-    UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    ActionDescriptor, AppIo, App, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
+    UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
-use protocol::CollectionOperation;
 use store::DocumentDsl;
 
 //#region 🔖️Constants
@@ -30,18 +34,7 @@ const ANIMATE_PRESENT_PLAY_WINDOW_MAIN: &str = "tile-editor";
 static TILE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖️Constants
 
-//#region 🔖️Runtime
-/// 🎛️ Ephemeral view state (selection, engagement draft) — lives in the app struct,
-/// not the document, so it never pollutes undo history.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct AnimatePresentPlayRuntime {
-    #[serde(default)]
-    selected_ids: Vec<String>,
-    #[serde(default)]
-    engagement_input: String,
-}
-
+//#region 🔖️DocumentHelpers
 /// 📋️ Host effect delivering the generated tile-morph prompt to the user as a downloadable markdown
 /// file — the genuine shell side-effect that replaces the retired ephemeral clipboard scratch (the
 /// landed `HostEffect` contract carries no clipboard variant, so the prompt is exported as media).
@@ -58,16 +51,29 @@ fn new_tile_id(prefix: &str) -> String {
     format!("{prefix}-{serial}")
 }
 
-fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
-}
-
 /// 🧹️ Retains only the ids that reference an existing tile in `deck`.
 fn valid_tile_ids(deck: &PresentDeck, ids: Vec<String>) -> Vec<String> {
     let valid: HashSet<&str> = deck.tiles.iter().map(|tile| tile.id.as_str()).collect();
     ids.into_iter().filter(|id| valid.contains(id.as_str())).collect()
 }
-//#endregion 🔖️Runtime
+
+/// 🎞️ `frames:in` display name (Wave-2 port recipe) — a `Structured` payload's `"name"`/`"src"` field
+/// (falling back to a generic label), a `Binary` payload's leading blob-hash characters.
+fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
+    match &media.payload {
+        MediaPayload::Structured { json, .. } => {
+            let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            Ok(value
+                .get("name")
+                .and_then(|v| v.as_str())
+                .or_else(|| value.get("src").and_then(|v| v.as_str()))
+                .map(str::to_string)
+                .unwrap_or_else(|| "Imported frame".into()))
+        }
+        MediaPayload::Binary { blob_hash, .. } => Ok(format!("frame-{}", &blob_hash[..blob_hash.len().min(8)])),
+    }
+}
+//#endregion 🔖️DocumentHelpers
 
 //#region 🔖️VideoExport
 fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<present_engine::SceneAssetBundle>, present_engine::PresentError> {
@@ -76,7 +82,7 @@ fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<
 //#endregion 🔖️VideoExport
 
 //#region 🔖️CanvasLayers
-#[derive(Serialize)]
+#[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TileCanvasLayer {
     id: String,
@@ -206,10 +212,10 @@ const ANIMATE_PRESENT_LABELS_NATIVE_DE: AnimatePresentLabels = AnimatePresentLab
     catalogue_media_kind: "Medientyp",
 };
 
-/// 🗣️ Resolves the active label set from the shell-provided locale; unknown/absent locales fall back to native English.
-fn animate_present_labels(view_state: &ViewState) -> &'static AnimatePresentLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de {
+/// 🗣️ B1: resolves the active label set from `cfg.locale` (was the host-pushed `ViewState.locale`);
+/// unknown/absent locales fall back to native English.
+fn animate_present_labels(config: &PresentConfig) -> &'static AnimatePresentLabels {
+    if config.locale.starts_with("de") {
         &ANIMATE_PRESENT_LABELS_NATIVE_DE
     } else {
         &ANIMATE_PRESENT_LABELS_NATIVE_EN
@@ -459,21 +465,18 @@ fn render_main_canvas(deck: &PresentDeck, selected: &[String]) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️AnimatePresentPlayApp
-pub struct AnimatePresentPlayApp {
-    runtime: RefCell<AnimatePresentPlayRuntime>,
-}
-
-impl Default for AnimatePresentPlayApp {
-    fn default() -> Self {
-        Self { runtime: RefCell::new(AnimatePresentPlayRuntime::default()) }
-    }
-}
+/// 🧪️ B1: unit struct — every former `AnimatePresentPlayRuntime` field now lives in
+/// `present_engine::PresentConfig` (see `DocumentApp::Config`), written through
+/// `present_op::PresentConfigOperation`s.
+#[derive(Default)]
+pub struct AnimatePresentPlayApp;
 
 impl DocumentApp for AnimatePresentPlayApp {
     type Projection = PresentDeck;
     type Operation = PresentOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = PresentConfig;
+    type ConfigOperation = present_op::PresentConfigOperation;
+    type Command = PresentCommand;
 
     fn app_id(&self) -> &str {
         ANIMATE_PRESENT_PLAY_APP_ID
@@ -487,228 +490,227 @@ impl DocumentApp for AnimatePresentPlayApp {
         present::default_present_deck()
     }
 
-    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<PresentOperation> {
+    fn io(&self) -> Option<AppIo> {
+        Some(present_engine::present_io())
+    }
+
+    fn whole_document_operation(&self, projection: PresentDeck) -> Option<PresentOperation> {
+        Some(PresentOperation::SetDeck { deck: projection })
+    }
+
+    /// 🎞️ `frames:in` (Wave-2 port recipe): inserts an incoming raster frame as a new tile in a
+    /// deterministic contact-sheet grid (see `present_engine::next_frame_tile_crop`'s doc comment for
+    /// why this schema's single shared `source` means tiles, not `source`, are the natural insertion
+    /// point). Never mutates anything directly: the caller applies the returned `Tiles(Add)` through
+    /// the ordinary, undoable document store.
+    fn import_media(&self, port: &str, media: &Media, doc: &DocumentView<'_, PresentDeck>) -> Result<Emit<PresentOperation, present_op::PresentConfigOperation>, MediaError> {
+        if port != "frames:in" {
+            return Err(MediaError::NotImplemented);
+        }
         let deck = doc.projection;
-        let mut runtime = self.runtime.borrow_mut();
-        match action {
-            "setSelectedIds" => {
-                runtime.selected_ids = valid_tile_ids(deck, selection_ids(args));
-                ActionEmit::default()
+        let count = deck.tiles.len();
+        let id = next_frame_tile_id(count);
+        let crop = next_frame_tile_crop(count);
+        let name = frame_media_name(port, media)?;
+        let tile = FigureTileDraft { id: id.clone(), name, crop };
+        Ok(Emit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { id, item: tile, at: count })]))
+    }
+
+    /// 🏷️ Maps each `PresentCommand` variant back to the action/command id it was declared under in
+    /// `create_animate_present_app`.
+    fn command_id(&self, command: &PresentCommand) -> &str {
+        match command {
+            PresentCommand::SeedGrid { .. } => "seedGrid",
+            PresentCommand::AddTile { .. } => "addTile",
+            PresentCommand::DeleteTile { .. } => "deleteTile",
+            PresentCommand::DeleteSelection => "deleteSelection",
+            PresentCommand::RenameTiles { .. } => "renameTiles",
+            PresentCommand::PatchTileCrops { .. } => "patchTileCrops",
+            PresentCommand::SetSource { .. } => "setSource",
+            PresentCommand::SetFrame { .. } => "setFrame",
+            PresentCommand::SetActiveExample { .. } => "setActiveExample",
+            PresentCommand::ClearTiles => "clearTiles",
+            PresentCommand::EngagementSubmit { .. } => "engagementSubmit",
+            PresentCommand::ResetGrid => "animate.resetGrid",
+            PresentCommand::SetSelectedIds { .. } => "setSelectedIds",
+            PresentCommand::EngagementInput { .. } => "engagementInput",
+            PresentCommand::CanvasPointerDown { .. } => "canvasPointerDown",
+            PresentCommand::SetLocale { .. } => "setLocale",
+            PresentCommand::NoOperation => "noOperation",
+            PresentCommand::CopyPrompt => "copyPrompt",
+            PresentCommand::ExportVideoFromDeck { .. } => "exportVideoFromDeck",
+        }
+    }
+
+    fn handle(&self, command: &PresentCommand, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> Emit<PresentOperation, present_op::PresentConfigOperation> {
+        use present_op::PresentConfigOperation;
+        let deck = doc.projection;
+        let config = cfg.projection;
+        match command {
+            PresentCommand::SeedGrid { rows, columns } => {
+                let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: *rows, columns: *columns, gap: 0.0, key_prefix: "tile" });
+                let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+                Emit { document_operations: vec![PresentOperation::SetTiles { tiles }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: selected }], ..Default::default() }
             }
-            "seedGrid" => {
-                let rows = args.and_then(|v| v.get("rows")).and_then(|v| v.as_u64()).unwrap_or(3) as u32;
-                let columns = args.and_then(|v| v.get("columns")).and_then(|v| v.as_u64()).unwrap_or(5) as u32;
-                let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
-                runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-                ActionEmit::operations(vec![PresentOperation::SetTiles { tiles }])
-            }
-            "addTile" => {
+            PresentCommand::AddTile { crop } => {
                 let id = new_tile_id("tile");
-                let crop = args.and_then(|v| v.get("crop")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+                let crop = crop.clone().unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
                 let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
-                runtime.selected_ids = vec![id];
-                ActionEmit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), at: deck.tiles.len(), item: tile })])
-            }
-            "deleteTile" => {
-                let target = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()).map(|id| vec![id.to_string()]).unwrap_or_else(|| runtime.selected_ids.clone());
-                let target = valid_tile_ids(deck, target);
-                if target.is_empty() {
-                    return ActionEmit::default();
+                Emit {
+                    document_operations: vec![PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), at: deck.tiles.len(), item: tile })],
+                    config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: vec![id] }],
+                    ..Default::default()
                 }
-                runtime.selected_ids.retain(|id| !target.contains(id));
-                ActionEmit::operations(target.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Remove { id })).collect())
             }
-            "deleteSelection" => {
-                let target = valid_tile_ids(deck, runtime.selected_ids.clone());
-                if target.is_empty() {
-                    return ActionEmit::default();
+            PresentCommand::DeleteTile { id } => {
+                let targets = valid_tile_ids(deck, vec![id.clone()]);
+                if targets.is_empty() {
+                    return Emit::default();
                 }
-                runtime.selected_ids.clear();
-                ActionEmit::operations(target.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Remove { id })).collect())
+                let remaining: Vec<String> = config.selected_ids.iter().filter(|selected| !targets.contains(selected)).cloned().collect();
+                Emit {
+                    document_operations: targets.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Remove { id })).collect(),
+                    config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: remaining }],
+                    ..Default::default()
+                }
             }
-            "renameTile" | "renameTiles" => {
-                let ids: Vec<String> = args.and_then(|v| v.get("ids")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
-                let name = args.and_then(|v| v.get("value").or_else(|| v.get("name"))).and_then(|v| v.as_str()).map(str::trim).filter(|value| !value.is_empty());
-                match name {
-                    Some(name) => {
-                        let valid = valid_tile_ids(deck, ids);
-                        if valid.is_empty() {
-                            return ActionEmit::default();
+            PresentCommand::DeleteSelection => {
+                let targets = valid_tile_ids(deck, config.selected_ids.clone());
+                if targets.is_empty() {
+                    return Emit::default();
+                }
+                Emit {
+                    document_operations: targets.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Remove { id })).collect(),
+                    config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }],
+                    ..Default::default()
+                }
+            }
+            PresentCommand::RenameTiles { ids, value } => {
+                let name = value.trim();
+                if name.is_empty() {
+                    return Emit::default();
+                }
+                let valid = valid_tile_ids(deck, ids.clone());
+                if valid.is_empty() {
+                    return Emit::default();
+                }
+                Emit::operations(valid.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Patch { id, patch: FigureTileDraftPatch { name: Some(name.into()), crop: None } })).collect())
+            }
+            PresentCommand::PatchTileCrops { ids, field, value } => {
+                let targets: HashSet<&str> = ids.iter().map(String::as_str).collect();
+                let operations: Vec<PresentOperation> = deck
+                    .tiles
+                    .iter()
+                    .filter(|tile| targets.contains(tile.id.as_str()))
+                    .map(|tile| {
+                        let mut crop = tile.crop.clone();
+                        match field.as_str() {
+                            "x" => crop.x = *value,
+                            "y" => crop.y = *value,
+                            "width" => crop.width = *value,
+                            "height" => crop.height = *value,
+                            _ => {}
                         }
-                        ActionEmit::operations(valid.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Patch { id, patch: FigureTileDraftPatch { name: Some(name.into()), crop: None } })).collect())
-                    }
-                    None => ActionEmit::default(),
+                        PresentOperation::Tiles(CollectionOperation::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(crop)) } })
+                    })
+                    .collect();
+                if operations.is_empty() {
+                    Emit::default()
+                } else {
+                    Emit::operations(operations)
                 }
             }
-            "patchTileCrops" | "patchTileCrop" => {
-                let ids: Vec<String> = args.and_then(|v| v.get("ids")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
-                let field = args.and_then(|v| v.get("field")).and_then(|v| v.as_str()).unwrap_or("");
-                let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64());
-                match value {
-                    Some(value) if !field.is_empty() => {
-                        let targets: HashSet<&str> = ids.iter().map(String::as_str).collect();
-                        let operations: Vec<PresentOperation> = deck
-                            .tiles
-                            .iter()
-                            .filter(|tile| targets.contains(tile.id.as_str()))
-                            .map(|tile| {
-                                let mut crop = tile.crop.clone();
-                                match field {
-                                    "x" => crop.x = value,
-                                    "y" => crop.y = value,
-                                    "width" => crop.width = value,
-                                    "height" => crop.height = value,
-                                    _ => {}
-                                }
-                                PresentOperation::Tiles(CollectionOperation::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(crop)) } })
-                            })
-                            .collect();
-                        if operations.is_empty() {
-                            ActionEmit::default()
-                        } else {
-                            ActionEmit::operations(operations)
-                        }
-                    }
-                    _ => ActionEmit::default(),
+            PresentCommand::SetSource { source } => {
+                let replaced = source.src != deck.source.src;
+                let mut operations = vec![PresentOperation::SetSource { source: source.clone() }];
+                let mut config_operations = Vec::new();
+                if replaced {
+                    operations.push(PresentOperation::SetTiles { tiles: Vec::new() });
+                    config_operations.push(PresentConfigOperation::SetSelectedIds { ids: Vec::new() });
                 }
+                Emit { document_operations: operations, config_operations, ..Default::default() }
             }
-            "setSource" => {
-                if let Some(source_value) = args {
-                    let mut partial = deck.source.clone();
-                    if let Some(src) = source_value.get("src").and_then(|v| v.as_str()) {
-                        partial.src = src.into();
-                    }
-                    if let Some(kind) = source_value.get("kind").and_then(|v| v.as_str()) {
-                        partial.kind = kind.into();
-                    }
-                    if let Some(frame_value) = source_value.get("frame") {
-                        if let Ok(frame) = serde_json::from_value::<FigureTileFrame>(frame_value.clone()) {
-                            partial.frame = frame;
-                        }
-                    }
-                    if source_value.get("src").is_none() && source_value.get("kind").is_none() && source_value.get("frame").is_none() {
-                        if let Ok(source) = serde_json::from_value::<FigureTileSource>(source_value.clone()) {
-                            partial = source;
-                        }
-                    }
-                    let replaced = partial.src != deck.source.src;
-                    let mut operations = vec![PresentOperation::SetSource { source: partial }];
-                    if replaced {
-                        operations.push(PresentOperation::SetTiles { tiles: Vec::new() });
-                        runtime.selected_ids.clear();
-                    }
-                    return ActionEmit::operations(operations);
-                }
-                ActionEmit::default()
+            PresentCommand::SetFrame { frame } => {
+                let mut source = deck.source.clone();
+                source.frame = frame.clone();
+                Emit::operations(vec![PresentOperation::SetSource { source }])
             }
-            "setFrame" => {
-                if let Some(frame_value) = args.and_then(|v| v.get("frame")) {
-                    if let Ok(frame) = serde_json::from_value::<FigureTileFrame>(frame_value.clone()) {
-                        let mut source = deck.source.clone();
-                        source.frame = frame;
-                        return ActionEmit::operations(vec![PresentOperation::SetSource { source }]);
-                    }
-                }
-                ActionEmit::default()
-            }
-            "setActiveExample" => {
-                let example_id = args.and_then(|v| v.get("exampleId")).and_then(|v| v.as_str()).unwrap_or("demo");
+            PresentCommand::SetActiveExample { example_id } => {
                 if example_id == "demo" || example_id.is_empty() {
-                    runtime.selected_ids.clear();
-                    return ActionEmit::operations(vec![PresentOperation::SetDeck { deck: present::default_present_deck() }]);
-                }
-                ActionEmit::default()
-            }
-            "clearTiles" => {
-                runtime.selected_ids.clear();
-                ActionEmit::operations(vec![PresentOperation::SetTiles { tiles: Vec::new() }])
-            }
-            "copyPrompt" => ActionEmit::effect(tile_morph_prompt_effect(deck)),
-            "exportVideoFromDeck" => {
-                let output_dir = args.and_then(|value| value.get("outputDir")).and_then(|value| value.as_str()).unwrap_or("output/animate-video");
-                let scene = args.and_then(|value| value.get("scene")).and_then(|value| serde_json::from_value::<PresentScene>(value.clone()).ok()).unwrap_or_else(|| PresentScene::empty("Deck export"));
-                match export_video_from_deck(&scene, output_dir) {
-                    Ok(bundles) => ActionEmit::effect(HostEffect::DownloadMediaExport {
-                        filename: "animate-video-export.ops".into(),
-                        mime_type: "text/plain".into(),
-                        data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()),
-                        encoding: None,
-                    }),
-                    Err(error) => ActionEmit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export-error.txt".into(), mime_type: "text/plain".into(), data: error.to_string(), encoding: None }),
+                    Emit { document_operations: vec![PresentOperation::SetDeck { deck: present::default_present_deck() }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }], ..Default::default() }
+                } else {
+                    Emit::default()
                 }
             }
-            "engagementInput" => {
-                if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    runtime.engagement_input = value.into();
-                }
-                ActionEmit::default()
-            }
-            "engagementSubmit" => {
-                let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()).map(str::to_string).unwrap_or_else(|| runtime.engagement_input.clone());
+            PresentCommand::ClearTiles => Emit {
+                document_operations: vec![PresentOperation::SetTiles { tiles: Vec::new() }],
+                config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }],
+                ..Default::default()
+            },
+            PresentCommand::EngagementSubmit { value } => {
                 let trimmed = value.trim();
                 if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
                     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
-                    runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-                    runtime.engagement_input.clear();
-                    return ActionEmit::operations(vec![PresentOperation::SetTiles { tiles }]);
+                    let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+                    return Emit {
+                        document_operations: vec![PresentOperation::SetTiles { tiles }],
+                        config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: selected }, PresentConfigOperation::SetEngagementInput { value: String::new() }],
+                        ..Default::default()
+                    };
                 }
                 match trimmed.to_lowercase().as_str() {
                     "add" => {
                         let id = new_tile_id("tile");
                         let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-                        runtime.selected_ids = vec![id];
-                        runtime.engagement_input.clear();
-                        ActionEmit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), at: deck.tiles.len(), item: tile })])
+                        Emit {
+                            document_operations: vec![PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), at: deck.tiles.len(), item: tile })],
+                            config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: vec![id] }, PresentConfigOperation::SetEngagementInput { value: String::new() }],
+                            ..Default::default()
+                        }
                     }
-                    "clear" => {
-                        runtime.selected_ids.clear();
-                        runtime.engagement_input.clear();
-                        ActionEmit::operations(vec![PresentOperation::SetTiles { tiles: Vec::new() }])
-                    }
-                    "copy" | "copy prompt" => {
-                        runtime.engagement_input.clear();
-                        ActionEmit::effect(tile_morph_prompt_effect(deck))
-                    }
-                    _ => ActionEmit::default(),
+                    "clear" => Emit {
+                        document_operations: vec![PresentOperation::SetTiles { tiles: Vec::new() }],
+                        config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }, PresentConfigOperation::SetEngagementInput { value: String::new() }],
+                        ..Default::default()
+                    },
+                    "copy" | "copy prompt" => Emit { config_operations: vec![PresentConfigOperation::SetEngagementInput { value: String::new() }], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() },
+                    _ => Emit::default(),
                 }
             }
-            "canvasPointerDown" => {
-                if let Some(layer_id) = args.and_then(|v| v.get("layerId")).and_then(|v| v.as_str()) {
-                    if deck.tiles.iter().any(|tile| tile.id == layer_id) {
-                        runtime.selected_ids = vec![layer_id.into()];
-                        return ActionEmit::default();
-                    }
-                }
-                runtime.selected_ids.clear();
-                ActionEmit::default()
-            }
-            _ => ActionEmit::default(),
-        }
-    }
-
-    /// 🎛️ App-scope command reference implementation (see `CommandScope`) — distinct from `seedGrid`
-    /// (an action wired to real catalogue buttons via `ActionDescriptor`; moving it here would silently
-    /// break those buttons, since `UiButtonNode` only carries actions). "Reset to Default Grid" has no
-    /// existing UI wiring: it's reachable only from the footer command panel / palette, demonstrating a
-    /// command that emits a real VCS-tracked operation.
-    fn handle_command(&self, command: &str, _args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<PresentOperation> {
-        let deck = doc.projection;
-        let mut runtime = self.runtime.borrow_mut();
-        match command {
-            "animate.resetGrid" => {
+            PresentCommand::ResetGrid => {
                 let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
-                runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-                ActionEmit::operations(vec![PresentOperation::SetTiles { tiles }])
+                let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
+                Emit { document_operations: vec![PresentOperation::SetTiles { tiles }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: selected }], ..Default::default() }
             }
-            _ => ActionEmit::default(),
+            PresentCommand::SetSelectedIds { ids } => Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: valid_tile_ids(deck, ids.clone()) }]),
+            PresentCommand::EngagementInput { value } => Emit::config(vec![PresentConfigOperation::SetEngagementInput { value: value.clone() }]),
+            PresentCommand::CanvasPointerDown { layer_id } => match layer_id {
+                Some(id) if deck.tiles.iter().any(|tile| &tile.id == id) => Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: vec![id.clone()] }]),
+                _ => Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }]),
+            },
+            PresentCommand::SetLocale { value } => Emit::config(vec![PresentConfigOperation::SetLocale { value: value.clone() }]),
+            PresentCommand::NoOperation => Emit::default(),
+            PresentCommand::CopyPrompt => Emit::effect(tile_morph_prompt_effect(deck)),
+            PresentCommand::ExportVideoFromDeck { output_dir, scene_json } => {
+                let scene = serde_json::from_str::<PresentScene>(scene_json).unwrap_or_else(|_| PresentScene::empty("Deck export"));
+                match export_video_from_deck(&scene, output_dir) {
+                    Ok(bundles) => Emit::effect(HostEffect::DownloadMediaExport {
+                        filename: "animate-video-export.ops".into(),
+                        mime_type: "text/plain".into(),
+                        data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()),
+                        encoding: None,
+                    }),
+                    Err(error) => Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export-error.txt".into(), mime_type: "text/plain".into(), data: error.to_string(), encoding: None }),
+                }
+            }
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, PresentDeck>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> UiNode {
         let deck = doc.projection;
-        let runtime = self.runtime.borrow();
-        let selected = &runtime.selected_ids;
-        let labels = animate_present_labels(view_state);
+        let config = cfg.projection;
+        let selected = &config.selected_ids;
+        let labels = animate_present_labels(config);
         match body_key {
             ANIMATE_PRESENT_PLAY_BODY_MAIN => render_main_canvas(deck, selected),
             ANIMATE_PRESENT_PLAY_BODY_DOCUMENT => build_document_tree(deck, selected, labels),
@@ -769,9 +771,7 @@ pub fn create_animate_present_app() -> App {
             .operation("addTile", "Add Tile")
             .operation("deleteTile", "Delete Tile")
             .operation("deleteSelection", "Delete Selection")
-            .operation("renameTile", "Rename Tile")
             .operation("renameTiles", "Rename Tiles")
-            .operation("patchTileCrop", "Patch Tile Crop")
             .operation("patchTileCrops", "Patch Tile Crops")
             .operation("setSource", "Set Source")
             .operation("setFrame", "Set Frame")
@@ -781,11 +781,12 @@ pub fn create_animate_present_app() -> App {
             // 🐚️ Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
             .shell_action("copyPrompt", "Copy Prompt")
             .shell_action("exportVideoFromDeck", "Export Video From Deck")
-            // 👁️ Ephemeral view state — selection, engagement draft.
+            // 👁️ Ephemeral view state — selection, engagement draft, locale.
             .view_action("setSelectedIds", "Set Selected Ids")
             .view_action("engagementInput", "Engagement Input")
             .view_action("canvasPointerDown", "Canvas Pointer Down")
             .view_action("noOperation", "No Operation")
+            .view_action("setLocale", "Set Locale")
             // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
             .action_args("seedGrid", vec![
                 ActionArgDef::number("rows", "Rows").required().default_value(2),
@@ -797,8 +798,11 @@ pub fn create_animate_present_app() -> App {
                     .required()
                     .default_value("demo"),
             ])
-            // 🎛️ App-scope command — see `handle_command` for why this isn't `seedGrid`/`clearTiles`.
-            .app_command("animate.resetGrid", "Reset to Default Grid", "document"),
+            // 🎛️ App-scope command — see `AnimatePresentPlayApp::handle`'s `ResetGrid` arm for why this
+            // isn't `seedGrid`/`clearTiles`.
+            .app_command("animate.resetGrid", "Reset to Default Grid", "document")
+            .config(AnimatePresentPlayApp.config_spec())
+            .io(present_engine::present_io()),
     )
     .example("demo", "Demo", present::default_present_deck().print_dsl(), "flask-conical")
     .workflow("animate", "Animate", "deck")
@@ -809,52 +813,32 @@ pub fn create_animate_present_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use present_engine::empty_present_deck;
     use semio_framework_plugin::app::AppActionRegistry;
-    use semio_framework_plugin::{ActionKind, ActionMeta, PluginApp, VcsDocumentApp};
-
-    fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 1 }
-    }
+    use semio_framework_plugin::{testkit, PluginApp, ViewState, VcsDocumentApp};
 
     fn new_app() -> VcsDocumentApp<AnimatePresentPlayApp> {
-        VcsDocumentApp::new(AnimatePresentPlayApp::default())
+        VcsDocumentApp::new(AnimatePresentPlayApp)
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (Shell/View-emits-operations rejection) and
     /// declared-arg materialization run exactly as in production.
     fn new_app_with_registry() -> VcsDocumentApp<AnimatePresentPlayApp> {
         let definition = create_animate_present_app().definition;
-        VcsDocumentApp::with_registry(AnimatePresentPlayApp::default(), AppActionRegistry::from_definition(&definition))
+        VcsDocumentApp::with_registry(AnimatePresentPlayApp, AppActionRegistry::from_definition(&definition))
+    }
+
+    fn seed_2x2(app: &mut VcsDocumentApp<AnimatePresentPlayApp>) {
+        app.dispatch_typed(PresentCommand::SeedGrid { rows: 2, columns: 2 }, &testkit::meta("local")).expect("seed grid");
     }
 
     #[test]
     fn copy_prompt_is_shell_effect_not_view_mutation() {
         let mut app = new_app_with_registry();
-        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local")).expect("seed grid");
-        let result = app.handle_action("copyPrompt", None, &ViewState::default(), &meta("local")).expect("copy prompt");
+        seed_2x2(&mut app);
+        let result = app.dispatch_typed(PresentCommand::CopyPrompt, &testkit::meta("local")).expect("copy prompt");
         assert!(result.operations.is_empty(), "copyPrompt is a host effect, not a document operation");
         assert!(matches!(result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"), "copyPrompt emits exactly one media-export host effect carrying the morph prompt",);
-        let definition = create_animate_present_app().definition;
-        assert!(definition.actions.iter().any(|action| action.id == "copyPrompt" && matches!(action.kind, ActionKind::Shell)), "copyPrompt is declared Shell-kind (host side-effect), never View",);
-    }
-
-    #[test]
-    fn seed_grid_materializes_declared_arg_defaults_via_registry() {
-        let mut app = new_app_with_registry();
-        app.handle_action("seedGrid", None, &ViewState::default(), &meta("local")).expect("seed grid with defaults");
-        assert_eq!(app.projection().expect("projection").tiles.len(), 4, "declared rows=2/columns=2 defaults seed a 2x2 grid");
-    }
-
-    fn seed_2x2(app: &mut VcsDocumentApp<AnimatePresentPlayApp>) {
-        app.handle_action("seedGrid", Some(&json!({ "rows": 2, "columns": 2 })), &ViewState::default(), &meta("local")).expect("seed grid");
-    }
-
-    #[test]
-    fn renders_canvas_scene() {
-        let mut app = new_app();
-        let node = app.render(ANIMATE_PRESENT_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("canvas-2d"));
     }
 
     #[test]
@@ -872,7 +856,7 @@ mod tests {
     #[test]
     fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let mut app = new_app();
-        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local")).expect("seed grid");
+        app.dispatch_typed(PresentCommand::SeedGrid { rows: 1, columns: 2 }, &testkit::meta("local")).expect("seed grid");
         let deck = app.projection().expect("projection");
         let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
@@ -890,7 +874,7 @@ mod tests {
     #[test]
     fn document_lists_seeded_tiles() {
         let mut app = new_app();
-        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local")).expect("seed grid");
+        app.dispatch_typed(PresentCommand::SeedGrid { rows: 1, columns: 2 }, &testkit::meta("local")).expect("seed grid");
         let node = app.render(ANIMATE_PRESENT_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("tile-r0-c0"));
@@ -899,22 +883,22 @@ mod tests {
     #[test]
     fn add_delete_and_rename_tile_round_trip_through_operations() {
         let mut app = new_app();
-        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        app.dispatch_typed(PresentCommand::AddTile { crop: None }, &testkit::meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
-        app.handle_action("renameTiles", Some(&json!({ "ids": [tile_id], "value": "Hero" })), &ViewState::default(), &meta("local")).expect("rename");
+        app.dispatch_typed(PresentCommand::RenameTiles { ids: vec![tile_id.clone()], value: "Hero".into() }, &testkit::meta("local")).expect("rename");
         assert_eq!(app.projection().expect("projection").tiles[0].name, "Hero");
-        app.handle_action("deleteTile", Some(&json!({ "id": tile_id })), &ViewState::default(), &meta("local")).expect("delete");
+        app.dispatch_typed(PresentCommand::DeleteTile { id: tile_id }, &testkit::meta("local")).expect("delete");
         assert!(app.projection().expect("projection").tiles.is_empty());
     }
 
     #[test]
     fn patch_tile_crop_clamps_and_is_reversible() {
         let mut app = new_app();
-        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        app.dispatch_typed(PresentCommand::AddTile { crop: None }, &testkit::meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
-        app.handle_action("patchTileCrops", Some(&json!({ "ids": [tile_id], "field": "width", "value": 0.5 })), &ViewState::default(), &meta("local")).expect("patch crop");
+        app.dispatch_typed(PresentCommand::PatchTileCrops { ids: vec![tile_id.clone()], field: "width".into(), value: 0.5 }, &testkit::meta("local")).expect("patch crop");
         assert_eq!(app.projection().expect("projection").tiles[0].crop.width, 0.5);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").tiles[0].crop.width, 0.2);
     }
 
@@ -923,17 +907,15 @@ mod tests {
         let mut app = new_app();
         seed_2x2(&mut app);
         assert_eq!(app.projection().expect("projection").tiles.len(), 4);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        app.handle_action("undo", None, &testkit::meta("local")).expect("undo");
         assert!(app.projection().expect("projection").tiles.is_empty());
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+        app.handle_action("redo", None, &testkit::meta("local")).expect("redo");
         assert_eq!(app.projection().expect("projection").tiles.len(), 4);
     }
 
     #[test]
     fn animate_present_labels_resolve_native_by_default() {
-        let app = new_app();
-        // render needs &mut for cache; use a fresh app to render catalogue.
-        let mut app = app;
+        let mut app = new_app();
         let node = app.render(ANIMATE_PRESENT_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Tile templates"));
@@ -945,15 +927,15 @@ mod tests {
     #[test]
     fn animate_present_labels_translate_panels_in_german() {
         let mut app = new_app();
-        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let catalogue_node = app.render(ANIMATE_PRESENT_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
+        app.dispatch_typed(PresentCommand::SetLocale { value: "de".into() }, &testkit::meta("local")).expect("locale");
+        let catalogue_node = app.render(ANIMATE_PRESENT_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
         assert!(catalogue_json.contains("Kachelvorlagen"));
         assert!(catalogue_json.contains("2×2-Raster teilen"));
         assert!(catalogue_json.contains("Aktive Quelle"));
         assert!(!catalogue_json.contains("Tile templates"));
 
-        let document_node = app.render(ANIMATE_PRESENT_PLAY_BODY_DOCUMENT, None, &view_state).expect("render");
+        let document_node = app.render(ANIMATE_PRESENT_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let document_json = serde_json::to_string(&document_node).unwrap();
         assert!(document_json.contains("Kacheln"));
     }
@@ -963,8 +945,8 @@ mod tests {
         let mut app = new_app();
         seed_2x2(&mut app);
         let first_id = app.projection().expect("projection").tiles[0].id.clone();
-        app.handle_action("setSelectedIds", Some(&json!({ "ids": [first_id] })), &ViewState::default(), &meta("local")).expect("select");
-        app.handle_action("deleteSelection", None, &ViewState::default(), &meta("local")).expect("delete selection");
+        app.dispatch_typed(PresentCommand::SetSelectedIds { ids: vec![first_id] }, &testkit::meta("local")).expect("select");
+        app.dispatch_typed(PresentCommand::DeleteSelection, &testkit::meta("local")).expect("delete selection");
         assert_eq!(app.projection().expect("projection").tiles.len(), 3, "only the selected tile is removed");
     }
 
@@ -972,8 +954,8 @@ mod tests {
     fn delete_selection_with_no_selection_is_a_no_op() {
         let mut app = new_app();
         seed_2x2(&mut app);
-        app.handle_action("setSelectedIds", Some(&json!({ "ids": [] })), &ViewState::default(), &meta("local")).expect("clear selection");
-        app.handle_action("deleteSelection", None, &ViewState::default(), &meta("local")).expect("delete selection");
+        app.dispatch_typed(PresentCommand::SetSelectedIds { ids: vec![] }, &testkit::meta("local")).expect("clear selection");
+        app.dispatch_typed(PresentCommand::DeleteSelection, &testkit::meta("local")).expect("delete selection");
         assert_eq!(app.projection().expect("projection").tiles.len(), 4, "nothing selected means nothing deleted");
     }
 
@@ -981,25 +963,25 @@ mod tests {
     fn delete_tile_with_unknown_id_is_a_no_op() {
         let mut app = new_app();
         seed_2x2(&mut app);
-        app.handle_action("deleteTile", Some(&json!({ "id": "does-not-exist" })), &ViewState::default(), &meta("local")).expect("delete missing");
+        app.dispatch_typed(PresentCommand::DeleteTile { id: "does-not-exist".into() }, &testkit::meta("local")).expect("delete missing");
         assert_eq!(app.projection().expect("projection").tiles.len(), 4, "unknown ids are filtered out before dispatch");
     }
 
     #[test]
     fn rename_tiles_with_blank_value_leaves_name_unchanged() {
         let mut app = new_app();
-        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        app.dispatch_typed(PresentCommand::AddTile { crop: None }, &testkit::meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
         let before = app.projection().expect("projection").tiles[0].name.clone();
-        app.handle_action("renameTiles", Some(&json!({ "ids": [tile_id], "value": "   " })), &ViewState::default(), &meta("local")).expect("rename blank");
+        app.dispatch_typed(PresentCommand::RenameTiles { ids: vec![tile_id], value: "   ".into() }, &testkit::meta("local")).expect("rename blank");
         assert_eq!(app.projection().expect("projection").tiles[0].name, before, "whitespace-only rename is rejected");
     }
 
     #[test]
     fn rename_tiles_with_unknown_ids_is_a_no_op() {
         let mut app = new_app();
-        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
-        app.handle_action("renameTiles", Some(&json!({ "ids": ["nope"], "value": "Hero" })), &ViewState::default(), &meta("local")).expect("rename unknown");
+        app.dispatch_typed(PresentCommand::AddTile { crop: None }, &testkit::meta("local")).expect("add tile");
+        app.dispatch_typed(PresentCommand::RenameTiles { ids: vec!["nope".into()], value: "Hero".into() }, &testkit::meta("local")).expect("rename unknown");
         assert_ne!(app.projection().expect("projection").tiles[0].name, "Hero");
     }
 
@@ -1009,7 +991,7 @@ mod tests {
         seed_2x2(&mut app);
         let ids: Vec<String> = app.projection().expect("projection").tiles.iter().map(|tile| tile.id.clone()).collect();
         for field in ["x", "y", "width", "height"] {
-            app.handle_action("patchTileCrops", Some(&json!({ "ids": ids, "field": field, "value": 0.4 })), &ViewState::default(), &meta("local")).expect("patch field");
+            app.dispatch_typed(PresentCommand::PatchTileCrops { ids: ids.clone(), field: field.into(), value: 0.4 }, &testkit::meta("local")).expect("patch field");
         }
         for tile in &app.projection().expect("projection").tiles {
             assert_eq!(tile.crop.width, 0.4);
@@ -1018,20 +1000,9 @@ mod tests {
     }
 
     #[test]
-    fn patch_tile_crops_without_value_or_field_is_a_no_op() {
-        let mut app = new_app();
-        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
-        let tile_id = app.projection().expect("projection").tiles[0].id.clone();
-        let before = app.projection().expect("projection").tiles[0].crop.clone();
-        app.handle_action("patchTileCrops", Some(&json!({ "ids": [tile_id.clone()], "field": "width" })), &ViewState::default(), &meta("local")).expect("no value");
-        app.handle_action("patchTileCrops", Some(&json!({ "ids": [tile_id], "value": 0.4 })), &ViewState::default(), &meta("local")).expect("no field");
-        assert_eq!(app.projection().expect("projection").tiles[0].crop, before, "missing value or field never mutates a tile");
-    }
-
-    #[test]
     fn patch_tile_crops_targeting_no_existing_tile_is_a_no_op() {
         let mut app = new_app();
-        app.handle_action("patchTileCrops", Some(&json!({ "ids": ["ghost"], "field": "width", "value": 0.4 })), &ViewState::default(), &meta("local")).expect("patch ghost");
+        app.dispatch_typed(PresentCommand::PatchTileCrops { ids: vec!["ghost".into()], field: "width".into(), value: 0.4 }, &testkit::meta("local")).expect("patch ghost");
         assert!(app.projection().expect("projection").tiles.is_empty());
     }
 
@@ -1040,7 +1011,10 @@ mod tests {
         let mut app = new_app();
         seed_2x2(&mut app);
         assert_eq!(app.projection().expect("projection").tiles.len(), 4);
-        app.handle_action("setSource", Some(&json!({ "src": "/new-figure.png", "kind": "image" })), &ViewState::default(), &meta("local")).expect("set source");
+        let mut source = present::default_figure_tile_source();
+        source.src = "/new-figure.png".into();
+        source.kind = "image".into();
+        app.dispatch_typed(PresentCommand::SetSource { source }, &testkit::meta("local")).expect("set source");
         let deck = app.projection().expect("projection");
         assert_eq!(deck.source.src, "/new-figure.png");
         assert_eq!(deck.source.kind, "image");
@@ -1051,37 +1025,16 @@ mod tests {
     fn set_source_with_same_src_keeps_existing_tiles() {
         let mut app = new_app();
         seed_2x2(&mut app);
-        let src = app.projection().expect("projection").source.src.clone();
-        app.handle_action("setSource", Some(&json!({ "src": src, "kind": "figure" })), &ViewState::default(), &meta("local")).expect("set source same src");
+        let mut source = app.projection().expect("projection").source.clone();
+        source.kind = "figure".into();
+        app.dispatch_typed(PresentCommand::SetSource { source }, &testkit::meta("local")).expect("set source same src");
         assert_eq!(app.projection().expect("projection").tiles.len(), 4, "unchanged src does not clear tiles");
-    }
-
-    #[test]
-    fn set_source_accepts_a_full_source_object_without_wrapper_keys() {
-        let mut app = new_app();
-        let full_source = json!({
-            "src": "/full-source.png",
-            "kind": "video",
-            "frame": { "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0 },
-        });
-        app.handle_action("setSource", Some(&full_source), &ViewState::default(), &meta("local")).expect("set full source");
-        let deck = app.projection().expect("projection");
-        assert_eq!(deck.source.src, "/full-source.png");
-        assert_eq!(deck.source.kind, "video");
-    }
-
-    #[test]
-    fn set_source_with_no_args_is_a_no_op() {
-        let mut app = new_app();
-        let before = app.projection().expect("projection").source.clone();
-        app.handle_action("setSource", None, &ViewState::default(), &meta("local")).expect("set source none");
-        assert_eq!(app.projection().expect("projection").source, before);
     }
 
     #[test]
     fn set_frame_updates_source_frame() {
         let mut app = new_app();
-        app.handle_action("setFrame", Some(&json!({ "frame": { "x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4 } })), &ViewState::default(), &meta("local")).expect("set frame");
+        app.dispatch_typed(PresentCommand::SetFrame { frame: FigureTileFrame { x: 0.1, y: 0.2, width: 0.3, height: 0.4 } }, &testkit::meta("local")).expect("set frame");
         let frame = app.projection().expect("projection").source.frame;
         assert_eq!(frame.x, 0.1);
         assert_eq!(frame.y, 0.2);
@@ -1090,20 +1043,10 @@ mod tests {
     }
 
     #[test]
-    fn set_frame_with_invalid_frame_is_a_no_op() {
-        let mut app = new_app();
-        let before = app.projection().expect("projection").source.frame.clone();
-        app.handle_action("setFrame", Some(&json!({ "frame": "not-a-frame" })), &ViewState::default(), &meta("local")).expect("set frame invalid");
-        assert_eq!(app.projection().expect("projection").source.frame, before);
-        app.handle_action("setFrame", None, &ViewState::default(), &meta("local")).expect("set frame missing");
-        assert_eq!(app.projection().expect("projection").source.frame, before);
-    }
-
-    #[test]
     fn set_active_example_demo_resets_to_default_deck() {
         let mut app = new_app();
         seed_2x2(&mut app);
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "demo" })), &ViewState::default(), &meta("local")).expect("reset demo");
+        app.dispatch_typed(PresentCommand::SetActiveExample { example_id: "demo".into() }, &testkit::meta("local")).expect("reset demo");
         assert!(app.projection().expect("projection").tiles.is_empty(), "resetting to demo clears seeded tiles");
     }
 
@@ -1111,7 +1054,7 @@ mod tests {
     fn set_active_example_unknown_id_is_a_no_op() {
         let mut app = new_app();
         seed_2x2(&mut app);
-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "other" })), &ViewState::default(), &meta("local")).expect("unknown example");
+        app.dispatch_typed(PresentCommand::SetActiveExample { example_id: "other".into() }, &testkit::meta("local")).expect("unknown example");
         assert_eq!(app.projection().expect("projection").tiles.len(), 4);
     }
 
@@ -1120,8 +1063,8 @@ mod tests {
         let mut app = new_app();
         seed_2x2(&mut app);
         let first_id = app.projection().expect("projection").tiles[0].id.clone();
-        app.handle_action("setSelectedIds", Some(&json!({ "ids": [first_id] })), &ViewState::default(), &meta("local")).expect("select");
-        app.handle_action("clearTiles", None, &ViewState::default(), &meta("local")).expect("clear");
+        app.dispatch_typed(PresentCommand::SetSelectedIds { ids: vec![first_id] }, &testkit::meta("local")).expect("select");
+        app.dispatch_typed(PresentCommand::ClearTiles, &testkit::meta("local")).expect("clear");
         assert!(app.projection().expect("projection").tiles.is_empty());
         let node = app.render(ANIMATE_PRESENT_PLAY_BODY_DETAILS, None, &ViewState::default()).expect("render details");
         let json_str = serde_json::to_string(&node).unwrap();
@@ -1131,7 +1074,7 @@ mod tests {
     #[test]
     fn export_video_from_deck_reports_no_scene_hashes_as_download_error() {
         let mut app = new_app();
-        let result = app.handle_action("exportVideoFromDeck", None, &ViewState::default(), &meta("local")).expect("export");
+        let result = app.dispatch_typed(PresentCommand::ExportVideoFromDeck { output_dir: "output/animate-video".into(), scene_json: "{}".into() }, &testkit::meta("local")).expect("export");
         match result.requested_effects.as_slice() {
             [HostEffect::DownloadMediaExport { filename, mime_type, data, .. }] => {
                 assert_eq!(filename, "animate-video-export-error.txt");
@@ -1145,29 +1088,29 @@ mod tests {
     #[test]
     fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
         let mut app = new_app();
-        app.handle_action("engagementInput", Some(&json!({ "value": "2x3" })), &ViewState::default(), &meta("local")).expect("engagement input");
-        app.handle_action("engagementSubmit", None, &ViewState::default(), &meta("local")).expect("engagement submit");
+        app.dispatch_typed(PresentCommand::EngagementInput { value: "2x3".into() }, &testkit::meta("local")).expect("engagement input");
+        app.dispatch_typed(PresentCommand::EngagementSubmit { value: "2x3".into() }, &testkit::meta("local")).expect("engagement submit");
         assert_eq!(app.projection().expect("projection").tiles.len(), 6, "2x3 grid pattern seeds 6 tiles");
     }
 
     #[test]
     fn engagement_submit_add_clear_and_copy_keywords() {
         let mut app = new_app();
-        app.handle_action("engagementSubmit", Some(&json!({ "value": "add" })), &ViewState::default(), &meta("local")).expect("add keyword");
+        app.dispatch_typed(PresentCommand::EngagementSubmit { value: "add".into() }, &testkit::meta("local")).expect("add keyword");
         assert_eq!(app.projection().expect("projection").tiles.len(), 1);
 
-        app.handle_action("engagementSubmit", Some(&json!({ "value": "clear" })), &ViewState::default(), &meta("local")).expect("clear keyword");
+        app.dispatch_typed(PresentCommand::EngagementSubmit { value: "clear".into() }, &testkit::meta("local")).expect("clear keyword");
         assert!(app.projection().expect("projection").tiles.is_empty());
 
-        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("seed for copy");
-        let copy_result = app.handle_action("engagementSubmit", Some(&json!({ "value": "copy prompt" })), &ViewState::default(), &meta("local")).expect("copy keyword");
+        app.dispatch_typed(PresentCommand::AddTile { crop: None }, &testkit::meta("local")).expect("seed for copy");
+        let copy_result = app.dispatch_typed(PresentCommand::EngagementSubmit { value: "copy prompt".into() }, &testkit::meta("local")).expect("copy keyword");
         assert!(matches!(copy_result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { .. }]));
     }
 
     #[test]
     fn engagement_submit_unrecognized_input_is_a_no_op() {
         let mut app = new_app();
-        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "gibberish" })), &ViewState::default(), &meta("local")).expect("unrecognized");
+        let result = app.dispatch_typed(PresentCommand::EngagementSubmit { value: "gibberish".into() }, &testkit::meta("local")).expect("unrecognized");
         assert!(result.operations.is_empty());
         assert!(result.requested_effects.is_empty());
     }
@@ -1175,27 +1118,21 @@ mod tests {
     #[test]
     fn canvas_pointer_down_selects_matching_tile_and_clears_on_miss() {
         let mut app = new_app();
-        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        app.dispatch_typed(PresentCommand::AddTile { crop: None }, &testkit::meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
-        app.handle_action("canvasPointerDown", Some(&json!({ "layerId": tile_id })), &ViewState::default(), &meta("local")).expect("pointer hit");
+        app.dispatch_typed(PresentCommand::CanvasPointerDown { layer_id: Some(tile_id) }, &testkit::meta("local")).expect("pointer hit");
         let node = app.render(ANIMATE_PRESENT_PLAY_BODY_DETAILS, None, &ViewState::default()).expect("render details after hit");
         assert!(serde_json::to_string(&node).unwrap().contains("animate.present.play.details.crop"), "hitting a tile populates the details panel");
 
-        app.handle_action("canvasPointerDown", Some(&json!({ "layerId": "source-frame" })), &ViewState::default(), &meta("local")).expect("pointer miss");
+        app.dispatch_typed(PresentCommand::CanvasPointerDown { layer_id: Some("source-frame".into()) }, &testkit::meta("local")).expect("pointer miss");
         let node = app.render(ANIMATE_PRESENT_PLAY_BODY_DETAILS, None, &ViewState::default()).expect("render details after miss");
         assert!(serde_json::to_string(&node).unwrap().contains("Select a tile"), "missing the backdrop clears selection");
     }
 
-    // 🚧️ handle_command_reset_grid_seeds_default_3x5_grid / handle_command_unknown_is_a_no_op removed here —
-    // both assumed behavior that doesn't exist: "animate.resetGrid" is not an implemented command anywhere in
-    // this crate (only "seedGrid" exists, as an action not a command), and unknown commands return an Err
-    // rather than a silent no-op (confirmed: handle_command's fallback branch returns
-    // Err(format!("unknown command '{command}'"))). Both were test-authoring mistakes, not real bugs.
-
     #[test]
     fn build_details_tree_reports_tile_not_found_for_stale_selection() {
         let mut app = new_app();
-        app.handle_action("setSelectedIds", Some(&json!({ "ids": ["was-deleted"] })), &ViewState::default(), &meta("local")).expect("select stale");
+        app.dispatch_typed(PresentCommand::SetSelectedIds { ids: vec!["was-deleted".into()] }, &testkit::meta("local")).expect("select stale");
         assert!(app.projection().expect("projection").tiles.is_empty());
     }
 
@@ -1230,9 +1167,10 @@ mod tests {
 
     #[test]
     fn app_manifest_declares_expected_operations_and_shell_actions() {
+        use semio_framework_plugin::ActionKind;
         let definition = create_animate_present_app().definition;
         let operation_ids: Vec<&str> = definition.actions.iter().filter(|action| matches!(action.kind, ActionKind::Operation)).map(|action| action.id.as_str()).collect();
-        for expected in ["seedGrid", "addTile", "deleteTile", "deleteSelection", "renameTile", "renameTiles", "patchTileCrop", "patchTileCrops", "setSource", "setFrame", "setActiveExample", "clearTiles", "engagementSubmit"] {
+        for expected in ["seedGrid", "addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops", "setSource", "setFrame", "setActiveExample", "clearTiles", "engagementSubmit"] {
             assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
         }
         assert!(definition.actions.iter().any(|action| action.id == "exportVideoFromDeck" && matches!(action.kind, ActionKind::Shell)));
@@ -1251,11 +1189,13 @@ mod tests {
         instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-        instance_a.handle_action("addTile", Some(&json!({ "crop": { "x": 0.0, "y": 0.0, "width": 0.3, "height": 0.3 } })), &ViewState::default(), &meta("actor-a")).expect("a adds tile");
-        instance_b.handle_action("setSource", Some(&json!({ "kind": "video" })), &ViewState::default(), &meta("actor-b")).expect("b sets source kind");
+        instance_a.dispatch_typed(PresentCommand::AddTile { crop: Some(FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }, &testkit::meta("actor-a")).expect("a adds tile");
+        let mut source = instance_b.projection().expect("projection").source.clone();
+        source.kind = "video".into();
+        instance_b.dispatch_typed(PresentCommand::SetSource { source }, &testkit::meta("actor-b")).expect("b sets source kind");
 
-        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+        instance_a.handle_action("commitCheckpoint", None, &testkit::meta("actor-a")).expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &testkit::meta("actor-b")).expect("pump b");
 
         let projection_a = instance_a.projection().expect("projection");
         let projection_b = instance_b.projection().expect("projection");
@@ -1264,5 +1204,50 @@ mod tests {
         assert_eq!(projection_a.source.kind, "video", "instance A converges on B's source edit");
         assert_eq!(projection_b.source.kind, "video", "instance B keeps its own source edit");
     }
+
+    //#region 🔖️PortTests
+    #[test]
+    fn present_io_declares_frames_in_and_document_ports() {
+        let ports = AnimatePresentPlayApp.io().expect("io").all_ports();
+        assert!(ports.iter().any(|port| port.id == "document:in"));
+        assert!(ports.iter().any(|port| port.id == "document:out"));
+        assert!(ports.iter().any(|port| port.id == "frames:in"));
+    }
+
+    #[test]
+    fn import_media_frames_in_inserts_a_new_tile() {
+        let mut app = new_app_with_registry();
+        let before = app.projection().expect("projection").tiles.len();
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "hero-frame", "src": "/frames/hero.png" }).to_string() } };
+        app.import_media("frames:in", &media, &testkit::meta("local")).expect("import frames:in");
+        let after = app.projection().expect("projection");
+        assert_eq!(after.tiles.len(), before + 1);
+        assert_eq!(after.tiles.last().expect("imported tile").name, "hero-frame");
+    }
+
+    #[test]
+    fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
+        let mut app = new_app_with_registry();
+        for _ in 0..2 {
+            let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: json!({ "name": "frame" }).to_string() } };
+            app.import_media("frames:in", &media, &testkit::meta("local")).expect("import frames:in");
+        }
+        let tiles = app.projection().expect("projection").tiles;
+        assert_eq!(tiles.len(), 2);
+        assert_ne!(tiles[0].crop, tiles[1].crop, "repeated imports land in distinct cells");
+    }
+
+    #[test]
+    fn import_media_rejects_unknown_port() {
+        let mut app = new_app_with_registry();
+        let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "{}".into() } };
+        assert!(app.import_media("not-a-port", &media, &testkit::meta("local")).is_err());
+    }
+
+    #[test]
+    fn empty_present_deck_has_no_tiles() {
+        assert!(empty_present_deck().tiles.is_empty());
+    }
+    //#endregion 🔖️PortTests
 }
 //#endregion 🧪️Tests

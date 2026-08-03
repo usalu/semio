@@ -1,0 +1,302 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-playbook v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust)
+   Compiling semio-s-plugin-trinity-ram v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-writer v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/⚡️implementation/🦀️rust)
+   Compiling semio-framework-editor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-writer-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-s-plugin-trinity-jack v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust)
+warning: constant `CLAUSE_KEYWORDS` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:482:7
+    |
+482 | const CLAUSE_KEYWORDS: &[&str] = &["MATCH", "WHERE", "RETURN", "CREATE", "DELETE", "SET", "MERGE"];
+    |       ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `LOGIC_KEYWORDS` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:483:7
+    |
+483 | const LOGIC_KEYWORDS: &[&str] = &["AND", "OR"];
+    |       ^^^^^^^^^^^^^^
+
+warning: function `completion_prefix` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:485:4
+    |
+485 | fn completion_prefix(source: &str, cursor: usize) -> String {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `tokens_before_cursor` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:500:4
+    |
+500 | fn tokens_before_cursor<'a>(tokens: &'a [SpannedToken], cursor: usize) -> &'a [SpannedToken] {
+    |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `after_colon_kind_context` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:511:4
+    |
+511 | fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `after_dot_property_context` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:530:4
+    |
+530 | fn after_dot_property_context(source: &str, cursor: usize) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `open_bracket_kind` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:539:4
+    |
+539 | fn open_bracket_kind(tokens: &[SpannedToken]) -> Option<char> {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `collect_bound_vars` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:556:4
+    |
+556 | fn collect_bound_vars(tokens: &[SpannedToken]) -> BTreeSet<String> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `in_where_clause` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:572:4
+    |
+572 | fn in_where_clause(tokens: &[SpannedToken]) -> bool {
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `graph_node_kinds` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:585:4
+    |
+585 | fn graph_node_kinds(graph: &Graph) -> Vec<String> {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `graph_edge_kinds` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:596:4
+    |
+596 | fn graph_edge_kinds(graph: &Graph) -> Vec<String> {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `graph_property_names` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:607:4
+    |
+607 | fn graph_property_names(graph: &Graph) -> Vec<String> {
+    |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `filter_completions` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:617:4
+    |
+617 | fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Option<String>)>, prefix: &str) -> Vec<Completion> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `collect_pattern_vars` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:641:4
+    |
+641 | fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
+    |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `collect_clause_bound_vars` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:653:4
+    |
+653 | fn collect_clause_bound_vars(clauses: &[Clause]) -> BTreeSet<String> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `collect_referenced_vars` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:669:4
+    |
+669 | fn collect_referenced_vars(clauses: &[Clause]) -> Vec<(String, usize, usize)> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `collect_expr_vars` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:698:4
+    |
+698 | fn collect_expr_vars(expr: &Expr, refs: &mut Vec<(String, usize, usize)>) {
+    |    ^^^^^^^^^^^^^^^^^
+
+warning: function `semantic_lints` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:708:4
+    |
+708 | fn semantic_lints(graph: &Graph, query: &Query, source: &str) -> Vec<Diagnostic> {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `find_kind_span` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:781:4
+    |
+781 | fn find_kind_span(source: &str, kind: &str) -> Option<(usize, usize)> {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `find_ident_span` is never used
+   --> ✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust/📦️lib.rs:787:4
+    |
+787 | fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
+    |    ^^^^^^^^^^^^^^^
+
+   Compiling semio-s-app-writer-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-playbook v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/⚡️implementation/🦀️rust)
+warning: `semio-s-plugin-trinity-jack` (lib) generated 20 warnings
+   Compiling semio-s-app-playbook-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-playbook-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-writer-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-playbook-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-writer-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-playbook-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+warning: unused doc comment
+  --> ✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:46:1
+   |
+46 | /// 🗣️ Complete UI label set for the playbook-play app; one field per label makes every locale combination compile-checked.
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+   |
+   = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+   = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-s-app-writer-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+warning: unused import: `WriterCamera`
+ --> ✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:9:14
+  |
+9 | use writer::{WriterCamera, WriterProjection, WRITER_DOCUMENT_SCHEMA};
+  |              ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-app-playbook-ui` (lib) generated 1 warning
+   Compiling semio-s-plugin-playbook v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/📖️playbook/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust)
+warning: `semio-s-app-writer-ui` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-writer-ui` to apply 1 suggestion)
+   Compiling semio-s-plugin-writer v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/✒️writer/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust)
+warning: `semio-s-app-playbook-ui` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized] target(s) in 19.02s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_playbook_engine-a474a99f6d0cadf1)
+
+running 3 tests
+test tests::playbook_io_declares_the_extra_chapters_in_port ... ok
+test tests::playbook_config_dsl_round_trips_default_and_populated ... ok
+test tests::playbook_config_pack_round_trips ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_playbook_op-427d7064ad959108)
+
+running 2 tests
+test tests::playbook_config_operation_backwards_restores_pre_state ... ok
+test tests::playbook_config_operation_binary_matches_text ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_playbook_protocol-03dd82f9fdd59724)
+
+running 2 tests
+test tests::op_binary_round_trips ... ok
+test tests::playbook_command_binary_round_trips_for_every_shape ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_playbook_ui-6738f7e53d59ff2e)
+
+running 13 tests
+test tests::import_media_rejects_unknown_ports_and_malformed_payloads ... ok
+test tests::playbook_io_declares_the_extra_chapters_in_port_and_its_own_kind ... ok
+test tests::import_media_creates_the_imported_step_and_a_note_block ... ok
+test tests::import_media_reuses_the_imported_step_on_a_second_import ... ok
+test tests::render_builder_emits_playbook_list_component_scene ... ok
+test tests::playbook_play_app_declares_builder_window ... ok
+test tests::undo_redo_round_trip_through_the_wrapper ... ok
+test tests::set_selection_is_a_view_command_without_operations ... ok
+test tests::add_step_action_grows_projection ... ok
+test tests::update_playbook_title_coalesces_into_one_undo_step ... ok
+test tests::add_block_materializes_declared_kind_default ... ok
+test tests::add_block_action_appends_and_selects_block ... ok
+test tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_writer_engine-327ee3af171539cf)
+
+running 11 tests
+test tests::newline_gates_disallow_inside_token ... ok
+test tests::placeholders_suggest_expr_after_and ... ok
+test tests::placeholders_suggest_label_after_colon ... ok
+test tests::symbol_at_label_position_is_node_kind_not_variable ... ok
+test tests::newline_gates_disallow_before_dot ... ok
+test tests::selection_maps_to_smallest_containing_ast_node ... ok
+test tests::symbol_occurrences_find_bound_variable_uses ... ok
+test tests::parses_full_jack_ast_shape ... ok
+test tests::newline_gates_allow_after_match_close_paren ... ok
+test tests::jack_completions_use_example_fixture ... ok
+test tests::selectable_spans_include_var_label_and_property_access ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_writer_op-9fd816917ffa1fcd)
+
+running 8 tests
+test tests::writer_config_operation_backwards_restores_pre_state ... ok
+test tests::writer_document_vcs_undoes_text_operation ... ok
+test tests::writer_document_vcs_replays_document_operation ... ok
+test tests::writer_document_vcs_replays_text_operations ... ok
+test tests::writer_op_text_round_trips_every_variant ... ok
+test tests::writer_config_pack_round_trips ... ok
+test tests::writer_config_operation_binary_matches_text ... ok
+test tests::writer_config_dsl_round_trips_default_and_populated ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_writer_protocol-81da4163a3fae1b3)
+
+running 3 tests
+test tests::writer_document_text_round_trips_through_the_store ... ok
+test tests::op_binary_round_trips_and_agrees_with_text ... ok
+test tests::writer_command_binary_matches_text_for_every_shape ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_writer_ui-3913dc3e3944f0bb)
+
+running 27 tests
+test tests::export_media_rejects_unknown_ports ... ok
+test tests::export_media_text_out_projects_the_document_as_a_chapter ... ok
+test tests::renders_text_editor_scene ... ok
+test tests::renders_catalogue_panel ... ok
+test tests::format_document_without_change_emits_no_operation ... ok
+test tests::engagement_submit_parses_font_size ... ok
+test tests::engagement_submit_parses_normalized_shell_drafts ... ok
+test tests::lint_is_a_view_action_and_example_default_materializes ... ok
+test tests::renders_document_tree_for_jack ... ok
+test tests::commit_rename_renames_all_spans_at_the_config_selection ... ok
+test tests::set_active_example_loads_dag_jack_fixture ... ok
+test tests::set_active_example_falls_back_to_empty_document ... ok
+test tests::set_active_example_loads_jack_fixture ... ok
+test tests::set_text_action_updates_projection ... ok
+test tests::set_camera_command_writes_config_not_operations ... ok
+test tests::window_engagements_expose_format_lint_placeholder ... ok
+test tests::set_text_undo_redo_round_trips_through_the_wrapper ... ok
+test tests::view_action_emits_no_operations ... ok
+test tests::window_engagements_include_format_and_lint_possible_engagements ... ok
+test tests::format_document_reformats_jack_query ... ok
+test tests::window_measures_expose_font_line_height_tab_and_toggle ... ok
+test tests::writer_io_declares_the_extra_text_out_port ... ok
+test tests::text_edit_burst_coalesces_into_one_undo_step ... ok
+test tests::writer_labels_resolve_native_by_default ... ok
+test tests::writer_labels_resolve_german_locale ... ok
+test tests::scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack ... ok
+test tests::set_ast_hover_updates_tree_highlight_and_scene_hover ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests ../../../../../../../✏️s/🔌️plugin/📖️playbook/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_plugin_playbook-1019cc88835e8c5e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests ../../../../../../../✏️s/🔌️plugin/✒️writer/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_plugin_writer-3bdfd0158263704d)
+
+running 3 tests
+test __semio_plugin_sanity_constitutional_crates_present ... ok
+test tests::manifest_includes_dag_jack_example ... ok
+test __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

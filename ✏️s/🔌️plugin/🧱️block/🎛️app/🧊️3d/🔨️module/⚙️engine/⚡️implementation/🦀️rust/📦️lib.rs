@@ -1,6 +1,7 @@
 //! 🏙️ Block 3D app — headless compute (constitutional: engine).
 
-use block_3d::Block3dDefinition;
+use block_3d::{Block3dDefinition, BLOCK_3D_SCHEMA};
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 //#region 🔖️DocumentHelpers
@@ -68,6 +69,77 @@ pub fn puzzle3d_catalog_fragment(definition: &Block3dDefinition, wanted_tags: &[
 }
 //#endregion 🔖️PuzzleCatalogFragment
 
+//#region 🔖️Config
+/// 🧮️ `Block3dPlayApp`'s real `DocumentApp::Config` — B1 pure-trait conversion. Absorbs the former
+/// `Block3dPlayApp` `RefCell` runtime fields (`selected_ids`/`active_representation_id`) plus the
+/// locale this app now resolves itself (mirrors `shooting_engine::ShootingConfig::locale`). `wanted_tags`
+/// is new — the tag filter `export_media("catalog:out", ..)` (see `🖱️ui`) is supposed to source
+/// `puzzle3d_catalog_fragment`'s `wanted_tags` argument from; `DocumentApp::export_media`'s landed
+/// signature (`🧰️framework/…/🔌️plugin`) doesn't thread `ConfigView` through yet (only `doc`), so
+/// today's `export_media` always calls the fragment builder with an empty (all-tags) filter — this
+/// field stays here, ready for whenever a later wave threads `cfg` into `export_media`, or for any
+/// other in-process reader of the config record.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "block3dcfg")]
+#[dsl(layout = "lines")]
+pub struct Block3dConfig {
+    /// 👁️ Multi-selected row ids in the document tree — was `Block3dPlayApp::selected_ids`.
+    pub selected_ids: Vec<String>,
+    /// 👁️ The representation shown in the inspector's representation select — was
+    /// `Block3dPlayApp::active_representation_id`.
+    pub active_representation_id: Option<String>,
+    /// 🏷️ Tag filter for `puzzle3d_catalog_fragment`'s active-representation resolution — see the
+    /// struct doc above for why `export_media` can't read it yet. Empty means "all tags".
+    pub wanted_tags: Vec<String>,
+    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState.locale`.
+    pub locale: String,
+}
+
+impl Default for Block3dConfig {
+    fn default() -> Self {
+        Self { selected_ids: Vec::new(), active_representation_id: None, wanted_tags: Vec::new(), locale: "en-US".into() }
+    }
+}
+
+impl store::ConfigRecord for Block3dConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `block_3d_op::Block3dConfigOperation` — lives here (not in
+/// `block_3d_op`) since `protocol::OperationDiff`/`Block3dConfig` are both foreign to that crate (the
+/// orphan rule needs one local type); mirrors `shooting_engine`'s identical pattern.
+impl protocol::OperationDiff<Block3dConfig> for Block3dConfig {
+    fn apply(&self, _base: &Block3dConfig) -> Block3dConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ `Block3dPlayApp`'s typed media I/O surface (`AppDefinition.io`) — the implicit document ports
+/// (`Kit×Type`, matching the `"3d.block"` artifact kind) plus the flagship `"catalog:out"` port this
+/// ticket adds: the puzzle3d seam that finally gives `puzzle3d_catalog_fragment` a real caller (see
+/// `🖱️ui`'s `Block3dPlayApp::export_media`).
+pub fn block3d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo::from_document(
+        BLOCK_3D_SCHEMA,
+        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        semio_framework_plugin::ArtifactPresentation { id: "3d.block".into(), name: "Object Kind".into(), dimension: "3d".into(), component_kind: "block3d".into() },
+    )
+    .with_ports(vec![semio_framework_plugin::MediaPortSpec {
+        id: "catalog:out".into(),
+        label: "Kit Catalog".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        kind_id: Some("kit.catalog".into()),
+        required: false,
+        multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+    }])
+}
+//#endregion 🔖️Io
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -96,6 +168,28 @@ mod tests {
         let fragment = puzzle3d_catalog_fragment(&definition, &[]);
         assert_eq!(fragment["objectKinds"][0]["id"], "capsule");
         assert_eq!(fragment["objectKinds"][0]["vortices"][0]["vortexKind"], "door");
+    }
+
+    #[test]
+    fn block3d_config_default_has_no_selection_and_all_tags() {
+        let config = Block3dConfig::default();
+        assert!(config.selected_ids.is_empty());
+        assert!(config.active_representation_id.is_none());
+        assert!(config.wanted_tags.is_empty());
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[test]
+    fn block3d_io_declares_the_catalog_out_port() {
+        let io = block3d_io();
+        assert_eq!(io.document_schema, BLOCK_3D_SCHEMA);
+        let ports = io.all_ports();
+        assert!(ports.iter().any(|port| port.id == "document:in"));
+        assert!(ports.iter().any(|port| port.id == "document:out"));
+        let catalog = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
+        assert_eq!(catalog.kind_id.as_deref(), Some("kit.catalog"));
+        assert_eq!(catalog.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert_eq!(catalog.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
     }
 }
 //#endregion 🧪️Tests

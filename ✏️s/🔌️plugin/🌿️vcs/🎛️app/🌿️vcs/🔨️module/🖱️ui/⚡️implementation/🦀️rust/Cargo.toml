@@ -14,6 +14,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🌿️vcs/🎛️app/�
 vcs = { path = "../../../../../../../../../✏️s/🔌️plugin/🌿️vcs/🎛️app/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-s-app-vcs" }
 vcs_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🌿️vcs/🎛️app/🌿️vcs/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-vcs-engine" }
 vcs_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🌿️vcs/🎛️app/🌿️vcs/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-vcs-op" }
+vcs_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🌿️vcs/🎛️app/🌿️vcs/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-vcs-protocol" }
 vcs_kernel = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }

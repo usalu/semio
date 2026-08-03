@@ -4,11 +4,12 @@ use norm_core::{CheckReport, NormFamily, NormHost, SetDocumentOperation};
 #[cfg(test)]
 use semio_framework_plugin::testkit;
 use semio_framework_plugin::{
-    create_default_layout, ui_stack_vertical, ui_text, ActionEmit, App, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, UiNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    create_default_layout, ui_stack_vertical, ui_text, App, AppIo, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType,
+    OsMediaCapability, PanelGroup, ArtifactKindSpec, PortMultiplicity, SurfaceKind, UiNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use serde::Serialize;
-use serde_json::Value;
+use protocol::{Operation, OperationDiff};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
 fn render_report(report: &CheckReport) -> UiNode {
@@ -30,6 +31,105 @@ fn render_summary<F: NormFamily>(host: &NormHost<F>) -> UiNode {
 }
 //#endregion 🔖️Shared
 
+//#region 🔖️Config
+/// 🧮️ B1: shared `DocumentApp::Config` for every norm family — all fifteen apps have the identical
+/// shape (one field: which `CheckReport::checks` row `BODY_INSPECTION` currently points at, previously
+/// hardcoded to `report.checks.first()`), so unlike `shooting`'s per-app `ShootingConfig` this is ONE
+/// type reused by every `define_norm_family_app!` expansion rather than duplicated fifteen times.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "normcfg")]
+#[dsl(layout = "lines")]
+pub struct NormConfig {
+    /// 👁️ Which `CheckReport::checks` row `BODY_INSPECTION` renders — `None` (the default) means "the
+    /// first check", matching the pre-B1 hardcoded `report.checks.first()`.
+    pub selected_check_index: Option<u32>,
+}
+
+impl store::ConfigRecord for NormConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `NormConfigOperation` — mirrors `shooting_engine::ShootingConfig`'s
+/// own `OperationDiff` impl (`apply` ignores `base` entirely; `NormConfigOperation::Snapshot` already
+/// carries the full post-op config).
+impl OperationDiff<NormConfig> for NormConfig {
+    fn apply(&self, _base: &NormConfig) -> NormConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+
+/// @emoji 🧮️ `NormConfig`'s operation enum — `Snapshot` is the generic whole-config inverse every other
+/// variant's `backwards()` returns (mirrors `shooting_op::ShootingConfigOperation`'s "restore the
+/// whole-config snapshot from just before it" pattern, the simplest correct inverse for a config this
+/// small); `SetSelectedCheckIndex` is the one real per-field edit every norm family app dispatches.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum NormConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: NormConfig,
+    },
+    #[dsl(key = "selected-check")]
+    SetSelectedCheckIndex { index: Option<u32> },
+}
+
+impl Operation<NormConfig> for NormConfigOperation {
+    type Diff = NormConfig;
+
+    fn diff(&self, base: &NormConfig) -> NormConfig {
+        match self {
+            NormConfigOperation::Snapshot { config } => config.clone(),
+            NormConfigOperation::SetSelectedCheckIndex { index } => NormConfig { selected_check_index: *index, ..base.clone() },
+        }
+    }
+
+    fn backwards(&self, base: &NormConfig) -> Vec<Self> {
+        vec![NormConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ Every norm family's typed media I/O surface — the implicit `document:in`/`document:out` pair
+/// (auto-injected by `AppIo::all_ports`) plus the two extra workflow ports every norm app family gets:
+/// `model:in` (a generic upstream-model input — an honest pass-through, no family `Document` shape has a
+/// generic "raw model" field to receive one into yet) and `report:out` (the computed `CheckReport`,
+/// pinned to this family's own already-declared `computation.norm.{variant}` artifact kind via
+/// `kind_id`). One function serves both the builder's `.io(...)` declaration (`create_app`) and each
+/// generated `DocumentApp::io` override, so the two never drift apart.
+fn norm_io(variant: &str, document_schema: &str, artifact_kind_id: &str) -> AppIo {
+    AppIo {
+        document_schema: document_schema.into(),
+        document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        ports: vec![
+            MediaPortSpec {
+                id: "model:in".into(),
+                label: "Model".into(),
+                direction: MediaPortDirection::In,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: None,
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+            MediaPortSpec {
+                id: "report:out".into(),
+                label: "Report".into(),
+                direction: MediaPortDirection::Out,
+                media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
+                kind_id: Some(artifact_kind_id.into()),
+                required: false,
+                multiplicity: PortMultiplicity::Many,
+            },
+        ],
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: ArtifactPresentation { id: artifact_kind_id.into(), name: variant.into(), dimension: "compliance".into(), component_kind: "norm".into() },
+    }
+}
+//#endregion 🔖️Io
+
 macro_rules! define_norm_family_app {
     ($module:ident, $app_struct:ident, $app_id:literal, $label:literal, $variant:literal, $doc_crate:ident, $op_crate:ident, $family_crate:ident, $family_ty:ident) => {
         pub mod $module {
@@ -49,6 +149,27 @@ macro_rules! define_norm_family_app {
             const BODY_INSPECTION: &str = concat!("norm.", $variant, ".play.inspection");
             const WINDOW_INPUTS: &str = concat!("norm-", $variant, "-inputs");
             const WINDOW_RESULTS: &str = concat!("norm-", $variant, "-results");
+            const ARTIFACT_KIND_ID: &str = concat!("computation.norm.", $variant);
+
+            //#region 🔖️Command
+            /// 🎯️ B1: this family's `DocumentApp::Command` — the SOLE dispatch surface for its own
+            /// behavior. `SetDocument` is a whole-document replace (mirrors the pre-B1 `"setDocument"`
+            /// action), `Evaluate` recomputes in place by recommitting the current projection (mirrors
+            /// `"evaluate"`), and `SetSelectedCheckIndex` is the one real config edit this app family has
+            /// today (drives `BODY_INSPECTION`'s check pointer — see `NormConfig`).
+            #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+            pub enum Command {
+                #[dsl(key = "set-document")]
+                SetDocument {
+                    #[dsl(block)]
+                    document: Document,
+                },
+                #[dsl(key = "evaluate")]
+                Evaluate,
+                #[dsl(key = "selected-check")]
+                SetSelectedCheckIndex { index: Option<u32> },
+            }
+            //#endregion 🔖️Command
 
             #[derive(Default)]
             pub struct $app_struct;
@@ -56,8 +177,9 @@ macro_rules! define_norm_family_app {
             impl DocumentApp for $app_struct {
                 type Projection = Document;
                 type Operation = Operation;
-                type Config = semio_framework_plugin::NoConfig;
-                type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+                type Config = NormConfig;
+                type ConfigOperation = NormConfigOperation;
+                type Command = Command;
 
                 fn app_id(&self) -> &str {
                     $app_id
@@ -67,26 +189,38 @@ macro_rules! define_norm_family_app {
                     concat!("semio.norm.", $variant, "/v1")
                 }
 
+                fn config_schema(&self) -> &str {
+                    concat!("config.norm.", $variant)
+                }
+
                 fn initial_projection(&self) -> Self::Projection {
                     Document::default()
                 }
 
-                fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Self::Projection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<Self::Operation> {
-                    match action {
-                        "setDocument" => {
-                            if let Some(next) = args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<Document>(value.clone()).ok()) {
-                                return ActionEmit::commit(vec![SetDocumentOperation::SetDocument { document: next }], "setDocument");
-                            }
-                        }
-                        "evaluate" => {
-                            return ActionEmit::commit(vec![SetDocumentOperation::SetDocument { document: doc.projection.clone() }], "evaluate");
-                        }
-                        _ => {}
-                    }
-                    ActionEmit::default()
+                fn io(&self) -> Option<AppIo> {
+                    Some(norm_io($variant, self.document_schema(), ARTIFACT_KIND_ID))
                 }
 
-                fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
+                /// 🏷️ Maps each `Command` variant back to the action id it was declared under in
+                /// `create_app` — used by `VcsDocumentApp` for command-log labeling and the registry's
+                /// View/Shell kind-discipline check.
+                fn command_id(&self, command: &Command) -> &str {
+                    match command {
+                        Command::SetDocument { .. } => "setDocument",
+                        Command::Evaluate => "evaluate",
+                        Command::SetSelectedCheckIndex { .. } => "setSelectedCheckIndex",
+                    }
+                }
+
+                fn handle(&self, command: &Command, doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Emit<Operation, NormConfigOperation> {
+                    match command {
+                        Command::SetDocument { document } => Emit::commit(vec![SetDocumentOperation::SetDocument { document: document.clone() }], "setDocument"),
+                        Command::Evaluate => Emit::commit(vec![SetDocumentOperation::SetDocument { document: doc.projection.clone() }], "evaluate"),
+                        Command::SetSelectedCheckIndex { index } => Emit::config(vec![NormConfigOperation::SetSelectedCheckIndex { index: *index }]),
+                    }
+                }
+
+                fn render(&self, body_key: &str, doc: &DocumentView<'_, Document>, cfg: &ConfigView<'_, NormConfig>) -> UiNode {
                     let host = NormHost::<Family>::from_document(doc.projection.clone());
                     match body_key {
                         BODY_INPUTS => render_document_json(&doc.projection),
@@ -94,15 +228,62 @@ macro_rules! define_norm_family_app {
                         BODY_DOCUMENT => render_summary::<Family>(&host),
                         BODY_CATALOGUE => ui_text(format!("{} catalogue", $label)),
                         BODY_INSPECTION => {
-                            if let Some(check) = host.report().checks.first() {
-                                ui_text(format!("{check:?}"))
-                            } else {
-                                ui_text("No checks")
+                            let checks = &host.report().checks;
+                            let index = cfg.projection.selected_check_index.map(|value| value as usize).filter(|index| *index < checks.len()).unwrap_or(0);
+                            match checks.get(index) {
+                                Some(check) => ui_text(format!("{check:?}")),
+                                None => ui_text("No checks"),
                             }
                         }
                         _ => ui_text(format!("Unknown body: {body_key}")),
                     }
                 }
+
+                //#region 🔖️MediaPorts
+                /// 🎞️ `"report:out"` dumps the currently computed `CheckReport`, pinned to this family's
+                /// already-declared `ARTIFACT_KIND_ID`; `"document:out"` replicates the SDK default
+                /// (whole-document pack) since overriding `export_media` shadows it entirely.
+                fn export_media(&self, port: &str, doc: &DocumentView<'_, Document>) -> Result<Media, MediaError> {
+                    if port == "report:out" {
+                        let host = NormHost::<Family>::from_document(doc.projection.clone());
+                        let json = serde_json::to_string(host.report()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                        return Ok(Media { media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: ARTIFACT_KIND_ID.into(), json } });
+                    }
+                    if port != "document:out" {
+                        return Err(MediaError::NotImplemented);
+                    }
+                    let bytes = store::DocumentPack::encode_pack(doc.projection);
+                    Ok(Media {
+                        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                        payload: MediaPayload::Structured { schema: self.document_schema().to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                    })
+                }
+
+                /// 🎞️ `"model:in"` is an honest generic pass-through: a payload that happens to decode as
+                /// this family's own `Document` shape becomes a whole-document replace; anything else is
+                /// accepted but inert (no norm family document has a generic "raw model" field to stash a
+                /// foreign shape into yet — see the ticket's port-recipe notes). `"document:in"`
+                /// replicates the SDK default (decodes the base64 pack).
+                fn import_media(&self, port: &str, media: &Media, _doc: &DocumentView<'_, Document>) -> Result<Emit<Operation, NormConfigOperation>, MediaError> {
+                    if port == "model:in" {
+                        if let MediaPayload::Structured { json, .. } = &media.payload {
+                            if let Ok(document) = serde_json::from_str::<Document>(json) {
+                                return Ok(Emit::operations(vec![SetDocumentOperation::SetDocument { document }]));
+                            }
+                        }
+                        return Ok(Emit::default());
+                    }
+                    if port != "document:in" {
+                        return Err(MediaError::NotImplemented);
+                    }
+                    let MediaPayload::Structured { json, .. } = &media.payload else {
+                        return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
+                    };
+                    let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                    let document = <Document as store::DocumentPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                    Ok(Emit::operations(vec![SetDocumentOperation::SetDocument { document }]))
+                }
+                //#endregion 🔖️MediaPorts
             }
 
             pub fn create_app() -> App {
@@ -110,7 +291,7 @@ macro_rules! define_norm_family_app {
                     App::builder($app_id, $label)
                         .document(["semio", "norm", $variant])
                         .artifact_kind(ArtifactKindSpec {
-                            id: format!("computation.norm.{variant}", variant = $variant),
+                            id: ARTIFACT_KIND_ID.into(),
                             name: $label.into(),
                             source_format: format!("norm.{variant}.document", variant = $variant),
                             component_kind: "norm".into(),
@@ -121,6 +302,7 @@ macro_rules! define_norm_family_app {
                             export_formats: vec![],
                             import_formats: vec![],
                         })
+                        .io(norm_io($variant, concat!("semio.norm.", $variant, "/v1"), ARTIFACT_KIND_ID))
                         .mode("edit", "Edit", "square-pen")
                         .default_mode_id("edit")
                         .window_kind(WINDOW_INPUTS, "Inputs", BODY_INPUTS, SurfaceKind::Canvas2d, "download")
@@ -131,6 +313,7 @@ macro_rules! define_norm_family_app {
                         .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, BODY_INSPECTION)
                         .operation("setDocument", "Set Document")
                         .view_action("evaluate", "Evaluate")
+                        .view_action("setSelectedCheckIndex", "Set Selected Check")
                         .keybinding("mod+z", "undo")
                         .keybinding("mod+shift+z", "redo"),
                 )
@@ -209,9 +392,6 @@ semio_framework_plugin::semio_plugin! {
 mod tests {
     use super::*;
     use ::din4108::Document as Din4108Document;
-    use semio_framework_plugin::PluginApp;
-    use semio_framework_plugin::ViewState;
-    use serde_json::json;
 
     #[test]
     fn fifteen_family_apps_are_registered() {
@@ -240,7 +420,7 @@ mod tests {
     fn din4108_host_backed_report_after_set_document() {
         let mut app = testkit::new_app::<din4108::Din4108PlayApp>();
         let document = Din4108Document { airtightness_n50: 10.0, ..Din4108Document::default() };
-        app.handle_action("setDocument", Some(&json!({ "document": document })), &ViewState::default(), &testkit::meta("local")).expect("set document");
+        app.dispatch_typed(din4108::Command::SetDocument { document }, &testkit::meta("local")).expect("set document");
         let host = NormHost::<din4108_engine::Din4108Family>::from_document(app.projection().expect("projection"));
         assert!(!host.report().checks.is_empty());
     }
@@ -249,7 +429,70 @@ mod tests {
     fn din4108_undo_redo_round_trip() {
         let mut app = testkit::new_app::<din4108::Din4108PlayApp>();
         let document = Din4108Document { psi_times_l_sum: 0.5, ..Din4108Document::default() };
-        testkit::assert_undo_redo_round_trip(&mut app, "setDocument", Some(&json!({ "document": document })), |app| app.projection().expect("projection").psi_times_l_sum, 0.02, 0.5);
+        testkit::assert_undo_redo_round_trip(&mut app, din4108::Command::SetDocument { document }, |app| app.projection().expect("projection").psi_times_l_sum, 0.02, 0.5);
+    }
+
+    /// 🧮️ `SetSelectedCheckIndex` is config-only — it must dispatch cleanly and never touch the document.
+    #[test]
+    fn din4108_selected_check_index_is_a_config_only_edit() {
+        let mut app = testkit::new_app::<din4108::Din4108PlayApp>();
+        let before = app.projection().expect("projection");
+        app.dispatch_typed(din4108::Command::SetSelectedCheckIndex { index: Some(2) }, &testkit::meta("local")).expect("select check");
+        let after = app.projection().expect("projection");
+        assert_eq!(before, after, "a config-only command must never mutate the document");
+    }
+
+    /// 🔌️ Port recipe: every norm family app declares `model:in`/`report:out` alongside the implicit
+    /// document ports, and `report:out` is pinned to this family's already-declared artifact kind.
+    #[test]
+    fn din4108_declares_model_in_and_report_out_ports() {
+        let ports = din4108::create_app().definition.io.ports;
+        assert!(ports.iter().any(|port| port.id == "model:in" && port.direction == MediaPortDirection::In));
+        let report_out = ports.iter().find(|port| port.id == "report:out").expect("report:out declared");
+        assert_eq!(report_out.direction, MediaPortDirection::Out);
+        assert_eq!(report_out.kind_id.as_deref(), Some("computation.norm.din4108"));
+    }
+
+    /// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
+    #[test]
+    fn din4108_report_out_exports_the_computed_check_report() {
+        let mut app = testkit::new_app::<din4108::Din4108PlayApp>();
+        let media = semio_framework_plugin::PluginApp::export_media(&mut app, "report:out").expect("export report:out");
+        let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
+        assert_eq!(schema, "computation.norm.din4108");
+        let report: CheckReport = serde_json::from_str(&json).expect("report json parses");
+        assert!(!report.checks.is_empty());
+    }
+
+    #[test]
+    fn norm_config_dsl_round_trips() {
+        store::test_support::assert_dsl_round_trip(&NormConfig::default());
+        store::test_support::assert_dsl_round_trip(&NormConfig { selected_check_index: Some(3) });
+    }
+
+    #[test]
+    fn norm_config_dsl_pack_equivalence() {
+        store::test_support::assert_dsl_pack_equivalence(&NormConfig::default());
+        store::test_support::assert_dsl_pack_equivalence(&NormConfig { selected_check_index: Some(7) });
+    }
+
+    #[test]
+    fn norm_config_operation_snapshot_is_a_real_inverse() {
+        let base = NormConfig { selected_check_index: Some(1) };
+        let op = NormConfigOperation::SetSelectedCheckIndex { index: Some(5) };
+        let next = op.diff(&base);
+        assert_eq!(next.selected_check_index, Some(5));
+        let backwards = op.backwards(&base);
+        assert_eq!(backwards, vec![NormConfigOperation::Snapshot { config: base.clone() }]);
+        let restored = backwards[0].diff(&next);
+        assert_eq!(restored, base);
+    }
+
+    #[test]
+    fn norm_config_operation_op_text_round_trips() {
+        store::test_support::assert_op_line_round_trip(&NormConfigOperation::SetSelectedCheckIndex { index: Some(2) });
+        store::test_support::assert_op_line_round_trip(&NormConfigOperation::SetSelectedCheckIndex { index: None });
+        store::test_support::assert_op_line_round_trip(&NormConfigOperation::Snapshot { config: NormConfig { selected_check_index: Some(9) } });
     }
 }
 //#endregion 🧪️Tests

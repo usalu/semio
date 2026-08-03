@@ -1,7 +1,8 @@
 //! ⚙️ Note app — headless compute (constitutional: engine).
 
-use note::{NoteBlockNode, NoteDocument, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+use note::{NoteBlockNode, NoteCamera, NoteDocument, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{DwgDrawing, DwgGeometry};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -13,6 +14,63 @@ const SEMIO_NOTE_EXAMPLE_TEXT: &str = note_dsl::SEMIO_NOTE_EXAMPLE_TEXT;
 
 static NOTE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖️Constants
+
+//#region 🔖️Config
+/// 🧮️ Note's real `DocumentApp::Config` — mirrors `shooting_engine::ShootingConfig`'s pilot shape.
+/// Absorbs every field that used to live on the ui crate's `NotePlayRuntime` (selection, hover, the
+/// in-progress engagement-rename input, and the free/live canvas camera) plus the two `ViewState`
+/// fields the note UI actually read (`locale`/`active_utility_id`) — see
+/// `note_ui::NotePlayApp::render`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "notecfg")]
+#[dsl(layout = "lines")]
+pub struct NoteConfig {
+    /// 👁️ Selected block ids — was `NotePlayRuntime::selected_ids`.
+    pub selected_block_ids: Vec<String>,
+    /// 👁️ Hovered block id — was `NotePlayRuntime::hovered_id`.
+    pub hovered_block_id: Option<String>,
+    /// ✏️ In-progress engagement-rename input — was `NotePlayRuntime::engagement_input`.
+    pub engagement_input: String,
+    /// 📷️ The free/live canvas camera — session-only, never a document field. Was
+    /// `NotePlayRuntime::camera`.
+    #[dsl(block)]
+    pub camera: NoteCamera,
+    /// 🧰️ The active canvas utility (select/pencil/eraser/…) — was read off
+    /// `view_state.active_utility_id` (host-pushed `ViewState`, deleted by the pure-trait migration).
+    pub active_utility_id: String,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+impl Default for NoteConfig {
+    fn default() -> Self {
+        Self {
+            selected_block_ids: Vec::new(),
+            hovered_block_id: None,
+            engagement_input: String::new(),
+            camera: NoteCamera::default(),
+            active_utility_id: "selectDirect".into(),
+            locale: "en-US".into(),
+        }
+    }
+}
+
+impl store::ConfigRecord for NoteConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `note_op::NoteConfigOperation` (lives here, not in `note_op`, since
+/// `protocol::OperationDiff`/`NoteConfig` are both foreign to that crate — the orphan rule requires at
+/// least one local type). Mirrors `NoteOperation::SetDocument`'s "whole-document replace" pattern:
+/// `apply` ignores `base` entirely.
+impl protocol::OperationDiff<NoteConfig> for NoteConfig {
+    fn apply(&self, _base: &NoteConfig) -> NoteConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
 
 //#region 🔖️DocumentHelpers
 pub fn create_note_id(prefix: &str) -> String {
@@ -857,6 +915,30 @@ mod tests {
         let document: NoteDocument = serde_json::from_value(value).unwrap();
         assert_eq!(document.schema, NOTE_DOCUMENT_SCHEMA);
         assert!(document.blocks.is_empty());
+    }
+
+    #[test]
+    fn note_config_default_matches_the_pre_migration_runtime_defaults() {
+        let config = NoteConfig::default();
+        assert!(config.selected_block_ids.is_empty());
+        assert!(config.hovered_block_id.is_none());
+        assert_eq!(config.active_utility_id, "selectDirect");
+        assert_eq!(config.locale, "en-US");
+        assert_eq!(config.camera, NoteCamera::default());
+    }
+
+    /// 🧮️ B1 Config dsl/pack round-trip law (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE).
+    #[test]
+    fn note_config_dsl_pack_round_trips() {
+        let config = NoteConfig {
+            selected_block_ids: vec!["text-1".into(), "table-2".into()],
+            hovered_block_id: Some("image-3".into()),
+            engagement_input: "Renaming…".into(),
+            camera: NoteCamera { x: 12.5, y: -4.0, zoom: 2.5 },
+            active_utility_id: "pencil".into(),
+            locale: "de-DE".into(),
+        };
+        store::test_support::assert_dsl_pack_equivalence(&config);
     }
 }
 //#endregion 🧪️Tests

@@ -17,3 +17,4 @@ store = { path = "../../../../../../../../../🧰️framework/🛍️product/�
 
 [dev-dependencies]
 space_shared = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🔨️module/🤝️shared/⚡️implementation/🦀️rust", package = "semio-s-plugin-space-shared" }
+space_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🪐️space/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-space-space-engine" }

@@ -376,6 +376,13 @@ pub struct LayoutDocument {
     pub pages: Vec<Page>,
     #[serde(rename = "printTarget")]
     pub print_target: Option<String>,
+    /// 🔠️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: the last dictionary imported through the
+    /// `fields:in` workflow port (JSON object text, `{ "key": value, ... }`). Layout has no existing
+    /// text-interpolation/field-binding concept for frames/stories, so this is a new named data source
+    /// the layout can reference later (e.g. a future `{{key}}` story-content binding) rather than
+    /// wiring it into rendering today — see `LayoutOperation::SetDataFields`/`layout_ui::import_media`.
+    #[serde(rename = "dataFieldsJson", default, skip_serializing_if = "Option::is_none")]
+    pub data_fields_json: Option<String>,
 }
 //#endregion 🔖️Types
 

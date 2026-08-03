@@ -35,13 +35,13 @@ mod tests {
             "asset-1".into(),
             RasterImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into() },
         );
-        let mut params = serde_json::Map::new();
-        params.insert("brightness".into(), serde_json::json!(0.06));
-        params.insert("label".into(), serde_json::json!("Warm \"Curve\""));
-        params.insert("enabled".into(), serde_json::json!(true));
-        params.insert("fallback".into(), serde_json::Value::Null);
-        params.insert("curves".into(), serde_json::json!([[0.0, 0.0], [0.25, 0.2], [1.0, 1.0]]));
-        params.insert("nested".into(), serde_json::json!({ "inner": 1.5 }));
+        let mut params = BTreeMap::new();
+        params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
+        params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));
+        params.insert("enabled".into(), dsl::to_dsl_value(&serde_json::json!(true)).expect("dsl value"));
+        params.insert("fallback".into(), dsl::DslValue::Null);
+        params.insert("curves".into(), dsl::to_dsl_value(&serde_json::json!([[0.0, 0.0], [0.25, 0.2], [1.0, 1.0]])).expect("dsl value"));
+        params.insert("nested".into(), dsl::to_dsl_value(&serde_json::json!({ "inner": 1.5 })).expect("dsl value"));
         let document = RasterProjection {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),

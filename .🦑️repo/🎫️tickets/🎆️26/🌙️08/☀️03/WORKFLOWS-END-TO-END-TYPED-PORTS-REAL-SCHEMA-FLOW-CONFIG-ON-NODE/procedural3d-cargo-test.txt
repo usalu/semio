@@ -1,0 +1,480 @@
+### cargo test --lib -p semio-s-app-procedural-3d-engine ###
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🗣️dsl/⚡️implementation/🦀️rust)
+warning: function `tessellate_geometry_json_for_wasm` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs:2223:4
+     |
+2223 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-kernel-flow-module-brep` (lib) generated 1 warning
+   Compiling semio-framework-kernel-neural-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚡️implementation/🦀️rust/🕸️dag)
+   Compiling semio-framework-os-kernel-infinite-board-port-directed-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-playbook v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-flow-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📦️lib.rs:253:13
+    |
+253 |     values: std::collections::BTreeMap<String, dsl::DslValue>,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+253 -     values: std::collections::BTreeMap<String, dsl::DslValue>,
+253 +     values: BTreeMap<String, dsl::DslValue>,
+    |
+
+   Compiling semio-s-app-procedural-3d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+warning: `semio-s-app-procedural-3d` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-procedural-3d` to apply 1 suggestion)
+   Compiling semio-s-app-procedural-3d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:726:25
+    |
+726 |         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes json");
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+726 -         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes json");
+726 +         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes json");
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:727:28
+    |
+727 |         let instances: Vec<serde_json::Value> = serde_json::from_str(&instances_json).expect("instances json");
+    |                            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+727 -         let instances: Vec<serde_json::Value> = serde_json::from_str(&instances_json).expect("instances json");
+727 +         let instances: Vec<Value> = serde_json::from_str(&instances_json).expect("instances json");
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:833:25
+    |
+833 |         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+833 -         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
+833 +         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:856:25
+    |
+856 |         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+856 -         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
+856 +         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
+    |
+
+warning: `semio-s-app-procedural-3d-engine` (lib test) generated 4 warnings (run `cargo fix --lib -p semio-s-app-procedural-3d-engine --tests` to apply 4 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 9.93s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_procedural_3d_engine-a10f29aec252ec5a)
+
+running 8 tests
+test tests::preview_tolerance_follows_lod_mode ... ok
+test tests::procedural3d_io_declares_the_params_and_geometry_ports ... ok
+test tests::procedural3d_config_default_matches_the_former_runtime_defaults ... ok
+test tests::document_from_mesh_returns_valid_default_projection ... ok
+test tests::procedural3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs ... ok
+test tests::rectangle_wire_preview_emits_edge_only_mesh ... ok
+test tests::wireframe_show_mode_strips_shaded_triangles ... ok
+test tests::preview_payload_has_meshes_and_instances ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+exit: 0
+### cargo test --lib -p semio-s-app-procedural-3d-op ###
+warning: function `tessellate_geometry_json_for_wasm` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs:2223:4
+     |
+2223 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-kernel-flow-module-brep` (lib) generated 1 warning
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📦️lib.rs:253:13
+    |
+253 |     values: std::collections::BTreeMap<String, dsl::DslValue>,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+253 -     values: std::collections::BTreeMap<String, dsl::DslValue>,
+253 +     values: BTreeMap<String, dsl::DslValue>,
+    |
+
+warning: `semio-s-app-procedural-3d` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-procedural-3d` to apply 1 suggestion)
+   Compiling semio-s-app-procedural-3d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 2.97s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_procedural_3d_op-2ad39f023c2fc6ef)
+
+running 33 tests
+test tests::config_set_generation_round_trips ... ok
+test tests::config_set_active_utility_and_locale_round_trip ... ok
+test tests::config_set_sun_and_eval_driver_round_trip_as_raw_json ... ok
+test tests::config_set_hover_round_trips ... ok
+test tests::config_set_camera_and_preview_camera_round_trip ... ok
+test tests::config_set_selection_round_trips ... ok
+test tests::backwards_remove_synapse_when_missing_returns_empty ... ok
+test tests::backwards_remove_widget_when_missing_returns_empty ... ok
+test tests::fixture_ops_ignore_camera ... ok
+test tests::generation_op_round_trips ... ok
+test tests::diff_absorb_merges_collections_and_prefers_incoming_scalars ... ok
+test tests::op_text_parse_rejects_unknown_operation ... ok
+test tests::op_text_round_trip_remove_layout ... ok
+test tests::op_text_round_trip_remove_widget ... ok
+test tests::op_text_round_trip_remove_synapse ... ok
+test tests::op_text_round_trip_set_schema ... ok
+test tests::procedural3d_fixture_operations_detects_widget_synapse_layout_schema_changes ... ok
+test tests::op_text_round_trip_set_widget ... ok
+test tests::remove_layout_backwards_present_restores_set_layout_missing_returns_empty ... ok
+test tests::op_text_round_trip_set_camera ... ok
+test tests::op_text_round_trip_set_layout ... ok
+test tests::set_camera_round_trip_updates_camera ... ok
+test tests::set_layout_round_trip_inserts_when_absent ... ok
+test tests::set_layout_round_trip_replaces_when_present ... ok
+test tests::set_schema_round_trip_updates_schema ... ok
+test tests::set_synapse_round_trip_replaces_existing_synapse_by_id ... ok
+test tests::op_text_round_trip_generation ... ok
+test tests::set_widget_round_trip_replaces_existing_widget_by_id ... ok
+test tests::set_widget_round_trips ... ok
+test tests::op_text_round_trip_set_synapse ... ok
+test tests::widget_id_covers_all_widget_kinds ... ok
+test tests::config_op_text_round_trips_every_variant ... ok
+test tests::store_applies_widget_add ... ok
+
+test result: ok. 33 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit: 0
+### cargo test --lib -p semio-s-app-procedural-3d-dsl ###
+   Compiling semio-framework-os-kernel-math-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🗣️dsl/⚡️implementation/🦀️rust)
+warning: function `tessellate_geometry_json_for_wasm` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs:2223:4
+     |
+2223 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-kernel-flow-module-brep` (lib) generated 1 warning
+   Compiling semio-framework-kernel-neural-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚡️implementation/🦀️rust/🕸️dag)
+   Compiling semio-framework-os-kernel-infinite-board-port-directed-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-flow-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📦️lib.rs:253:13
+    |
+253 |     values: std::collections::BTreeMap<String, dsl::DslValue>,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+253 -     values: std::collections::BTreeMap<String, dsl::DslValue>,
+253 +     values: BTreeMap<String, dsl::DslValue>,
+    |
+
+warning: `semio-s-app-procedural-3d` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-procedural-3d` to apply 1 suggestion)
+   Compiling semio-s-app-procedural-3d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 6.07s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_procedural_3d_dsl-1ebac5cc3dfed03b)
+
+running 12 tests
+test tests::dsl_round_trip_empty_projection ... ok
+test tests::dsl_round_trip_covers_remaining_widget_kinds ... ok
+test tests::parse_dsl_rejects_unknown_widget_kind ... ok
+test tests::dsl_round_trip_rectangle_wire_preview_fixture ... ok
+test tests::dsl_round_trip_with_generation_state ... ok
+test tests::dsl_round_trip_box_shell_preview_fixture ... ok
+test tests::dsl_round_trip_box_fillet_preview_fixture ... ok
+test tests::dsl_round_trip_face_sweep_extrude_fixture ... ok
+test tests::dsl_round_trip_sphere_box_fuse_fixture ... ok
+test tests::dsl_round_trip_hexagonal_mushroom_column_fixture ... ok
+test tests::dsl_round_trip_rectangle_extrude_volume_fixture ... ok
+test tests::dsl_round_trip_sphere_cut_with_torus_fixture ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+exit: 0
+### cargo test --lib -p semio-s-app-procedural-3d-pack ###
+warning: function `tessellate_geometry_json_for_wasm` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs:2223:4
+     |
+2223 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-kernel-flow-module-brep` (lib) generated 1 warning
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📦️lib.rs:253:13
+    |
+253 |     values: std::collections::BTreeMap<String, dsl::DslValue>,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+253 -     values: std::collections::BTreeMap<String, dsl::DslValue>,
+253 +     values: BTreeMap<String, dsl::DslValue>,
+    |
+
+warning: `semio-s-app-procedural-3d` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-procedural-3d` to apply 1 suggestion)
+   Compiling semio-s-app-procedural-3d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d-pack v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🎒️pack/⚡️implementation/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 2.23s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_procedural_3d_pack-924ffbaf6e5ad352)
+
+running 6 tests
+test tests::dsl_pack_equivalence_with_generation_state ... ok
+test tests::dsl_pack_equivalence_empty_projection ... ok
+test tests::dsl_pack_equivalence_covers_remaining_widget_kinds ... ok
+test tests::dsl_pack_equivalence_hexagonal_mushroom_column_fixture ... ok
+test tests::dsl_pack_equivalence_rectangle_extrude_volume_fixture ... ok
+test tests::dsl_pack_equivalence_sphere_cut_with_torus_fixture ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+exit: 0
+### cargo test --lib -p semio-s-app-procedural-3d-protocol ###
+   Compiling semio-framework-os-kernel-math-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🗣️dsl/⚡️implementation/🦀️rust)
+warning: function `tessellate_geometry_json_for_wasm` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs:2223:4
+     |
+2223 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-kernel-flow-module-brep` (lib) generated 1 warning
+   Compiling semio-framework-os-kernel-infinite-board-port-directed-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust)
+   Compiling semio-framework-kernel-neural-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚡️implementation/🦀️rust/🕸️dag)
+   Compiling semio-framework-os-kernel-flow-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📦️lib.rs:253:13
+    |
+253 |     values: std::collections::BTreeMap<String, dsl::DslValue>,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+253 -     values: std::collections::BTreeMap<String, dsl::DslValue>,
+253 +     values: BTreeMap<String, dsl::DslValue>,
+    |
+
+   Compiling semio-s-app-procedural-3d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+warning: `semio-s-app-procedural-3d` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-procedural-3d` to apply 1 suggestion)
+   Compiling semio-s-app-procedural-3d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 7.50s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_procedural_3d_protocol-3de4a7800ec76319)
+
+running 4 tests
+test tests::command_op_binary_round_trips_and_agrees_with_text ... ok
+test tests::command_binary_round_trips_every_document_mutating_variant ... ok
+test tests::command_binary_round_trips_every_config_only_variant ... ok
+test tests::document_text_round_trip_with_operation_applied ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit: 0
+### cargo test --lib -p semio-s-app-procedural-3d-ui ###
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+warning: function `tessellate_geometry_json_for_wasm` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs:2223:4
+     |
+2223 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-kernel-flow-module-brep` (lib) generated 1 warning
+   Compiling semio-framework-os-kernel-infinite-board-port-directed-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-playbook v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-flow-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📦️lib.rs:253:13
+    |
+253 |     values: std::collections::BTreeMap<String, dsl::DslValue>,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+253 -     values: std::collections::BTreeMap<String, dsl::DslValue>,
+253 +     values: BTreeMap<String, dsl::DslValue>,
+    |
+
+   Compiling semio-s-app-procedural-3d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+warning: `semio-s-app-procedural-3d` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-app-procedural-3d` to apply 1 suggestion)
+   Compiling semio-s-app-procedural-3d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-procedural-3d-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1278:79
+     |
+1278 | ...er().any(|effect| matches!(effect, semio_framework_core::kernel::HostEffect::DispatchAction { action, .. } if action == "flowEv...
+     |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1278 -             if !result.requested_effects.iter().any(|effect| matches!(effect, semio_framework_core::kernel::HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")) {
+1278 +             if !result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")) {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1431:21
+     |
+1431 |         let parsed: ui_wgpu::UiNode = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("preview ui json");
+     |                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1431 -         let parsed: ui_wgpu::UiNode = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("preview ui json");
+1431 +         let parsed: UiNode = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("preview ui json");
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1433:13
+     |
+1433 |             ui_wgpu::UiNode::ComponentScene(scene) => {
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1433 -             ui_wgpu::UiNode::ComponentScene(scene) => {
+1433 +             UiNode::ComponentScene(scene) => {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1447:77
+     |
+1447 |         let main_graph = |app: &mut VcsDocumentApp<Procedural3dPlayApp>| -> ui_wgpu::NodeGraphScene {
+     |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1447 -         let main_graph = |app: &mut VcsDocumentApp<Procedural3dPlayApp>| -> ui_wgpu::NodeGraphScene {
+1447 +         let main_graph = |app: &mut VcsDocumentApp<Procedural3dPlayApp>| -> NodeGraphScene {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1449:42
+     |
+1449 |             match serde_json::from_str::<ui_wgpu::UiNode>(&serde_json::to_string(&node).unwrap()).expect("graph ui json") {
+     |                                          ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1449 -             match serde_json::from_str::<ui_wgpu::UiNode>(&serde_json::to_string(&node).unwrap()).expect("graph ui json") {
+1449 +             match serde_json::from_str::<UiNode>(&serde_json::to_string(&node).unwrap()).expect("graph ui json") {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1450:17
+     |
+1450 |                 ui_wgpu::UiNode::ComponentScene(scene) => scene.node_graph.expect("node_graph payload"),
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1450 -                 ui_wgpu::UiNode::ComponentScene(scene) => scene.node_graph.expect("node_graph payload"),
+1450 +                 UiNode::ComponentScene(scene) => scene.node_graph.expect("node_graph payload"),
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1487:21
+     |
+1487 |         let parsed: ui_wgpu::UiNode = serde_json::from_str(&json).expect("preview ui json");
+     |                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1487 -         let parsed: ui_wgpu::UiNode = serde_json::from_str(&json).expect("preview ui json");
+1487 +         let parsed: UiNode = serde_json::from_str(&json).expect("preview ui json");
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1489:13
+     |
+1489 |             ui_wgpu::UiNode::ComponentScene(scene) => {
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1489 -             ui_wgpu::UiNode::ComponentScene(scene) => {
+1489 +             UiNode::ComponentScene(scene) => {
+     |
+
+warning: `semio-s-app-procedural-3d-ui` (lib test) generated 8 warnings (run `cargo fix --lib -p semio-s-app-procedural-3d-ui --tests` to apply 8 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 16.58s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_procedural_3d_ui-31f0068e39bdfe05)
+
+running 24 tests
+test tests::main_graph_scene_exports_flow_backed_node_graph_fields ... ok
+test tests::procedural3d_labels_translate_catalogue_and_inspector_in_german ... ok
+test tests::add_widget_action_appends_widget ... ok
+test tests::add_generation_records_an_undoable_generation_operation ... ok
+test tests::generate_mode_renders_surfaces ... ok
+test tests::patch_flow_widgets_edits_slider_value ... ok
+test tests::procedural3d_labels_resolve_native_english_by_default ... ok
+test tests::gumball_drag_coalesces_multi_tick_translate_into_one_edit ... ok
+test tests::node_graph_hover_updates_preview_selection_and_graph_scene ... ok
+test tests::remove_widget_action_deletes_by_id_and_supports_undo ... ok
+test tests::renders_node_graph_scene ... ok
+test tests::renders_world_preview_scene ... ok
+test tests::rotate_and_scale_selection_persist_into_flow_graph ... ok
+test tests::set_active_example_arg_form_materializes_into_operations ... ok
+test tests::set_active_example_loads_sphere_fixture ... ok
+test tests::set_active_utility_switch_clears_scratch_and_emits_no_operations ... ok
+test tests::set_hover_from_world_updates_preview_and_graph_scene ... ok
+test tests::set_lod_mode_is_a_view_action_with_no_document_operations ... ok
+test tests::sphere_cut_example_computing_chrome_clears_once_ticks_converge ... ok
+test tests::sphere_cut_example_preview_renders_meshes ... ok
+test tests::sun_measures_are_exposed_on_preview_windows ... ok
+test tests::translate_selection_persists_transform_into_flow_graph ... ok
+test tests::two_instances_converge_disjoint_widget_moves ... ok
+test tests::undo_redo_round_trips_flow_graph_edits ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.99s
+
+exit: 0

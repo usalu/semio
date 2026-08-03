@@ -17,6 +17,7 @@ path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️mo
 [dependencies]
 semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }
+workflow = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-workflow" }
 semio-framework-plugin = { path = "../../../🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 framework_hash = { path = "../../../../../../../🧰️framework/🔨️module/#⃣hash/⚡️implementation/🦀️rust", package = "semio-framework-hash" }
 store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

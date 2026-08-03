@@ -6,41 +6,131 @@ use flow_core::{flow_neuron_kind_infos_json, CameraJson, FlowEvalDriver, FlowFix
 use flow_module_draw::render_scene_json;
 use playbook::{selected_generation, GenerationPlayState};
 use procedural_2d::Procedural2dDocument;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use store::DocumentDsl;
+use ui_wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
-//#region 🔖️Types
-/// 👁️ Ephemeral per-session view state — never part of the persisted document. Selection, the
-/// graph camera, the active show mode, the off-main-thread eval driver, and the derived generation
-/// preview all live here on the app struct, out of the VCS document.
-#[derive(Clone, Debug)]
-pub struct Procedural2dPlayRuntime {
+//#region 🔖️Config
+/// 🧮️ B1/Wave-2: `Procedural2dPlayApp::Config` — the pure-trait config artifact replacing the old
+/// ad hoc `Procedural2dPlayRuntime` app-struct `RefCell`. Selection, the graph camera, the show-mode
+/// display toggle, the off-main-thread eval-driver cursor, the derived generation selection/preview,
+/// and locale all round-trip through the config `DocumentStore` exactly like document content now,
+/// with a real `backwards` per `procedural_2d_op::Procedural2dConfigOperation` — see
+/// `procedural_2d_ui::Procedural2dPlayApp::handle`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "procedural2dcfg")]
+#[dsl(layout = "lines")]
+pub struct Procedural2dConfig {
+    /// 👁️ Selected widget ids — was `Procedural2dPlayRuntime::selected_ids`.
     pub selected_ids: Vec<String>,
+    /// 🗺️ The node-graph camera — was `Procedural2dPlayRuntime::camera`.
+    #[dsl(block)]
     pub camera: CameraJson,
+    /// 👁️ Display mode (`"preview"`/`"generate"`/`"wire"`) — was `Procedural2dPlayRuntime::show_mode`.
     pub show_mode: String,
-    pub eval_driver: FlowEvalDriver,
+    /// 🧵️ `FlowEvalDriver` doesn't derive `dsl::DslRecord` (framework flow-core type, out of this
+    /// plugin's scope to extend) — carried as its own JSON serialization instead; see `eval_driver`/
+    /// `eval_driver_json_for`.
+    #[serde(default)]
+    pub eval_driver_json: String,
+    /// 👁️ Active generation selection — was `Procedural2dPlayRuntime::selected_generation_id`.
     pub selected_generation_id: Option<String>,
+    /// 👁️ Derived generation preview text — was `Procedural2dPlayRuntime::generation_preview_text`.
     pub generation_preview_text: Option<String>,
+    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState.locale`.
+    pub locale: String,
 }
 
-impl Default for Procedural2dPlayRuntime {
+impl Default for Procedural2dConfig {
     fn default() -> Self {
         Self {
             selected_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             show_mode: default_show_mode(),
-            eval_driver: FlowEvalDriver::default(),
+            eval_driver_json: String::new(),
             selected_generation_id: None,
             generation_preview_text: None,
+            locale: "en-US".into(),
         }
     }
+}
+
+impl store::ConfigRecord for Procedural2dConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `procedural_2d_op::Procedural2dConfigOperation` — mirrors
+/// `shooting_engine::ShootingConfig`'s own impl (`apply` ignores `base` entirely, ops always snapshot).
+impl protocol::OperationDiff<Procedural2dConfig> for Procedural2dConfig {
+    fn apply(&self, _base: &Procedural2dConfig) -> Procedural2dConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+
+impl Procedural2dConfig {
+    /// 🧵️ Decodes `eval_driver_json` back into a live `FlowEvalDriver` — empty/malformed decodes to
+    /// the default (never-ticked) driver.
+    pub fn eval_driver(&self) -> FlowEvalDriver {
+        if self.eval_driver_json.is_empty() {
+            return FlowEvalDriver::default();
+        }
+        serde_json::from_str(&self.eval_driver_json).unwrap_or_default()
+    }
+}
+
+/// 🧵️ Encodes a `FlowEvalDriver` for `Procedural2dConfig::eval_driver_json` — the write-side
+/// counterpart of `Procedural2dConfig::eval_driver`.
+pub fn eval_driver_json_for(driver: &FlowEvalDriver) -> String {
+    serde_json::to_string(driver).unwrap_or_default()
 }
 
 pub fn default_show_mode() -> String {
     "preview".into()
 }
-//#endregion 🔖️Types
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `create_procedural2d_app`'s
+/// `.artifact_kind(...)` document schema/media type verbatim, plus two workflow ports: `params:in`
+/// (generic Data×Value parametric input, feeds `InputSlider` widget values — see
+/// `procedural_2d_ui::Procedural2dPlayApp::import_media`) and `drawing:out` (TwoD×Vector, tagged with
+/// draw's already-registered `2d.drawing` kind id — see `export_media`).
+pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo::from_document(
+        "procedural.2d",
+        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Flow },
+        semio_framework_plugin::ArtifactPresentation {
+            id: "2d.procedural".into(),
+            name: "2D Procedural".into(),
+            dimension: "2d".into(),
+            component_kind: "procedural2d".into(),
+        },
+    )
+    .with_ports(vec![
+        semio_framework_plugin::MediaPortSpec {
+            id: "params:in".into(),
+            label: "Parameters".into(),
+            direction: semio_framework_plugin::MediaPortDirection::In,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+            kind_id: None,
+            required: false,
+            multiplicity: semio_framework_core::PortMultiplicity::One,
+        },
+        semio_framework_plugin::MediaPortSpec {
+            id: "drawing:out".into(),
+            label: "Drawing".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+            kind_id: Some("2d.drawing".into()),
+            required: false,
+            multiplicity: semio_framework_core::PortMultiplicity::Many,
+        },
+    ])
+}
+//#endregion 🔖️Io
 
 //#region 🔖️EvalCache
 /// 🧠️ Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions —
@@ -74,43 +164,11 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
         .unwrap_or_else(|| (endpoint.to_string(), "out".into()))
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowDiagramPortRecord {
-    id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    label: Option<String>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowNodeRecord {
-    id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    label: Option<String>,
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
-    inputs: Vec<WorkflowDiagramPortRecord>,
-    outputs: Vec<WorkflowDiagramPortRecord>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct WorkflowEdgeRecord {
-    id: String,
-    source_node_id: String,
-    source_port_id: String,
-    target_node_id: String,
-    target_port_id: String,
-}
-
-pub fn fixture_to_workflow(fixture: &DagFixture) -> (String, String) {
-    let nodes: Vec<WorkflowNodeRecord> = fixture
+pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+    let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
-        .map(|node| WorkflowNodeRecord {
+        .map(|node| NodeGraphNodeRecord {
             id: node.id.clone(),
             label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
             x: node.x,
@@ -121,41 +179,42 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (String, String) {
                 .inputs()
                 .iter()
                 .filter(|port| port.visible)
-                .map(|port| WorkflowDiagramPortRecord {
+                .map(|port| NodeGraphPortRecord {
                     id: format!("{}@{}", node.id, port.id),
                     label: Some(port.label.clone()),
+                    ..Default::default()
                 })
                 .collect(),
             outputs: node
                 .outputs()
                 .iter()
                 .filter(|port| port.visible)
-                .map(|port| WorkflowDiagramPortRecord {
+                .map(|port| NodeGraphPortRecord {
                     id: format!("{}@{}", node.id, port.id),
                     label: Some(port.label.clone()),
+                    ..Default::default()
                 })
                 .collect(),
+            ..Default::default()
         })
         .collect();
-    let edges: Vec<WorkflowEdgeRecord> = fixture
+    let edges: Vec<NodeGraphEdgeRecord> = fixture
         .edges
         .iter()
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            WorkflowEdgeRecord {
+            NodeGraphEdgeRecord {
                 id: edge.id.clone(),
                 source_node_id,
                 source_port_id,
                 target_node_id,
                 target_port_id,
+                label: None,
             }
         })
         .collect();
-    (
-        serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()),
-        serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()),
-    )
+    (nodes, edges)
 }
 
 pub fn collect_drawing_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
@@ -263,15 +322,17 @@ pub fn generation_preview_layers(eval_json: &str) -> String {
 }
 
 /// 👁️ Recomputes the ephemeral generation preview for the currently selected generation and
-/// stores it on the runtime (never on the persisted document).
-pub fn refresh_generation_preview(runtime: &mut Procedural2dPlayRuntime, fixture: &FlowFixture, generation: &GenerationPlayState) {
+/// stores it on the config (never on the persisted document).
+pub fn refresh_generation_preview(config: &mut Procedural2dConfig, fixture: &FlowFixture, generation: &GenerationPlayState) {
     let Some(selected) = selected_generation(generation) else {
-        runtime.generation_preview_text = None;
+        config.generation_preview_text = None;
         return;
     };
     let preview = evaluate_generation_preview(fixture, &selected.values);
-    runtime.generation_preview_text = Some(preview.clone());
-    runtime.eval_driver.set_eval_json(preview);
+    config.generation_preview_text = Some(preview.clone());
+    let mut driver = config.eval_driver();
+    driver.set_eval_json(preview);
+    config.eval_driver_json = eval_driver_json_for(&driver);
 }
 
 /// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.procedural2d` example

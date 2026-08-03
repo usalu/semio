@@ -3,17 +3,17 @@
 //! 🕳️ Deviation from the constitutional split recipe's usual "rs" content (a `#[derive(dsl::DslDocument)]`
 //! entity + `X_DOCUMENT_SCHEMA` constant): the Studio app has no document type of its own — its
 //! `DocumentApp::Projection`/`Operation` are `semio_framework_os::{OsProjection, OsOperation}`, owned
-//! entirely by `framework/product/os/core/rs` (outside this plugin). What this app DOES own are its own
-//! transient view-state records (panel bookkeeping, live-collaboration runtime state) — the closest
-//! analog to "entity structs" this app has, so they live here instead.
+//! entirely by `framework/product/os/core/rs` (outside this plugin). What this app DOES own is
+//! `SpaceWindowCamera` — a tiny per-window camera record, the one domain value `space_engine::SpaceConfig`
+//! (its `DocumentApp::Config`, see the `⚙️engine` crate) needs that isn't already declared by os-core —
+//! mirrors `shooting`'s own `ShootingCamera` living in its entities crate rather than in `shooting_engine`.
 
-use semio_framework_os::OsWorkflowCamera;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
 // 🕳️ Also a deviation from the usual "rs" content: these manifest/panel identifiers are shared by
-// `space_engine` (`parse_panel_state`'s default tab id) and `space_ui` (manifest window/panel/body
-// wiring, render dispatch) — centralized here rather than duplicated in both.
+// `space_engine` (config defaults) and `space_ui` (manifest window/panel/body wiring, render dispatch)
+// — centralized here rather than duplicated in both.
 pub const S_PLAY_APP_ID: &str = "studio";
 pub const S_PLAY_CONTROLLER_ID: &str = "s-play";
 pub const S_PLAY_SURFACE_WORKFLOW: &str = "s.play.workflow";
@@ -37,71 +37,34 @@ pub const S_STUDIO_EXAMPLES: &[(&str, &str)] = &[("demo", "Demo Studio")];
 //#endregion 🔖️Constants
 
 //#region 🔖️Types
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// 🎥️ One window-instance's workflow-canvas camera — keyed by window id inside
+/// `space_engine::SpaceConfig.camera` (a `BTreeMap<String, SpaceWindowCamera>`, per the Configured Node
+/// Apps recipe's "camera/selection/per-window options keyed by window-instance id" rule). Distinct from
+/// `semio_framework_os::OsWorkflowCamera` (a plain, non-`dsl`-field data type this crate can't blanket-
+/// impl `dsl::DslField` for under the orphan rule) — converts to/from it 1:1 at the render boundary.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SpacePanelState {
-    #[serde(default)]
-    pub active_panel_tab: String,
-    #[serde(default)]
-    pub workflows: Vec<SpaceProgramEntry>,
-    #[serde(default)]
-    pub spawned_apps: Vec<SpawnedAppEntry>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub active_spawned_id: Option<String>,
+pub struct SpaceWindowCamera {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SpaceProgramEntry {
-    pub plugin_id: String,
-    pub workflow_step_id: String,
-    pub app_id: String,
-    pub label: String,
-    pub document: Vec<String>,
-    pub yields: String,
+impl Default for SpaceWindowCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SpawnedAppEntry {
-    pub id: String,
-    pub plugin_id: String,
-    pub instance_id: u32,
-    pub app_id: String,
-    pub label: String,
-    pub document: Vec<String>,
+impl From<semio_framework_os::OsWorkflowCamera> for SpaceWindowCamera {
+    fn from(camera: semio_framework_os::OsWorkflowCamera) -> Self {
+        Self { x: camera.x, y: camera.y, zoom: camera.zoom }
+    }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct StudioRuntimeState {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub active_instance_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub focused_instance_id: Option<String>,
-    #[serde(default)]
-    pub selected_media_node_ids: Vec<String>,
-    #[serde(default)]
-    pub selected_app_instance_ids: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub hovered_media_node_id: Option<String>,
-    #[serde(default)]
-    pub workflow_engagement_input: String,
-    #[serde(default)]
-    pub compiled_dag_engagement_input: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub space_id: Option<String>,
-    #[serde(default)]
-    pub clipboard_instance_ids: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub workflow_camera: Option<OsWorkflowCamera>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub client_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub client_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pending_import_instance_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pending_import_format: Option<String>,
+impl From<SpaceWindowCamera> for semio_framework_os::OsWorkflowCamera {
+    fn from(camera: SpaceWindowCamera) -> Self {
+        Self { x: camera.x, y: camera.y, zoom: camera.zoom }
+    }
 }
 //#endregion 🔖️Types

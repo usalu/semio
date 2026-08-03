@@ -4,11 +4,111 @@
 //! `curated_count`, `curate_delta`, `curate_set`) rather than inherent methods — Rust's orphan rule
 //! forbids an `impl CurateDocument` block outside the crate that defines the type (`sourcing`).
 
-use sourcing::{CurateDocument, CuratedItem, GeometryRecipe};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use sourcing::{CurateDocument, CuratedItem, Filters, GeometryRecipe};
 
 /// 🔁️ Re-exported for `sourcing-module-{beams,windows,slabs}`, which depend on this crate (aliased
 /// `sourcing_curate`) for both the entity type and the module trait/fixture data.
 pub use sourcing::ObjectKind;
+
+//#region 🔖️Config
+/// 🧮️ B1: curate's real `DocumentApp::Config` — the pure-trait pilot's config artifact. Absorbs both
+/// the former `CurateDocument.filters` (search/sort — the `Filters` type is unchanged, just relocated)
+/// AND `CurateDocument.runtime.selected_object_id` (flattened to a plain field here, no `#[dsl(refs =
+/// "object")]` — Config is a separate DSL document/store from `CurateDocument`, so the `#[dsl(defines =
+/// "object")]` namespace `ObjectKind::id` establishes there can't be validated across the two anyway;
+/// see `shooting_engine::ShootingConfig`'s analogous drop of `#[dsl(refs = ...)]` on its own former
+/// `ShootingPlayRuntime` selection-id fields). `locale` is the `cfg.locale`-driven counterpart to the
+/// deleted `ViewState.locale` — `DocumentApp::render`/`handle` no longer receive a `ViewState` at all,
+/// so locale-aware label resolution now reads it off here (see `sourcing_ui::is_de_locale`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "sourcingcuratecfg")]
+#[dsl(layout = "lines")]
+pub struct SourcingCurateConfig {
+    /// 🔍️ Was `CurateDocument.filters` — the pool table's active filter/search/sort state.
+    #[dsl(block)]
+    pub filters: Filters,
+    /// 👁️ Was `CurateDocument.runtime.selected_object_id` — the single object selected for the preview window.
+    pub selected_object_id: Option<String>,
+    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
+    pub locale: String,
+}
+
+impl Default for SourcingCurateConfig {
+    fn default() -> Self {
+        Self { filters: Filters::default(), selected_object_id: None, locale: "en-US".into() }
+    }
+}
+
+impl store::ConfigRecord for SourcingCurateConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `sourcing_op::SourcingCurateConfigOperation` (lives here, not in
+/// `sourcing_op`, since `protocol::OperationDiff`/`SourcingCurateConfig` are both foreign to that crate
+/// — the orphan rule requires at least one local type). Mirrors `SourcingOperation::SetDocument`'s
+/// existing "whole-document replace" pattern: `apply` ignores `base` entirely.
+impl protocol::OperationDiff<SourcingCurateConfig> for SourcingCurateConfig {
+    fn apply(&self, _base: &SourcingCurateConfig) -> SourcingCurateConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports (keyed off
+/// `sourcing::SOURCING_CURATE_SCHEMA`, `MediaType{Kit,Kit}` matching the `"catalogue.sourcing"`
+/// `ArtifactKindSpec`) plus the extra `catalog:out` output port: this app's `stock` (its
+/// `"catalogue.kinds"`-shaped rows) mapped into the SAME `kit.catalog` JSON shape
+/// `block_3d::puzzle3d_catalog_fragment` produces, so `s/plugin/puzzle`'s `kit:in` importer can consume
+/// either producer identically without knowing which one it came from (see `sourcing_catalog_fragment`).
+pub fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: sourcing::SOURCING_CURATE_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Kit },
+        ports: vec![semio_framework_plugin::MediaPortSpec {
+            id: "catalog:out".into(),
+            label: "Catalog".into(),
+            direction: semio_framework_plugin::MediaPortDirection::Out,
+            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+            kind_id: Some("kit.catalog".into()),
+            required: false,
+            multiplicity: semio_framework_core::PortMultiplicity::Many,
+        }],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "catalogue.sourcing".into(), name: "Sourcing Curation".into(), dimension: "data".into(), component_kind: "catalogue".into() },
+    }
+}
+//#endregion 🔖️Io
+
+//#region 🔖️PuzzleCatalogFragment
+/// 🌉️ Maps this app's stock (its `"catalogue.kinds"`-shaped rows) into the `s/plugin/puzzle` 3d catalog
+/// shape (`objectKinds`/`vortexKinds`/`cableKinds`/`attractionKinds`/`kindCompatibility` — see
+/// `block_3d::puzzle3d_catalog_fragment`, the sibling producer this mirrors byte-for-byte in shape), the
+/// seam puzzle imports through its `Kit×Type` `kit:in` media port. Sourcing's `ObjectKind` carries no
+/// mesh URL (geometry is a procedural `GeometryRecipe`, not an asset reference) or vortex/attachment
+/// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
+/// mesh as "no visual representation yet", not an error.
+pub fn sourcing_catalog_fragment(document: &CurateDocument) -> Value {
+    let object_kinds: Vec<Value> = document
+        .stock
+        .iter()
+        .map(|kind| json!({ "id": kind.id, "name": kind.name, "label": kind.name, "meshUrl": Value::Null, "vortices": Vec::<Value>::new() }))
+        .collect();
+    json!({
+        "schema": "manifest",
+        "objectKinds": object_kinds,
+        "vortexKinds": Vec::<Value>::new(),
+        "cableKinds": Vec::<Value>::new(),
+        "attractionKinds": Vec::<Value>::new(),
+        "kindCompatibility": Vec::<Value>::new(),
+    })
+}
+//#endregion 🔖️PuzzleCatalogFragment
 
 //#region 🔖️Typology
 /// 🌳️ One node in a module's typology tree — object kinds reference a node by its path of segment ids.
@@ -142,17 +242,19 @@ pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
 //#endregion 🔖️Geometry
 
 //#region 🔖️DocumentHelpers
-/// 🔎️ The stock kinds that currently satisfy every active filter dimension.
-pub fn filtered_stock(document: &CurateDocument) -> Vec<&ObjectKind> {
+/// 🔎️ The stock kinds that currently satisfy every active filter dimension. `filters` used to live on
+/// `CurateDocument` itself; B1 moved it onto `SourcingCurateConfig` (session-only view state), so this
+/// now takes it as a separate parameter rather than reading `document.filters`.
+pub fn filtered_stock<'a>(document: &'a CurateDocument, filters: &Filters) -> Vec<&'a ObjectKind> {
     document
         .stock
         .iter()
         .filter(|kind| {
-            let query = document.filters.query.trim().to_lowercase();
+            let query = filters.query.trim().to_lowercase();
             let matches_query = query.is_empty() || kind.name.to_lowercase().contains(&query);
-            let matches_module = document.filters.module_ids.is_empty() || document.filters.module_ids.contains(&kind.module_id);
-            let matches_typology = document.filters.typology_path.is_empty() || kind.typology_path.starts_with(&document.filters.typology_path);
-            let matches_availability = kind.availability >= document.filters.min_availability;
+            let matches_module = filters.module_ids.is_empty() || filters.module_ids.contains(&kind.module_id);
+            let matches_typology = filters.typology_path.is_empty() || kind.typology_path.starts_with(&filters.typology_path);
+            let matches_availability = kind.availability >= filters.min_availability;
             matches_query && matches_module && matches_typology && matches_availability
         })
         .collect()
@@ -417,38 +519,74 @@ mod tests {
 
     #[test]
     fn filtered_stock_matches_query() {
-        let mut document = sample_document();
-        document.filters.query = "glulam".into();
-        let filtered = filtered_stock(&document);
+        let document = sample_document();
+        let filters = Filters { query: "glulam".into(), ..Default::default() };
+        let filtered = filtered_stock(&document, &filters);
         assert_eq!(filtered.len(), 1);
         assert_eq!(filtered[0].id, "beam-glulam-gl24h");
     }
 
     #[test]
     fn filtered_stock_matches_module() {
-        let mut document = sample_document();
-        document.filters.module_ids = vec!["slabs".into()];
-        let filtered = filtered_stock(&document);
+        let document = sample_document();
+        let filters = Filters { module_ids: vec!["slabs".into()], ..Default::default() };
+        let filtered = filtered_stock(&document, &filters);
         assert!(filtered.iter().all(|kind| kind.module_id == "slabs"));
         assert_eq!(filtered.len(), 3);
     }
 
     #[test]
     fn filtered_stock_matches_typology_prefix() {
-        let mut document = sample_document();
-        document.filters.typology_path = vec!["beams".into(), "steel".into()];
-        let filtered = filtered_stock(&document);
+        let document = sample_document();
+        let filters = Filters { typology_path: vec!["beams".into(), "steel".into()], ..Default::default() };
+        let filtered = filtered_stock(&document, &filters);
         assert_eq!(filtered.len(), 2);
         assert!(filtered.iter().all(|kind| kind.typology_path.starts_with(&["beams".to_string(), "steel".to_string()])));
     }
 
     #[test]
     fn filtered_stock_matches_min_availability() {
-        let mut document = sample_document();
-        document.filters.min_availability = 20;
-        let filtered = filtered_stock(&document);
+        let document = sample_document();
+        let filters = Filters { min_availability: 20, ..Default::default() };
+        let filtered = filtered_stock(&document, &filters);
         assert!(filtered.iter().all(|kind| kind.availability >= 20));
         assert!(!filtered.is_empty());
+    }
+
+    #[test]
+    fn sourcing_curate_config_default_matches_the_prior_document_defaults() {
+        let config = SourcingCurateConfig::default();
+        assert_eq!(config.filters, Filters::default());
+        assert_eq!(config.selected_object_id, None);
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[test]
+    fn sourcing_curate_io_declares_the_catalog_out_port_alongside_the_implicit_document_ports() {
+        let io = sourcing_curate_io();
+        assert_eq!(io.document_schema, sourcing::SOURCING_CURATE_SCHEMA);
+        let ports = io.all_ports();
+        assert_eq!(ports.len(), 3, "document:in, document:out, catalog:out");
+        let catalog_out = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
+        assert_eq!(catalog_out.kind_id.as_deref(), Some("kit.catalog"));
+        assert_eq!(catalog_out.media_type.class, semio_framework_plugin::MediaClass::Kit);
+        assert_eq!(catalog_out.media_type.form, semio_framework_plugin::MediaForm::Type);
+    }
+
+    #[test]
+    fn sourcing_catalog_fragment_maps_stock_into_the_puzzle3d_kit_catalog_shape() {
+        let document = sample_document();
+        let fragment = sourcing_catalog_fragment(&document);
+        assert_eq!(fragment["schema"], "manifest");
+        let object_kinds = fragment["objectKinds"].as_array().expect("objectKinds array");
+        assert_eq!(object_kinds.len(), document.stock.len());
+        assert_eq!(object_kinds[0]["id"], document.stock[0].id);
+        assert_eq!(object_kinds[0]["meshUrl"], Value::Null);
+        assert!(object_kinds[0]["vortices"].as_array().unwrap().is_empty());
+        assert!(fragment["vortexKinds"].as_array().unwrap().is_empty());
+        assert!(fragment["cableKinds"].as_array().unwrap().is_empty());
+        assert!(fragment["attractionKinds"].as_array().unwrap().is_empty());
+        assert!(fragment["kindCompatibility"].as_array().unwrap().is_empty());
     }
 
     #[test]

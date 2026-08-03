@@ -15,6 +15,9 @@ imperative = { path = "../../../../../../../../../✏️s/🔌️plugin/📜️i
 imperative_op = { path = "../../../../../../../../../✏️s/🔌️plugin/📜️imperative/🎛️app/📜️imperative/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-imperative-op" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 imperative_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📜️imperative/🎛️app/📜️imperative/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-imperative-engine" }
+neural_engine = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚙️engine/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }

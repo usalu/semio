@@ -11,7 +11,7 @@
 //! to whenever `DocumentApp::handle_typed_command` returns `None` — see `shooting_ui`'s
 //! `ShootingPlayApp::handle_typed_command` for the dispatch and exactly which actions are covered.
 
-use shooting::ShootingFixture;
+use shooting::{ShootingCamera, ShootingFixture};
 use shooting_op::ShootingOperation;
 use protocol::OpBinary;
 use serde::{Deserialize, Serialize};
@@ -28,21 +28,29 @@ pub fn decode_op(bytes: &[u8]) -> Result<ShootingOperation, protocol::ProtocolEr
 }
 
 //#region 🔖️ShootingCommand
-/// 🎯️ Typed binary command envelope for the shooting app's app-engine channel — one variant per a
-/// representative subset of `create_shooting_app`'s real declared actions (see the module doc). Field
-/// shapes mirror each action's real `args` object exactly (`shooting_ui`'s `handle_action` match arms
-/// are the ground truth): e.g. `SetActiveShot.shot_id` mirrors `"setActiveShot"`'s `value`/`id` arg,
-/// `AddShot.{format,shape}` mirrors its `.action_args` defaults. `#[derive(dsl::DslOps)]` gives this a
-/// binary (`OpBinary`) AND text (`OpText`) codec, matching `ShootingOperationDsl`'s (`shooting_op`)
-/// derive/attribute conventions exactly, even though this enum is never dispatched through
-/// `store::DocumentCommand` (it is not a `protocol::Operation` — no `diff`/`backwards` — purely a
-/// command-channel wire codec).
+/// 🎯️ B1: `ShootingPlayApp::Command` — the SOLE dispatch surface for shooting's own behavior, now
+/// covering EVERY declared action (the pre-B1 legacy `{kind,name,args}` wire-value envelope fallback
+/// is gone — `DocumentApp::handle_action`/`handle_typed_command` no longer exist; see `shooting_ui`'s
+/// `ShootingPlayApp::handle`). Field shapes mirror each action's real `args` object exactly.
+/// `#[derive(dsl::DslOps)]` gives this a binary (`OpBinary`) AND text (`OpText`) codec, matching
+/// `ShootingOperationDsl`'s (`shooting_op`) derive/attribute conventions exactly, even though this enum
+/// is never dispatched through `store::DocumentCommand` (it is not a `protocol::Operation` — no
+/// `diff`/`backwards` — purely a command-channel wire codec).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum ShootingCommand {
+    // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
+    #[dsl(key = "fixture-json")]
+    SetFixtureJson { json: String },
+    #[dsl(key = "active-example")]
+    SetActiveExample { example_id: String },
     #[dsl(key = "active-shot")]
     SetActiveShot { shot_id: Option<String> },
     #[dsl(key = "active-asset")]
     SetActiveAsset { asset_id: Option<String> },
+    #[dsl(key = "shot-camera")]
+    SetShotCamera { shot_id: String, #[dsl(block)] camera: ShootingCamera },
+    #[dsl(key = "save-camera")]
+    SaveCamera,
     #[dsl(key = "sun-azimuth")]
     SetSunAzimuth { value: f64 },
     #[dsl(key = "sun-elevation")]
@@ -57,22 +65,69 @@ pub enum ShootingCommand {
     SetShadowEnabled { value: bool },
     #[dsl(key = "toggle-sun")]
     ToggleSun { value: bool },
+    #[dsl(key = "active-shot-label")]
+    SetActiveShotLabel { value: String },
+    #[dsl(key = "active-shot-format")]
+    SetActiveShotFormat { value: String },
+    #[dsl(key = "active-shot-shape")]
+    SetActiveShotShape { value: String },
+    #[dsl(key = "patch-shots")]
+    PatchShots { shot_ids: Vec<String>, field: String, value: String },
+    #[dsl(key = "patch-assets")]
+    PatchAssets { asset_ids: Vec<String>, field: String, value: String },
     #[dsl(key = "add-shot")]
     AddShot { format: String, shape: String },
     #[dsl(key = "add-asset")]
     AddAsset { format: String },
+    #[dsl(key = "import-asset")]
+    ImportAsset { payload: String, name: Option<String> },
+    #[dsl(key = "reset-fixture")]
+    ResetFixture,
     #[dsl(key = "translate-selection")]
     TranslateSelection { asset_ids: Vec<String>, dx: f64, dy: f64, dz: f64 },
     #[dsl(key = "rotate-selection")]
     RotateSelection { asset_ids: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64 },
     #[dsl(key = "scale-selection")]
     ScaleSelection { asset_ids: Vec<String>, sx: f64, sy: f64, sz: f64 },
+
+    // 👁️ Config-only (was ephemeral `ShootingPlayRuntime` state) — emit `config_operations`, never
+    // document operations.
+    #[dsl(key = "camera")]
+    SetCamera { #[dsl(block)] camera: ShootingCamera },
+    #[dsl(key = "load-saved-camera")]
+    LoadSavedCamera { id: String },
+    #[dsl(key = "camera-draft-label")]
+    SetCameraDraftLabel { value: String },
+    #[dsl(key = "center-model")]
+    SetCenterModel { pressed: Option<bool> },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { utility_id: String },
+    #[dsl(key = "locale")]
+    SetLocale { value: String },
     #[dsl(key = "set-selection")]
     SetSelection { shot_ids: Vec<String>, asset_ids: Vec<String> },
     #[dsl(key = "selection-method")]
     SetSelectionMethod { method: String },
-    #[dsl(key = "reset-fixture")]
-    ResetFixture,
+    #[dsl(key = "world-select")]
+    WorldSelect { ids: Vec<String>, merge: String },
+    #[dsl(key = "set-hover")]
+    SetHover { asset_id: Option<String> },
+    #[dsl(key = "world-pick")]
+    WorldPick { asset_id: Option<String>, asset_index: Option<u64>, merge: String },
+    #[dsl(key = "world-pointer-down")]
+    WorldPointerDown,
+    #[dsl(key = "world-pointer-move")]
+    WorldPointerMove,
+
+    // 🐚️ Shell effects — export/import round-trips through the host, no operations either way.
+    #[dsl(key = "save-download")]
+    SaveDownload,
+    #[dsl(key = "load-request")]
+    LoadRequest,
+    #[dsl(key = "import-asset-request")]
+    ImportAssetRequest,
+    #[dsl(key = "export-shots")]
+    ExportShots { all: bool },
 }
 //#endregion 🔖️ShootingCommand
 

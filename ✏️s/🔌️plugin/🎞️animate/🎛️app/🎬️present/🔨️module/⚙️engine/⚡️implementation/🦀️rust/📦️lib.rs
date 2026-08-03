@@ -328,6 +328,92 @@ pub mod slide {
 pub use compiler::{compile_present_site, compile_scene_to_assets, PresentCompileError, SceneAssetBundle};
 pub use slide::{PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA};
 
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Config
+/// 🧮️ B1: animate present's real `DocumentApp::Config` — absorbs every former
+/// `AnimatePresentPlayRuntime` field (`selected_ids`/`engagement_input`) plus the locale the pre-B1
+/// host-pushed `ViewState` used to carry (see `present_ui::animate_present_labels`) — same
+/// "absorb every runtime field" shape `shooting_engine::ShootingConfig` established for the pilot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "presentcfg")]
+#[dsl(layout = "lines")]
+pub struct PresentConfig {
+    /// 👁️ Selected tile ids — was `AnimatePresentPlayRuntime::selected_ids`.
+    pub selected_ids: Vec<String>,
+    /// ⌨️ In-progress engagement-bar input draft — was `AnimatePresentPlayRuntime::engagement_input`.
+    pub engagement_input: String,
+    /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewState.locale`.
+    pub locale: String,
+}
+
+impl Default for PresentConfig {
+    fn default() -> Self {
+        Self { selected_ids: Vec::new(), engagement_input: String::new(), locale: "en-US".into() }
+    }
+}
+
+impl store::ConfigRecord for PresentConfig {}
+
+/// @emoji 🧮️ Whole-record diff for `present_op::PresentConfigOperation` (lives here rather than in
+/// `present_op`, matching `shooting_engine::ShootingConfig`'s note on the orphan rule): mirrors
+/// `PresentOperation::SetDeck`'s existing "whole-document replace" pattern — `apply` ignores `base`
+/// entirely.
+impl protocol::OperationDiff<PresentConfig> for PresentConfig {
+    fn apply(&self, _base: &PresentConfig) -> PresentConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `create_animate_present_app`'s
+/// `.artifact_kind(...)` literal (schema/media type copied verbatim) plus the extra `frames:in` input
+/// port (Wave-2 port recipe).
+pub fn present_io() -> semio_framework_core::AppIo {
+    semio_framework_core::AppIo {
+        document_schema: present::PRESENT_DECK_SCHEMA.into(),
+        document_media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::Presentation, form: semio_framework_core::MediaForm::Deck },
+        ports: vec![semio_framework_core::MediaPortSpec {
+            id: "frames:in".into(),
+            label: "Frames".into(),
+            direction: semio_framework_core::MediaPortDirection::In,
+            media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Raster },
+            kind_id: Some("2d.image".into()),
+            required: false,
+            multiplicity: semio_framework_core::PortMultiplicity::Many,
+        }],
+        export_formats: Vec::new(),
+        import_formats: Vec::new(),
+        artifact: semio_framework_core::ArtifactPresentation { id: "animate.present.deck".into(), name: "Animate Present Deck".into(), dimension: "2d".into(), component_kind: "panel".into() },
+    }
+}
+
+/// 🎞️ `frames:in` placement (Wave-2 port recipe) — `PresentDeck` models one shared background
+/// `source` image with named crop-`tiles` over it; there is no per-tile independent raster payload in
+/// this schema, so an incoming `2d.image` frame becomes a new tile positioned in a deterministic
+/// contact-sheet grid (4 columns) rather than replacing `source` — exactly the surface `seedGrid`/
+/// `addTile` (see `present_ui`) already let a user crop/arrange candidate frames on. Pure: both
+/// functions depend only on the current tile COUNT, so repeated imports land in distinct, stable
+/// cells without needing a live host/counter.
+const FRAME_IMPORT_GRID_COLUMNS: usize = 4;
+
+pub fn next_frame_tile_id(existing_tile_count: usize) -> String {
+    format!("frame-{}", existing_tile_count + 1)
+}
+
+pub fn next_frame_tile_crop(existing_tile_count: usize) -> present::FigureTileFrame {
+    let cell = 1.0 / FRAME_IMPORT_GRID_COLUMNS as f64;
+    let column = existing_tile_count % FRAME_IMPORT_GRID_COLUMNS;
+    let row = existing_tile_count / FRAME_IMPORT_GRID_COLUMNS;
+    clamp_tile_crop(present::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
+}
+//#endregion 🔖️Io
+
 //#region 🔖️Error
 /// 🎞️ Errors from present deck video export and VCS envelope materialization.
 #[derive(Debug, thiserror::Error)]
@@ -574,5 +660,57 @@ mod tests {
         let deck: present::PresentDeck = serde_json::from_value(document).expect("deck");
         assert_eq!(deck.tiles.len(), 1);
     }
+
+    //#region 🔖️ConfigTests
+    #[test]
+    fn present_config_default_matches_the_existing_runtime_defaults() {
+        let config = PresentConfig::default();
+        assert!(config.selected_ids.is_empty());
+        assert!(config.engagement_input.is_empty());
+        assert_eq!(config.locale, "en-US");
+    }
+
+    #[test]
+    fn present_config_dsl_round_trips() {
+        let config = PresentConfig { selected_ids: vec!["t1".into()], engagement_input: "2x2".into(), locale: "de-DE".into() };
+        let text = store::DocumentDsl::print_dsl(&config);
+        let parsed = <PresentConfig as store::DocumentDsl>::parse_dsl(&text).expect("config dsl round trip");
+        assert_eq!(parsed, config);
+    }
+
+    #[test]
+    fn present_config_pack_round_trips() {
+        let config = PresentConfig { selected_ids: vec!["t2".into()], engagement_input: "add".into(), locale: "en-US".into() };
+        let bytes = store::DocumentPack::encode_pack(&config);
+        let decoded = <PresentConfig as store::DocumentPack>::decode_pack(&bytes).expect("config pack round trip");
+        assert_eq!(decoded, config);
+    }
+    //#endregion 🔖️ConfigTests
+
+    //#region 🔖️IoTests
+    #[test]
+    fn present_io_declares_the_frames_in_port() {
+        let io = present_io();
+        assert_eq!(io.document_schema, present::PRESENT_DECK_SCHEMA);
+        assert_eq!(io.ports.len(), 1);
+        let port = &io.ports[0];
+        assert_eq!(port.id, "frames:in");
+        assert_eq!(port.kind_id.as_deref(), Some("2d.image"));
+        assert_eq!(port.direction, semio_framework_core::MediaPortDirection::In);
+        assert_eq!(port.multiplicity, semio_framework_core::PortMultiplicity::Many);
+        assert!(!port.required);
+    }
+
+    #[test]
+    fn frame_import_placement_is_deterministic_and_non_overlapping() {
+        let first = next_frame_tile_crop(0);
+        let second = next_frame_tile_crop(1);
+        assert_ne!(first, second);
+        assert_eq!(next_frame_tile_id(0), "frame-1");
+        assert_eq!(next_frame_tile_id(1), "frame-2");
+        // 🧮️ Pure function of the count, not a mutating counter.
+        assert_eq!(next_frame_tile_crop(0), first);
+    }
+    //#endregion 🔖️IoTests
 }
 //#endregion 🧪️Tests

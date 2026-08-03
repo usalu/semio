@@ -1,17 +1,23 @@
-//! 🧩️ Playbook-play app — `DocumentApp` impl, render, manifest (constitutional: ui).
+//! 🧩️ Playbook-play app — `DocumentApp` impl, render, manifest (constitutional: ui). B1: the
+//! pure-trait flip — `PlaybookPlayApp` is a unit struct; the former app-struct `RefCell<Vec<String>>`
+//! selection now lives in `playbook_engine::PlaybookConfig`, written via
+//! `playbook_op::PlaybookConfigOperation`s (real `backwards`, no ad hoc `InverseAction`); every action
+//! dispatches through the single typed `playbook_protocol::PlaybookCommand` channel via
+//! `DocumentApp::handle` — mirrors `writer_ui::WriterPlayApp`/`shooting_ui::ShootingPlayApp`.
 
-use playbook::{empty_playbook_projection, PlaybookSpec, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA};
-use playbook_engine::default_block;
+use playbook::{empty_playbook_projection, flatten_playbook_blocks, PlaybookSpec, PlaybookStep, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA};
+use playbook_engine::{default_block, playbook_io, PlaybookChapterPayload, PlaybookConfig};
 use playbook_kernel::{render_playbook_builder, PlaybookBuilderConfig, PLAYBOOK_BUILDER_LABELS_EN};
 use playbook_op::{
     add_block_operation, add_step_operation, move_block_operation, move_step_operation, remove_block_operation, remove_step_operation,
-    update_playbook_title_operation, PlaybookOperation,
+    update_playbook_title_operation, PlaybookConfigOperation, PlaybookOperation,
 };
+use playbook_protocol::PlaybookCommand;
 use semio_framework_plugin::{
-    app_labels, create_default_layout, is_de_locale, localized_label_map, resolve_labels, ui_text, ActionArgDef, ActionArgOption, ActionEmit,
-    App, AppLabelsOverlay, AppLabelsOverlayExt, BlockPaletteEntry, DocumentApp, DocumentView, SurfaceKind, UiNode, ViewState,
+    localized_label_map, ui_text, AppIo, ArtifactKindSpec, BlockPaletteEntry, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    App, AppLabelsOverlay, AppLabelsOverlayExt, OsMediaCapability, SurfaceKind, UiNode,
 };
-use serde_json::Value;
+use semio_framework_plugin::{app_labels, create_default_layout, ActionArgDef, ActionArgOption};
 
 //#region 🔖️Constants
 const PLAYBOOK_PLAY_APP_ID: &str = "playbook-play";
@@ -19,7 +25,22 @@ const PLAYBOOK_PLAY_CONTROLLER_ID: &str = "playbook-play";
 const PLAYBOOK_PLAY_SURFACE_BUILDER: &str = "playbook.play.builder";
 const PLAYBOOK_PLAY_BODY_BUILDER: &str = "playbook.play.builder";
 const PLAYBOOK_PLAY_WINDOW_BUILDER: &str = "playbook-builder";
+/// 📥️ The step `"chapters:in"` imports land in — created on first import, reused on every later one.
+const PLAYBOOK_IMPORTED_STEP_ID: &str = "imported";
 //#endregion 🔖️Constants
+
+//#region 🔖️Locale
+/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `writer_ui`/`shooting_ui`'s
+/// identical region.
+fn is_de_locale(cfg: &PlaybookConfig) -> bool {
+    cfg.locale.starts_with("de")
+}
+
+fn resolve_labels<L: LocaleLabels>(cfg: &PlaybookConfig) -> &'static L {
+    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+}
+//#endregion 🔖️Locale
 
 //#region 🔖️Terminology
 /// 🗣️ Complete UI label set for the playbook-play app; one field per label makes every locale combination compile-checked.
@@ -82,25 +103,18 @@ fn render_builder(spec: &PlaybookSpec, selected_id: Option<&str>) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️PlaybookPlayApp
-use std::cell::RefCell;
-
-/// 🎛️ Ephemeral view state (the current block/step selection) — lives in the app struct, never in the
-/// document, so selecting an element never pollutes undo history.
-pub struct PlaybookPlayApp {
-    selected_ids: RefCell<Vec<String>>,
-}
-
-impl Default for PlaybookPlayApp {
-    fn default() -> Self {
-        Self { selected_ids: RefCell::new(Vec::new()) }
-    }
-}
+/// 🧪️ B1: unit struct — the former app-struct `RefCell<Vec<String>>` selection now lives in
+/// `playbook_engine::PlaybookConfig` (see `DocumentApp::Config`), written through
+/// `playbook_op::PlaybookConfigOperation`s.
+#[derive(Default)]
+pub struct PlaybookPlayApp;
 
 impl DocumentApp for PlaybookPlayApp {
     type Projection = PlaybookSpec;
     type Operation = PlaybookOperation;
-        type Config = semio_framework_plugin::NoConfig;
-        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
+    type Config = PlaybookConfig;
+    type ConfigOperation = PlaybookConfigOperation;
+    type Command = PlaybookCommand;
 
     fn app_id(&self) -> &str {
         PLAYBOOK_PLAY_APP_ID
@@ -114,95 +128,129 @@ impl DocumentApp for PlaybookPlayApp {
         empty_playbook_projection()
     }
 
-    fn handle_action(
-        &self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, PlaybookSpec>,
-        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<PlaybookOperation> {
-        let spec = doc.projection;
-        match action {
-            "setSelection" => {
-                if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| value.as_array()) {
-                    *self.selected_ids.borrow_mut() = ids.iter().filter_map(|value| value.as_str().map(str::to_string)).collect();
-                }
-                ActionEmit::default()
-            }
-            "addStep" => {
-                let step_id = format!("step-{}", spec.steps.len() + 1);
-                ActionEmit::operations(vec![add_step_operation(spec, step_id)])
-            }
-            "removeStep" => {
-                let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
-                if step_id.is_empty() {
-                    return ActionEmit::default();
-                }
-                ActionEmit::operations(vec![remove_step_operation(step_id)])
-            }
-            "moveStep" => {
-                let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
-                let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
-                if step_id.is_empty() {
-                    return ActionEmit::default();
-                }
-                ActionEmit::operations(vec![move_step_operation(step_id, index)])
-            }
-            "addBlock" => {
-                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("text");
-                let Some(step_id) = args
-                    .and_then(|value| value.get("stepId"))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string)
-                    .or_else(|| spec.steps.first().map(|step| step.id.clone()))
-                else {
-                    return ActionEmit::default();
-                };
-                let block_id = format!("block-{}", spec.steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1);
-                *self.selected_ids.borrow_mut() = vec![block_id.clone()];
-                ActionEmit::operations(vec![add_block_operation(&step_id, default_block(block_id, kind), None)])
-            }
-            "removeBlock" => {
-                let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
-                let block_id = args.and_then(|value| value.get("blockId")).and_then(|value| value.as_str()).unwrap_or("");
-                if step_id.is_empty() || block_id.is_empty() {
-                    return ActionEmit::default();
-                }
-                self.selected_ids.borrow_mut().retain(|id| id != block_id);
-                ActionEmit::operations(vec![remove_block_operation(step_id, block_id)])
-            }
-            "moveBlock" => {
-                let block_id = args.and_then(|value| value.get("blockId")).and_then(|value| value.as_str());
-                let from_step_id = args.and_then(|value| value.get("fromStepId")).and_then(|value| value.as_str());
-                let to_step_id = args.and_then(|value| value.get("toStepId")).and_then(|value| value.as_str());
-                let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
-                let (Some(block_id), Some(from_step_id), Some(to_step_id)) = (block_id, from_step_id, to_step_id) else {
-                    return ActionEmit::default();
-                };
-                ActionEmit::operations(vec![move_block_operation(block_id, from_step_id, to_step_id, index)])
-            }
-            "updatePlaybook" => {
-                let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
-                ActionEmit::amend(
-                    vec![update_playbook_title_operation(Some(title.to_string()).filter(|title| !title.is_empty()))],
-                    "playbook.title",
-                )
-            }
-            _ => ActionEmit::default(),
+    fn io(&self) -> Option<AppIo> {
+        Some(playbook_io())
+    }
+
+    /// 🏷️ Maps each `PlaybookCommand` variant back to the action id it was declared under in
+    /// `create_playbook_play_app` — used by `VcsDocumentApp` for command-log labeling and the
+    /// registry's View/Shell kind-discipline check.
+    fn command_id(&self, command: &PlaybookCommand) -> &str {
+        match command {
+            PlaybookCommand::AddStep => "addStep",
+            PlaybookCommand::RemoveStep { .. } => "removeStep",
+            PlaybookCommand::MoveStep { .. } => "moveStep",
+            PlaybookCommand::AddBlock { .. } => "addBlock",
+            PlaybookCommand::RemoveBlock { .. } => "removeBlock",
+            PlaybookCommand::MoveBlock { .. } => "moveBlock",
+            PlaybookCommand::UpdatePlaybook { .. } => "updatePlaybook",
+            PlaybookCommand::SetSelection { .. } => "setSelection",
+            PlaybookCommand::SetLocale { .. } => "setLocale",
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, PlaybookSpec>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
+    fn handle(
+        &self,
+        command: &PlaybookCommand,
+        doc: &DocumentView<'_, PlaybookSpec>,
+        cfg: &ConfigView<'_, PlaybookConfig>,
+    ) -> Emit<PlaybookOperation, PlaybookConfigOperation> {
+        let spec = doc.projection;
+        let config = cfg.projection;
+        match command {
+            PlaybookCommand::AddStep => {
+                let step_id = format!("step-{}", spec.steps.len() + 1);
+                Emit::operations(vec![add_step_operation(spec, step_id)])
+            }
+            PlaybookCommand::RemoveStep { step_id } => {
+                if step_id.is_empty() {
+                    return Emit::default();
+                }
+                Emit::operations(vec![remove_step_operation(step_id)])
+            }
+            PlaybookCommand::MoveStep { step_id, index } => {
+                if step_id.is_empty() {
+                    return Emit::default();
+                }
+                Emit::operations(vec![move_step_operation(step_id, *index)])
+            }
+            PlaybookCommand::AddBlock { kind, step_id } => {
+                let Some(step_id) = step_id.clone().or_else(|| spec.steps.first().map(|step| step.id.clone())) else {
+                    return Emit::default();
+                };
+                let block_id = format!("block-{}", spec.steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1);
+                Emit {
+                    document_operations: vec![add_block_operation(&step_id, default_block(block_id.clone(), kind), None)],
+                    config_operations: vec![PlaybookConfigOperation::SetSelectedIds { ids: vec![block_id] }],
+                    ..Default::default()
+                }
+            }
+            PlaybookCommand::RemoveBlock { step_id, block_id } => {
+                if step_id.is_empty() || block_id.is_empty() {
+                    return Emit::default();
+                }
+                let remaining: Vec<String> = config.selected_ids.iter().filter(|id| *id != block_id).cloned().collect();
+                Emit {
+                    document_operations: vec![remove_block_operation(step_id, block_id)],
+                    config_operations: vec![PlaybookConfigOperation::SetSelectedIds { ids: remaining }],
+                    ..Default::default()
+                }
+            }
+            PlaybookCommand::MoveBlock { block_id, from_step_id, to_step_id, index } => {
+                Emit::operations(vec![move_block_operation(block_id, from_step_id, to_step_id, *index)])
+            }
+            PlaybookCommand::UpdatePlaybook { value } => {
+                Emit::amend(vec![update_playbook_title_operation(Some(value.clone()).filter(|title| !title.is_empty()))], "playbook.title")
+            }
+            PlaybookCommand::SetSelection { ids } => Emit::config(vec![PlaybookConfigOperation::SetSelectedIds { ids: ids.clone() }]),
+            PlaybookCommand::SetLocale { value } => Emit::config(vec![PlaybookConfigOperation::SetLocale { value: value.clone() }]),
+        }
+    }
+
+    /// 🎞️ `"chapters:in"` (Text×Document, `Many`) — decodes a `writer`-shaped chapter payload (see
+    /// `writer_engine::WriterChapterPayload`/`playbook_engine::PlaybookChapterPayload`) and inserts it
+    /// as a `"note"` block (free-form `text` field, non-interactive — see `PLAYBOOK_BUILTIN_KINDS` and
+    /// `default_value_for_block`'s `"note"` arm in the kernel crate) into a dedicated `"imported"` step,
+    /// created on first import and reused on every later one (idempotent step creation).
+    fn import_media(
+        &self,
+        port: &str,
+        media: &Media,
+        doc: &DocumentView<'_, PlaybookSpec>,
+    ) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation>, MediaError> {
+        if port != "chapters:in" {
+            return Err(MediaError::NotImplemented);
+        }
+        let MediaPayload::Structured { json, .. } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "chapters:in importer only accepts a Structured payload".into()));
+        };
+        let chapter: PlaybookChapterPayload = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let spec = doc.projection;
+        let mut operations = Vec::new();
+        if !spec.steps.iter().any(|step| step.id == PLAYBOOK_IMPORTED_STEP_ID) {
+            operations.push(PlaybookOperation::AddStep {
+                step: PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() },
+                index: None,
+            });
+        }
+        let block_id = format!("chapter-{}", flatten_playbook_blocks(spec).len() + 1);
+        let mut block = default_block(block_id, "note");
+        block.label = chapter.title;
+        block.text = Some(chapter.text);
+        operations.push(add_block_operation(PLAYBOOK_IMPORTED_STEP_ID, block, None));
+        Ok(Emit::operations(operations))
+    }
+
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
         match body_key {
-            PLAYBOOK_PLAY_BODY_BUILDER => render_builder(doc.projection, self.selected_ids.borrow().first().map(String::as_str)),
+            PLAYBOOK_PLAY_BODY_BUILDER => render_builder(doc.projection, cfg.projection.selected_ids.first().map(String::as_str)),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<PlaybookPlayLabels>(view_state);
-        let is_de = is_de_locale(view_state);
+    fn app_labels(&self, cfg: &ConfigView<'_, PlaybookConfig>) -> AppLabelsOverlay {
+        let labels = resolve_labels::<PlaybookPlayLabels>(cfg.projection);
+        let is_de = is_de_locale(cfg.projection);
         AppLabelsOverlay::default()
             .window_kind_label(PLAYBOOK_PLAY_WINDOW_BUILDER, labels.window_builder)
             .mode_label("builder", labels.mode_builder)
@@ -217,6 +265,18 @@ pub fn create_playbook_play_app() -> App {
     App::from_builder(
         App::builder(PLAYBOOK_PLAY_APP_ID, "Playbook")
             .document(["semio", "playbook"])
+            .artifact_kind(ArtifactKindSpec {
+                id: "text.playbook".into(),
+                name: "Playbook".into(),
+                source_format: PLAYBOOK_DOCUMENT_SCHEMA.into(),
+                component_kind: "playbook".into(),
+                dimension: "text".into(),
+                media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+                schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
+                export_formats: vec![],
+                import_formats: vec![],
+            })
             .mode("builder", "Builder", "blocks")
             .default_mode_id("builder")
             .window_kind(PLAYBOOK_PLAY_WINDOW_BUILDER, "Builder", PLAYBOOK_PLAY_BODY_BUILDER, SurfaceKind::BlockList, "clipboard-list")
@@ -237,7 +297,12 @@ pub fn create_playbook_play_app() -> App {
                     PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, *kind)).collect(),
                 )
                 .default_value("text"),
-            ]),
+            ])
+            // 🎯️ Typed channel surface (mirrors `writer_ui::create_writer_app`'s identical wiring) —
+            // `playbook_engine::playbook_io()` is the single source of truth for both the trait's
+            // `io()` override and this manifest declaration.
+            .config(PlaybookPlayApp.config_spec())
+            .io(playbook_io()),
     )
 }
 //#endregion 🔖️Manifest
@@ -246,15 +311,22 @@ pub fn create_playbook_play_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp};
-    use serde_json::json;
+    use semio_framework_plugin::{testkit::{self, meta}, PluginApp, VcsDocumentApp, ViewState};
+
+    fn new_app() -> VcsDocumentApp<PlaybookPlayApp> {
+        testkit::new_app::<PlaybookPlayApp>()
+    }
+
+    fn new_app_with_registry() -> VcsDocumentApp<PlaybookPlayApp> {
+        testkit::new_app_with_registry::<PlaybookPlayApp>(create_playbook_play_app)
+    }
 
     #[test]
     fn add_block_materializes_declared_kind_default() {
-        let mut app = testkit::new_app_with_registry::<PlaybookPlayApp>(create_playbook_play_app);
-        app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
-        // addBlock fired with no args: the declared `kind` default ("text") must be materialized host-side.
-        app.handle_action("addBlock", None, &ViewState::default(), &testkit::meta("local")).expect("add block");
+        let mut app = new_app_with_registry();
+        app.dispatch_typed(PlaybookCommand::AddStep, &meta("local")).expect("add step");
+        // addBlock fired with the declared default `kind` ("text").
+        app.dispatch_typed(PlaybookCommand::AddBlock { kind: "text".into(), step_id: None }, &meta("local")).expect("add block");
         let projection = app.projection().expect("materialize projection");
         assert_eq!(projection.steps[0].blocks.last().unwrap().kind, "text", "kind default materialized from the registry");
     }
@@ -269,17 +341,15 @@ mod tests {
 
     #[test]
     fn add_step_action_grows_projection() {
-        let mut app = testkit::new_app::<PlaybookPlayApp>();
-        app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
+        let mut app = new_app();
+        app.dispatch_typed(PlaybookCommand::AddStep, &meta("local")).expect("add step");
         assert_eq!(app.projection().expect("materialize projection").steps.len(), 2);
     }
 
     #[test]
     fn add_block_action_appends_and_selects_block() {
-        let mut app = testkit::new_app::<PlaybookPlayApp>();
-        let result = app
-            .handle_action("addBlock", Some(&json!({ "kind": "text" })), &ViewState::default(), &testkit::meta("local"))
-            .expect("add block");
+        let mut app = new_app();
+        let result = app.dispatch_typed(PlaybookCommand::AddBlock { kind: "text".into(), step_id: None }, &meta("local")).expect("add block");
         assert_eq!(result.operations.len(), 1);
         let projection = app.projection().expect("materialize projection");
         assert_eq!(projection.steps[0].blocks.len(), 1);
@@ -290,28 +360,25 @@ mod tests {
     }
 
     #[test]
-    fn set_selection_is_a_view_action_without_operations() {
-        let mut app = testkit::new_app::<PlaybookPlayApp>();
-        let result = app
-            .handle_action("setSelection", Some(&json!({ "ids": ["block-1"] })), &ViewState::default(), &testkit::meta("local"))
-            .expect("set selection");
-        assert!(result.operations.is_empty(), "selection is ephemeral view state, not a document operation");
+    fn set_selection_is_a_view_command_without_operations() {
+        let mut app = new_app();
+        let result = app.dispatch_typed(PlaybookCommand::SetSelection { ids: vec!["block-1".into()] }, &meta("local")).expect("set selection");
+        assert!(result.operations.is_empty(), "selection is ephemeral config state, not a document operation");
     }
 
     #[test]
     fn render_builder_emits_playbook_list_component_scene() {
-        let mut app = testkit::new_app::<PlaybookPlayApp>();
+        let mut app = new_app();
         let node = app.render(PLAYBOOK_PLAY_BODY_BUILDER, None, &ViewState::default()).expect("render");
         assert!(matches!(node, UiNode::ComponentScene(_)));
     }
 
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
-        let mut app = testkit::new_app::<PlaybookPlayApp>();
+        let mut app = new_app();
         testkit::assert_undo_redo_round_trip(
             &mut app,
-            "addStep",
-            None,
+            PlaybookCommand::AddStep,
             |app| app.projection().expect("materialize projection").steps.len(),
             1,
             2,
@@ -320,12 +387,12 @@ mod tests {
 
     #[test]
     fn update_playbook_title_coalesces_into_one_undo_step() {
-        let mut app = testkit::new_app::<PlaybookPlayApp>();
+        let mut app = new_app();
         for title in ["R", "Re", "Recipe"] {
-            app.handle_action("updatePlaybook", Some(&json!({ "value": title })), &ViewState::default(), &testkit::meta("local")).expect("type title");
+            app.dispatch_typed(PlaybookCommand::UpdatePlaybook { value: title.into() }, &meta("local")).expect("type title");
         }
         assert_eq!(app.projection().expect("materialize projection").title.as_deref(), Some("Recipe"));
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &meta("local")).expect("undo");
         assert_eq!(app.projection().expect("materialize projection").title, None, "coalesced typing is one undo step");
     }
 
@@ -337,13 +404,77 @@ mod tests {
     fn two_instances_converge_disjoint_edits_via_backbone() {
         testkit::assert_two_instances_converge::<PlaybookPlayApp, (usize, usize)>(
             "mem://playbook-convergence",
-            ("addStep", None),
-            ("addBlock", Some(&json!({ "kind": "number" }))),
+            PlaybookCommand::AddStep,
+            PlaybookCommand::AddBlock { kind: "number".into(), step_id: None },
             |app| {
                 let projection = app.projection().expect("materialize projection");
                 (projection.steps.len(), projection.steps[0].blocks.len())
             },
         );
     }
+
+    //#region 🔖️PortTests
+    #[test]
+    fn playbook_io_declares_the_extra_chapters_in_port_and_its_own_kind() {
+        let io = playbook_io();
+        assert_eq!(io.artifact.id, "text.playbook");
+        let ports = io.all_ports();
+        let chapters_in = ports.iter().find(|port| port.id == "chapters:in").expect("chapters:in declared");
+        assert_eq!(chapters_in.kind_id.as_deref(), Some("text.document"));
+    }
+
+    fn chapter_media(text: &str, title: &str) -> Media {
+        let payload = PlaybookChapterPayload { id: "jack".into(), title: title.into(), text: text.into(), language_id: "jack".into() };
+        Media {
+            media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+            payload: MediaPayload::Structured { schema: "text.document".into(), json: serde_json::to_string(&payload).unwrap() },
+        }
+    }
+
+    #[test]
+    fn import_media_creates_the_imported_step_and_a_note_block() {
+        let app = PlaybookPlayApp;
+        let spec = empty_playbook_projection();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc_view = DocumentView { projection: &spec, history: &history };
+        let media = chapter_media("MATCH (a) RETURN a", "Jack Query");
+        let emit = app.import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
+        assert_eq!(emit.document_operations.len(), 2, "creates the imported step, then the note block");
+        assert!(matches!(&emit.document_operations[0], PlaybookOperation::AddStep { step, .. } if step.id == PLAYBOOK_IMPORTED_STEP_ID));
+        match &emit.document_operations[1] {
+            PlaybookOperation::AddBlock { step_id, block, .. } => {
+                assert_eq!(step_id, PLAYBOOK_IMPORTED_STEP_ID);
+                assert_eq!(block.kind, "note");
+                assert_eq!(block.label, "Jack Query");
+                assert_eq!(block.text.as_deref(), Some("MATCH (a) RETURN a"));
+            }
+            other => panic!("expected AddBlock, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn import_media_reuses_the_imported_step_on_a_second_import() {
+        let app = PlaybookPlayApp;
+        let mut spec = empty_playbook_projection();
+        spec.steps.push(PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() });
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc_view = DocumentView { projection: &spec, history: &history };
+        let media = chapter_media("second chapter", "Second");
+        let emit = app.import_media("chapters:in", &media, &doc_view).expect("import chapters:in");
+        assert_eq!(emit.document_operations.len(), 1, "the imported step already exists, only the block is added");
+        assert!(matches!(&emit.document_operations[0], PlaybookOperation::AddBlock { step_id, .. } if step_id == PLAYBOOK_IMPORTED_STEP_ID));
+    }
+
+    #[test]
+    fn import_media_rejects_unknown_ports_and_malformed_payloads() {
+        let app = PlaybookPlayApp;
+        let spec = empty_playbook_projection();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc_view = DocumentView { projection: &spec, history: &history };
+        assert!(matches!(app.import_media("nonsense:in", &chapter_media("x", "y"), &doc_view), Err(MediaError::NotImplemented)));
+        let bad_media = Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: "text.document".into(), json: "not json".into() } };
+        assert!(matches!(app.import_media("chapters:in", &bad_media, &doc_view), Err(MediaError::Payload(..))));
+    }
+    //#endregion 🔖️PortTests
 }
 //#endregion 🧪️Tests

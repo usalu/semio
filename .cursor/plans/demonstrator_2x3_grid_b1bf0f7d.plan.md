@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: tests-verify
     content: Update the renderer brand test to expect six brands, run registry generation, vitest and the full demonstrator build, and verify diagonal scroll, per-pane untint and click navigation at runtime
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

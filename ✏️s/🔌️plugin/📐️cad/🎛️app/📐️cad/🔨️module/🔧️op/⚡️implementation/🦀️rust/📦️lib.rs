@@ -447,6 +447,41 @@ fn transform_objects_diff(projection: &CadScene, object_ids: &[String], patch_fo
 }
 //#endregion 🔖️Operations
 
+//#region 🔖️ConfigOperations
+/// @emoji 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe: `cad_document_engine::CadConfig`'s
+/// operation enum. Unlike `CadOperation` (many narrow document-mutating variants), this is a single
+/// whole-record `Snapshot`: `cad_ui`'s pure `handle()` converts its (former `RefCell`-backed)
+/// `CadPlayRuntime` scratch struct into the next `CadConfig` once per dispatch and diffs it against the
+/// pre-command config, exactly like `CadOperation::SetScene`'s existing "whole-document replace"
+/// pattern — session state (selection/hover/camera/engagement/…) mutates in tight clusters (e.g.
+/// `worldSelect` touches 5+ fields together), so per-field variants would just be wide-argument
+/// snapshots in miniature with none of a real granular diff's benefit. `backwards()` restores the
+/// exact pre-command `CadConfig`, giving real, exact undo without any per-field reverse-patch
+/// bookkeeping — the same justification `shooting_op::ShootingConfigOperation` documents for its own
+/// `Snapshot` fallback, generalized here to the sole variant.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum CadConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: cad_document_engine::CadConfig,
+    },
+}
+
+impl Operation<cad_document_engine::CadConfig> for CadConfigOperation {
+    type Diff = cad_document_engine::CadConfig;
+
+    fn diff(&self, _base: &cad_document_engine::CadConfig) -> cad_document_engine::CadConfig {
+        let CadConfigOperation::Snapshot { config } = self;
+        config.clone()
+    }
+
+    fn backwards(&self, base: &cad_document_engine::CadConfig) -> Vec<Self> {
+        vec![CadConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+//#endregion 🔖️ConfigOperations
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -473,7 +508,7 @@ mod tests {
 
     fn sample_geometry() -> CadGeometry {
         CadGeometry {
-            anchors: vec![json!({ "id": "anchor-1", "position": [0.0, 0.0, 0.0] })],
+            anchors: vec![serde_json::from_value(json!({ "id": "anchor-1", "position": [0.0, 0.0, 0.0] })).expect("dsl value")],
             vertices: vec![CadVertex { id: "v1".into(), position: [0.0, 0.0, 0.0] }, CadVertex { id: "v2".into(), position: [1.0, 0.0, 0.0] }],
             edges: vec![CadEdge { id: "e1".into(), vertex_ids: vec!["v1".into(), "v2".into()], curve: CadEdgeCurve { kind: "line".into() } }],
             wires: vec![CadWire { id: "w1".into(), edge_ids: vec!["e1".into()] }],
@@ -507,6 +542,20 @@ mod tests {
         scene.references_by_model_definition_id.insert(CadPaneId::Shape.model_definition_id().to_string(), vec![sample_reference()]);
         scene.active_model_definition_id = CadPaneId::Shape.model_definition_id().to_string();
         scene
+    }
+
+    #[test]
+    fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
+        let base = cad_document_engine::CadConfig { selection_method: "lasso".into(), active_utility_id: "move".into(), ..cad_document_engine::CadConfig::default() };
+        let next = cad_document_engine::CadConfig { selection_method: "lasso".into(), active_utility_id: "rotate".into(), selected_object_ids: vec!["object-1".into()], ..cad_document_engine::CadConfig::default() };
+        let operation = CadConfigOperation::Snapshot { config: next.clone() };
+        let forward = operation.diff(&base);
+        assert_eq!(forward, next);
+        let backwards = operation.backwards(&base);
+        assert_eq!(backwards, vec![CadConfigOperation::Snapshot { config: base.clone() }]);
+        let restored = backwards[0].diff(&forward);
+        assert_eq!(restored, base);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
