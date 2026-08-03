@@ -1,15 +1,15 @@
 {
   "title": "Get Procedural 3D Working End to End",
-  "emoji": "🧊",
-  "status": "open",
+  "emoji": "\ud83e\uddca",
+  "status": "closed",
   "description": "Get procedural 3d working end to end. Latest: SelectionSet migration broke procedural-3d-ui (merge_world_selection_ids).",
-  "summary": "Procedural 3d boots again after Rust FE0F char-literal compile breaks. Restored corrupted ui_wgpu lib from HEAD (naive apostrophe FE0F strip). Converted real multi-scalar emoji char lits (OS starts_with/replacen) to string patterns; kept \u0026[char] testkit as base scalars. Vite :6018 e2e ok=true.",
+  "summary": "Procedural 3d boots after migrating procedural 2d/3d UI app_labels! to native_en/native_de/reuse_* (LocaleLabels/AppLabelsOverlay deleted). Meta builder uses LocalizedLabel; runtime strings use Label::data. Also imported UiTreeActionPlacement in framework-plugin. Vite :6018 e2e: title procedural\u00b73d, 3 canvases, Flow+Preview.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2403"
   },
-  "goal": "🎯︎r2602🎯︎runningsketchpad",
+  "goal": "\ud83c\udfaf\ufe0er2602\ud83c\udfaf\ufe0erunningsketchpad",
   "sessions": [
-    "⚪fa27f60ad79f4faf9d633e4c476e912a",
-    "⚪4f317966ec694a3facfa6a98e7113428"
+    "\u26aafa27f60ad79f4faf9d633e4c476e912a",
+    "\u26aa4f317966ec694a3facfa6a98e7113428"
   ]
 }

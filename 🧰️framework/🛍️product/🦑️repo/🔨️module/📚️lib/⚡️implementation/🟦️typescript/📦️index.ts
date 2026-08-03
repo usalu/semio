@@ -3848,7 +3848,7 @@ export function installMicroCommitGitHooks(root: string): void {
   mkdirSync(join(root, ".🦑️repo"), { recursive: true });
   writeFileSync(join(root, ".🦑️repo", MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
   const hooksDir = join(root, ".git", "hooks");
-  const repoHooksDir = join(root, "repo", "hooks");
+  const repoHooksDir = join(root, "🧰️framework", "🛍️product", "🦑️repo", "🪝️hooks");
   mkdirSync(hooksDir, { recursive: true });
   mkdirSync(repoHooksDir, { recursive: true });
   for (const name of [...MICRO_COMMIT_POST_WIPE_HOOKS, "prepare-commit-msg"] as const) {

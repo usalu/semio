@@ -498,7 +498,7 @@ exit 0
 	})
 }
 
-func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
+func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 	repoRoot := findTestRepoRoot(".")
 
 	cases := []struct {
@@ -508,98 +508,108 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 		forbiddenFragments []string
 	}{
 		{
-			name: "codex template uses coda assistant",
+			name: "codex uses the cross-platform repo bootstrap",
 			path: filepath.Join(repoRoot, ".codex", "config.toml"),
 			requiredFragments: []string{
-				`command = "go"`,
-				`"run"`,
-				`"./repo/codex"`,
+				`command = "bun"`,
+				`args = ["./📜️script.ts", "dev", "mcp", "stdio", "codex"]`,
 			},
 			forbiddenFragments: []string{
-				"coda/engine",
-				"coda.py",
+				"repo/client/client",
 			},
 		},
 		{
-			name: "kiro settings stay repo relative",
+			name: "cursor uses the cross-platform repo bootstrap",
+			path: filepath.Join(repoRoot, ".cursor", "mcp.json"),
+			requiredFragments: []string{
+				`"command": "bun"`,
+				`"args": ["./📜️script.ts", "dev", "mcp", "stdio", "cursor"]`,
+			},
+			forbiddenFragments: []string{
+				"repo/client/client",
+			},
+		},
+		{
+			name: "generic clients use the cross-platform repo bootstrap",
+			path: filepath.Join(repoRoot, ".mcp.json"),
+			requiredFragments: []string{
+				`"command": "bun"`,
+				`"args": ["./📜️script.ts", "dev", "mcp", "stdio", "client"]`,
+			},
+			forbiddenFragments: []string{
+				"repo/client/client",
+			},
+		},
+		{
+			name: "copilot uses the cross-platform repo bootstrap",
+			path: filepath.Join(repoRoot, ".vscode", "mcp.json"),
+			requiredFragments: []string{
+				`"command": "bun"`,
+				`"args": ["./📜️script.ts", "dev", "mcp", "stdio", "copilot"]`,
+			},
+			forbiddenFragments: []string{
+				"repo/client/client",
+			},
+		},
+		{
+			name: "kiro uses the cross-platform repo bootstrap",
 			path: filepath.Join(repoRoot, ".kiro", "settings", "mcp.json"),
 			requiredFragments: []string{
-				`"./repo/kiro"`,
-				`"go"`,
-				`"run"`,
+				`"command": "bun"`,
+				`"args": ["./📜️script.ts", "dev", "mcp", "stdio", "kiro"]`,
 			},
 			forbiddenFragments: []string{
-				"/workspaces/semio/",
-				"coda/engine",
-				"coda.py",
+				"repo/client/client",
 			},
 		},
 		{
-			name: "kiro compose agent uses coda assistant",
-			path: filepath.Join(repoRoot, ".kiro", "agents", "compose.json"),
+			name: "windsurf uses the cross-platform repo bootstrap",
+			path: filepath.Join(repoRoot, ".windsurf", "mcp.json"),
 			requiredFragments: []string{
-				`"./repo/kiro"`,
-				`"go"`,
-				`"run"`,
+				`"command": "bun"`,
+				`"args": ["./📜️script.ts", "dev", "mcp", "stdio", "client"]`,
 			},
 			forbiddenFragments: []string{
-				"coda/engine",
-				"coda.py",
+				"repo/client/client",
 			},
 		},
 		{
-			name: "devcontainer post-create antigravity config uses coda assistant",
+			name: "devcontainer builds the repo client from its canonical source",
 			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
 			requiredFragments: []string{
-				"/workspaces/semio/compose/engine",
-				"/workspaces/semio/coda/assistant",
-				"main.py",
+				`🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client`,
+				`🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation/🐹️go`,
+				"bun nx run workspace:setup",
 			},
 			forbiddenFragments: []string{
-				"/workspaces/semio/coda/engine",
-				"coda.py",
+				"repo/client/client",
+				"./repo/client/mcp/go",
 			},
 		},
 		{
-			name: "native bootstrap script performs repo bootstrap",
-			path: filepath.Join(repoRoot, ".devcontainer", "install-native.ps1"),
+			name: "native shell bootstrap builds the repo client from its canonical source",
+			path: filepath.Join(repoRoot, "🧰️framework", "🛍️product", "🦑️repo", "🔨️module", "🔩️native", "🥾️bootstrap", "⌨️script.sh"),
 			requiredFragments: []string{
-				"PLAYWRIGHT_BROWSERS_PATH",
-				`$script:PythonKind = "3.14"`,
-				`Sync-WingetPackage -Id "Microsoft.DotNet.SDK.10" -Label ".NET SDK 10.0"`,
-				`Sync-WingetPackage -Id "Microsoft.VisualStudio.2022.BuildTools" -Label "Visual Studio Build Tools"`,
-				`Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"`,
-				`Stop-RepoPythonProcesses -RepoRoot $repoRoot`,
-				`@("sync", "--all-packages", "--all-groups", "--python", $script:PythonKind)`,
-				`@("run", "./repo/client/mcp/go", "configure", "--repo", $repoRoot)`,
-				`@("playwright", "install", "chromium")`,
-				`@("run", "git:setup")`,
+				`🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client`,
+				`🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation/🐹️go`,
+				"bun nx run workspace:setup",
 			},
 			forbiddenFragments: []string{
-				`Microsoft.DotNet.SDK.7`,
+				"repo/client/client",
+				"./repo/client/mcp/go",
 			},
 		},
 		{
-			name: "devcontainer excludes dotnet 7 and restores monorepo solution",
-			path: filepath.Join(repoRoot, ".devcontainer", "devcontainer.json"),
+			name: "native windows bootstrap builds the repo client from its canonical source",
+			path: filepath.Join(repoRoot, "🧰️framework", "🛍️product", "🦑️repo", "🔨️module", "🔩️native", "🥾️bootstrap", "⌨️script.ps1"),
 			requiredFragments: []string{
-				`"version": "1.26"`,
-				`"version": "2.53"`,
-				`"additionalVersions": "9.0 10.0"`,
+				`🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client.exe`,
+				`./🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation/🐹️go`,
+				`@("nx", "run", "workspace:setup")`,
 			},
 			forbiddenFragments: []string{
-				`7.0`,
-			},
-		},
-		{
-			name: "devcontainer post-create restores monorepo solution",
-			path: filepath.Join(repoRoot, ".devcontainer", "post-create.sh"),
-			requiredFragments: []string{
-				"uv sync --all-packages --all-groups",
-				"dotnet restore Monorepo.sln",
-			},
-			forbiddenFragments: []string{
-				"dotnet restore net/Compose.sln",
+				"repo/client/client.exe",
+				"./repo/client/mcp/go",
 			},
 		},
 	}
@@ -1257,7 +1267,7 @@ func TestStreamAndListTicketsIgnoreNestedWorkspaceFiles(t *testing.T) {
 	SetRootDir(tmpDir)
 	defer SetRootDir(oldRootDir)
 
-	ticketDir := filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets", "26", "03", "07", "SAMPLE")
+	ticketDir := filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets", FormatYearDir(26), FormatMonthDir(3), FormatDayDir(7), "SAMPLE")
 	if err := os.MkdirAll(filepath.Join(ticketDir, "workspace", "node_modules", "pkg"), 0755); err != nil {
 		t.Fatalf("failed to create nested workspace: %v", err)
 	}
@@ -8048,8 +8058,8 @@ func TestTechnologyListIDs(t *testing.T) {
 	}
 	expectedIDs := map[string]string{
 		"compose": emojiText(EmojiTechnologyUser) + "compose",
-		"repo":  emojiText(EmojiTechnologyInfra) + "repo",
-		"coda":  emojiText(EmojiTechnologyResearch) + "coda",
+		"repo":    emojiText(EmojiTechnologyInfra) + "repo",
+		"coda":    emojiText(EmojiTechnologyResearch) + "coda",
 	}
 	for _, p := range technologies {
 		expected, ok := expectedIDs[p.Name]
@@ -8089,12 +8099,12 @@ func TestBundleListIDs(t *testing.T) {
 		"compose/desktop":    emojiText(EmojiTechnologyUser) + "compose" + emojiText("🖥️") + "desktop",
 		"compose/docs":       emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "docs",
 		"compose/play":       emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "play",
-		"asset":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "asset",
-		"repo/client":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
-		"repo/server":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍️") + "server",
-		"repo/go":          emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleLibrary) + "go",
-		"repo/vscode":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩️") + "vscode",
-		"repo/graphql":     emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🔗️") + "graphql",
+		"asset":              emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "asset",
+		"repo/client":        emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
+		"repo/server":        emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍️") + "server",
+		"repo/go":            emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleLibrary) + "go",
+		"repo/vscode":        emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩️") + "vscode",
+		"repo/graphql":       emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🔗️") + "graphql",
 	}
 	for _, b := range bundles {
 		expected, ok := expectedIDs[b.Name]
@@ -8307,12 +8317,12 @@ func TestExhaustiveMonorepoTreeFullIDDocument(t *testing.T) {
 		"compose/js":      emojiText(EmojiTechnologyUser) + "compose" + emojiText("📜️") + "js",
 		"compose/go":      emojiText(EmojiTechnologyUser) + "compose" + emojiText("🐹️") + "go",
 		"compose/engine":  emojiText(EmojiTechnologyUser) + "compose" + emojiText("⚙️") + "engine",
-		"asset":  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "asset",
+		"asset":           emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "asset",
 		"compose/desktop": emojiText(EmojiTechnologyUser) + "compose" + emojiText("🖥️") + "desktop",
 		"compose/docs":    emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "docs",
-		"repo/client":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
-		"repo/server":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍️") + "server",
-		"repo/vscode":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩️") + "vscode",
+		"repo/client":     emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
+		"repo/server":     emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍️") + "server",
+		"repo/vscode":     emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩️") + "vscode",
 	}
 	allBundles := []*TreeNode{}
 	for _, technology := range []*TreeNode{composeTechnology, composeRepoTechnology, codaTechnology} {
@@ -10923,6 +10933,10 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	if ticket.Interactions[len(ticket.Interactions)-1].Kind != "ticket.close" {
 		t.Errorf("last interaction Kind = %q, want %q", ticket.Interactions[len(ticket.Interactions)-1].Kind, "ticket.close")
 	}
+	closeFiles := ticket.Interactions[len(ticket.Interactions)-1].Files
+	if len(closeFiles) != 1 || closeFiles[0].Path != testFile {
+		t.Fatalf("no-management close files = %#v, want %q", closeFiles, testFile)
+	}
 	if len(ticket.Sessions) != openSessionCount {
 		t.Fatalf("FinishTicket must not append sessions: before=%d after=%d", openSessionCount, len(ticket.Sessions))
 	}
@@ -11855,7 +11869,6 @@ func TestMcpToolsSchemas(t *testing.T) {
 	s := CreateMcpServer(McpClientGeneric, DefaultCommandTimeout)
 	tools := s.ListTools()
 	allowedTools := []string{
-		"search",
 		"ticket_open",
 		"ticket_close",
 		"ticket_reopen",
@@ -16426,8 +16439,17 @@ func TestHookCommandJSONOutput(t *testing.T) {
 func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
 	repoRoot := t.TempDir()
 	hooksDir := filepath.Join(repoRoot, ".git", "hooks")
+	hookSourcesDir := filepath.Join(repoRoot, "🧰️framework", "🛍️product", "🦑️repo", "🪝️hook")
 	if err := os.MkdirAll(hooksDir, 0o755); err != nil {
 		t.Fatalf("mkdir hooks: %v", err)
+	}
+	if err := os.MkdirAll(hookSourcesDir, 0o755); err != nil {
+		t.Fatalf("mkdir hook sources: %v", err)
+	}
+	for _, hookName := range []string{"prepare-commit-msg", "post-commit", "post-checkout", "post-merge", "post-rewrite"} {
+		if err := os.WriteFile(filepath.Join(hookSourcesDir, hookName), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+			t.Fatalf("write hook source %s: %v", hookName, err)
+		}
 	}
 	for _, hookName := range []string{"pre-commit", "post-commit"} {
 		hookPath := filepath.Join(hooksDir, hookName)
@@ -16451,7 +16473,7 @@ func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
 	if !strings.Contains(output, "micro-commit hooks installed") {
 		t.Fatalf("expected micro-commit hooks install message, got %q", output)
 	}
-	for _, hookName := range []string{"post-commit", "prepare-commit-msg"} {
+	for _, hookName := range []string{"prepare-commit-msg", "post-commit", "post-checkout", "post-merge", "post-rewrite"} {
 		hookPath := filepath.Join(hooksDir, hookName)
 		if st, err := os.Stat(hookPath); err != nil || st.IsDir() {
 			t.Fatalf("expected micro-commit hook at %s: %v", hookPath, err)
@@ -16475,6 +16497,7 @@ func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
 
 func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
 	repoRoot := t.TempDir()
+	sourceRepoRoot := findTestRepoRoot(".")
 	initGit := exec.Command("git", "init")
 	initGit.Dir = repoRoot
 	if out, err := initGit.CombinedOutput(); err != nil {
@@ -16485,16 +16508,17 @@ func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
 	if err := os.MkdirAll(hooksDir, 0o755); err != nil {
 		t.Fatalf("mkdir hooks: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(repoRoot, "repo", "hook"), 0o755); err != nil {
+	hookSourcesDir := filepath.Join(repoRoot, "🧰️framework", "🛍️product", "🦑️repo", "🪝️hook")
+	if err := os.MkdirAll(hookSourcesDir, 0o755); err != nil {
 		t.Fatalf("mkdir repo hooks: %v", err)
 	}
-	for _, hookName := range []string{"post-commit", "prepare-commit-msg"} {
-		hookSrc := filepath.Join("..", "..", "hook", hookName)
+	for _, hookName := range []string{"prepare-commit-msg", "post-commit", "post-checkout", "post-merge", "post-rewrite"} {
+		hookSrc := filepath.Join(sourceRepoRoot, "🧰️framework", "🛍️product", "🦑️repo", "🪝️hook", hookName)
 		data, err := os.ReadFile(hookSrc)
 		if err != nil {
 			t.Fatalf("read hook source %s: %v", hookName, err)
 		}
-		if err := os.WriteFile(filepath.Join(repoRoot, "repo", "hook", hookName), data, 0o755); err != nil {
+		if err := os.WriteFile(filepath.Join(hookSourcesDir, hookName), data, 0o755); err != nil {
 			t.Fatalf("write hook source %s: %v", hookName, err)
 		}
 	}
@@ -16514,11 +16538,6 @@ func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
 	cmd.Env = append(os.Environ(), "GIT_DIR="+gitDir, "GIT_WORK_TREE="+repoRoot)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("run post-commit: %v\n%s", err, out)
-	}
-	if _, err := os.Stat(templatePath); err == nil {
-		t.Fatalf("expected %s removed after post-commit", templatePath)
-	} else if !os.IsNotExist(err) {
-		t.Fatalf("stat %s: %v", templatePath, err)
 	}
 	b, err := os.ReadFile(editMsgPath)
 	if err != nil {
@@ -23308,13 +23327,13 @@ func TestMcpStdioInitializeHandshake(t *testing.T) {
 	if repoRoot == "" {
 		t.Skip("repo root not found")
 	}
-	bin := filepath.Join(repoRoot, "repo", "client", "client")
+	bin := filepath.Join(repoRoot, "🧰️framework", "🛍️product", "🦑️repo", "🔨️module", "💻️client", "client")
 	if _, err := os.Stat(bin); err != nil {
 		t.Skip("repo client binary not built")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, bin, "mcp", "cursor")
+	cmd := exec.CommandContext(ctx, bin, "--timeout", "50ms", "mcp", "cursor")
 	cmd.Dir = repoRoot
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -23328,6 +23347,7 @@ func TestMcpStdioInitializeHandshake(t *testing.T) {
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
+	time.Sleep(100 * time.Millisecond)
 	defer func() {
 		_ = stdin.Close()
 		_ = cmd.Process.Kill()

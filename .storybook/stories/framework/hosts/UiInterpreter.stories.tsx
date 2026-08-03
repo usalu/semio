@@ -52,7 +52,7 @@ const TREE_TREE: UiNode = {
           iconId: "square",
           selected: true,
           action: { controllerId: STORY_UI_INTERPRETER_CONTROLLER_ID, action: "selectItem", args: { id: "item-background" } },
-          actions: [{ iconId: "trash-2", label: "Delete", revealOnHover: true, action: { controllerId: STORY_UI_INTERPRETER_CONTROLLER_ID, action: "deleteItem", args: { id: "item-background" } } }],
+          actions: [{ iconId: "trash-2", label: "Delete", placement: "menu", action: { controllerId: STORY_UI_INTERPRETER_CONTROLLER_ID, action: "deleteItem", args: { id: "item-background" } } }],
         },
         {
           id: "item-foreground",

@@ -15,11 +15,11 @@ use writer_engine::{
 use writer_op::{WriterConfigOperation, WriterOperation};
 use writer_protocol::WriterCommand;
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
-    build_text_editor_scene, engagement_token_matches, localized_label_map, strip_engagement_prefix,
+    build_text_editor_scene, engagement_token_matches, strip_engagement_prefix,
     tree_item, ui_declarative_sections_to_tree, ui_text, App,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, AppActionRegistry, AppIo, AppLabelsOverlay, AppLabelsOverlayExt, LocalizedLabel,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, AppActionRegistry, AppIo, LocalizedLabel,
     ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, Menu,
-    DocumentApp, DocumentView, ConfigView, Emit, IconName, AppLabels, Locale, Terminology, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
+    DocumentApp, DocumentView, ConfigView, Emit, IconName, AppLabels, Label, Locale, Terminology, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
     UiTreeItemNode, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -67,7 +67,7 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
     let children: Vec<UiTreeItemNode> = node.children.iter().map(jack_ast_to_tree_item).collect();
     UiTreeItemNode {
         id: node.id.clone(),
-        label: node.label.clone(),
+        label: Label::data(node.label.clone()),
         description: Some(node.kind.clone()),
         // 🛟️ `and_then(IconName::from_str)` (not the panicking `IconName::from`) so a jack AST kind
         // whose icon string isn't (yet) in the shared icon catalog just renders with no icon.
@@ -128,51 +128,9 @@ semio_framework_plugin::app_labels! {
         tab_size: native_en "Tab size", native_de "Tabulatorgröße", reuse_en "Tab size", reuse_de "Tabulatorgröße";
         engagement_placeholder: native_en "Format, lint, line numbers", native_de "Format, prüfen, Zeilennummern", reuse_en "Format, lint, line numbers", reuse_de "Format, prüfen, Zeilennummern";
         editor_mode_status: native_en "Text editor", native_de "Texteditor", reuse_en "Text editor", reuse_de "Texteditor";
-        window_main: native_en "Jack", native_de "Jack", reuse_en "Jack", reuse_de "Jack";
-        mode_edit: native_en "Edit", native_de "Bearbeiten", reuse_en "Edit", reuse_de "Bearbeiten";
-        panel_tab_content: native_en "Content", native_de "Inhalt", reuse_en "Content", reuse_de "Inhalt";
-        panel_tab_outline: native_en "Outline", native_de "Gliederung", reuse_en "Outline", reuse_de "Gliederung";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_writer_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn writer_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("formatDocument", "Format Document", "Dokument formatieren"),
-        ("lintDocument", "Lint Document", "Dokument prüfen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("textEdit", "Edit Text", "Text bearbeiten"),
-        ("setText", "Set Text", "Text festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("commitRename", "Commit Rename", "Umbenennung übernehmen"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-        ("setDocument", "Set Document", "Dokument festlegen"),
-        ("setDocumentJson", "Set Document JSON", "Dokument-JSON festlegen"),
-        ("setFixtureJson", "Set Fixture JSON", "Fixture-JSON festlegen"),
-        ("requestCompletions", "Request Completions", "Vervollständigungen anfordern"),
-        ("textSelect", "Text Select", "Text auswählen"),
-        ("setEditorSelection", "Set Editor Selection", "Editor-Auswahl festlegen"),
-        ("selectAstNode", "Select Ast Node", "AST-Knoten auswählen"),
-        ("setAstSelection", "Set Ast Selection", "AST-Auswahl festlegen"),
-        ("setAstHover", "Set Ast Hover", "Überfahren (AST) festlegen"),
-        ("textHover", "Text Hover", "Text-Hover"),
-        ("toggleLineNumbers", "Toggle Line Numbers", "Zeilennummern umschalten"),
-        ("setEditorSetting", "Set Editor Setting", "Editor-Einstellung festlegen"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_writer_app`.
-/// Writer declares no utilities today; kept for parity with the other apps' `app_labels()` wiring.
-fn writer_utility_labels(_is_de: bool) -> HashMap<String, String> {
-    HashMap::new()
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -189,7 +147,7 @@ fn render_document_panel(document: &WriterProjection, config: &WriterConfig, lab
             id: "writer-document".into(),
             label: Some(labels.document.into()),
             default_open: Some(true),
-            children: vec![ui_text(document.id.clone()), ui_text(document.language_id.clone())],
+            children: vec![ui_text(Label::data(document.id.clone())), ui_text(Label::data(document.language_id.clone()))],
             presence: UiPresence::default(),
             menu: None,
         }]);
@@ -199,14 +157,14 @@ fn render_document_panel(document: &WriterProjection, config: &WriterConfig, lab
         vec![UiTreeItemNode {
             description: Some(root.kind.clone()),
             icon_id: jack_ast_tree_icon(&root.kind).and_then(IconName::from_str),
-            ..tree_item(root.id.as_str(), root.label.as_str())
+            ..tree_item(root.id.as_str(), Label::data(root.label.as_str()))
         }]
     } else {
         vec![jack_ast_to_tree_item(&root)]
     };
     let (highlighted_ast_id, _, _) = editor_hover_context(document, config);
     PanelTreeBuilder::new("writer-play-document")
-        .section_or_placeholder("writer-play-document.ast", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, items, labels.empty_query)
+        .section_or_placeholder("writer-play-document.ast", Some(labels.document.into()), true, items, labels.empty_query)
         .selected(config.selected_ast_ids.clone())
         .highlighted(highlighted_ast_id.map(|id| vec![id]).unwrap_or_default())
         .selection_change(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstSelection", None))
@@ -231,11 +189,11 @@ fn render_inspection_panel(document: &WriterProjection, config: &WriterConfig, l
             label: Some(labels.document.into()),
             default_open: Some(true),
             children: vec![
-                ui_text(format!("Schema: {}", document.schema)),
-                ui_text(format!("Id: {}", document.id)),
-                ui_text(format!("Language: {}", document.language_id)),
-                ui_text(format!("Uri: {}", document.uri)),
-                ui_text(format!("Lines: {}", document.text.lines().count())),
+                ui_text(Label::data(format!("Schema: {}", document.schema))),
+                ui_text(Label::data(format!("Id: {}", document.id))),
+                ui_text(Label::data(format!("Language: {}", document.language_id))),
+                ui_text(Label::data(format!("Uri: {}", document.uri))),
+                ui_text(Label::data(format!("Lines: {}", document.text.lines().count()))),
             ],
             presence: UiPresence::default(),
             menu: None,
@@ -245,9 +203,9 @@ fn render_inspection_panel(document: &WriterProjection, config: &WriterConfig, l
             label: Some(labels.camera.into()),
             default_open: Some(false),
             children: vec![
-                ui_text(format!("x: {}", config.camera.x)),
-                ui_text(format!("y: {}", config.camera.y)),
-                ui_text(format!("zoom: {}", config.camera.zoom)),
+                ui_text(Label::data(format!("x: {}", config.camera.x))),
+                ui_text(Label::data(format!("y: {}", config.camera.y))),
+                ui_text(Label::data(format!("zoom: {}", config.camera.zoom))),
             ],
             presence: UiPresence::default(),
             menu: None,
@@ -261,7 +219,7 @@ fn render_inspection_panel(document: &WriterProjection, config: &WriterConfig, l
                 id: "writer-inspector.diagnostics".into(),
                 label: Some(labels.diagnostics.into()),
                 default_open: Some(true),
-                children: messages.into_iter().map(ui_text).collect(),
+                children: messages.into_iter().map(Label::data).map(ui_text).collect(),
                 presence: UiPresence::default(),
                 menu: None,
             });
@@ -716,7 +674,7 @@ impl DocumentApp for WriterPlayApp {
             WRITER_PLAY_BODY_DOCUMENT => render_document_panel(document, config, labels),
             WRITER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
             WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(document, config, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -811,18 +769,6 @@ impl DocumentApp for WriterPlayApp {
             },
         ];
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), measures)])
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, WriterConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<WriterPlayLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(WRITER_PLAY_WINDOW_KIND, labels.window_main)
-            .panel_tab_label(WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID, labels.panel_tab_content)
-            .panel_tab_label(WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID, labels.panel_tab_outline)
-            .mode_label("edit", labels.mode_edit)
-            .action_labels(writer_action_labels(is_de))
-            .utility_labels(writer_utility_labels(is_de))
     }
 
     fn context_menu(

@@ -381,10 +381,11 @@ if [ -z "$SKIP_TOOL_INSTALL" ]; then
 fi
 
 #region 🔖️RepoConfigure
-echo "🔧️ Syncing repo hook and MCP configuration..."
-if [ -x "$REPO_ROOT/repo/client/client" ]; then
-  if "$REPO_ROOT/repo/client/client" configure --repo "$REPO_ROOT"; then
-    echo "✅️ Repo hook and MCP configuration synced."
+echo "🔧️ Syncing repo hook configuration..."
+REPO_CLIENT="$REPO_ROOT/🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client"
+if [ -x "$REPO_CLIENT" ]; then
+  if "$REPO_CLIENT" configure --repo "$REPO_ROOT"; then
+    echo "✅️ Repo hook configuration synced."
   else
     echo "⚠️  Repo configure failed, continuing without blocking attach."
   fi

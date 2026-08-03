@@ -10,12 +10,12 @@
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     app_labels, build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at,
-    localized_label_map, tree_item, tree_item_with_action,
+    tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest,
-    ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, LocalizedLabel, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, NodeGraphHover, MediaClass, MediaForm, MediaType, PanelTreeBuilder,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabels, ContextMenuItemSpec, ContextMenuRequest,
+    ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, NodeGraphHover, MediaClass, MediaForm, MediaType, PanelTreeBuilder,
     TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
-    ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
+    Terminology, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -90,8 +90,15 @@ fn is_de_locale(cfg: &RewriteConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &RewriteConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🗣️ `RewriteConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
+fn rewrite_locale(cfg: &RewriteConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
+/// `AppLabels::labels`. `RewriteConfig` carries no terminology field, so terminology is always `Native`.
+fn resolve_labels<L: AppLabels>(cfg: &RewriteConfig) -> &'static L {
+    L::labels(rewrite_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -673,60 +680,40 @@ fn node_to_workflow_record(node: &Node) -> NodeGraphNodeRecord {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the Rewrite rule app; one field per label makes every locale combination compile-checked.
 app_labels! {
+    /// 🗣️ Complete UI label set for the Rewrite rule app; one field per label makes every locale×terminology combination compile-checked. No distinct reuse-terminology concept for this app, so reuse repeats native.
     struct TrinityRewriteLabels {
-        pieces: &'static str = en: "Pieces", de: "Stücke";
-        piece: &'static str = en: "Piece", de: "Stück";
-        connection: &'static str = en: "Connection", de: "Verbindung";
-        connector: &'static str = en: "Connector", de: "Verbinder";
-        catalogue: &'static str = en: "Catalogue", de: "Katalog";
-        add_to_lhs: &'static str = en: "Add to LHS", de: "Zu LHS hinzufügen";
-        add_to_rhs: &'static str = en: "Add to RHS", de: "Zu RHS hinzufügen";
-        parameters: &'static str = en: "Parameters", de: "Parameter";
-        geometry: &'static str = en: "Geometry", de: "Geometrie";
-        identity: &'static str = en: "Identity", de: "Identität";
-        history: &'static str = en: "History", de: "Verlauf";
-        rule: &'static str = en: "Rule", de: "Regel";
-        window_before: &'static str = en: "Before", de: "Vorher";
-        window_after: &'static str = en: "After", de: "Nachher";
-        window_lhs: &'static str = en: "LHS", de: "LHS";
-        window_rhs: &'static str = en: "RHS", de: "RHS";
-        window_jack: &'static str = en: "Jack", de: "Jack";
-        window_parameters: &'static str = en: "Parameters", de: "Parameter";
+        pieces: native_en "Pieces", native_de "Stücke", reuse_en "Pieces", reuse_de "Stücke";
+        piece: native_en "Piece", native_de "Stück", reuse_en "Piece", reuse_de "Stück";
+        connection: native_en "Connection", native_de "Verbindung", reuse_en "Connection", reuse_de "Verbindung";
+        connector: native_en "Connector", native_de "Verbinder", reuse_en "Connector", reuse_de "Verbinder";
+        catalogue: native_en "Catalogue", native_de "Katalog", reuse_en "Catalogue", reuse_de "Katalog";
+        add_to_lhs: native_en "Add to LHS", native_de "Zu LHS hinzufügen", reuse_en "Add to LHS", reuse_de "Zu LHS hinzufügen";
+        add_to_rhs: native_en "Add to RHS", native_de "Zu RHS hinzufügen", reuse_en "Add to RHS", reuse_de "Zu RHS hinzufügen";
+        parameters: native_en "Parameters", native_de "Parameter", reuse_en "Parameters", reuse_de "Parameter";
+        geometry: native_en "Geometry", native_de "Geometrie", reuse_en "Geometry", reuse_de "Geometrie";
+        identity: native_en "Identity", native_de "Identität", reuse_en "Identity", reuse_de "Identität";
+        history: native_en "History", native_de "Verlauf", reuse_en "History", reuse_de "Verlauf";
+        rule: native_en "Rule", native_de "Regel", reuse_en "Rule", reuse_de "Regel";
+        window_before: native_en "Before", native_de "Vorher", reuse_en "Before", reuse_de "Vorher";
+        window_after: native_en "After", native_de "Nachher", reuse_en "After", reuse_de "Nachher";
+        window_lhs: native_en "LHS", native_de "LHS", reuse_en "LHS", reuse_de "LHS";
+        window_rhs: native_en "RHS", native_de "RHS", reuse_en "RHS", reuse_de "RHS";
+        window_jack: native_en "Jack", native_de "Jack", reuse_en "Jack", reuse_de "Jack";
+        window_parameters: native_en "Parameters", native_de "Parameter", reuse_en "Parameters", reuse_de "Parameter";
     }
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_rewrite_app`'s static
-/// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette
-/// and Actions rail get a translated label without threading locale through the whole builder chain.
-fn trinity_rewrite_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("addRuleClause", "Add Rule Clause", "Regelklausel hinzufügen"),
-        ("resetRule", "Reset Rule", "Regel zurücksetzen"),
-        ("setParameter", "Set Parameter", "Parameter festlegen"),
-        ("patchNodes", "Patch Nodes", "Knoten aktualisieren"),
-        ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
-        ("setViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
-        ("setLhsJson", "Set LHS Json", "LHS-JSON festlegen"),
-        ("setRhsJson", "Set RHS Json", "RHS-JSON festlegen"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
-        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
-        ("textSelect", "Select Text", "Text auswählen"),
-        ("textHover", "Hover Text", "Text hovern"),
-        ("reorganize", "Reorganize", "Neu anordnen"),
-        ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
-    ])
-}
-//#endregion 🔖️CommandLabels
+// 🗣️ Every operation/view-action's German translation now lives directly at its
+// `.action_with(...)` call site in `create_rewrite_app`'s manifest (see `🔖️Manifest` below) — this
+// used to be a separate `trinity_rewrite_action_labels` id->label overlay map, deleted along with
+// `AppLabelsOverlay`.
 
 //#region 🔖️Panels
 fn build_document_tree(state: &RewriteRuleState, cfg: &RewriteConfig, labels: &TrinityRewriteLabels) -> UiNode {
     let Some(fixture) = parse_fixture_json(&state.before_fixture_json) else {
-        return ui_text("Invalid trinity fixture");
+        return ui_text(Label::data("Invalid trinity fixture"));
     };
     let builder = PanelTreeBuilder::new("trinity-document");
     let node_items: Vec<UiTreeItemNode> = fixture
@@ -735,7 +722,7 @@ fn build_document_tree(state: &RewriteRuleState, cfg: &RewriteConfig, labels: &T
         .map(|node| {
             tree_item_with_action(
                 builder.item_id("node", &node.id),
-                if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
+                Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
                 Some(node.kind.clone()),
                 rewrite_action("setSelection", Some(json!({ "ids": [node.id] }))),
             )
@@ -749,7 +736,7 @@ fn build_document_tree(state: &RewriteRuleState, cfg: &RewriteConfig, labels: &T
         .build()
 }
 
-fn catalogue_add_item(id: &str, label: &str, clause_kind: &str) -> UiTreeItemNode {
+fn catalogue_add_item(id: &str, label: impl Into<Label>, clause_kind: &str) -> UiTreeItemNode {
     UiTreeItemNode {
         ..tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind }))))
     }
@@ -771,18 +758,18 @@ fn build_catalogue_tree(labels: &TrinityRewriteLabels) -> UiNode {
             "trinity-catalogue.lhs",
             Some(labels.add_to_lhs.into()),
             true,
-            vec![catalogue_add_item("trinity-catalogue.add-where", "Where clause", "where")],
+            vec![catalogue_add_item("trinity-catalogue.add-where", Label::data("Where clause"), "where")],
         )
         .section(
             "trinity-catalogue.rhs",
             Some(labels.add_to_rhs.into()),
             true,
             vec![
-                catalogue_add_item("trinity-catalogue.add-create", "Create pattern", "create"),
-                catalogue_add_item("trinity-catalogue.add-merge", "Merge pattern", "merge"),
-                catalogue_add_item("trinity-catalogue.add-set", "Set assignment", "set"),
-                catalogue_add_item("trinity-catalogue.add-delete", "Delete pattern", "delete"),
-                catalogue_add_item("trinity-catalogue.add-parameter", "Parameter", "parameter"),
+                catalogue_add_item("trinity-catalogue.add-create", Label::data("Create pattern"), "create"),
+                catalogue_add_item("trinity-catalogue.add-merge", Label::data("Merge pattern"), "merge"),
+                catalogue_add_item("trinity-catalogue.add-set", Label::data("Set assignment"), "set"),
+                catalogue_add_item("trinity-catalogue.add-delete", Label::data("Delete pattern"), "delete"),
+                catalogue_add_item("trinity-catalogue.add-parameter", Label::data("Parameter"), "parameter"),
             ],
         )
         .selected(vec![])
@@ -807,9 +794,9 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
     let Some(fixture) = parse_fixture_json(&state.before_fixture_json) else {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "trinity-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
-            children: vec![ui_text("Invalid trinity fixture")],
+            children: vec![ui_text(Label::data("Invalid trinity fixture"))],
             presence: UiPresence::default(),
             menu: None,
         }]);
@@ -817,10 +804,10 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
     if cfg.selected_node_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "trinity-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
-            children: vec![ui_text("Select one or more pieces")],
+            children: vec![ui_text(Label::data("Select one or more pieces"))],
             menu: None,
         }]);
     }
@@ -832,9 +819,9 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
     if nodes.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "trinity-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
-            children: vec![ui_text("Piece not found")],
+            children: vec![ui_text(Label::data("Piece not found"))],
             presence: UiPresence::default(),
             menu: None,
         }]);
@@ -862,12 +849,12 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
             fields: vec![
                 ui_inspector_readonly_field(
                     "trinity-inspector.flat-u",
-                    "Flat U",
+                    Label::data("Flat U"),
                     if u_mixed.placeholder.is_none() { u_values.first().cloned().unwrap_or_default() } else { u_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
                 ),
                 ui_inspector_readonly_field(
                     "trinity-inspector.flat-v",
-                    "Flat V",
+                    Label::data("Flat V"),
                     if v_mixed.placeholder.is_none() { v_values.first().cloned().unwrap_or_default() } else { v_mixed.placeholder.unwrap_or_else(|| UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
                 ),
             ],
@@ -880,12 +867,12 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
             fields: vec![
                 UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                     id: "trinity-inspector.name".into(),
-                    label: "Name".into(),
+                    label: Label::data("Name"),
                     child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
                         id: "trinity-inspector.name.input".into(),
                         input_kind: "text".into(),
                         value: name_mixed.value,
-                        placeholder: name_mixed.placeholder,
+                        placeholder: name_mixed.placeholder.map(Label::data),
                         commit: None,
                         on_change: rewrite_action("patchNodes", Some(json!({ "nodeIds": node_ids, "field": "name" }))),
                         min: None,
@@ -901,7 +888,7 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
                 }),
                 ui_inspector_readonly_field(
                     "trinity-inspector.kind",
-                    "Kind",
+                    Label::data("Kind"),
                     if kind_mixed.placeholder.is_none() {
                         nodes.first().map(|node| node.kind.clone()).unwrap_or_default()
                     } else {
@@ -915,7 +902,7 @@ fn build_inspector_tree(state: &RewriteRuleState, cfg: &RewriteConfig, term_labe
 
 fn build_parameters_panel(state: &RewriteRuleState, labels: &TrinityRewriteLabels) -> UiNode {
     let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
-        return ui_text("Invalid RHS");
+        return ui_text(Label::data("Invalid RHS"));
     };
     let mut children: Vec<UiNode> = Vec::new();
     for param in &rhs.parameters {
@@ -932,7 +919,7 @@ fn build_parameters_panel(state: &RewriteRuleState, labels: &TrinityRewriteLabel
         };
         children.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
             id: format!("trinity-rewrite.param.{}", param.name),
-            label: param.name.clone(),
+            label: Label::data(param.name.clone()),
             child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
                 id: format!("trinity-rewrite.param.{}.input", param.name),
                 input_kind: match param.kind {
@@ -942,7 +929,7 @@ fn build_parameters_panel(state: &RewriteRuleState, labels: &TrinityRewriteLabel
                 }
                 .into(),
                 value: display,
-                placeholder: Some(param.kind_label()),
+                placeholder: Some(Label::data(param.kind_label())),
                 commit: Some("blur".into()),
                 on_change: rewrite_action("setParameter", Some(json!({ "name": param.name }))),
                 min: None,
@@ -958,7 +945,7 @@ fn build_parameters_panel(state: &RewriteRuleState, labels: &TrinityRewriteLabel
         }));
     }
     if children.is_empty() {
-        children.push(ui_text("No parameters declared on RHS."));
+        children.push(ui_text(Label::data("No parameters declared on RHS.")));
     }
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "trinity-rewrite.parameters".into(),
@@ -1406,7 +1393,7 @@ impl DocumentApp for TrinityRewritePlayApp {
             TRINITY_REWRITE_PLAY_BODY_DOCUMENT => build_document_tree(state, config, labels),
             TRINITY_REWRITE_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             TRINITY_REWRITE_PLAY_BODY_INSPECTION => build_inspector_tree(state, config, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -1419,18 +1406,6 @@ impl DocumentApp for TrinityRewritePlayApp {
             (TRINITY_REWRITE_PLAY_WINDOW_LHS.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_LHS, mode_for(TRINITY_REWRITE_PLAY_WINDOW_LHS))]),
             (TRINITY_REWRITE_PLAY_WINDOW_RHS.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_RHS, mode_for(TRINITY_REWRITE_PLAY_WINDOW_RHS))]),
         ])
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, RewriteConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<TrinityRewriteLabels>(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, labels.window_before)
-            .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_AFTER, labels.window_after)
-            .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_LHS, labels.window_lhs)
-            .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_RHS, labels.window_rhs)
-            .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_JACK, labels.window_jack)
-            .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS, labels.window_parameters)
-            .action_labels(trinity_rewrite_action_labels(is_de_locale(cfg.projection)))
     }
 
     fn context_menu(
@@ -1596,7 +1571,7 @@ pub fn create_rewrite_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
         testkit::meta(actor)
@@ -1611,7 +1586,7 @@ mod tests {
     /// mirrors the flow app's `context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last`.
     #[test]
     fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
-        let mut app = new_app();
+        let mut app = testkit::new_app_with_registry::<TrinityRewritePlayApp>(create_rewrite_app);
         app.dispatch_typed(TrinityRewriteCommand::SetSelection { ids: vec!["n1".into(), "n2".into()], surface_id: None }, &meta("local")).expect("select");
         let request = semio_framework_plugin::ContextMenuRequest {
             menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
@@ -1758,8 +1733,11 @@ mod tests {
         assert!(catalogue_json.contains("Zu RHS hinzufügen"));
         let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_PARAMETERS, None, &ViewState::default()).expect("render")).unwrap();
         assert!(parameters_json.contains("\"Parameter\""));
-        let action_labels = app.app_labels().action_labels;
-        assert_eq!(action_labels.get("resetRule").map(String::as_str), Some("Regel zurücksetzen"));
+        // 🗣️ `AppLabelsOverlay`/`app_labels()` are gone — action translations now live directly on
+        // the static manifest's `LocalizedLabel`s (see `🔖️Manifest`'s `.action_with(...)` calls).
+        let definition = create_rewrite_app().definition;
+        let reset_rule = definition.actions.iter().find(|action| action.id == "resetRule").expect("resetRule action");
+        assert_eq!(reset_rule.label.resolve(Terminology::Native, Locale::De), "Regel zurücksetzen");
     }
 
     #[test]

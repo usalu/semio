@@ -4,8 +4,8 @@ use norm_core::{CheckReport, NormFamily, NormHost, SetDocumentOperation};
 #[cfg(test)]
 use semio_framework_plugin::testkit;
 use semio_framework_plugin::{
-    create_default_layout, ui_stack_vertical, ui_text, App, AppIo, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType,
-    OsMediaCapability, PanelGroup, ArtifactKindSpec, PortMultiplicity, SurfaceKind, UiNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    create_default_layout, ui_stack_vertical, ui_text, App, AppIo, ArtifactPresentation, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec,
+    MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, PortMultiplicity, SurfaceKind, UiNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use protocol::{Operation, OperationDiff};
@@ -14,20 +14,20 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Shared
 fn render_report(report: &CheckReport) -> UiNode {
     if report.checks.is_empty() {
-        return ui_text("No checks computed.");
+        return ui_text(Label::data("No checks computed."));
     }
-    let children = report.checks.iter().enumerate().map(|(index, check)| ui_text(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message))).collect();
+    let children = report.checks.iter().enumerate().map(|(index, check)| ui_text(Label::data(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message)))).collect();
     ui_stack_vertical(children)
 }
 
 fn render_document_json<D: Serialize>(document: &D) -> UiNode {
     let json = serde_json::to_string_pretty(document).unwrap_or_else(|_| "{}".into());
-    ui_text(json)
+    ui_text(Label::data(json))
 }
 
 fn render_summary<F: NormFamily>(host: &NormHost<F>) -> UiNode {
     let report = host.report();
-    ui_text(format!("{} — {} checks, worst u={:.2}, all pass={}", F::family_id().label(), report.checks.len(), report.worst_utilization(), report.all_pass()))
+    ui_text(Label::data(format!("{} — {} checks, worst u={:.2}, all pass={}", F::family_id().label(), report.checks.len(), report.worst_utilization(), report.all_pass())))
 }
 //#endregion 🔖️Shared
 
@@ -226,16 +226,16 @@ macro_rules! define_norm_family_app {
                         BODY_INPUTS => render_document_json(&doc.projection),
                         BODY_RESULTS => render_report(host.report()),
                         BODY_DOCUMENT => render_summary::<Family>(&host),
-                        BODY_CATALOGUE => ui_text(format!("{} catalogue", $label)),
+                        BODY_CATALOGUE => ui_text(Label::data(format!("{} catalogue", $label))),
                         BODY_INSPECTION => {
                             let checks = &host.report().checks;
                             let index = cfg.projection.selected_check_index.map(|value| value as usize).filter(|index| *index < checks.len()).unwrap_or(0);
                             match checks.get(index) {
-                                Some(check) => ui_text(format!("{check:?}")),
-                                None => ui_text("No checks"),
+                                Some(check) => ui_text(Label::data(format!("{check:?}"))),
+                                None => ui_text(Label::data("No checks")),
                             }
                         }
-                        _ => ui_text(format!("Unknown body: {body_key}")),
+                        _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
                     }
                 }
 
@@ -288,7 +288,7 @@ macro_rules! define_norm_family_app {
 
             pub fn create_app() -> App {
                 App::from_builder(
-                    App::builder($app_id, $label)
+                    App::builder($app_id, LocalizedLabel::data($label))
                         .document(["semio", "norm", $variant])
                         .artifact_kind(ArtifactKindSpec {
                             id: ARTIFACT_KIND_ID.into(),
@@ -303,21 +303,21 @@ macro_rules! define_norm_family_app {
                             import_formats: vec![],
                         })
                         .io(norm_io($variant, concat!("semio.norm.", $variant, "/v1"), ARTIFACT_KIND_ID))
-                        .mode("edit", "Edit", "pencil")
+                        .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
                         .default_mode_id("edit")
-                        .window_kind(WINDOW_INPUTS, "Inputs", BODY_INPUTS, SurfaceKind::Canvas2d, "download")
-                        .window_kind(WINDOW_RESULTS, "Results", BODY_RESULTS, SurfaceKind::Canvas2d, "bar-chart-3")
+                        .window_kind(WINDOW_INPUTS, LocalizedLabel::native("Inputs", "Eingaben"), BODY_INPUTS, SurfaceKind::Canvas2d, "download")
+                        .window_kind(WINDOW_RESULTS, LocalizedLabel::native("Results", "Ergebnisse"), BODY_RESULTS, SurfaceKind::Canvas2d, "bar-chart-3")
                         .default_layout(create_default_layout(&[WINDOW_INPUTS.into(), WINDOW_RESULTS.into()], "row", Some(&[42.0, 58.0]), Some(&["Inputs".into(), "Results".into()])))
-                        .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, BODY_DOCUMENT)
-                        .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, BODY_CATALOGUE)
-                        .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, BODY_INSPECTION)
-                        .operation("setDocument", "Set Document")
-                        .view_action("evaluate", "Evaluate")
-                        .view_action("setSelectedCheckIndex", "Set Selected Check")
+                        .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, BODY_DOCUMENT)
+                        .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+                        .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, BODY_INSPECTION)
+                        .operation("setDocument", LocalizedLabel::native("Set Document", "Dokument setzen"))
+                        .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
+                        .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
                         .keybinding("mod+z", "undo")
                         .keybinding("mod+shift+z", "redo"),
                 )
-                .example("default", "Default", serde_json::to_string(&Document::default()).expect("default document serializes"), "file")
+                .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&Document::default()).expect("default document serializes"), "file")
                 .workflow($variant, $label, "compliance")
             }
         }

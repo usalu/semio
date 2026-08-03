@@ -9342,10 +9342,15 @@ dependencies = [
 name = "semio-s-app-fem-3d-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-s-app-fem-3d",
  "semio-s-app-fem-3d-dsl",
  "semio-s-plugin-fem-core",
+ "serde",
  "thiserror 2.0.18",
 ]
 
@@ -9358,6 +9363,7 @@ dependencies = [
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-s-app-fem-3d",
+ "semio-s-app-fem-3d-engine",
  "serde",
  "serde_json",
 ]
@@ -9376,28 +9382,28 @@ dependencies = [
 name = "semio-s-app-fem-3d-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-fem-3d",
  "semio-s-app-fem-3d-engine",
  "semio-s-app-fem-3d-op",
+ "serde",
 ]
 
 [[package]]
 name = "semio-s-app-fem-3d-ui"
 version = "0.1.0"
 dependencies = [
- "semio-framework-os-kernel-dsl",
- "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-fem-3d",
  "semio-s-app-fem-3d-dsl",
  "semio-s-app-fem-3d-engine",
  "semio-s-app-fem-3d-op",
+ "semio-s-app-fem-3d-protocol",
  "semio-s-plugin-fem-core",
  "semio-s-plugin-fem-shared",
- "serde",
  "serde_json",
  "wasm-bindgen",
 ]

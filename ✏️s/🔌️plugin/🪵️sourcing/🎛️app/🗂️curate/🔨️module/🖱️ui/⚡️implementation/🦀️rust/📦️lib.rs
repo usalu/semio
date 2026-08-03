@@ -8,9 +8,9 @@
 
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
-    app_labels, build_table_scene, build_world_3d_scene, localized_label_map, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
-    ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, ArtifactKindSpec, SurfaceKind, TableCell, TableScene, UiInputNode, UiNode,
-    UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemAction, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
+    app_labels, build_table_scene, build_world_3d_scene, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
+    ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, ArtifactKindSpec, SurfaceKind, TableCell, TableScene, Terminology, UiInputNode, UiNode,
+    UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
 };
 use serde_json::{json, Value};
 use sourcing::{CurateDocument, Filters, ObjectKind, SortDirection, TableSort, SOURCING_CURATE_SCHEMA};
@@ -50,8 +50,15 @@ fn is_de_locale(cfg: &SourcingCurateConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &SourcingCurateConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🗣️ `cfg.locale` mapped onto the SDK's exhaustive `Locale` enum.
+fn sourcing_locale(cfg: &SourcingCurateConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ `SourcingCurateConfig` has no terminology axis (curate is never embedded/reused as a building
+/// component sub-widget) — always resolves the native cell.
+fn resolve_labels<L: AppLabels>(cfg: &SourcingCurateConfig) -> &'static L {
+    L::labels(sourcing_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -137,7 +144,7 @@ fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: &Sou
         children.push(UiNode::Toggle(UiToggleNode {
             id: format!("sourcing-filter-module-{}", module.module_id),
             icon_id: "layers".into(),
-            text: Some(module.label.clone()),
+            text: Some(Label::data(module.label.clone())),
             on_change: sourcing_action("setFilterModule", Some(json!({ "moduleId": module.module_id, "enabled": !pressed }))),
             presence: UiPresence::selected(pressed),
             menu: None,
@@ -147,7 +154,7 @@ fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: &Sou
         }];
     for module in modules {
         for (path, label) in typology_flatten(&module.typology) {
-            typology_items.push(UiSelectItem { value: path.join("/"), label,
+            typology_items.push(UiSelectItem { value: path.join("/"), label: Label::data(label),
         });
         }
     }
@@ -168,11 +175,11 @@ fn build_filter_bar(filters: &Filters, modules: &[ModuleCatalogue], labels: &Sou
 
 fn pool_columns_json(labels: &SourcingLabels) -> String {
     json!([
-        {"id": "name", "label": labels.col_name},
-        {"id": "module", "label": labels.col_module, "sortable": true},
-        {"id": "typology", "label": labels.col_typology},
-        {"id": "availability", "label": labels.col_availability, "sortable": true},
-        {"id": "curated", "label": labels.col_curated},
+        {"id": "name", "label": labels.col_name.as_str()},
+        {"id": "module", "label": labels.col_module.as_str(), "sortable": true},
+        {"id": "typology", "label": labels.col_typology.as_str()},
+        {"id": "availability", "label": labels.col_availability.as_str(), "sortable": true},
+        {"id": "curated", "label": labels.col_curated.as_str()},
     ])
     .to_string()
 }
@@ -219,9 +226,9 @@ fn build_pool_table(document: &CurateDocument, cfg: &SourcingCurateConfig, label
 
 fn build_curated_table(document: &CurateDocument, cfg: &SourcingCurateConfig, labels: &SourcingLabels) -> UiNode {
     let columns = json!([
-        {"id": "name", "label": labels.col_name},
-        {"id": "availability", "label": labels.col_availability},
-        {"id": "count", "label": labels.col_count},
+        {"id": "name", "label": labels.col_name.as_str()},
+        {"id": "availability", "label": labels.col_availability.as_str()},
+        {"id": "count", "label": labels.col_count.as_str()},
         {"id": "actions", "label": ""},
     ])
     .to_string();
@@ -239,7 +246,7 @@ fn build_curated_table(document: &CurateDocument, cfg: &SourcingCurateConfig, la
                     ("count", TableCell::Stepper { value: item.count as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_action("curateSetCount", Some(json!({ "objectId": kind.id }))) }),
                     (
                         "actions",
-                        TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), reveal_on_hover: None,
+                        TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), placement: Some(UiTreeActionPlacement::Menu),
         }] },
                     ),
                 ],
@@ -477,55 +484,12 @@ impl DocumentApp for SourcingCurateApp {
             BODY_CURATED => build_curated_table(document, config, labels),
             BODY_PREVIEW => render_preview(document, config, labels),
             BODY_GRID => render_grid(document, config),
-            _ => ui_text(""),
+            _ => ui_text(Label::data("")),
         }
     }
 
-    fn app_labels(&self, cfg: &ConfigView<'_, SourcingCurateConfig>) -> AppLabelsOverlay {
-        let config = cfg.projection;
-        let labels = resolve_labels::<SourcingLabels>(config);
-        let is_de = is_de_locale(config);
-        AppLabelsOverlay::default()
-            .window_kind_label(WINDOW_POOL, labels.window_pool)
-            .window_kind_label(WINDOW_CURATED, labels.window_curated)
-            .window_kind_label(WINDOW_PREVIEW, labels.window_preview)
-            .window_kind_label(WINDOW_GRID, labels.window_grid)
-            .mode_label("curate", labels.mode_curate)
-            .action_labels(sourcing_action_labels(is_de))
-            .example_labels(std::collections::HashMap::from([
-                (DEMO_STOCK_EXAMPLE_ID.to_string(), (if is_de { "Beispielbestand" } else { "Demo Stock" }).to_string()),
-                (EMPTY_EXAMPLE_ID.to_string(), (if is_de { "Leere Kuratierung" } else { "Empty Curation" }).to_string()),
-            ]))
-    }
 }
 //#endregion 🔖️SourcingCurateApp
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/hidden-operation declared in `create_sourcing_curate_app`'s
-/// static manifest — mirrors `puzzle3d_action_labels`, built on the shared `localized_label_map`.
-fn sourcing_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(
-        is_de,
-        &[
-            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-            ("stockFromCatalogue", "Stock From Catalogue", "Bestand aus Katalog"),
-            ("setDocument", "Set Document", "Dokument festlegen"),
-            ("setFilterQuery", "Set Filter Query", "Filterabfrage festlegen"),
-            ("setFilterModule", "Set Filter Module", "Filtermodul festlegen"),
-            ("setFilterTypology", "Set Filter Typology", "Filtertypologie festlegen"),
-            ("setFilterMinAvailability", "Set Filter Min Availability", "Mindestverfügbarkeit festlegen"),
-            ("sortTable", "Sort Table", "Tabelle sortieren"),
-            ("curateAdd", "Curate Add", "Kuratierung hinzufügen"),
-            ("curateSetCount", "Curate Set Count", "Kuratierte Anzahl festlegen"),
-            ("curateRemove", "Curate Remove", "Kuratierung entfernen"),
-            ("dropOnPool", "Drop On Pool", "Auf Pool ablegen"),
-            ("dropOnCurated", "Drop On Curated", "Auf Kuratiert ablegen"),
-            ("selectRow", "Select Row", "Zeile auswählen"),
-            ("worldSelect", "World Select", "Welt auswählen"),
-        ],
-    )
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Manifest
 fn sourcing_window(window_kind_id: &str, title: &str) -> WindowLayoutWindowNode {
@@ -553,7 +517,7 @@ fn sourcing_three_column_layout() -> WindowLayout {
 
 /// 🙈️ An internal document operation kept out of the command palette — the curate/DnD arms that mutate
 /// the persisted `CurateDocument` but are only ever dispatched from window chrome.
-fn hidden_operation(id: &str, label: &str) -> ActionDefinition {
+fn hidden_operation(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Operation) }
 }
 
@@ -561,13 +525,13 @@ fn hidden_operation(id: &str, label: &str) -> ActionDefinition {
 /// `SourcingCurateConfig` — they emit ONLY `config_operations` now, so (unlike `hidden_operation`
 /// above) they're declared `ActionKind::View`, letting `VcsDocumentApp`'s kind-discipline check
 /// actually enforce "must not emit document operations" instead of silently skipping an undeclared id.
-fn hidden_view_action(id: &str, label: &str) -> ActionDefinition {
+fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::View) }
 }
 
 pub fn create_sourcing_curate_app() -> App {
     App::from_builder(
-        App::builder(SOURCING_CURATE_APP_ID, "Curate")
+        App::builder(SOURCING_CURATE_APP_ID, LocalizedLabel::native("Curate", "Kuratieren"))
             .document(["semio", "sourcing", "curate"])
             .artifact_kind(ArtifactKindSpec {
                 id: "catalogue.kinds".into(),
@@ -609,36 +573,36 @@ pub fn create_sourcing_curate_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("library")
-            .mode("curate", "Curate", "folder-open")
+            .mode("curate", LocalizedLabel::native("Curate", "Kuratieren"), "folder-open")
             .default_mode_id("curate")
-            .window_kind(WINDOW_POOL, "Pool", BODY_POOL, SurfaceKind::Table, "library")
-            .window_kind(WINDOW_CURATED, "Curated", BODY_CURATED, SurfaceKind::Table, "tags")
-            .window_kind(WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d, "preview")
-            .window_kind(WINDOW_GRID, "Grid", BODY_GRID, SurfaceKind::World3d, "grid-3x3")
+            .window_kind(WINDOW_POOL, LocalizedLabel::native("Pool", "Pool"), BODY_POOL, SurfaceKind::Table, "library")
+            .window_kind(WINDOW_CURATED, LocalizedLabel::native("Curated", "Kuratiert"), BODY_CURATED, SurfaceKind::Table, "tags")
+            .window_kind(WINDOW_PREVIEW, LocalizedLabel::native("Preview", "Vorschau"), BODY_PREVIEW, SurfaceKind::World3d, "preview")
+            .window_kind(WINDOW_GRID, LocalizedLabel::native("Grid", "Raster"), BODY_GRID, SurfaceKind::World3d, "grid-3x3")
             .default_layout(sourcing_three_column_layout())
             // 🔧️ Curation counts/stock edits are persisted in `CurateDocument`, so each arm emits a
             // whole-document `SetDocument` operation and is declared as an Operation, never a View.
-            .operation("setActiveExample", "Set Active Example")
-            .operation("stockFromCatalogue", "Stock From Catalogue")
-            .action_with(hidden_operation("setDocument", "Set Document"))
-            .action_with(hidden_operation("curateAdd", "Curate Add"))
-            .action_with(hidden_operation("curateSetCount", "Curate Set Count"))
-            .action_with(hidden_operation("curateRemove", "Curate Remove"))
-            .action_with(hidden_operation("dropOnPool", "Drop On Pool"))
-            .action_with(hidden_operation("dropOnCurated", "Drop On Curated"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))
+            .action_with(hidden_operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen")))
+            .action_with(hidden_operation("curateAdd", LocalizedLabel::native("Curate Add", "Kuratierung hinzufügen")))
+            .action_with(hidden_operation("curateSetCount", LocalizedLabel::native("Curate Set Count", "Kuratierte Anzahl festlegen")))
+            .action_with(hidden_operation("curateRemove", LocalizedLabel::native("Curate Remove", "Kuratierung entfernen")))
+            .action_with(hidden_operation("dropOnPool", LocalizedLabel::native("Drop On Pool", "Auf Pool ablegen")))
+            .action_with(hidden_operation("dropOnCurated", LocalizedLabel::native("Drop On Curated", "Auf Kuratiert ablegen")))
             // 👁️ Filters/sort/selection — session-only `SourcingCurateConfig` view state, never the document.
-            .action_with(hidden_view_action("setFilterQuery", "Set Filter Query"))
-            .action_with(hidden_view_action("setFilterModule", "Set Filter Module"))
-            .action_with(hidden_view_action("setFilterTypology", "Set Filter Typology"))
-            .action_with(hidden_view_action("setFilterMinAvailability", "Set Filter Min Availability"))
-            .action_with(hidden_view_action("sortTable", "Sort Table"))
-            .action_with(hidden_view_action("selectRow", "Select Row"))
-            .action_with(hidden_view_action("worldSelect", "World Select"))
+            .action_with(hidden_view_action("setFilterQuery", LocalizedLabel::native("Set Filter Query", "Filterabfrage festlegen")))
+            .action_with(hidden_view_action("setFilterModule", LocalizedLabel::native("Set Filter Module", "Filtermodul festlegen")))
+            .action_with(hidden_view_action("setFilterTypology", LocalizedLabel::native("Set Filter Typology", "Filtertypologie festlegen")))
+            .action_with(hidden_view_action("setFilterMinAvailability", LocalizedLabel::native("Set Filter Min Availability", "Mindestverfügbarkeit festlegen")))
+            .action_with(hidden_view_action("sortTable", LocalizedLabel::native("Sort Table", "Tabelle sortieren")))
+            .action_with(hidden_view_action("selectRow", LocalizedLabel::native("Select Row", "Zeile auswählen")))
+            .action_with(hidden_view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen")))
             // 📝️ Staged argument form for the panel-visible example switch.
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new(DEMO_STOCK_EXAMPLE_ID, "Demo Stock"),
-                    ActionArgOption::new(EMPTY_EXAMPLE_ID, "Empty Curation"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new(DEMO_STOCK_EXAMPLE_ID, LocalizedLabel::native("Demo Stock", "Beispielbestand")),
+                    ActionArgOption::new(EMPTY_EXAMPLE_ID, LocalizedLabel::native("Empty Curation", "Leere Kuratierung")),
                 ]).default_value(DEMO_STOCK_EXAMPLE_ID),
             ])
             // 🎯️ Typed channel surface — this app's typed commands are dispatched via
@@ -649,8 +613,8 @@ pub fn create_sourcing_curate_app() -> App {
     )
     // 📄️ `AppDefinition::example` still wants document JSON (the manifest-wide example wire format);
     // the `.curate` text above is only the on-disk source of truth, re-serialized here once.
-    .example(DEMO_STOCK_EXAMPLE_ID, "Demo Stock", serde_json::to_string(&sourcing_engine::default_document()).unwrap_or_default(), "file-text")
-    .example(EMPTY_EXAMPLE_ID, "Empty Curation", serde_json::to_string(&sourcing_engine::empty_document()).unwrap_or_default(), "file-text")
+    .example(DEMO_STOCK_EXAMPLE_ID, LocalizedLabel::native("Demo Stock", "Beispielbestand"), serde_json::to_string(&sourcing_engine::default_document()).unwrap_or_default(), "file-text")
+    .example(EMPTY_EXAMPLE_ID, LocalizedLabel::native("Empty Curation", "Leere Kuratierung"), serde_json::to_string(&sourcing_engine::empty_document()).unwrap_or_default(), "file-text")
 }
 //#endregion 🔖️Manifest
 
@@ -704,7 +668,7 @@ mod tests {
     fn pool_render_respects_query_filter() {
         let document = sourcing_engine::default_document();
         let cfg = SourcingCurateConfig { filters: Filters { query: "glulam".into(), ..Default::default() }, ..Default::default() };
-        let node = build_pool_table(&document, &cfg, &SourcingLabels::EN);
+        let node = build_pool_table(&document, &cfg, &SourcingLabels::NATIVE_EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Glulam"));
         assert!(!json.contains("Hollow Core"));
@@ -715,7 +679,7 @@ mod tests {
         let document = sourcing_engine::default_document();
         let cfg = SourcingCurateConfig::default();
         let kind = &document.stock[0];
-        let node = build_pool_table(&document, &cfg, &SourcingLabels::EN);
+        let node = build_pool_table(&document, &cfg, &SourcingLabels::NATIVE_EN);
         let json = serde_json::to_value(&node).unwrap();
         let rows_json = json.pointer("/table/rowsJson").and_then(|value| value.as_str()).unwrap();
         let rows: Vec<Value> = serde_json::from_str(rows_json).unwrap();
@@ -799,7 +763,7 @@ mod tests {
         let document = sourcing_engine::default_document();
         let object_id = document.stock[0].id.clone();
         let cfg = SourcingCurateConfig { selected_object_id: Some(object_id.clone()), ..Default::default() };
-        let node = render_preview(&document, &cfg, &SourcingLabels::EN);
+        let node = render_preview(&document, &cfg, &SourcingLabels::NATIVE_EN);
         let json = serde_json::to_value(&node).unwrap();
         let meshes_json = json.pointer("/world3d/meshesJson").and_then(|value| value.as_str()).unwrap();
         let meshes: Vec<Value> = serde_json::from_str(meshes_json).unwrap();
@@ -811,7 +775,7 @@ mod tests {
     fn preview_shows_placeholder_without_selection() {
         let document = sourcing_engine::default_document();
         let cfg = SourcingCurateConfig::default();
-        let node = render_preview(&document, &cfg, &SourcingLabels::EN);
+        let node = render_preview(&document, &cfg, &SourcingLabels::NATIVE_EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("No selection"));
     }
@@ -855,7 +819,7 @@ mod tests {
     fn filter_bar_module_toggles_encode_pressed_state_as_presence_selected() {
         let filters = Filters { module_ids: vec!["beams".into()], ..Default::default() };
         let modules = available_modules();
-        let node = build_filter_bar(&filters, &modules, &SourcingLabels::EN);
+        let node = build_filter_bar(&filters, &modules, &SourcingLabels::NATIVE_EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"id\":\"sourcing-filter-module-beams\""), "beams toggle present: {json}");
         assert!(json.contains("\"id\":\"sourcing-filter-module-windows\""), "windows toggle present: {json}");
@@ -869,16 +833,16 @@ mod tests {
         assert!(!windows_slice.contains("\"selected\":true"), "windows toggle not selected: {windows_slice}");
     }
 
-    /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command — no more
-    /// passing a `ViewState` into `render`/`app_labels` for this purpose.
+    /// 🗣️ B1: the old `DocumentApp::app_labels() -> AppLabelsOverlay` per-id runtime map is deleted;
+    /// manifest text is now baked into `AppDefinition`/`App` as `LocalizedLabel` and resolved directly
+    /// via `.resolve(Terminology, Locale)` — no shell round-trip needed to assert on it.
     #[test]
-    fn sourcing_labels_resolve_native_german() {
-        let mut app = new_app();
-        app.dispatch_typed(SourcingCurateCommand::SetLocale { value: "de-DE".into() }, &testkit::meta("local")).expect("set locale");
-        let overlay = app.app_labels();
-        assert_eq!(overlay.window_kind_labels.get(WINDOW_POOL).map(String::as_str), Some("Pool"));
-        assert_eq!(overlay.window_kind_labels.get(WINDOW_CURATED).map(String::as_str), Some("Kuratiert"));
-        assert_eq!(overlay.mode_labels.get("curate").map(String::as_str), Some("Kuratieren"));
+    fn app_definition_labels_resolve_german() {
+        let def = &create_sourcing_curate_app().definition;
+        let (terminology, locale) = (Terminology::Native, Locale::De);
+        assert_eq!(def.window_kinds.iter().find(|entry| entry.id == WINDOW_POOL).expect("pool window").label.resolve(terminology, locale), "Pool");
+        assert_eq!(def.window_kinds.iter().find(|entry| entry.id == WINDOW_CURATED).expect("curated window").label.resolve(terminology, locale), "Kuratiert");
+        assert_eq!(def.modes.iter().find(|entry| entry.id == "curate").expect("curate mode").label.resolve(terminology, locale), "Kuratieren");
     }
 
     #[test]

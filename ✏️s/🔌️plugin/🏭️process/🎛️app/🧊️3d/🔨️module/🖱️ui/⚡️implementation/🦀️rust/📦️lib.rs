@@ -16,10 +16,10 @@ use process_3d_protocol::Process3dCommand;
 use protocol::CollectionOperation;
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{
-    app_labels, build_world_3d_scene, create_default_layout, localized_label_map, mesh_from_kind, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
+    app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
-    AppIo, AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup,
-    PanelTreeBuilder, SurfaceKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup,
+    PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
     WindowEngagementStatus, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
@@ -56,8 +56,15 @@ fn is_de_locale(cfg: &Process3dConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &Process3dConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🗣️ `cfg.locale` mapped onto the SDK's exhaustive `Locale` enum.
+fn process3d_locale(cfg: &Process3dConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ `Process3dConfig` has no terminology axis (process is never embedded/reused as a building
+/// component sub-widget) — always resolves the native cell.
+fn resolve_labels<L: AppLabels>(cfg: &Process3dConfig) -> &'static L {
+    L::labels(process3d_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -75,7 +82,7 @@ fn set_active_utility_effect(utility: &str) -> HostEffect {
 
 /// 📇️ A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the
 /// command palette) with the given execution kind.
-fn internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
@@ -325,7 +332,7 @@ fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f6
         (ProcessMeasure::Attach { component: SolidSpec::Box { width, depth, height }, pose }, labels.pull_attach, "attacher", "attach")
     };
     let origin = StepOrigin { machine_id: machine_id.to_string(), capability_id: capability_id.to_string() };
-    Some(ProcessStep { id: next_step_id(), label: label.to_string(), enabled: true, origin: Some(origin), measure })
+    Some(ProcessStep { id: next_step_id(), label: label.as_str().to_string(), enabled: true, origin: Some(origin), measure })
 }
 //#endregion 🔖️FaceDrag
 
@@ -445,7 +452,7 @@ fn process3d_measure_icon(measure: &ProcessMeasure) -> &'static str {
     }
 }
 
-fn process3d_measure_label<'a>(measure: &ProcessMeasure, labels: &'a Process3dLabels) -> &'a str {
+fn process3d_measure_label(measure: &ProcessMeasure, labels: &Process3dLabels) -> LabelText {
     match measure {
         ProcessMeasure::Cut { .. } => labels.cut,
         ProcessMeasure::Drill { .. } => labels.drill,
@@ -454,60 +461,15 @@ fn process3d_measure_label<'a>(measure: &ProcessMeasure, labels: &'a Process3dLa
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id, en, de) for every operation/view-action/shell-action declared in
-/// `create_process3d_app`'s static manifest — the manifest itself has no `view_state`/locale
-/// parameter, so `localized_label_map` over these entries is how the command palette and Actions
-/// rail get a translated label without threading locale through the whole builder chain.
-const PROCESS3D_ACTION_LABEL_ENTRIES: &[(&str, &str, &str)] = &[
-    ("addStep", "Add Step", "Schritt hinzufügen"),
-    ("addWorkshopMachine", "Add Machine", "Maschine hinzufügen"),
-    ("removeWorkshopMachine", "Remove Machine", "Maschine entfernen"),
-    ("updateWorkshopMachine", "Update Machine", "Maschine aktualisieren"),
-    ("setStock", "Set Stock", "Rohteil festlegen"),
-    ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-    ("removeSelectedStep", "Remove Selected Step", "Ausgewählten Schritt entfernen"),
-    ("exportModel", "Export Model", "Modell exportieren"),
-    ("loadModelRequest", "Load Model…", "Modell laden…"),
-    ("setDocument", "Set Document", "Dokument festlegen"),
-    ("importModelFile", "Import Model File", "Modelldatei importieren"),
-    ("removeStep", "Remove Step", "Schritt entfernen"),
-    ("moveStep", "Move Step", "Schritt verschieben"),
-    ("updateStep", "Update Step", "Schritt aktualisieren"),
-    ("setStepEnabled", "Set Step Enabled", "Schrittaktivierung festlegen"),
-    ("patchInspector", "Patch Inspector", "Inspektor aktualisieren"),
-    ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
-    ("worldFaceDragEnd", "World Face Drag End", "Welt-Flächenzug beendet"),
-    ("setCursor", "Set Cursor", "Cursor festlegen"),
-    ("stepCursor", "Step Cursor", "Cursor schrittweise bewegen"),
-    ("stepCursorBack", "Step Cursor Back", "Cursor zurück"),
-    ("stepCursorForward", "Step Cursor Forward", "Cursor vorwärts"),
-    ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-    ("engagementInput", "Engagement Input", "Eingabe"),
-    ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-    ("setSelection", "Set Selection", "Auswahl festlegen"),
-    ("setHover", "Set Hover", "Überfahren festlegen"),
-    ("setCamera", "Set Camera", "Kamera festlegen"),
-    ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
-    ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-    ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-    ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
-    ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
-];
-
-/// 🗣️ (utility id, en, de) for every `.utility(...)` declared in `create_process3d_app`.
-const PROCESS3D_UTILITY_LABEL_ENTRIES: &[(&str, &str, &str)] = &[("select", "Select", "Auswählen"), ("cut", "Cut", "Schneiden"), ("drill", "Drill", "Bohren"), ("attach", "Attach", "Anbauen")];
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️Panels
 /// 🎨️ `tree_item_with_action` (SDK) carries no icon slot, so this app-specific wrapper layers
 /// `icon_id` on top via struct-update syntax — the only piece of the item skeleton this app adds.
-fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
+fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None,
     ..tree_item_with_action(id, label, None, action) }
 }
 
-fn number_field(id: impl Into<String>, label: impl Into<String>, value: f64, target: &str, field: &str) -> UiNode {
+fn number_field(id: impl Into<String>, label: impl Into<Label>, value: f64, target: &str, field: &str) -> UiNode {
     let id = id.into();
     UiNode::Field(UiFieldNode {
         id: id.clone(),
@@ -533,7 +495,7 @@ fn number_field(id: impl Into<String>, label: impl Into<String>, value: f64, tar
     })
 }
 
-fn text_field(id: impl Into<String>, label: impl Into<String>, value: &str, target: &str, field: &str) -> UiNode {
+fn text_field(id: impl Into<String>, label: impl Into<Label>, value: &str, target: &str, field: &str) -> UiNode {
     let id = id.into();
     UiNode::Field(UiFieldNode {
         id: id.clone(),
@@ -566,7 +528,7 @@ fn build_document_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, label
         presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(stock.id.as_str())),
         action: Some(process3d_action("setSelection", Some(json!({ "id": stock.id })))),
         menu: None,
-        ..UiTreeItemNode::base(stock.id.clone(), stock.label.clone())
+        ..UiTreeItemNode::base(stock.id.clone(), Label::data(stock.label.clone()))
     };
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len());
     let step_items: Vec<UiTreeItemNode> = fixture
@@ -585,14 +547,14 @@ fn build_document_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, label
                     icon_id: if step.enabled { "eye".into() } else { "eye-off".into() },
                     label: Some(labels.enabled.into()),
                     action: process3d_action("setStepEnabled", Some(json!({ "id": step.id, "enabled": !step.enabled }))),
-                    reveal_on_hover: Some(true),
+                    placement: Some(UiTreeActionPlacement::Menu),
                 },
-                UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: process3d_action("removeStep", Some(json!({ "id": step.id }))), reveal_on_hover: Some(true),
+                UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: process3d_action("removeStep", Some(json!({ "id": step.id }))), placement: Some(UiTreeActionPlacement::Menu),
         },
             ]),
             dimmed: Some(!step.enabled),
             menu: None,
-            ..UiTreeItemNode::base(step.id.clone(), step.label.clone())
+            ..UiTreeItemNode::base(step.id.clone(), Label::data(step.label.clone()))
         })
         .collect();
     PanelTreeBuilder::new("process3d-play-document").section("process3d-play-document.stock", Some(labels.stock.into()), true, vec![stock_item]).section("process3d-play-document.steps", Some(labels.steps.into()), true, step_items).build()
@@ -627,7 +589,7 @@ fn build_catalogue_tree(fixture: &Process3dDocument, labels: &Process3dLabels) -
                 machine.capabilities.iter().map(move |capability| {
                     let failures = validate_capability(capability, &ctx);
                     let id = format!("process3d-catalogue.{}.{}", machine.id, capability.id);
-                    let label = format!("{} — {}", machine.label, capability.label);
+                    let label = Label::data(format!("{} — {}", machine.label, capability.label));
                     if failures.is_empty() {
                         iconed_tree_item_with_action(id, label, &capability.icon_id, process3d_action("addStep", Some(json!({ "machineId": machine.id, "capabilityId": capability.id }))))
                     } else {
@@ -639,7 +601,7 @@ fn build_catalogue_tree(fixture: &Process3dDocument, labels: &Process3dLabels) -
             })
             .collect();
         let section_id = format!("process3d-play-catalogue.{}", catalog_id.unwrap_or("workshop"));
-        let section_label = catalog_id.map(catalog_label).unwrap_or_else(|| labels.workshop.into());
+        let section_label = catalog_id.map(|id| Label::data(catalog_label(id))).unwrap_or_else(|| labels.workshop.into());
         builder = builder.section(section_id, Some(section_label), catalog_id.is_none(), items);
     }
     let stock_items = vec![
@@ -666,9 +628,9 @@ fn build_workshop_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, label
                 icon_id: Some(machine.icon_id.as_str().into()),
                 presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(target.as_str())),
                 action: Some(process3d_action("setSelection", Some(json!({ "id": target })))),
-                actions: Some(vec![UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove_machine.into()), action: process3d_action("removeWorkshopMachine", Some(json!({ "id": machine.id }))), reveal_on_hover: Some(true) }]),
+                actions: Some(vec![UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove_machine.into()), action: process3d_action("removeWorkshopMachine", Some(json!({ "id": machine.id }))), placement: Some(UiTreeActionPlacement::Menu) }]),
                 menu: None,
-                ..UiTreeItemNode::base(format!("process3d-workshop.machine.{}", machine.id), machine.label.clone())
+                ..UiTreeItemNode::base(format!("process3d-workshop.machine.{}", machine.id), Label::data(machine.label.clone()))
             }
         })
         .collect();
@@ -682,13 +644,13 @@ fn build_workshop_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, label
                 let id = format!("process3d-workshop.catalog.{catalog_id}.{}", machine.id);
                 let already_installed = fixture.workshop.machines.iter().any(|existing| existing.id == machine.id);
                 if already_installed {
-                    UiTreeItemNode { icon_id: Some(machine.icon_id.as_str().into()), dimmed: Some(true), menu: None, ..tree_item_desc(id, machine.label.clone(), Some(labels.installed.to_string())) }
+                    UiTreeItemNode { icon_id: Some(machine.icon_id.as_str().into()), dimmed: Some(true), menu: None, ..tree_item_desc(id, Label::data(machine.label.clone()), Some(labels.installed.as_str().to_string())) }
                 } else {
-                    iconed_tree_item_with_action(id, machine.label.clone(), &machine.icon_id, process3d_action("addWorkshopMachine", Some(json!({ "catalogId": catalog_id, "machineId": machine.id }))))
+                    iconed_tree_item_with_action(id, Label::data(machine.label.clone()), &machine.icon_id, process3d_action("addWorkshopMachine", Some(json!({ "catalogId": catalog_id, "machineId": machine.id }))))
                 }
             })
             .collect();
-        builder = builder.section(format!("process3d-play-workshop.catalog.{catalog_id}"), Some(catalog.label().into()), false, items);
+        builder = builder.section(format!("process3d-play-workshop.catalog.{catalog_id}"), Some(Label::data(catalog.label())), false, items);
     }
     builder.build()
 }
@@ -758,14 +720,14 @@ fn build_machine_inspector(machine: &WorkshopMachine, labels: &Process3dLabels) 
             .iter()
             .map(|parameter| {
                 let field = format!("{}.{}", capability.id, parameter.id);
-                number_field(format!("process3d-inspector.{field}"), parameter.label.clone(), parameter.value, &target, &field)
+                number_field(format!("process3d-inspector.{field}"), Label::data(parameter.label.clone()), parameter.value, &target, &field)
             })
             .collect();
         if !capability.rules.is_empty() {
             let summary = capability.rules.iter().map(describe_capability_rule).collect::<Vec<_>>().join("; ");
             fields.push(ui_inspector_readonly_field(format!("process3d-inspector.{}.rules", capability.id), labels.validation_warning, summary));
         }
-        groups.push(UiInspectorFieldGroup { presence: UiPresence::default(), id: format!("process3d-inspector.{}", capability.id), label: capability.label.clone(), default_open: Some(true), fields });
+        groups.push(UiInspectorFieldGroup { presence: UiPresence::default(), id: format!("process3d-inspector.{}", capability.id), label: Label::data(capability.label.clone()), default_open: Some(true), fields });
     }
     ui_inspector_groups_to_tree(&groups)
 }
@@ -822,7 +784,7 @@ fn build_inspector_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, labe
     let Some(selected_id) = cfg.selected_id.as_deref() else {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "process3d-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![ui_text(labels.no_selection)],
             presence: UiPresence::default(),
@@ -842,7 +804,7 @@ fn build_inspector_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, labe
     }
     ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
         id: "process3d-play-inspector.missing".into(),
-        label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+        label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
         default_open: Some(true),
         children: vec![ui_text(labels.no_selection)],
         presence: UiPresence::default(),
@@ -1318,21 +1280,12 @@ impl DocumentApp for Process3dPlayApp {
             PROCESS_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(doc.projection, labels),
             PROCESS_3D_PLAY_BODY_WORKSHOP => build_workshop_tree(doc.projection, config, labels),
             PROCESS_3D_PLAY_BODY_INSPECTION => build_inspector_tree(doc.projection, config, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
     fn window_engagements(&self, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, WindowEngagement> {
         HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, cfg.projection, process3d_active_utility(cfg.projection), resolve_labels::<Process3dLabels>(cfg.projection)))])
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, Process3dConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<Process3dLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(PROCESS_3D_PLAY_WINDOW_MAIN, labels.window_main)
-            .action_labels(localized_label_map(is_de, PROCESS3D_ACTION_LABEL_ENTRIES))
-            .utility_labels(localized_label_map(is_de, PROCESS3D_UTILITY_LABEL_ENTRIES))
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -1359,7 +1312,7 @@ fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
 //#region 🔖️Manifest
 pub fn create_process3d_app() -> App {
     App::from_builder(
-        App::builder(PROCESS_3D_PLAY_APP_ID, "Process 3D")
+        App::builder(PROCESS_3D_PLAY_APP_ID, LocalizedLabel::native("Process 3D", "Process 3D"))
             .document(["semio", "process", "3d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.process".into(),
@@ -1374,96 +1327,96 @@ pub fn create_process3d_app() -> App {
                 import_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl],
             })
             .icon_id("hammer")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
             .window_kind_with_engagement(
                 PROCESS_3D_PLAY_WINDOW_MAIN,
-                "Workpiece",
+                LocalizedLabel::native("Workpiece", "Werkstück"),
                 PROCESS_3D_PLAY_BODY_MAIN,
                 SurfaceKind::World3d,
-                process3d_engagement(&default_document(), &Process3dConfig::default(), PROCESS3D_DEFAULT_UTILITY, &Process3dLabels::EN),
+                process3d_engagement(&default_document(), &Process3dConfig::default(), PROCESS3D_DEFAULT_UTILITY, &Process3dLabels::NATIVE_EN),
                 "process-workpiece",
             )
             .default_layout(create_default_layout(&[PROCESS_3D_PLAY_WINDOW_MAIN.into()], "row", None, Some(&["Workpiece".into()])))
-            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_DOCUMENT)
-            .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_CATALOGUE)
-            .panel_tab("workshop", "Workshop", PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_WORKSHOP)
-            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PROCESS_3D_PLAY_BODY_INSPECTION)
+            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_DOCUMENT)
+            .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_CATALOGUE)
+            .panel_tab("workshop", LocalizedLabel::native("Workshop", "Werkstatt"), PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_WORKSHOP)
+            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, PROCESS_3D_PLAY_BODY_INSPECTION)
             // 🔧️ Palette-visible create/mutate actions (staged arg forms attached below).
-            .operation("addStep", "Add Step")
-            .operation("setStock", "Set Stock")
-            .operation("setActiveExample", "Set Active Example")
-            .operation("removeSelectedStep", "Remove Selected Step")
+            .operation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .operation("setStock", LocalizedLabel::native("Set Stock", "Rohteil festlegen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("removeSelectedStep", LocalizedLabel::native("Remove Selected Step", "Ausgewählten Schritt entfernen"))
             // 🐚️ Palette-visible host round-trips.
-            .shell_action("exportModel", "Export Model")
-            .shell_action("loadModelRequest", "Load Model…")
+            .shell_action("exportModel", LocalizedLabel::native("Export Model", "Modell exportieren"))
+            .shell_action("loadModelRequest", LocalizedLabel::native("Load Model…", "Modell laden…"))
             // 🔧️ Internal document mutations dispatched by panel/viewport wiring (not palette-worthy).
-            .action_with(internal_action("setDocument", "Set Document", ActionKind::Operation))
-            .action_with(internal_action("addWorkshopMachine", "Add Machine", ActionKind::Operation))
-            .action_with(internal_action("removeWorkshopMachine", "Remove Machine", ActionKind::Operation))
-            .action_with(internal_action("updateWorkshopMachine", "Update Machine", ActionKind::Operation))
-            .action_with(internal_action("importModelFile", "Import Model File", ActionKind::Operation))
-            .action_with(internal_action("removeStep", "Remove Step", ActionKind::Operation))
-            .action_with(internal_action("moveStep", "Move Step", ActionKind::Operation))
-            .action_with(internal_action("updateStep", "Update Step", ActionKind::Operation))
-            .action_with(internal_action("setStepEnabled", "Set Step Enabled", ActionKind::Operation))
-            .action_with(internal_action("patchInspector", "Patch Inspector", ActionKind::Operation))
-            .action_with(internal_action("worldPointerDown", "World Pointer Down", ActionKind::Operation))
-            .action_with(internal_action("worldFaceDragEnd", "World Face Drag End", ActionKind::Operation))
+            .action_with(internal_action("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Operation))
+            .action_with(internal_action("addWorkshopMachine", LocalizedLabel::native("Add Machine", "Maschine hinzufügen"), ActionKind::Operation))
+            .action_with(internal_action("removeWorkshopMachine", LocalizedLabel::native("Remove Machine", "Maschine entfernen"), ActionKind::Operation))
+            .action_with(internal_action("updateWorkshopMachine", LocalizedLabel::native("Update Machine", "Maschine aktualisieren"), ActionKind::Operation))
+            .action_with(internal_action("importModelFile", LocalizedLabel::native("Import Model File", "Modelldatei importieren"), ActionKind::Operation))
+            .action_with(internal_action("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"), ActionKind::Operation))
+            .action_with(internal_action("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"), ActionKind::Operation))
+            .action_with(internal_action("updateStep", LocalizedLabel::native("Update Step", "Schritt aktualisieren"), ActionKind::Operation))
+            .action_with(internal_action("setStepEnabled", LocalizedLabel::native("Set Step Enabled", "Schrittaktivierung festlegen"), ActionKind::Operation))
+            .action_with(internal_action("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"), ActionKind::Operation))
+            .action_with(internal_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::Operation))
+            .action_with(internal_action("worldFaceDragEnd", LocalizedLabel::native("World Face Drag End", "Welt-Flächenzug beendet"), ActionKind::Operation))
             // ⏱️ Document-cursor navigation operations (NOT framework History — they move the replay cursor).
-            .action_with(internal_action("setCursor", "Set Cursor", ActionKind::Operation))
-            .action_with(internal_action("stepCursor", "Step Cursor", ActionKind::Operation))
-            .action_with(internal_action("stepCursorBack", "Step Cursor Back", ActionKind::Operation))
-            .action_with(internal_action("stepCursorForward", "Step Cursor Forward", ActionKind::Operation))
+            .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::Operation))
+            .action_with(internal_action("stepCursor", LocalizedLabel::native("Step Cursor", "Cursor schrittweise bewegen"), ActionKind::Operation))
+            .action_with(internal_action("stepCursorBack", LocalizedLabel::native("Step Cursor Back", "Cursor zurück"), ActionKind::Operation))
+            .action_with(internal_action("stepCursorForward", LocalizedLabel::native("Step Cursor Forward", "Cursor vorwärts"), ActionKind::Operation))
             // 🎛️ Engagement session command line (a separate system from utility selection).
-            .action_with(internal_action("engagementSubmit", "Engagement Submit", ActionKind::Operation))
-            .action_with(internal_action("engagementInput", "Engagement Input", ActionKind::View))
-            .action_with(internal_action("engagementAbort", "Engagement Abort", ActionKind::View))
+            .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Operation))
+            .action_with(internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
+            .action_with(internal_action("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View))
             // 👁️ Ephemeral view state — selection, hover, camera, face picking, sun.
-            .action_with(internal_action("setSelection", "Set Selection", ActionKind::View))
-            .action_with(internal_action("setHover", "Set Hover", ActionKind::View))
-            .action_with(internal_action("setCamera", "Set Camera", ActionKind::View))
-            .action_with(internal_action("worldPick", "World Pick", ActionKind::View))
-            .action_with(internal_action("toggleSun", "Toggle Sun", ActionKind::View))
-            .action_with(internal_action("setSunAzimuth", "Set Sun Azimuth", ActionKind::View))
-            .action_with(internal_action("setSunElevation", "Set Sun Elevation", ActionKind::View))
-            .action_with(internal_action("setSunIntensity", "Set Sun Intensity", ActionKind::View))
+            .action_with(internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
+            .action_with(internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
+            .action_with(internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_with(internal_action("worldPick", LocalizedLabel::native("World Pick", "Welt-Auswahl (Pick)"), ActionKind::View))
+            .action_with(internal_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View))
+            .action_with(internal_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View))
+            .action_with(internal_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View))
+            .action_with(internal_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View))
             // 📝️ Staged argument forms for the palette-visible create/export actions.
             .action_args("addStep", vec![
-                ActionArgDef::select("measure", "Measure", vec![
-                    ActionArgOption::new("cut", "Cut"),
-                    ActionArgOption::new("drill", "Drill"),
-                    ActionArgOption::new("attach", "Attach"),
+                ActionArgDef::select("measure", LocalizedLabel::native("Measure", "Maßnahme"), vec![
+                    ActionArgOption::new("cut", LocalizedLabel::native("Cut", "Schnitt")),
+                    ActionArgOption::new("drill", LocalizedLabel::native("Drill", "Bohrung")),
+                    ActionArgOption::new("attach", LocalizedLabel::native("Attach", "Anbau")),
                 ]).default_value("cut"),
             ])
             .action_args("setStock", vec![
-                ActionArgDef::select("kind", "Kind", vec![
-                    ActionArgOption::new("box", "Box"),
-                    ActionArgOption::new("cylinder", "Cylinder"),
-                    ActionArgOption::new("sphere", "Sphere"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
+                    ActionArgOption::new("box", LocalizedLabel::native("Box", "Quader")),
+                    ActionArgOption::new("cylinder", LocalizedLabel::native("Cylinder", "Zylinder")),
+                    ActionArgOption::new("sphere", LocalizedLabel::native("Sphere", "Kugel")),
                 ]).default_value("box"),
             ])
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new(PROCESS3D_EXAMPLE_TIMBER, "Timber Beam Joinery"),
-                    ActionArgOption::new(PROCESS3D_EXAMPLE_PLATE, "Drilled Plate"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new(PROCESS3D_EXAMPLE_TIMBER, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung")),
+                    ActionArgOption::new(PROCESS3D_EXAMPLE_PLATE, LocalizedLabel::native("Drilled Plate", "Gebohrte Platte")),
                 ]).required().default_value(PROCESS3D_EXAMPLE_TIMBER),
             ])
             .action_args("exportModel", vec![
-                ActionArgDef::select("format", "Format", vec![
-                    ActionArgOption::new("step", "STEP"),
-                    ActionArgOption::new("obj", "OBJ"),
-                    ActionArgOption::new("stl", "STL"),
-                    ActionArgOption::new("glb", "GLB"),
+                ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![
+                    ActionArgOption::new("step", LocalizedLabel::native("STEP", "STEP")),
+                    ActionArgOption::new("obj", LocalizedLabel::native("OBJ", "OBJ")),
+                    ActionArgOption::new("stl", LocalizedLabel::native("STL", "STL")),
+                    ActionArgOption::new("glb", LocalizedLabel::native("GLB", "GLB")),
                 ]).required().default_value("step"),
             ])
             // 🧰️ Flat top-level exclusive utility bar scoped to the workpiece window (active utility is
             // host-owned). These four are the window's entire utility set — not a sub-collection — so
             // each carries `group: None` and renders as its own flat utility bar icon.
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("cut", "Cut", "scissors") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("drill", "Drill", "circle-dot") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("attach", "Attach", "plus") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", LocalizedLabel::native("Select", "Auswählen"), "mouse-pointer") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("cut", LocalizedLabel::native("Cut", "Schneiden"), "scissors") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("drill", LocalizedLabel::native("Drill", "Bohren"), "circle-dot") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("attach", LocalizedLabel::native("Attach", "Anbauen"), "plus") })
             .window_kind_utilities(PROCESS_3D_PLAY_WINDOW_MAIN, vec!["select".into(), "cut".into(), "drill".into(), "attach".into()])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -1475,8 +1428,8 @@ pub fn create_process3d_app() -> App {
             .config(Process3dPlayApp::default().config_spec())
             .io(process_3d_engine::process3d_io()),
     )
-    .example(PROCESS3D_EXAMPLE_TIMBER, "Timber Beam Joinery", process_3d_engine::TIMBER_EXAMPLE_DSL, "file-text")
-    .example(PROCESS3D_EXAMPLE_PLATE, "Drilled Plate", process_3d_engine::PLATE_EXAMPLE_DSL, "file-text")
+    .example(PROCESS3D_EXAMPLE_TIMBER, LocalizedLabel::native("Timber Beam Joinery", "Holzbalkenverbindung"), process_3d_engine::TIMBER_EXAMPLE_DSL, "file-text")
+    .example(PROCESS3D_EXAMPLE_PLATE, LocalizedLabel::native("Drilled Plate", "Gebohrte Platte"), process_3d_engine::PLATE_EXAMPLE_DSL, "file-text")
     .workflow("process3d", "Process 3D", "brep")
 }
 //#endregion 🔖️Manifest
@@ -1515,9 +1468,9 @@ mod tests {
     #[test]
     fn labels_resolve_native_by_default_and_in_german() {
         let mut config = Process3dConfig::default();
-        assert_eq!(resolve_labels::<Process3dLabels>(&config).stock, "Stock");
+        assert_eq!(resolve_labels::<Process3dLabels>(&config).stock.as_str(), "Stock");
         config.locale = "de".into();
-        assert_eq!(resolve_labels::<Process3dLabels>(&config).stock, "Rohteil");
+        assert_eq!(resolve_labels::<Process3dLabels>(&config).stock.as_str(), "Rohteil");
     }
 
     #[test]
@@ -1574,7 +1527,7 @@ mod tests {
     #[test]
     fn engagement_exposes_no_utility_switch_options() {
         let doc = Process3dDocument::default();
-        let engagement = process3d_engagement(&doc, &Process3dConfig::default(), "cut", &Process3dLabels::EN);
+        let engagement = process3d_engagement(&doc, &Process3dConfig::default(), "cut", &Process3dLabels::NATIVE_EN);
         assert!(engagement.options.is_none(), "select/cut/drill/attach switching lives only on the framework utility bar; the engagement must not duplicate it as options",);
     }
 
@@ -1630,21 +1583,21 @@ mod tests {
 
     #[test]
     fn face_drag_negative_distance_yields_cut() {
-        let step = process3d_step_from_face_drag([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], -0.5, None, &Process3dLabels::EN).expect("step");
+        let step = process3d_step_from_face_drag([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], -0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
         assert!(matches!(step.measure, ProcessMeasure::Cut { .. }));
         assert_eq!(step.label, "Push Cut");
     }
 
     #[test]
     fn face_drag_positive_distance_yields_attach() {
-        let step = process3d_step_from_face_drag([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.5, None, &Process3dLabels::EN).expect("step");
+        let step = process3d_step_from_face_drag([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
         assert!(matches!(step.measure, ProcessMeasure::Attach { .. }));
         assert_eq!(step.label, "Pull Attach");
     }
 
     #[test]
     fn face_drag_zero_distance_is_noop() {
-        assert!(process3d_step_from_face_drag([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.0, None, &Process3dLabels::EN).is_none());
+        assert!(process3d_step_from_face_drag([0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.0, None, &Process3dLabels::NATIVE_EN).is_none());
     }
 
     #[test]

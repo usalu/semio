@@ -10,10 +10,10 @@ use reasoning_wires_engine::{empty_mindmap_wires_document, find_board_node, meta
 use reasoning_wires_op::{MindmapWiresOperation, WiresConfigOperation};
 use reasoning_wires_protocol::WiresCommand;
 use semio_framework_plugin::{
-    app_labels, build_canvas_2d_scene, create_default_layout, localized_label_map,
+    app_labels, build_canvas_2d_scene, create_default_layout,
     tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, Emit, ActionDescriptor, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, ConfigView, DocumentApp, DocumentView, LocaleLabels, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability,
-    PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, UiNode, UiTreeItemNode,
+    AppLabels, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Label, Locale, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability,
+    PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, Terminology, UiNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::{json, Value};
@@ -40,13 +40,20 @@ const WIRES_DOCUMENT_RELATIONSHIP_PREFIX: &str = "wires-play-document.relationsh
 
 //#region 🔖️Locale
 /// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical helpers.
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `block3d_ui`'s identical pair.
 fn is_de_locale(cfg: &WiresConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &WiresConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🗣️ `WiresConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
+fn wires_locale(cfg: &WiresConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
+/// `AppLabels::labels`. `WiresConfig` carries no terminology field, so terminology is always `Native`.
+fn resolve_labels<L: AppLabels>(cfg: &WiresConfig) -> &'static L {
+    L::labels(wires_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -123,13 +130,13 @@ fn identity_label(wires: &DslValue, identity_id: u64) -> Option<String> {
         .map(str::to_string)
 }
 
-fn relationship_kind_display_name<'a>(kind: &'a str, labels: &WiresLabels) -> &'a str {
+fn relationship_kind_display_name(kind: &str, labels: &WiresLabels) -> String {
     match kind {
-        "owns" => labels.relationship_kind_owns,
-        "is" => labels.relationship_kind_is,
-        "references" => labels.relationship_kind_references,
-        "has" => labels.relationship_kind_has,
-        _ => kind,
+        "owns" => labels.relationship_kind_owns.as_str().to_string(),
+        "is" => labels.relationship_kind_is.as_str().to_string(),
+        "references" => labels.relationship_kind_references.as_str().to_string(),
+        "has" => labels.relationship_kind_has.as_str().to_string(),
+        _ => kind.to_string(),
     }
 }
 
@@ -256,45 +263,21 @@ fn node_position(node: &DslValue) -> (f64, f64) {
 
 //#region 🔖️Terminology
 app_labels! {
-    /// 🗣️ Complete UI label set for the mindmap wires app; one field per label makes every locale combination compile-checked.
+    /// 🗣️ Complete UI label set for the mindmap wires app; one field per label makes every locale×terminology combination compile-checked. No distinct reuse-terminology concept for this app, so reuse repeats native.
     struct WiresLabels {
-        identities: &'static str = en: "Identities", de: "Identitäten";
-        relationships: &'static str = en: "Relationships", de: "Beziehungen";
-        identity_kinds: &'static str = en: "Identity kinds", de: "Identitätsarten";
-        relationship_kinds: &'static str = en: "Relationship kinds", de: "Beziehungsarten";
-        relationship_kind_owns: &'static str = en: "Owns", de: "Besitzt";
-        relationship_kind_is: &'static str = en: "Is", de: "Ist";
-        relationship_kind_references: &'static str = en: "References", de: "Referenziert";
-        relationship_kind_has: &'static str = en: "Has", de: "Hat";
-        window_main: &'static str = en: "Canvas", de: "Leinwand";
-        mode_edit: &'static str = en: "Edit", de: "Bearbeiten";
+        identities: native_en "Identities", native_de "Identitäten", reuse_en "Identities", reuse_de "Identitäten";
+        relationships: native_en "Relationships", native_de "Beziehungen", reuse_en "Relationships", reuse_de "Beziehungen";
+        identity_kinds: native_en "Identity kinds", native_de "Identitätsarten", reuse_en "Identity kinds", reuse_de "Identitätsarten";
+        relationship_kinds: native_en "Relationship kinds", native_de "Beziehungsarten", reuse_en "Relationship kinds", reuse_de "Beziehungsarten";
+        relationship_kind_owns: native_en "Owns", native_de "Besitzt", reuse_en "Owns", reuse_de "Besitzt";
+        relationship_kind_is: native_en "Is", native_de "Ist", reuse_en "Is", reuse_de "Ist";
+        relationship_kind_references: native_en "References", native_de "Referenziert", reuse_en "References", reuse_de "Referenziert";
+        relationship_kind_has: native_en "Has", native_de "Hat", reuse_en "Has", reuse_de "Hat";
+        window_main: native_en "Canvas", native_de "Leinwand", reuse_en "Canvas", reuse_de "Leinwand";
+        mode_edit: native_en "Edit", native_de "Bearbeiten", reuse_en "Edit", reuse_de "Bearbeiten";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_wires_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn wires_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(
-        is_de,
-        &[
-            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-            ("addNode", "Add Node", "Knoten hinzufügen"),
-            ("addRelationship", "Add Relationship", "Beziehung hinzufügen"),
-            ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-            ("forceLayout", "Force Layout", "Kraftbasiertes Layout"),
-            ("reorganize", "Reorganize", "Neu anordnen"),
-            ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
-            ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("documentSelect", "Document Select", "Dokument auswählen"),
-            ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
-            ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
-        ],
-    )
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 fn render_document_panel(document: &MindmapWiresDocument, selected: &[String], labels: &WiresLabels) -> UiNode {
@@ -311,7 +294,7 @@ fn render_document_panel(document: &MindmapWiresDocument, selected: &[String], l
                 .filter(|kind_name| kind_name != label);
             Some(tree_item_with_action(
                 format!("{WIRES_DOCUMENT_IDENTITY_PREFIX}{node_id}"),
-                label,
+                Label::data(label),
                 description,
                 wires_action("setSelection", Some(json!({ "ids": [node_id] }))),
             ))
@@ -323,15 +306,15 @@ fn render_document_panel(document: &MindmapWiresDocument, selected: &[String], l
             let edge_id = edge.get("id")?.as_str()?;
             Some(tree_item_with_action(
                 format!("{WIRES_DOCUMENT_RELATIONSHIP_PREFIX}{edge_id}"),
-                wires_relationship_document_label(wires, edge_id, labels).unwrap_or_else(|| edge_id.into()),
+                Label::data(wires_relationship_document_label(wires, edge_id, labels).unwrap_or_else(|| edge_id.into())),
                 None,
                 wires_action("setSelection", Some(json!({ "ids": [edge_id] }))),
             ))
         })
         .collect();
     PanelTreeBuilder::new(WIRES_PLAY_DOCUMENT_NAMESPACE)
-        .section_or_placeholder("wires-play-document.identities", Some(labels.identities.into()), true, identity_items, "(none)")
-        .section_or_placeholder("wires-play-document.relationships", Some(labels.relationships.into()), false, relationship_items, "(none)")
+        .section_or_placeholder("wires-play-document.identities", Some(labels.identities.into()), true, identity_items, Label::data("(none)"))
+        .section_or_placeholder("wires-play-document.relationships", Some(labels.relationships.into()), false, relationship_items, Label::data("(none)"))
         .selected(document_tree_selected_ids(board, selected))
         .selection_change(wires_action("setSelection", None))
         .build()
@@ -360,7 +343,7 @@ fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslVa
             };
             tree_item_with_action(
                 namespace.item_id(kind, &format!("{index}.{kind_id}")),
-                catalog_kind_label(entry),
+                Label::data(catalog_kind_label(entry)),
                 Some(kind_id.into()),
                 action,
             )
@@ -375,8 +358,8 @@ fn render_catalogue_panel(wires: &DslValue, labels: &WiresLabels) -> UiNode {
     let identity_items = kind_catalog_items(&namespace, "identity-kinds", &identity_entries);
     let relationship_items = kind_catalog_items(&namespace, "relationship-kinds", &relationship_entries);
     namespace
-        .section_or_placeholder("wires-play-kinds.identity-kinds", Some(labels.identity_kinds.into()), true, identity_items, "(none)")
-        .section_or_placeholder("wires-play-kinds.relationship-kinds", Some(labels.relationship_kinds.into()), true, relationship_items, "(none)")
+        .section_or_placeholder("wires-play-kinds.identity-kinds", Some(labels.identity_kinds.into()), true, identity_items, Label::data("(none)"))
+        .section_or_placeholder("wires-play-kinds.relationship-kinds", Some(labels.relationship_kinds.into()), true, relationship_items, Label::data("(none)"))
         .build()
 }
 
@@ -392,16 +375,16 @@ fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String])
     if selected_nodes.is_empty() {
         let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
         return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {WIRES_FIXTURE_SCHEMA}")),
-            ui_text(format!(
+            ui_text(Label::data(format!("Schema: {WIRES_FIXTURE_SCHEMA}"))),
+            ui_text(Label::data(format!(
                 "Identities: {}",
                 extension.as_ref().map(|ext| ext.mindmap.topics.len()).unwrap_or(0)
-            )),
-            ui_text(format!(
+            ))),
+            ui_text(Label::data(format!(
                 "Relationships: {}",
                 extension.as_ref().map(|ext| ext.relationships.len()).unwrap_or(0)
-            )),
-            ui_text(format!("Board nodes: {}", fixture_nodes(&document.board_fixture).len())),
+            ))),
+            ui_text(Label::data(format!("Board nodes: {}", fixture_nodes(&document.board_fixture).len()))),
         ]);
     }
     let node = selected_nodes[0];
@@ -411,7 +394,7 @@ fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String])
     ui_stack_vertical(vec![
         ui_inspector_readonly_field(
             "wires-play-inspector.id",
-            "Id",
+            Label::data("Id"),
             node.get("id")
                 .and_then(|value| value.as_str())
                 .unwrap_or("")
@@ -419,7 +402,7 @@ fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String])
         ),
         ui_inspector_readonly_field(
             "wires-play-inspector.identity-label",
-            "Identity",
+            Label::data("Identity"),
             identity
                 .and_then(|row| row.get("label"))
                 .and_then(|value| value.as_str())
@@ -428,7 +411,7 @@ fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String])
         ),
         ui_inspector_readonly_field(
             "wires-play-inspector.node-kind",
-            "Identity Kind",
+            Label::data("Identity Kind"),
             node.get("nodeKind")
                 .and_then(|value| value.as_str())
                 .unwrap_or("—")
@@ -436,7 +419,7 @@ fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String])
         ),
         ui_inspector_readonly_field(
             "wires-play-inspector.x",
-            "X",
+            Label::data("X"),
             node.get("x")
                 .and_then(|value| value.as_f64())
                 .map(|value| value.to_string())
@@ -444,7 +427,7 @@ fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String])
         ),
         ui_inspector_readonly_field(
             "wires-play-inspector.y",
-            "Y",
+            Label::data("Y"),
             node.get("y")
                 .and_then(|value| value.as_f64())
                 .map(|value| value.to_string())
@@ -657,23 +640,8 @@ impl DocumentApp for ReasoningWiresPlayApp {
             WIRES_PLAY_BODY_DOCUMENT => render_document_panel(document, &cfg.projection.selected_ids, labels),
             WIRES_PLAY_BODY_CATALOGUE => render_catalogue_panel(&document.wires_fixture, labels),
             WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(document, &cfg.projection.selected_ids),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, WiresConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<WiresLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::with_framework_panel_tabs(
-            ["framework.panel.document", "framework.panel.catalogue", "framework.panel.inspection"],
-            is_de,
-        )
-        .window_kind_label("reasoning-wires-composite", labels.window_main)
-        .mode_label("edit", labels.mode_edit)
-        .action_labels(wires_action_labels(is_de))
-        .example_labels(std::collections::HashMap::from([
-            (WIRES_PLAY_EXAMPLE_METABOLISM_ID.to_string(), "Metabolism".to_string()),
-        ]))
     }
 }
 //#endregion 🔖️ReasoningWiresPlayApp
@@ -808,7 +776,7 @@ mod tests {
     #[test]
     fn relationship_kind_labels_match_fixture() {
         assert_eq!(RelationshipKind::Owns.label(), "owns");
-        assert_eq!(relationship_kind_display_name("is", WiresLabels::locale_labels_en()), "Is");
+        assert_eq!(relationship_kind_display_name("is", WiresLabels::labels(Locale::En, Terminology::Native)), "Is");
     }
 
     #[test]

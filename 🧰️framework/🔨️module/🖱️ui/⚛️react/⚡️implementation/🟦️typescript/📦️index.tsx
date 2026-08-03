@@ -85,6 +85,8 @@ import {
   type ShellLocale,
   type ShellTerminology,
   type StoragePort,
+  createBrowserStoragePort,
+  createMemoryStoragePort,
   panelTabFirstDraggableElementId,
   pickMostSpecificCanvasTarget,
   sortCanvasPickTargetsGeneralFirst,
@@ -148,7 +150,7 @@ import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { useHotkeys } from "react-hotkeys-hook";
-import { initReactI18next, useTranslation } from "react-i18next";
+import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { extendTailwindMerge } from "tailwind-merge";
 // #endregion 🔌️Adapters
@@ -277,7 +279,7 @@ const defaultFlowHostPort = flowHostPort;
 const defaultThreeHostPort = threeHostPort;
 const defaultSceneHostPort = sceneHostPort;
 
-/** @emoji 🔌️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key resets that port to its default adapter. */
+/** @emoji 🔌️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key is left untouched (whatever port is currently installed keeps running). */
 export type HostPortOverrides = Partial<{
   readonly react: ReactHostPort;
   readonly flow: FlowHostPort;
@@ -288,35 +290,43 @@ export type HostPortOverrides = Partial<{
 
 /** @emoji 🔌️ Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
  * so this is the only way to inject a test double or alternate adapter (e.g. Storybook's `withRenderer`
- * decorator) before a story renders. Every call is a full reset: a key you don't pass reverts to its
- * default adapter rather than leaving a previous override in place. */
-export function configureHostPorts(overrides: HostPortOverrides): void {
-  reactHostPort = overrides.react ?? defaultReactHostPort;
-  flowHostPort = overrides.flow ?? defaultFlowHostPort;
-  threeHostPort = overrides.three ?? defaultThreeHostPort;
-  sceneHostPort = overrides.scene ?? defaultSceneHostPort;
-  iconRenderPort = overrides.iconRender ?? defaultIconRenderPort;
+ * decorator) before a story renders. Ports are page-global (one React per page), so a merge — only the
+ * keys you pass are touched, everything else keeps whatever is currently installed — is required rather
+ * than a full reset: with two shells configuring ports independently (or nested calls within one shell),
+ * an unconditional reset-to-default on an unrelated key would clobber the other caller's still-active
+ * override. Returns a restore function that puts back exactly what was installed before this call. */
+export function configureHostPorts(overrides: HostPortOverrides): () => void {
+  const previous: HostPortOverrides = { react: reactHostPort, flow: flowHostPort, three: threeHostPort, scene: sceneHostPort, iconRender: iconRenderPort };
+  if (overrides.react !== undefined) reactHostPort = overrides.react;
+  if (overrides.flow !== undefined) flowHostPort = overrides.flow;
+  if (overrides.three !== undefined) threeHostPort = overrides.three;
+  if (overrides.scene !== undefined) sceneHostPort = overrides.scene;
+  if (overrides.iconRender !== undefined) iconRenderPort = overrides.iconRender;
+  return () => {
+    if (overrides.react !== undefined) reactHostPort = previous.react ?? defaultReactHostPort;
+    if (overrides.flow !== undefined) flowHostPort = previous.flow ?? defaultFlowHostPort;
+    if (overrides.three !== undefined) threeHostPort = previous.three ?? defaultThreeHostPort;
+    if (overrides.scene !== undefined) sceneHostPort = previous.scene ?? defaultSceneHostPort;
+    if (overrides.iconRender !== undefined) iconRenderPort = previous.iconRender ?? defaultIconRenderPort;
+  };
 }
 // #endregion 🔌️PortWiring
 
 // #region 🐚️ShellScope
-/** @emoji 🐚️ Marquee-drag selection-merge mode — mirrors the `SelectionUtilityOptions` control panel's
- * own union (kept as a bare string union here, not an import, to avoid a cycle with the os-renderer
- * package that both defines the control and reads this store). */
-export type SelectionMode = "default" | "additive" | "subtractive" | "invertive";
-
 /** @emoji 🐚️ Per-shell replacement for the old `(globalThis).__selectionMode` global plus its
  * `window`-wide `"semio:selectionOptionsChanged"` broadcast — those meant one shell's selection-mode
- * change silently reconfigured every other mounted shell's WASM session too. */
+ * change silently reconfigured every other mounted shell's WASM session too. Keyed by the same
+ * {@link SelectionMergeMode} union `marqueeModeFromModifiers`/`selectionMergeIds` already use (declared
+ * further down in this file — a `type` reference resolves module-wide, so the forward reference is fine). */
 export interface SelectionModeStore {
-  get(): SelectionMode;
-  set(mode: SelectionMode): void;
+  get(): SelectionMergeMode;
+  set(mode: SelectionMergeMode): void;
   /** Registers a callback invoked whenever `set` changes the mode. Returns an unsubscribe function. */
   subscribe(callback: () => void): () => void;
 }
 
 function createSelectionModeStore(): SelectionModeStore {
-  let mode: SelectionMode = "default";
+  let mode: SelectionMergeMode = "default";
   const subscribers = new Set<() => void>();
   return {
     get: () => mode,
@@ -351,13 +361,17 @@ export interface ShellScope {
   /** `querySelectorAll` scoped to this shell's root, replacing document-wide lookups. */
   queryAll(selector: string): HTMLElement[];
   readonly selection: SelectionModeStore;
+  /** This shell's own i18next instance (see `createShellI18nInstance`) — `useUiTranslation`/`useLabel`
+   * pick it up automatically via the nearest `I18nextProvider` ancestor (`FrameworkOsShell` renders one
+   * around its subtree), so no call site outside `ShellScope` plumbing itself needs to change. */
+  readonly i18n: typeof i18next;
 }
 
 let shellScopeAutoIdSeq = 0;
 
 /** @emoji 🐚️ Creates a fresh {@link ShellScope}. Call once per shell mount (e.g. from a lazy `useState`
  * initializer) — the scope's identity must stay stable for the shell instance's lifetime. */
-export function createShellScope(options: { readonly shellId?: string; readonly storage: StoragePort; readonly ownsPage?: boolean }): ShellScope {
+export function createShellScope(options: { readonly shellId?: string; readonly storage: StoragePort; readonly ownsPage?: boolean; readonly initialLocale?: UiLocale }): ShellScope {
   const shellId = options.shellId ?? `shell-${(shellScopeAutoIdSeq += 1)}`;
   const rootRef: { current: HTMLElement | null } = { current: null };
   const portalLayerRef: { current: HTMLElement | null } = { current: null };
@@ -370,13 +384,17 @@ export function createShellScope(options: { readonly shellId?: string; readonly 
     query: (selector) => rootRef.current?.querySelector<HTMLElement>(selector) ?? null,
     queryAll: (selector) => (rootRef.current ? Array.from(rootRef.current.querySelectorAll<HTMLElement>(selector)) : []),
     selection: createSelectionModeStore(),
+    i18n: createShellI18nInstance(options.initialLocale ?? "en"),
   };
 }
 
 export const ShellScopeContext = React.createContext<ShellScope | null>(null);
 
+/** @emoji 🐚️ Also wraps `children` in an `I18nextProvider` bound to `scope.i18n` — the only wiring
+ * `useUiTranslation`/`useLabel` (which call plain `useTranslation()`) need to resolve this shell's own
+ * translations instead of the shared `uiI18n` singleton; no call site elsewhere changes. */
 export function ShellScopeProvider({ scope, children }: { readonly scope: ShellScope; readonly children: React.ReactNode }): React.ReactElement {
-  return React.createElement(ShellScopeContext.Provider, { value: scope }, children);
+  return React.createElement(ShellScopeContext.Provider, { value: scope }, React.createElement(I18nextProvider, { i18n: scope.i18n }, children));
 }
 
 /** @emoji 🐚️ Reads the enclosing shell's scope — throws outside a {@link ShellScopeProvider} rather than
@@ -392,7 +410,103 @@ export function useShellScope(): ShellScope {
 export function useShellScopeOptional(): ShellScope | null {
   return React.useContext(ShellScopeContext);
 }
+
+/** @emoji 🐚️ Falls back to a plain (unnamespaced) browser storage port for the handful of standalone
+ * hooks (`useUiTerminology`, `setUiLocale`, …) usable both inside a `ShellScopeProvider` and outside one
+ * (a "TS-native product" that hasn't been wrapped yet) — matches pre-scoping behavior for the latter. */
+function shellScopeStorageOrBrowserFallback(scope: ShellScope | null): StoragePort {
+  return scope?.storage ?? createBrowserStoragePort();
+}
 // #endregion 🐚️ShellScope
+
+// #region 🐚️ShellActivity
+/** @emoji 🐚️ Which registered shell root most recently received a `pointerdown`/`focusin` — generalizes
+ * the `🪟️WindowChrome` region's `surfaceActiveRoots` tracker (which does the same thing for
+ * panel/pane/window activity within ONE page) to the shell level, so a page hosting several mounted
+ * shells can tell which one the user is actually interacting with. */
+const shellActivityRoots = new Set<HTMLElement>();
+let activeShellRootValue: HTMLElement | null = null;
+const shellActivitySubscribers = new Set<() => void>();
+let shellActivityListenersInstalled = false;
+
+function setActiveShellRoot(next: HTMLElement | null): void {
+  if (activeShellRootValue === next) return;
+  activeShellRootValue = next;
+  shellActivitySubscribers.forEach((notify) => notify());
+}
+
+function resolveActiveShellRoot(target: EventTarget | null): HTMLElement | null {
+  let node: Node | null = target instanceof Node ? target : null;
+  while (node) {
+    if (node instanceof HTMLElement && shellActivityRoots.has(node)) return node;
+    node = node.parentNode;
+  }
+  return null;
+}
+
+function installShellActivityListeners(): void {
+  if (shellActivityListenersInstalled || typeof document === "undefined") return;
+  shellActivityListenersInstalled = true;
+  const onActivity = (event: Event) => {
+    const root = resolveActiveShellRoot(event.target);
+    if (root) setActiveShellRoot(root);
+  };
+  document.addEventListener("pointerdown", onActivity, true);
+  document.addEventListener("focusin", onActivity, true);
+}
+
+/** @emoji 🐚️ Registers `root` as a candidate "active shell" — called once per mounted `FrameworkOsShell`.
+ * The first (and, on a single-shell page, only) registered root starts active so keyboard dispatch works
+ * immediately, before any pointer/focus activity. Returns an unregister function. */
+export function registerShellActivityRoot(root: HTMLElement): () => void {
+  installShellActivityListeners();
+  shellActivityRoots.add(root);
+  if (activeShellRootValue === null) setActiveShellRoot(root);
+  return () => {
+    shellActivityRoots.delete(root);
+    if (activeShellRootValue === root) setActiveShellRoot(shellActivityRoots.values().next().value ?? null);
+  };
+}
+
+/** @emoji 🐚️ The shell root most recently interacted with, among registered roots — `null` before any
+ * shell has registered. */
+export function activeShellRoot(): HTMLElement | null {
+  return activeShellRootValue;
+}
+
+/**
+ * @emoji 🐚️ A `document`-level `keydown` listener gated to one shell: fires `handler` only when the
+ * event's target is inside `rootRef.current`, or — for a keystroke that lands on `document`/`body` with
+ * nothing focused (the common case for a global hotkey) — when this shell is {@link activeShellRoot}.
+ * Replaces the old pattern of an unconditional `window`/`document` keydown listener per shell, under
+ * which every mounted shell fired its bound action (and could `preventDefault()` out from under another
+ * shell) for every keystroke on the page regardless of which shell the user was actually using.
+ */
+export function useShellKeydown(rootRef: { readonly current: HTMLElement | null }, handler: (event: KeyboardEvent) => void, deps: readonly unknown[]): void {
+  const handlerRef = React.useRef(handler);
+  handlerRef.current = handler;
+  const root = rootRef.current;
+  React.useEffect(() => {
+    if (!root) return;
+    const unregister = registerShellActivityRoot(root);
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      const withinThisRoot = target instanceof Node && root.contains(target);
+      if (!withinThisRoot && activeShellRoot() !== root) return;
+      handlerRef.current(event);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      unregister();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `deps` is the caller's own dependency list, spread intentionally
+  }, [root, ...deps]);
+}
+
+/** 🐚️ Stable no-op root for {@link useShellKeydown} call sites rendered outside a `ShellScopeProvider` (unit tests, storybook) — the hook's `if (!root) return;` guard makes this permanently inert rather than throwing. */
+export const NULL_SHELL_ROOT_REF: { readonly current: HTMLElement | null } = { current: null };
+// #endregion 🐚️ShellActivity
 
 // #region 🔖️IconRenderPort
 export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, ThemePaletteGroup, UiTheme } from "@semio-tech/ui-styling";
@@ -1506,10 +1620,6 @@ function coerceIconSource(source: IconSource): Icon {
     if (decoded) {
       return decoded;
     }
-    // 🎟️ Kebab catalog-shaped ids that are not vendored must surface as missing glyphs, not label text.
-    if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key)) {
-      return { kind: "catalog", key: key as IconName };
-    }
     return { kind: "text", text: key };
   }
   if ("kind" in source) {
@@ -1680,6 +1790,7 @@ const FindInViewIcon = createIconComponent("text-search");
 const FolderIcon = createIconComponent("folder");
 const FolderOpenIcon = createIconComponent("folder-open");
 const GripVerticalIcon = createIconComponent("grip-vertical");
+const MoveIcon = createIconComponent("move");
 const HandIcon = createIconComponent("hand");
 const InfoIcon = createIconComponent("info");
 const LandmarkIcon = createIconComponent("landmark");
@@ -3166,28 +3277,25 @@ export function resetElementsSurfaceChromeForTests(): void {
 }
 
 // #region 🎛️UiChromePrefs
-/** @emoji 🚗️ localStorage key for the active driver id (builtin or `custom.<slug>`). */
+/** @emoji 🚗️ Storage key for the active driver id (builtin or `custom.<slug>`). */
 export const UI_CHROME_DRIVER_STORAGE_KEY = "ui.chrome.driver";
 
-/** @emoji 🚗️ Reads the persisted active driver id from localStorage, defaulting to `"default"`. */
-export function readStoredUiDriverId(): string {
-  if (typeof localStorage === "undefined") return DEFAULT_UI_DRIVER.id;
-  return localStorage.getItem(UI_CHROME_DRIVER_STORAGE_KEY) || DEFAULT_UI_DRIVER.id;
+/** @emoji 🚗️ Reads the persisted active driver id from the given shell's storage, defaulting to `"default"`. */
+export function readStoredUiDriverId(storage: StoragePort): string {
+  return storage.get(UI_CHROME_DRIVER_STORAGE_KEY) || DEFAULT_UI_DRIVER.id;
 }
 
-/** @emoji 🚗️ Persists the active driver id to localStorage. */
-export function writeStoredUiDriverId(id: string): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CHROME_DRIVER_STORAGE_KEY, id);
+/** @emoji 🚗️ Persists the active driver id to the given shell's storage. */
+export function writeStoredUiDriverId(storage: StoragePort, id: string): void {
+  storage.set(UI_CHROME_DRIVER_STORAGE_KEY, id);
 }
 
-/** @emoji 🚗️ localStorage key for the user's saved custom drivers, keyed by driver id. */
+/** @emoji 🚗️ Storage key for the user's saved custom drivers, keyed by driver id. */
 export const UI_CUSTOM_DRIVERS_STORAGE_KEY = "ui.drivers.custom";
 
-/** @emoji 🚗️ Reads the user's saved custom drivers from localStorage; discards any entry that fails to parse. */
-export function readStoredUiCustomDrivers(): Record<string, UiDriver> {
-  if (typeof localStorage === "undefined") return {};
-  const raw = localStorage.getItem(UI_CUSTOM_DRIVERS_STORAGE_KEY);
+/** @emoji 🚗️ Reads the user's saved custom drivers from the given shell's storage; discards any entry that fails to parse. */
+export function readStoredUiCustomDrivers(storage: StoragePort): Record<string, UiDriver> {
+  const raw = storage.get(UI_CUSTOM_DRIVERS_STORAGE_KEY);
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
@@ -3205,108 +3313,98 @@ export function readStoredUiCustomDrivers(): Record<string, UiDriver> {
   }
 }
 
-/** @emoji 🚗️ Persists the user's saved custom drivers to localStorage. */
-export function writeStoredUiCustomDrivers(drivers: Record<string, UiDriver>): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CUSTOM_DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
+/** @emoji 🚗️ Persists the user's saved custom drivers to the given shell's storage. */
+export function writeStoredUiCustomDrivers(storage: StoragePort, drivers: Record<string, UiDriver>): void {
+  storage.set(UI_CUSTOM_DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
 }
 
-/** @emoji 🚗️ Resolves the active driver from localStorage (non-React fallback for non-hook consumers). */
-export function readStoredUiDriver(): UiDriver {
-  return resolveUiDriver(readStoredUiDriverId(), readStoredUiCustomDrivers());
+/** @emoji 🚗️ Resolves the active driver from the given shell's storage (non-React fallback for non-hook consumers). */
+export function readStoredUiDriver(storage: StoragePort): UiDriver {
+  return resolveUiDriver(readStoredUiDriverId(storage), readStoredUiCustomDrivers(storage));
 }
 
-/** @emoji 🌓️ localStorage key for surface appearance (system/light/dark). */
+/** @emoji 🌓️ Storage key for surface appearance (system/light/dark). */
 export const UI_CHROME_APPEARANCE_STORAGE_KEY = "ui.chrome.appearance";
 
-/** @emoji 🌓️ Reads persisted surface appearance from localStorage. */
-export function readStoredUiChromeAppearance(): ElementsSurfaceAppearance {
-  if (typeof localStorage === "undefined") return "system";
-  const raw = localStorage.getItem(UI_CHROME_APPEARANCE_STORAGE_KEY);
+/** @emoji 🌓️ Reads persisted surface appearance from the given shell's storage — a required param
+ * (not a `localStorage` default) since two shells on one page must never read/write each other's
+ * appearance through a shared key. */
+export function readStoredUiChromeAppearance(storage: StoragePort): ElementsSurfaceAppearance {
+  const raw = storage.get(UI_CHROME_APPEARANCE_STORAGE_KEY);
   if (raw === "light" || raw === "dark" || raw === "system") return raw;
   return "system";
 }
 
-/** @emoji 🌓️ Persists surface appearance to localStorage. */
-export function writeStoredUiChromeAppearance(appearance: ElementsSurfaceAppearance): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CHROME_APPEARANCE_STORAGE_KEY, appearance);
+/** @emoji 🌓️ Persists surface appearance to the given shell's storage. */
+export function writeStoredUiChromeAppearance(storage: StoragePort, appearance: ElementsSurfaceAppearance): void {
+  storage.set(UI_CHROME_APPEARANCE_STORAGE_KEY, appearance);
 }
 
 /** @emoji 📐️ User-selectable layout device; mobile is automatic and excluded here. */
 export type UiChromeLayout = "desktop" | "tablet";
 
-/** @emoji 📐️ localStorage key for the user-selected desktop/tablet layout. */
+/** @emoji 📐️ Storage key for the user-selected desktop/tablet layout. */
 export const UI_CHROME_LAYOUT_STORAGE_KEY = "ui.chrome.layout";
 
-/** @emoji 📐️ Reads the persisted layout preference from localStorage, defaulting to desktop. */
-export function readStoredUiChromeLayout(): UiChromeLayout {
-  if (typeof localStorage === "undefined") return "desktop";
-  return localStorage.getItem(UI_CHROME_LAYOUT_STORAGE_KEY) === "tablet" ? "tablet" : "desktop";
+/** @emoji 📐️ Reads the persisted layout preference from the given shell's storage, defaulting to desktop. */
+export function readStoredUiChromeLayout(storage: StoragePort): UiChromeLayout {
+  return storage.get(UI_CHROME_LAYOUT_STORAGE_KEY) === "tablet" ? "tablet" : "desktop";
 }
 
-/** @emoji 📐️ Persists the layout preference to localStorage. */
-export function writeStoredUiChromeLayout(layout: UiChromeLayout): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CHROME_LAYOUT_STORAGE_KEY, layout);
+/** @emoji 📐️ Persists the layout preference to the given shell's storage. */
+export function writeStoredUiChromeLayout(storage: StoragePort, layout: UiChromeLayout): void {
+  storage.set(UI_CHROME_LAYOUT_STORAGE_KEY, layout);
 }
 
-/** @emoji 🌐️ localStorage key for the active UI locale. */
+/** @emoji 🌐️ Storage key for the active UI locale. */
 export const UI_CHROME_LOCALE_STORAGE_KEY = "ui.chrome.locale";
 
-/** @emoji 🌐️ Reads the persisted UI locale from localStorage, if any. */
-export function readStoredUiChromeLocale(): UiLocale | null {
-  if (typeof localStorage === "undefined") return null;
-  const raw = localStorage.getItem(UI_CHROME_LOCALE_STORAGE_KEY);
+/** @emoji 🌐️ Reads the persisted UI locale from the given shell's storage, if any. */
+export function readStoredUiChromeLocale(storage: StoragePort): UiLocale | null {
+  const raw = storage.get(UI_CHROME_LOCALE_STORAGE_KEY);
   return raw === "en" || raw === "de" ? raw : null;
 }
 
-/** @emoji 🌐️ Persists the active UI locale to localStorage. */
-export function writeStoredUiChromeLocale(locale: UiLocale): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CHROME_LOCALE_STORAGE_KEY, locale);
+/** @emoji 🌐️ Persists the active UI locale to the given shell's storage. */
+export function writeStoredUiChromeLocale(storage: StoragePort, locale: UiLocale): void {
+  storage.set(UI_CHROME_LOCALE_STORAGE_KEY, locale);
 }
 
 /** @emoji 🗣️ Id of the always-available default terminology (no term substitutions). */
 export const UI_TERMINOLOGY_NATIVE = "native";
 
-/** @emoji 🗣️ localStorage key for the active app terminology id. */
+/** @emoji 🗣️ Storage key for the active app terminology id. */
 export const UI_CHROME_TERMINOLOGY_STORAGE_KEY = "ui.chrome.terminology";
 
-/** @emoji 🗣️ Reads the persisted terminology id from localStorage, defaulting to native. */
-export function readStoredUiChromeTerminology(): string {
-  if (typeof localStorage === "undefined") return UI_TERMINOLOGY_NATIVE;
-  return localStorage.getItem(UI_CHROME_TERMINOLOGY_STORAGE_KEY) || UI_TERMINOLOGY_NATIVE;
+/** @emoji 🗣️ Reads the persisted terminology id from the given shell's storage, defaulting to native. */
+export function readStoredUiChromeTerminology(storage: StoragePort): string {
+  return storage.get(UI_CHROME_TERMINOLOGY_STORAGE_KEY) || UI_TERMINOLOGY_NATIVE;
 }
 
-/** @emoji 🗣️ Persists the active terminology id to localStorage. */
-export function writeStoredUiChromeTerminology(id: string): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CHROME_TERMINOLOGY_STORAGE_KEY, id);
+/** @emoji 🗣️ Persists the active terminology id to the given shell's storage. */
+export function writeStoredUiChromeTerminology(storage: StoragePort, id: string): void {
+  storage.set(UI_CHROME_TERMINOLOGY_STORAGE_KEY, id);
 }
 
-/** @emoji 🎨️ localStorage key for the active theme id (builtin or `custom.<slug>`). */
+/** @emoji 🎨️ Storage key for the active theme id (builtin or `custom.<slug>`). */
 export const UI_CHROME_THEME_ID_STORAGE_KEY = "ui.chrome.theme";
 
-/** @emoji 🎨️ Reads the persisted active theme id from localStorage, if any. */
-export function readStoredUiChromeThemeId(): string | null {
-  if (typeof localStorage === "undefined") return null;
-  return localStorage.getItem(UI_CHROME_THEME_ID_STORAGE_KEY);
+/** @emoji 🎨️ Reads the persisted active theme id from the given shell's storage, if any. */
+export function readStoredUiChromeThemeId(storage: StoragePort): string | null {
+  return storage.get(UI_CHROME_THEME_ID_STORAGE_KEY);
 }
 
-/** @emoji 🎨️ Persists the active theme id to localStorage. */
-export function writeStoredUiChromeThemeId(id: string): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CHROME_THEME_ID_STORAGE_KEY, id);
+/** @emoji 🎨️ Persists the active theme id to the given shell's storage. */
+export function writeStoredUiChromeThemeId(storage: StoragePort, id: string): void {
+  storage.set(UI_CHROME_THEME_ID_STORAGE_KEY, id);
 }
 
-/** @emoji 🎨️ localStorage key for a full snapshot of the active theme (boot-time fallback before builtin/custom lookup resolves). */
+/** @emoji 🎨️ Storage key for a full snapshot of the active theme (boot-time fallback before builtin/custom lookup resolves). */
 export const UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY = "ui.chrome.theme.snapshot";
 
-/** @emoji 🎨️ Reads the persisted active theme snapshot from localStorage; discards it silently if invalid. */
-export function readStoredUiChromeThemeSnapshot(): UiTheme | null {
-  if (typeof localStorage === "undefined") return null;
-  const raw = localStorage.getItem(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY);
+/** @emoji 🎨️ Reads the persisted active theme snapshot from the given shell's storage; discards it silently if invalid. */
+export function readStoredUiChromeThemeSnapshot(storage: StoragePort): UiTheme | null {
+  const raw = storage.get(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY);
   if (!raw) return null;
   try {
     return parseUiTheme(JSON.parse(raw));
@@ -3315,19 +3413,17 @@ export function readStoredUiChromeThemeSnapshot(): UiTheme | null {
   }
 }
 
-/** @emoji 🎨️ Persists a full snapshot of the active theme to localStorage. */
-export function writeStoredUiChromeThemeSnapshot(theme: UiTheme): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY, serializeUiTheme(theme));
+/** @emoji 🎨️ Persists a full snapshot of the active theme to the given shell's storage. */
+export function writeStoredUiChromeThemeSnapshot(storage: StoragePort, theme: UiTheme): void {
+  storage.set(UI_CHROME_THEME_SNAPSHOT_STORAGE_KEY, serializeUiTheme(theme));
 }
 
-/** @emoji 🎨️ localStorage key for the user's saved custom themes, keyed by theme id. */
+/** @emoji 🎨️ Storage key for the user's saved custom themes, keyed by theme id. */
 export const UI_CUSTOM_THEMES_STORAGE_KEY = "ui.themes.custom";
 
-/** @emoji 🎨️ Reads the user's saved custom themes from localStorage; discards any entry that fails to parse. */
-export function readStoredUiCustomThemes(): Record<string, UiTheme> {
-  if (typeof localStorage === "undefined") return {};
-  const raw = localStorage.getItem(UI_CUSTOM_THEMES_STORAGE_KEY);
+/** @emoji 🎨️ Reads the user's saved custom themes from the given shell's storage; discards any entry that fails to parse. */
+export function readStoredUiCustomThemes(storage: StoragePort): Record<string, UiTheme> {
+  const raw = storage.get(UI_CUSTOM_THEMES_STORAGE_KEY);
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
@@ -3345,10 +3441,9 @@ export function readStoredUiCustomThemes(): Record<string, UiTheme> {
   }
 }
 
-/** @emoji 🎨️ Persists the user's saved custom themes to localStorage. */
-export function writeStoredUiCustomThemes(themes: Record<string, UiTheme>): void {
-  if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(themes));
+/** @emoji 🎨️ Persists the user's saved custom themes to the given shell's storage. */
+export function writeStoredUiCustomThemes(storage: StoragePort, themes: Record<string, UiTheme>): void {
+  storage.set(UI_CUSTOM_THEMES_STORAGE_KEY, JSON.stringify(themes));
 }
 
 /** @emoji 🧵️ localStorage key for WASM compute worker thread count. */
@@ -3707,6 +3802,12 @@ export type UiTranslationSchema = {
       readonly sync: UiLabelValue;
       readonly actions: UiLabelValue;
       readonly history: UiLabelValue;
+    };
+    readonly tree: {
+      readonly drag: {
+        readonly sort: UiLabelValue;
+        readonly transfer: UiLabelValue;
+      };
     };
     readonly find: {
       readonly toggle: UiLabelValue;
@@ -4245,6 +4346,12 @@ export const uiChromeTranslationBundles = {
           sync: { label: { normal: "Synchronisierung", beginner: "Synchronisierung" } },
           actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
           history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
+        },
+        tree: {
+          drag: {
+            sort: { label: { normal: "Sortieren", beginner: "Zeile sortieren" } },
+            transfer: { label: { normal: "Verschieben", beginner: "In ein Fenster ziehen" } },
+          },
         },
         find: {
           toggle: {
@@ -4871,6 +4978,12 @@ export const uiChromeTranslationBundles = {
           actions: { label: { normal: "Actions", beginner: "Actions" } },
           history: { label: { normal: "History", beginner: "History" } },
         },
+        tree: {
+          drag: {
+            sort: { label: { normal: "Reorder", beginner: "Reorder row" } },
+            transfer: { label: { normal: "Drag to window", beginner: "Drag into a window" } },
+          },
+        },
         find: {
           toggle: {
             label: {
@@ -5442,11 +5555,63 @@ export type UiRegisteredTranslationKey = string & { readonly [uiRegisteredTransl
  * — the only way callers should obtain a key for their registered strings; passing an unregistered
  * string does not type-check. */
 export function registerUiTranslationBundles<S extends Record<string, unknown>>(bundles: { readonly [L in UiLocale]: { readonly translation: S } }): <K extends DeepUiTranslationKeys<S>>(key: K) => UiRegisteredTranslationKey {
-  for (const [language, resource] of Object.entries(bundles)) {
-    i18next.addResourceBundle(language, "translation", resource.translation, true, true);
-  }
+  applyUiTranslationBundleTo(i18next, bundles);
+  registeredUiTranslationBundles.push(bundles);
+  for (const instance of liveShellI18nInstances) applyUiTranslationBundleTo(instance, bundles);
   return (key) => key as UiRegisteredTranslationKey;
 }
+
+// #region 🐚️ShellI18n
+/** 🐚️ Every bundle ever registered — the chrome's own domain-neutral one plus every product's, in
+ * registration order — replayed onto each new per-shell i18next instance at creation time so an
+ * embedded shell has the same translations as the page-owning singleton from its very first render.
+ * Seeded with `uiChromeTranslationBundles` itself since that one is loaded directly via `.init({resources})`
+ * rather than through `registerUiTranslationBundles`. */
+const registeredUiTranslationBundles: { readonly [L in UiLocale]: { readonly translation: Record<string, unknown> } }[] = [uiChromeTranslationBundles];
+
+/** 🐚️ Every currently-mounted shell's own i18next instance — {@link registerUiTranslationBundles}
+ * replays a late-registering bundle (e.g. a lazily-loaded product module importing after some shells
+ * already mounted) into each of these too, not just the shared singleton. */
+const liveShellI18nInstances = new Set<typeof i18next>();
+
+function applyUiTranslationBundleTo(instance: typeof i18next, bundle: { readonly [L in UiLocale]: { readonly translation: Record<string, unknown> } }): void {
+  for (const [language, resource] of Object.entries(bundle)) {
+    instance.addResourceBundle(language, "translation", resource.translation, true, true);
+  }
+}
+
+/** 🐚️ Creates and synchronously initializes a fresh i18next instance for one shell, pre-loaded with
+ * every bundle registered so far — mirrors {@link initializeUiI18n}'s own synchronous init (`initImmediate:
+ * false`) so an embedded shell never flashes untranslated chrome on its first paint either. `react-i18next`
+ * resolves the *nearest* `I18nextProvider` ancestor via context, so wrapping a shell's subtree in one
+ * (see `FrameworkOsShell`) is the only wiring `useUiTranslation`/`useLabel` call sites need — none of
+ * their many call sites throughout this file change. */
+export function createShellI18nInstance(initialLocale: UiLocale): typeof i18next {
+  const instance = i18next.createInstance();
+  instance.use(initReactI18next);
+  void instance.init({
+    resources: {},
+    fallbackLng: "en",
+    supportedLngs: ["en", "de"],
+    nonExplicitSupportedLngs: true,
+    lng: initialLocale,
+    showSupportNotice: false,
+    returnObjects: true,
+    initImmediate: false,
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false, bindI18n: "languageChanged", bindI18nStore: "added removed" },
+  });
+  for (const bundle of registeredUiTranslationBundles) applyUiTranslationBundleTo(instance, bundle);
+  liveShellI18nInstances.add(instance);
+  return instance;
+}
+
+/** 🐚️ Releases a shell's i18next instance on unmount — stops it receiving future
+ * {@link registerUiTranslationBundles} replays. */
+export function disposeShellI18nInstance(instance: typeof i18next): void {
+  liveShellI18nInstances.delete(instance);
+}
+// #endregion 🐚️ShellI18n
 
 //#region 🗣️TsNativeTerminology
 /** @emoji 🗣️ A `(locale) -> label-record` pair for one terminology id, mirroring the Rust `*_LABELS_{ID}_{LOCALE}` const pattern for TS-native products (e.g. compose, coda) that never cross the WASM plugin boundary and so have no `AppDefinition.terminologies`/`AppLabelsOverlay`. */
@@ -5461,23 +5626,27 @@ const uiTerminologyChangeListeners = new Set<() => void>();
 
 /** @emoji 🗣️ React hook giving TS-native products (no Rust `AppDefinition`) read/write access to the shared `ui.chrome.terminology` contract — the same localStorage key the shell's Settings terminology dropdown drives — without depending on `os-shell` state or any Rust type. */
 export function useUiTerminology(): { readonly terminology: string; readonly setTerminology: (id: string) => void } {
-  const [terminology, setTerminologyState] = React.useState<string>(() => readStoredUiChromeTerminology());
+  const storage = shellScopeStorageOrBrowserFallback(useShellScopeOptional());
+  const [terminology, setTerminologyState] = React.useState<string>(() => readStoredUiChromeTerminology(storage));
   React.useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key === UI_CHROME_TERMINOLOGY_STORAGE_KEY) setTerminologyState(readStoredUiChromeTerminology());
+      if (event.key === UI_CHROME_TERMINOLOGY_STORAGE_KEY) setTerminologyState(readStoredUiChromeTerminology(storage));
     };
-    const onLocalChange = () => setTerminologyState(readStoredUiChromeTerminology());
+    const onLocalChange = () => setTerminologyState(readStoredUiChromeTerminology(storage));
     uiTerminologyChangeListeners.add(onLocalChange);
     if (typeof window !== "undefined") window.addEventListener("storage", onStorage);
     return () => {
       uiTerminologyChangeListeners.delete(onLocalChange);
       if (typeof window !== "undefined") window.removeEventListener("storage", onStorage);
     };
-  }, []);
-  const setTerminology = React.useCallback((id: string) => {
-    writeStoredUiChromeTerminology(id);
-    for (const listener of uiTerminologyChangeListeners) listener();
-  }, []);
+  }, [storage]);
+  const setTerminology = React.useCallback(
+    (id: string) => {
+      writeStoredUiChromeTerminology(storage, id);
+      for (const listener of uiTerminologyChangeListeners) listener();
+    },
+    [storage],
+  );
   return { terminology, setTerminology };
 }
 //#endregion 🗣️TsNativeTerminology
@@ -5492,7 +5661,9 @@ function normalizeUiLocale(language?: string): UiTranslationLocaleCode {
 export const detectShellLocale = normalizeUiLocale as (language?: string) => ShellLocale;
 
 function resolveRequestedUiLocale(): UiTranslationLocaleCode {
-  const storedLocale = readStoredUiChromeLocale();
+  // 🐚️ The legacy shared `uiI18n` singleton (kept only for callers not yet wrapped in a `ShellScopeProvider`)
+  // is inherently page-global, so a plain browser-backed port is the correct (and only sensible) storage here.
+  const storedLocale = readStoredUiChromeLocale(createBrowserStoragePort());
   if (storedLocale) return storedLocale;
   return normalizeUiLocale(i18next.resolvedLanguage || i18next.language || (typeof navigator !== "undefined" ? navigator.language : undefined));
 }
@@ -5581,7 +5752,9 @@ export function setUiLocale(locale: UiLocale): Promise<unknown> {
  * already-initialized i18next instance in case this runs after `uiI18n`'s own module-load default
  * resolved differently. */
 export function initUiLocaleSync(locale: ShellLocale): void {
-  writeStoredUiChromeLocale(locale);
+  // 🐚️ Page-owning boot code only (renderer/demonstrator, before `createRoot(...).render(...)`) — a
+  // plain browser-backed port is correct here, same as `resolveRequestedUiLocale`.
+  writeStoredUiChromeLocale(createBrowserStoragePort(), locale);
   if (typeof document !== "undefined") document.documentElement.lang = locale;
   if (i18next.language !== locale) void i18next.changeLanguage(locale);
 }
@@ -8316,6 +8489,8 @@ export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
  * Parent hover emphasis is CSS: `[data-hover-scope]:hover [data-slot="drag-handle"]` in `🎨️ui.css` — the grip paints its own muted color at rest and cannot inherit `hover:text-emphasized` from the label/icon beside it.
  */
 export const DragHandle: React.FC<{
+  readonly labelId?: string;
+  readonly iconKind?: "grip-vertical" | "move";
   readonly onPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
   readonly onPointerMove?: React.PointerEventHandler<HTMLSpanElement>;
   readonly onPointerUp?: React.PointerEventHandler<HTMLSpanElement>;
@@ -8325,26 +8500,29 @@ export const DragHandle: React.FC<{
   readonly onClick?: React.MouseEventHandler<HTMLSpanElement>;
   readonly className?: string;
   readonly emphasized?: boolean;
-}> = ({ onPointerDown, onPointerMove, onPointerUp, onPointerCancel, attributes, listeners, onClick, className, emphasized = false }) => (
-  <span
-    data-slot="drag-handle"
-    className={cn("inline-flex shrink-0 cursor-grab touch-none items-center justify-center transition-colors hover:text-emphasized active:cursor-grabbing", emphasized ? "text-emphasized" : "text-muted-foreground", className)}
-    onPointerDown={onPointerDown}
-    onPointerMove={onPointerMove}
-    onPointerUp={onPointerUp}
-    onPointerCancel={onPointerCancel}
-    onClick={onClick}
-    onPointerEnter={(event) => {
-      event.currentTarget.closest(`[${HANDLE_HOVER_SCOPE_ATTR}]`)?.setAttribute("data-handle-hovered", "true");
-    }}
-    onPointerLeave={(event) => {
-      event.currentTarget.closest(`[${HANDLE_HOVER_SCOPE_ATTR}]`)?.removeAttribute("data-handle-hovered");
-    }}
-    {...(attributes as React.ComponentProps<"span">)}
-    {...(listeners as React.ComponentProps<"span">)}
-  >
-    <GripVerticalIcon size={12} />
-  </span>
+}> = ({ labelId = "ui.tree.drag.sort", iconKind = "grip-vertical", onPointerDown, onPointerMove, onPointerUp, onPointerCancel, attributes, listeners, onClick, className, emphasized = false }) => (
+  <ChromeControlHint id={labelId}>
+    <span
+      data-slot="drag-handle"
+      data-drag-role={iconKind === "move" ? "transfer" : "sort"}
+      className={cn("inline-flex shrink-0 cursor-grab touch-none items-center justify-center transition-colors hover:text-emphasized active:cursor-grabbing", emphasized ? "text-emphasized" : "text-muted-foreground", className)}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onClick={onClick}
+      onPointerEnter={(event) => {
+        event.currentTarget.closest(`[${HANDLE_HOVER_SCOPE_ATTR}]`)?.setAttribute("data-handle-hovered", "true");
+      }}
+      onPointerLeave={(event) => {
+        event.currentTarget.closest(`[${HANDLE_HOVER_SCOPE_ATTR}]`)?.removeAttribute("data-handle-hovered");
+      }}
+      {...(attributes as React.ComponentProps<"span">)}
+      {...(listeners as React.ComponentProps<"span">)}
+    >
+      {iconKind === "move" ? <MoveIcon size={12} /> : <GripVerticalIcon size={12} />}
+    </span>
+  </ChromeControlHint>
 );
 
 /** @emoji 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
@@ -15683,23 +15861,33 @@ export function useDocumentFullscreen(root?: Element): { isFullscreen: boolean; 
   return { isFullscreen, toggle };
 }
 
-let shellNavbarTrailingEndWidthPx = 0;
-const shellNavbarTrailingEndWidthListeners = new Set<() => void>();
+// 🐚️ Keyed by shell root (falling back to `document.documentElement` outside any shell) so two navbars
+// of different widths — one per shell — never overwrite each other's measured reserve.
+const shellNavbarTrailingEndWidthByRoot = new Map<HTMLElement, number>();
+const shellNavbarTrailingEndWidthListenersByRoot = new Map<HTMLElement, Set<() => void>>();
 
-function publishShellNavbarTrailingEndWidthPx(width: number) {
-  if (width <= 0 || width === shellNavbarTrailingEndWidthPx) return;
-  shellNavbarTrailingEndWidthPx = width;
-  for (const listener of shellNavbarTrailingEndWidthListeners) listener();
+function publishShellNavbarTrailingEndWidthPx(root: HTMLElement | undefined, width: number): void {
+  const key = resolveElementsSurfaceChromeRoot(root);
+  if (!key || width <= 0 || width === shellNavbarTrailingEndWidthByRoot.get(key)) return;
+  shellNavbarTrailingEndWidthByRoot.set(key, width);
+  for (const listener of shellNavbarTrailingEndWidthListenersByRoot.get(key) ?? []) listener();
 }
 
-/** @emoji ↔ Measured trailing navbar chrome width (fullscreen toggle footprint). */
-export function useShellNavbarTrailingEndWidthPx(): number {
+/** @emoji ↔ Measured trailing navbar chrome width (fullscreen toggle footprint) for this shell. */
+export function useShellNavbarTrailingEndWidthPx(root?: HTMLElement): number {
+  const key = resolveElementsSurfaceChromeRoot(root);
   return reactHostPort.useSyncExternalStore(
     (onStoreChange) => {
-      shellNavbarTrailingEndWidthListeners.add(onStoreChange);
-      return () => shellNavbarTrailingEndWidthListeners.delete(onStoreChange);
+      if (!key) return () => {};
+      let listeners = shellNavbarTrailingEndWidthListenersByRoot.get(key);
+      if (!listeners) {
+        listeners = new Set();
+        shellNavbarTrailingEndWidthListenersByRoot.set(key, listeners);
+      }
+      listeners.add(onStoreChange);
+      return () => listeners.delete(onStoreChange);
     },
-    () => shellNavbarTrailingEndWidthPx,
+    () => (key ? (shellNavbarTrailingEndWidthByRoot.get(key) ?? 0) : 0),
     () => 0,
   );
 }
@@ -15718,6 +15906,14 @@ function NavbarFullscreenToggle() {
 
 /** @emoji 🖥️ Navbar trailing slot for fullscreen — parks width so labels do not collapse when panels open. */
 function NavbarTrailingFullscreenSlot() {
+  const shellScope = useShellScopeOptional();
+  // 🐚️ Resolved at render time (not read from `shellScope.rootRef` inside the effect): the ref object's
+  // identity never changes, so a dep array holding the ref itself would never re-fire this effect once
+  // the root attaches after this component's own mount commit (shell roots attach bottom-up, after
+  // deeply-nested descendants like this one). Reading `.current` here and depending on the resolved
+  // element instead picks up the populated root on the guaranteed re-render `FrameworkOsShell` triggers
+  // once its own root ref callback fires.
+  const root = shellScope?.rootRef.current ?? undefined;
   const shellRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [parkedMinWidth, setParkedMinWidth] = reactHostPort.useState(0);
 
@@ -15728,14 +15924,14 @@ function NavbarTrailingFullscreenSlot() {
       const width = shell.getBoundingClientRect().width;
       if (width > 0) {
         setParkedMinWidth(width);
-        publishShellNavbarTrailingEndWidthPx(width);
+        publishShellNavbarTrailingEndWidthPx(root, width);
       }
     };
     measure();
     const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
     resizeObserver?.observe(shell);
     return () => resizeObserver?.disconnect();
-  }, []);
+  }, [root]);
 
   return (
     <div
@@ -15896,7 +16092,7 @@ function NavbarExampleSelect({ id, label, value, options, onValueChange, classNa
             <SelectValue placeholder={resolvedLabel} />
           </span>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent forceMount>
           {resolvedOptions.map((row) => (
             <SelectItem key={row.id} value={row.id} icon={row.icon}>
               <span className="truncate">{row.label}</span>
@@ -16420,8 +16616,6 @@ const treeInspectorInnerRowClassName = "min-w-0 w-full";
 const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-double";
 const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double overflow-hidden";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
-const treeHeaderRevealActionsClassName =
-  "flex max-w-0 items-center gap-single overflow-hidden opacity-0 pointer-events-none transition-opacity group-hover/tree-row:max-w-none group-hover/tree-row:overflow-visible group-hover/tree-row:opacity-100 group-hover/tree-row:pointer-events-auto group-focus-within/tree-row:max-w-none group-focus-within/tree-row:overflow-visible group-focus-within/tree-row:opacity-100 group-focus-within/tree-row:pointer-events-auto";
 const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center gap-x-tiny min-h-workbench";
 const treePropertyHeaderGridStyle: React.CSSProperties = { gridTemplateColumns: `minmax(0, 1fr) ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)}` };
 const treeItemControlClassName =
@@ -16675,6 +16869,8 @@ const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, c
   );
 };
 
+export type TreeActionPlacement = "row" | "menu";
+
 /**
  * Configuration interface for an action button on a tree section.
  **/
@@ -16686,8 +16882,8 @@ export interface TreeSectionAction {
   text?: string;
   id?: string;
   disabled?: boolean;
-  /** @emoji 👁️ When true, the action stays hidden until the tree row is hovered. */
-  revealOnHover?: boolean;
+  /** @emoji 📍️ Row actions paint on the header; menu actions appear in the row context menu. */
+  placement?: TreeActionPlacement;
 }
 
 /**
@@ -16704,6 +16900,92 @@ export interface TreeCheckboxAction {
 }
 
 export type TreeHeaderAction = TreeSectionAction | TreeCheckboxAction;
+
+export type TreeDragRole = "sort" | "transfer";
+
+/** @emoji 🫳️ Which drag handles a tree row exposes under the default driver. */
+export function deriveTreeDragRoles(item: { readonly draggable?: boolean; readonly dragData?: Record<string, string>; readonly isDragHandle?: boolean }, paletteDragEnabled: boolean): readonly TreeDragRole[] {
+  const roles: TreeDragRole[] = [];
+  const hasTransfer = Boolean(item.dragData) || (paletteDragEnabled && (item.draggable || item.dragData));
+  const hasSort = Boolean(item.isDragHandle) || Boolean(item.draggable && !item.dragData);
+  if (hasSort) roles.push("sort");
+  if (hasTransfer) roles.push("transfer");
+  return roles;
+}
+
+function treeSectionActionPlacement(action: TreeSectionAction): TreeActionPlacement {
+  return action.placement ?? "row";
+}
+
+function rowTreeHeaderActions(actions: readonly TreeHeaderAction[]): TreeHeaderAction[] {
+  return actions.filter((action) => action.kind === "checkbox" || treeSectionActionPlacement(action) === "row");
+}
+
+function menuTreeHeaderActionsToContextItems(actions: readonly TreeHeaderAction[]): ContextMenuItem[] {
+  return actions
+    .filter((action): action is TreeSectionAction => action.kind !== "checkbox" && treeSectionActionPlacement(action) === "menu")
+    .map((action, index) => ({
+      id: action.id ?? `tree-row-action-${index}`,
+      label: action.text ?? action.title ?? "",
+      icon: action.icon,
+      disabled: action.disabled,
+      onSelect: () => action.onClick(),
+    }));
+}
+
+/** @emoji 🖱️ Merges menu-placement row actions into a host-built context menu. */
+export function mergeTreeRowContextMenu(actions: readonly TreeHeaderAction[] | undefined, contextMenu: readonly ContextMenuItem[] | undefined): ContextMenuItem[] | undefined {
+  const fromActions = menuTreeHeaderActionsToContextItems(actions ?? []);
+  if (fromActions.length === 0) {
+    return contextMenu?.length ? [...contextMenu] : undefined;
+  }
+  if (!contextMenu?.length) {
+    return fromActions;
+  }
+  return [...contextMenu, { id: "tree-row-action-separator", separator: true }, ...fromActions];
+}
+
+type TreeDragHandleRenderProps = {
+  readonly roles: readonly TreeDragRole[];
+  readonly driverSurfaceDrag: boolean;
+  readonly rowEmphasized: boolean;
+  readonly armDrag?: () => void;
+  readonly sortDndProps?: { readonly attributes?: object; readonly listeners?: Record<string, unknown> };
+  readonly transferPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
+  readonly onSortHandleClick?: React.MouseEventHandler<HTMLSpanElement>;
+};
+
+const renderTreeDragHandles = ({ roles, driverSurfaceDrag, rowEmphasized, armDrag, sortDndProps, transferPointerDown, onSortHandleClick }: TreeDragHandleRenderProps): React.ReactNode => {
+  if (driverSurfaceDrag || roles.length === 0) {
+    return null;
+  }
+  return (
+    <>
+      {roles.includes("sort") ? (
+        <DragHandle
+          labelId="ui.tree.drag.sort"
+          iconKind="grip-vertical"
+          emphasized={rowEmphasized}
+          onPointerDown={armDrag ? () => armDrag() : undefined}
+          attributes={sortDndProps?.attributes}
+          listeners={sortDndProps?.listeners}
+          onClick={onSortHandleClick}
+        />
+      ) : null}
+      {roles.includes("transfer") ? (
+        <DragHandle
+          labelId="ui.tree.drag.transfer"
+          iconKind="move"
+          emphasized={rowEmphasized}
+          onPointerDown={(event) => {
+            armDrag?.();
+            transferPointerDown?.(event);
+          }}
+        />
+      ) : null}
+    </>
+  );
+};
 
 export interface TreeCheckboxProps {
   id?: string;
@@ -16761,17 +17043,13 @@ const renderTreeHeaderAction = (action: TreeHeaderAction, key: React.Key) =>
   );
 
 const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => {
-  const indexedActions = actions.map((action, index) => ({ action, key: action.id ?? index }));
-  const persistentActions = indexedActions.filter(({ action }) => action.kind === "checkbox" || !action.revealOnHover);
-  const revealActions = indexedActions.filter(({ action }) => action.kind !== "checkbox" && action.revealOnHover);
+  const rowActions = rowTreeHeaderActions(actions);
+  if (rowActions.length === 0) {
+    return null;
+  }
   return (
-    <div data-slot="tree-header-actions" className={treeHeaderActionsClassName}>
-      {persistentActions.map(({ action, key }) => renderTreeHeaderAction(action, key))}
-      {revealActions.length > 0 ? (
-        <div data-slot="tree-header-reveal-actions" className={treeHeaderRevealActionsClassName}>
-          {revealActions.map(({ action, key }) => renderTreeHeaderAction(action, key))}
-        </div>
-      ) : null}
+    <div data-slot="tree-header-actions" data-ui-reveal-region className={treeHeaderActionsClassName}>
+      {rowActions.map((action, index) => renderTreeHeaderAction(action, action.id ?? index))}
     </div>
   );
 };
@@ -17215,8 +17493,12 @@ interface TreeItemProps {
   contextMenu?: ContextMenuItem[];
   /** @emoji 🎚️ Control rendered on the header row of expandable property groups (label left, control right). */
   headerControl?: React.ReactNode;
-  /** @emoji 🫳️ `"handle"` restricts native drag start to the trailing grip (arms `draggable` only while the grip is pressed); `"surface"` (default) keeps the whole row draggable. */
+  /** @emoji 🫳️ `"handle"` restricts native drag start to the trailing grip (arms `draggable` only while the grip is pressed); `"surface"` keeps the whole row draggable. */
   dragInitiation?: "handle" | "surface";
+  /** @emoji 🫳️ Explicit drag handles for sort vs palette transfer; overrides {@link dragInitiation} when set. */
+  dragRoles?: readonly TreeDragRole[];
+  /** @emoji 🫳️ Pointer-down handler for palette transfer drags — wired to the transfer handle only. */
+  transferPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
   /** @emoji 🎯️ Passive drop-zone highlight while a compatible tree drag is in flight. */
   isDropReady?: boolean;
 }
@@ -17865,7 +18147,9 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                   </span>
                 </div>
                 {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-                {isDragHandle && !driverSurfaceDrag && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
+                {isDragHandle && !driverSurfaceDrag ? (
+                  <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />
+                ) : null}
               </div>
             </TreeAlignedRow>
           </div>
@@ -17940,7 +18224,9 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                 </span>
               </div>
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-              {isDragHandle && !driverSurfaceDrag && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
+              {isDragHandle && !driverSurfaceDrag ? (
+                <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />
+              ) : null}
             </div>
           </TreeAlignedRow>
         </div>
@@ -17992,7 +18278,9 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               </span>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-            {isDragHandle && !driverSurfaceDrag && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
+            {isDragHandle && !driverSurfaceDrag ? (
+              <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />
+            ) : null}
           </div>
         </TreeAlignedRow>
       </div>
@@ -18031,7 +18319,9 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             </span>
           </div>
           {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-          {isDragHandle && !driverSurfaceDrag && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
+          {isDragHandle && !driverSurfaceDrag ? (
+            <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />
+          ) : null}
         </div>
       </TreeAlignedRow>
     </div>
@@ -18108,12 +18398,15 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   contextMenu,
   headerControl,
   isDragging = false,
-  dragInitiation = "surface",
+  dragInitiation = "handle",
+  dragRoles,
+  transferPointerDown,
   isDropReady = false,
 }) => {
   const localizedLabel = useIdLabel(id);
   const resolvedLabel = label !== undefined ? label : localizedLabel;
   const controlHint = useControlAccessibleLabel(id);
+  const resolvedContextMenu = mergeTreeRowContextMenu(actions, contextMenu);
   assertNoNestedTreeSections(children, "TreeItem");
   if (sortable && sortableId) {
     return (
@@ -18165,13 +18458,26 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const driverSurfaceDrag = useUiDriverDragSurface();
+  const resolvedDragRoles: readonly TreeDragRole[] =
+    dragRoles ??
+    (driverSurfaceDrag
+      ? []
+      : draggable
+        ? dragInitiation === "surface"
+          ? []
+          : deriveTreeDragRoles({ draggable, isDragHandle }, Boolean(transferPointerDown))
+        : isDragHandle
+          ? ["sort"]
+          : []);
   const effectiveDragInitiation = driverSurfaceDrag ? "surface" : dragInitiation;
   const [dragArmed, setDragArmed] = reactHostPort.useState(false);
   const armDrag = reactHostPort.useCallback(() => {
     setDragArmed(true);
     window.addEventListener("pointerup", () => setDragArmed(false), { once: true });
   }, []);
-  const effectiveDraggable = draggable && (effectiveDragInitiation === "surface" || dragArmed);
+  const effectiveDraggable =
+    draggable &&
+    (driverSurfaceDrag || (resolvedDragRoles.length === 0 && effectiveDragInitiation === "surface") || ((resolvedDragRoles.length > 0 || effectiveDragInitiation === "handle") && dragArmed));
   const handleDragEnd = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       setDragArmed(false);
@@ -18183,14 +18489,21 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     treeRowShellClassName,
     treeRowChromeShellClasses(isSelected, isHighlighted, isHidden),
     isExpandable ? "cursor-foldable" : "cursor-selectable",
-    draggable && effectiveDragInitiation === "surface" ? "cursor-grab active:cursor-grabbing" : "",
+    draggable && (driverSurfaceDrag || (resolvedDragRoles.length === 0 && effectiveDragInitiation === "surface")) ? "cursor-grab active:cursor-grabbing" : "",
     isDragging ? "opacity-40" : "",
     isDropReady && dropZoneReadyTextClass,
     className,
   );
   const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted, loading, waiting), isDropReady && dropZoneReadyFillClass);
-  const treeLabelSelectClass = draggable && effectiveDragInitiation === "surface" ? "select-none" : "select-text";
+  const treeLabelSelectClass = draggable && (driverSurfaceDrag || (resolvedDragRoles.length === 0 && effectiveDragInitiation === "surface")) ? "select-none" : "select-text";
   const rowEmphasized = isSelected || isHighlighted || isDropReady;
+  const dragHandleProps = {
+    roles: resolvedDragRoles,
+    driverSurfaceDrag,
+    rowEmphasized,
+    armDrag,
+    transferPointerDown,
+  };
 
   if (layoutKind === "property") {
     const PropertyFoldChevron = treeFoldChevronIcon(direction, inline, open);
@@ -18278,7 +18591,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 <PropertyValueColumnContext.Provider value={true}>{headerControl}</PropertyValueColumnContext.Provider>
               ) : null}
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-              {draggable && !driverSurfaceDrag && <DragHandle onPointerDown={effectiveDragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
+              {renderTreeDragHandles(dragHandleProps)}
             </div>
           </div>
         </TreeAlignedRow>
@@ -18307,12 +18620,12 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           {propertyContent}
         </>
       );
-    return <TreeItemRowContextMenu items={contextMenu}>{isExpandable ? <div className="min-w-0 w-full">{propertyBlock}</div> : propertyHeader}</TreeItemRowContextMenu>;
+    return <TreeItemRowContextMenu items={resolvedContextMenu}>{isExpandable ? <div className="min-w-0 w-full">{propertyBlock}</div> : propertyHeader}</TreeItemRowContextMenu>;
   }
 
   if (isExpandable && resolvedLabel) {
     return (
-      <TreeItemRowContextMenu items={contextMenu}>
+      <TreeItemRowContextMenu items={resolvedContextMenu}>
         {(() => {
           const DefaultFoldChevron = treeFoldChevronIcon(direction, inline, open);
           const defaultHeader = (
@@ -18415,7 +18728,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                       </button>
                     </div>
                   )}
-                  {draggable && !driverSurfaceDrag && <DragHandle onPointerDown={effectiveDragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
+                  {renderTreeDragHandles(dragHandleProps)}
                 </div>
               </TreeAlignedRow>
             </div>
@@ -18448,7 +18761,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }
 
   return (
-    <TreeItemRowContextMenu items={contextMenu}>
+    <TreeItemRowContextMenu items={resolvedContextMenu}>
       <div
         data-dim
         data-slot="tree-item-row"
@@ -18512,7 +18825,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 </button>
               </div>
             )}
-            {draggable && !driverSurfaceDrag && <DragHandle onPointerDown={effectiveDragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
+            {renderTreeDragHandles(dragHandleProps)}
           </div>
         </TreeAlignedRow>
       </div>
@@ -18947,7 +19260,8 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   }, [hasDynamicChildren, item, loadItemItems, treeOpenState.open]);
 
   const palettePointerProps = buildPalettePointerProps(item, section);
-  const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && (item.draggable || item.dragData) ? "touch-none" : undefined;
+  const dragRoles = reactHostPort.useMemo(() => deriveTreeDragRoles(item, Boolean(dragAndDropController?.pointerPaletteDrag)), [dragAndDropController?.pointerPaletteDrag, item]);
+  const palettePointerClassName = dragAndDropController?.pointerPaletteDrag && dragRoles.includes("transfer") ? "touch-none" : undefined;
 
   return (
     <TreeItem
@@ -18970,7 +19284,9 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       actions={item.actions}
       contextMenu={item.contextMenu}
       draggable={Boolean(item.draggable) || Boolean(item.dragData)}
-      dragInitiation={item.dragData || dragAndDropController?.pointerPaletteDrag ? "surface" : "handle"}
+      dragRoles={dragRoles}
+      dragInitiation="handle"
+      transferPointerDown={palettePointerProps.onPointerDown}
       isDropReady={draggedIds.length > 0 && !isDragging && Boolean(dragAndDropController?.handleDrop)}
       layoutKind={propertyLayout ? "property" : undefined}
       headerControl={hasControl && hasNestedTreeItems ? item.control : undefined}
@@ -18982,7 +19298,6 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       onDrop={(event) => handleDropOnItem(event, item, section)}
       onPointerEnter={item.onPointerEnter}
       onPointerLeave={item.onPointerLeave}
-      {...palettePointerProps}
       branchCount={branchCount}
       activeBranchIndex={clampedBranchIndex}
       onBranchChange={setActiveBranchIndex}
@@ -20929,7 +21244,8 @@ const Panel: React.FC<PanelProps> = ({
   tabBarHost = "panel",
 }) => {
   const dock = usePanelDockContext();
-  const trailingEndWidthPx = useShellNavbarTrailingEndWidthPx();
+  const panelShellScope = useShellScopeOptional();
+  const trailingEndWidthPx = useShellNavbarTrailingEndWidthPx(panelShellScope?.rootRef.current ?? undefined);
   const collapseLabel = useLabel("ui.common.collapse");
   const panelRootRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [surfaceActive, surfaceActiveProps] = useSurfaceActive(panelRootRef);
@@ -22639,6 +22955,8 @@ const Window: React.FC<WindowProps> = ({
   // 📱️ Windows always take the full space on mobile — Focus/Unfocus is meaningless there and is hidden.
   const mobile = useUiMobile();
   const focusControl = !mobile && (onMaximize || onMinimize);
+  // 🐚️ Gates the search-routing keydown listeners below to this shell — absent outside a `ShellScopeProvider` (tests), where they simply stay inert.
+  const shellScope = useShellScopeOptional();
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -22686,32 +23004,32 @@ const Window: React.FC<WindowProps> = ({
     setSearchFolded(true);
   }, [measuresExpanded, onActionsFoldedChange, actionsFoldedProp]);
 
-  reactHostPort.useEffect(() => {
-    if (!active || !search?.input?.onAbort) return;
-    const onKeyDown = (event: KeyboardEvent) => {
+  useShellKeydown(
+    shellScope?.rootRef ?? NULL_SHELL_ROOT_REF,
+    (event) => {
+      if (!active || !search?.input?.onAbort) return;
       if (routeWindowSearchEscape(search, event, { chromeVisible: searchExpanded, actionActive: searchExpanded })) {
         event.preventDefault();
         event.stopPropagation();
       }
-    };
-    document.addEventListener("keydown", onKeyDown, true);
-    return () => document.removeEventListener("keydown", onKeyDown, true);
-  }, [active, search, searchExpanded]);
+    },
+    [active, search, searchExpanded],
+  );
 
   // 🔎️ Typing anywhere in an active window with a folded search pane unfolds it, mirroring a spotlight
-  // search, so the document-level routing that applies the keystroke (see Mode) has a mounted field to
+  // search, so the shell-scoped routing that applies the keystroke (see Mode) has a mounted field to
   // land in. Purely additive — it only flips the fold flag, never touches the value/dispatch itself.
-  reactHostPort.useEffect(() => {
-    if (!active || !search?.input || searchExpanded) return;
-    const onKeyDown = (event: KeyboardEvent) => {
+  useShellKeydown(
+    shellScope?.rootRef ?? NULL_SHELL_ROOT_REF,
+    (event) => {
+      if (!active || !search?.input || searchExpanded) return;
       if (event.defaultPrevented || event.isComposing) return;
       if (event.key.length !== 1 || event.key === " " || event.ctrlKey || event.metaKey || event.altKey) return;
       if (!shouldRouteKeysToWindowSearch(event.target)) return;
       setSearchFolded(false);
-    };
-    document.addEventListener("keydown", onKeyDown, true);
-    return () => document.removeEventListener("keydown", onKeyDown, true);
-  }, [active, search, searchExpanded]);
+    },
+    [active, search, searchExpanded],
+  );
 
   reactHostPort.useLayoutEffect(() => {
     const body = windowBodyRef.current;
@@ -28144,6 +28462,10 @@ function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, 
 
 /** @emoji 🪟️ Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
 const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, layout, onLayoutChange, onTemplateDrop, children, className = "", mobile = false }) => {
+  // 🐚️ Gates the active-window search-routing keydown listener below to this shell — absent outside a `ShellScopeProvider` (tests), where it simply stays inert.
+  const shellScope = useShellScopeOptional();
+  // 🐚️ Resolves via the nearest `I18nextProvider` (this shell's own instance), not the shared `uiI18n` singleton.
+  const { t: modeT } = useUiTranslation();
   const parentSurface = useSurface();
   const modeBodyFillClass = shellFloorFillClass(parentSurface);
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
@@ -28195,11 +28517,12 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setLayoutState((prev) => setActiveWindowInLayout(prev, activeWindowId));
   }, [activeWindowId]);
 
-  reactHostPort.useEffect(() => {
-    if (!activeWindowId) return;
-    const search = windowsById.get(activeWindowId)?.search;
-    if (!search?.input) return;
-    const onKeyDown = (event: KeyboardEvent) => {
+  useShellKeydown(
+    shellScope?.rootRef ?? NULL_SHELL_ROOT_REF,
+    (event) => {
+      if (!activeWindowId) return;
+      const search = windowsById.get(activeWindowId)?.search;
+      if (!search?.input) return;
       if (
         routeWindowSearchEscape(search, event, {
           chromeVisible: true,
@@ -28219,10 +28542,9 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       event.preventDefault();
       event.stopPropagation();
       queueMicrotask(() => focusActiveSearchInput());
-    };
-    document.addEventListener("keydown", onKeyDown, true);
-    return () => document.removeEventListener("keydown", onKeyDown, true);
-  }, [activeWindowId, windowsById, windowsKey]);
+    },
+    [activeWindowId, windowsById, windowsKey],
+  );
 
   const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
     if (!tabBarElement && !bodyElement) {
@@ -28626,7 +28948,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   const orderedWindowIds = modeCollectWindowIds(dockOutLayout);
   const hasWindows = orderedWindowIds.length > 0;
-  const emptyShellNotice = resolveTranslationLabel(uiI18n.t("ui.display.emptyShell"));
+  const emptyShellNotice = resolveTranslationLabel(modeT("ui.display.emptyShell"));
 
   /** @emoji 📱️ Mobile has no split-pane window manager: every window collapses into one tab stack, rendered through the same {@link ModeDockStack} chrome (tab bar, utility bar, measures, engagement) as desktop. */
   const mobileFlatStack: WindowLayoutStackNode | null = mobile
@@ -32072,6 +32394,35 @@ if (import.meta.vitest) {
     });
   });
 
+  /** 🐚️ Test-only stand-in for `FrameworkOsShell`'s own scope wiring — wraps a render-prop's output in
+   * a `ShellScopeProvider` whose root points at the wrapper div, so `useShellKeydown` consumers
+   * (`Window`, `Mode`) route document keydowns the same way they do inside a real mounted shell.
+   * `renderChildren` is a FUNCTION, not a plain `ReactNode`: `rootRef.current` is still `null` on the
+   * initial render (refs attach during commit, after render finishes), so this needs a forced second
+   * render — mirroring `FrameworkOsShell`'s own `bumpAfterRootAttach` — to ever see the populated root.
+   * A plain `children` prop would defeat that: React treats an unchanged child *element* (the common
+   * "pass `children` through" optimization) as a bailout and never re-invokes it, so a component like
+   * `Mode` with no unrelated state of its own to force a second render would never re-read the ref.
+   * Calling a function instead produces a fresh element every render, matching how `FrameworkOsShell`
+   * really works — its inner tree is authored directly in its own body, not threaded through as an
+   * opaque prop. */
+  function TestShellRoot({ children }: { readonly children: () => React.ReactNode }): React.ReactElement {
+    const [scope] = reactHostPort.useState(() => createShellScope({ storage: createMemoryStoragePort() }));
+    const [, bump] = reactHostPort.useState(0);
+    // 🐚️ Memoized: an inline (re-created every render) ref callback makes React detach+reattach the
+    // ref on every commit (identity changed → old callback fires with `null`, new one fires with the
+    // node), and since each call bumps state, that becomes an infinite render loop.
+    const setRoot = reactHostPort.useCallback((node: HTMLDivElement | null) => {
+      scope.rootRef.current = node;
+      bump((n) => n + 1);
+    }, [scope]);
+    return (
+      <div ref={setRoot}>
+        <ShellScopeProvider scope={scope}>{children()}</ShellScopeProvider>
+      </div>
+    );
+  }
+
   describe("Shell components", () => {
     it("Ui renders the active app body", () => {
       render(
@@ -32390,7 +32741,7 @@ if (import.meta.vitest) {
       const { render } = await import("@testing-library/react");
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Inspector", tree: { sections: [] } })];
-      publishShellNavbarTrailingEndWidthPx(96);
+      publishShellNavbarTrailingEndWidthPx(undefined, 96);
       const { container } = render(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["tab-a"]} size={360} />);
       const cap = container.querySelector('[data-slot="panel"][data-anchor="top-right"] [data-slot="window-chrome-cap"]') as HTMLElement;
       expect(cap.style.paddingInlineStart).toBe(`${96 + uiSpacingPx(1)}px`);
@@ -32411,7 +32762,7 @@ if (import.meta.vitest) {
       );
       const slot = container.querySelector('[data-slot="navbar-fullscreen-toggle"]') as HTMLElement;
       expect(slot.style.minWidth).toBe("112px");
-      expect(shellNavbarTrailingEndWidthPx).toBe(112);
+      expect(shellNavbarTrailingEndWidthByRoot.get(document.documentElement)).toBe(112);
       rectSpy.mockRestore();
     });
 
@@ -34640,21 +34991,25 @@ if (import.meta.vitest) {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
-          <div className="h-layout-preview-md w-layout-floating-menu-lg">
-            <Mode
-              activeWindowId="engagement-window"
-              windows={[
-                {
-                  id: "engagement-window",
-                  title: "Viewport",
-                  active: true,
-                  search: { input: { id: "search-input", value, placeholder: "Action", onChange: setValue } },
-                  children: <div data-testid="window-body">Body</div>,
-                },
-              ]}
-              layout={{ kind: "stack", children: [{ kind: "window", id: "engagement-window" }] }}
-            />
-          </div>
+          <TestShellRoot>
+            {() => (
+              <div className="h-layout-preview-md w-layout-floating-menu-lg">
+                <Mode
+                  activeWindowId="engagement-window"
+                  windows={[
+                    {
+                      id: "engagement-window",
+                      title: "Viewport",
+                      active: true,
+                      search: { input: { id: "search-input", value, placeholder: "Action", onChange: setValue } },
+                      children: <div data-testid="window-body">Body</div>,
+                    },
+                  ]}
+                  layout={{ kind: "stack", children: [{ kind: "window", id: "engagement-window" }] }}
+                />
+              </div>
+            )}
+          </TestShellRoot>
         );
       };
       const { container } = render(<Harness />);
@@ -34825,23 +35180,27 @@ if (import.meta.vitest) {
     it("Mode Escape aborts active window search", async () => {
       const aborted: string[] = [];
       const Harness = () => (
-        <div className="h-layout-preview-md w-layout-floating-menu-lg">
-          <Mode
-            activeWindowId="engagement-window"
-            windows={[
-              {
-                id: "engagement-window",
-                title: "Viewport",
-                active: true,
-                search: {
-                  input: { value: "Box", placeholder: "Action", onChange: () => {}, onAbort: () => aborted.push("abort") },
-                },
-                children: <div data-testid="window-body">Body</div>,
-              },
-            ]}
-            layout={{ kind: "stack", children: [{ kind: "window", id: "engagement-window" }] }}
-          />
-        </div>
+        <TestShellRoot>
+          {() => (
+            <div className="h-layout-preview-md w-layout-floating-menu-lg">
+              <Mode
+                activeWindowId="engagement-window"
+                windows={[
+                  {
+                    id: "engagement-window",
+                    title: "Viewport",
+                    active: true,
+                    search: {
+                      input: { value: "Box", placeholder: "Action", onChange: () => {}, onAbort: () => aborted.push("abort") },
+                    },
+                    children: <div data-testid="window-body">Body</div>,
+                  },
+                ]}
+                layout={{ kind: "stack", children: [{ kind: "window", id: "engagement-window" }] }}
+              />
+            </div>
+          )}
+        </TestShellRoot>
       );
       const { container } = render(<Harness />);
       fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
@@ -36900,7 +37259,8 @@ if (treeVitest) {
       expect(selectMarkup).toContain('data-detail-panel-control="fill"');
     });
 
-    it("keeps a trailing chevron affordance on select and playground example dropdowns", () => {
+    it("keeps a trailing chevron affordance on select and playground example dropdowns", async () => {
+      const { render } = await import("@testing-library/react");
       const selectMarkup = renderToStaticMarkup(
         <Select id="tooltip.manual" defaultValue="alpha">
           <SelectTrigger className="w-32">
@@ -36911,7 +37271,10 @@ if (treeVitest) {
           </SelectContent>
         </Select>,
       );
-      const exampleMarkup = renderToStaticMarkup(
+      // 🧪️ The dropdown's option icons live inside Radix's portaled `SelectContent`, which never mounts
+      // under `renderToStaticMarkup` (no effects run, so the portal's `mounted` gate stays false) — a real
+      // DOM render (with `forceMount` on the content) is required to observe them.
+      render(
         <NavbarExampleSelect
           id="playground.navbar.fixture"
           value="nakagin"
@@ -36923,6 +37286,7 @@ if (treeVitest) {
           includeNoExample={false}
         />,
       );
+      const exampleMarkup = document.body.innerHTML;
 
       expect(selectMarkup).toContain('data-slot="select-chevron"');
       expect(selectMarkup).toContain('data-icon="chevron-down"');
@@ -37179,7 +37543,7 @@ if (treeVitest) {
       expect(markup).toContain('data-testid="remove-icon"');
     });
 
-    it("collapses reveal-on-hover tree actions without collapsing persistent actions", async () => {
+    it("keeps row-placement actions visible and routes menu-placement actions to the context menu", async () => {
       const { render } = await import("@testing-library/react");
       const { container } = render(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
@@ -37187,22 +37551,18 @@ if (treeVitest) {
             id="tooltip.manual"
             actions={[
               { id: "persistent", icon: <span data-testid="persistent-icon" />, onClick: () => undefined },
-              { id: "revealed", icon: <span data-testid="revealed-icon" />, onClick: () => undefined, revealOnHover: true },
+              { id: "menu-only", icon: <span data-testid="menu-icon" />, onClick: () => undefined, placement: "menu" },
             ]}
           />
         </TreeContext.Provider>,
       );
 
       const actions = container.querySelector<HTMLElement>('[data-slot="tree-header-actions"]');
-      const revealActions = container.querySelector<HTMLElement>('[data-slot="tree-header-reveal-actions"]');
       expect(actions).toBeTruthy();
-      expect(revealActions).toBeTruthy();
-      expect(revealActions?.className).toContain("max-w-0");
-      expect(revealActions?.className).toContain("group-hover/tree-row:max-w-none");
-      expect(revealActions?.className).toContain("group-focus-within/tree-row:max-w-none");
-      expect(revealActions?.querySelector('[data-testid="revealed-icon"]')).toBeTruthy();
-      expect(revealActions?.querySelector('[data-testid="persistent-icon"]')).toBeNull();
+      expect(container.querySelector('[data-slot="tree-header-reveal-actions"]')).toBeNull();
       expect(actions?.querySelector('[data-testid="persistent-icon"]')).toBeTruthy();
+      expect(actions?.querySelector('[data-testid="menu-icon"]')).toBeNull();
+      expect(actions?.getAttribute("data-ui-reveal-region")).toBe("");
     });
 
     it("uses the same inline tree header actions when isTree is false", () => {
@@ -37755,6 +38115,12 @@ if (treeVitest) {
       expect(resolveUiDriver("compact", { compact: custom })).toEqual(custom);
       expect(resolveUiDriver("compact", {})).toEqual(COMPACT_UI_DRIVER);
       expect(resolveUiDriver("unknown.id", {})).toEqual(DEFAULT_UI_DRIVER);
+    });
+
+    it("deriveTreeDragRoles separates catalogue transfer from in-tree sort", () => {
+      expect(deriveTreeDragRoles({ draggable: true, dragData: { "application/x-test": "{}" } }, true)).toEqual(["transfer"]);
+      expect(deriveTreeDragRoles({ draggable: true }, false)).toEqual(["sort"]);
+      expect(deriveTreeDragRoles({ draggable: true, dragData: { "application/x-test": "{}" }, isDragHandle: true }, true)).toEqual(["sort", "transfer"]);
     });
 
     it("useControlInlineText hides labels only under an icons-only driver", () => {

@@ -93,7 +93,7 @@ use semio_framework_core::{
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor,
     NamedLayout, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPresence,
-    UiSectionNode, UiSelectItem, UiSelectNode, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    UiSectionNode, UiSelectItem, UiSelectNode, UiState, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind, FRAMEWORK_HISTORY_BODY_KEY,
     ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, Label, Locale, LocalizedLabel, Terminology,
 };
@@ -3229,7 +3229,7 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
                     icon_id: IconName::RotateCcw,
                     label: Some(Label::data(if is_de { "Zurück bis hier" } else { "Backwards" })),
                     action: act(REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::Object(vec![("entrySeq".into(), DslValue::Number(entry.seq as f64))]))),
-                    reveal_on_hover: Some(true),
+                    placement: Some(UiTreeActionPlacement::Menu),
                 }]);
             }
             item

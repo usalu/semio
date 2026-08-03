@@ -324,15 +324,14 @@ import { configureHostPorts, type HostPortOverrides } from "@semio-tech/ui-react
 /** @emoji 🔌️ A story requests an alternate host-port adapter (stub renderer, test double, …) by setting
  * `parameters.hostPortOverrides` to a {@link HostPortOverrides} object (or a thunk returning one, for
  * overrides that need `context.globals`, e.g. the `iconRenderer` toggle). Applied via `configureHostPorts`
- * before render and reset to defaults on cleanup, since ports are module-global. Most stories set nothing
- * here and render with the library's real default adapters. */
+ * before render and restored to whatever was installed beforehand on cleanup, since ports are page-global.
+ * Most stories set nothing here and render with the library's real default adapters. */
 export const withRenderer: Decorator = (Story, context) => {
   const overridesParam = context.parameters.hostPortOverrides as HostPortOverrides | ((context: typeof context) => HostPortOverrides) | undefined;
   if (!overridesParam) return <Story />;
   const overrides = typeof overridesParam === "function" ? overridesParam(context) : overridesParam;
   React.useLayoutEffect(() => {
-    configureHostPorts(overrides);
-    return () => configureHostPorts({});
+    return configureHostPorts(overrides);
   }, [JSON.stringify(Object.keys(overrides))]);
   return <Story />;
 };

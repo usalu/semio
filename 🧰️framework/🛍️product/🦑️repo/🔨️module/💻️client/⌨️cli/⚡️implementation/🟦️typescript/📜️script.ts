@@ -2,8 +2,8 @@
 /** 🧭️ Repo CLI task router. */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { FileLinter } from "../../../../../../../🔨️module/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementation/🟦️typescript/🟦️typescript/📦️index.ts";
-import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, resolveCliBin, runBundleScriptMain, runCmd, runTestBudgeted } from "../../../../../../../🔨️module/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementation/🟦️typescript/🟦️typescript/📦️index.ts";
+import type { FileLinter } from "../../../../📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, resolveCliBin, runBundleScriptMain, runCmd, runTestBudgeted } from "../../../../📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 
 export const policyFile = "main.go";
 

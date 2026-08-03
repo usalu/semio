@@ -1,11 +1,11 @@
 //! 🗂️ VCS app — DocumentApp impl, render, manifest (constitutional: ui).
 
 use semio_framework_plugin::{SurfaceKind,
-    build_graph_timeline_scene, create_default_layout, localized_label_map,
+    build_graph_timeline_scene, create_default_layout,
     tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, ActionDescriptor,
-    AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit, HistoryView, LocaleLabels, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
+    AppLabels, ConfigView, DocumentApp, DocumentView, Emit, HistoryView, Label, Locale, LocalizedLabel, Terminology, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
     ArtifactKindSpec, UiButtonNode, UiFieldNode, UiInspectorFieldGroup, UiInputNode, UiNode, UiPresence, UiStackNode,
-    UiTreeItemNode, GraphTimelineScene, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    UiTreeItemNode, GraphTimelineScene,
 };
 use serde_json::{json, Value};
 use store::{DocumentCommand, DocumentStore};
@@ -32,12 +32,17 @@ type VcsDemoStore = DocumentStore<VcsDemoProjection, VcsDemoOperation>;
 //#region 🔖️Locale
 /// 🗣️ `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
 /// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
+/// `VcsDemoConfig` carries no terminology axis, so this app is always `Terminology::Native`.
 fn is_de_locale(cfg: &VcsDemoConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &VcsDemoConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn vcs_locale(cfg: &VcsDemoConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+fn resolve_labels<L: AppLabels>(cfg: &VcsDemoConfig) -> &'static L {
+    L::labels(vcs_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -287,52 +292,23 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the VCS app; one field per label makes every locale combination compile-checked.
     struct VcsLabels {
-        actions: &'static str = en: "Actions", de: "Aktionen";
-        counter: &'static str = en: "Counter", de: "Zähler";
-        commit: &'static str = en: "Commit", de: "Commit";
-        branch: &'static str = en: "Branch", de: "Branch";
-        undo: &'static str = en: "Undo", de: "Rückgängig";
-        redo: &'static str = en: "Redo", de: "Wiederholen";
-        title: &'static str = en: "Title", de: "Titel";
-        status: &'static str = en: "Status", de: "Status";
-        notes: &'static str = en: "Notes", de: "Notizen";
-        tags: &'static str = en: "Tags", de: "Schlagwörter";
-        alternatives: &'static str = en: "Alternatives", de: "Alternativen";
-        no_checkpoints: &'static str = en: "(no checkpoints)", de: "(keine Checkpoints)";
-        checkpoints: &'static str = en: "checkpoints", de: "Checkpoints";
-        window_editor: &'static str = en: "Editor", de: "Editor";
-        window_history: &'static str = en: "History", de: "Verlauf";
+        document: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
+        actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
+        counter: native_en "Counter", native_de "Zähler", reuse_en "Counter", reuse_de "Zähler";
+        commit: native_en "Commit", native_de "Commit", reuse_en "Commit", reuse_de "Commit";
+        branch: native_en "Branch", native_de "Branch", reuse_en "Branch", reuse_de "Branch";
+        undo: native_en "Undo", native_de "Rückgängig", reuse_en "Undo", reuse_de "Rückgängig";
+        redo: native_en "Redo", native_de "Wiederholen", reuse_en "Redo", reuse_de "Wiederholen";
+        title: native_en "Title", native_de "Titel", reuse_en "Title", reuse_de "Titel";
+        status: native_en "Status", native_de "Status", reuse_en "Status", reuse_de "Status";
+        notes: native_en "Notes", native_de "Notizen", reuse_en "Notes", reuse_de "Notizen";
+        tags: native_en "Tags", native_de "Schlagwörter", reuse_en "Tags", reuse_de "Schlagwörter";
+        alternatives: native_en "Alternatives", native_de "Alternativen", reuse_en "Alternatives", reuse_de "Alternativen";
+        no_checkpoints: native_en "(no checkpoints)", native_de "(keine Checkpoints)", reuse_en "(no checkpoints)", reuse_de "(keine Checkpoints)";
+        checkpoints: native_en "checkpoints", native_de "Checkpoints", reuse_en "checkpoints", reuse_de "Checkpoints";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_vcs_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the whole
-/// builder chain; mirrors `puzzle3d_action_labels`.
-fn vcs_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("incrementCounter", "Increment Counter", "Zähler erhöhen"),
-        ("patchProjection", "Patch Projection", "Projektion aktualisieren"),
-        ("textEdit", "Edit Text", "Text bearbeiten"),
-        ("edit", "Edit", "Bearbeiten"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("noOperation", "No-operation", "Keine Aktion"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
-        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
-        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
-        ("canvasWheel", "Canvas Wheel", "Leinwand-Mausrad"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_vcs_app`;
-/// currently empty since this manifest declares no utilities, kept for parity with `puzzle3d_utility_labels`.
-fn vcs_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
-    std::collections::HashMap::new()
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 /// 🌳️ Builds the document tree's checkpoint + alternative sections from `HistoryView` alone — the
@@ -351,7 +327,7 @@ fn build_document_tree(history: &HistoryView, selected: &[String], labels: &VcsL
             menu: None,
             ..tree_item_with_action(
                 builder.item_id("checkpoint", &column.checkpoint_id),
-                column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone()),
+                Label::data(column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone())),
                 Some(column.timestamp.clone()),
                 vcs_action("checkoutCheckpoint", Some(json!({ "checkpointId": column.checkpoint_id }))),
             )
@@ -374,8 +350,8 @@ fn build_document_tree(history: &HistoryView, selected: &[String], labels: &VcsL
                 menu: None,
                 ..tree_item_with_action(
                     builder.item_id("alternative", alternative_id),
-                    alternative_id.clone(),
-                    Some(format!("{count} {}", labels.checkpoints)),
+                    Label::data(alternative_id.clone()),
+                    Some(format!("{count} {}", labels.checkpoints.as_str())),
                     vcs_action("switchAlternative", Some(json!({ "alternativeId": alternative_id }))),
                 )
             }
@@ -385,7 +361,7 @@ fn build_document_tree(history: &HistoryView, selected: &[String], labels: &VcsL
     builder
         .section_or_placeholder(
             "vcs-play-document.checkpoints",
-            Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
+            Some(labels.document.into()),
             true,
             checkpoint_items,
             labels.no_checkpoints,
@@ -509,7 +485,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
     })
 }
 
-fn editor_button(id: &str, icon_id: &str, label: &str, action: &str) -> UiNode {
+fn editor_button(id: &str, icon_id: &str, label: impl Into<Label>, action: &str) -> UiNode {
     UiNode::Button(UiButtonNode {
         id: Some(format!("vcs-play-editor.{id}")),
         icon_id: icon_id.into(),
@@ -531,7 +507,7 @@ fn render_editor(projection: &VcsDemoProjection, labels: &VcsLabels) -> UiNode {
     let increment_row = ui_stack_horizontal(vec![editor_button(
         "increment",
         "plus",
-        &format!("+ {} ({})", labels.counter, projection.counter),
+        Label::data(format!("+ {} ({})", labels.counter.as_str(), projection.counter)),
         "incrementCounter",
     )]);
     let commit_row = ui_stack_horizontal(vec![
@@ -543,8 +519,8 @@ fn render_editor(projection: &VcsDemoProjection, labels: &VcsLabels) -> UiNode {
         editor_button("redo", "redo", labels.redo, "redo"),
     ]);
     let summary = ui_stack_vertical(vec![
-        ui_text(format!("{} · {} {}", projection.title, labels.counter, projection.counter)),
-        ui_text(if projection.notes.is_empty() { "—".to_string() } else { projection.notes.clone() }),
+        ui_text(Label::data(format!("{} · {} {}", projection.title, labels.counter.as_str(), projection.counter))),
+        ui_text(Label::data(if projection.notes.is_empty() { "—".to_string() } else { projection.notes.clone() })),
     ]);
     ui_stack_vertical(vec![heading, increment_row, commit_row, history_row, summary])
 }
@@ -651,18 +627,8 @@ impl DocumentApp for VcsPlayApp {
             VCS_PLAY_BODY_HISTORY => render_history(doc.history),
             VCS_PLAY_BODY_DOCUMENT => build_document_tree(doc.history, &cfg.projection.selected_checkpoint_ids, labels),
             VCS_PLAY_BODY_INSPECTION => build_inspection_tree(doc.projection, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, VcsDemoConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<VcsLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(VCS_PLAY_WINDOW_EDITOR, labels.window_editor)
-            .window_kind_label(VCS_PLAY_WINDOW_HISTORY, labels.window_history)
-            .action_labels(vcs_action_labels(is_de))
-            .utility_labels(vcs_utility_labels(is_de))
     }
 }
 //#endregion 🔖️VcsPlayApp

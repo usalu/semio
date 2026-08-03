@@ -11,8 +11,8 @@ use present_op::PresentOperation;
 use present_protocol::PresentCommand;
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
-    build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
-    ActionDescriptor, AppIo, App, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
+    app_labels, build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
+    ActionDescriptor, AppIo, App, AppLabels, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -127,104 +127,51 @@ fn deck_to_canvas_layers(deck: &PresentDeck, selected: &[String]) -> String {
 //#endregion 🔖️CanvasLayers
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the animate present tile-play app; one field per label makes every locale compile-checked.
-struct AnimatePresentLabels {
-    tiles_section: &'static str,
-    no_tiles: &'static str,
-    details_select_tile: &'static str,
-    details_tile_not_found: &'static str,
-    field_name: &'static str,
-    field_id: &'static str,
-    selected_suffix: &'static str,
-    delete_tile: &'static str,
-    delete_selection: &'static str,
-    group_crop: &'static str,
-    field_x: &'static str,
-    field_y: &'static str,
-    field_width: &'static str,
-    field_height: &'static str,
-    group_identity: &'static str,
-    catalogue_tile_templates: &'static str,
-    catalogue_seed_desc: &'static str,
-    catalogue_seed_2x2: &'static str,
-    catalogue_seed_3x5: &'static str,
-    catalogue_add_tile: &'static str,
-    catalogue_clear_tiles: &'static str,
-    catalogue_figure_templates: &'static str,
-    catalogue_use_figure: &'static str,
-    catalogue_active_source: &'static str,
-    catalogue_media_kind: &'static str,
+app_labels! {
+    /// 🗣️ Complete UI label set for the animate present tile-play app; one field per label makes every locale×terminology combination compile-checked. `PresentConfig` carries no terminology axis, so `reuse_*` mirrors `native_*` throughout.
+    struct AnimatePresentLabels {
+        tiles_section: native_en "Tiles", native_de "Kacheln", reuse_en "Tiles", reuse_de "Kacheln";
+        no_tiles: native_en "(no tiles — seed a grid)", native_de "(keine Kacheln — Raster erzeugen)", reuse_en "(no tiles — seed a grid)", reuse_de "(keine Kacheln — Raster erzeugen)";
+        details_select_tile: native_en "Select a tile in the canvas or workbench document.", native_de "Wählen Sie eine Kachel in der Leinwand oder im Werkbankdokument aus.", reuse_en "Select a tile in the canvas or workbench document.", reuse_de "Wählen Sie eine Kachel in der Leinwand oder im Werkbankdokument aus.";
+        details_tile_not_found: native_en "Selected tile not found.", native_de "Ausgewählte Kachel nicht gefunden.", reuse_en "Selected tile not found.", reuse_de "Ausgewählte Kachel nicht gefunden.";
+        field_name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        field_id: native_en "Id", native_de "ID", reuse_en "Id", reuse_de "ID";
+        selected_suffix: native_en "selected", native_de "ausgewählt", reuse_en "selected", reuse_de "ausgewählt";
+        delete_tile: native_en "Delete tile", native_de "Kachel löschen", reuse_en "Delete tile", reuse_de "Kachel löschen";
+        delete_selection: native_en "Delete selection", native_de "Auswahl löschen", reuse_en "Delete selection", reuse_de "Auswahl löschen";
+        group_crop: native_en "Crop", native_de "Zuschnitt", reuse_en "Crop", reuse_de "Zuschnitt";
+        field_x: native_en "X", native_de "X", reuse_en "X", reuse_de "X";
+        field_y: native_en "Y", native_de "Y", reuse_en "Y", reuse_de "Y";
+        field_width: native_en "Width", native_de "Breite", reuse_en "Width", reuse_de "Breite";
+        field_height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
+        group_identity: native_en "Identity", native_de "Identität", reuse_en "Identity", reuse_de "Identität";
+        catalogue_tile_templates: native_en "Tile templates", native_de "Kachelvorlagen", reuse_en "Tile templates", reuse_de "Kachelvorlagen";
+        catalogue_seed_desc: native_en "Seed morph tiles from figure templates.", native_de "Morph-Kacheln aus Abbildungsvorlagen erzeugen.", reuse_en "Seed morph tiles from figure templates.", reuse_de "Morph-Kacheln aus Abbildungsvorlagen erzeugen.";
+        catalogue_seed_2x2: native_en "Split 2×2 grid", native_de "2×2-Raster teilen", reuse_en "Split 2×2 grid", reuse_de "2×2-Raster teilen";
+        catalogue_seed_3x5: native_en "Split 3×5 catalogue grid", native_de "3×5-Katalograster teilen", reuse_en "Split 3×5 catalogue grid", reuse_de "3×5-Katalograster teilen";
+        catalogue_add_tile: native_en "Add single tile", native_de "Einzelne Kachel hinzufügen", reuse_en "Add single tile", reuse_de "Einzelne Kachel hinzufügen";
+        catalogue_clear_tiles: native_en "Clear tiles", native_de "Kacheln leeren", reuse_en "Clear tiles", reuse_de "Kacheln leeren";
+        catalogue_figure_templates: native_en "Figure templates", native_de "Abbildungsvorlagen", reuse_en "Figure templates", reuse_de "Abbildungsvorlagen";
+        catalogue_use_figure: native_en "Use catalogue figure", native_de "Katalogabbildung verwenden", reuse_en "Use catalogue figure", reuse_de "Katalogabbildung verwenden";
+        catalogue_active_source: native_en "Active source", native_de "Aktive Quelle", reuse_en "Active source", reuse_de "Aktive Quelle";
+        catalogue_media_kind: native_en "Media kind", native_de "Medientyp", reuse_en "Media kind", reuse_de "Medientyp";
+    }
 }
 
-const ANIMATE_PRESENT_LABELS_NATIVE_EN: AnimatePresentLabels = AnimatePresentLabels {
-    tiles_section: "Tiles",
-    no_tiles: "(no tiles — seed a grid)",
-    details_select_tile: "Select a tile in the canvas or workbench document.",
-    details_tile_not_found: "Selected tile not found.",
-    field_name: "Name",
-    field_id: "Id",
-    selected_suffix: "selected",
-    delete_tile: "Delete tile",
-    delete_selection: "Delete selection",
-    group_crop: "Crop",
-    field_x: "X",
-    field_y: "Y",
-    field_width: "Width",
-    field_height: "Height",
-    group_identity: "Identity",
-    catalogue_tile_templates: "Tile templates",
-    catalogue_seed_desc: "Seed morph tiles from figure templates.",
-    catalogue_seed_2x2: "Split 2×2 grid",
-    catalogue_seed_3x5: "Split 3×5 catalogue grid",
-    catalogue_add_tile: "Add single tile",
-    catalogue_clear_tiles: "Clear tiles",
-    catalogue_figure_templates: "Figure templates",
-    catalogue_use_figure: "Use catalogue figure",
-    catalogue_active_source: "Active source",
-    catalogue_media_kind: "Media kind",
-};
-
-const ANIMATE_PRESENT_LABELS_NATIVE_DE: AnimatePresentLabels = AnimatePresentLabels {
-    tiles_section: "Kacheln",
-    no_tiles: "(keine Kacheln — Raster erzeugen)",
-    details_select_tile: "Wählen Sie eine Kachel in der Leinwand oder im Werkbankdokument aus.",
-    details_tile_not_found: "Ausgewählte Kachel nicht gefunden.",
-    field_name: "Name",
-    field_id: "ID",
-    selected_suffix: "ausgewählt",
-    delete_tile: "Kachel löschen",
-    delete_selection: "Auswahl löschen",
-    group_crop: "Zuschnitt",
-    field_x: "X",
-    field_y: "Y",
-    field_width: "Breite",
-    field_height: "Höhe",
-    group_identity: "Identität",
-    catalogue_tile_templates: "Kachelvorlagen",
-    catalogue_seed_desc: "Morph-Kacheln aus Abbildungsvorlagen erzeugen.",
-    catalogue_seed_2x2: "2×2-Raster teilen",
-    catalogue_seed_3x5: "3×5-Katalograster teilen",
-    catalogue_add_tile: "Einzelne Kachel hinzufügen",
-    catalogue_clear_tiles: "Kacheln leeren",
-    catalogue_figure_templates: "Abbildungsvorlagen",
-    catalogue_use_figure: "Katalogabbildung verwenden",
-    catalogue_active_source: "Aktive Quelle",
-    catalogue_media_kind: "Medientyp",
-};
-
 /// 🗣️ B1: resolves the active label set from `cfg.locale` (was the host-pushed `ViewState.locale`);
-/// unknown/absent locales fall back to native English.
+/// unknown/absent locales fall back to native English. `PresentConfig` carries no terminology axis,
+/// so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
+fn animate_present_locale(config: &PresentConfig) -> Locale {
+    if config.locale.starts_with("de") { Locale::De } else { Locale::En }
+}
+
 fn animate_present_labels(config: &PresentConfig) -> &'static AnimatePresentLabels {
-    if config.locale.starts_with("de") {
-        &ANIMATE_PRESENT_LABELS_NATIVE_DE
-    } else {
-        &ANIMATE_PRESENT_LABELS_NATIVE_EN
-    }
+    AnimatePresentLabels::labels(animate_present_locale(config), Terminology::Native)
 }
 //#endregion 🔖️Terminology
 
 //#region 🔖️Panels
-fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
+fn tree_item(id: impl Into<String>, label: impl Into<Label>) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -251,7 +198,7 @@ fn build_document_tree(deck: &PresentDeck, selected: &[String], labels: &Animate
         .iter()
         .map(|tile| UiTreeItemNode {
             id: tile.id.clone(),
-            label: tile.name.clone(),
+            label: Label::data(tile.name.clone()),
             description: Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)),
             icon_id: None,
             presence: UiPresence::selected(selected.contains(&tile.id)),
@@ -285,7 +232,7 @@ fn build_document_tree(deck: &PresentDeck, selected: &[String], labels: &Animate
     })
 }
 
-fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &[f64]) -> UiNode {
+fn inspector_crop_field(tile_ids: &[String], field: &str, label: impl Into<Label>, values: &[f64]) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
     UiNode::Field(UiFieldNode {
         id: format!("animate.present.play.tile.crop.{field}"),
@@ -294,7 +241,7 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &
             id: format!("animate.present.play.tile.crop.{field}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform { format!("{:.6}", values.first().copied().unwrap_or(0.0)) } else { String::new() },
-            placeholder: if mixed.uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
+            placeholder: if mixed.uniform { None } else { Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER)) },
             commit: Some("blur".into()),
             on_change: animate_present_action("patchTileCrops", Some(json!({ "ids": tile_ids, "field": field }))),
             min: None,
@@ -317,7 +264,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "animate.present.play.details.empty".into(),
             presence: UiPresence::default(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![ui_text(labels.details_select_tile)],
             menu: None,
@@ -328,7 +275,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "animate.present.play.details.not-found".into(),
             presence: UiPresence::default(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![ui_text(labels.details_tile_not_found)],
             menu: None,
@@ -343,7 +290,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
             id: "animate.present.play.tile.name.input".into(),
             input_kind: "text".into(),
             value: name_mixed.value,
-            placeholder: name_mixed.placeholder,
+            placeholder: name_mixed.placeholder.map(Label::data),
             commit: Some("blur".into()),
             on_change: animate_present_action("renameTiles", Some(json!({ "ids": tile_ids }))),
             min: None,
@@ -359,7 +306,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
         presence: UiPresence::default(),
         menu: None,
     })];
-    identity_fields.push(ui_inspector_readonly_field("animate.present.play.tile.id", labels.field_id, if tile_ids.len() == 1 { tile_ids.first().cloned().unwrap_or_default() } else { format!("{} {}", tile_ids.len(), labels.selected_suffix) }));
+    identity_fields.push(ui_inspector_readonly_field("animate.present.play.tile.id", labels.field_id, if tile_ids.len() == 1 { tile_ids.first().cloned().unwrap_or_default() } else { format!("{} {}", tile_ids.len(), labels.selected_suffix.as_str()) }));
     if tile_ids.len() == 1 {
         identity_fields.push(UiNode::Button(semio_framework_plugin::UiButtonNode {
             id: Some(format!("animate.present.play.tile.{}.delete", tile_ids[0])),
@@ -398,7 +345,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
     ui_inspector_groups_to_tree(&groups)
 }
 
-fn catalogue_button(id: &str, label: &str, action: &str, args: Option<Value>) -> UiNode {
+fn catalogue_button(id: &str, label: impl Into<Label>, action: &str, args: Option<Value>) -> UiNode {
     UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, presence: UiPresence::default(),
         menu: None,
     })
@@ -450,7 +397,7 @@ fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> Ui
                     presence: UiPresence::default(),
                     menu: None,
                 }),
-                ui_text(format!("{}: {}", labels.catalogue_media_kind, deck.source.kind)),
+                ui_text(Label::data(format!("{}: {}", labels.catalogue_media_kind.as_str(), deck.source.kind))),
             ],
             menu: None,
         },
@@ -716,7 +663,7 @@ impl DocumentApp for AnimatePresentPlayApp {
             ANIMATE_PRESENT_PLAY_BODY_DOCUMENT => build_document_tree(deck, selected, labels),
             ANIMATE_PRESENT_PLAY_BODY_CATALOGUE => build_catalogue_tree(deck, labels),
             ANIMATE_PRESENT_PLAY_BODY_DETAILS => build_details_tree(deck, selected, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -725,7 +672,7 @@ impl DocumentApp for AnimatePresentPlayApp {
 //#region 🔖️Manifest
 pub fn create_animate_present_app() -> App {
     App::from_builder(
-        App::builder(ANIMATE_PRESENT_PLAY_APP_ID, "Animate Present").document(["semio", "animate"])
+        App::builder(ANIMATE_PRESENT_PLAY_APP_ID, LocalizedLabel::native("Animate Present", "Animate Present")).document(["semio", "animate"])
             .artifact_kind(ArtifactKindSpec {
                 id: "animate.present.deck".into(),
                 name: "Animate Present Deck".into(),
@@ -739,9 +686,9 @@ pub fn create_animate_present_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("animate")
-            .mode("main", "Edit", "pencil")
+            .mode("main", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("main")
-            .window_kind(ANIMATE_PRESENT_PLAY_WINDOW_MAIN, "Tile editor", ANIMATE_PRESENT_PLAY_BODY_MAIN, SurfaceKind::Canvas2d, "grid-3x3")
+            .window_kind(ANIMATE_PRESENT_PLAY_WINDOW_MAIN, LocalizedLabel::native("Tile editor", "Kacheleditor"), ANIMATE_PRESENT_PLAY_BODY_MAIN, SurfaceKind::Canvas2d, "grid-3x3")
             .default_layout(create_default_layout(
                 &[ANIMATE_PRESENT_PLAY_WINDOW_MAIN.into()],
                 "stack",
@@ -750,61 +697,61 @@ pub fn create_animate_present_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 ANIMATE_PRESENT_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 ANIMATE_PRESENT_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 ANIMATE_PRESENT_PLAY_BODY_DETAILS,
             )
             // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
-            .operation("seedGrid", "Seed Grid")
-            .operation("addTile", "Add Tile")
-            .operation("deleteTile", "Delete Tile")
-            .operation("deleteSelection", "Delete Selection")
-            .operation("renameTiles", "Rename Tiles")
-            .operation("patchTileCrops", "Patch Tile Crops")
-            .operation("setSource", "Set Source")
-            .operation("setFrame", "Set Frame")
-            .operation("setActiveExample", "Set Active Example")
-            .operation("clearTiles", "Clear Tiles")
-            .operation("engagementSubmit", "Engagement Submit")
+            .operation("seedGrid", LocalizedLabel::native("Seed Grid", "Raster erzeugen"))
+            .operation("addTile", LocalizedLabel::native("Add Tile", "Kachel hinzufügen"))
+            .operation("deleteTile", LocalizedLabel::native("Delete Tile", "Kachel löschen"))
+            .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .operation("renameTiles", LocalizedLabel::native("Rename Tiles", "Kacheln umbenennen"))
+            .operation("patchTileCrops", LocalizedLabel::native("Patch Tile Crops", "Kachelzuschnitte aktualisieren"))
+            .operation("setSource", LocalizedLabel::native("Set Source", "Quelle festlegen"))
+            .operation("setFrame", LocalizedLabel::native("Set Frame", "Rahmen festlegen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("clearTiles", LocalizedLabel::native("Clear Tiles", "Kacheln leeren"))
+            .operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             // 🐚️ Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
-            .shell_action("copyPrompt", "Copy Prompt")
-            .shell_action("exportVideoFromDeck", "Export Video From Deck")
+            .shell_action("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"))
+            .shell_action("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"))
             // 👁️ Ephemeral view state — selection, engagement draft, locale.
-            .view_action("setSelectedIds", "Set Selected Ids")
-            .view_action("engagementInput", "Engagement Input")
-            .view_action("canvasPointerDown", "Canvas Pointer Down")
-            .view_action("noOperation", "No Operation")
-            .view_action("setLocale", "Set Locale")
+            .view_action("setSelectedIds", LocalizedLabel::native("Set Selected Ids", "Auswahl-IDs festlegen"))
+            .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
+            .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
+            .view_action("noOperation", LocalizedLabel::native("No Operation", "Keine Aktion"))
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
             .action_args("seedGrid", vec![
-                ActionArgDef::number("rows", "Rows").required().default_value(2),
-                ActionArgDef::number("columns", "Columns").required().default_value(2),
+                ActionArgDef::number("rows", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(2),
+                ActionArgDef::number("columns", LocalizedLabel::native("Columns", "Spalten")).required().default_value(2),
             ])
-            .action_args("setSource", vec![ActionArgDef::text("src", "Source").required()])
+            .action_args("setSource", vec![ActionArgDef::text("src", LocalizedLabel::native("Source", "Quelle")).required()])
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![ActionArgOption::new("demo", "Demo")])
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("demo", LocalizedLabel::native("Demo", "Demo"))])
                     .required()
                     .default_value("demo"),
             ])
             // 🎛️ App-scope command — see `AnimatePresentPlayApp::handle`'s `ResetGrid` arm for why this
             // isn't `seedGrid`/`clearTiles`.
-            .app_command("animate.resetGrid", "Reset to Default Grid", "document")
+            .app_command("animate.resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document")
             .config(AnimatePresentPlayApp.config_spec())
             .io(present_engine::present_io()),
     )
-    .example("demo", "Demo", present::default_present_deck().print_dsl(), "cylinder")
+    .example("demo", LocalizedLabel::native("Demo", "Demo"), present::default_present_deck().print_dsl(), "cylinder")
     .workflow("animate", "Animate", "deck")
 }
 //#endregion 🔖️Manifest

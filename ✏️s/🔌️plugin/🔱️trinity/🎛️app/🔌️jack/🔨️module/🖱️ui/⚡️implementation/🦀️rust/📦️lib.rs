@@ -9,12 +9,12 @@
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     app_labels, build_node_graph_scene, build_table_scene, build_text_editor_scene,
-    localized_label_map, text_identifier_occurrences_json, tree_item, tree_item_with_action,
+    text_identifier_occurrences_json, tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
-    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest, ConfigView, DocumentApp,
-    DocumentView, Emit, LocaleLabels, LocalizedLabel, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, MediaClass, MediaForm, MediaType, PanelTreeBuilder, ArtifactKindSpec,
-    TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
-    ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
+    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabels, ContextMenuItemSpec, ContextMenuRequest, ConfigView, DocumentApp,
+    DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaError, MediaPayload, MeasureSelectItem, NodeGraphScene, NodeGraphNodeRecord, NodeGraphEdgeRecord, NodeGraphPortRecord, NodeGraphViewport, MediaClass, MediaForm, MediaType, PanelTreeBuilder, ArtifactKindSpec,
+    TableScene, TextEditorScene, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
+    WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -55,13 +55,20 @@ const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 
 //#region 🔖️Locale
 /// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s own pair.
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`/`wires_ui`'s own pair.
 fn is_de_locale(cfg: &JackConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &JackConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🗣️ `JackConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
+fn jack_locale(cfg: &JackConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
+/// `AppLabels::labels`. `JackConfig` carries no terminology field, so terminology is always `Native`.
+fn resolve_labels<L: AppLabels>(cfg: &JackConfig) -> &'static L {
+    L::labels(jack_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -334,55 +341,28 @@ fn result_to_table(result_json: &str) -> (String, String) {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the Jack query app; one field per label makes every locale combination compile-checked.
 app_labels! {
+    /// 🗣️ Complete UI label set for the Jack query app; one field per label makes every locale×terminology
+    /// combination compile-checked. No distinct reuse-terminology concept for this app, so reuse repeats native.
     struct TrinityJackLabels {
-        pieces: &'static str = en: "Pieces", de: "Stücke";
-        connections: &'static str = en: "Connections", de: "Verbindungen";
-        fixtures: &'static str = en: "Fixtures", de: "Fixturen";
-        example_queries: &'static str = en: "Example queries", de: "Beispielabfragen";
-        manifest_kinds: &'static str = en: "Manifest kinds", de: "Manifestarten";
-        piece: &'static str = en: "Piece", de: "Stück";
-        connection: &'static str = en: "Connection", de: "Verbindung";
-        connector: &'static str = en: "Connector", de: "Verbinder";
-        geometry: &'static str = en: "Geometry", de: "Geometrie";
-        identity: &'static str = en: "Identity", de: "Identität";
-        history: &'static str = en: "History", de: "Verlauf";
-        query: &'static str = en: "Query", de: "Abfrage";
-        window_graph: &'static str = en: "Nakagin Graph", de: "Nakagin-Graph";
-        window_editor: &'static str = en: "Jack Query", de: "Jack-Abfrage";
-        window_results: &'static str = en: "Results", de: "Ergebnisse";
+        pieces: native_en "Pieces", native_de "Stücke", reuse_en "Pieces", reuse_de "Stücke";
+        connections: native_en "Connections", native_de "Verbindungen", reuse_en "Connections", reuse_de "Verbindungen";
+        fixtures: native_en "Fixtures", native_de "Fixturen", reuse_en "Fixtures", reuse_de "Fixturen";
+        example_queries: native_en "Example queries", native_de "Beispielabfragen", reuse_en "Example queries", reuse_de "Beispielabfragen";
+        manifest_kinds: native_en "Manifest kinds", native_de "Manifestarten", reuse_en "Manifest kinds", reuse_de "Manifestarten";
+        piece: native_en "Piece", native_de "Stück", reuse_en "Piece", reuse_de "Stück";
+        connection: native_en "Connection", native_de "Verbindung", reuse_en "Connection", reuse_de "Verbindung";
+        connector: native_en "Connector", native_de "Verbinder", reuse_en "Connector", reuse_de "Verbinder";
+        geometry: native_en "Geometry", native_de "Geometrie", reuse_en "Geometry", reuse_de "Geometrie";
+        identity: native_en "Identity", native_de "Identität", reuse_en "Identity", reuse_de "Identität";
+        history: native_en "History", native_de "Verlauf", reuse_en "History", reuse_de "Verlauf";
+        query: native_en "Query", native_de "Abfrage", reuse_en "Query", reuse_de "Abfrage";
+        window_graph: native_en "Nakagin Graph", native_de "Nakagin-Graph", reuse_en "Nakagin Graph", reuse_de "Nakagin-Graph";
+        window_editor: native_en "Jack Query", native_de "Jack-Abfrage", reuse_en "Jack Query", reuse_de "Jack-Abfrage";
+        window_results: native_en "Results", native_de "Ergebnisse", reuse_en "Results", reuse_de "Ergebnisse";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_trinity_jack_app`'s static
-/// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette
-/// and Actions rail get a translated label without threading locale through the whole builder chain.
-fn trinity_jack_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-        ("patchNodes", "Patch Nodes", "Knoten aktualisieren"),
-        ("setViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
-        ("reorganize", "Reorganize", "Neu anordnen"),
-        ("runQuery", "Run Jack Query", "Jack-Abfrage ausführen"),
-        ("loadExampleQuery", "Load Example Query", "Beispielabfrage laden"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("textEdit", "Edit Jack Query", "Jack-Abfrage bearbeiten"),
-        ("textSelect", "Select Jack Query Text", "Jack-Abfragetext auswählen"),
-        ("requestCompletions", "Request Completions", "Vervollständigungen anfordern"),
-        ("formatDocument", "Format Jack Query", "Jack-Abfrage formatieren"),
-        ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
-        ("editorEngagementInput", "Editor Engagement Input", "Editor-Eingabe"),
-        ("graphEngagementInput", "Graph Engagement Input", "Graph-Eingabe"),
-        ("resultsEngagementInput", "Results Engagement Input", "Ergebnis-Eingabe"),
-        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
-    ])
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 fn flat_position_uv(node: &Node) -> (String, String) {
@@ -401,7 +381,7 @@ fn build_document_tree(fixture: &GraphFixture, cfg: &JackConfig, labels: &Trinit
         .map(|node| {
             tree_item_with_action(
                 builder.item_id("node", &node.id),
-                if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
+                Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
                 Some(node.kind.clone()),
                 jack_action("setSelection", Some(json!({ "ids": [node.id] }))),
             )
@@ -410,7 +390,7 @@ fn build_document_tree(fixture: &GraphFixture, cfg: &JackConfig, labels: &Trinit
     let edge_items: Vec<UiTreeItemNode> = fixture
         .edges
         .iter()
-        .map(|edge| tree_item(builder.item_id("edge", &edge.id), format!("{} → {}", edge.source, edge.target)))
+        .map(|edge| tree_item(builder.item_id("edge", &edge.id), Label::data(format!("{} → {}", edge.source, edge.target))))
         .collect();
     let selected = cfg.selected_node_ids.iter().map(|id| builder.item_id("node", id)).collect();
     builder
@@ -439,7 +419,7 @@ fn build_catalogue_tree(cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode 
         .map(|(id, label)| {
             tree_item_with_action(
                 builder.item_id("fixture", id),
-                *label,
+                Label::data(*label),
                 Some(preset_query(id).into()),
                 jack_action("setActiveExample", Some(json!({ "exampleId": id }))),
             )
@@ -450,7 +430,7 @@ fn build_catalogue_tree(cfg: &JackConfig, labels: &TrinityJackLabels) -> UiNode 
         .map(|(id, label, query)| {
             tree_item_with_action(
                 builder.item_id("example", id),
-                *label,
+                Label::data(*label),
                 Some((*query).into()),
                 jack_action("loadExampleQuery", Some(json!({ "query": query }))),
             )
@@ -478,10 +458,10 @@ fn build_inspector_tree(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &
     if cfg.selected_node_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "trinity-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
-            children: vec![ui_text("Select one or more pieces")],
+            children: vec![ui_text(Label::data("Select one or more pieces"))],
             menu: None,
         }]);
     }
@@ -493,10 +473,10 @@ fn build_inspector_tree(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &
     if nodes.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "trinity-inspector.missing".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
-            children: vec![ui_text("Piece not found")],
+            children: vec![ui_text(Label::data("Piece not found"))],
             menu: None,
         }]);
     }
@@ -525,7 +505,7 @@ fn build_inspector_tree(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &
             fields: vec![
                 ui_inspector_readonly_field(
                     "trinity-inspector.flat-u",
-                    "Flat U",
+                    Label::data("Flat U"),
                     if u_mixed.placeholder.is_none() {
                         u_values.first().cloned().unwrap_or_default()
                     } else {
@@ -534,7 +514,7 @@ fn build_inspector_tree(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &
                 ),
                 ui_inspector_readonly_field(
                     "trinity-inspector.flat-v",
-                    "Flat V",
+                    Label::data("Flat V"),
                     if v_mixed.placeholder.is_none() {
                         v_values.first().cloned().unwrap_or_default()
                     } else {
@@ -543,7 +523,7 @@ fn build_inspector_tree(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &
                 ),
                 ui_inspector_readonly_field(
                     "trinity-inspector.ports",
-                    "Connectors",
+                    Label::data("Connectors"),
                     if ports_mixed.placeholder.is_none() {
                         port_counts.first().cloned().unwrap_or_default()
                     } else {
@@ -560,12 +540,12 @@ fn build_inspector_tree(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &
             fields: vec![
                 UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                     id: "trinity-inspector.name".into(),
-                    label: "Name".into(),
+                    label: Label::data("Name"),
                     child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(),
                         id: "trinity-inspector.name.input".into(),
                         input_kind: "text".into(),
                         value: name_mixed.value,
-                        placeholder: name_mixed.placeholder,
+                        placeholder: name_mixed.placeholder.map(Label::data),
                         commit: None,
                         on_change: jack_action(
                             "patchNodes",
@@ -584,7 +564,7 @@ fn build_inspector_tree(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &
                 }),
                 ui_inspector_readonly_field(
                     "trinity-inspector.kind",
-                    "Kind",
+                    Label::data("Kind"),
                     if kind_mixed.placeholder.is_none() {
                         nodes.first().map(|node| node.kind.clone()).unwrap_or_default()
                     } else {
@@ -593,7 +573,7 @@ fn build_inspector_tree(fixture: &GraphFixture, cfg: &JackConfig, term_labels: &
                 ),
                 ui_inspector_readonly_field(
                     "trinity-inspector.id",
-                    "Id",
+                    Label::data("Id"),
                     if node_ids.len() == 1 {
                         node_ids.first().cloned().unwrap_or_default()
                     } else {
@@ -864,7 +844,7 @@ impl DocumentApp for TrinityJackPlayApp {
             TRINITY_JACK_PLAY_BODY_DOCUMENT => build_document_tree(fixture, cfg.projection, labels),
             TRINITY_JACK_PLAY_BODY_CATALOGUE => build_catalogue_tree(cfg.projection, labels),
             TRINITY_JACK_PLAY_BODY_INSPECTION => build_inspector_tree(fixture, cfg.projection, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -874,15 +854,6 @@ impl DocumentApp for TrinityJackPlayApp {
             TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(),
             vec![trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode)],
         )])
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, JackConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<TrinityJackLabels>(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(TRINITY_JACK_PLAY_WINDOW_GRAPH, labels.window_graph)
-            .window_kind_label(TRINITY_JACK_PLAY_WINDOW_EDITOR, labels.window_editor)
-            .window_kind_label(TRINITY_JACK_PLAY_WINDOW_RESULTS, labels.window_results)
-            .action_labels(trinity_jack_action_labels(is_de_locale(cfg.projection)))
     }
 
     fn context_menu(
@@ -1050,7 +1021,7 @@ pub fn create_trinity_jack_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
         testkit::meta(actor)
@@ -1190,7 +1161,7 @@ mod tests {
 
     #[test]
     fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
-        let mut app = new_app();
+        let mut app = testkit::new_app_with_registry::<TrinityJackPlayApp>(create_trinity_jack_app);
         let node_id = node_id_at(&app, 0);
         app.dispatch_typed(TrinityJackCommand::SetSelection { ids: vec![node_id.clone()] }, &meta("local")).expect("select");
         let request = ContextMenuRequest {

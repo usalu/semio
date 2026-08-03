@@ -22,14 +22,7 @@ use procedural_3d_engine::{
 use procedural_3d_engine::{default_projection, example_projection};
 use procedural_3d_op::{procedural3d_fixture_operations, Procedural3dConfigOperation, Procedural3dOperation};
 use procedural_3d_protocol::Procedural3dCommand;
-use semio_framework_plugin::{
-    apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, world3d_scene, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
-    AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, LocaleLabels, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphHover, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder,
-    SelectionSet, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    ui_declarative_sections_to_tree,
-};
+use semio_framework_plugin::{Label, apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, world3d_scene, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphHover, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder, SelectionSet, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, ui_declarative_sections_to_tree, AppLabels, Locale, LocalizedLabel, Terminology};
 use store::DocumentPack;
 use serde_json::{json, Value};
 
@@ -68,8 +61,12 @@ fn is_de_locale(cfg: &Procedural3dConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &Procedural3dConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn procedural3d_locale(cfg: &Procedural3dConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+fn resolve_labels<L: AppLabels>(cfg: &Procedural3dConfig) -> &'static L {
+    L::labels(procedural3d_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -200,26 +197,26 @@ fn procedural3d_show_mode_measure(show_mode: &str) -> WindowMeasure {
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the 3D flow app; one field per label makes every locale combination compile-checked.
     struct Procedural3dLabels {
-        widgets: &'static str = en: "Widgets", de: "Elemente";
-        schema_prefix: &'static str = en: "Schema:", de: "Schema:";
-        widgets_prefix: &'static str = en: "Widgets:", de: "Elemente:";
-        no_selection: &'static str = en: "No selection", de: "Keine Auswahl";
-        id_field: &'static str = en: "Id", de: "ID";
-        value_field: &'static str = en: "Value", de: "Wert";
-        range_field: &'static str = en: "Range", de: "Bereich";
-        widget_group: &'static str = en: "Widget", de: "Element";
-        generate_hint: &'static str = en: "Add a generation to edit input values.", de: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
-        preview_hint: &'static str = en: "(evaluate a generation to preview output)", de: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
-        catalog_neuron: &'static str = en: "Neuron", de: "Neuron";
-        catalog_slider: &'static str = en: "Slider", de: "Schieberegler";
-        catalog_note: &'static str = en: "Note", de: "Notiz";
-        catalog_preview: &'static str = en: "Preview", de: "Vorschau";
-        window_flow: &'static str = en: "Flow", de: "Workflow";
-        window_preview: &'static str = en: "Preview", de: "Vorschau";
-        window_generations: &'static str = en: "Generations", de: "Generationen";
-        window_generate_form: &'static str = en: "Form", de: "Formular";
-        window_generate_preview: &'static str = en: "Preview", de: "Vorschau";
-        delete_selection: &'static str = en: "Delete selection", de: "Auswahl löschen";
+        widgets: native_en "Widgets", native_de "Elemente", reuse_en "Widgets", reuse_de "Elemente";
+        schema_prefix: native_en "Schema:", native_de "Schema:", reuse_en "Schema:", reuse_de "Schema:";
+        widgets_prefix: native_en "Widgets:", native_de "Elemente:", reuse_en "Widgets:", reuse_de "Elemente:";
+        no_selection: native_en "No selection", native_de "Keine Auswahl", reuse_en "No selection", reuse_de "Keine Auswahl";
+        id_field: native_en "Id", native_de "ID", reuse_en "Id", reuse_de "ID";
+        value_field: native_en "Value", native_de "Wert", reuse_en "Value", reuse_de "Wert";
+        range_field: native_en "Range", native_de "Bereich", reuse_en "Range", reuse_de "Bereich";
+        widget_group: native_en "Widget", native_de "Element", reuse_en "Widget", reuse_de "Element";
+        generate_hint: native_en "Add a generation to edit input values.", native_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.", reuse_en "Add a generation to edit input values.", reuse_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
+        preview_hint: native_en "(evaluate a generation to preview output)", native_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)", reuse_en "(evaluate a generation to preview output)", reuse_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
+        catalog_neuron: native_en "Neuron", native_de "Neuron", reuse_en "Neuron", reuse_de "Neuron";
+        catalog_slider: native_en "Slider", native_de "Schieberegler", reuse_en "Slider", reuse_de "Schieberegler";
+        catalog_note: native_en "Note", native_de "Notiz", reuse_en "Note", reuse_de "Notiz";
+        catalog_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        window_flow: native_en "Flow", native_de "Workflow", reuse_en "Flow", reuse_de "Workflow";
+        window_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        window_generations: native_en "Generations", native_de "Generationen", reuse_en "Generations", reuse_de "Generationen";
+        window_generate_form: native_en "Form", native_de "Formular", reuse_en "Form", reuse_de "Formular";
+        window_generate_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        delete_selection: native_en "Delete selection", native_de "Auswahl löschen", reuse_en "Delete selection", reuse_de "Auswahl löschen";
     }
 }
 
@@ -231,74 +228,20 @@ fn procedural3d_labels(cfg: &Procedural3dConfig) -> &'static Procedural3dLabels 
 /// 🗣️ Resolves a catalogue widget kind's display label from its stable id; unknown kinds fall back to the id itself.
 fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3dLabels) -> &'static str {
     match kind {
-        "neuron" => labels.catalog_neuron,
-        "inputSlider" => labels.catalog_slider,
-        "inputNote" => labels.catalog_note,
-        "outputPreview" => labels.catalog_preview,
+        "neuron" => labels.catalog_neuron.as_str(),
+        "inputSlider" => labels.catalog_slider.as_str(),
+        "inputNote" => labels.catalog_note.as_str(),
+        "outputPreview" => labels.catalog_preview.as_str(),
         _ => kind,
     }
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_procedural3d_app`'s
-/// static manifest — the manifest itself has no locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn procedural3d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
-        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-        ("removeWidget", "Remove Widget", "Element entfernen"),
-        ("moveMediaNode", "Move Node", "Knoten verschieben"),
-        ("addWidget", "Add Widget", "Element hinzufügen"),
-        ("patchFlowWidgets", "Patch Flow Widgets", "Flow-Elemente aktualisieren"),
-        ("reorganize", "Reorganize", "Neu anordnen"),
-        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
-        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
-        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-        ("addGeneration", "Add Generation", "Generation hinzufügen"),
-        ("removeGeneration", "Remove Generation", "Generation entfernen"),
-        ("renameGeneration", "Rename Generation", "Generation umbenennen"),
-        ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("selectNode", "Select Node", "Knoten auswählen"),
-        ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
-        ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
-        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
-        ("worldSelect", "World Select", "Welt auswählen"),
-        ("worldHover", "World Hover", "Überfahren (Welt)"),
-        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("setLodMode", "Set Lod Mode", "LOD-Modus festlegen"),
-        ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
-        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("selectGeneration", "Set Generation", "Generation auswählen"),
-    ];
-    semio_framework_plugin::localized_label_map(is_de, ENTRIES)
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_procedural3d_app`.
-fn procedural3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("move", "Move", "Verschieben"),
-        ("rotate", "Rotate", "Drehen"),
-        ("scale", "Scale", "Skalieren"),
-    ];
-    semio_framework_plugin::localized_label_map(is_de, ENTRIES)
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 /// 🌳️ SDK's `tree_item_with_action` plus an icon id — this crate's document/catalogue trees carry
 /// icons per item, which the shared helper doesn't model directly.
-fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
+fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: icon_id.map(Into::into), menu: None,
     ..tree_item_with_action(id, label, None, action) }
 }
@@ -309,9 +252,7 @@ fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String], labe
         .iter()
         .map(|widget| {
             let id = widget_id(widget).to_string();
-            tree_item_with_icon(
-                format!("procedural-widget:{id}"),
-                id.clone(),
+            tree_item_with_icon(format!("procedural-widget:{id}"), Label::data(id.clone()),
                 Some("cpu"),
                 procedural_action("setSelection", Some(json!({ "ids": [id] }))),
             )
@@ -329,7 +270,7 @@ fn build_catalogue_tree(labels: &Procedural3dLabels) -> UiNode {
         .map(|(kind, icon)| {
             tree_item_with_icon(
                 format!("procedural-play-catalogue.{kind}"),
-                procedural3d_catalog_label(*kind, labels),
+                Label::data(procedural3d_catalog_label(*kind, labels)),
                 Some(icon),
                 procedural_action("addWidget", Some(json!({ "kind": kind }))),
             )
@@ -344,11 +285,11 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], lab
     let Some(selected_id) = selected_node_ids.first() else {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "procedural-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![
-                ui_text(format!("{} {}", labels.schema_prefix, fixture.schema)),
-            ui_text(format!("{} {}", labels.widgets_prefix, fixture.widgets.len())),
+                ui_text(Label::data(format!("{} {}", labels.schema_prefix.as_str(), fixture.schema))),
+            ui_text(Label::data(format!("{} {}", labels.widgets_prefix.as_str(), fixture.widgets.len()))),
             ],
             presence: UiPresence::default(),
             menu: None,
@@ -357,9 +298,9 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], lab
     let Some(widget) = fixture.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "procedural-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
-            children: vec![ui_text(labels.no_selection.to_string())],
+            children: vec![ui_text(labels.no_selection)],
             presence: UiPresence::default(),
             menu: None,
         }]);
@@ -449,7 +390,7 @@ fn render_generate_preview(fixture: &FlowFixture, generation: &GenerationPlaySta
             .preview_text
             .as_deref()
             .filter(|value| !value.is_empty())
-            .unwrap_or(labels.preview_hint);
+            .unwrap_or(labels.preview_hint.as_str());
         return render_generation_preview_text(
             PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW,
             PROCEDURAL_3D_PLAY_APP_ID,
@@ -928,7 +869,7 @@ impl DocumentApp for Procedural3dPlayApp {
             PROCEDURAL_3D_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_node_ids, labels),
             PROCEDURAL_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             PROCEDURAL_3D_PLAY_BODY_INSPECTION => build_inspector_tree(fixture, &config.selected_node_ids, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -948,31 +889,6 @@ impl DocumentApp for Procedural3dPlayApp {
         ])
     }
 
-    fn app_labels(&self, cfg: &ConfigView<'_, Procedural3dConfig>) -> semio_framework_plugin::AppLabelsOverlay {
-        let config = cfg.projection;
-        let labels = procedural3d_labels(config);
-        let is_de = is_de_locale(config);
-        semio_framework_plugin::AppLabelsOverlay::default()
-            .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_MAIN, labels.window_flow)
-            .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, labels.window_preview)
-            .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS, labels.window_generations)
-            .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM, labels.window_generate_form)
-            .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW, labels.window_generate_preview)
-            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
-            .mode_label("generate", if is_de { "Generieren" } else { "Generate" })
-            .action_labels(procedural3d_action_labels(is_de))
-            .utility_labels(procedural3d_utility_labels(is_de))
-            .example_labels(semio_framework_plugin::localized_label_map(is_de, &[
-                (PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", "Sechseckige Pilzsäule"),
-                (PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen"),
-                (PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", "Kugel mit Torus geschnitten"),
-                (PROCEDURAL_EXAMPLE_BOX_FILLET, "Box Fillet Preview", "Kantenrundung Vorschau"),
-                (PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, "Sphere Box Fuse", "Kugel und Quader vereinen"),
-                (PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, "Face Sweep Extrude", "Fläche extrudieren"),
-                (PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, "Rectangle Wire Preview", "Rechteck-Draht Vorschau"),
-                (PROCEDURAL_EXAMPLE_BOX_SHELL, "Box Shell Preview", "Hohlkörper Vorschau"),
-            ]))
-    }
 
     fn context_menu(
         &self,
@@ -999,7 +915,7 @@ impl DocumentApp for Procedural3dPlayApp {
         menu = menu.group("create", |m| m.action("addWidget").action("addGeneration"));
         menu = menu.when(has_selection, |m| m.group("targets", |m2| m2.action("removeWidget").action("removeGeneration")));
         menu = menu.group("methods", |m| m.action("renameGeneration").action("updateGenerationValues").action("patchFlowWidgets"));
-        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
         menu.build()
@@ -1010,7 +926,7 @@ impl DocumentApp for Procedural3dPlayApp {
 //#region 🔖️Manifest
 pub fn create_procedural3d_app() -> App {
     App::from_builder(
-        App::builder(PROCEDURAL_3D_PLAY_APP_ID, "Procedural 3D").document(["semio", "procedural", "3d"])
+        App::builder(PROCEDURAL_3D_PLAY_APP_ID, LocalizedLabel::native("Procedural 3D", "Procedural 3D")).document(["semio", "procedural", "3d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.procedural".into(),
                 name: "3D Procedural".into(),
@@ -1024,41 +940,41 @@ pub fn create_procedural3d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("workflow")
-            .mode("edit", "Edit", "pencil")
-            .mode("generate", "Generate", "sparkles")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
+            .mode("generate", LocalizedLabel::native("Generate", "Generieren"), "sparkles")
             .default_mode_id("edit")
             .mode_layout("generate", "procedural3d-generate")
             .window_kind(
                 PROCEDURAL_3D_PLAY_WINDOW_MAIN,
-                "Flow",
+                LocalizedLabel::native("Flow", "Workflow"),
                 PROCEDURAL_3D_PLAY_BODY_MAIN,
                 SurfaceKind::NodeGraph,
                 "flow-graph",
             )
             .window_kind(
                 PROCEDURAL_3D_PLAY_WINDOW_PREVIEW,
-                "Preview",
+                LocalizedLabel::native("Preview", "Vorschau"),
                 PROCEDURAL_3D_PLAY_BODY_PREVIEW,
                 SurfaceKind::World3d,
                 "preview",
             )
             .window_kind(
                 PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS,
-                "Generations",
+                LocalizedLabel::native("Generations", "Generationen"),
                 PROCEDURAL_3D_PLAY_BODY_GENERATIONS,
                 SurfaceKind::Canvas2d,
                 "sparkles",
             )
             .window_kind(
                 PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM,
-                "Form",
+                LocalizedLabel::native("Form", "Formular"),
                 PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM,
                 SurfaceKind::Canvas2d,
                 "clipboard-list",
             )
             .window_kind(
                 PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW,
-                "Preview",
+                LocalizedLabel::native("Preview", "Vorschau"),
                 PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW,
                 SurfaceKind::World3d,
                 "preview",
@@ -1088,84 +1004,84 @@ pub fn create_procedural3d_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 PROCEDURAL_3D_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 PROCEDURAL_3D_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 PROCEDURAL_3D_PLAY_BODY_INSPECTION,
             )
             // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
-            .operation("setActiveExample", "Set Active Example")
-            .operation("nodeGraphEdit", "Edit Graph")
-            .operation("deleteSelection", "Delete Selection")
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"))
+            .operation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
             // 🗂️ Referenced by Procedural3dPlayApp::context_menu — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("removeWidget", "Remove Widget", ActionKind::Operation).with_category("targets"))
-            .operation("moveMediaNode", "Move Node")
-            .action_with(ActionDefinition::new_catalog("addWidget", "Add Widget", ActionKind::Operation).with_category("create"))
-            .action_with(ActionDefinition::new_catalog("patchFlowWidgets", "Patch Flow Widgets", ActionKind::Operation).with_category("methods"))
-            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("translateSelection", "Translate Selection", ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("rotateSelection", "Rotate Selection", ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("scaleSelection", "Scale Selection", ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("addGeneration", "Add Generation", ActionKind::Operation).with_category("create"))
-            .action_with(ActionDefinition::new_catalog("removeGeneration", "Remove Generation", ActionKind::Operation).with_category("targets"))
-            .action_with(ActionDefinition::new_catalog("renameGeneration", "Rename Generation", ActionKind::Operation).with_category("methods"))
-            .action_with(ActionDefinition::new_catalog("updateGenerationValues", "Update Generation Values", ActionKind::Operation).with_category("methods"))
+            .action_with(ActionDefinition::new_catalog("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"), ActionKind::Operation).with_category("targets"))
+            .operation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
+            .action_with(ActionDefinition::new_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Operation).with_category("create"))
+            .action_with(ActionDefinition::new_catalog("patchFlowWidgets", LocalizedLabel::native("Patch Flow Widgets", "Flow-Elemente aktualisieren"), ActionKind::Operation).with_category("methods"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Operation).with_category("create"))
+            .action_with(ActionDefinition::new_catalog("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::Operation).with_category("targets"))
+            .action_with(ActionDefinition::new_catalog("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::Operation).with_category("methods"))
+            .action_with(ActionDefinition::new_catalog("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::Operation).with_category("methods"))
             // 👁️ Ephemeral view actions — selection, hover, world picking, graph camera, sun/LOD/show-mode display toggles, preview camera (emit no operations).
-            .view_action("nodeGraphViewport", "Set Viewport")
-            .view_action("setSelection", "Set Selection")
-            .view_action("selectNode", "Select Node")
-            .view_action("nodeGraphSelect", "Node Graph Select")
-            .view_action("nodeGraphHover", "Node Graph Hover")
-            .view_action("setHover", "Set Hover")
-            .view_action("worldPointerDown", "World Pointer Down")
-            .view_action("graphPointerDown", "Graph Pointer Down")
-            .view_action("worldSelect", "World Select")
-            .view_action("worldHover", "World Hover")
-            .view_action("setSelectionMethod", "Set Selection Method")
-            .view_action("setLodMode", "Set LOD Mode")
-            .view_action("setShowMode", "Set Show Mode")
-            .view_action("toggleSun", "Toggle Sun")
-            .view_action("setSunAzimuth", "Set Sun Azimuth")
-            .view_action("setSunElevation", "Set Sun Elevation")
-            .view_action("setSunIntensity", "Set Sun Intensity")
-            .view_action("setCamera", "Set Camera")
-            .view_action("selectGeneration", "Select Generation")
+            .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("selectNode", LocalizedLabel::native("Select Node", "Knoten auswählen"))
+            .view_action("nodeGraphSelect", LocalizedLabel::native("Node Graph Select", "Graph-Auswahl"))
+            .view_action("nodeGraphHover", LocalizedLabel::native("Node Graph Hover", "Graph-Hover"))
+            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
+            .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
+            .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
+            .view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"))
+            .view_action("worldHover", LocalizedLabel::native("World Hover", "Überfahren (Welt)"))
+            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
+            .view_action("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"))
+            .view_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"))
+            .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
+            .view_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
+            .view_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
+            .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
+            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .view_action("selectGeneration", LocalizedLabel::native("Set Generation", "Generation auswählen"))
             // 📝️ Staged argument forms for the palette-visible actions (defaults materialized host-side).
             .action_args("addWidget", vec![
-                ActionArgDef::select("kind", "Kind", vec![
-                    ActionArgOption::new("neuron", "Neuron"),
-                    ActionArgOption::new("inputSlider", "Slider"),
-                    ActionArgOption::new("inputNote", "Note"),
-                    ActionArgOption::new("outputPreview", "Preview"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
+                    ActionArgOption::new("neuron", LocalizedLabel::native("Neuron", "Neuron")),
+                    ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),
+                    ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
+                    ActionArgOption::new("outputPreview", LocalizedLabel::native("Preview", "Vorschau")),
                 ]).default_value("inputSlider"),
             ])
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column"),
-                    ActionArgOption::new(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume"),
-                    ActionArgOption::new(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus"),
-                    ActionArgOption::new(PROCEDURAL_EXAMPLE_BOX_FILLET, "Box Fillet Preview"),
-                    ActionArgOption::new(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, "Sphere Box Fuse"),
-                    ActionArgOption::new(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, "Face Sweep Extrude"),
-                    ActionArgOption::new(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, "Rectangle Wire Preview"),
-                    ActionArgOption::new(PROCEDURAL_EXAMPLE_BOX_SHELL, "Box Shell Preview"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule")),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, LocalizedLabel::native("Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen")),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_SPHERE_TORUS, LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten")),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_BOX_FILLET, LocalizedLabel::native("Box Fillet Preview", "Kantenrundung Vorschau")),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, LocalizedLabel::native("Sphere Box Fuse", "Kugel und Quader vereinen")),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, LocalizedLabel::native("Face Sweep Extrude", "Fläche extrudieren")),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, LocalizedLabel::native("Rectangle Wire Preview", "Rechteck-Draht Vorschau")),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_BOX_SHELL, LocalizedLabel::native("Box Shell Preview", "Hohlkörper Vorschau")),
                 ]).required(),
             ])
             // 🧰️ Transform gumball — an exclusive utility group scoped to the 3D preview window (active utility is host-owned).
-            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
-            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
-            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
+            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", LocalizedLabel::native("Move", "Verschieben"), "move") })
+            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw") })
+            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2") })
             .window_kind_utilities(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -1176,14 +1092,14 @@ pub fn create_procedural3d_app() -> App {
             .config(Procedural3dPlayApp::default().config_spec())
             .io(procedural_3d_engine::procedural3d_io()),
     )
-    .example(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_HEX_COLUMN), "hexagon")
-    .example(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECT_EXTRUDE), "box")
-    .example(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_TORUS), "circle")
-    .example(PROCEDURAL_EXAMPLE_BOX_FILLET, "Box Fillet Preview", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_BOX_FILLET), "box")
-    .example(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, "Sphere Box Fuse", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE), "combine")
-    .example(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, "Face Sweep Extrude", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE), "layers")
-    .example(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, "Rectangle Wire Preview", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE), "square")
-    .example(PROCEDURAL_EXAMPLE_BOX_SHELL, "Box Shell Preview", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_BOX_SHELL), "box")
+    .example(PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule"), procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_HEX_COLUMN), "hexagon")
+    .example(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, LocalizedLabel::native("Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen"), procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECT_EXTRUDE), "box")
+    .example(PROCEDURAL_EXAMPLE_SPHERE_TORUS, LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten"), procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_TORUS), "circle")
+    .example(PROCEDURAL_EXAMPLE_BOX_FILLET, LocalizedLabel::native("Box Fillet Preview", "Kantenrundung Vorschau"), procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_BOX_FILLET), "box")
+    .example(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, LocalizedLabel::native("Sphere Box Fuse", "Kugel und Quader vereinen"), procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE), "combine")
+    .example(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, LocalizedLabel::native("Face Sweep Extrude", "Fläche extrudieren"), procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE), "layers")
+    .example(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, LocalizedLabel::native("Rectangle Wire Preview", "Rechteck-Draht Vorschau"), procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE), "square")
+    .example(PROCEDURAL_EXAMPLE_BOX_SHELL, LocalizedLabel::native("Box Shell Preview", "Hohlkörper Vorschau"), procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_BOX_SHELL), "box")
     .workflow("procedural3d", "Procedural 3D", "brep")
 }
 //#endregion 🔖️Manifest

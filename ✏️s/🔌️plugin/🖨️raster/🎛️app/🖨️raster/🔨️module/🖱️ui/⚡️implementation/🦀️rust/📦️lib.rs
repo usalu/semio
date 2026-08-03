@@ -19,8 +19,8 @@ use semio_framework_plugin::{SurfaceKind,
     build_paint_2d_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, App, ActionDescriptor,
-    AppIo, AppLabelsOverlay, AppLabelsOverlayExt, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
-    Paint2dScene, ArtifactKindSpec, UtilityCategory, UtilityDefinition, WindowMeasure, localized_label_map,
+    AppIo, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
+    Paint2dScene, ArtifactKindSpec, Terminology, UtilityCategory, UtilityDefinition, WindowMeasure,
     tree_item_with_action,
     UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -57,8 +57,16 @@ fn is_de_locale(cfg: &RasterConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &RasterConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🌐️ `RasterConfig` carries no terminology axis — raster has no native/reuse vocabulary split, so
+/// every cell resolves `Terminology::Native`.
+fn raster_locale(cfg: &RasterConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ Resolves the active `RasterPlayLabels` cell from the config-carried locale via the SDK's
+/// two-axis `AppLabels::labels` (was the deleted `LocaleLabels::locale_labels_en/de`).
+fn resolve_labels<L: AppLabels>(cfg: &RasterConfig) -> &'static L {
+    L::labels(raster_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -107,44 +115,6 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_raster_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the builder chain.
-fn raster_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("addLayer", "Add Layer", "Ebene hinzufügen"),
-        ("setDocument", "Set Document", "Dokument festlegen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setCameraZoom", "Set Camera Zoom", "Kamerazoom festlegen"),
-        ("setLayerVisible", "Set Layer Visible", "Ebenensichtbarkeit festlegen"),
-        ("toggleLayerVisible", "Toggle Layer Visible", "Ebenensichtbarkeit umschalten"),
-        ("dropLayerKind", "Drop Layer Kind", "Ebenenart ablegen"),
-        ("deleteLayer", "Delete Layer", "Ebene löschen"),
-        ("duplicateLayer", "Duplicate Layer", "Ebene duplizieren"),
-        ("patchLayer", "Patch Layer", "Ebene aktualisieren"),
-        ("patchLayers", "Patch Layers", "Ebenen aktualisieren"),
-        ("moveLayer", "Move Layer", "Ebene verschieben"),
-        ("selectAll", "Select All", "Alles auswählen"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("setBrushSize", "Set Brush Size", "Pinselgröße festlegen"),
-        ("setBrushOpacity", "Set Brush Opacity", "Pinseldeckkraft festlegen"),
-        ("setCompositeViewport", "Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"),
-        ("setLocale", "Set Locale", "Sprache festlegen"),
-    ])
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_raster_app`.
-fn raster_utility_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("selectMarquee", "Marquee Select", "Rahmenauswahl"),
-        ("paintBrush", "Brush", "Pinsel"),
-        ("paintEraser", "Eraser", "Radiergummi"),
-    ])
-}
-//#endregion 🔖️CommandLabels
 //#endregion 🔖️Terminology
 
 //#region 🔖️Panels
@@ -185,7 +155,7 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
         dimmed: if layer_visible(layer) { None } else { Some(true) },
         ..tree_item_with_action(
             layer_row_id(layer),
-            layer_name(layer),
+            Label::data(layer_name(layer)),
             Some(description.into()),
             play_action(RASTER_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [layer_node_id(layer)] }))),
         )
@@ -225,7 +195,7 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterConfig, labels
         .map(|layer| vec![layer_row_id(layer)])
         .unwrap_or_default();
     PanelTreeBuilder::new(RASTER_TREE_PREFIX)
-        .section(RASTER_TREE_PREFIX, Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, [action_rows, layer_items].concat())
+        .section(RASTER_TREE_PREFIX, Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, [action_rows, layer_items].concat())
         .selected(selected_ids)
         .highlighted(highlighted_ids)
         .selection_change(play_action(RASTER_PLAY_CONTROLLER_ID, "setSelection", None))
@@ -243,7 +213,7 @@ fn render_masks_panel(document: &RasterDocument, runtime: &RasterConfig, labels:
                     icon_id: Some("scan".into()),
                     ..tree_item_with_action(
                         mask_row_id(id),
-                        format!("{name} {}", labels.mask_suffix),
+                        Label::data(format!("{name} {}", labels.mask_suffix.as_str())),
                         Some("mask".into()),
                         play_action(RASTER_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [id] }))),
                     )
@@ -293,8 +263,8 @@ fn render_properties_panel(document: &RasterDocument, runtime: &RasterConfig, la
         .collect();
     if layers.is_empty() {
         return ui_stack_vertical(vec![
-            ui_text(format!("{}: {}", labels.schema_prefix, document.schema)),
-            ui_text(format!("{}: {} @ {}", labels.brush_prefix, runtime.brush_size, runtime.brush_opacity)),
+            ui_text(Label::data(format!("{}: {}", labels.schema_prefix.as_str(), document.schema))),
+            ui_text(Label::data(format!("{}: {} @ {}", labels.brush_prefix.as_str(), runtime.brush_size, runtime.brush_opacity))),
         ]);
     }
     let names: Vec<String> = layers.iter().map(|layer| layer_name(*layer).into()).collect();
@@ -317,7 +287,7 @@ fn render_properties_panel(document: &RasterDocument, runtime: &RasterConfig, la
                 if mixed_opacity.uniform {
                     mixed_opacity.value.to_string()
                 } else {
-                    labels.mixed.to_string()
+                    labels.mixed.into()
                 },
             ),
         ],
@@ -670,21 +640,8 @@ impl DocumentApp for RasterPlayApp {
             RASTER_PLAY_BODY_MASKS => render_masks_panel(document, config, labels),
             RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
             RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(document, config, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, RasterConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<RasterPlayLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(RASTER_PLAY_WINDOW_COMPOSITE, labels.window_composite)
-            .window_kind_label(RASTER_PLAY_WINDOW_NAVIGATOR, labels.window_navigator)
-            .panel_tab_label(RASTER_PLAY_MASKS_TAB_ID, labels.masks)
-            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
-            .action_labels(raster_action_labels(is_de))
-            .utility_labels(raster_utility_labels(is_de))
-            .example_labels(HashMap::from([("semio".to_string(), "Semio".to_string())]))
     }
 }
 //#endregion 🔖️RasterPlayApp
@@ -692,19 +649,19 @@ impl DocumentApp for RasterPlayApp {
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the panel/pointer/gesture-bound vocabulary
 /// dispatched by the layer tree, catalogue drops and inspector, never a palette command.
-fn raster_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+fn raster_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 /// 🧰️ One composite-window utility declaration; ids must stay host-compatible (`paint*` prefix paints,
 /// `paintEraser` erases, `selectMarquee` selects) because the scene's active utility feeds `RasterHost`.
-fn raster_utility(id: &str, label: &str, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+fn raster_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 
 pub fn create_raster_app() -> App {
     App::from_builder(
-        App::builder(RASTER_PLAY_APP_ID, "Raster").document(["semio", "raster"])
+        App::builder(RASTER_PLAY_APP_ID, LocalizedLabel::native("Raster", "Raster")).document(["semio", "raster"])
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.raster".into(),
                 name: "2D Raster".into(),
@@ -733,10 +690,10 @@ pub fn create_raster_app() -> App {
                 import_formats: vec![OsMediaFormat::Png],
             })
             .icon_id("raster")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, "Composite", RASTER_PLAY_BODY_COMPOSITE, SurfaceKind::Paint2d, "image")
-            .window_kind(RASTER_PLAY_WINDOW_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_NAVIGATOR, SurfaceKind::Paint2d, "focus")
+            .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, LocalizedLabel::native("Composite", "Komposit"), RASTER_PLAY_BODY_COMPOSITE, SurfaceKind::Paint2d, "image")
+            .window_kind(RASTER_PLAY_WINDOW_NAVIGATOR, LocalizedLabel::native("Navigator", "Navigator"), RASTER_PLAY_BODY_NAVIGATOR, SurfaceKind::Paint2d, "focus")
             .default_layout(create_default_layout(
                 &[RASTER_PLAY_WINDOW_COMPOSITE.into(), RASTER_PLAY_WINDOW_NAVIGATOR.into()],
                 "row",
@@ -745,68 +702,68 @@ pub fn create_raster_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 RASTER_PLAY_BODY_LAYERS,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 RASTER_PLAY_BODY_CATALOGUE,
             )
-            .panel_tab(RASTER_PLAY_MASKS_TAB_ID, "Masks", PanelGroup::Workbench, RASTER_PLAY_BODY_MASKS)
+            .panel_tab(RASTER_PLAY_MASKS_TAB_ID, LocalizedLabel::native("Masks", "Masken"), PanelGroup::Workbench, RASTER_PLAY_BODY_MASKS)
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 RASTER_PLAY_BODY_PROPERTIES,
             )
             // ✏️ Palette-visible content operations.
-            .operation("addLayer", "Add Layer")
-            .operation("setDocument", "Set Document")
-            .operation("setActiveExample", "Set Active Example")
+            .operation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
+            .operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🔧️ Internal content operations — layer-tree / catalogue-drop / inspector bound.
-            .action_with(raster_internal_action("setLayerVisible", "Set Layer Visible", ActionKind::Operation))
-            .action_with(raster_internal_action("toggleLayerVisible", "Toggle Layer Visible", ActionKind::Operation))
-            .action_with(raster_internal_action("dropLayerKind", "Drop Layer Kind", ActionKind::Operation))
-            .action_with(raster_internal_action("deleteLayer", "Delete Layer", ActionKind::Operation))
-            .action_with(raster_internal_action("duplicateLayer", "Duplicate Layer", ActionKind::Operation))
-            .action_with(raster_internal_action("patchLayer", "Patch Layer", ActionKind::Operation))
-            .action_with(raster_internal_action("patchLayers", "Patch Layers", ActionKind::Operation))
-            .action_with(raster_internal_action("moveLayer", "Move Layer", ActionKind::Operation))
+            .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Operation))
+            .action_with(raster_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Operation))
+            .action_with(raster_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Operation))
+            .action_with(raster_internal_action("deleteLayer", LocalizedLabel::native("Delete Layer", "Ebene löschen"), ActionKind::Operation))
+            .action_with(raster_internal_action("duplicateLayer", LocalizedLabel::native("Duplicate Layer", "Ebene duplizieren"), ActionKind::Operation))
+            .action_with(raster_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Operation))
+            .action_with(raster_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Operation))
+            .action_with(raster_internal_action("moveLayer", LocalizedLabel::native("Move Layer", "Ebene verschieben"), ActionKind::Operation))
             // 👁️ Ephemeral view state — selection, hover, live brush controls, navigator viewport, camera.
-            .view_action("selectAll", "Select All")
-            .action_with(raster_internal_action("setSelection", "Set Selection", ActionKind::View))
-            .action_with(raster_internal_action("setHover", "Set Hover", ActionKind::View))
-            .action_with(raster_internal_action("setBrushSize", "Set Brush Size", ActionKind::View))
-            .action_with(raster_internal_action("setBrushOpacity", "Set Brush Opacity", ActionKind::View))
-            .action_with(raster_internal_action("setCompositeViewport", "Set Composite Viewport", ActionKind::View))
-            .action_with(raster_internal_action("setCamera", "Set Camera", ActionKind::View))
-            .action_with(raster_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::View))
-            .action_with(raster_internal_action("setLocale", "Set Locale", ActionKind::View))
+            .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
+            .action_with(raster_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
+            .action_with(raster_internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
+            .action_with(raster_internal_action("setBrushSize", LocalizedLabel::native("Set Brush Size", "Pinselgröße festlegen"), ActionKind::View))
+            .action_with(raster_internal_action("setBrushOpacity", LocalizedLabel::native("Set Brush Opacity", "Pinseldeckkraft festlegen"), ActionKind::View))
+            .action_with(raster_internal_action("setCompositeViewport", LocalizedLabel::native("Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"), ActionKind::View))
+            .action_with(raster_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_with(raster_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
+            .action_with(raster_internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📝️ Staged palette-form arguments for the two palette operations.
             .action_args("addLayer", vec![
-                ActionArgDef::select("kind", "Layer Kind", vec![
-                    ActionArgOption::new("pixel", "Pixel"),
-                    ActionArgOption::new("group", "Group"),
-                    ActionArgOption::new("adjustment", "Adjustment"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Layer Kind", "Ebenenart"), vec![
+                    ActionArgOption::new("pixel", LocalizedLabel::native("Pixel", "Pixel")),
+                    ActionArgOption::new("group", LocalizedLabel::native("Group", "Gruppe")),
+                    ActionArgOption::new("adjustment", LocalizedLabel::native("Adjustment", "Anpassung")),
                 ]).required().default_value("pixel"),
             ])
             .action_args("setDocument", vec![
-                ActionArgDef::text("document", "Document"),
+                ActionArgDef::text("document", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument")),
             ])
             // 🧰️ Composite-window utilities — one exclusive set, active utility host-owned (never a document operation).
-            .utility(raster_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
-            .utility(raster_utility("paintBrush", "Brush", "paintbrush", "Paint", UtilityCategory::Utilities))
-            .utility(raster_utility("paintEraser", "Eraser", "eraser", "Paint", UtilityCategory::Utilities))
+            .utility(raster_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
+            .utility(raster_utility("paintBrush", LocalizedLabel::native("Brush", "Pinsel"), "paintbrush", "Paint", UtilityCategory::Utilities))
+            .utility(raster_utility("paintEraser", LocalizedLabel::native("Eraser", "Radiergummi"), "eraser", "Paint", UtilityCategory::Utilities))
             .window_kind_utilities(RASTER_PLAY_WINDOW_COMPOSITE, vec![
                 "selectMarquee".into(), "paintBrush".into(), "paintEraser".into(),
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("semio", "Semio", semio_example_json(), "sparkles")
+    .example("semio", LocalizedLabel::data("Semio"), semio_example_json(), "sparkles")
     .workflow("raster", "Raster", "2d.raster")
 }
 //#endregion 🔖️Manifest

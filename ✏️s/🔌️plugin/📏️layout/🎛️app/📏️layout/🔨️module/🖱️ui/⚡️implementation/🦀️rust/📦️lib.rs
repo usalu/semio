@@ -12,12 +12,12 @@ use layout_op::{LayoutConfigOperation, LayoutOperation};
 use layout_protocol::LayoutCommand;
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{SurfaceKind,
-    build_canvas_2d_scene, create_default_layout, engagement_token_matches, localized_label_map,
+    build_canvas_2d_scene, create_default_layout, engagement_token_matches,
     tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
-    ActionArgOption, ActionDefinition, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt,
-    Canvas2dScene, ActionDescriptor, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec,
-    IconName, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
+    ActionArgOption, ActionDefinition, ActionKind, App, AppLabels,
+    Canvas2dScene, ActionDescriptor, ConfigView, DocumentApp, DocumentView, Emit, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec,
+    IconName, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
     WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -555,8 +555,16 @@ fn is_de_locale(cfg: &LayoutConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &LayoutConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🌐️ `LayoutConfig` carries no terminology axis (unlike `CadConfig::terminology`) — layout has no
+/// native/reuse vocabulary split, so every cell resolves `Terminology::Native`.
+fn layout_locale(cfg: &LayoutConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
+/// `AppLabels::labels` (was the deleted `LocaleLabels::locale_labels_en/de`).
+fn resolve_labels<L: AppLabels>(cfg: &LayoutConfig) -> &'static L {
+    L::labels(layout_locale(cfg), Terminology::Native)
 }
 
 /// 🗣️ Resolves the active label set from the config-carried locale; unknown locales fall back to native English.
@@ -565,18 +573,18 @@ fn layout_labels(cfg: &LayoutConfig) -> &'static LayoutLabels {
 }
 
 /// 🗣️ Resolves a catalogue frame kind's display label from its stable id; unknown kinds fall back to the kind id itself.
-fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> &'static str {
+fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> Label {
     match kind {
-        "rect" => labels.kind_rect,
-        "text" => labels.kind_text,
-        "image" => labels.kind_image,
-        _ => kind,
+        "rect" => labels.kind_rect.into(),
+        "text" => labels.kind_text.into(),
+        "image" => labels.kind_image.into(),
+        _ => Label::data(kind),
     }
 }
 
 /// 🗣️ Fills a localized preflight message template's positional `{}` placeholders, in order, with the given values.
-fn preflight_msg(template: &str, args: &[&str]) -> String {
-    let mut result = template.to_string();
+fn preflight_msg(template: LabelText, args: &[&str]) -> String {
+    let mut result = template.as_str().to_string();
     for arg in args {
         result = result.replacen("{}", arg, 1);
     }
@@ -584,52 +592,13 @@ fn preflight_msg(template: &str, args: &[&str]) -> String {
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_layout_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn layout_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addFrame", "Add Frame", "Rahmen hinzufügen"),
-        ("addPage", "Add Page", "Seite hinzufügen"),
-        ("exportPng", "Export Png", "Png exportieren"),
-        ("exportSvg", "Export Svg", "Svg exportieren"),
-        ("exportPdf", "Export Pdf", "Pdf exportieren"),
-        ("exportPackage", "Export Package", "Paket exportieren"),
-        ("patchPage", "Patch Page", "Seite aktualisieren"),
-        ("patchFrame", "Patch Frame", "Rahmen aktualisieren"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("canvasDrop", "Canvas Drop", "Ablegen auf Leinwand"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setActivePage", "Set Active Page", "Aktive Seite festlegen"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("focusPreflightIssue", "Focus Preflight Issue", "Preflight-Problem fokussieren"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
-        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegen"),
-        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
-        ("canvasDragOver", "Canvas Drag Over", "Ziehen über Leinwand"),
-        ("canvasDragLeave", "Canvas Drag Leave", "Ziehen verlässt Leinwand"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_layout_app`.
-/// The layout app currently declares no utilities, so this returns an empty map — kept for parity with the
-/// other crates' overlay-wiring shape and to compile-check the moment a utility is added.
-fn layout_utility_labels(_is_de: bool) -> HashMap<String, String> {
-    HashMap::new()
-}
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️Panels
 /// 🌳️ Layout's row shape (id/label/description/icon/optional-action) over the SDK's
 /// `tree_item_desc`/`tree_item_with_action` — the icon assignment is the only bit the SDK helpers
 /// don't cover, since not every plugin's rows carry one.
 fn layout_tree_item(
     id: impl Into<String>,
-    label: impl Into<String>,
+    label: impl Into<Label>,
     description: Option<String>,
     icon_id: Option<String>,
     action: Option<ActionDescriptor>,
@@ -646,7 +615,7 @@ fn layout_tree_item(
 /// used by the document tree's page and frame rows to drive canvas hover highlighting.
 fn layout_tree_item_hoverable(
     id: impl Into<String>,
-    label: impl Into<String>,
+    label: impl Into<Label>,
     description: Option<String>,
     icon_id: Option<String>,
     action: Option<ActionDescriptor>,
@@ -663,7 +632,7 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
     let spread_items: Vec<UiTreeItemNode> = doc
         .spreads
         .iter()
-        .map(|spread| layout_tree_item(spread_row_id(&spread.id), spread.name.clone(), Some(spread.page_ids.join(", ")), Some("layout".into()), None))
+        .map(|spread| layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None))
         .collect();
 
     let page_items: Vec<UiTreeItemNode> = doc
@@ -672,8 +641,8 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
         .map(|page| {
             layout_tree_item_hoverable(
                 page_row_id(&page.id),
-                page.name.clone(),
-                page.parent_page_id.as_ref().map(|parent_id| format!("{}: {parent_id}", labels.parent)),
+                Label::data(page.name.clone()),
+                page.parent_page_id.as_ref().map(|parent_id| format!("{}: {parent_id}", labels.parent.as_str())),
                 Some("file".into()),
                 Some(layout_action("setActivePage", Some(json!({ "pageId": page.id })))),
                 &page.id,
@@ -688,7 +657,7 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
             page.frames.iter().map(move |frame| {
                 layout_tree_item_hoverable(
                     frame_row_id(frame.id()),
-                    frame.id(),
+                    Label::data(frame.id()),
                     Some(format!("{} · {}", page.name, frame.kind_str())),
                     Some(frame_icon(frame.kind_str()).into()),
                     Some(layout_action("setSelection", Some(json!({ "ids": [frame.id()] })))),
@@ -709,7 +678,7 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
         .map(|parent| {
             layout_tree_item(
                 parent_page_row_id(&parent.id),
-                parent.name.clone(),
+                Label::data(parent.name.clone()),
                 Some(format!("{}×{}", parent.width as i64, parent.height as i64)),
                 Some("copy".into()),
                 None,
@@ -724,8 +693,8 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
             page.layers.iter().map(move |layer| {
                 layout_tree_item(
                     layer_row_id(&page.id, &layer.id),
-                    format!("{} · {}", page.name, layer.name),
-                    Some(format!("{} {}", layer.object_ids.len(), labels.objects)),
+                    Label::data(format!("{} · {}", page.name, layer.name)),
+                    Some(format!("{} {}", layer.object_ids.len(), labels.objects.as_str())),
                     Some("layers".into()),
                     None,
                 )
@@ -736,7 +705,7 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
     let story_items: Vec<UiTreeItemNode> = doc
         .stories
         .iter()
-        .map(|story| layout_tree_item(story_row_id(&story.id), story.id.clone(), Some(format!("{} {}", story.content.chars().count(), labels.chars)), Some("file-text".into()), None))
+        .map(|story| layout_tree_item(story_row_id(&story.id), Label::data(story.id.clone()), Some(format!("{} {}", story.content.chars().count(), labels.chars.as_str())), Some("file-text".into()), None))
         .collect();
 
     let link_items: Vec<UiTreeItemNode> = doc
@@ -754,7 +723,7 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
                 .collect();
             layout_tree_item(
                 link_row_id(&link.id),
-                link.path.clone(),
+                Label::data(link.path.clone()),
                 Some(link.state.clone().unwrap_or_else(|| "ok".into())),
                 Some("link".into()),
                 (!referencing_ids.is_empty()).then(|| layout_action("setSelection", Some(json!({ "ids": referencing_ids })))),
@@ -768,7 +737,7 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
         .map(|style| {
             layout_tree_item(
                 style_row_id(&style.id),
-                style.name.clone(),
+                Label::data(style.name.clone()),
                 Some(format!("{} · {}pt", style.font_family, style.font_size as i64)),
                 Some("type".into()),
                 None,
@@ -782,7 +751,7 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
             Some(size) => format!("{font_family} · {}pt", size as i64),
             None => font_family.to_string(),
         };
-        layout_tree_item(style_row_id(&style.id), name, Some(description), Some("type".into()), None)
+        layout_tree_item(style_row_id(&style.id), Label::data(name), Some(description), Some("type".into()), None)
     }));
 
     let highlighted_ids: Vec<String> = config
@@ -795,10 +764,10 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
             "layout-document.document",
             Some(labels.document.into()),
             true,
-            vec![layout_tree_item("layout-document.document.root", doc.name.clone(), Some(LAYOUT_FIXTURE_SCHEMA.into()), Some("file-text".into()), None)],
+            vec![layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_FIXTURE_SCHEMA.into()), Some("file-text".into()), None)],
         )
         .section("layout-document.spreads", Some(labels.spreads.into()), false, spread_items)
-        .section("layout-document.pages", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, page_items)
+        .section("layout-document.pages", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, page_items)
         .section("layout-document.frames", Some(labels.frames.into()), true, frame_items)
         .section("layout-document.parentPages", Some(labels.parent_pages.into()), false, parent_page_items)
         .section("layout-document.layers", Some(labels.layers.into()), false, layer_items)
@@ -813,7 +782,7 @@ fn build_document_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &Lay
     builder.build()
 }
 
-fn catalogue_tree_item(kind: &str, label: &str, icon: &str) -> UiTreeItemNode {
+fn catalogue_tree_item(kind: &str, label: impl Into<Label>, icon: &str) -> UiTreeItemNode {
     let action = if kind == "page" { layout_action("addPage", None) } else { layout_action("addFrame", Some(json!({ "kind": kind }))) };
     let mut drag_data_entries = serde_json::Map::new();
     drag_data_entries.insert(LAYOUT_CATALOGUE_DRAG_MIME.to_string(), json!(json!({ "kind": kind }).to_string()));
@@ -828,7 +797,7 @@ fn build_catalogue_tree(labels: &LayoutLabels) -> UiNode {
     let mut items = vec![catalogue_tree_item("page", labels.catalogue_page, "file")];
     items.extend(LAYOUT_CATALOGUE_KINDS.iter().map(|(kind, icon)| catalogue_tree_item(kind, catalogue_kind_label(kind, labels), icon)));
     PanelTreeBuilder::new("layout-catalogue")
-        .section("layout-catalogue.kinds", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, items)
+        .section("layout-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)
         .build()
 }
 
@@ -836,13 +805,13 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
     if config.selected_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "layout-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![
-                ui_text(format!("{}: {}", labels.schema, LAYOUT_FIXTURE_SCHEMA)),
-                ui_text(format!("{}: {}", labels.name, doc.name)),
-                ui_text(format!("{}: {}", labels.pages, doc.pages.len())),
-                ui_text(format!("{}: {}", labels.active_page, config.active_page_id)),
+                ui_text(Label::data(format!("{}: {}", labels.schema.as_str(), LAYOUT_FIXTURE_SCHEMA))),
+                ui_text(Label::data(format!("{}: {}", labels.name.as_str(), doc.name))),
+                ui_text(Label::data(format!("{}: {}", labels.pages.as_str(), doc.pages.len()))),
+                ui_text(Label::data(format!("{}: {}", labels.active_page.as_str(), config.active_page_id))),
             ],
             presence: UiPresence::default(),
             menu: None,
@@ -985,7 +954,7 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
                                 id: format!("layout-play-inspector.frame-{field}.input"),
                                 input_kind: "text".into(),
                                 value: rgba_to_text(value),
-                                placeholder: Some("r, g, b, a".into()),
+                                placeholder: Some(Label::data("r, g, b, a")),
                                 commit: Some("blur".into()),
                                 on_change: layout_action(
                                     "patchFrame",
@@ -1118,7 +1087,7 @@ fn build_inspector_tree(doc: &LayoutDocument, config: &LayoutConfig, labels: &La
     }
     ui_declarative_sections_to_tree(&[UiSectionNode {
         id: "layout-play-inspector.missing".into(),
-        label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+        label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
         default_open: Some(true),
         children: vec![ui_text(labels.selection_not_found)],
         presence: UiPresence::default(),
@@ -1140,7 +1109,7 @@ fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {
                         issue.code,
                         issue.object_id.clone().unwrap_or_else(|| issue.message.clone())
                     ),
-                    issue.message.clone(),
+                    Label::data(issue.message.clone()),
                     Some(format!("{} · {}", issue.severity, issue.code)),
                     Some(if issue.severity == "error" {
                         "alert-circle"
@@ -1175,7 +1144,7 @@ fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutL
         controls: None,
         status: Some(vec![WindowEngagementStatus {
             id: format!("layout-status-{label}"),
-            text: format!("{} {}", labels.page, config.active_page_id),
+            text: format!("{} {}", labels.page.as_str(), config.active_page_id),
         }]),
         possible_engagements: Some(vec![
             WindowEngagementPossible { id: "layout.eng.undo".into(), label: labels.undo.into(), detail: None, action: Some(layout_action("undo", None)) },
@@ -1598,7 +1567,7 @@ impl DocumentApp for LayoutPlayApp {
             LAYOUT_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(document, config, labels),
             LAYOUT_PLAY_BODY_PREFLIGHT => build_preflight_tree(document, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -1611,32 +1580,19 @@ impl DocumentApp for LayoutPlayApp {
         ])
     }
 
-    fn app_labels(&self, cfg: &ConfigView<'_, LayoutConfig>) -> AppLabelsOverlay {
-        let config = cfg.projection;
-        let labels = layout_labels(config);
-        let is_de = is_de_locale(config);
-        AppLabelsOverlay::default()
-            .window_kind_label(LAYOUT_PLAY_WINDOW_BLUEPRINT, labels.window_blueprint)
-            .window_kind_label(LAYOUT_PLAY_WINDOW_PREVIEW, labels.window_preview)
-            .panel_tab_label(LAYOUT_PLAY_PREFLIGHT_TAB_ID, labels.preflight)
-            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
-            .action_labels(layout_action_labels(is_de))
-            .utility_labels(layout_utility_labels(is_de))
-            .example_labels(HashMap::from([("sample".to_string(), (if is_de { "Beispiel" } else { "Sample" }).to_string())]))
-    }
 }
 //#endregion 🔖️LayoutPlayApp
 
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
 /// vocabulary dispatched by the canvas and panels, never surfaced as a standalone palette command.
-fn layout_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+fn layout_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 pub fn create_layout_app() -> App {
     App::from_builder(
-        App::builder(LAYOUT_PLAY_APP_ID, "Layout").document(["semio", "layout"])
+        App::builder(LAYOUT_PLAY_APP_ID, LocalizedLabel::native("Layout", "Layout")).document(["semio", "layout"])
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.layout".into(),
                 name: "Layout".into(),
@@ -1650,10 +1606,10 @@ pub fn create_layout_app() -> App {
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("layout")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::Canvas2d, "layout")
-            .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "preview")
+            .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, LocalizedLabel::native("Blueprint", "Entwurf"), LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::Canvas2d, "layout")
+            .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, LocalizedLabel::native("Preview", "Vorschau"), LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "preview")
             .default_layout(create_default_layout(
                 &[LAYOUT_PLAY_WINDOW_BLUEPRINT.into(), LAYOUT_PLAY_WINDOW_PREVIEW.into()],
                 "row",
@@ -1662,58 +1618,58 @@ pub fn create_layout_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 LAYOUT_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 LAYOUT_PLAY_BODY_CATALOGUE,
             )
-            .panel_tab(LAYOUT_PLAY_PREFLIGHT_TAB_ID, "Preflight", PanelGroup::Workbench, LAYOUT_PLAY_BODY_PREFLIGHT)
+            .panel_tab(LAYOUT_PLAY_PREFLIGHT_TAB_ID, LocalizedLabel::native("Preflight", "Preflight"), PanelGroup::Workbench, LAYOUT_PLAY_BODY_PREFLIGHT)
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 LAYOUT_PLAY_BODY_INSPECTION,
             )
             // ✏️ Palette-visible content commands — dispatched as VCS operations with a true inverse.
-            .operation("addFrame", "Add Frame")
-            .operation("addPage", "Add Page")
+            .operation("addFrame", LocalizedLabel::native("Add Frame", "Rahmen hinzufügen"))
+            .operation("addPage", LocalizedLabel::native("Add Page", "Seite hinzufügen"))
             .action_args("addFrame", vec![
-                ActionArgDef::select("kind", "Kind", vec![
-                    ActionArgOption::new("rect", "Rectangle"),
-                    ActionArgOption::new("text", "Text Frame"),
-                    ActionArgOption::new("image", "Image Frame"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
+                    ActionArgOption::new("rect", LocalizedLabel::native("Rectangle", "Rechteck")),
+                    ActionArgOption::new("text", LocalizedLabel::native("Text Frame", "Textrahmen")),
+                    ActionArgOption::new("image", LocalizedLabel::native("Image Frame", "Bildrahmen")),
                 ]).default_value("rect"),
-                ActionArgDef::number("x", "X"),
-                ActionArgDef::number("y", "Y"),
+                ActionArgDef::number("x", LocalizedLabel::native("X", "X")),
+                ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")),
             ])
             // 🐚️ Palette-visible shell exports — round-trip through the host.
-            .shell_action("exportPng", "Export Png")
-            .shell_action("exportSvg", "Export Svg")
-            .shell_action("exportPdf", "Export Pdf")
-            .shell_action("exportPackage", "Export Package")
+            .shell_action("exportPng", LocalizedLabel::native("Export Png", "Png exportieren"))
+            .shell_action("exportSvg", LocalizedLabel::native("Export Svg", "Svg exportieren"))
+            .shell_action("exportPdf", LocalizedLabel::native("Export Pdf", "Pdf exportieren"))
+            .shell_action("exportPackage", LocalizedLabel::native("Export Package", "Paket exportieren"))
             // 🔧️ Internal document operations — inspector/DnD-bound, not palette commands.
-            .action_with(layout_internal_action("patchPage", "Patch Page", ActionKind::Operation))
-            .action_with(layout_internal_action("patchFrame", "Patch Frame", ActionKind::Operation))
-            .action_with(layout_internal_action("canvasDrop", "Canvas Drop", ActionKind::Operation))
+            .action_with(layout_internal_action("patchPage", LocalizedLabel::native("Patch Page", "Seite aktualisieren"), ActionKind::Operation))
+            .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Operation))
+            .action_with(layout_internal_action("canvasDrop", LocalizedLabel::native("Canvas Drop", "Ablegen auf Leinwand"), ActionKind::Operation))
             // 👁️ Ephemeral view state — selection, hover, active page, drop ghost, pointer, camera, engagement draft.
-            .action_with(layout_internal_action("setSelection", "Set Selection", ActionKind::View))
-            .action_with(layout_internal_action("setActivePage", "Set Active Page", ActionKind::View))
-            .action_with(layout_internal_action("setHover", "Set Hover", ActionKind::View))
-            .action_with(layout_internal_action("focusPreflightIssue", "Focus Preflight Issue", ActionKind::View))
-            .action_with(layout_internal_action("engagementInput", "Engagement Input", ActionKind::View))
-            .action_with(layout_internal_action("canvasPointerDown", "Canvas Pointer Down", ActionKind::View))
-            .action_with(layout_internal_action("canvasPointerMove", "Canvas Pointer Move", ActionKind::View))
-            .action_with(layout_internal_action("canvasPointerUp", "Canvas Pointer Up", ActionKind::View))
-            .action_with(layout_internal_action("canvasDragOver", "Canvas Drag Over", ActionKind::View))
-            .action_with(layout_internal_action("canvasDragLeave", "Canvas Drag Leave", ActionKind::View))
-            .action_with(layout_internal_action("setCamera", "Set Camera", ActionKind::View))
+            .action_with(layout_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
+            .action_with(layout_internal_action("setActivePage", LocalizedLabel::native("Set Active Page", "Aktive Seite festlegen"), ActionKind::View))
+            .action_with(layout_internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
+            .action_with(layout_internal_action("focusPreflightIssue", LocalizedLabel::native("Focus Preflight Issue", "Preflight-Problem fokussieren"), ActionKind::View))
+            .action_with(layout_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
+            .action_with(layout_internal_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::View))
+            .action_with(layout_internal_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View))
+            .action_with(layout_internal_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::View))
+            .action_with(layout_internal_action("canvasDragOver", LocalizedLabel::native("Canvas Drag Over", "Ziehen über Leinwand"), ActionKind::View))
+            .action_with(layout_internal_action("canvasDragLeave", LocalizedLabel::native("Canvas Drag Leave", "Ziehen verlässt Leinwand"), ActionKind::View))
+            .action_with(layout_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
             // 🐚️ Engagement submit — routes typed export intents through the host, emits only shell effects.
-            .action_with(layout_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Shell))
+            .action_with(layout_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Shell))
             // 📇️ Per-window action scoping — the content-authoring operations only make sense on the
             // interactive Blueprint surface; the read-only Preview surface renders output and never
             // creates or edits frames/pages. Exports, camera, pointer/drag, selection and hover are
@@ -1727,7 +1683,7 @@ pub fn create_layout_app() -> App {
             .config(LayoutPlayApp::default().config_spec())
             .io(layout_engine::layout_io()),
     )
-    .example("sample", "Sample", layout_engine::layout_sample_document_json(), "cylinder")
+    .example("sample", LocalizedLabel::native("Sample", "Beispiel"), layout_engine::layout_sample_document_json(), "cylinder")
     .workflow("layout", "Layout", "layout")
 }
 //#endregion 🔖️Manifest
@@ -2084,7 +2040,7 @@ mod tests {
 
     #[test]
     fn preflight_finds_missing_asset() {
-        let issues = run_layout_preflight(&layout_engine::default_document(), &LayoutLabels::EN);
+        let issues = run_layout_preflight(&layout_engine::default_document(), LayoutLabels::labels(Locale::En, Terminology::Native));
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
         let mut app = new_app();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT);
@@ -2448,7 +2404,7 @@ mod tests {
         if let Some(story) = doc.stories.iter_mut().find(|story| story.id == "story-overset") {
             story.content = "a".repeat(450);
         }
-        let issues = run_layout_preflight(&doc, &LayoutLabels::EN);
+        let issues = run_layout_preflight(&doc, LayoutLabels::labels(Locale::En, Terminology::Native));
         let codes: Vec<&str> = issues.iter().map(|issue| issue.code.as_str()).collect();
         for expected in [
             "object.out_of_bounds",

@@ -28,9 +28,9 @@ use remodel_app_engine::{RemodelConfig, RemodelFrameCursor, RemodelLayerVisibili
 use remodel_op::{RemodelConfigOperation, RemodelOperation};
 use remodel_protocol::RemodelCommand;
 use semio_framework_plugin::{
-    app_labels, build_canvas_2d_scene, build_table_scene, build_world_3d_scene, create_default_layout, create_named_layout, localized_label_map, mesh_from_kind, ui_import_drop_zone, ui_stack_vertical, ui_text,
-    world3d_camera_json, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, ConfigView, DocumentApp, DocumentView,
-    Emit, GlbExporter, HostEffect, LocaleLabels, Media, MediaClass, MediaError, MediaPayload, MediaType, MeshData, MeshExporter, OsMediaCapability, OsMediaFormat, PanelGroup, ArtifactKindSpec, SurfaceKind, TableScene, UiNode, UtilityCategory, UtilityDefinition, WorldSunConfig,
+    app_labels, build_canvas_2d_scene, build_table_scene, build_world_3d_scene, create_default_layout, create_named_layout, mesh_from_kind, ui_import_drop_zone, ui_stack_vertical, ui_text,
+    world3d_camera_json, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, Canvas2dScene, ConfigView, DocumentApp, DocumentView,
+    Emit, GlbExporter, HostEffect, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaPayload, MediaType, MeshData, MeshExporter, OsMediaCapability, OsMediaFormat, PanelGroup, ArtifactKindSpec, SurfaceKind, TableScene, Terminology, UiNode, UtilityCategory, UtilityDefinition, WorldSunConfig,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde_json::{json, Value};
@@ -348,99 +348,104 @@ app_labels! {
     /// (video/reconstruction/mesh/vertices/triangles) do not map onto the Object/Vortex/Attraction
     /// reuse vocabulary. House convention: no umlauts in German strings (ae/oe/ue/ss).
     struct RemodelLabels {
-        model: &'static str = en: "Model", de: "Modell";
-        capture: &'static str = en: "Capture", de: "Aufnahme";
-        analyze: &'static str = en: "Analyze", de: "Analyse";
-        default_example: &'static str = en: "Default", de: "Standard";
-        reconstruction: &'static str = en: "Reconstruction", de: "Rekonstruktion";
-        error: &'static str = en: "error", de: "Fehler";
-        status: &'static str = en: "Status", de: "Status";
-        running: &'static str = en: "Running", de: "Läuft";
-        idle: &'static str = en: "Idle", de: "Leerlauf";
-        utility: &'static str = en: "Utility", de: "Werkzeug";
-        selection: &'static str = en: "selection", de: "Auswahl";
-        mesh: &'static str = en: "Mesh", de: "Mesh";
-        vertices: &'static str = en: "vertices", de: "Vertices";
-        triangles: &'static str = en: "triangles", de: "Dreiecke";
-        streams: &'static str = en: "Streams", de: "Streams";
-        assets: &'static str = en: "Assets", de: "Assets";
-        no_streams: &'static str = en: "No media streams imported yet", de: "Noch keine Medien-Streams importiert";
-        stream_kind_video: &'static str = en: "video", de: "Video";
-        stream_kind_image_sequence: &'static str = en: "image sequence", de: "Bildsequenz";
-        frames: &'static str = en: "frames", de: "Frames";
-        sync_offset: &'static str = en: "sync offset", de: "Sync-Versatz";
-        sparse_cloud: &'static str = en: "Sparse point cloud", de: "Dünne Punktwolke";
-        dense_cloud: &'static str = en: "Dense point cloud", de: "Dichte Punktwolke";
-        results_none: &'static str = en: "none", de: "keine";
-        trajectory: &'static str = en: "Trajectory", de: "Trajektorie";
-        poses: &'static str = en: "poses", de: "Posen";
-        geo_products: &'static str = en: "Geo products", de: "Geo-Produkte";
-        available: &'static str = en: "available", de: "verfügbar";
-        params_ingest: &'static str = en: "Ingest", de: "Ingest";
-        params_feature: &'static str = en: "Feature", de: "Feature";
-        params_matching: &'static str = en: "Matching", de: "Matching";
-        params_sfm: &'static str = en: "SfM", de: "SfM";
-        params_dense: &'static str = en: "Dense", de: "Dense";
-        params_mesh: &'static str = en: "Mesh", de: "Mesh";
-        params_motion: &'static str = en: "Motion", de: "Bewegung";
-        params_geo: &'static str = en: "Geo", de: "Geo";
-        stride_short: &'static str = en: "stride", de: "Schrittweite";
-        max_short: &'static str = en: "max", de: "max";
-        downscale_short: &'static str = en: "downscale", de: "Verkleinerung";
-        target_short: &'static str = en: "target", de: "Ziel";
-        octaves_short: &'static str = en: "octaves", de: "Oktaven";
-        ratio_short: &'static str = en: "ratio", de: "Verhältnis";
-        window_short: &'static str = en: "window", de: "Fenster";
-        ransac_short: &'static str = en: "ransac", de: "Ransac";
-        min_track_short: &'static str = en: "min track", de: "min. Spur";
-        ba_short: &'static str = en: "ba", de: "BA";
-        voxel_short: &'static str = en: "voxel", de: "Voxel";
-        enabled: &'static str = en: "enabled", de: "aktiviert";
-        disabled: &'static str = en: "disabled", de: "deaktiviert";
-        cameras_calibrated: &'static str = en: "Calibrated cameras", de: "Kalibrierte Kameras";
-        rig_extrinsics: &'static str = en: "Rig extrinsics", de: "Rig-Extrinsik";
-        gcps: &'static str = en: "Ground control points", de: "Passpunkte";
-        tracks: &'static str = en: "Motion tracks", de: "Bewegungsspuren";
-        tracks_none: &'static str = en: "No motion tracks", de: "Keine Bewegungsspuren";
-        motion_not_implemented: &'static str = en: "Motion tracking is not yet driven by the reconstruction engine", de: "Bewegungsverfolgung wird von der Rekonstruktions-Engine noch nicht ausgeführt";
-        qc_none: &'static str = en: "No quality report yet", de: "Noch kein Qualitätsbericht";
-        qc_reprojection: &'static str = en: "Mean reprojection error", de: "Mittlerer Reprojektionsfehler";
-        qc_track_length: &'static str = en: "Mean track length", de: "Mittlere Spurlänge";
-        qc_registered_ratio: &'static str = en: "Registered frame ratio", de: "Anteil registrierter Frames";
-        qc_dense_coverage: &'static str = en: "Dense coverage ratio", de: "Dense-Abdeckungsanteil";
-        qc_gcp_rmse: &'static str = en: "GCP checkpoint RMSE", de: "Passpunkt-Kontroll-RMSE";
-        qc_watertight: &'static str = en: "Watertight", de: "Wasserdicht";
-        qc_boundary_edges: &'static str = en: "Boundary edges", de: "Ränder";
-        qc_components: &'static str = en: "Connected components", de: "Zusammenhangskomponenten";
-        qc_euler: &'static str = en: "Euler characteristic", de: "Euler-Charakteristik";
-        qc_genus: &'static str = en: "Genus", de: "Genus";
-        qc_closed_fallback: &'static str = en: "Closed via fallback", de: "Über Fallback geschlossen";
-        panel_media: &'static str = en: "Media", de: "Medien";
-        panel_pipeline: &'static str = en: "Pipeline", de: "Pipeline";
-        panel_results: &'static str = en: "Results", de: "Ergebnisse";
-        panel_parameters: &'static str = en: "Parameters", de: "Parameter";
-        panel_calibration: &'static str = en: "Calibration", de: "Kalibrierung";
-        panel_tracks: &'static str = en: "Tracks", de: "Spuren";
-        panel_qc: &'static str = en: "Quality", de: "Qualität";
-        window_frames: &'static str = en: "Frames", de: "Frames";
-        window_report: &'static str = en: "Report", de: "Bericht";
-        layers: &'static str = en: "Layers", de: "Ebenen";
-        layer_mesh: &'static str = en: "Mesh", de: "Mesh";
-        layer_dense: &'static str = en: "Dense cloud", de: "Dichte Punktwolke";
-        layer_sparse: &'static str = en: "Sparse cloud", de: "Dünne Punktwolke";
-        layer_cameras: &'static str = en: "Cameras", de: "Kameras";
-        layer_gcps: &'static str = en: "GCPs", de: "Passpunkte";
+        model: native_en "Model", native_de "Modell", reuse_en "Model", reuse_de "Modell";
+        capture: native_en "Capture", native_de "Aufnahme", reuse_en "Capture", reuse_de "Aufnahme";
+        analyze: native_en "Analyze", native_de "Analyse", reuse_en "Analyze", reuse_de "Analyse";
+        default_example: native_en "Default", native_de "Standard", reuse_en "Default", reuse_de "Standard";
+        reconstruction: native_en "Reconstruction", native_de "Rekonstruktion", reuse_en "Reconstruction", reuse_de "Rekonstruktion";
+        error: native_en "error", native_de "Fehler", reuse_en "error", reuse_de "Fehler";
+        status: native_en "Status", native_de "Status", reuse_en "Status", reuse_de "Status";
+        running: native_en "Running", native_de "Läuft", reuse_en "Running", reuse_de "Läuft";
+        idle: native_en "Idle", native_de "Leerlauf", reuse_en "Idle", reuse_de "Leerlauf";
+        utility: native_en "Utility", native_de "Werkzeug", reuse_en "Utility", reuse_de "Werkzeug";
+        selection: native_en "selection", native_de "Auswahl", reuse_en "selection", reuse_de "Auswahl";
+        mesh: native_en "Mesh", native_de "Mesh", reuse_en "Mesh", reuse_de "Mesh";
+        vertices: native_en "vertices", native_de "Vertices", reuse_en "vertices", reuse_de "Vertices";
+        triangles: native_en "triangles", native_de "Dreiecke", reuse_en "triangles", reuse_de "Dreiecke";
+        streams: native_en "Streams", native_de "Streams", reuse_en "Streams", reuse_de "Streams";
+        assets: native_en "Assets", native_de "Assets", reuse_en "Assets", reuse_de "Assets";
+        no_streams: native_en "No media streams imported yet", native_de "Noch keine Medien-Streams importiert", reuse_en "No media streams imported yet", reuse_de "Noch keine Medien-Streams importiert";
+        stream_kind_video: native_en "video", native_de "Video", reuse_en "video", reuse_de "Video";
+        stream_kind_image_sequence: native_en "image sequence", native_de "Bildsequenz", reuse_en "image sequence", reuse_de "Bildsequenz";
+        frames: native_en "frames", native_de "Frames", reuse_en "frames", reuse_de "Frames";
+        sync_offset: native_en "sync offset", native_de "Sync-Versatz", reuse_en "sync offset", reuse_de "Sync-Versatz";
+        sparse_cloud: native_en "Sparse point cloud", native_de "Dünne Punktwolke", reuse_en "Sparse point cloud", reuse_de "Dünne Punktwolke";
+        dense_cloud: native_en "Dense point cloud", native_de "Dichte Punktwolke", reuse_en "Dense point cloud", reuse_de "Dichte Punktwolke";
+        results_none: native_en "none", native_de "keine", reuse_en "none", reuse_de "keine";
+        trajectory: native_en "Trajectory", native_de "Trajektorie", reuse_en "Trajectory", reuse_de "Trajektorie";
+        poses: native_en "poses", native_de "Posen", reuse_en "poses", reuse_de "Posen";
+        geo_products: native_en "Geo products", native_de "Geo-Produkte", reuse_en "Geo products", reuse_de "Geo-Produkte";
+        available: native_en "available", native_de "verfügbar", reuse_en "available", reuse_de "verfügbar";
+        params_ingest: native_en "Ingest", native_de "Ingest", reuse_en "Ingest", reuse_de "Ingest";
+        params_feature: native_en "Feature", native_de "Feature", reuse_en "Feature", reuse_de "Feature";
+        params_matching: native_en "Matching", native_de "Matching", reuse_en "Matching", reuse_de "Matching";
+        params_sfm: native_en "SfM", native_de "SfM", reuse_en "SfM", reuse_de "SfM";
+        params_dense: native_en "Dense", native_de "Dense", reuse_en "Dense", reuse_de "Dense";
+        params_mesh: native_en "Mesh", native_de "Mesh", reuse_en "Mesh", reuse_de "Mesh";
+        params_motion: native_en "Motion", native_de "Bewegung", reuse_en "Motion", reuse_de "Bewegung";
+        params_geo: native_en "Geo", native_de "Geo", reuse_en "Geo", reuse_de "Geo";
+        stride_short: native_en "stride", native_de "Schrittweite", reuse_en "stride", reuse_de "Schrittweite";
+        max_short: native_en "max", native_de "max", reuse_en "max", reuse_de "max";
+        downscale_short: native_en "downscale", native_de "Verkleinerung", reuse_en "downscale", reuse_de "Verkleinerung";
+        target_short: native_en "target", native_de "Ziel", reuse_en "target", reuse_de "Ziel";
+        octaves_short: native_en "octaves", native_de "Oktaven", reuse_en "octaves", reuse_de "Oktaven";
+        ratio_short: native_en "ratio", native_de "Verhältnis", reuse_en "ratio", reuse_de "Verhältnis";
+        window_short: native_en "window", native_de "Fenster", reuse_en "window", reuse_de "Fenster";
+        ransac_short: native_en "ransac", native_de "Ransac", reuse_en "ransac", reuse_de "Ransac";
+        min_track_short: native_en "min track", native_de "min. Spur", reuse_en "min track", reuse_de "min. Spur";
+        ba_short: native_en "ba", native_de "BA", reuse_en "ba", reuse_de "BA";
+        voxel_short: native_en "voxel", native_de "Voxel", reuse_en "voxel", reuse_de "Voxel";
+        enabled: native_en "enabled", native_de "aktiviert", reuse_en "enabled", reuse_de "aktiviert";
+        disabled: native_en "disabled", native_de "deaktiviert", reuse_en "disabled", reuse_de "deaktiviert";
+        cameras_calibrated: native_en "Calibrated cameras", native_de "Kalibrierte Kameras", reuse_en "Calibrated cameras", reuse_de "Kalibrierte Kameras";
+        rig_extrinsics: native_en "Rig extrinsics", native_de "Rig-Extrinsik", reuse_en "Rig extrinsics", reuse_de "Rig-Extrinsik";
+        gcps: native_en "Ground control points", native_de "Passpunkte", reuse_en "Ground control points", reuse_de "Passpunkte";
+        tracks: native_en "Motion tracks", native_de "Bewegungsspuren", reuse_en "Motion tracks", reuse_de "Bewegungsspuren";
+        tracks_none: native_en "No motion tracks", native_de "Keine Bewegungsspuren", reuse_en "No motion tracks", reuse_de "Keine Bewegungsspuren";
+        motion_not_implemented: native_en "Motion tracking is not yet driven by the reconstruction engine", native_de "Bewegungsverfolgung wird von der Rekonstruktions-Engine noch nicht ausgeführt", reuse_en "Motion tracking is not yet driven by the reconstruction engine", reuse_de "Bewegungsverfolgung wird von der Rekonstruktions-Engine noch nicht ausgeführt";
+        qc_none: native_en "No quality report yet", native_de "Noch kein Qualitätsbericht", reuse_en "No quality report yet", reuse_de "Noch kein Qualitätsbericht";
+        qc_reprojection: native_en "Mean reprojection error", native_de "Mittlerer Reprojektionsfehler", reuse_en "Mean reprojection error", reuse_de "Mittlerer Reprojektionsfehler";
+        qc_track_length: native_en "Mean track length", native_de "Mittlere Spurlänge", reuse_en "Mean track length", reuse_de "Mittlere Spurlänge";
+        qc_registered_ratio: native_en "Registered frame ratio", native_de "Anteil registrierter Frames", reuse_en "Registered frame ratio", reuse_de "Anteil registrierter Frames";
+        qc_dense_coverage: native_en "Dense coverage ratio", native_de "Dense-Abdeckungsanteil", reuse_en "Dense coverage ratio", reuse_de "Dense-Abdeckungsanteil";
+        qc_gcp_rmse: native_en "GCP checkpoint RMSE", native_de "Passpunkt-Kontroll-RMSE", reuse_en "GCP checkpoint RMSE", reuse_de "Passpunkt-Kontroll-RMSE";
+        qc_watertight: native_en "Watertight", native_de "Wasserdicht", reuse_en "Watertight", reuse_de "Wasserdicht";
+        qc_boundary_edges: native_en "Boundary edges", native_de "Ränder", reuse_en "Boundary edges", reuse_de "Ränder";
+        qc_components: native_en "Connected components", native_de "Zusammenhangskomponenten", reuse_en "Connected components", reuse_de "Zusammenhangskomponenten";
+        qc_euler: native_en "Euler characteristic", native_de "Euler-Charakteristik", reuse_en "Euler characteristic", reuse_de "Euler-Charakteristik";
+        qc_genus: native_en "Genus", native_de "Genus", reuse_en "Genus", reuse_de "Genus";
+        qc_closed_fallback: native_en "Closed via fallback", native_de "Über Fallback geschlossen", reuse_en "Closed via fallback", reuse_de "Über Fallback geschlossen";
+        panel_media: native_en "Media", native_de "Medien", reuse_en "Media", reuse_de "Medien";
+        panel_pipeline: native_en "Pipeline", native_de "Pipeline", reuse_en "Pipeline", reuse_de "Pipeline";
+        panel_results: native_en "Results", native_de "Ergebnisse", reuse_en "Results", reuse_de "Ergebnisse";
+        panel_parameters: native_en "Parameters", native_de "Parameter", reuse_en "Parameters", reuse_de "Parameter";
+        panel_calibration: native_en "Calibration", native_de "Kalibrierung", reuse_en "Calibration", reuse_de "Kalibrierung";
+        panel_tracks: native_en "Tracks", native_de "Spuren", reuse_en "Tracks", reuse_de "Spuren";
+        panel_qc: native_en "Quality", native_de "Qualität", reuse_en "Quality", reuse_de "Qualität";
+        window_frames: native_en "Frames", native_de "Frames", reuse_en "Frames", reuse_de "Frames";
+        window_report: native_en "Report", native_de "Bericht", reuse_en "Report", reuse_de "Bericht";
+        layers: native_en "Layers", native_de "Ebenen", reuse_en "Layers", reuse_de "Ebenen";
+        layer_mesh: native_en "Mesh", native_de "Mesh", reuse_en "Mesh", reuse_de "Mesh";
+        layer_dense: native_en "Dense cloud", native_de "Dichte Punktwolke", reuse_en "Dense cloud", reuse_de "Dichte Punktwolke";
+        layer_sparse: native_en "Sparse cloud", native_de "Dünne Punktwolke", reuse_en "Sparse cloud", reuse_de "Dünne Punktwolke";
+        layer_cameras: native_en "Cameras", native_de "Kameras", reuse_en "Cameras", reuse_de "Kameras";
+        layer_gcps: native_en "GCPs", native_de "Passpunkte", reuse_en "GCPs", reuse_de "Passpunkte";
     }
 }
 
 /// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical pair.
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `flow_ui`'s identical pair.
+/// `RemodelConfig` carries no terminology axis, so this app is always `Terminology::Native`.
 fn is_de_locale(cfg: &RemodelConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &RemodelConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn remodel_locale(cfg: &RemodelConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+fn resolve_labels<L: AppLabels>(cfg: &RemodelConfig) -> &'static L {
+    L::labels(remodel_locale(cfg), Terminology::Native)
 }
 
 fn remodel_labels(cfg: &RemodelConfig) -> &'static RemodelLabels {
@@ -448,68 +453,21 @@ fn remodel_labels(cfg: &RemodelConfig) -> &'static RemodelLabels {
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_remodel_app`'s
-/// static manifest — the manifest itself has no `cfg`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the builder chain.
-fn remodel_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(
-        is_de,
-        &[
-            ("runReconstruction", "Run Reconstruction", "Rekonstruktion starten"),
-            ("retryStage", "Retry", "Wiederholen"),
-            ("runStage", "Run Stage", "Stufe ausführen"),
-            ("importFrames", "Import Frames", "Frames importieren"),
-            ("importVideo", "Import Video", "Video importieren"),
-            ("addStream", "Add Stream", "Stream hinzufügen"),
-            ("removeStream", "Remove Stream", "Stream entfernen"),
-            ("setStreamSync", "Set Stream Sync", "Stream-Synchronisation festlegen"),
-            ("editCalibration", "Edit Calibration", "Kalibrierung bearbeiten"),
-            ("calibrateCameras", "Calibrate Cameras", "Kameras kalibrieren"),
-            ("addGcp", "Add Ground Control Point", "Passpunkt hinzufügen"),
-            ("removeGcp", "Remove Ground Control Point", "Passpunkt entfernen"),
-            ("placeGcpObservation", "Place GCP Observation", "Passpunkt-Beobachtung setzen"),
-            ("setIngestParams", "Set Ingest Params", "Ingest-Parameter festlegen"),
-            ("setFeatureParams", "Set Feature Params", "Feature-Parameter festlegen"),
-            ("setMatchParams", "Set Match Params", "Match-Parameter festlegen"),
-            ("setSfmParams", "Set SfM Params", "SfM-Parameter festlegen"),
-            ("setDenseParams", "Set Dense Params", "Dense-Parameter festlegen"),
-            ("setMeshParams", "Set Mesh Params", "Mesh-Parameter festlegen"),
-            ("setMotionParams", "Set Motion Params", "Bewegungs-Parameter festlegen"),
-            ("setGeoParams", "Set Geo Params", "Geo-Parameter festlegen"),
-            ("resetPlaceholderMesh", "Reset Placeholder Mesh", "Platzhalter-Mesh zurücksetzen"),
-            ("clearSparse", "Clear Sparse Cloud", "Dünne Punktwolke löschen"),
-            ("clearDense", "Clear Dense Cloud", "Dichte Punktwolke löschen"),
-            ("clearMeshResult", "Clear Mesh", "Mesh löschen"),
-            ("clearTracks", "Clear Tracks", "Spuren löschen"),
-            ("clearGeoProducts", "Clear Geo Products", "Geo-Produkte löschen"),
-            ("clearResult", "Clear Result", "Ergebnis löschen"),
-            ("exportQcReport", "Export QC Report", "QC-Bericht exportieren"),
-        ],
-    )
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_remodel_app`.
-fn remodel_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(is_de, &[("select", "Select", "Auswählen"), ("sculpt", "Sculpt", "Formen"), ("measure", "Measure", "Messen"), ("gcpPlace", "Place GCP", "Passpunkt setzen")])
-}
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️PanelBuilders
 /// 🗂️ `remodel.media` — drop zone plus a summary line per imported stream/asset.
 fn build_media_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
     let mut lines = vec![
-        ui_import_drop_zone("remodel-media-drop", labels.panel_media, labels.no_streams, Some(REMODEL_MEDIA_ACCEPT), remodel_action("importFramePayload", None)),
-        ui_text(format!("{}: {} - {}: {}", labels.streams, scene.streams.len(), labels.assets, scene.assets.len())),
+        ui_import_drop_zone("remodel-media-drop", labels.panel_media.into(), labels.no_streams.into(), Some(REMODEL_MEDIA_ACCEPT), remodel_action("importFramePayload", None)),
+        ui_text(Label::data(format!("{}: {} - {}: {}", labels.streams.as_str(), scene.streams.len(), labels.assets.as_str(), scene.assets.len()))),
     ];
     for stream in &scene.streams {
         let kind_label = match stream.kind {
             MediaKind::Video => labels.stream_kind_video,
             MediaKind::ImageSequence => labels.stream_kind_image_sequence,
         };
-        lines.push(ui_text(format!("{} ({kind_label}, {} {}, {}: {:.1}ms)", stream.name, stream.frames.len(), labels.frames, labels.sync_offset, stream.sync_offset_ms)));
+        lines.push(ui_text(Label::data(format!("{} ({}, {} {}, {}: {:.1}ms)", stream.name, kind_label.as_str(), stream.frames.len(), labels.frames.as_str(), labels.sync_offset.as_str(), stream.sync_offset_ms))));
         if let Some(source) = &stream.source {
-            lines.push(ui_text(format!("  {:?} {}x{} {:.0}ms", source.codec, source.width, source.height, source.duration_ms)));
+            lines.push(ui_text(Label::data(format!("  {:?} {}x{} {:.0}ms", source.codec, source.width, source.height, source.duration_ms))));
         }
     }
     ui_stack_vertical(lines)
@@ -523,27 +481,29 @@ fn build_pipeline_panel(scene: &RemodelScene, config: &RemodelConfig, active_uti
     let job = &scene.job;
     let job_label = format!(
         "{}: {} ({:.0}%){}",
-        labels.reconstruction,
+        labels.reconstruction.as_str(),
         remodel_app_engine::stage_display(job.stage),
         job.progress_0_1 * 100.0,
-        job.error.as_ref().map(|error| format!(" - {}: {error}", labels.error)).unwrap_or_default()
+        job.error.as_ref().map(|error| format!(" - {}: {error}", labels.error.as_str())).unwrap_or_default()
     );
     let running = !matches!(job.stage, ReconstructionStage::Idle | ReconstructionStage::Done | ReconstructionStage::Failed);
-    let running_label = format!("{}: {}", labels.status, if running { labels.running } else { labels.idle });
-    let utility_label = format!("{}: {} - {}: {} ({})", labels.utility, active_utility, labels.selection, config.selection.mode, config.selection.ids.len());
-    ui_stack_vertical(vec![ui_text(job_label), ui_text(running_label), ui_text(utility_label)])
+    let running_label = format!("{}: {}", labels.status.as_str(), if running { labels.running.as_str() } else { labels.idle.as_str() });
+    let utility_label = format!("{}: {} - {}: {} ({})", labels.utility.as_str(), active_utility, labels.selection.as_str(), config.selection.mode, config.selection.ids.len());
+    ui_stack_vertical(vec![ui_text(Label::data(job_label)), ui_text(Label::data(running_label)), ui_text(Label::data(utility_label))])
 }
 
 /// 🧵️ `remodel.results` — the products a run (partially) produced.
 fn build_results_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
     let results = &scene.results;
-    let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh, results.mesh.source, results.mesh.mesh.vertex_count(), labels.vertices, results.mesh.mesh.triangle_count(), labels.triangles);
-    let sparse_label = results.sparse.as_ref().map_or_else(|| format!("{}: {}", labels.sparse_cloud, labels.results_none), |sparse| format!("{}: {}", labels.sparse_cloud, sparse.points.to_f32_vec().len() / 3));
-    let dense_label = results.dense.as_ref().map_or_else(|| format!("{}: {}", labels.dense_cloud, labels.results_none), |dense| format!("{}: {}", labels.dense_cloud, dense.positions.to_f32_vec().len() / 3));
-    let trajectory_label =
-        results.trajectory.as_ref().map_or_else(|| format!("{}: {}", labels.trajectory, labels.results_none), |trajectory| format!("{}: {} {}", labels.trajectory, trajectory.poses.len(), labels.poses));
-    let geo_label = results.geo.as_ref().map_or_else(|| format!("{}: {}", labels.geo_products, labels.results_none), |_| format!("{}: {}", labels.geo_products, labels.available));
-    ui_stack_vertical(vec![ui_text(mesh_label), ui_text(sparse_label), ui_text(dense_label), ui_text(trajectory_label), ui_text(geo_label)])
+    let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh.as_str(), results.mesh.source, results.mesh.mesh.vertex_count(), labels.vertices.as_str(), results.mesh.mesh.triangle_count(), labels.triangles.as_str());
+    let sparse_label = results.sparse.as_ref().map_or_else(|| format!("{}: {}", labels.sparse_cloud.as_str(), labels.results_none.as_str()), |sparse| format!("{}: {}", labels.sparse_cloud.as_str(), sparse.points.to_f32_vec().len() / 3));
+    let dense_label = results.dense.as_ref().map_or_else(|| format!("{}: {}", labels.dense_cloud.as_str(), labels.results_none.as_str()), |dense| format!("{}: {}", labels.dense_cloud.as_str(), dense.positions.to_f32_vec().len() / 3));
+    let trajectory_label = results.trajectory.as_ref().map_or_else(
+        || format!("{}: {}", labels.trajectory.as_str(), labels.results_none.as_str()),
+        |trajectory| format!("{}: {} {}", labels.trajectory.as_str(), trajectory.poses.len(), labels.poses.as_str()),
+    );
+    let geo_label = results.geo.as_ref().map_or_else(|| format!("{}: {}", labels.geo_products.as_str(), labels.results_none.as_str()), |_| format!("{}: {}", labels.geo_products.as_str(), labels.available.as_str()));
+    ui_stack_vertical(vec![ui_text(Label::data(mesh_label)), ui_text(Label::data(sparse_label)), ui_text(Label::data(dense_label)), ui_text(Label::data(trajectory_label)), ui_text(Label::data(geo_label))])
 }
 
 /// ⚙️ `remodel.parameters` — a read-only dump of the 8 param sub-groups (editing happens via the
@@ -551,32 +511,53 @@ fn build_results_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
 fn build_parameters_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
     let p = &scene.params;
     ui_stack_vertical(vec![
-        ui_text(format!(
+        ui_text(Label::data(format!(
             "{}: {} {}, {} {}, {} {}px, min sharpness {:.2}",
-            labels.params_ingest, labels.stride_short, p.ingest.frame_sample_stride, labels.max_short, p.ingest.max_frames, labels.downscale_short, p.ingest.downscale_long_edge_px, p.ingest.min_sharpness
-        )),
-        ui_text(format!("{}: {:?}, {} {}, {} {}", labels.params_feature, p.feature.detector, labels.target_short, p.feature.target_count, labels.octaves_short, p.feature.octaves)),
-        ui_text(format!("{}: {:?}, {} {:.2}, {} {}", labels.params_matching, p.matching.matcher, labels.ratio_short, p.matching.ratio_test, labels.window_short, p.matching.sequential_window)),
-        ui_text(format!("{}: {} {}, {} {}, {} {}", labels.params_sfm, labels.ransac_short, p.sfm.ransac_iterations, labels.min_track_short, p.sfm.min_track_length, labels.ba_short, p.sfm.ba_max_iterations)),
-        ui_text(format!("{}: {:?}, {} {}px", labels.params_dense, p.dense.resolution, labels.window_short, p.dense.window_radius_px)),
-        ui_text(format!(
+            labels.params_ingest.as_str(),
+            labels.stride_short.as_str(),
+            p.ingest.frame_sample_stride,
+            labels.max_short.as_str(),
+            p.ingest.max_frames,
+            labels.downscale_short.as_str(),
+            p.ingest.downscale_long_edge_px,
+            p.ingest.min_sharpness
+        ))),
+        ui_text(Label::data(format!("{}: {:?}, {} {}, {} {}", labels.params_feature.as_str(), p.feature.detector, labels.target_short.as_str(), p.feature.target_count, labels.octaves_short.as_str(), p.feature.octaves))),
+        ui_text(Label::data(format!("{}: {:?}, {} {:.2}, {} {}", labels.params_matching.as_str(), p.matching.matcher, labels.ratio_short.as_str(), p.matching.ratio_test, labels.window_short.as_str(), p.matching.sequential_window))),
+        ui_text(Label::data(format!(
+            "{}: {} {}, {} {}, {} {}",
+            labels.params_sfm.as_str(),
+            labels.ransac_short.as_str(),
+            p.sfm.ransac_iterations,
+            labels.min_track_short.as_str(),
+            p.sfm.min_track_length,
+            labels.ba_short.as_str(),
+            p.sfm.ba_max_iterations
+        ))),
+        ui_text(Label::data(format!("{}: {:?}, {} {}px", labels.params_dense.as_str(), p.dense.resolution, labels.window_short.as_str(), p.dense.window_radius_px))),
+        ui_text(Label::data(format!(
             "{}: {} {:.1}mm, {} {}, watertight {}",
-            labels.params_mesh, labels.voxel_short, p.mesh.tsdf_voxel_size_mm, labels.target_short, p.mesh.decimate_target_triangles, p.mesh.guarantee_watertight
-        )),
-        ui_text(format!("{}: {}", labels.params_motion, if p.motion.enabled { labels.enabled } else { labels.disabled })),
-        ui_text(format!("{}: {}", labels.params_geo, if p.geo.enabled { labels.enabled } else { labels.disabled })),
+            labels.params_mesh.as_str(),
+            labels.voxel_short.as_str(),
+            p.mesh.tsdf_voxel_size_mm,
+            labels.target_short.as_str(),
+            p.mesh.decimate_target_triangles,
+            p.mesh.guarantee_watertight
+        ))),
+        ui_text(Label::data(format!("{}: {}", labels.params_motion.as_str(), if p.motion.enabled { labels.enabled.as_str() } else { labels.disabled.as_str() }))),
+        ui_text(Label::data(format!("{}: {}", labels.params_geo.as_str(), if p.geo.enabled { labels.enabled.as_str() } else { labels.disabled.as_str() }))),
     ])
 }
 
 /// 🎯️ `remodel.calibration` — per-camera calibration, rig extrinsics, ground control points.
 fn build_calibration_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
-    let mut lines = vec![ui_text(format!("{}: {} - {}: {}", labels.cameras_calibrated, scene.calibration.cameras.len(), labels.rig_extrinsics, scene.calibration.rig.len()))];
+    let mut lines = vec![ui_text(Label::data(format!("{}: {} - {}: {}", labels.cameras_calibrated.as_str(), scene.calibration.cameras.len(), labels.rig_extrinsics.as_str(), scene.calibration.rig.len())))];
     for camera in &scene.calibration.cameras {
-        lines.push(ui_text(format!("{} ({}): fx {:.1} fy {:.1}", camera.label, camera.model, camera.fx, camera.fy)));
+        lines.push(ui_text(Label::data(format!("{} ({}): fx {:.1} fy {:.1}", camera.label, camera.model, camera.fx, camera.fy))));
     }
-    lines.push(ui_text(format!("{}: {}", labels.gcps, scene.gcps.len())));
+    lines.push(ui_text(Label::data(format!("{}: {}", labels.gcps.as_str(), scene.gcps.len()))));
     for gcp in &scene.gcps {
-        lines.push(ui_text(format!("{} [{:.2}, {:.2}, {:.2}] ({} obs)", gcp.name, gcp.world_position[0], gcp.world_position[1], gcp.world_position[2], gcp.observations.len())));
+        lines.push(ui_text(Label::data(format!("{} [{:.2}, {:.2}, {:.2}] ({} obs)", gcp.name, gcp.world_position[0], gcp.world_position[1], gcp.world_position[2], gcp.observations.len()))));
     }
     ui_stack_vertical(lines)
 }
@@ -588,9 +569,9 @@ fn build_tracks_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
     if scene.results.tracks.is_empty() {
         return ui_stack_vertical(vec![ui_text(labels.tracks_none), ui_text(labels.motion_not_implemented)]);
     }
-    let mut lines = vec![ui_text(format!("{}: {}", labels.tracks, scene.results.tracks.len()))];
+    let mut lines = vec![ui_text(Label::data(format!("{}: {}", labels.tracks.as_str(), scene.results.tracks.len())))];
     for track in &scene.results.tracks {
-        lines.push(ui_text(format!("{} ({:?}): {} frames, {:.2} m/s", track.id, track.class, track.length, track.mean_speed_m_s)));
+        lines.push(ui_text(Label::data(format!("{} ({:?}): {} frames, {:.2} m/s", track.id, track.class, track.length, track.mean_speed_m_s))));
     }
     ui_stack_vertical(lines)
 }
@@ -601,26 +582,26 @@ fn build_qc_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
         return ui_stack_vertical(vec![ui_text(labels.qc_none)]);
     };
     let mut lines = vec![
-        ui_text(format!("{}: {:.2}px", labels.qc_reprojection, qc.reprojection_rms_px)),
-        ui_text(format!("{}: {:.1}", labels.qc_track_length, qc.mean_track_length)),
-        ui_text(format!("{}: {:.0}%", labels.qc_registered_ratio, qc.registered_frame_ratio * 100.0)),
-        ui_text(format!("{}: {:.0}%", labels.qc_dense_coverage, qc.dense_coverage_ratio * 100.0)),
+        ui_text(Label::data(format!("{}: {:.2}px", labels.qc_reprojection.as_str(), qc.reprojection_rms_px))),
+        ui_text(Label::data(format!("{}: {:.1}", labels.qc_track_length.as_str(), qc.mean_track_length))),
+        ui_text(Label::data(format!("{}: {:.0}%", labels.qc_registered_ratio.as_str(), qc.registered_frame_ratio * 100.0))),
+        ui_text(Label::data(format!("{}: {:.0}%", labels.qc_dense_coverage.as_str(), qc.dense_coverage_ratio * 100.0))),
     ];
     if let Some(rmse) = qc.gcp_checkpoint_rmse {
-        lines.push(ui_text(format!("{}: {:.3}m", labels.qc_gcp_rmse, rmse)));
+        lines.push(ui_text(Label::data(format!("{}: {:.3}m", labels.qc_gcp_rmse.as_str(), rmse))));
     }
     if let Some(watertight) = &qc.watertight {
-        lines.push(ui_text(format!("{}: {}", labels.qc_watertight, watertight.is_watertight)));
-        lines.push(ui_text(format!("{}: {}", labels.qc_boundary_edges, watertight.boundary_edge_count)));
-        lines.push(ui_text(format!("{}: {}", labels.qc_components, watertight.connected_components)));
-        lines.push(ui_text(format!("{}: {}", labels.qc_euler, watertight.euler_characteristic)));
+        lines.push(ui_text(Label::data(format!("{}: {}", labels.qc_watertight.as_str(), watertight.is_watertight))));
+        lines.push(ui_text(Label::data(format!("{}: {}", labels.qc_boundary_edges.as_str(), watertight.boundary_edge_count))));
+        lines.push(ui_text(Label::data(format!("{}: {}", labels.qc_components.as_str(), watertight.connected_components))));
+        lines.push(ui_text(Label::data(format!("{}: {}", labels.qc_euler.as_str(), watertight.euler_characteristic))));
         if let Some(genus) = watertight.genus {
-            lines.push(ui_text(format!("{}: {}", labels.qc_genus, genus)));
+            lines.push(ui_text(Label::data(format!("{}: {}", labels.qc_genus.as_str(), genus))));
         }
-        lines.push(ui_text(format!("{}: {}", labels.qc_closed_fallback, watertight.closed_fallback_used)));
+        lines.push(ui_text(Label::data(format!("{}: {}", labels.qc_closed_fallback.as_str(), watertight.closed_fallback_used))));
     }
     for warning in &qc.warnings {
-        lines.push(ui_text(format!("⚠️ {warning}")));
+        lines.push(ui_text(Label::data(format!("⚠️ {warning}"))));
     }
     ui_stack_vertical(lines)
 }
@@ -1298,31 +1279,8 @@ impl DocumentApp for RemodelPlayApp {
             REMODEL_PLAY_BODY_CALIBRATION => build_calibration_panel(scene, labels),
             REMODEL_PLAY_BODY_TRACKS => build_tracks_panel(scene, labels),
             REMODEL_PLAY_BODY_QC => build_qc_panel(scene, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, RemodelConfig>) -> AppLabelsOverlay {
-        let labels = remodel_labels(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(REMODEL_PLAY_WINDOW_MAIN, labels.model)
-            .window_kind_label(REMODEL_PLAY_WINDOW_FRAMES, labels.window_frames)
-            .window_kind_label(REMODEL_PLAY_WINDOW_REPORT, labels.window_report)
-            .mode_label("capture", labels.capture)
-            .mode_label("model", labels.model)
-            .mode_label("analyze", labels.analyze)
-            .action_labels(remodel_action_labels(is_de))
-            .utility_labels(remodel_utility_labels(is_de))
-            .example_labels(std::collections::HashMap::from([("default".to_string(), labels.default_example.to_string())]))
-            .panel_tab_label(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)
-            .panel_tab_label(REMODEL_PANEL_MEDIA_ID, labels.panel_media)
-            .panel_tab_label(REMODEL_PANEL_PIPELINE_ID, labels.panel_pipeline)
-            .panel_tab_label(REMODEL_PANEL_RESULTS_ID, labels.panel_results)
-            .panel_tab_label(REMODEL_PANEL_PARAMETERS_ID, labels.panel_parameters)
-            .panel_tab_label(REMODEL_PANEL_CALIBRATION_ID, labels.panel_calibration)
-            .panel_tab_label(REMODEL_PANEL_TRACKS_ID, labels.panel_tracks)
-            .panel_tab_label(REMODEL_PANEL_QC_ID, labels.panel_qc)
     }
 
     /// 👁️ Dynamic per-render window measures — `remodel-main`'s `remodel.layers` toggle group must
@@ -1337,7 +1295,7 @@ impl DocumentApp for RemodelPlayApp {
 //#region 🔖️Manifest
 /// 👁️ `remodel.layers` — `remodel-main`'s layer-visibility toggle group (`setLayerVisibility`).
 fn remodel_layer_measures(layers: &RemodelLayerVisibility, labels: &RemodelLabels) -> semio_framework_plugin::WindowMeasure {
-    let toggle = |id: &str, icon: &str, label: &'static str, pressed: bool, layer: &str| semio_framework_plugin::WindowMeasure::Toggle {
+    let toggle = |id: &str, icon: &str, label: LabelText, pressed: bool, layer: &str| semio_framework_plugin::WindowMeasure::Toggle {
         id: format!("remodel-measure-layer-{id}"),
         icon_id: icon.into(),
         label: Some(label.into()),
@@ -1371,7 +1329,7 @@ fn remodel_layer_measures(layers: &RemodelLayerVisibility, labels: &RemodelLabel
 pub fn create_remodel_app() -> App {
     let default_example = default_remodel_scene().print_dsl();
     App::from_builder(
-        App::builder(REMODEL_PLAY_APP_ID, "Remodel")
+        App::builder(REMODEL_PLAY_APP_ID, LocalizedLabel::native("Remodel", "Remodel"))
             .document(["semio", "remodel"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.remodel".into(),
@@ -1391,13 +1349,13 @@ pub fn create_remodel_app() -> App {
             .media_input(remodel_app_engine::remodel_photos_in_port())
             .media_output(remodel_app_engine::remodel_mesh_out_port())
             .icon_id("remodel-app")
-            .mode("capture", "Capture", "camera")
-            .mode("model", "Model", "box")
-            .mode("analyze", "Analyze", "search")
+            .mode("capture", LocalizedLabel::native("Capture", "Aufnahme"), "camera")
+            .mode("model", LocalizedLabel::native("Model", "Modell"), "box")
+            .mode("analyze", LocalizedLabel::native("Analyze", "Analyse"), "search")
             .default_mode_id("model")
-            .window_kind(REMODEL_PLAY_WINDOW_MAIN, "Model", REMODEL_PLAY_BODY_MAIN, SurfaceKind::World3d, "remodel-model")
-            .window_kind(REMODEL_PLAY_WINDOW_FRAMES, "Frames", REMODEL_PLAY_BODY_FRAMES, SurfaceKind::Canvas2d, "layout-grid")
-            .window_kind(REMODEL_PLAY_WINDOW_REPORT, "Report", REMODEL_PLAY_BODY_REPORT, SurfaceKind::Table, "document-report")
+            .window_kind(REMODEL_PLAY_WINDOW_MAIN, LocalizedLabel::native("Model", "Modell"), REMODEL_PLAY_BODY_MAIN, SurfaceKind::World3d, "remodel-model")
+            .window_kind(REMODEL_PLAY_WINDOW_FRAMES, LocalizedLabel::native("Frames", "Frames"), REMODEL_PLAY_BODY_FRAMES, SurfaceKind::Canvas2d, "layout-grid")
+            .window_kind(REMODEL_PLAY_WINDOW_REPORT, LocalizedLabel::native("Report", "Bericht"), REMODEL_PLAY_BODY_REPORT, SurfaceKind::Table, "document-report")
             .default_layout(create_default_layout(&[REMODEL_PLAY_WINDOW_MAIN.into(), REMODEL_PLAY_WINDOW_FRAMES.into()], "row", Some(&[70.0, 30.0]), Some(&["Model".into(), "Frames".into()])))
             .named_layout(create_named_layout(
                 "remodel-capture",
@@ -1412,184 +1370,184 @@ pub fn create_remodel_app() -> App {
                 "Analyze",
                 create_default_layout(&[REMODEL_PLAY_WINDOW_MAIN.into(), REMODEL_PLAY_WINDOW_REPORT.into()], "row", Some(&[60.0, 40.0]), Some(&["Model".into(), "Report".into()])),
                 "builtin",
-                Some("table".into()),
+                Some("table-2".into()),
                 None,
             ))
             .mode_layout("capture", "remodel-capture")
             .mode_layout("analyze", "remodel-analyze")
-            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, REMODEL_PLAY_BODY_PIPELINE)
-            .panel_tab(REMODEL_PANEL_MEDIA_ID, "Media", PanelGroup::Workbench, REMODEL_PLAY_BODY_MEDIA)
-            .panel_tab(REMODEL_PANEL_RESULTS_ID, "Results", PanelGroup::Workbench, REMODEL_PLAY_BODY_RESULTS)
-            .panel_tab(REMODEL_PANEL_PARAMETERS_ID, "Parameters", PanelGroup::Details, REMODEL_PLAY_BODY_PARAMETERS)
-            .panel_tab(REMODEL_PANEL_CALIBRATION_ID, "Calibration", PanelGroup::Details, REMODEL_PLAY_BODY_CALIBRATION)
-            .panel_tab(REMODEL_PANEL_TRACKS_ID, "Tracks", PanelGroup::Details, REMODEL_PLAY_BODY_TRACKS)
-            .panel_tab(REMODEL_PANEL_QC_ID, "Quality", PanelGroup::Settings, REMODEL_PLAY_BODY_QC)
+            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, REMODEL_PLAY_BODY_PIPELINE)
+            .panel_tab(REMODEL_PANEL_MEDIA_ID, LocalizedLabel::native("Media", "Medien"), PanelGroup::Workbench, REMODEL_PLAY_BODY_MEDIA)
+            .panel_tab(REMODEL_PANEL_RESULTS_ID, LocalizedLabel::native("Results", "Ergebnisse"), PanelGroup::Workbench, REMODEL_PLAY_BODY_RESULTS)
+            .panel_tab(REMODEL_PANEL_PARAMETERS_ID, LocalizedLabel::native("Parameters", "Parameter"), PanelGroup::Details, REMODEL_PLAY_BODY_PARAMETERS)
+            .panel_tab(REMODEL_PANEL_CALIBRATION_ID, LocalizedLabel::native("Calibration", "Kalibrierung"), PanelGroup::Details, REMODEL_PLAY_BODY_CALIBRATION)
+            .panel_tab(REMODEL_PANEL_TRACKS_ID, LocalizedLabel::native("Tracks", "Spuren"), PanelGroup::Details, REMODEL_PLAY_BODY_TRACKS)
+            .panel_tab(REMODEL_PANEL_QC_ID, LocalizedLabel::native("Quality", "Qualität"), PanelGroup::Settings, REMODEL_PLAY_BODY_QC)
             // 🚀️ Staged reconstruction — now fully synchronous (see module doc comment); there is no more
             // `advanceReconstruction`/`cancelReconstruction` action (nothing left to advance or cancel).
-            .operation("runReconstruction", "Run Reconstruction")
-            .operation("retryStage", "Retry")
-            .operation("runStage", "Run Stage")
+            .operation("runReconstruction", LocalizedLabel::native("Run Reconstruction", "Rekonstruktion starten"))
+            .operation("retryStage", LocalizedLabel::native("Retry", "Wiederholen"))
+            .operation("runStage", LocalizedLabel::native("Run Stage", "Stufe ausführen"))
             .action_args("runStage", vec![ActionArgDef::select(
                 "stage",
-                "Stage",
+                LocalizedLabel::native("Stage", "Stufe"),
                 vec![
-                    ActionArgOption::new("extracting-features", "Extracting Features"),
-                    ActionArgOption::new("matching-features", "Matching Features"),
-                    ActionArgOption::new("estimating-poses", "Estimating Poses"),
-                    ActionArgOption::new("bundle-adjusting", "Bundle Adjusting"),
-                    ActionArgOption::new("dense-stereo", "Dense Stereo"),
-                    ActionArgOption::new("fusing-volume", "Fusing Volume"),
-                    ActionArgOption::new("extracting-surface", "Extracting Surface"),
-                    ActionArgOption::new("texturing", "Texturing"),
+                    ActionArgOption::new("extracting-features", LocalizedLabel::native("Extracting Features", "Merkmale extrahieren")),
+                    ActionArgOption::new("matching-features", LocalizedLabel::native("Matching Features", "Merkmale zuordnen")),
+                    ActionArgOption::new("estimating-poses", LocalizedLabel::native("Estimating Poses", "Posen schätzen")),
+                    ActionArgOption::new("bundle-adjusting", LocalizedLabel::native("Bundle Adjusting", "Bündelausgleich")),
+                    ActionArgOption::new("dense-stereo", LocalizedLabel::native("Dense Stereo", "Dense-Stereo")),
+                    ActionArgOption::new("fusing-volume", LocalizedLabel::native("Fusing Volume", "Volumen fusionieren")),
+                    ActionArgOption::new("extracting-surface", LocalizedLabel::native("Extracting Surface", "Oberfläche extrahieren")),
+                    ActionArgOption::new("texturing", LocalizedLabel::native("Texturing", "Texturierung")),
                 ],
             )
             .default_value("extracting-features")])
             // 📥️ Ingestion.
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importFrames", "Import Frames", ActionKind::Shell) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importFramePayload", "Import Frame Payload", ActionKind::Operation) })
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importVideo", "Import Video", ActionKind::Shell) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoFramePayload", "Import Video Frame Payload", ActionKind::Operation) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoDone", "Import Video Done", ActionKind::Operation) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoBytesPayload", "Import Video Bytes Payload", ActionKind::Operation) })
-            .operation("addStream", "Add Stream")
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importFrames", LocalizedLabel::native("Import Frames", "Frames importieren"), ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importFramePayload", LocalizedLabel::native("Import Frame Payload", "Bild-Payload importieren"), ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importVideo", LocalizedLabel::native("Import Video", "Video importieren"), ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoFramePayload", LocalizedLabel::native("Import Video Frame Payload", "Video-Frame-Payload importieren"), ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoDone", LocalizedLabel::native("Import Video Done", "Video-Import abgeschlossen"), ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoBytesPayload", LocalizedLabel::native("Import Video Bytes Payload", "Video-Byte-Payload importieren"), ActionKind::Operation) })
+            .operation("addStream", LocalizedLabel::native("Add Stream", "Stream hinzufügen"))
             .action_args("addStream", vec![
-                ActionArgDef::text("name", "Name").default_value("Stream"),
-                ActionArgDef::select("kind", "Kind", vec![ActionArgOption::new("image-sequence", "Image Sequence"), ActionArgOption::new("video", "Video")]).default_value("image-sequence"),
-                ActionArgDef::text("cameraId", "Camera Id").default_value("cam-0"),
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("Stream"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![ActionArgOption::new("image-sequence", LocalizedLabel::native("Image Sequence", "Bildsequenz")), ActionArgOption::new("video", LocalizedLabel::native("Video", "Video"))]).default_value("image-sequence"),
+                ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).default_value("cam-0"),
             ])
-            .operation("removeStream", "Remove Stream")
-            .action_args("removeStream", vec![ActionArgDef::text("streamId", "Stream Id").required()])
-            .operation("setStreamSync", "Set Stream Sync")
-            .action_args("setStreamSync", vec![ActionArgDef::text("streamId", "Stream Id").required(), ActionArgDef::number("syncOffsetMs", "Sync Offset (ms)").default_value(0)])
+            .operation("removeStream", LocalizedLabel::native("Remove Stream", "Stream entfernen"))
+            .action_args("removeStream", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required()])
+            .operation("setStreamSync", LocalizedLabel::native("Set Stream Sync", "Stream-Synchronisation festlegen"))
+            .action_args("setStreamSync", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required(), ActionArgDef::number("syncOffsetMs", LocalizedLabel::native("Sync Offset (ms)", "Sync-Versatz (ms)")).default_value(0)])
             // 🎯️ Calibration / GCPs.
-            .operation("editCalibration", "Edit Calibration")
+            .operation("editCalibration", LocalizedLabel::native("Edit Calibration", "Kalibrierung bearbeiten"))
             .action_args("editCalibration", vec![
-                ActionArgDef::text("cameraId", "Camera Id").required(),
-                ActionArgDef::text("label", "Label"),
-                ActionArgDef::select("model", "Model", vec![ActionArgOption::new("pinhole", "Pinhole"), ActionArgOption::new("brownConrady", "Brown-Conrady"), ActionArgOption::new("fisheye", "Fisheye")]).default_value("pinhole"),
-                ActionArgDef::number("fx", "fx").default_value(1000),
-                ActionArgDef::number("fy", "fy").default_value(1000),
-                ActionArgDef::number("cx", "cx").default_value(0),
-                ActionArgDef::number("cy", "cy").default_value(0),
-                ActionArgDef::number("skew", "Skew").default_value(0),
-                ActionArgDef::number("k1", "k1").default_value(0),
-                ActionArgDef::number("k2", "k2").default_value(0),
-                ActionArgDef::number("k3", "k3").default_value(0),
-                ActionArgDef::number("p1", "p1").default_value(0),
-                ActionArgDef::number("p2", "p2").default_value(0),
-                ActionArgDef::toggle("locked", "Locked").default_value(false),
+                ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).required(),
+                ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")),
+                ActionArgDef::select("model", LocalizedLabel::native("Model", "Modell"), vec![ActionArgOption::new("pinhole", LocalizedLabel::native("Pinhole", "Lochkamera")), ActionArgOption::new("brownConrady", LocalizedLabel::native("Brown-Conrady", "Brown-Conrady")), ActionArgOption::new("fisheye", LocalizedLabel::native("Fisheye", "Fischauge"))]).default_value("pinhole"),
+                ActionArgDef::number("fx", LocalizedLabel::native("fx", "fx")).default_value(1000),
+                ActionArgDef::number("fy", LocalizedLabel::native("fy", "fy")).default_value(1000),
+                ActionArgDef::number("cx", LocalizedLabel::native("cx", "cx")).default_value(0),
+                ActionArgDef::number("cy", LocalizedLabel::native("cy", "cy")).default_value(0),
+                ActionArgDef::number("skew", LocalizedLabel::native("Skew", "Scherung")).default_value(0),
+                ActionArgDef::number("k1", LocalizedLabel::native("k1", "k1")).default_value(0),
+                ActionArgDef::number("k2", LocalizedLabel::native("k2", "k2")).default_value(0),
+                ActionArgDef::number("k3", LocalizedLabel::native("k3", "k3")).default_value(0),
+                ActionArgDef::number("p1", LocalizedLabel::native("p1", "p1")).default_value(0),
+                ActionArgDef::number("p2", LocalizedLabel::native("p2", "p2")).default_value(0),
+                ActionArgDef::toggle("locked", LocalizedLabel::native("Locked", "Gesperrt")).default_value(false),
             ])
-            .operation("calibrateCameras", "Calibrate Cameras")
-            .operation("addGcp", "Add Ground Control Point")
+            .operation("calibrateCameras", LocalizedLabel::native("Calibrate Cameras", "Kameras kalibrieren"))
+            .operation("addGcp", LocalizedLabel::native("Add Ground Control Point", "Passpunkt hinzufügen"))
             .action_args("addGcp", vec![
-                ActionArgDef::text("name", "Name").default_value("GCP"),
-                ActionArgDef::number("worldX", "World X").default_value(0),
-                ActionArgDef::number("worldY", "World Y").default_value(0),
-                ActionArgDef::number("worldZ", "World Z").default_value(0),
+                ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("GCP"),
+                ActionArgDef::number("worldX", LocalizedLabel::native("World X", "Welt X")).default_value(0),
+                ActionArgDef::number("worldY", LocalizedLabel::native("World Y", "Welt Y")).default_value(0),
+                ActionArgDef::number("worldZ", LocalizedLabel::native("World Z", "Welt Z")).default_value(0),
             ])
-            .operation("removeGcp", "Remove Ground Control Point")
-            .action_args("removeGcp", vec![ActionArgDef::text("gcpId", "GCP Id").required()])
-            .operation("placeGcpObservation", "Place GCP Observation")
+            .operation("removeGcp", LocalizedLabel::native("Remove Ground Control Point", "Passpunkt entfernen"))
+            .action_args("removeGcp", vec![ActionArgDef::text("gcpId", LocalizedLabel::native("GCP Id", "Passpunkt-Id")).required()])
+            .operation("placeGcpObservation", LocalizedLabel::native("Place GCP Observation", "Passpunkt-Beobachtung setzen"))
             .action_args("placeGcpObservation", vec![
-                ActionArgDef::text("gcpId", "GCP Id").required(),
-                ActionArgDef::text("streamId", "Stream Id").required(),
-                ActionArgDef::number("frameIndex", "Frame Index").required(),
-                ActionArgDef::number("pixelX", "Pixel X").required(),
-                ActionArgDef::number("pixelY", "Pixel Y").required(),
+                ActionArgDef::text("gcpId", LocalizedLabel::native("GCP Id", "Passpunkt-Id")).required(),
+                ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required(),
+                ActionArgDef::number("frameIndex", LocalizedLabel::native("Frame Index", "Frame-Index")).required(),
+                ActionArgDef::number("pixelX", LocalizedLabel::native("Pixel X", "Pixel X")).required(),
+                ActionArgDef::number("pixelY", LocalizedLabel::native("Pixel Y", "Pixel Y")).required(),
             ])
             // ⚙️ 8 param-group setters, one per `ReconstructionParams` sub-struct.
-            .operation("setIngestParams", "Set Ingest Params")
+            .operation("setIngestParams", LocalizedLabel::native("Set Ingest Params", "Ingest-Parameter festlegen"))
             .action_args("setIngestParams", vec![
-                ActionArgDef::number("frameSampleStride", "Frame Sample Stride").default_value(5),
-                ActionArgDef::number("maxFrames", "Max Frames").default_value(200),
-                ActionArgDef::number("downscaleLongEdgePx", "Downscale Long Edge (px)").default_value(1600),
-                ActionArgDef::slider("minSharpness", "Min Sharpness", 0.0, 1.0).default_value(0.3),
+                ActionArgDef::number("frameSampleStride", LocalizedLabel::native("Frame Sample Stride", "Frame-Abtastschrittweite")).default_value(5),
+                ActionArgDef::number("maxFrames", LocalizedLabel::native("Max Frames", "Max. Frames")).default_value(200),
+                ActionArgDef::number("downscaleLongEdgePx", LocalizedLabel::native("Downscale Long Edge (px)", "Verkleinerung lange Kante (px)")).default_value(1600),
+                ActionArgDef::slider("minSharpness", LocalizedLabel::native("Min Sharpness", "Min. Schärfe"), 0.0, 1.0).default_value(0.3),
             ])
-            .operation("setFeatureParams", "Set Feature Params")
+            .operation("setFeatureParams", LocalizedLabel::native("Set Feature Params", "Feature-Parameter festlegen"))
             .action_args("setFeatureParams", vec![
-                ActionArgDef::select("detector", "Detector", vec![ActionArgOption::new("orb", "ORB"), ActionArgOption::new("akaze", "AKAZE"), ActionArgOption::new("harris", "Harris")]).default_value("orb"),
-                ActionArgDef::number("targetCount", "Target Count").default_value(4000),
-                ActionArgDef::number("octaves", "Octaves").default_value(4),
-                ActionArgDef::slider("edgeThreshold", "Edge Threshold", 1.0, 50.0).default_value(10.0),
+                ActionArgDef::select("detector", LocalizedLabel::native("Detector", "Detektor"), vec![ActionArgOption::new("orb", LocalizedLabel::native("ORB", "ORB")), ActionArgOption::new("akaze", LocalizedLabel::native("AKAZE", "AKAZE")), ActionArgOption::new("harris", LocalizedLabel::native("Harris", "Harris"))]).default_value("orb"),
+                ActionArgDef::number("targetCount", LocalizedLabel::native("Target Count", "Ziel-Anzahl")).default_value(4000),
+                ActionArgDef::number("octaves", LocalizedLabel::native("Octaves", "Oktaven")).default_value(4),
+                ActionArgDef::slider("edgeThreshold", LocalizedLabel::native("Edge Threshold", "Kanten-Schwelle"), 1.0, 50.0).default_value(10.0),
             ])
-            .operation("setMatchParams", "Set Match Params")
+            .operation("setMatchParams", LocalizedLabel::native("Set Match Params", "Match-Parameter festlegen"))
             .action_args("setMatchParams", vec![
-                ActionArgDef::select("matcher", "Matcher", vec![ActionArgOption::new("brute-force", "Brute Force"), ActionArgOption::new("kd-tree", "KD-Tree")]).default_value("brute-force"),
-                ActionArgDef::slider("ratioTest", "Ratio Test", 0.1, 1.0).default_value(0.8),
-                ActionArgDef::toggle("crossCheck", "Cross Check").default_value(true),
-                ActionArgDef::number("sequentialWindow", "Sequential Window").default_value(8),
-                ActionArgDef::number("maxPairsPerFrame", "Max Pairs Per Frame").default_value(16),
-                ActionArgDef::toggle("loopClosure", "Loop Closure").default_value(true),
+                ActionArgDef::select("matcher", LocalizedLabel::native("Matcher", "Matcher"), vec![ActionArgOption::new("brute-force", LocalizedLabel::native("Brute Force", "Brute Force")), ActionArgOption::new("kd-tree", LocalizedLabel::native("KD-Tree", "KD-Baum"))]).default_value("brute-force"),
+                ActionArgDef::slider("ratioTest", LocalizedLabel::native("Ratio Test", "Verhältnistest"), 0.1, 1.0).default_value(0.8),
+                ActionArgDef::toggle("crossCheck", LocalizedLabel::native("Cross Check", "Kreuzprüfung")).default_value(true),
+                ActionArgDef::number("sequentialWindow", LocalizedLabel::native("Sequential Window", "Sequenzielles Fenster")).default_value(8),
+                ActionArgDef::number("maxPairsPerFrame", LocalizedLabel::native("Max Pairs Per Frame", "Max. Paare pro Frame")).default_value(16),
+                ActionArgDef::toggle("loopClosure", LocalizedLabel::native("Loop Closure", "Schleifenschluss")).default_value(true),
             ])
-            .operation("setSfmParams", "Set SfM Params")
+            .operation("setSfmParams", LocalizedLabel::native("Set SfM Params", "SfM-Parameter festlegen"))
             .action_args("setSfmParams", vec![
-                ActionArgDef::number("ransacIterations", "RANSAC Iterations").default_value(1000),
-                ActionArgDef::slider("ransacThresholdPx", "RANSAC Threshold (px)", 0.1, 10.0).default_value(2.0),
-                ActionArgDef::number("minTrackLength", "Min Track Length").default_value(3),
-                ActionArgDef::number("baMaxIterations", "BA Max Iterations").default_value(50),
-                ActionArgDef::select("robustLoss", "Robust Loss", vec![ActionArgOption::new("l2", "L2"), ActionArgOption::new("huber", "Huber"), ActionArgOption::new("cauchy", "Cauchy")]).default_value("huber"),
-                ActionArgDef::slider("huberDeltaPx", "Huber Delta (px)", 0.1, 10.0).default_value(1.5),
+                ActionArgDef::number("ransacIterations", LocalizedLabel::native("RANSAC Iterations", "RANSAC-Iterationen")).default_value(1000),
+                ActionArgDef::slider("ransacThresholdPx", LocalizedLabel::native("RANSAC Threshold (px)", "RANSAC-Schwelle (px)"), 0.1, 10.0).default_value(2.0),
+                ActionArgDef::number("minTrackLength", LocalizedLabel::native("Min Track Length", "Min. Spurlänge")).default_value(3),
+                ActionArgDef::number("baMaxIterations", LocalizedLabel::native("BA Max Iterations", "BA Max. Iterationen")).default_value(50),
+                ActionArgDef::select("robustLoss", LocalizedLabel::native("Robust Loss", "Robuster Verlust"), vec![ActionArgOption::new("l2", LocalizedLabel::native("L2", "L2")), ActionArgOption::new("huber", LocalizedLabel::native("Huber", "Huber")), ActionArgOption::new("cauchy", LocalizedLabel::native("Cauchy", "Cauchy"))]).default_value("huber"),
+                ActionArgDef::slider("huberDeltaPx", LocalizedLabel::native("Huber Delta (px)", "Huber-Delta (px)"), 0.1, 10.0).default_value(1.5),
             ])
-            .operation("setDenseParams", "Set Dense Params")
+            .operation("setDenseParams", LocalizedLabel::native("Set Dense Params", "Dense-Parameter festlegen"))
             .action_args("setDenseParams", vec![
-                ActionArgDef::select("resolution", "Resolution", vec![ActionArgOption::new("low", "Low"), ActionArgOption::new("medium", "Medium"), ActionArgOption::new("high", "High")]).default_value("medium"),
-                ActionArgDef::number("windowRadiusPx", "Window Radius (px)").default_value(3),
-                ActionArgDef::number("minViewConsistency", "Min View Consistency").default_value(3),
-                ActionArgDef::slider("confidenceThreshold", "Confidence Threshold", 0.0, 1.0).default_value(0.5),
-                ActionArgDef::number("maxPoints", "Max Points").default_value(500_000),
+                ActionArgDef::select("resolution", LocalizedLabel::native("Resolution", "Auflösung"), vec![ActionArgOption::new("low", LocalizedLabel::native("Low", "Niedrig")), ActionArgOption::new("medium", LocalizedLabel::native("Medium", "Mittel")), ActionArgOption::new("high", LocalizedLabel::native("High", "Hoch"))]).default_value("medium"),
+                ActionArgDef::number("windowRadiusPx", LocalizedLabel::native("Window Radius (px)", "Fensterradius (px)")).default_value(3),
+                ActionArgDef::number("minViewConsistency", LocalizedLabel::native("Min View Consistency", "Min. Ansichtskonsistenz")).default_value(3),
+                ActionArgDef::slider("confidenceThreshold", LocalizedLabel::native("Confidence Threshold", "Konfidenzschwelle"), 0.0, 1.0).default_value(0.5),
+                ActionArgDef::number("maxPoints", LocalizedLabel::native("Max Points", "Max. Punkte")).default_value(500_000),
             ])
-            .operation("setMeshParams", "Set Mesh Params")
+            .operation("setMeshParams", LocalizedLabel::native("Set Mesh Params", "Mesh-Parameter festlegen"))
             .action_args("setMeshParams", vec![
-                ActionArgDef::slider("tsdfVoxelSizeMm", "TSDF Voxel Size (mm)", 1.0, 20.0).default_value(5.0),
-                ActionArgDef::slider("tsdfTruncationMm", "TSDF Truncation (mm)", 2.0, 60.0).default_value(20.0),
-                ActionArgDef::number("decimateTargetTriangles", "Decimate Target Triangles").default_value(200_000),
-                ActionArgDef::number("smoothingIterations", "Smoothing Iterations").default_value(2),
-                ActionArgDef::toggle("textureEnabled", "Texture Enabled").default_value(true),
-                ActionArgDef::select("textureSize", "Texture Size", vec![ActionArgOption::new("1024", "1024"), ActionArgOption::new("2048", "2048"), ActionArgOption::new("4096", "4096")]).default_value("2048"),
-                ActionArgDef::toggle("guaranteeWatertight", "Guarantee Watertight").default_value(true),
-                ActionArgDef::number("holeFillMaxBoundaryVerts", "Hole Fill Max Boundary Verts").default_value(512),
-                ActionArgDef::toggle("selfIntersectionCheck", "Self-Intersection Check").default_value(false),
+                ActionArgDef::slider("tsdfVoxelSizeMm", LocalizedLabel::native("TSDF Voxel Size (mm)", "TSDF-Voxelgröße (mm)"), 1.0, 20.0).default_value(5.0),
+                ActionArgDef::slider("tsdfTruncationMm", LocalizedLabel::native("TSDF Truncation (mm)", "TSDF-Trunkierung (mm)"), 2.0, 60.0).default_value(20.0),
+                ActionArgDef::number("decimateTargetTriangles", LocalizedLabel::native("Decimate Target Triangles", "Ziel-Dreiecke (Dezimierung)")).default_value(200_000),
+                ActionArgDef::number("smoothingIterations", LocalizedLabel::native("Smoothing Iterations", "Glättungs-Iterationen")).default_value(2),
+                ActionArgDef::toggle("textureEnabled", LocalizedLabel::native("Texture Enabled", "Textur aktiviert")).default_value(true),
+                ActionArgDef::select("textureSize", LocalizedLabel::native("Texture Size", "Texturgröße"), vec![ActionArgOption::new("1024", LocalizedLabel::native("1024", "1024")), ActionArgOption::new("2048", LocalizedLabel::native("2048", "2048")), ActionArgOption::new("4096", LocalizedLabel::native("4096", "4096"))]).default_value("2048"),
+                ActionArgDef::toggle("guaranteeWatertight", LocalizedLabel::native("Guarantee Watertight", "Wasserdichtheit garantieren")).default_value(true),
+                ActionArgDef::number("holeFillMaxBoundaryVerts", LocalizedLabel::native("Hole Fill Max Boundary Verts", "Max. Randpunkte für Lochfüllung")).default_value(512),
+                ActionArgDef::toggle("selfIntersectionCheck", LocalizedLabel::native("Self-Intersection Check", "Selbstüberschneidungsprüfung")).default_value(false),
             ])
-            .operation("setMotionParams", "Set Motion Params")
+            .operation("setMotionParams", LocalizedLabel::native("Set Motion Params", "Bewegungs-Parameter festlegen"))
             .action_args("setMotionParams", vec![
-                ActionArgDef::toggle("enabled", "Enabled").default_value(false),
-                ActionArgDef::number("maxTracks", "Max Tracks").default_value(64),
-                ActionArgDef::number("trackWindowPx", "Track Window (px)").default_value(21),
-                ActionArgDef::slider("minTrackQuality", "Min Track Quality", 0.0, 1.0).default_value(0.3),
-                ActionArgDef::number("minTrackLengthFrames", "Min Track Length (frames)").default_value(5),
+                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(false),
+                ActionArgDef::number("maxTracks", LocalizedLabel::native("Max Tracks", "Max. Spuren")).default_value(64),
+                ActionArgDef::number("trackWindowPx", LocalizedLabel::native("Track Window (px)", "Spurfenster (px)")).default_value(21),
+                ActionArgDef::slider("minTrackQuality", LocalizedLabel::native("Min Track Quality", "Min. Spurqualität"), 0.0, 1.0).default_value(0.3),
+                ActionArgDef::number("minTrackLengthFrames", LocalizedLabel::native("Min Track Length (frames)", "Min. Spurlänge (Frames)")).default_value(5),
             ])
-            .operation("setGeoParams", "Set Geo Params")
+            .operation("setGeoParams", LocalizedLabel::native("Set Geo Params", "Geo-Parameter festlegen"))
             .action_args("setGeoParams", vec![
-                ActionArgDef::toggle("enabled", "Enabled").default_value(false),
-                ActionArgDef::number("originLon", "Origin Longitude").default_value(0),
-                ActionArgDef::number("originLat", "Origin Latitude").default_value(0),
-                ActionArgDef::number("originAlt", "Origin Altitude").default_value(0),
-                ActionArgDef::slider("gsdM", "Ground Sample Distance (m)", 0.01, 1.0).default_value(0.05),
-                ActionArgDef::slider("dsmCellM", "DSM Cell Size (m)", 0.01, 5.0).default_value(0.1),
-                ActionArgDef::slider("dtmFilterRadiusM", "DTM Filter Radius (m)", 0.1, 10.0).default_value(2.0),
-                ActionArgDef::number("orthoMaxPx", "Ortho Max (px)").default_value(4096),
+                ActionArgDef::toggle("enabled", LocalizedLabel::native("Enabled", "Aktiviert")).default_value(false),
+                ActionArgDef::number("originLon", LocalizedLabel::native("Origin Longitude", "Ursprung Längengrad")).default_value(0),
+                ActionArgDef::number("originLat", LocalizedLabel::native("Origin Latitude", "Ursprung Breitengrad")).default_value(0),
+                ActionArgDef::number("originAlt", LocalizedLabel::native("Origin Altitude", "Ursprung Höhe")).default_value(0),
+                ActionArgDef::slider("gsdM", LocalizedLabel::native("Ground Sample Distance (m)", "Bodenauflösung (m)"), 0.01, 1.0).default_value(0.05),
+                ActionArgDef::slider("dsmCellM", LocalizedLabel::native("DSM Cell Size (m)", "DOM-Zellgröße (m)"), 0.01, 5.0).default_value(0.1),
+                ActionArgDef::slider("dtmFilterRadiusM", LocalizedLabel::native("DTM Filter Radius (m)", "DGM-Filterradius (m)"), 0.1, 10.0).default_value(2.0),
+                ActionArgDef::number("orthoMaxPx", LocalizedLabel::native("Ortho Max (px)", "Ortho Max. (px)")).default_value(4096),
             ])
             // 🧹️ Clear/reset.
-            .operation("resetPlaceholderMesh", "Reset Placeholder Mesh")
-            .operation("clearSparse", "Clear Sparse Cloud")
-            .operation("clearDense", "Clear Dense Cloud")
-            .operation("clearMeshResult", "Clear Mesh")
-            .operation("clearTracks", "Clear Tracks")
-            .operation("clearGeoProducts", "Clear Geo Products")
-            .operation("clearResult", "Clear Result")
+            .operation("resetPlaceholderMesh", LocalizedLabel::native("Reset Placeholder Mesh", "Platzhalter-Mesh zurücksetzen"))
+            .operation("clearSparse", LocalizedLabel::native("Clear Sparse Cloud", "Dünne Punktwolke löschen"))
+            .operation("clearDense", LocalizedLabel::native("Clear Dense Cloud", "Dichte Punktwolke löschen"))
+            .operation("clearMeshResult", LocalizedLabel::native("Clear Mesh", "Mesh löschen"))
+            .operation("clearTracks", LocalizedLabel::native("Clear Tracks", "Spuren löschen"))
+            .operation("clearGeoProducts", LocalizedLabel::native("Clear Geo Products", "Geo-Produkte löschen"))
+            .operation("clearResult", LocalizedLabel::native("Clear Result", "Ergebnis löschen"))
             // 👁️ View-only runtime actions.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSelection", "Set Selection", ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setCamera", "Set Camera", ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setLayerVisibility", "Set Layer Visibility", ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFrameCursor", "Set Frame Cursor", ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setReportTable", "Set Report Table", ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setLayerVisibility", LocalizedLabel::native("Set Layer Visibility", "Ebenensichtbarkeit festlegen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFrameCursor", LocalizedLabel::native("Set Frame Cursor", "Frame-Cursor festlegen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setReportTable", LocalizedLabel::native("Set Report Table", "Berichtstabelle festlegen"), ActionKind::View) })
             // 📤️ Export.
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("exportQcReport", "Export QC Report", ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("exportQcReport", LocalizedLabel::native("Export QC Report", "QC-Bericht exportieren"), ActionKind::Shell) })
             // 🧰️ Utility groups — an exclusive per-window set (active utility is host-owned).
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer-2") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("sculpt", "Sculpt", "paintbrush") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("measure", "Measure", "scaling") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", "Place GCP", "crosshair") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", LocalizedLabel::native("Select", "Auswählen"), "mouse-pointer-2") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("sculpt", LocalizedLabel::native("Sculpt", "Formen"), "paintbrush") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("measure", LocalizedLabel::native("Measure", "Messen"), "scaling") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", LocalizedLabel::native("Place GCP", "Passpunkt setzen"), "crosshair") })
             .window_kind_utilities(REMODEL_PLAY_WINDOW_MAIN, vec!["select".into(), "measure".into(), "sculpt".into()])
             .window_kind_utilities(REMODEL_PLAY_WINDOW_FRAMES, vec!["select".into(), "gcpPlace".into()])
             // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE
@@ -1598,7 +1556,7 @@ pub fn create_remodel_app() -> App {
             // commands are dispatched via `RemodelCommand`'s `OpBinary` codec directly).
             .io(remodel_app_engine::remodel_io()),
     )
-    .example("default", "Default", &default_example, "file")
+    .example("default", LocalizedLabel::native("Default", "Standard"), &default_example, "file")
     .workflow("remodel", "Remodel", "mesh")
 }
 //#endregion 🔖️Manifest

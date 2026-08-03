@@ -9,13 +9,12 @@ use infinite_board_port_directed_dag::{
 };
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
-    build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
-    ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ConfigView, DocumentApp, DocumentView, Emit, LocalizedLabel, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
+    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, tree_item, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
+    ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, NodeGraphScene, NodeGraphViewport, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, Terminology, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
     UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde_json::{json, Value};
-use std::collections::HashMap;
 
 //#region 🔖️Constants
 const DAG_PLAY_APP_ID: &str = "dag-play";
@@ -52,191 +51,58 @@ fn remove_nodes_operations(document: &DagDocument, node_ids: &[String]) -> Vec<D
     operations
 }
 
-fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description: None,
-        icon_id: None,
-        presence: UiPresence::default(),
-        default_open: None,
-        action: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        dimmed: None,
-        menu: None,
-    }
-}
-
-fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, description: impl Into<String>) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description: Some(description.into()),
-        icon_id: None,
-        presence: UiPresence::default(),
-        default_open: None,
-        action: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        dimmed: None,
-        menu: None,
-    }
-}
-
-fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description,
-        icon_id: None,
-        presence: UiPresence::default(),
-        default_open: None,
-        action: Some(action),
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        dimmed: None,
-        menu: None,
-    }
-}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the DAG app; one field per label makes every locale combination compile-checked.
-struct DagPlayLabels {
-    nodes: &'static str,
-    edges: &'static str,
-    empty: &'static str,
-    kind_computation: &'static str,
-    kind_slider: &'static str,
-    kind_select: &'static str,
-    kind_note: &'static str,
-    kind_preview: &'static str,
-    kind_screen: &'static str,
-    select_a_node: &'static str,
-    node_not_found: &'static str,
-    slider_group: &'static str,
-    node_group: &'static str,
-    field_value: &'static str,
-    field_min: &'static str,
-    field_max: &'static str,
-    field_name: &'static str,
-    field_kind: &'static str,
-    field_id: &'static str,
-    selected_suffix: &'static str,
-    delete_selection: &'static str,
-    window_main: &'static str,
-    window_compiled: &'static str,
+app_labels! {
+    /// 🗣️ Complete UI label set for the DAG app; one field per label makes every locale combination
+    /// compile-checked. This app has no separate reuse-terminology concept, so the `reuse_*` cells
+    /// repeat the `native_*` text verbatim.
+    struct DagPlayLabels {
+        nodes: native_en "Nodes", native_de "Knoten", reuse_en "Nodes", reuse_de "Knoten";
+        edges: native_en "Edges", native_de "Kanten", reuse_en "Edges", reuse_de "Kanten";
+        empty: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
+        kind_computation: native_en "Computation", native_de "Berechnung", reuse_en "Computation", reuse_de "Berechnung";
+        kind_slider: native_en "Slider", native_de "Schieberegler", reuse_en "Slider", reuse_de "Schieberegler";
+        kind_select: native_en "Select", native_de "Auswahl", reuse_en "Select", reuse_de "Auswahl";
+        kind_note: native_en "Note", native_de "Notiz", reuse_en "Note", reuse_de "Notiz";
+        kind_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        kind_screen: native_en "Screen", native_de "Bildschirm", reuse_en "Screen", reuse_de "Bildschirm";
+        select_a_node: native_en "Select a node in the document.", native_de "Wählen Sie einen Knoten im Dokument aus.", reuse_en "Select a node in the document.", reuse_de "Wählen Sie einen Knoten im Dokument aus.";
+        node_not_found: native_en "Node not found", native_de "Knoten nicht gefunden", reuse_en "Node not found", reuse_de "Knoten nicht gefunden";
+        slider_group: native_en "slider", native_de "schieberegler", reuse_en "slider", reuse_de "schieberegler";
+        node_group: native_en "Node", native_de "Knoten", reuse_en "Node", reuse_de "Knoten";
+        field_value: native_en "Value", native_de "Wert", reuse_en "Value", reuse_de "Wert";
+        field_min: native_en "Min", native_de "Min", reuse_en "Min", reuse_de "Min";
+        field_max: native_en "Max", native_de "Max", reuse_en "Max", reuse_de "Max";
+        field_name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        field_kind: native_en "Kind", native_de "Typ", reuse_en "Kind", reuse_de "Typ";
+        field_id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
+        selected_suffix: native_en "selected", native_de "ausgewählt", reuse_en "selected", reuse_de "ausgewählt";
+        delete_selection: native_en "Delete selection", native_de "Auswahl löschen", reuse_en "Delete selection", reuse_de "Auswahl löschen";
+    }
 }
-
-const DAG_PLAY_LABELS_NATIVE_EN: DagPlayLabels = DagPlayLabels {
-    nodes: "Nodes",
-    edges: "Edges",
-    empty: "(none)",
-    kind_computation: "Computation",
-    kind_slider: "Slider",
-    kind_select: "Select",
-    kind_note: "Note",
-    kind_preview: "Preview",
-    kind_screen: "Screen",
-    select_a_node: "Select a node in the document.",
-    node_not_found: "Node not found",
-    slider_group: "slider",
-    node_group: "Node",
-    field_value: "Value",
-    field_min: "Min",
-    field_max: "Max",
-    field_name: "Name",
-    field_kind: "Kind",
-    field_id: "Id",
-    selected_suffix: "selected",
-    delete_selection: "Delete selection",
-    window_main: "DAG",
-    window_compiled: "DSL",
-};
-
-const DAG_PLAY_LABELS_NATIVE_DE: DagPlayLabels = DagPlayLabels {
-    nodes: "Knoten",
-    edges: "Kanten",
-    empty: "(keine)",
-    kind_computation: "Berechnung",
-    kind_slider: "Schieberegler",
-    kind_select: "Auswahl",
-    kind_note: "Notiz",
-    kind_preview: "Vorschau",
-    kind_screen: "Bildschirm",
-    select_a_node: "Wählen Sie einen Knoten im Dokument aus.",
-    node_not_found: "Knoten nicht gefunden",
-    slider_group: "schieberegler",
-    node_group: "Knoten",
-    field_value: "Wert",
-    field_min: "Min",
-    field_max: "Max",
-    field_name: "Name",
-    field_kind: "Typ",
-    field_id: "Id",
-    selected_suffix: "ausgewählt",
-    delete_selection: "Auswahl löschen",
-    window_main: "DAG",
-    window_compiled: "DSL",
-};
 
 /// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven locale read.
 fn is_de_locale(cfg: &DagConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-/// 🗣️ Resolves the active label set from `cfg.locale`; this app has no terminology variant.
-fn dag_play_labels(cfg: &DagConfig) -> &'static DagPlayLabels {
+/// 🗣️ Derives the compile-time-checked `Locale` from the BCP-47 `cfg.locale` tag.
+fn dag_locale(cfg: &DagConfig) -> Locale {
     if is_de_locale(cfg) {
-        &DAG_PLAY_LABELS_NATIVE_DE
+        Locale::De
     } else {
-        &DAG_PLAY_LABELS_NATIVE_EN
+        Locale::En
     }
 }
-//#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_dag_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn dag_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addNode", "Add Node", "Knoten hinzufügen"),
-        ("removeNode", "Remove Node", "Knoten entfernen"),
-        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-        ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
-        ("connectMediaPorts", "Connect Ports", "Anschlüsse verbinden"),
-        ("disconnect", "Disconnect", "Trennen"),
-        ("moveMediaNode", "Move Node", "Knoten verschieben"),
-        ("renameDagNode", "Rename Node", "Knoten umbenennen"),
-        ("reorganize", "Reorganize", "Neu anordnen"),
-        ("patchDagNodes", "Patch Nodes", "Knoten aktualisieren"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("selectNode", "Select Node", "Knoten auswählen"),
-        ("nodeGraphSelect", "Node Graph Select", "Knotengraph auswählen"),
-        ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
-        ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
-        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+/// 🗣️ Resolves the active label set from `cfg.locale`; this app has no terminology variant, so
+/// `Terminology` is always `Native`.
+fn dag_play_labels(cfg: &DagConfig) -> &'static DagPlayLabels {
+    DagPlayLabels::labels(dag_locale(cfg), Terminology::Native)
 }
-//#endregion 🔖️CommandLabels
+//#endregion 🔖️Terminology
 
 //#region 🔖️Panels
 fn build_document_tree(document: &DagDocument, selected: &[String], labels: &DagPlayLabels) -> UiNode {
@@ -246,13 +112,13 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
         .map(|node| {
             tree_item_with_action(
                 format!("dag-play-document.node.{}", node.id),
-                if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
+                Label::data(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
                 Some(dag_node_kind_tag(&node.kind).into()),
                 dag_action("setSelection", Some(json!({ "ids": [node.id.clone()] }))),
             )
         })
         .collect();
-    let edge_items: Vec<UiTreeItemNode> = document.edges.iter().map(|edge| tree_item_with_description(format!("dag-play-document.edge.{}", edge.id), format!("{} → {}", edge.source, edge.target), edge.id.clone())).collect();
+    let edge_items: Vec<UiTreeItemNode> = document.edges.iter().map(|edge| tree_item_desc(format!("dag-play-document.edge.{}", edge.id), Label::data(format!("{} → {}", edge.source, edge.target)), Some(edge.id.clone()))).collect();
     let mut sections = vec![
         UiTreeSectionNode {
             id: "dag-play-document.nodes".into(),
@@ -294,7 +160,7 @@ fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "dag-play-catalogue.node-kinds".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
             items: kinds
@@ -318,7 +184,7 @@ fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
     })
 }
 
-fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
+fn inspector_number_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
     UiNode::Field(UiFieldNode {presence: UiPresence::default(),
         id: field_id.into(),
@@ -327,7 +193,7 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, valu
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
-            placeholder: if mixed.uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
+            placeholder: if mixed.uniform { None } else { Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER)) },
             commit: None,
             on_change: dag_action("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
             min: None,
@@ -343,7 +209,7 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, valu
     })
 }
 
-fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
+fn inspector_text_field(node_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_text(values);
     UiNode::Field(UiFieldNode {presence: UiPresence::default(),
         id: field_id.into(),
@@ -352,7 +218,7 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
-            placeholder: mixed.placeholder,
+            placeholder: mixed.placeholder.map(Label::data),
             commit: Some("blur".into()),
             on_change: dag_action("patchDagNodes", Some(json!({ "nodeIds": node_ids, "field": field }))),
             min: None,
@@ -372,7 +238,7 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "dag-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text(labels.select_a_node)],
@@ -383,7 +249,7 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
     if nodes.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "dag-play-inspector.missing".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text(labels.node_not_found)],
@@ -474,7 +340,7 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
             }),
         );
     } else {
-        base_fields.insert(0, ui_inspector_readonly_field("dag-play-inspector.id", labels.field_id, format!("{} {}", node_ids.len(), labels.selected_suffix)));
+        base_fields.insert(0, ui_inspector_readonly_field("dag-play-inspector.id", labels.field_id, format!("{} {}", node_ids.len(), labels.selected_suffix.as_str())));
     }
     groups.push(UiInspectorFieldGroup { presence: UiPresence::default(), id: "dag-play-inspector.base".into(), label: labels.node_group.into(), default_open: None, fields: base_fields });
     ui_inspector_groups_to_tree(&groups)
@@ -710,25 +576,7 @@ impl DocumentApp for DagPlayApp {
             DAG_PLAY_BODY_DOCUMENT => build_document_tree(document, selected, labels),
             DAG_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             DAG_PLAY_BODY_INSPECTOR => build_inspector_tree(document, selected, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
-        }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, DagConfig>) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = dag_play_labels(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: HashMap::from([(DAG_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()), (DAG_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string())]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::from([("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string())]),
-            action_labels: dag_action_labels(is_de),
-            utility_labels: HashMap::new(),
-            example_labels: HashMap::from([("demo".to_string(), "Demo".to_string())]),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-            tutorial_labels: HashMap::new(),
-            group_labels: HashMap::new(),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -760,7 +608,7 @@ impl DocumentApp for DagPlayApp {
         if let Some(edge_id) = hit_edge_id {
             menu = menu.group("transfer", |m| m.action_args("disconnect", json!({ "edgeId": edge_id })));
         }
-        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
         menu.build()

@@ -25,9 +25,9 @@ use semio_framework_plugin::{
     tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures,
     ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, AppLabels,
-    Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, IconName, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
+    Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, IconName, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
     ArtifactKindSpec, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode,
-    UiToggleNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
+    UiToggleNode, UiTreeActionPlacement, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -612,14 +612,14 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves a primitive catalogue entry's display label from its stable kind; unknown kinds fall back to the catalog's native English text.
-fn primitive_catalog_label(kind: &str, fallback_label: &'static str, labels: &LowpolyLabels) -> &'static str {
+fn primitive_catalog_label(kind: &str, fallback_label: &'static str, labels: &LowpolyLabels) -> Label {
     match kind {
-        "box" => labels.primitive_box,
-        "plane" => labels.primitive_plane,
-        "cylinder" => labels.primitive_cylinder,
-        "cone" => labels.primitive_cone,
-        "ico_sphere" => labels.primitive_ico_sphere,
-        _ => fallback_label,
+        "box" => labels.primitive_box.into(),
+        "plane" => labels.primitive_plane.into(),
+        "cylinder" => labels.primitive_cylinder.into(),
+        "cone" => labels.primitive_cone.into(),
+        "ico_sphere" => labels.primitive_ico_sphere.into(),
+        _ => Label::data(fallback_label),
     }
 }
 //#endregion 🔖️Terminology
@@ -640,7 +640,7 @@ fn build_document_tree(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &Lo
             let vertex_count = mesh.as_ref().map(|entry| entry.vertex_count()).unwrap_or(0);
             let edge_count = mesh.as_ref().map(|entry| entry.edge_count()).unwrap_or(0);
             let face_count = mesh.as_ref().map(|entry| entry.face_count()).unwrap_or(0);
-            let component_group = |mode: &str, label: &str, icon: &str, count: usize| {
+            let component_group = |mode: &str, label: LabelText, icon: &str, count: usize| {
                 let leaves: Vec<UiTreeItemNode> = (0..count)
                     .map(|id| {
                         let row_id = document_target_row_id(&object.id, object_index, mode, id as u32);
@@ -655,7 +655,7 @@ fn build_document_tree(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &Lo
                                 icon_id: "flip-vertical".into(),
                                 label: Some(labels.flip_normal.into()),
                                 action: lowpoly_action("flipFaces", Some(json!({ "faceIds": [id] }))),
-                                reveal_on_hover: Some(true),
+                                placement: Some(UiTreeActionPlacement::Menu),
                             }]);
                         }
                         UiTreeItemNode {
@@ -673,7 +673,7 @@ fn build_document_tree(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &Lo
                             unhover_action: Some(lowpoly_action("setHover", None)),
                             actions,
                             menu: None,
-                            ..UiTreeItemNode::base(row_id, format!("{label} {id}"))
+                            ..UiTreeItemNode::base(row_id, Label::data(format!("{} {id}", label.as_str())))
                         }
                     })
                     .collect();
@@ -682,7 +682,7 @@ fn build_document_tree(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &Lo
                     items: Some(leaves),
                     description: Some(format!("{count}")),
                     menu: None,
-                    ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}.{mode}.group"), label.to_string())
+                    ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}.{mode}.group"), label)
                 }
             };
             UiTreeItemNode {
@@ -704,7 +704,7 @@ fn build_document_tree(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &Lo
                 default_open: Some(object.id == active_id),
                 description: Some(object.id.clone()),
                 menu: None,
-                ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}"), object.name.clone())
+                ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}"), Label::data(object.name.clone()))
             }
         })
         .collect();
@@ -748,7 +748,7 @@ fn build_layers_tree(view: LowpolyView<'_>, labels: &LowpolyLabels) -> UiNode {
             icon_id: Some("layers".into()),
             ..tree_item_with_action(
                 format!("lowpoly-layer:{index}"),
-                layer.name.clone(),
+                Label::data(layer.name.clone()),
                 Some(format!("{} · {}", layer.opacity, layer.blend_mode)),
                 lowpoly_action("setActivePaintLayer", Some(json!({ "layerIndex": index }))),
             )
@@ -760,7 +760,7 @@ fn build_layers_tree(view: LowpolyView<'_>, labels: &LowpolyLabels) -> UiNode {
         .build()
 }
 
-fn inspector_utility_param_field(id: &str, label: &str, key: &str, value: &Value) -> UiNode {
+fn inspector_utility_param_field(id: &str, label: LabelText, key: &str, value: &Value) -> UiNode {
     UiNode::Field(UiFieldNode {presence: UiPresence::default(),
         id: format!("lowpoly-play-inspector.{id}"),
         label: label.into(),
@@ -787,8 +787,8 @@ fn inspector_utility_param_field(id: &str, label: &str, key: &str, value: &Value
 fn build_inspector_tree(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabels) -> UiNode {
     let Some(object) = active_object(view) else {
         return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {LOWPOLY_DOCUMENT_SCHEMA}")),
-            ui_text("No active object".to_string()),
+            ui_text(Label::data(format!("Schema: {LOWPOLY_DOCUMENT_SCHEMA}"))),
+            ui_text(Label::data("No active object")),
         ]);
     };
     let config = view.config;
@@ -845,7 +845,7 @@ fn build_inspector_tree(view: LowpolyView<'_>, active_utility: &str, labels: &Lo
                         "{} · {} {}",
                         format_selection_targets_label(&targets),
                         config.selection_ids.len(),
-                        labels.selected,
+                        labels.selected.as_str(),
                     ),
                 ),
                 ui_inspector_readonly_field(
@@ -965,7 +965,7 @@ fn lowpoly_window_engagement(view: LowpolyView<'_>, active_utility: &str, labels
                 "{} · {} · {selected_count} {}",
                 format_selection_targets_label(&selection_targets_from_config(config)),
                 transform,
-                labels.selected,
+                labels.selected.as_str(),
             ),
         }]),
         possible_engagements: Some(vec![
@@ -991,7 +991,7 @@ fn utility_param_f64(params: &Value, key: &str, default: f64) -> f64 {
 
 fn lowpoly_utility_param_slider(
     id: &str,
-    label: &str,
+    label: LabelText,
     key: &str,
     params: &Value,
     default: f64,
@@ -1018,7 +1018,7 @@ fn lowpoly_utility_param_slider(
 /// 🎯️ One selection-granularity toggle. Selection kinds are a non-exclusive multi-select (mesh + face +
 /// edge + vertex can all be active at once), so they are a window-measure toggle group — NOT a
 /// single-active utility group.
-fn selection_kind_toggle(id: &str, icon: &str, label: &str, kind: &str, pressed: bool) -> WindowMeasure {
+fn selection_kind_toggle(id: &str, icon: &str, label: LabelText, kind: &str, pressed: bool) -> WindowMeasure {
     WindowMeasure::Toggle {
         id: format!("lowpoly-select-{id}"),
         icon_id: icon.into(),
@@ -1143,7 +1143,7 @@ fn lowpoly_select_measures_group(config: &LowpolyConfig, labels: &LowpolyLabels)
 /// Utility Options rail only while that exact utility is active. Both utilities stamp through the same
 /// `stamp_brush` path (radius/hardness/opacity + eraser flag), so they share an identical param set.
 fn lowpoly_paint_params_group(utility: &str, params: &Value, labels: &LowpolyLabels) -> WindowMeasure {
-    let slider = |suffix: &str, label: &str, key: &str, default: f64, min: f64, max: f64, step: f64| WindowMeasure::Slider {
+    let slider = |suffix: &str, label: LabelText, key: &str, default: f64, min: f64, max: f64, step: f64| WindowMeasure::Slider {
         id: format!("lowpoly-measure-{utility}-{suffix}"),
         label: Some(label.into()),
         value: utility_param_f64(params, key, default),
@@ -2138,7 +2138,7 @@ impl DocumentApp for LowpolyPlayApp {
                         &lowpoly_sun_config(config),
                     ),
                 ),
-                None => ui_text("Failed to load lowpoly document"),
+                None => ui_text(Label::data("Failed to load lowpoly document")),
             },
             LOWPOLY_PLAY_BODY_UV => match &loaded {
                 Some(loaded) => build_canvas_2d_scene(
@@ -2151,16 +2151,16 @@ impl DocumentApp for LowpolyPlayApp {
                         layers_json: uv_canvas_layers_json(loaded, view, &texture_cache),
                     },
                 ),
-                None => ui_text("Failed to load UV canvas"),
+                None => ui_text(Label::data("Failed to load UV canvas")),
             },
             LOWPOLY_PLAY_BODY_DOCUMENT => match &loaded {
                 Some(loaded) => build_document_tree(view, loaded, labels),
-                None => ui_text("Failed to load lowpoly document"),
+                None => ui_text(Label::data("Failed to load lowpoly document")),
             },
             LOWPOLY_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             LOWPOLY_PLAY_BODY_INSPECTION => build_inspector_tree(view, active_utility, labels),
             LOWPOLY_PLAY_BODY_LAYERS => build_layers_tree(view, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -2391,7 +2391,7 @@ pub fn create_lowpoly_app() -> App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp, ViewState};
 
     fn new_app() -> VcsDocumentApp<LowpolyPlayApp> {
         testkit::new_app::<LowpolyPlayApp>()

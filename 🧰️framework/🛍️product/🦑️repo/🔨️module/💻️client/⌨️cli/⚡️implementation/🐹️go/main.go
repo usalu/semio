@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/blevesearch/bleve/v2"
+	blevequery "github.com/blevesearch/bleve/v2/search/query"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/dustin/go-humanize"
 	"github.com/google/uuid"
@@ -33,12 +34,15 @@ import (
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	ignore "github.com/sabhiram/go-gitignore"
 	"github.com/spf13/cobra"
+	repopkg "github.com/usalu/semio/repo/go"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
 	"math"
 	"math/rand"
+	_ "modernc.org/sqlite"
 	"net/http"
 	"os"
 	"os/exec"
@@ -53,17 +57,10 @@ import (
 	"text/template"
 	"time"
 	"unicode/utf8"
-	_ "modernc.org/sqlite"
-	blevequery "github.com/blevesearch/bleve/v2/search/query"
-	ignore "github.com/sabhiram/go-gitignore"
-	repopkg "github.com/usalu/semio/repo/go"
 )
-
-
 
 // #region 🤸️Preamble
 // Package declaration and dependency imports for the repo CLI.
-
 
 // #region 🔌️Adapters
 // #endregion 🔌️Adapters
@@ -885,13 +882,7 @@ func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
 				}
 				kind = parsed
 			}
-			ctx := cmd.Context()
-			if config.Timeout > 0 {
-				ctxWithTimeout, cancel := context.WithTimeout(ctx, config.Timeout)
-				defer cancel()
-				ctx = ctxWithTimeout
-			}
-			return serveMcp(ctx, kind, config.Timeout)
+			return serveMcp(cmd.Context(), kind, config.Timeout)
 		},
 	}
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Initialize and exit without starting server")
@@ -9214,7 +9205,7 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "loc",
 		Short: "Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)",
-		Long:  "Counts tracked files via git (not cloc). The runnable CLI is built from repo/client/mcp/go (package main), not repo/client (library): go build -o repo/client/client.exe ./repo/client/mcp/go. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳️wip), including all contributors. With --history, each row scans the tree at that commit for physical LOC; Δ% is change vs the previous printed history step. Branch and checkpoint lines use the same emoji ids as the repo tree (⛳️wip, 🔀️abc1234, 🧑️‍💻️alias).",
+		Long:  "Counts tracked files via git (not cloc). The runnable CLI is built from the repo client's MCP Go implementation into the platform-specific client binary. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳️wip), including all contributors. With --history, each row scans the tree at that commit for physical LOC; Δ% is change vs the previous printed history step. Branch and checkpoint lines use the same emoji ids as the repo tree (⛳️wip, 🔀️abc1234, 🧑️‍💻️alias).",
 		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			langs, _ := c.Flags().GetStringSlice("languages")
@@ -15404,10 +15395,10 @@ const (
 	BreachSystemDevcontainerVscodeExtensionsOutside    Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
 	BreachFolderIllegalEmpty                           Statute = "folder/illegal/empty"
 	BreachFileIllegalUseGodfile                        Statute = "file/illegal/use-godfile"
-	BreachComposeNoUiDependency                          Statute = "compose/import/no-ui-dependency"
+	BreachComposeNoUiDependency                        Statute = "compose/import/no-ui-dependency"
 	BreachDependencyBoundaryDirectImport               Statute = "dependency-boundary/import/direct-third-party"
-	BreachComposeDescriptionMissingEmoji                 Statute = "compose/description/missing-emoji"
-	BreachComposeDescriptionEmojiNotUnique               Statute = "compose/description/emoji-not-unique"
+	BreachComposeDescriptionMissingEmoji               Statute = "compose/description/missing-emoji"
+	BreachComposeDescriptionEmojiNotUnique             Statute = "compose/description/emoji-not-unique"
 	BreachCodeRustRegionComment                        Statute = "code/rust/region-comment-instead-of-mod"
 )
 
@@ -16993,11 +16984,23 @@ func FormatDayDir(day int) string {
 	return EmojiDay + PadNumber(day, 2)
 }
 
+// 🧭️parseDatedDir parses one canonical emoji-prefixed date directory segment.
+func parseDatedDir(segment, prefix string) (int, error) {
+	value := strings.TrimPrefix(segment, prefix)
+	if value == segment {
+		return 0, fmt.Errorf("date directory %q is missing prefix %q", segment, prefix)
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, fmt.Errorf("invalid date directory %q: %w", segment, err)
+	}
+	return parsed, nil
+}
+
 // 🎫️FormatTicketRelPath returns YY/MM/DD/SLUG with emoji date segments.
 func FormatTicketRelPath(year, month, day int, slug string) string {
 	return FormatYearDir(year) + "/" + FormatMonthDir(month) + "/" + FormatDayDir(day) + "/" + slug
 }
-
 
 // 🔗️PathToUriPath MUST complete the operation and return consistent results.
 // 🌐️PathToUriPath performs the path to uri path operation (no whitespace, reversible).
@@ -22438,6 +22441,9 @@ func normalizeTicketFileInput(filePath string) string {
 		path := strings.TrimPrefix(normalized, "file://")
 		return normalizeRepoPath(path)
 	}
+	if filepath.IsAbs(normalized) || strings.ContainsAny(normalized, `/\`) || filepath.Ext(normalized) != "" {
+		return normalizeRepoPath(normalized)
+	}
 	uri := IdToUri(normalized)
 	if uri != "" && strings.HasPrefix(uri, "repo://") {
 		id := UriToId(uri)
@@ -22909,7 +22915,7 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	var tickets []Ticket
 	var years []string
 	if year != nil {
-		years = []string{PadNumber(*year, 2)}
+		years = []string{FormatYearDir(*year)}
 	} else {
 		entries, err := os.ReadDir(ticketsDir)
 		if err != nil {
@@ -22928,7 +22934,7 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 		}
 		var months []string
 		if month != nil {
-			months = []string{PadNumber(*month, 2)}
+			months = []string{FormatMonthDir(*month)}
 		} else {
 			entries, err := os.ReadDir(yearPath)
 			if err != nil {
@@ -22947,7 +22953,7 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 			}
 			var days []string
 			if day != nil {
-				days = []string{PadNumber(*day, 2)}
+				days = []string{FormatDayDir(*day)}
 			} else {
 				entries, err := os.ReadDir(monthPath)
 				if err != nil {
@@ -22964,9 +22970,12 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 				if !FileExists(dayPath) {
 					continue
 				}
-				yearInt, _ := strconv.Atoi(y)
-				monthInt, _ := strconv.Atoi(m)
-				dayInt, _ := strconv.Atoi(d)
+				yearInt, yearErr := parseDatedDir(y, EmojiYear)
+				monthInt, monthErr := parseDatedDir(m, EmojiMonth)
+				dayInt, dayErr := parseDatedDir(d, EmojiDay)
+				if yearErr != nil || monthErr != nil || dayErr != nil {
+					continue
+				}
 				filepath.WalkDir(dayPath, func(path string, dEntry fs.DirEntry, err error) error {
 					if err != nil {
 						return nil
@@ -23018,7 +23027,7 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 	}
 	var years []string
 	if year != nil {
-		years = []string{PadNumber(*year, 2)}
+		years = []string{FormatYearDir(*year)}
 	} else {
 		entries, err := os.ReadDir(ticketsDir)
 		if err != nil {
@@ -23044,7 +23053,7 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 		}
 		var months []string
 		if month != nil {
-			months = []string{PadNumber(*month, 2)}
+			months = []string{FormatMonthDir(*month)}
 		} else {
 			entries, err := os.ReadDir(yearPath)
 			if err != nil {
@@ -23063,7 +23072,7 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 			}
 			var days []string
 			if day != nil {
-				days = []string{PadNumber(*day, 2)}
+				days = []string{FormatDayDir(*day)}
 			} else {
 				entries, err := os.ReadDir(monthPath)
 				if err != nil {
@@ -23080,9 +23089,12 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 				if !FileExists(dayPath) {
 					continue
 				}
-				yearInt, _ := strconv.Atoi(y)
-				monthInt, _ := strconv.Atoi(m)
-				dayInt, _ := strconv.Atoi(d)
+				yearInt, yearErr := parseDatedDir(y, EmojiYear)
+				monthInt, monthErr := parseDatedDir(m, EmojiMonth)
+				dayInt, dayErr := parseDatedDir(d, EmojiDay)
+				if yearErr != nil || monthErr != nil || dayErr != nil {
+					continue
+				}
 				walkErr := filepath.WalkDir(dayPath, func(path string, dEntry fs.DirEntry, err error) error {
 					if err != nil {
 						return nil
@@ -24665,7 +24677,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 
 	var tickFilesResult *TicketDiffs
 	var err error
-	if !bulk || len(files) > 0 {
+	if (!bulk || len(files) > 0) && !noManagement {
 		tickFilesResult, err = ComputeTicketFiles(ticket, files)
 		if err != nil {
 			return err
@@ -24736,26 +24748,30 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		closeClient = ticket.Interactions[len(ticket.Interactions)-1].Client
 	}
 	var interactionFiles []InteractionFile
-	if tickFilesResult != nil {
-		seen := make(map[string]struct{})
-		addFile := func(path string) {
-			if _, ok := seen[path]; ok {
-				return
-			}
-			seen[path] = struct{}{}
-			interactionFiles = append(interactionFiles, InteractionFile{Path: path})
+	seenInteractionFiles := make(map[string]struct{})
+	addInteractionFile := func(path string) {
+		if _, ok := seenInteractionFiles[path]; ok {
+			return
 		}
+		seenInteractionFiles[path] = struct{}{}
+		interactionFiles = append(interactionFiles, InteractionFile{Path: path})
+	}
+	if tickFilesResult != nil {
 		for _, f := range tickFilesResult.Files.Added {
-			addFile(f.Path)
+			addInteractionFile(f.Path)
 		}
 		for _, f := range tickFilesResult.Files.Modified {
-			addFile(f.Path)
+			addInteractionFile(f.Path)
 		}
 		for _, f := range tickFilesResult.Files.Deleted {
-			addFile(f.Path)
+			addInteractionFile(f.Path)
 		}
 		for _, f := range tickFilesResult.Files.Renamed {
-			addFile(f.To)
+			addInteractionFile(f.To)
+		}
+	} else {
+		for _, path := range files {
+			addInteractionFile(path)
 		}
 	}
 	ticket.Interactions = append(ticket.Interactions, Interaction{
@@ -38572,7 +38588,7 @@ func installMicroCommitHook(repoRoot, hookName string) error {
 	if repoRoot == "" {
 		return nil
 	}
-	src := filepath.Join(repoRoot, "repo", "hook", hookName)
+	src := filepath.Join(repoRoot, "🧰️framework", "🛍️product", "🦑️repo", "🪝️hook", hookName)
 	data, err := os.ReadFile(src)
 	if err != nil {
 		return fmt.Errorf("read micro-commit hook %s: %w", hookName, err)
@@ -45277,11 +45293,8 @@ func searchLinesInFile(filePath string, pattern string) []int {
 
 // #region 🔖️Missing Hook Functions
 
-
 // #region 🤸️Preamble
 // Package client — MCP + hook helpers shared by repo/client/mcp and repo/client/mcp/{cursor,kiro,...}.
-
-
 
 // #endregion 🤸️Preamble
 
@@ -45697,36 +45710,36 @@ func mcpDesc(kind McpClientKind, key string) string {
 // mcpDescriptionTable: keys = stable ids; inner map must include generic + each IDE kind used.
 var mcpDescriptionTable = map[string]map[McpClientKind]string{
 	"prompt_enhance": {
-		McpClientGeneric:  "Use when you are about to add behavior and must align the change with repository rules before editing.",
-		McpClientCursor:   "Use when the Cursor agent is about to add behavior and must align the change with repository rules before editing.",
-		McpClientKiro:     "Use when the Kiro agent is about to add behavior and must align the change with repository rules before editing.",
-		McpClientCopilot:  "Use when the Copilot agent is about to add behavior and must align the change with repository rules before editing.",
-		McpClientClaude:   "Use when Claude Code is about to add behavior and must align the change with repository rules before editing.",
-		McpClientCodex:    "Use when Codex is about to add behavior and must align the change with repository rules before editing.",
+		McpClientGeneric: "Use when you are about to add behavior and must align the change with repository rules before editing.",
+		McpClientCursor:  "Use when the Cursor agent is about to add behavior and must align the change with repository rules before editing.",
+		McpClientKiro:    "Use when the Kiro agent is about to add behavior and must align the change with repository rules before editing.",
+		McpClientCopilot: "Use when the Copilot agent is about to add behavior and must align the change with repository rules before editing.",
+		McpClientClaude:  "Use when Claude Code is about to add behavior and must align the change with repository rules before editing.",
+		McpClientCodex:   "Use when Codex is about to add behavior and must align the change with repository rules before editing.",
 	},
 	"prompt_refactor": {
-		McpClientGeneric:  "Use when a refactor is required and you must not regress behavior or tests.",
-		McpClientCursor:   "Use when the Cursor agent must refactor without regressing behavior or tests.",
-		McpClientKiro:     "Use when the Kiro agent must refactor without regressing behavior or tests.",
-		McpClientCopilot:  "Use when the Copilot agent must refactor without regressing behavior or tests.",
-		McpClientClaude:   "Use when Claude Code must refactor without regressing behavior or tests.",
-		McpClientCodex:    "Use when Codex must refactor without regressing behavior or tests.",
+		McpClientGeneric: "Use when a refactor is required and you must not regress behavior or tests.",
+		McpClientCursor:  "Use when the Cursor agent must refactor without regressing behavior or tests.",
+		McpClientKiro:    "Use when the Kiro agent must refactor without regressing behavior or tests.",
+		McpClientCopilot: "Use when the Copilot agent must refactor without regressing behavior or tests.",
+		McpClientClaude:  "Use when Claude Code must refactor without regressing behavior or tests.",
+		McpClientCodex:   "Use when Codex must refactor without regressing behavior or tests.",
 	},
 	"prompt_test": {
-		McpClientGeneric:  "Use when tests must be extended before you claim coverage for new paths.",
-		McpClientCursor:   "Use when the Cursor agent must extend tests before claiming coverage for new paths.",
-		McpClientKiro:     "Use when the Kiro agent must extend tests before claiming coverage for new paths.",
-		McpClientCopilot:  "Use when the Copilot agent must extend tests before claiming coverage for new paths.",
-		McpClientClaude:   "Use when Claude Code must extend tests before claiming coverage for new paths.",
-		McpClientCodex:    "Use when Codex must extend tests before claiming coverage for new paths.",
+		McpClientGeneric: "Use when tests must be extended before you claim coverage for new paths.",
+		McpClientCursor:  "Use when the Cursor agent must extend tests before claiming coverage for new paths.",
+		McpClientKiro:    "Use when the Kiro agent must extend tests before claiming coverage for new paths.",
+		McpClientCopilot: "Use when the Copilot agent must extend tests before claiming coverage for new paths.",
+		McpClientClaude:  "Use when Claude Code must extend tests before claiming coverage for new paths.",
+		McpClientCodex:   "Use when Codex must extend tests before claiming coverage for new paths.",
 	},
 	"prompt_comply": {
-		McpClientGeneric:  "Use when the tree is red and you must converge implementation to passing tests without deleting assertions.",
-		McpClientCursor:   "Use when the Cursor agent must converge a red workspace to passing tests without deleting assertions.",
-		McpClientKiro:     "Use when the Kiro agent must converge a red workspace to passing tests without deleting assertions.",
-		McpClientCopilot:  "Use when the Copilot agent must converge a red workspace to passing tests without deleting assertions.",
-		McpClientClaude:   "Use when Claude Code must converge a red workspace to passing tests without deleting assertions.",
-		McpClientCodex:    "Use when Codex must converge a red workspace to passing tests without deleting assertions.",
+		McpClientGeneric: "Use when the tree is red and you must converge implementation to passing tests without deleting assertions.",
+		McpClientCursor:  "Use when the Cursor agent must converge a red workspace to passing tests without deleting assertions.",
+		McpClientKiro:    "Use when the Kiro agent must converge a red workspace to passing tests without deleting assertions.",
+		McpClientCopilot: "Use when the Copilot agent must converge a red workspace to passing tests without deleting assertions.",
+		McpClientClaude:  "Use when Claude Code must converge a red workspace to passing tests without deleting assertions.",
+		McpClientCodex:   "Use when Codex must converge a red workspace to passing tests without deleting assertions.",
 	},
 	"res_root": {
 		McpClientGeneric: "Fetch when the session anchor for the repository root is required before any scoped read.",
@@ -45913,28 +45926,28 @@ var mcpDescriptionTable = map[string]map[McpClientKind]string{
 		McpClientCodex:   "Fetch when Codex must read one checkpoint record before tying hooks or tickets to history.",
 	},
 	"tool_ticket_open": {
-		McpClientGeneric:  "Use at the start of any tracked task that will touch the repository and needs a durable workspace folder.",
-		McpClientCursor:   "Use at the start of a Cursor agent task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
-		McpClientKiro:     "Use at the start of a Kiro agent task that will touch the repository and needs a durable workspace folder; use when a spec id should be bound for later archival on close.",
-		McpClientCopilot:  "Use at the start of a Copilot agent task that will touch the repository and needs a durable workspace folder; use when a memory plan id should be bound for later archival on close.",
-		McpClientClaude:   "Use at the start of a Claude Code task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
-		McpClientCodex:    "Use at the start of a Codex task that will touch the repository and needs a durable workspace folder; use when a memory id should be bound for later archival on close.",
+		McpClientGeneric: "Use at the start of any tracked task that will touch the repository and needs a durable workspace folder.",
+		McpClientCursor:  "Use at the start of a Cursor agent task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
+		McpClientKiro:    "Use at the start of a Kiro agent task that will touch the repository and needs a durable workspace folder; use when a spec id should be bound for later archival on close.",
+		McpClientCopilot: "Use at the start of a Copilot agent task that will touch the repository and needs a durable workspace folder; use when a memory plan id should be bound for later archival on close.",
+		McpClientClaude:  "Use at the start of a Claude Code task that will touch the repository and needs a durable workspace folder; use when a plan id should be bound for later archival on close.",
+		McpClientCodex:   "Use at the start of a Codex task that will touch the repository and needs a durable workspace folder; use when a memory id should be bound for later archival on close.",
 	},
 	"tool_ticket_close": {
-		McpClientGeneric:  "Use only when the tracked task is finished, the summary is final, and the touched paths list is complete.",
-		McpClientCursor:   "Use only when the Cursor agent task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
-		McpClientKiro:     "Use only when the Kiro agent task is finished, the summary is final, the touched paths list is complete, and any bound spec should be archived into the ticket folder.",
-		McpClientCopilot:  "Use only when the Copilot agent task is finished, the summary is final, the touched paths list is complete, and any bound memory plan should be archived into the ticket folder.",
-		McpClientClaude:   "Use only when the Claude Code task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
-		McpClientCodex:    "Use only when the Codex task is finished, the summary is final, the touched paths list is complete, and any bound memory should be archived into the ticket folder.",
+		McpClientGeneric: "Use only when the tracked task is finished, the summary is final, and the touched paths list is complete.",
+		McpClientCursor:  "Use only when the Cursor agent task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
+		McpClientKiro:    "Use only when the Kiro agent task is finished, the summary is final, the touched paths list is complete, and any bound spec should be archived into the ticket folder.",
+		McpClientCopilot: "Use only when the Copilot agent task is finished, the summary is final, the touched paths list is complete, and any bound memory plan should be archived into the ticket folder.",
+		McpClientClaude:  "Use only when the Claude Code task is finished, the summary is final, the touched paths list is complete, and any bound plan should be archived into the ticket folder.",
+		McpClientCodex:   "Use only when the Codex task is finished, the summary is final, the touched paths list is complete, and any bound memory should be archived into the ticket folder.",
 	},
 	"tool_ticket_reopen": {
-		McpClientGeneric:  "Use when work must continue on a closed ticket before any new edits land.",
-		McpClientCursor:   "Use when the Cursor agent must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
-		McpClientKiro:     "Use when the Kiro agent must continue a closed ticket before new edits; use when rebinding a spec id for archival on the next close.",
-		McpClientCopilot:  "Use when the Copilot agent must continue a closed ticket before new edits; use when rebinding a memory plan id for archival on the next close.",
-		McpClientClaude:   "Use when Claude Code must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
-		McpClientCodex:    "Use when Codex must continue a closed ticket before new edits; use when rebinding a memory id for archival on the next close.",
+		McpClientGeneric: "Use when work must continue on a closed ticket before any new edits land.",
+		McpClientCursor:  "Use when the Cursor agent must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
+		McpClientKiro:    "Use when the Kiro agent must continue a closed ticket before new edits; use when rebinding a spec id for archival on the next close.",
+		McpClientCopilot: "Use when the Copilot agent must continue a closed ticket before new edits; use when rebinding a memory plan id for archival on the next close.",
+		McpClientClaude:  "Use when Claude Code must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
+		McpClientCodex:   "Use when Codex must continue a closed ticket before new edits; use when rebinding a memory id for archival on the next close.",
 	},
 	"tool_section_move": {
 		McpClientGeneric: "Use when a region rename is required and the surrounding file context is already loaded.",

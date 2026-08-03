@@ -9,11 +9,11 @@ use note_engine::{
 use note_op::{NoteConfigOperation, NoteOperation};
 use note_protocol::NoteCommand;
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    build_ink_canvas_scene, localized_label_map,
+    build_ink_canvas_scene,
     tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App, MediaClass, MediaForm, MediaType, OsMediaCapability, ArtifactKindSpec,
-    InkCanvasScene, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, ConfigView, Emit, LocaleLabels, LocalizedLabel,
+    InkCanvasScene, ActionDescriptor, AppLabels, DocumentApp, DocumentView, ConfigView, Emit, Label, Locale, LocalizedLabel, Terminology,
     HostEffect, PanelTreeBuilder, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiToggleNode, UiTreeItemNode,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -43,12 +43,17 @@ const NOTE_PLAY_WINDOW_NAVIGATOR: &str = "note-navigator";
 //#region 🔖️Locale
 /// 🗣️ `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
 /// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical helpers.
+/// `NoteConfig` carries no terminology axis, so this app is always `Terminology::Native`.
 fn is_de_locale(cfg: &NoteConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &NoteConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn note_locale(cfg: &NoteConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+fn resolve_labels<L: AppLabels>(cfg: &NoteConfig) -> &'static L {
+    L::labels(note_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -150,111 +155,44 @@ fn note_patch_json_value(field: &str, value: &str) -> Value {
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the note app; one field per label makes every locale combination compile-checked.
     struct NotePlayLabels {
-        catalogue_title: &'static str = en: "Block kinds", de: "Blockarten";
-        catalogue_text: &'static str = en: "text — rich text block", de: "Text — reicher Textblock";
-        catalogue_image: &'static str = en: "image — embedded image", de: "Bild — eingebettetes Bild";
-        catalogue_table: &'static str = en: "table — grid block", de: "Tabelle — Rasterblock";
-        catalogue_math: &'static str = en: "math — TeX equation", de: "Mathe — TeX-Formel";
-        catalogue_ink: &'static str = en: "ink — pencil strokes", de: "Tinte — Stiftstriche";
-        catalogue_group: &'static str = en: "group — nested blocks", de: "Gruppe — verschachtelte Blöcke";
-        inspector_block: &'static str = en: "Block", de: "Block";
-        document_empty: &'static str = en: "Drop blocks here", de: "Blöcke hier ablegen";
-        add_text: &'static str = en: "Add Text", de: "Text hinzufügen";
-        add_table: &'static str = en: "Add Table", de: "Tabelle hinzufügen";
-        add_math: &'static str = en: "Add Math", de: "Mathe hinzufügen";
-        add_image: &'static str = en: "Add Image", de: "Bild hinzufügen";
-        add_group: &'static str = en: "Add Group", de: "Gruppe hinzufügen";
-        window_composite: &'static str = en: "Canvas", de: "Leinwand";
-        window_navigator: &'static str = en: "Navigator", de: "Navigator";
-        field_name: &'static str = en: "Name", de: "Name";
-        field_x: &'static str = en: "X", de: "X";
-        field_y: &'static str = en: "Y", de: "Y";
-        field_width: &'static str = en: "Width", de: "Breite";
-        field_height: &'static str = en: "Height", de: "Höhe";
-        field_visible: &'static str = en: "Visible", de: "Sichtbar";
-        field_locked: &'static str = en: "Locked", de: "Gesperrt";
-        measure_camera: &'static str = en: "Camera", de: "Kamera";
-        measure_zoom: &'static str = en: "Zoom", de: "Zoom";
-        measure_grid: &'static str = en: "Grid", de: "Raster";
-        measure_show_grid: &'static str = en: "Show grid", de: "Raster anzeigen";
-        measure_spacing: &'static str = en: "Spacing", de: "Abstand";
-        measure_subdivisions: &'static str = en: "Subdivisions", de: "Unterteilungen";
-        measure_opacity: &'static str = en: "Opacity", de: "Deckkraft";
-        measure_snap: &'static str = en: "Snap", de: "Fangen";
-        measure_snap_to_grid: &'static str = en: "Snap to grid", de: "Am Raster einrasten";
-        measure_snap_spacing: &'static str = en: "Snap spacing", de: "Rasterabstand";
-        measure_drawing: &'static str = en: "Drawing", de: "Zeichnen";
-        measure_pencil_width: &'static str = en: "Pencil width", de: "Stiftbreite";
-        measure_eraser_radius: &'static str = en: "Eraser radius", de: "Radiergummi-Radius";
+        document: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
+        catalogue_title: native_en "Block kinds", native_de "Blockarten", reuse_en "Block kinds", reuse_de "Blockarten";
+        catalogue_text: native_en "text — rich text block", native_de "Text — reicher Textblock", reuse_en "text — rich text block", reuse_de "Text — reicher Textblock";
+        catalogue_image: native_en "image — embedded image", native_de "Bild — eingebettetes Bild", reuse_en "image — embedded image", reuse_de "Bild — eingebettetes Bild";
+        catalogue_table: native_en "table — grid block", native_de "Tabelle — Rasterblock", reuse_en "table — grid block", reuse_de "Tabelle — Rasterblock";
+        catalogue_math: native_en "math — TeX equation", native_de "Mathe — TeX-Formel", reuse_en "math — TeX equation", reuse_de "Mathe — TeX-Formel";
+        catalogue_ink: native_en "ink — pencil strokes", native_de "Tinte — Stiftstriche", reuse_en "ink — pencil strokes", reuse_de "Tinte — Stiftstriche";
+        catalogue_group: native_en "group — nested blocks", native_de "Gruppe — verschachtelte Blöcke", reuse_en "group — nested blocks", reuse_de "Gruppe — verschachtelte Blöcke";
+        inspector_block: native_en "Block", native_de "Block", reuse_en "Block", reuse_de "Block";
+        document_empty: native_en "Drop blocks here", native_de "Blöcke hier ablegen", reuse_en "Drop blocks here", reuse_de "Blöcke hier ablegen";
+        add_text: native_en "Add Text", native_de "Text hinzufügen", reuse_en "Add Text", reuse_de "Text hinzufügen";
+        add_table: native_en "Add Table", native_de "Tabelle hinzufügen", reuse_en "Add Table", reuse_de "Tabelle hinzufügen";
+        add_math: native_en "Add Math", native_de "Mathe hinzufügen", reuse_en "Add Math", reuse_de "Mathe hinzufügen";
+        add_image: native_en "Add Image", native_de "Bild hinzufügen", reuse_en "Add Image", reuse_de "Bild hinzufügen";
+        add_group: native_en "Add Group", native_de "Gruppe hinzufügen", reuse_en "Add Group", reuse_de "Gruppe hinzufügen";
+        field_name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        field_x: native_en "X", native_de "X", reuse_en "X", reuse_de "X";
+        field_y: native_en "Y", native_de "Y", reuse_en "Y", reuse_de "Y";
+        field_width: native_en "Width", native_de "Breite", reuse_en "Width", reuse_de "Breite";
+        field_height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
+        field_visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
+        field_locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
+        measure_camera: native_en "Camera", native_de "Kamera", reuse_en "Camera", reuse_de "Kamera";
+        measure_zoom: native_en "Zoom", native_de "Zoom", reuse_en "Zoom", reuse_de "Zoom";
+        measure_grid: native_en "Grid", native_de "Raster", reuse_en "Grid", reuse_de "Raster";
+        measure_show_grid: native_en "Show grid", native_de "Raster anzeigen", reuse_en "Show grid", reuse_de "Raster anzeigen";
+        measure_spacing: native_en "Spacing", native_de "Abstand", reuse_en "Spacing", reuse_de "Abstand";
+        measure_subdivisions: native_en "Subdivisions", native_de "Unterteilungen", reuse_en "Subdivisions", reuse_de "Unterteilungen";
+        measure_opacity: native_en "Opacity", native_de "Deckkraft", reuse_en "Opacity", reuse_de "Deckkraft";
+        measure_snap: native_en "Snap", native_de "Fangen", reuse_en "Snap", reuse_de "Fangen";
+        measure_snap_to_grid: native_en "Snap to grid", native_de "Am Raster einrasten", reuse_en "Snap to grid", reuse_de "Am Raster einrasten";
+        measure_snap_spacing: native_en "Snap spacing", native_de "Rasterabstand", reuse_en "Snap spacing", reuse_de "Rasterabstand";
+        measure_drawing: native_en "Drawing", native_de "Zeichnen", reuse_en "Drawing", reuse_de "Zeichnen";
+        measure_pencil_width: native_en "Pencil width", native_de "Stiftbreite", reuse_en "Pencil width", reuse_de "Stiftbreite";
+        measure_eraser_radius: native_en "Eraser radius", native_de "Radiergummi-Radius", reuse_en "Eraser radius", reuse_de "Radiergummi-Radius";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action/internal-action declared in
-/// `create_note_app`'s static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay
-/// is how the command palette and Actions rail get a translated label without threading locale through the builder.
-fn note_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("selectAll", "Select All", "Alles auswählen"),
-        ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-        ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
-        ("addBlock", "Add Block", "Block hinzufügen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("loadRequest", "Import", "Importieren"),
-        ("saveDownload", "Export", "Exportieren"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setCameraZoom", "Set Camera Zoom", "Kamerazoom festlegen"),
-        ("setGridVisible", "Set Grid Visible", "Rastersichtbarkeit festlegen"),
-        ("setGridSpacing", "Set Grid Spacing", "Rasterabstand festlegen"),
-        ("setGridSubdivisions", "Set Grid Subdivisions", "Rasterunterteilungen festlegen"),
-        ("setGridOpacity", "Set Grid Opacity", "Rasterdeckkraft festlegen"),
-        ("setSnapEnabled", "Set Snap Enabled", "Einrasten aktivieren"),
-        ("setSnapGridSpacing", "Set Snap Grid Spacing", "Rasterabstand für Einrasten festlegen"),
-        ("setPencilWidth", "Set Pencil Width", "Stiftbreite festlegen"),
-        ("setEraserRadius", "Set Eraser Radius", "Radiergummi-Radius festlegen"),
-        ("moveBlock", "Move Block", "Block verschieben"),
-        ("deleteBlock", "Delete Block", "Block löschen"),
-        ("duplicateBlock", "Duplicate Block", "Block duplizieren"),
-        ("patchBlocks", "Patch Blocks", "Blöcke aktualisieren"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-        ("inkApplyEvents", "Apply Note Events", "Notiz-Ereignisse anwenden"),
-        ("nudgeSelection", "Nudge Selection", "Auswahl verschieben"),
-        ("nudgeSelectionUp", "Nudge Selection Up", "Auswahl nach oben verschieben"),
-        ("nudgeSelectionDown", "Nudge Selection Down", "Auswahl nach unten verschieben"),
-        ("nudgeSelectionLeft", "Nudge Selection Left", "Auswahl nach links verschieben"),
-        ("nudgeSelectionRight", "Nudge Selection Right", "Auswahl nach rechts verschieben"),
-        ("nudgeSelectionUpFast", "Nudge Selection Up Fast", "Auswahl schnell nach oben verschieben"),
-        ("nudgeSelectionDownFast", "Nudge Selection Down Fast", "Auswahl schnell nach unten verschieben"),
-        ("nudgeSelectionLeftFast", "Nudge Selection Left Fast", "Auswahl schnell nach links verschieben"),
-        ("nudgeSelectionRightFast", "Nudge Selection Right Fast", "Auswahl schnell nach rechts verschieben"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-        ("navigatorEngagementInput", "Navigator Engagement Input", "Navigator-Eingabe"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_note_app`.
-fn note_utility_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("selectDirect", "Direct", "Direkt"),
-        ("selectMarquee", "Marquee", "Rahmenauswahl"),
-        ("text", "Text", "Text"),
-        ("image", "Image", "Bild"),
-        ("table", "Table", "Tabelle"),
-        ("math", "Math", "Mathe"),
-        ("pencil", "Pencil", "Stift"),
-        ("eraserStroke", "Stroke Eraser", "Strich-Radiergummi"),
-        ("eraserPoint", "Point Eraser", "Punkt-Radiergummi"),
-        ("pan", "Pan", "Schwenken"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
@@ -273,7 +211,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
         menu: None,
         ..tree_item_with_action(
             block_tree_row_id(block),
-            block_name(block),
+            Label::data(block_name(block)),
             Some(block_kind(block).into()),
             play_action(NOTE_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [block_id(block)] }))),
         )
@@ -287,7 +225,7 @@ fn block_tree_row_id(block: &NoteBlockNode) -> String {
 fn render_document_panel(document: &NoteDocument, selected_ids: &[String], labels: &NotePlayLabels) -> UiNode {
     let action_rows: Vec<UiTreeItemNode> = [
         ("text", labels.add_text, "type"),
-        ("table", labels.add_table, "table"),
+        ("table", labels.add_table, "table-2"),
         ("math", labels.add_math, "note-math"),
         ("image", labels.add_image, "image"),
         ("group", labels.add_group, "folder-plus"),
@@ -317,7 +255,7 @@ fn render_document_panel(document: &NoteDocument, selected_ids: &[String], label
         .filter_map(|id| find_block(&document.blocks, id).map(block_tree_row_id))
         .collect();
     PanelTreeBuilder::new("note-play-blocks")
-        .section("note-play-blocks", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, [action_rows, block_items].concat())
+        .section("note-play-blocks", Some(labels.document.into()), true, [action_rows, block_items].concat())
         .selected(selected_ids)
         .selection_change(play_action(NOTE_PLAY_CONTROLLER_ID, "setSelection", None))
         .build()
@@ -349,7 +287,7 @@ fn inspector_patch(block_ids: &[String], field: &str) -> ActionDescriptor {
     )
 }
 
-fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
+fn inspector_text_field(block_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_text(values);
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
@@ -361,7 +299,7 @@ fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, value
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
-            placeholder: mixed.placeholder,
+            placeholder: mixed.placeholder.map(Label::data),
             commit: None,
             min: None,
             max: None,
@@ -376,7 +314,7 @@ fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, value
     })
 }
 
-fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
+fn inspector_number_field(block_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
@@ -395,7 +333,7 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, val
             placeholder: if mixed.uniform {
                 None
             } else {
-                Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
+                Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER))
             },
             commit: None,
             min: None,
@@ -418,17 +356,17 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], act
         .collect();
     if blocks.is_empty() {
         return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {}", document.schema)),
-            ui_text(format!("Blocks: {}", flatten_blocks(&document.blocks).len())),
-            ui_text(format!("Utility: {active_utility_id}")),
-            ui_text(format!(
+            ui_text(Label::data(format!("Schema: {}", document.schema))),
+            ui_text(Label::data(format!("Blocks: {}", flatten_blocks(&document.blocks).len()))),
+            ui_text(Label::data(format!("Utility: {active_utility_id}"))),
+            ui_text(Label::data(format!(
                 "Snap: {}",
                 if document.snap_enabled.unwrap_or(false) {
                     format!("{}px", document.snap_grid_spacing.unwrap_or(8.0))
                 } else {
                     "off".into()
                 }
-            )),
+            ))),
         ]);
     }
     let block_ids: Vec<String> = blocks.iter().map(|block| block_id(*block).into()).collect();
@@ -1234,7 +1172,7 @@ impl DocumentApp for NotePlayApp {
             NOTE_PLAY_BODY_DOCUMENT => render_document_panel(document, &config.selected_block_ids, labels),
             NOTE_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
             NOTE_PLAY_BODY_PROPERTIES => render_properties_panel(document, &config.selected_block_ids, &config.active_utility_id, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -1255,16 +1193,6 @@ impl DocumentApp for NotePlayApp {
         ])
     }
 
-    fn app_labels(&self, cfg: &ConfigView<'_, NoteConfig>) -> AppLabelsOverlay {
-        let config = cfg.projection;
-        let labels = resolve_labels::<NotePlayLabels>(config);
-        let is_de = is_de_locale(config);
-        AppLabelsOverlay::default()
-            .window_kind_label(NOTE_PLAY_WINDOW_COMPOSITE, labels.window_composite)
-            .window_kind_label(NOTE_PLAY_WINDOW_NAVIGATOR, labels.window_navigator)
-            .action_labels(note_action_labels(is_de))
-            .utility_labels(note_utility_labels(is_de))
-    }
 }
 //#endregion 🔖️NotePlayApp
 
@@ -1382,11 +1310,11 @@ pub fn create_note_app() -> App {
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
             // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
-            .utility(note_utility("selectDirect", LocalizedLabel::native("Direct", "Direkt"), "cursor", "Select", UtilityCategory::Selection))
+            .utility(note_utility("selectDirect", LocalizedLabel::native("Direct", "Direkt"), "text-cursor", "Select", UtilityCategory::Selection))
             .utility(note_utility("selectMarquee", LocalizedLabel::native("Marquee", "Rahmenauswahl"), "selection", "Select", UtilityCategory::Selection))
             .utility(note_utility("text", LocalizedLabel::native("Text", "Text"), "type", "Block", UtilityCategory::Utilities))
             .utility(note_utility("image", LocalizedLabel::native("Image", "Bild"), "image", "Block", UtilityCategory::Utilities))
-            .utility(note_utility("table", LocalizedLabel::native("Table", "Tabelle"), "table", "Block", UtilityCategory::Utilities))
+            .utility(note_utility("table", LocalizedLabel::native("Table", "Tabelle"), "table-2", "Block", UtilityCategory::Utilities))
             .utility(note_utility("math", LocalizedLabel::native("Math", "Mathe"), "sigma", "Block", UtilityCategory::Utilities))
             .utility(note_utility("pencil", LocalizedLabel::native("Pencil", "Stift"), "pencil", "Draw", UtilityCategory::Utilities))
             .utility(note_utility("eraserStroke", LocalizedLabel::native("Stroke Eraser", "Strich-Radiergummi"), "eraser", "Draw", UtilityCategory::Utilities))
@@ -1421,9 +1349,9 @@ pub fn create_note_app() -> App {
     );
     for window in app.definition.window_kinds.iter_mut() {
         if window.id == NOTE_PLAY_WINDOW_COMPOSITE {
-            window.options.measures = note_canvas_measures(&document, &NoteCamera::default(), &NotePlayLabels::EN);
+            window.options.measures = note_canvas_measures(&document, &NoteCamera::default(), &NotePlayLabels::NATIVE_EN);
         } else if window.id == NOTE_PLAY_WINDOW_NAVIGATOR {
-            window.options.measures = note_navigator_measures(&document, &NoteCamera::default(), &NotePlayLabels::EN);
+            window.options.measures = note_navigator_measures(&document, &NoteCamera::default(), &NotePlayLabels::NATIVE_EN);
         }
     }
     app.example("semio", LocalizedLabel::native("Semio", "Semio"), semio_example_json(), "sparkles")

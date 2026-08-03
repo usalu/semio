@@ -1,12 +1,121 @@
 //! ⚙️ FEM 3D app — headless compute (constitutional: engine).
 
-use fem3d::{Fem3dDocument, FemElement, FemLoad};
+use fem3d::{Fem3dDocument, FemCamera, FemElement, FemLoad};
 use fem_core::{analyses, Bar3, Dof, Element, Frame3, MemberUdl, Model, NodalLoad, Node, Support};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub fn empty_fem3d_projection() -> Fem3dDocument {
     Fem3dDocument::default()
 }
+
+// #region 🔖️Config
+/// 🧮️ B1: fem3d's real `DocumentApp::Config` — absorbs both former `Fem3dPlayApp` `RefCell` fields
+/// (`result_display`, `camera`); session-only view state now round-trips through the config
+/// `DocumentStore` exactly like document content, with a real `backwards` per
+/// `fem3d_op::Fem3dConfigOperation` instead of never being VCS'd at all. Mirrors
+/// `fem2d_engine::Fem2dConfig`'s identical B1 recipe, minus a `locale` field (fem3d never carried a
+/// `ViewState::locale` the way fem2d did).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase", default)]
+#[dsl(extension = "fem3dcfg")]
+#[dsl(layout = "lines")]
+pub struct Fem3dConfig {
+    /// 👁️ The results window's selected case/combination id — was `fem_shared::ResultDisplay::source_id`.
+    pub result_source_id: Option<String>,
+    /// 👁️ The results window's display mode (`"static"`/`"modal"`/`"buckling"`) — was
+    /// `fem_shared::DisplayMode`'s discriminant. Kept as a flat string rather than depending on
+    /// `fem_shared` from `engine` (documented as ui-scoped) — `fem3d_ui` translates to/from
+    /// `fem_shared::DisplayMode` at the render boundary.
+    pub result_mode: String,
+    /// 👁️ The selected modal/buckling mode index — was `fem_shared::DisplayMode::Modal`/`Buckling`'s payload.
+    pub result_mode_index: u32,
+    /// 🎥️ The world-3d camera (opaque host JSON) — was `Fem3dPlayApp::camera`.
+    #[dsl(block)]
+    pub camera: FemCamera,
+}
+
+impl Default for Fem3dConfig {
+    fn default() -> Self {
+        Self { result_source_id: None, result_mode: "static".into(), result_mode_index: 0, camera: FemCamera::default() }
+    }
+}
+
+impl store::ConfigRecord for Fem3dConfig {}
+
+/// 🧮️ Whole-record diff for `fem3d_op::Fem3dConfigOperation` (lives here, not in `fem3d_op`, since
+/// `protocol::OperationDiff`/`Fem3dConfig` are both foreign to that crate — the orphan rule requires at
+/// least one local type). Mirrors `Fem3dOperation::SetDocument`'s existing "whole-document replace"
+/// pattern: `apply` ignores `base` entirely.
+impl protocol::OperationDiff<Fem3dConfig> for Fem3dConfig {
+    fn apply(&self, _base: &Fem3dConfig) -> Fem3dConfig {
+        self.clone()
+    }
+    fn absorb(&mut self, other: Self) {
+        *self = other;
+    }
+}
+// #endregion 🔖️Config
+
+// #region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document port pair
+/// (`fem.3d` × 3D-Any) plus `geometry:in` (importing an externally authored extruded-footprint outline
+/// as a new `FemSolid` — see `fem3d_ui::Fem3dPlayApp::import_media`) and `results:out` (every load
+/// case/combination's solved `fem_core::StaticResult`, pinned to the `computation.fem3d` artifact kind
+/// declared in `fem3d_ui::create_fem3d_app` — see `fem3d_ui::Fem3dPlayApp::export_media`).
+pub fn fem3d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: fem3d::FEM_3D_SCHEMA.into(),
+        document_media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::ThreeD,
+            form: semio_framework_plugin::MediaForm::Any,
+        },
+        ports: vec![fem3d_geometry_in_port(), fem3d_results_out_port()],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation {
+            id: "3d.fem".into(),
+            name: "FEM 3D".into(),
+            dimension: "3d".into(),
+            component_kind: "fem3d".into(),
+        },
+    }
+}
+
+/// 🔌️ `geometry:in` — an externally authored extruded-footprint outline (polygon-with-holes,
+/// base/height/layers), imported as a new `FemSolid`.
+pub fn fem3d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "geometry:in".into(),
+        label: "Geometry".into(),
+        direction: semio_framework_plugin::MediaPortDirection::In,
+        media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::ThreeD,
+            form: semio_framework_plugin::MediaForm::Any,
+        },
+        kind_id: None,
+        required: true,
+        multiplicity: semio_framework_core::PortMultiplicity::One,
+    }
+}
+
+/// 🔌️ `results:out` — every load case/combination's solved `fem_core::StaticResult`, pinned to the
+/// `computation.fem3d` artifact kind.
+pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
+    semio_framework_plugin::MediaPortSpec {
+        id: "results:out".into(),
+        label: "Results".into(),
+        direction: semio_framework_plugin::MediaPortDirection::Out,
+        media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::Data,
+            form: semio_framework_plugin::MediaForm::Value,
+        },
+        kind_id: Some("computation.fem3d".into()),
+        required: false,
+        multiplicity: semio_framework_core::PortMultiplicity::One,
+    }
+}
+// #endregion 🔖️Io
 
 // #region 🔖️Bridge
 
@@ -349,6 +458,59 @@ mod tests {
     use fem3d::{FemAnalysisSettings, FemCombination, FemDof, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use fem_core::ElementResult;
     use std::collections::BTreeMap;
+
+    // #region 🔖️Config
+    #[test]
+    fn fem3d_config_default_is_static_display_with_default_camera() {
+        let config = Fem3dConfig::default();
+        assert_eq!(config.result_mode, "static");
+        assert!(config.result_source_id.is_none());
+        assert_eq!(config.result_mode_index, 0);
+        assert_eq!(config.camera, FemCamera::default());
+    }
+
+    /// 🧮️ `Fem3dConfig`'s `OperationDiff` is a whole-record replace, mirroring `Fem2dConfig`'s
+    /// identical B1 pilot pattern: `apply` ignores `base` entirely.
+    #[test]
+    fn fem3d_config_operation_diff_is_a_whole_record_replace() {
+        let base = Fem3dConfig::default();
+        let replacement = Fem3dConfig { result_source_id: Some("dead".into()), result_mode: "modal".into(), result_mode_index: 2, camera: FemCamera { json: "{\"x\":1}".into() } };
+        let applied = protocol::OperationDiff::apply(&replacement, &base);
+        assert_eq!(applied, replacement);
+        let mut absorbed = base.clone();
+        protocol::OperationDiff::absorb(&mut absorbed, replacement.clone());
+        assert_eq!(absorbed, replacement);
+    }
+    // #endregion 🔖️Config
+
+    // #region 🔖️Io
+    /// 🔌️ Wave-1's `required: true` unwired-input enforcement (`validate_edge_kinds`) lives in the run
+    /// crate, not here — this test only proves the port DECLARATION is correct; the cross-crate
+    /// enforcement is exercised at the run-crate level.
+    #[test]
+    fn fem3d_io_declares_geometry_in_and_results_out_ports() {
+        let io = fem3d_io();
+        assert_eq!(io.document_schema, fem3d::FEM_3D_SCHEMA);
+        assert_eq!(io.document_media_type.class, semio_framework_plugin::MediaClass::ThreeD);
+        assert_eq!(io.document_media_type.form, semio_framework_plugin::MediaForm::Any);
+        assert_eq!(io.artifact.id, "3d.fem");
+        assert_eq!(io.artifact.component_kind, "fem3d");
+
+        let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
+        assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
+        assert!(geometry_in.required, "geometry:in is a required input port");
+        assert_eq!(geometry_in.media_type.class, semio_framework_plugin::MediaClass::ThreeD);
+        assert_eq!(geometry_in.media_type.form, semio_framework_plugin::MediaForm::Any);
+        assert_eq!(geometry_in.multiplicity, semio_framework_core::PortMultiplicity::One);
+
+        let results_out = io.ports.iter().find(|port| port.id == "results:out").expect("results:out declared");
+        assert_eq!(results_out.direction, semio_framework_plugin::MediaPortDirection::Out);
+        assert!(!results_out.required, "results:out is optional");
+        assert_eq!(results_out.kind_id.as_deref(), Some("computation.fem3d"));
+        assert_eq!(results_out.media_type.class, semio_framework_plugin::MediaClass::Data);
+        assert_eq!(results_out.media_type.form, semio_framework_plugin::MediaForm::Value);
+    }
+    // #endregion 🔖️Io
 
     // #region 🔖️Fixtures
     fn cantilever_fixture() -> (Fem3dDocument, f64, f64, f64, f64, f64) {

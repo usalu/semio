@@ -15,16 +15,16 @@ use draw_engine::{
 };
 use draw_op::{draw_op_for_layer_field, DrawConfigOperation, DrawOperation};
 use draw_protocol::DrawCommand;
-use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionKind, AppIo, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaError, MediaPayload,
-    build_canvas_2d_scene, create_default_layout, localized_label_map, selection_ids,
+use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionKind, AppIo, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaError, MediaPayload,
+    build_canvas_2d_scene, create_default_layout, selection_ids,
     tree_item, tree_item_with_action, tree_item_with_action_draggable,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec,
-    ActionDescriptor, PanelGroup, UtilityCategory, UtilityDefinition, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec,
+    ActionDescriptor, PanelGroup, Terminology, UtilityCategory, UtilityDefinition, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem,
     UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, WindowEngagement,
     WindowEngagementInput, WindowEngagementStatus,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use semio_framework_plugin::kernel::HostEffect;
 use serde_json::{json, Value};
@@ -54,8 +54,13 @@ fn is_de_locale(cfg: &DrawConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &DrawConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn draw_locale(cfg: &DrawConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ `AppLabels::labels` (was the deleted `LocaleLabels::locale_labels_en/de`).
+fn resolve_labels<L: AppLabels>(cfg: &DrawConfig) -> &'static L {
+    L::labels(draw_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -746,64 +751,6 @@ semio_framework_plugin::app_labels! {
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/action_with declared in `create_draw_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn draw_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addLayer", "Add Layer", "Ebene hinzufügen"),
-        ("combineBoolean", "Combine Boolean", "Boolean kombinieren"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("setDocument", "Set Document", "Dokument festlegen"),
-        ("commitDocument", "Commit Document", "Dokument übernehmen"),
-        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setCameraZoom", "Set Camera Zoom", "Kamerazoom festlegen"),
-        ("setSelectedOpacity", "Set Selected Opacity", "Deckkraft der Auswahl festlegen"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-        ("dropLayerKind", "Drop Layer Kind", "Ebenenart ablegen"),
-        ("moveLayer", "Move Layer", "Ebene verschieben"),
-        ("deleteLayer", "Delete Layer", "Ebene löschen"),
-        ("duplicateLayer", "Duplicate Layer", "Ebene duplizieren"),
-        ("toggleLayerVisible", "Toggle Layer Visible", "Ebenensichtbarkeit umschalten"),
-        ("patchLayer", "Patch Layer", "Ebene aktualisieren"),
-        ("patchLayers", "Patch Layers", "Ebenen aktualisieren"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
-        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
-        ("canvasDoubleClick", "Canvas Double Click", "Leinwand-Doppelklick"),
-        ("canvasCommitDraft", "Canvas Commit Draft", "Leinwand-Entwurf übernehmen"),
-        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegen"),
-        ("canvasEscape", "Canvas Escape", "Leinwand abbrechen"),
-        ("selectAll", "Select All", "Alles auswählen"),
-        ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-        ("setLocale", "Set Locale", "Sprache festlegen"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_draw_app`.
-fn draw_utility_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("selectMarquee", "Marquee Select", "Rahmenauswahl"),
-        ("selectLasso", "Lasso Select", "Lasso-Auswahl"),
-        ("selectDirect", "Direct Select", "Direktauswahl"),
-        ("pen", "Pen", "Stift"),
-        ("shapeRect", "Rectangle", "Rechteck"),
-        ("shapeEllipse", "Ellipse", "Ellipse"),
-        ("shapeLine", "Line", "Linie"),
-        ("shapePolygon", "Polygon", "Polygon"),
-        ("booleanCombine", "Boolean", "Boolean"),
-        ("trace", "Trace", "Nachzeichnen"),
-        ("transformMove", "Pan", "Verschieben"),
-    ];
-    localized_label_map(is_de, ENTRIES)
-}
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️Panels
 fn layer_icon(layer: &draw::DrawLayerNode) -> &str {
     match layer {
@@ -842,7 +789,7 @@ fn layer_tree_item(doc: &DrawDocument, layer: &draw::DrawLayerNode) -> UiTreeIte
         default_open: Some(matches!(layer, draw::DrawLayerNode::Group(_))),
         items: nested_items,
         dimmed: if base.visible { None } else { Some(true) },
-        ..tree_item_with_action_draggable(row_id, base.name.clone(), description, action, &drag_data)
+        ..tree_item_with_action_draggable(row_id, Label::data(base.name.clone()), description, action, &drag_data)
     }
 }
 
@@ -853,7 +800,7 @@ fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> U
             draggable: Some(false),
             ..tree_item_with_action(
                 row_id,
-                layer_base(child).name.clone(),
+                Label::data(layer_base(child).name.clone()),
                 Some(layer_kind_label(child)),
                 draw_play_action("setSelection", Some(json!({ "ids": [child_id] }))),
             )
@@ -861,7 +808,7 @@ fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> U
         None => UiTreeItemNode {
             icon_id: Some("alert-circle".into()),
             draggable: Some(false),
-            ..tree_item(row_id, format!("{child_id} (missing)"))
+            ..tree_item(row_id, Label::data(format!("{child_id} (missing)")))
         },
     }
 }
@@ -893,13 +840,13 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawConfig, labels
         .into_iter()
         .collect();
     let builder = PanelTreeBuilder::new("draw-play-layers")
-        .section("draw-play-layers", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, action_items.into_iter().chain(layer_items).collect())
+        .section("draw-play-layers", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, action_items.into_iter().chain(layer_items).collect())
         .selected(selected_tree_ids)
         .selection_change(draw_play_action("setSelection", None));
     if highlighted_ids.is_empty() { builder.build() } else { builder.highlighted(highlighted_ids).build() }
 }
 
-fn tree_button(id: &str, label: &str, icon: &str, action: &str, args: Value) -> UiTreeItemNode {
+fn tree_button(id: &str, label: impl Into<Label>, icon: &str, action: &str, args: Value) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon.into()), menu: None,
     ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args))) }
 }
@@ -935,14 +882,14 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawConfig, la
             icon_id: Some("combine".into()),
             ..tree_item_with_action(
                 format!("draw-play-catalogue.bool.{operation}"),
-                format!("{} {operation}", labels.kind_boolean),
+                Label::data(format!("{} {operation}", labels.kind_boolean.as_str())),
                 None,
                 draw_play_action("combineBoolean", Some(json!({ "operation": operation, "ids": interaction.selected_ids }))),
             )
         });
     }
     PanelTreeBuilder::new("draw-play-catalogue")
-        .section("draw-play-catalogue", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, items)
+        .section("draw-play-catalogue", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)
         .build()
 }
 
@@ -950,7 +897,7 @@ fn inspector_patch(layer_ids: &[String], field: &str) -> ActionDescriptor {
     draw_play_action("patchLayers", Some(json!({ "layerIds": layer_ids, "field": field })))
 }
 
-fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
+fn inspector_number_field(layer_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[f64], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
@@ -960,7 +907,7 @@ fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, val
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
-            placeholder: if mixed.uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
+            placeholder: if mixed.uniform { None } else { Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER)) },
             commit: None,
             on_change: inspector_patch(layer_ids, field),
             min: None,
@@ -976,7 +923,7 @@ fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, val
     })
 }
 
-fn inspector_text_field(layer_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
+fn inspector_text_field(layer_ids: &[String], field_id: &str, label: impl Into<Label>, values: &[String], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_text(values);
     UiNode::Field(UiFieldNode {
         presence: UiPresence::default(),
@@ -986,7 +933,7 @@ fn inspector_text_field(layer_ids: &[String], field_id: &str, label: &str, value
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
-            placeholder: mixed.placeholder,
+            placeholder: mixed.placeholder.map(Label::data),
             commit: None,
             on_change: inspector_patch(layer_ids, field),
             min: None,
@@ -1036,8 +983,8 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 child: Box::new(UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "draw-play-inspector.boolean-operation.select".into(),
                     value: op_mixed.value,
-                    placeholder: op_mixed.placeholder,
-                    items: DRAW_BOOLEAN_OPERATIONS.iter().map(|operation| UiSelectItem { value: (*operation).into(), label: (*operation).into(),
+                    placeholder: op_mixed.placeholder.map(Label::data),
+                    items: DRAW_BOOLEAN_OPERATIONS.iter().map(|operation| UiSelectItem { value: (*operation).into(), label: Label::data(*operation),
         }).collect(),
                     on_change: inspector_patch(&layer_ids, "booleanOperation"),
                     menu: None,
@@ -1316,10 +1263,10 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
                 child: Box::new(UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "draw-play-inspector.blend-mode.select".into(),
                     value: blend_mixed.value,
-                    placeholder: blend_mixed.placeholder,
+                    placeholder: blend_mixed.placeholder.map(Label::data),
                     items: DRAW_BLEND_MODES
                         .iter()
-                        .map(|mode| UiSelectItem { value: (*mode).into(), label: (*mode).into(),
+                        .map(|mode| UiSelectItem { value: (*mode).into(), label: Label::data(*mode),
         })
                         .collect(),
                     on_change: inspector_patch(&layer_ids, "blendMode"),
@@ -1421,9 +1368,9 @@ fn render_properties_panel(document: &DrawDocument, interaction: &DrawConfig, la
         .collect();
     if selected_layers.is_empty() {
         return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {}", DRAW_DOCUMENT_SCHEMA)),
-            ui_text(format!("Utility: {active_utility}")),
-            ui_text(format!("Layers: {}", flatten_draw_layers(&document.layers).len())),
+            ui_text(Label::data(format!("Schema: {}", DRAW_DOCUMENT_SCHEMA))),
+            ui_text(Label::data(format!("Utility: {active_utility}"))),
+            ui_text(Label::data(format!("Layers: {}", flatten_draw_layers(&document.layers).len()))),
         ]);
     }
     let mut groups = Vec::new();
@@ -1987,34 +1934,22 @@ impl DocumentApp for DrawPlayApp {
             DRAW_PLAY_BODY_LAYERS => render_layers_panel(document, config, labels),
             DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(document, config, labels),
             DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(document, config, labels, active_utility),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    fn app_labels(&self, cfg: &ConfigView<'_, DrawConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<DrawPlayLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::with_framework_panel_tabs(
-            ["framework.panel.document", "framework.panel.catalogue", "framework.panel.inspection"],
-            is_de,
-        )
-        .window_kind_label(DRAW_PLAY_WINDOW_CANVAS, labels.window_canvas)
-        .mode_label("edit", labels.mode_edit)
-        .action_labels(draw_action_labels(is_de))
-        .utility_labels(draw_utility_labels(is_de))
-    }
 }
 //#endregion 🔖️DrawPlayApp
 
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector-bound vocabulary
 /// that is dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
-fn draw_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+fn draw_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
-fn draw_utility(id: &str, label: &str, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
+fn draw_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
 
@@ -2041,7 +1976,7 @@ pub fn create_draw_app() -> App {
         possible_engagements: None,
     };
     App::from_builder(
-        App::builder(DRAW_PLAY_APP_ID, "Draw").document(["semio", "draw"])
+        App::builder(DRAW_PLAY_APP_ID, LocalizedLabel::native("Draw", "Zeichnen")).document(["semio", "draw"])
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.drawing".into(),
                 name: "2D Drawing".into(),
@@ -2055,58 +1990,58 @@ pub fn create_draw_app() -> App {
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("draw")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind_with_engagement(DRAW_PLAY_WINDOW_CANVAS, "Canvas", DRAW_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, engagement, "pen-tool")
-            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, DRAW_PLAY_BODY_LAYERS)
-            .panel_tab("framework.panel.catalogue", "Catalogue", PanelGroup::Workbench, DRAW_PLAY_BODY_CATALOGUE)
-            .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, DRAW_PLAY_BODY_PROPERTIES)
+            .window_kind_with_engagement(DRAW_PLAY_WINDOW_CANVAS, LocalizedLabel::native("Canvas", "Leinwand"), DRAW_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, engagement, "pen-tool")
+            .panel_tab("framework.panel.document", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"), PanelGroup::Workbench, DRAW_PLAY_BODY_LAYERS)
+            .panel_tab("framework.panel.catalogue", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, DRAW_PLAY_BODY_CATALOGUE)
+            .panel_tab("framework.panel.inspection", LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, DRAW_PLAY_BODY_PROPERTIES)
             // ✏️ Palette-visible content operations.
-            .operation("addLayer", "Add Layer")
-            .operation("combineBoolean", "Combine Boolean")
-            .operation("setActiveExample", "Set Active Example")
+            .operation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
+            .operation("combineBoolean", LocalizedLabel::native("Combine Boolean", "Boolean kombinieren"))
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🔧️ Internal content operations — inspector/layer-panel/import-bound, not palette commands.
-            .action_with(draw_internal_action("setDocument", "Set Document", ActionKind::Operation))
-            .action_with(draw_internal_action("commitDocument", "Commit Document", ActionKind::Operation))
-            .action_with(draw_internal_action("setFixtureJson", "Set Fixture Json", ActionKind::Operation))
-            .action_with(draw_internal_action("setSelectedOpacity", "Set Selected Opacity", ActionKind::Operation))
-            .action_with(draw_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Operation))
-            .action_with(draw_internal_action("dropLayerKind", "Drop Layer Kind", ActionKind::Operation))
-            .action_with(draw_internal_action("moveLayer", "Move Layer", ActionKind::Operation))
-            .action_with(draw_internal_action("deleteLayer", "Delete Layer", ActionKind::Operation))
-            .action_with(draw_internal_action("duplicateLayer", "Duplicate Layer", ActionKind::Operation))
-            .action_with(draw_internal_action("toggleLayerVisible", "Toggle Layer Visible", ActionKind::Operation))
-            .action_with(draw_internal_action("patchLayer", "Patch Layer", ActionKind::Operation))
-            .action_with(draw_internal_action("patchLayers", "Patch Layers", ActionKind::Operation))
+            .action_with(draw_internal_action("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Operation))
+            .action_with(draw_internal_action("commitDocument", LocalizedLabel::native("Commit Document", "Dokument übernehmen"), ActionKind::Operation))
+            .action_with(draw_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Operation))
+            .action_with(draw_internal_action("setSelectedOpacity", LocalizedLabel::native("Set Selected Opacity", "Deckkraft der Auswahl festlegen"), ActionKind::Operation))
+            .action_with(draw_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Operation))
+            .action_with(draw_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Operation))
+            .action_with(draw_internal_action("moveLayer", LocalizedLabel::native("Move Layer", "Ebene verschieben"), ActionKind::Operation))
+            .action_with(draw_internal_action("deleteLayer", LocalizedLabel::native("Delete Layer", "Ebene löschen"), ActionKind::Operation))
+            .action_with(draw_internal_action("duplicateLayer", LocalizedLabel::native("Duplicate Layer", "Ebene duplizieren"), ActionKind::Operation))
+            .action_with(draw_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Operation))
+            .action_with(draw_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Operation))
+            .action_with(draw_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Operation))
             // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit operations, the rest are pure View.
-            .action_with(draw_internal_action("canvasPointerDown", "Canvas Pointer Down", ActionKind::Operation))
-            .action_with(draw_internal_action("canvasPointerUp", "Canvas Pointer Up", ActionKind::Operation))
-            .action_with(draw_internal_action("canvasDoubleClick", "Canvas Double Click", ActionKind::Operation))
-            .action_with(draw_internal_action("canvasCommitDraft", "Canvas Commit Draft", ActionKind::Operation))
-            .action_with(draw_internal_action("canvasPointerMove", "Canvas Pointer Move", ActionKind::View))
-            .action_with(draw_internal_action("canvasEscape", "Canvas Escape", ActionKind::View))
+            .action_with(draw_internal_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Operation))
+            .action_with(draw_internal_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::Operation))
+            .action_with(draw_internal_action("canvasDoubleClick", LocalizedLabel::native("Canvas Double Click", "Leinwand-Doppelklick"), ActionKind::Operation))
+            .action_with(draw_internal_action("canvasCommitDraft", LocalizedLabel::native("Canvas Commit Draft", "Leinwand-Entwurf übernehmen"), ActionKind::Operation))
+            .action_with(draw_internal_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View))
+            .action_with(draw_internal_action("canvasEscape", LocalizedLabel::native("Canvas Escape", "Leinwand abbrechen"), ActionKind::View))
             // 👁️ Ephemeral view state.
-            .view_action("selectAll", "Select All")
-            .view_action("clearSelection", "Clear Selection")
-            .action_with(draw_internal_action("setSelection", "Set Selection", ActionKind::View))
-            .action_with(draw_internal_action("setHover", "Set Hover", ActionKind::View))
-            .action_with(draw_internal_action("engagementInput", "Engagement Input", ActionKind::View))
-            .action_with(draw_internal_action("setLocale", "Set Locale", ActionKind::View))
+            .view_action("selectAll", LocalizedLabel::native("Select All", "Alles auswählen"))
+            .view_action("clearSelection", LocalizedLabel::native("Clear Selection", "Auswahl aufheben"))
+            .action_with(draw_internal_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"), ActionKind::View))
+            .action_with(draw_internal_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"), ActionKind::View))
+            .action_with(draw_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
+            .action_with(draw_internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📷️ Camera — session-only runtime pose, never a document operation.
-            .action_with(draw_internal_action("setCamera", "Set Camera", ActionKind::View))
-            .action_with(draw_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::View))
+            .action_with(draw_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
+            .action_with(draw_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
             // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
-            .utility(draw_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
-            .utility(draw_utility("selectLasso", "Lasso Select", "lasso", "Select", UtilityCategory::Selection))
-            .utility(draw_utility("selectDirect", "Direct Select", "mouse-pointer-2", "Select", UtilityCategory::Selection))
-            .utility(draw_utility("pen", "Pen", "pen-tool", "Draw", UtilityCategory::Utilities))
-            .utility(draw_utility("shapeRect", "Rectangle", "rectangle-tool", "Draw", UtilityCategory::Utilities))
-            .utility(draw_utility("shapeEllipse", "Ellipse", "circle", "Draw", UtilityCategory::Utilities))
-            .utility(draw_utility("shapeLine", "Line", "minus", "Draw", UtilityCategory::Utilities))
-            .utility(draw_utility("shapePolygon", "Polygon", "hexagon", "Draw", UtilityCategory::Utilities))
-            .utility(draw_utility("booleanCombine", "Boolean", "combine", "Combine", UtilityCategory::Utilities))
-            .utility(draw_utility("trace", "Trace", "scan-line", "Combine", UtilityCategory::Utilities))
-            .utility(draw_utility("transformMove", "Pan", "move", "View", UtilityCategory::Utilities))
+            .utility(draw_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
+            .utility(draw_utility("selectLasso", LocalizedLabel::native("Lasso Select", "Lasso-Auswahl"), "lasso", "Select", UtilityCategory::Selection))
+            .utility(draw_utility("selectDirect", LocalizedLabel::native("Direct Select", "Direktauswahl"), "mouse-pointer-2", "Select", UtilityCategory::Selection))
+            .utility(draw_utility("pen", LocalizedLabel::native("Pen", "Stift"), "pen-tool", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapeRect", LocalizedLabel::native("Rectangle", "Rechteck"), "rectangle-tool", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapeEllipse", LocalizedLabel::native("Ellipse", "Ellipse"), "circle", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapeLine", LocalizedLabel::native("Line", "Linie"), "minus", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapePolygon", LocalizedLabel::native("Polygon", "Polygon"), "hexagon", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("booleanCombine", LocalizedLabel::native("Boolean", "Boolean"), "combine", "Combine", UtilityCategory::Utilities))
+            .utility(draw_utility("trace", LocalizedLabel::native("Trace", "Nachzeichnen"), "scan-line", "Combine", UtilityCategory::Utilities))
+            .utility(draw_utility("transformMove", LocalizedLabel::native("Pan", "Verschieben"), "move", "View", UtilityCategory::Utilities))
             .window_kind_utilities(DRAW_PLAY_WINDOW_CANVAS, vec![
                 "selectMarquee".into(), "selectLasso".into(), "selectDirect".into(),
                 "pen".into(), "shapeRect".into(), "shapeEllipse".into(), "shapeLine".into(), "shapePolygon".into(),
@@ -2126,7 +2061,7 @@ pub fn create_draw_app() -> App {
     )
     .example(
         DRAW_PLAY_EXAMPLE_DEFAULT_ID,
-        "Semio",
+        LocalizedLabel::native("Semio", "Semio"),
         semio_draw_example_json(),
         "sparkles",
     )

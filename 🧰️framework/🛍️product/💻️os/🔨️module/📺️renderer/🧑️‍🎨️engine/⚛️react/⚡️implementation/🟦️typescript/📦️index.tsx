@@ -288,7 +288,9 @@ import {
   ShellScopeProvider,
   useShellScope,
   useShellScopeOptional,
-  type SelectionMode,
+  useShellKeydown,
+  detectShellLocale,
+  disposeShellI18nInstance,
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/ui-asset";
 import {
@@ -852,7 +854,6 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], onAction: UiInt
     isHidden: item.isHidden,
     draggable: item.draggable,
     dragData: item.dragData,
-    className: item.draggable || item.dragData ? "cursor-grab active:cursor-grabbing" : undefined,
     items: item.items?.length ? uiTreeItemsToTreeData(item.items, onAction) : undefined,
     onClick: item.action ? () => dispatchUiAction(onAction, item.action!, {}) : undefined,
     onPointerEnter: item.hoverAction ? () => dispatchUiAction(onAction, item.hoverAction!, {}) : undefined,
@@ -861,7 +862,7 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], onAction: UiInt
       kind: "button" as const,
       icon: renderControlIcon(action.iconId, 12),
       title: action.label,
-      revealOnHover: action.revealOnHover,
+      placement: action.placement ?? "row",
       onClick: () => dispatchUiAction(onAction, action.action, {}),
     })),
   }));
@@ -2057,17 +2058,17 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
 export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurfaceDevice => (mobile ? "mobile" : state.uiPrefs.uiLayout);
 //#endregion selectors
 
-/** 🌱️ Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from local storage for UI prefs). */
+/** 🌱️ Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from the shell's own storage for UI prefs). */
 export function initialShellState(_props: {
   readonly pluginFilter?: string;
   readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly locks?: ResolvedShellLocks;
   readonly defaults?: FrameworkOsDefaults;
-  readonly ephemeral?: boolean;
+  readonly storage: StoragePort;
 }): ShellState {
   const locks = _props.locks ?? {};
   const defaults = _props.defaults ?? {};
-  const ephemeral = _props.ephemeral === true;
+  const storage = _props.storage;
   return {
     pluginRuntime: { loadedPlugins: [], session: null, error: null },
     windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
@@ -2091,15 +2092,18 @@ export function initialShellState(_props: {
     overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionCompletedInteractions: [], dialog: null },
     tutorial: { activeTutorialId: null, playing: false, rate: 1, muted: false, captionsOn: true, recording: false, deviated: false },
     uiPrefs: {
-      uiAppearance: locks.appearance ?? (ephemeral ? "system" : readStoredUiChromeAppearance()),
-      uiLayout: ephemeral ? "desktop" : readStoredUiChromeLayout(),
-      uiDriverId: ephemeral ? DEFAULT_UI_DRIVER.id : readStoredUiDriverId(),
-      uiCustomDrivers: ephemeral ? {} : readStoredUiCustomDrivers(),
+      // 🐚️ No more `ephemeral ? default : readStored...()` branching here — `storage` already resolves
+      // to an empty, this-shell-only memory store for an ephemeral shell (see `resolveShellScopeStorage`),
+      // so a fresh read naturally falls through to each reader's own built-in default.
+      uiAppearance: locks.appearance ?? readStoredUiChromeAppearance(storage),
+      uiLayout: readStoredUiChromeLayout(storage),
+      uiDriverId: readStoredUiDriverId(storage),
+      uiCustomDrivers: readStoredUiCustomDrivers(storage),
       uiDriverDraft: null,
-      uiLocale: locks.locale ?? (ephemeral ? undefined : readStoredUiChromeLocale()) ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
-      uiTerminology: locks.terminology ?? (ephemeral ? UI_TERMINOLOGY_NATIVE : readStoredUiChromeTerminology()),
-      uiThemeId: locks.themeId ?? (ephemeral ? "semio" : readStoredUiChromeThemeId()) ?? "semio",
-      uiCustomThemes: ephemeral ? {} : readStoredUiCustomThemes(),
+      uiLocale: locks.locale ?? readStoredUiChromeLocale(storage) ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
+      uiTerminology: locks.terminology ?? readStoredUiChromeTerminology(storage),
+      uiThemeId: locks.themeId ?? readStoredUiChromeThemeId(storage) ?? "semio",
+      uiCustomThemes: readStoredUiCustomThemes(storage),
       uiThemeDraft: null,
     },
     sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "", syncStatusByDocumentId: {} },
@@ -4227,9 +4231,9 @@ function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { read
   // shell's marquee gestures.
   const selectionStore = useShellScope().selection;
 
-  const [selectionMode, setSelectionMode] = useState<SelectionMode>(() => selectionStore.get());
+  const [selectionMode, setSelectionMode] = useState<SelectionMergeMode>(() => selectionStore.get());
 
-  const handleModeChange = (mode: SelectionMode) => {
+  const handleModeChange = (mode: SelectionMergeMode) => {
     selectionStore.set(mode);
     setSelectionMode(mode);
   };
@@ -5355,7 +5359,9 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   const ephemeral = isEphemeralShellBrand(options.brand);
   if (ephemeral) clearDurableShellStorage();
   if (options.brand) document.title = options.brand.windowTitle;
-  bootstrapElementsSurfaceChromeDocument(locks.appearance ?? (ephemeral ? "system" : readStoredUiChromeAppearance()));
+  // 🐚️ This pre-paint bootstrap runs before any `ShellScope` exists (React hasn't mounted yet), so it
+  // resolves storage the same way `resolveShellScopeStorage` will once the shell below actually mounts.
+  bootstrapElementsSurfaceChromeDocument(locks.appearance ?? readStoredUiChromeAppearance(ephemeral ? createMemoryStoragePort() : createBrowserStoragePort()));
   // 🐢️ No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
   createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
@@ -5597,9 +5603,17 @@ function resolveShellScopeStorage(ephemeral: boolean, storageNamespace: string |
  * {@link ShellScope} — the seam that lets several of these coexist on one page — around the actual shell
  * implementation in {@link FrameworkOsShellInner}. */
 export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactElement {
-  const { shellId, storageNamespace, ownsPage = false, brand, ...innerProps } = props;
+  const { shellId, storageNamespace, ownsPage = false, brand, locks, ...innerProps } = props;
   const ephemeral = isEphemeralShellBrand(brand);
-  const [scope] = useState<ShellScope>(() => createShellScope({ shellId, ownsPage, storage: resolveShellScopeStorage(ephemeral, storageNamespace) }));
+  const [scope] = useState<ShellScope>(() => {
+    const storage = resolveShellScopeStorage(ephemeral, storageNamespace);
+    // 🐚️ Resolved synchronously (not in a `useEffect`) so an embedded shell never flashes the wrong
+    // locale's chrome on its first paint, mirroring `initUiLocaleSync`'s reasoning for the page-owning
+    // case. `locks.locale` and any previously-stored preference cover the common cases; a brand's own
+    // `defaults.locale` (not available yet here) still lands moments later via the uiPrefs effect below.
+    const initialLocale = locks?.locale ?? readStoredUiChromeLocale(storage) ?? detectShellLocale(typeof navigator !== "undefined" ? navigator.language : undefined);
+    return createShellScope({ shellId, ownsPage, storage, initialLocale });
+  });
   // 🐚️ `scope.rootRef` is a stable object (its identity never changes), so a descendant hook that puts
   // the REF ITSELF in a `useEffect`/`useLayoutEffect` dependency array would never re-fire once the ref
   // attaches. This state bump forces one guaranteed re-render right after attachment so descendants that
@@ -5614,10 +5628,11 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
   const setPortalLayer = useCallback((node: HTMLDivElement | null) => {
     scope.portalLayerRef.current = node;
   }, [scope]);
+  useEffect(() => () => disposeShellI18nInstance(scope.i18n), [scope]);
   return (
     <div ref={setRoot} className="semio-scope" data-shell-id={scope.shellId} style={{ height: "100%", width: "100%", isolation: "isolate" }}>
       <ShellScopeProvider scope={scope}>
-        <FrameworkOsShellInner {...innerProps} brand={brand} />
+        <FrameworkOsShellInner {...innerProps} locks={locks} brand={brand} />
         <div data-semio-portal-layer ref={setPortalLayer} />
       </ShellScopeProvider>
     </div>
@@ -5650,7 +5665,7 @@ function FrameworkOsShellInner({
   const locks = locksProp ?? EMPTY_SHELL_LOCKS;
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
   const ephemeral = isEphemeralShellBrand(brand);
-  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, ephemeral }));
+  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
   const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
@@ -5707,8 +5722,8 @@ function FrameworkOsShellInner({
   const uiTheme: UiTheme = useMemo(() => {
     if (uiThemeDraft) return uiThemeDraft;
     const found = builtinUiThemes().find((t) => t.id === uiThemeId) ?? uiCustomThemes[uiThemeId];
-    return found ?? (ephemeral ? undefined : readStoredUiChromeThemeSnapshot()) ?? semioTheme();
-  }, [uiThemeId, uiCustomThemes, uiThemeDraft, ephemeral]);
+    return found ?? readStoredUiChromeThemeSnapshot(scope.storage) ?? semioTheme();
+  }, [uiThemeId, uiCustomThemes, uiThemeDraft, scope.storage]);
   const uiDriver: UiDriver = useMemo(() => uiDriverDraft ?? resolveUiDriver(uiDriverId, uiCustomDrivers), [uiDriverId, uiCustomDrivers, uiDriverDraft]);
   /** 🧵️ Lazily-created worker running `🟦️backbone-🟦️worker.ts` — one per shell instance, reused across `openDocument` calls. */
   const backboneWorkerRef = useRef<Worker | null>(null);
@@ -5777,7 +5792,9 @@ function FrameworkOsShellInner({
   // sharing the page with others must not fight them over `window.history`.
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode && scope.ownsPage);
 
-  const shellStorage = useMemo(() => (ephemeral ? createMemoryStoragePort() : createBrowserStoragePort()), [ephemeral]);
+  // 🐚️ `scope.storage` (not a separately-resolved ephemeral/browser port here) — two shells sharing a
+  // page must not clobber each other's panel layout/dock state through an unnamespaced localStorage key.
+  const shellStorage = scope.storage;
   const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", shellStorage), [session?.app.id, shellStorage]);
   const dockLayoutStore = useMemo(() => new DockLayoutStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
   const dockUiStateStore = useMemo(() => new DockUiStateStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
@@ -7510,27 +7527,32 @@ function FrameworkOsShellInner({
 
   useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, driver: uiDriver }, scope.rootRef.current ?? undefined);
 
-  //#region 💾️ uiPrefs persistence (skips localStorage writes for any locked preference; skipped entirely for ephemeral brands)
+  //#region 💾️ uiPrefs persistence (skips writes for any locked preference; an ephemeral brand's
+  // `scope.storage` is already an in-memory port, so the writes below are harmless there too — no more
+  // `ephemeral` branch needed to skip them outright, only `setActiveUiTheme` stays unconditional since
+  // it remains a page-global singleton, not yet part of this wave's scoping)
   useEffect(() => {
-    if (ephemeral) {
-      void setUiLocale(uiLocale);
-      setActiveUiTheme(uiTheme);
-      return;
+    if (!locks.appearance) writeStoredUiChromeAppearance(scope.storage, uiAppearance);
+    writeStoredUiChromeLayout(scope.storage, uiLayout);
+    writeStoredUiDriverId(scope.storage, uiDriverId);
+    writeStoredUiCustomDrivers(scope.storage, uiCustomDrivers);
+    if (!locks.locale) writeStoredUiChromeLocale(scope.storage, uiLocale);
+    // 🐚️ This shell's own i18next instance (not the shared `uiI18n` singleton) — and its own root's
+    // `lang` attribute; `document.documentElement.lang` stays reserved for the page-owning case.
+    void scope.i18n.changeLanguage(uiLocale);
+    if (scope.ownsPage) {
+      if (typeof document !== "undefined") document.documentElement.lang = uiLocale;
+    } else if (scope.rootRef.current) {
+      scope.rootRef.current.lang = uiLocale;
     }
-    if (!locks.appearance) writeStoredUiChromeAppearance(uiAppearance);
-    writeStoredUiChromeLayout(uiLayout);
-    writeStoredUiDriverId(uiDriverId);
-    writeStoredUiCustomDrivers(uiCustomDrivers);
-    if (!locks.locale) writeStoredUiChromeLocale(uiLocale);
-    void setUiLocale(uiLocale);
-    if (!locks.terminology) writeStoredUiChromeTerminology(uiTerminology);
+    if (!locks.terminology) writeStoredUiChromeTerminology(scope.storage, uiTerminology);
     setActiveUiTheme(uiTheme);
     if (!locks.themeId) {
-      writeStoredUiChromeThemeSnapshot(uiTheme);
-      writeStoredUiChromeThemeId(uiThemeId);
+      writeStoredUiChromeThemeSnapshot(scope.storage, uiTheme);
+      writeStoredUiChromeThemeId(scope.storage, uiThemeId);
     }
-    writeStoredUiCustomThemes(uiCustomThemes);
-  }, [uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks, ephemeral]);
+    writeStoredUiCustomThemes(scope.storage, uiCustomThemes);
+  }, [uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks, scope]);
   //#endregion
 
   useActionHotkey(
@@ -7967,34 +7989,37 @@ function FrameworkOsShellInner({
   const frameworkDisplayTabs = useMemo(() => createFrameworkDisplayPanelTabs(() => displayHostRef.current), [displayHost, uiLocale]);
   const frameworkSettingsTabs = useMemo(() => createFrameworkSettingsPanelTabs(() => settingsHostRef.current), [settingsHost]);
 
-  useEffect(() => {
-    if (!session) return;
-    const parseKeys = (keys: string) =>
-      keys
-        .split(",")
-        .map((key) => key.trim().toLowerCase())
-        .filter(Boolean);
-    const isEditableTarget = (target: EventTarget | null) => {
-      if (!(target instanceof HTMLElement)) return false;
-      const tag = target.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
-      if (target.isContentEditable) return true;
-      return target.closest("[contenteditable='true'], [role='textbox']") != null;
-    };
-    const matches = (event: KeyboardEvent, binding: string) => {
-      const parts = binding.split("+").map((part) => part.trim());
-      const key = parts[parts.length - 1] ?? "";
-      const needsCtrl = parts.includes("ctrl") || parts.includes("meta") || parts.includes("mod");
-      const needsShift = parts.includes("shift");
-      const needsAlt = parts.includes("alt");
-      const hasCtrl = event.ctrlKey || event.metaKey;
-      if (needsCtrl !== hasCtrl) return false;
-      if (needsShift !== event.shiftKey) return false;
-      if (needsAlt !== event.altKey) return false;
-      return event.key.toLowerCase() === key;
-    };
-    const actionById = new Map(session.app.actions.map((action) => [action.id, action]));
-    const onKeyDown = (event: KeyboardEvent) => {
+  // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
+  // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
+  // shell) for every keystroke on the page regardless of which shell the user was actually using.
+  const handleAppKeydown = useCallback(
+    (event: KeyboardEvent) => {
+      if (!session) return;
+      const parseKeys = (keys: string) =>
+        keys
+          .split(",")
+          .map((key) => key.trim().toLowerCase())
+          .filter(Boolean);
+      const isEditableTarget = (target: EventTarget | null) => {
+        if (!(target instanceof HTMLElement)) return false;
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+        if (target.isContentEditable) return true;
+        return target.closest("[contenteditable='true'], [role='textbox']") != null;
+      };
+      const matches = (event: KeyboardEvent, binding: string) => {
+        const parts = binding.split("+").map((part) => part.trim());
+        const key = parts[parts.length - 1] ?? "";
+        const needsCtrl = parts.includes("ctrl") || parts.includes("meta") || parts.includes("mod");
+        const needsShift = parts.includes("shift");
+        const needsAlt = parts.includes("alt");
+        const hasCtrl = event.ctrlKey || event.metaKey;
+        if (needsCtrl !== hasCtrl) return false;
+        if (needsShift !== event.shiftKey) return false;
+        if (needsAlt !== event.altKey) return false;
+        return event.key.toLowerCase() === key;
+      };
+      const actionById = new Map(session.app.actions.map((action) => [action.id, action]));
       if (isEditableTarget(event.target)) return;
       // 🧰️🛠️ Escape deactivates the active window's active utility (P5), or — when no utility is active —
       // the active mode-level tool, when nothing is being typed.
@@ -8036,10 +8061,10 @@ function FrameworkOsShellInner({
           return;
         }
       }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onAction, session]);
+    },
+    [onAction, session],
+  );
+  useShellKeydown(scope.rootRef, handleAppKeydown, [handleAppKeydown]);
 
   const activeRightPanelTab = session?.app.panelTabs.find((tab) => panelAnchorForGroup(tab.group) === "top-right");
   const activePanelTabId = panel?.activePanelTab ?? (activeRightPanelTab ? panelTabKindId(activeRightPanelTab.kind) : undefined) ?? (session?.app.panelTabs[0] ? panelTabKindId(session.app.panelTabs[0].kind) : undefined);
@@ -14553,7 +14578,7 @@ function WorldInstancesLayer({
   readonly meshes: readonly WorldMeshRecord[];
   readonly selection: WorldSelectionRecord;
   /** 🐚️ This shell's own `SelectionModeStore` value — see `resolveWorldSelectionMergeMode`'s doc. */
-  readonly persistentSelectionMode: SelectionMode;
+  readonly persistentSelectionMode: SelectionMergeMode;
   readonly palette: MeshStylePalette;
   readonly projectionSpec?: WorldProjectionSpec;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
@@ -16077,7 +16102,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // is consumed inside `<Canvas>` r3f subtrees (`WorldInstancesLayer`) via a prop, not context — R3F
   // primitives aren't guaranteed to re-render just because an *outer* DOM component's context changed,
   // so the toolbar's mode toggle needs an explicit subscription to actually propagate.
-  const [persistentSelectionMode, setPersistentSelectionMode] = useState<SelectionMode>(() => shellScope?.selection.get() ?? "default");
+  const [persistentSelectionMode, setPersistentSelectionMode] = useState<SelectionMergeMode>(() => shellScope?.selection.get() ?? "default");
   useEffect(() => {
     if (!shellScope) return;
     return shellScope.selection.subscribe(() => setPersistentSelectionMode(shellScope.selection.get()));
@@ -20499,7 +20524,7 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
 //#region TableHost
 //#region Types
 type TableColumnRecord = { readonly id: string; readonly label: string; readonly sortable?: boolean };
-type TableCellButton = { readonly iconId: IconName; readonly label?: string; readonly action: ActionDescriptor; readonly revealOnHover?: boolean };
+type TableCellButton = { readonly iconId: IconName; readonly label?: string; readonly action: ActionDescriptor; readonly placement?: "row" | "menu" };
 type TableCellRecord =
   | { readonly kind: "text"; readonly value: string }
   | { readonly kind: "number"; readonly value: number }

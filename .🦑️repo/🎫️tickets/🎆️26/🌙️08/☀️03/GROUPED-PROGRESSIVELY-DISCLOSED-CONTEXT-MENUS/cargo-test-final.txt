@@ -1,0 +1,1675 @@
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-canvas v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust)
+   Compiling semio-s-kernel-flow-module-logic v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🧠️logic)
+   Compiling semio-s-kernel-flow-module-text v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📝️text)
+   Compiling semio-s-kernel-flow-module-bim v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🏗️bim)
+   Compiling semio-s-kernel-flow-module-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🫀️core)
+   Compiling semio-s-kernel-flow-module-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🧮️math)
+   Compiling semio-s-kernel-flow-module-list v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📃️list)
+   Compiling semio-s-kernel-flow-module-dictionary v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📖️dictionary)
+   Compiling semio-s-app-puzzle-2d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-framework-kernel-neural-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚡️implementation/🦀️rust/🕸️dag)
+warning: unused import: `Level`
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7444:32
+     |
+7444 | use crate::theme::{GlassStyle, Level, Rgba, Theme};
+     |                                ^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::IconName`
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:15406:5
+      |
+15406 | use crate::IconName;
+      |     ^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18236:52
+      |
+18236 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+18236 -     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+18236 +     pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
+      |
+
+   Compiling semio-framework-os-kernel-infinite-board v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/⚡️implementation/🦀️rust)
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18584:28
+      |
+18584 |             label: "Group".into(),
+      |                            ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18827:58
+      |
+18827 | ...   UiNode::Text(UiTextNode { value: "hello".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+      |                                                ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18984:26
+      |
+18984 |             label: label.into(),
+      |                          ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:19123:58
+      |
+19123 | ...   let node = UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::defa...
+      |                                                        ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18587:69
+      |
+18587 | ...   children: vec![UiNode::Text(UiTextNode { value: "label".into(), emphasize: None, data_attributes: None, presence: UiPresenc...
+      |                                                               ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18438:103
+      |
+18438 | ...o()), icon_id: IconName::CircleDot, label: label.into(), action: action(), style: None, presence: UiPresence::default(),
+      |                                                     ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18841:88
+      |
+18841 | ...   assert_equivalent("Text", &leaf(UiNode::Text(UiTextNode { value: "hello world".into(), emphasize: Some(true), data_attribut...
+      |                                                                                      ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:19029:28
+      |
+19029 |             label: "Label".into(),
+      |                            ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:19047:35
+      |
+19047 |             label: Some("Section".into()),
+      |                                   ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:19050:69
+      |
+19050 | ...   children: vec![UiNode::Text(UiTextNode { value: "child".into(), emphasize: None, data_attributes: None, presence: UiPresenc...
+      |                                                               ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18848:139
+      |
+18848 | ...to()), icon_id: IconName::CircleDot, label: "Go".into(), action: action(), style: None, presence: UiPresence::default(),
+      |                                                     ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:19068:107
+      |
+19068 | ...into(), src: String::new(), alt: Some("alt text".into()), presence: UiPresence::default(),
+      |                                                     ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18447:84
+      |
+18447 | ...   ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, ...
+      |                                                                                  ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18877:78
+      |
+18877 |                 items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into(),
+      |                                                                              ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18878:60
+      |
+18878 |         }, UiSelectItem { value: "b".into(), label: "Beta".into(),
+      |                                                            ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18468:75
+      |
+18468 | ...   let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence:...
+      |                                                                         ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18896:137
+      |
+18896 | ...), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default(),
+      |                                                     ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:17691:48
+      |
+17691 |         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+      |                                                ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:17745:72
+      |
+17745 | ...   UiNode::Group(UiGroupNode { id: "group".into(), label: "Group".into(), default_open: None, presence: UiPresence::default(),...
+      |                                                                      ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:17409:53
+      |
+17409 |         let mut item = UiTreeItemNode::base("row1", "Row One");
+      |                        --------------------         ^^^^^^^^^ unsatisfied trait bound
+      |                        |
+      |                        required by a bound introduced by this call
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+note: required by a bound in `ui::UiTreeItemNode::base`
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2623:52
+      |
+ 2623 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+      |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18907:120
+      |
+18907 | ...), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default(),
+      |                                                     ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18910:118
+      |
+18910 | ...), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::selected(true),
+      |                                                     ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18920:125
+      |
+18920 | ... { entries: vec![UiKeyValueEntry { label: "Name".into(), value: "Semio".into(),
+      |                                                     ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:17433:53
+      |
+17433 |         let mut item = UiTreeItemNode::base("row1", "Row One");
+      |                        --------------------         ^^^^^^^^^ unsatisfied trait bound
+      |                        |
+      |                        required by a bound introduced by this call
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+note: required by a bound in `ui::UiTreeItemNode::base`
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2623:52
+      |
+ 2623 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+      |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16763:70
+      |
+16763 |             items: vec![UiSelectItem { value: "a".into(), label: "A".into(),
+      |                                                                      ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16764:57
+      |
+16764 |         }, UiSelectItem { value: "b".into(), label: "B".into(),
+      |                                                         ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16839:48
+      |
+16839 |         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+      |                                                ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:15318:104
+      |
+15318 | ...con_id: IconName::CircleDot, text: Some("Toggle".into()), on_change: action(), presence: UiPresence::default(),
+      |                                                     ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:16851:100
+      |
+16851 | ...   UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style:...
+      |                                                                                                  ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14724:23
+      |
+14724 |             label: id.into(),
+      |                       ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14878:74
+      |
+14878 | ...   UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::s...
+      |                                                                        ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14736:23
+      |
+14736 |             label: id.into(),
+      |                       ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14930:176
+      |
+14930 | ...esence::default(), items: vec![UiTreeItemNode::base("i1", "Item")],
+      |                                   --------------------       ^^^^^^ unsatisfied trait bound
+      |                                   |
+      |                                   required by a bound introduced by this call
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+note: required by a bound in `ui::UiTreeItemNode::base`
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2623:52
+      |
+ 2623 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+      |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14943:176
+      |
+14943 | ...esence::default(), items: vec![UiTreeItemNode::base("i1", "Item")],
+      |                                   --------------------       ^^^^^^ unsatisfied trait bound
+      |                                   |
+      |                                   required by a bound introduced by this call
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+note: required by a bound in `ui::UiTreeItemNode::base`
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2623:52
+      |
+ 2623 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+      |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:15035:68
+      |
+15035 | ...   UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: description.map(String::from), required: So...
+      |                                                                  ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:15206:51
+      |
+15206 |         let mut item = UiTreeItemNode::base("i1", "Item One");
+      |                        --------------------       ^^^^^^^^^^ unsatisfied trait bound
+      |                        |
+      |                        required by a bound introduced by this call
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+note: required by a bound in `ui::UiTreeItemNode::base`
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2623:52
+      |
+ 2623 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+      |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:15056:51
+      |
+15056 |         let mut item = UiTreeItemNode::base("i1", "Item One");
+      |                        --------------------       ^^^^^^^^^^ unsatisfied trait bound
+      |                        |
+      |                        required by a bound introduced by this call
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+note: required by a bound in `ui::UiTreeItemNode::base`
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2623:52
+      |
+ 2623 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+      |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:15074:176
+      |
+15074 | ...esence::default(), items: vec![UiTreeItemNode::base("i1", "Item One")],
+      |                                   --------------------       ^^^^^^^^^^ unsatisfied trait bound
+      |                                   |
+      |                                   required by a bound introduced by this call
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+note: required by a bound in `ui::UiTreeItemNode::base`
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:2623:52
+      |
+ 2623 |     pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
+      |                                                    ^^^^^^^^^^^ required by this bound in `UiTreeItemNode::base`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:15111:74
+      |
+15111 |             items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into(),
+      |                                                                          ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:15112:60
+      |
+15112 |         }, UiSelectItem { value: "b".into(), label: "Beta".into(),
+      |                                                            ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14840:100
+      |
+14840 | ...   UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style:...
+      |                                                                                                  ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14700:48
+      |
+14700 |         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+      |                                                ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:14861:74
+      |
+14861 | ...   UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::s...
+      |                                                                        ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:12311:80
+      |
+12311 | ...   let field = UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: None, required: None, error: No...
+      |                                                                              ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:12334:93
+      |
+12334 | ...   let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), pres...
+      |                                                                                           ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+   Compiling semio-framework-os-kernel-surface-tiled-map v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust)
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:12201:48
+      |
+12201 |         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+      |                                                ^^^^ unsatisfied trait bound
+      |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+      |
+   45 | impl From<LabelText> for Label {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      = help: for that trait implementation, expected `LabelText`, found `&str`
+      = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7417:73
+     |
+7417 | ...   let (tree, dragged) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: Ui...
+     |                                                                       ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:6203:48
+     |
+6203 |         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+     |                                                ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:7426:76
+     |
+7426 | ...   let (tree, scrollable) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence:...
+     |                                                                          ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:6765:108
+     |
+6765 |             items: items.into_iter().map(|(value, label)| UiSelectItem { value: value.into(), label: label.into(),
+     |                                                                                                            ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:6643:48
+     |
+6643 |         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+     |                                                ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:6652:26
+     |
+6652 |             label: label.into(),
+     |                          ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:6777:26
+     |
+6777 |             label: label.into(),
+     |                          ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Vec<NodeGraphNodeRecord>: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5484:39
+     |
+5484 |             NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
+     |                                       ^^^^ the trait `From<&str>` is not implemented for `Vec<NodeGraphNodeRecord>`
+     |
+     = help: the following other types implement trait `From<T>`:
+               `Vec<T, A>` implements `From<BinaryHeap<T, A>>`
+               `Vec<T, A>` implements `From<Box<[T], A>>`
+               `Vec<T, A>` implements `From<VecDeque<T, A>>`
+               `Vec<T>` implements `From<&[T; N]>`
+               `Vec<T>` implements `From<&[T]>`
+               `Vec<T>` implements `From<&mut [T; N]>`
+               `Vec<T>` implements `From<&mut [T]>`
+               `Vec<T>` implements `From<Cow<'_, [T]>>`
+             and 5 others
+     = note: required for `&str` to implement `Into<Vec<NodeGraphNodeRecord>>`
+
+error[E0277]: the trait bound `Vec<NodeGraphEdgeRecord>: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5484:52
+     |
+5484 |             NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
+     |                                                    ^^^^ the trait `From<&str>` is not implemented for `Vec<NodeGraphEdgeRecord>`
+     |
+     = help: the following other types implement trait `From<T>`:
+               `Vec<T, A>` implements `From<BinaryHeap<T, A>>`
+               `Vec<T, A>` implements `From<Box<[T], A>>`
+               `Vec<T, A>` implements `From<VecDeque<T, A>>`
+               `Vec<T>` implements `From<&[T; N]>`
+               `Vec<T>` implements `From<&[T]>`
+               `Vec<T>` implements `From<&mut [T; N]>`
+               `Vec<T>` implements `From<&mut [T]>`
+               `Vec<T>` implements `From<Cow<'_, [T]>>`
+             and 5 others
+     = note: required for `&str` to implement `Into<Vec<NodeGraphEdgeRecord>>`
+
+error[E0277]: the trait bound `NodeGraphViewport: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5484:65
+     |
+5484 |             NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
+     |                                                                 ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `NodeGraphViewport`
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:3479:1
+     |
+3479 | pub struct NodeGraphViewport {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<NodeGraphViewport>`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:6816:42
+     |
+6816 |                 assert_eq!(button.label, "Alpha");
+     |                                          ^^^^^^^ expected `Label`, found `&str`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18619:61
+      |
+18619 |             UiNode::Text(text) => WidgetNode::Text { value: text.value.clone(), emphasize: text.emphasize.unwrap_or(false) },
+      |                                                             ^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18619 -             UiNode::Text(text) => WidgetNode::Text { value: text.value.clone(), emphasize: text.emphasize.unwrap_or(false) },
+18619 +             UiNode::Text(text) => WidgetNode::Text { value: text.value.to_string(), emphasize: text.emphasize.unwrap_or(false) },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18621:129
+      |
+18621 | ...ome(button.icon_id.clone()), label: button.label.clone(), event: Some(button.action.clone()) },
+      |                                        ^^^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18621 -             UiNode::Button(button) => WidgetNode::Button { id: button.id.clone(), icon_id: Some(button.icon_id.clone()), label: button.label.clone(), event: Some(button.action.clone()) },
+18621 +             UiNode::Button(button) => WidgetNode::Button { id: button.id.clone(), icon_id: Some(button.icon_id.clone()), label: button.label.to_string(), event: Some(button.action.clone()) },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18626:30
+      |
+18626 |                 placeholder: input.placeholder.clone(),
+      |                              ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:6877:99
+     |
+6877 | ...   actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some("Delete".into()), action: action(), reveal_on_h...
+     |                                                                                             ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5571:36
+     |
+5571 |             menu: None, value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
+     |                                    ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0277]: the trait bound `Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5573:76
+     |
+5573 | ...   menu: None, id: None, icon_id: IconName::CircleDot, label: "l".into(), action: act("a"), style: None, presence: UiPresence::...
+     |                                                                      ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:45:1
+     |
+  45 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18633:102
+      |
+18633 | ... { value: item.value.clone(), label: item.label.clone() }).collect(),
+      |                                         ^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18633 -                 items: select.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
+18633 +                 items: select.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.to_string() }).collect(),
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18634:30
+      |
+18634 |                 placeholder: select.placeholder.clone(),
+      |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18637:157
+      |
+18637 | ...gle.presence.selected, text: toggle.text.clone(), on_change: Some(toggle.on_change.clone()) },
+      |                                 ^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18638:122
+      |
+18638 | ...).map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+      |                                         ^^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18638 -             UiNode::KeyValue(kv) => WidgetNode::KeyValue { entries: kv.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+18638 +             UiNode::KeyValue(kv) => WidgetNode::KeyValue { entries: kv.entries.iter().map(|entry| KeyValueEntry { label: entry.label.to_string(), value: entry.value.clone() }).collect() },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18651:83
+      |
+18651 | ...   Some(control) => WidgetNode::Field { id: field.id.clone(), label: field.label.clone(), child: control_to_widget(&control) },
+      |                                                                         ^^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18651 -                 Some(control) => WidgetNode::Field { id: field.id.clone(), label: field.label.clone(), child: control_to_widget(&control) },
+18651 +                 Some(control) => WidgetNode::Field { id: field.id.clone(), label: field.label.to_string(), child: control_to_widget(&control) },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18652:81
+      |
+18652 | ...   None => WidgetNode::Section { id: field.id.clone(), label: Some(field.label.clone()), default_open: true, children: vec![to...
+      |                                                                  ---- ^^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |                                                                  |
+      |                                                                  arguments to this enum variant are incorrect
+      |
+help: the type constructed contains `Label` due to the type of the argument passed
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18652:76
+      |
+18652 | ...id: field.id.clone(), label: Some(field.label.clone()), default_open: true, children: vec![to_widget_node(&field.child)] },
+      |                                 ^^^^^-------------------^
+      |                                      |
+      |                                      this argument influences the type of `Some`
+note: tuple variant defined here
+     --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+      |
+  606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+      |     ^^^^
+help: try using a conversion method
+      |
+18652 -                 None => WidgetNode::Section { id: field.id.clone(), label: Some(field.label.clone()), default_open: true, children: vec![to_widget_node(&field.child)] },
+18652 +                 None => WidgetNode::Section { id: field.id.clone(), label: Some(field.label.to_string()), default_open: true, children: vec![to_widget_node(&field.child)] },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18654:94
+      |
+18654 | ... section.id.clone(), label: section.label.clone(), default_open: section.default_open.unwrap_or(true), children: section.child...
+      |                                ^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18655:93
+      |
+18655 | ...on { id: group.id.clone(), label: Some(group.label.clone()), default_open: group.default_open.unwrap_or(true), children: group...
+      |                                      ---- ^^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |                                      |
+      |                                      arguments to this enum variant are incorrect
+      |
+help: the type constructed contains `Label` due to the type of the argument passed
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18655:88
+      |
+18655 | ...id: group.id.clone(), label: Some(group.label.clone()), default_open: group.default_open.unwrap_or(true), children: group.chil...
+      |                                 ^^^^^-------------------^
+      |                                      |
+      |                                      this argument influences the type of `Some`
+note: tuple variant defined here
+     --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+      |
+  606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+      |     ^^^^
+help: try using a conversion method
+      |
+18655 -             UiNode::Group(group) => WidgetNode::Section { id: group.id.clone(), label: Some(group.label.clone()), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
+18655 +             UiNode::Group(group) => WidgetNode::Section { id: group.id.clone(), label: Some(group.label.to_string()), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18677:122
+      |
+18677 | ...on_id: Some(n.icon_id.clone()), label: n.label.clone(), event: Some(n.action.clone()) },
+      |                                           ^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18677 -             UiControlNode::Button(n) => ControlNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.clone(), event: Some(n.action.clone()) },
+18677 +             UiControlNode::Button(n) => ControlNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.to_string(), event: Some(n.action.clone()) },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18678:150
+      |
+18678 | ...value.clone(), placeholder: n.placeholder.clone(), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
+      |                                ^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18682:97
+      |
+18682 |                 items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
+      |                                                                                                 ^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18682 -                 items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
+18682 +                 items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.to_string() }).collect(),
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18683:30
+      |
+18683 |                 placeholder: n.placeholder.clone(),
+      |                              ^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18686:145
+      |
+18686 | ...ed: n.presence.selected, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
+      |                                   ^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18687:128
+      |
+18687 | ...).map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+      |                                         ^^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18687 -             UiControlNode::KeyValue(n) => ControlNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+18687 +             UiControlNode::KeyValue(n) => ControlNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.to_string(), value: entry.value.clone() }).collect() },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18700:121
+      |
+18700 | ...on_id: Some(n.icon_id.clone()), label: n.label.clone(), event: Some(n.action.clone()) },
+      |                                           ^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18700 -             UiControlNode::Button(n) => WidgetNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.clone(), event: Some(n.action.clone()) },
+18700 +             UiControlNode::Button(n) => WidgetNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.to_string(), event: Some(n.action.clone()) },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18701:149
+      |
+18701 | ...value.clone(), placeholder: n.placeholder.clone(), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
+      |                                ^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18705:97
+      |
+18705 |                 items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
+      |                                                                                                 ^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18705 -                 items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
+18705 +                 items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.to_string() }).collect(),
+      |
+
+   Compiling semio-framework-os-kernel-infinite-board-normal-undirected v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-port v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-normal-directed v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementation/🦀️rust)
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18706:30
+      |
+18706 |                 placeholder: n.placeholder.clone(),
+      |                              ^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18709:144
+      |
+18709 | ...ed: n.presence.selected, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
+      |                                   ^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18710:127
+      |
+18710 | ...).map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+      |                                         ^^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18710 -             UiControlNode::KeyValue(n) => WidgetNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+18710 +             UiControlNode::KeyValue(n) => WidgetNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.to_string(), value: entry.value.clone() }).collect() },
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18719:66
+      |
+18719 | ...ion.icon_id.clone(), label: action.label.clone(), event: action.action.clone(), reveal_on_hover: action.reveal_on_hover.unwrap...
+      |                                ^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18725:20
+      |
+18725 |             label: item.label.clone(),
+      |                    ^^^^^^^^^^^^^^^^^^ expected `String`, found `Label`
+      |
+help: try using a conversion method
+      |
+18725 -             label: item.label.clone(),
+18725 +             label: item.label.to_string(),
+      |
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:18744:54
+      |
+18744 | ...   TreeSection { id: section.id.clone(), label: section.label.clone(), default_open: section.default_open.unwrap_or(true), ite...
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^ expected `Option<String>`, found `Option<Label>`
+      |
+      = note: expected enum `std::option::Option<std::string::String>`
+                 found enum `std::option::Option<Label>`
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:103:39
+    |
+103 | fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:103:74
+    |
+103 | fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+    |                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:148:29
+    |
+148 | fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |                             ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:148:64
+    |
+148 | fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:153:39
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:153:74
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+    |                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:166:32
+    |
+166 | fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:166:67
+    |
+166 | fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:184:57
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:184:92
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+    |                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:199:46
+    |
+199 |     gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
+199 +     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:202:59
+    |
+202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
+202 + pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:214:54
+    |
+214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
+214 + fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:219:46
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &canvas::camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:219:81
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:243:34
+    |
+243 | fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:243:69
+    |
+243 | fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1081:25
+     |
+1081 | pub trait MapExtension: canvas::CanvasExtension {
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1081 - pub trait MapExtension: canvas::CanvasExtension {
+1081 + pub trait MapExtension: CanvasExtension {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1088:6
+     |
+1088 | impl canvas::CanvasExtension for DefaultMapExtension {
+     |      ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1088 - impl canvas::CanvasExtension for DefaultMapExtension {
+1088 + impl CanvasExtension for DefaultMapExtension {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1354:17
+     |
+1354 |     pub camera: canvas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1354 -     pub camera: canvas::camera::Camera,
+1354 +     pub camera: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1355:19
+     |
+1355 |     pub viewport: canvas::camera::Viewport,
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1355 -     pub viewport: canvas::camera::Viewport,
+1355 +     pub viewport: camera::Viewport,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1359:53
+     |
+1359 |     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+     |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1359 -     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+1359 +     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1382:17
+     |
+1382 |         origin: canvas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1382 -         origin: canvas::camera::Camera,
+1382 +         origin: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1501:24
+     |
+1501 |         let viewport = canvas::camera::Viewport::default();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1501 -         let viewport = canvas::camera::Viewport::default();
+1501 +         let viewport = camera::Viewport::default();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1541:32
+     |
+1541 |     fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1541 -     fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 +     fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:1803:59
+     |
+1803 |         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+     |                                                           ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1803 -         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+1803 +         self.tile_images.insert(tiles::tile_key(z, x, y), Arc::new(image));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2496:17
+     |
+2496 |                 canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2496 -                 canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 +                 text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2695:43
+     |
+2695 |         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2695 -         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+2695 +         let mut draw: Vec<(u32, u32, u32, Arc<RasterImage>)> = Vec::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2710:13
+     |
+2710 |             canvas::raster::draw_image_arc(scene, &img, aff);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2710 -             canvas::raster::draw_image_arc(scene, &img, aff);
+2710 +             raster::draw_image_arc(scene, &img, aff);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2820:21
+     |
+2820 |                     canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2820 -                     canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 +                     text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust/../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs:2855:6
+     |
+2855 | impl canvas::canvas_content::CanvasContent for MapHost {
+     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2855 - impl canvas::canvas_content::CanvasContent for MapHost {
+2855 + impl canvas_content::CanvasContent for MapHost {
+     |
+
+   Compiling semio-s-kernel-reasoning-mindmap v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️module/💭️mindmap/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-port-directed v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+Some errors have detailed explanations: E0277, E0308.
+For more information about an error, try `rustc --explain E0277`.
+warning: `semio-framework-ui-wgpu` (lib test) generated 1 warning (1 duplicate)
+error: could not compile `semio-framework-ui-wgpu` (lib test) due to 86 previous errors; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `semio-framework-os-kernel-surface-tiled-map` (lib) generated 31 warnings (run `cargo fix --lib -p semio-framework-os-kernel-surface-tiled-map` to apply 31 suggestions)
+warning: `semio-framework-ui-wgpu` (lib) generated 3 warnings (run `cargo fix --lib -p semio-framework-ui-wgpu` to apply 3 suggestions)

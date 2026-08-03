@@ -1,6 +1,6 @@
 //! ⚡️ FEM 3D app — operation enum + laws (constitutional: op).
 
-use fem3d::{element_id, Fem3dDocument, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use fem3d::{element_id, Fem3dDocument, FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
@@ -389,6 +389,56 @@ impl Operation<Fem3dDocument> for Fem3dOperation {
 pub type Fem3dEnvelope = DocumentEnvelope<Fem3dDocument, Fem3dOperation>;
 pub type Fem3dStore = DocumentStore<Fem3dDocument, Fem3dOperation>;
 
+// #region 🔖️ConfigOperations
+/// 🧮️ B1: `fem3d_engine::Fem3dConfig`'s operation enum — one variant per settled interaction (mirrors
+/// the pre-B1 `Fem3dPlayApp` `RefCell` field writes), plus a generic `Snapshot` every variant's
+/// `backwards()` returns — mirrors `fem2d_op::Fem2dConfigOperation`'s identical B1 pilot recipe: since a
+/// config-only dispatch is a plain `Apply` (not an `AmendLast`), each tick is its own distinct, real
+/// config edit, and "undo this tick" is exactly "restore the whole-config snapshot from just before it".
+/// `Operation::Diff` is the WHOLE `Fem3dConfig` (not a granular patch type): `diff()` returns "the full
+/// config after this op", and `OperationDiff<Fem3dConfig>::apply` for `Fem3dConfig` itself
+/// (`fem3d_engine`) just returns that snapshot verbatim, ignoring `base`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Fem3dConfigOperation {
+    #[dsl(key = "snapshot")]
+    Snapshot {
+        #[dsl(block)]
+        config: fem3d_engine::Fem3dConfig,
+    },
+    /// 👁️ Was the `setResultDisplay` view action writing `Fem3dPlayApp::result_display`.
+    #[dsl(key = "result-display")]
+    SetResultDisplay { source_id: Option<String>, mode: String, mode_index: u32 },
+    /// 🎥️ Was the `setCamera` view action writing `Fem3dPlayApp::camera`.
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: FemCamera,
+    },
+}
+
+impl Operation<fem3d_engine::Fem3dConfig> for Fem3dConfigOperation {
+    type Diff = fem3d_engine::Fem3dConfig;
+
+    fn diff(&self, base: &fem3d_engine::Fem3dConfig) -> fem3d_engine::Fem3dConfig {
+        let mut next = base.clone();
+        match self {
+            Fem3dConfigOperation::Snapshot { config } => return config.clone(),
+            Fem3dConfigOperation::SetResultDisplay { source_id, mode, mode_index } => {
+                next.result_source_id = source_id.clone();
+                next.result_mode = mode.clone();
+                next.result_mode_index = *mode_index;
+            }
+            Fem3dConfigOperation::SetCamera { camera } => next.camera = camera.clone(),
+        }
+        next
+    }
+
+    fn backwards(&self, base: &fem3d_engine::Fem3dConfig) -> Vec<Self> {
+        vec![Fem3dConfigOperation::Snapshot { config: base.clone() }]
+    }
+}
+// #endregion 🔖️ConfigOperations
+
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -606,5 +656,36 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&Fem3dOperation::SetDocument { document: cantilever });
     }
     // #endregion 🔖️OpText
+
+    // #region 🔖️ConfigOperations
+    #[test]
+    fn config_operation_backwards_always_restores_the_pre_operation_snapshot() {
+        let base = fem3d_engine::Fem3dConfig::default();
+        let camera = FemCamera { json: "{\"x\":1}".into() };
+        let op = Fem3dConfigOperation::SetCamera { camera: camera.clone() };
+        let next = op.diff(&base);
+        assert_eq!(next.camera, camera);
+        let backwards = op.backwards(&base);
+        assert_eq!(backwards, vec![Fem3dConfigOperation::Snapshot { config: base.clone() }]);
+        assert_eq!(backwards[0].diff(&next), base);
+    }
+
+    #[test]
+    fn set_result_display_config_operation_round_trips() {
+        let base = fem3d_engine::Fem3dConfig::default();
+        let op = Fem3dConfigOperation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2 };
+        let next = op.diff(&base);
+        assert_eq!(next.result_source_id.as_deref(), Some("dead"));
+        assert_eq!(next.result_mode, "modal");
+        assert_eq!(next.result_mode_index, 2);
+    }
+
+    #[test]
+    fn fem3d_config_operation_text_round_trips_every_variant() {
+        store::test_support::assert_op_line_round_trip(&Fem3dConfigOperation::Snapshot { config: fem3d_engine::Fem3dConfig::default() });
+        store::test_support::assert_op_line_round_trip(&Fem3dConfigOperation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
+        store::test_support::assert_op_line_round_trip(&Fem3dConfigOperation::SetCamera { camera: FemCamera { json: "{\"x\":1}".into() } });
+    }
+    // #endregion 🔖️ConfigOperations
 }
 // #endregion 🧪️Tests

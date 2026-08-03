@@ -6810,6 +6810,12 @@
   transition: color 120ms ease;
 }
 
+/* 🪟️ Border overlay is a pure paint layer above the gap/chip glass — never intercepts pointer events
+ * or reserves layout space, regardless of what utility classes a consumer composes onto it. */
+[data-window-silhouette-border] {
+  pointer-events: none;
+}
+
 /* 🪟️ U-gap must punch through — never inherit cap/body glass or a stack rectangle fill. */
 [data-window-silhouette-gap] {
   background: transparent !important;
@@ -6867,6 +6873,14 @@
 [data-slot="introduction-info-box"]:hover,
 [data-slot="dialog-box"]:hover {
   border-color: transparent !important;
+}
+
+/* 🎓️ The introduction box's real border is the silhouette SVG (see `WindowChromeSilhouetteBorder`),
+ * not the box's own (permanently transparent) CSS border — emphasize its stroke only while the
+ * pointer is inside and the box isn't already active-clicked, never on `:focus-within` so a button
+ * click does not leave it stuck emphasized after the pointer leaves. */
+[data-slot="introduction-info-box"]:not([data-active="true"]):hover [data-window-silhouette-border] path {
+  stroke: var(--border-emphasized-color);
 }
 
 /* 🎓️ Introduction step unit hover: title + drag handle — not footer step-count chip. */

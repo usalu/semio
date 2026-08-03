@@ -11,14 +11,14 @@ use imperative_op::{ImperativeConfigOperation, ImperativeOperation};
 use imperative_protocol::ImperativeCommand;
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
-    build_table_scene, build_text_editor_scene, create_stack_layout, localized_label_map, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
-    ActionArgDef, ActionArgOption, App, AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, TableScene,
-    TextEditorScene, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    build_table_scene, build_text_editor_scene, create_stack_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
+    ActionArgDef, ActionArgOption, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, TableScene,
+    Terminology, TextEditorScene, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use store::DocumentPack;
 
 //#region 🔖️Constants
@@ -36,14 +36,22 @@ pub const IMPERATIVE_DOCUMENT_SCHEMA: &str = "imperative.document/v1";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s local helpers.
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `block3d_ui`'s identical region.
 fn is_de_locale(cfg: &ImperativeConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &ImperativeConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+/// 🗣️ `ImperativeConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
+fn imperative_locale(cfg: &ImperativeConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+/// 🗣️ Resolves the active `ImperativeLabels` cell from the config-carried locale via the SDK's
+/// two-axis `AppLabels::labels`. `ImperativeConfig` carries no terminology field, so terminology is
+/// always `Native` — imperative's control-flow vocabulary has no building/assembly reuse variant.
+fn imperative_labels(cfg: &ImperativeConfig) -> &'static ImperativeLabels {
+    ImperativeLabels::labels(imperative_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -92,51 +100,29 @@ fn imperative_action(action: &str, args: Option<Value>) -> semio_framework_plugi
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Terminology
+// 🗣️ Complete UI label set for the imperative app; one field per label makes every locale combination
+// compile-checked. No separate reuse-terminology concept (pure control-flow vocabulary), so reuse repeats native.
 semio_framework_plugin::app_labels! {
-    /// 🗣️ Complete UI label set for the imperative app; one field per label makes every locale combination compile-checked.
     struct ImperativeLabels {
-        window_main: &'static str = en: "Imperative", de: "Imperativ";
-        window_script: &'static str = en: "Script", de: "Skript";
-        col_index: &'static str = en: "#", de: "#";
-        col_id: &'static str = en: "Id", de: "ID";
-        col_kind: &'static str = en: "Kind", de: "Art";
-        action_state_set: &'static str = en: "Set state", de: "Zustand setzen";
-        action_log_print: &'static str = en: "Print log", de: "Log ausgeben";
-        action_control_if: &'static str = en: "If", de: "Wenn";
-        action_control_while: &'static str = en: "While", de: "Solange";
-        action_math_add: &'static str = en: "Add", de: "Addieren";
-        document_empty: &'static str = en: "(none)", de: "(keine)";
-        inspector_empty_hint: &'static str = en: "Select a step in the document.", de: "Wählen Sie einen Schritt im Dokument aus.";
-        inspector_step_not_found: &'static str = en: "Step not found", de: "Schritt nicht gefunden";
-        inspector_id: &'static str = en: "Id", de: "ID";
-        inspector_kind: &'static str = en: "Kind", de: "Art";
-        inspector_params: &'static str = en: "Params", de: "Parameter";
+        window_main: native_en "Imperative", native_de "Imperativ", reuse_en "Imperative", reuse_de "Imperativ";
+        window_script: native_en "Script", native_de "Skript", reuse_en "Script", reuse_de "Skript";
+        col_index: native_en "#", native_de "#", reuse_en "#", reuse_de "#";
+        col_id: native_en "Id", native_de "ID", reuse_en "Id", reuse_de "ID";
+        col_kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        action_state_set: native_en "Set state", native_de "Zustand setzen", reuse_en "Set state", reuse_de "Zustand setzen";
+        action_log_print: native_en "Print log", native_de "Log ausgeben", reuse_en "Print log", reuse_de "Log ausgeben";
+        action_control_if: native_en "If", native_de "Wenn", reuse_en "If", reuse_de "Wenn";
+        action_control_while: native_en "While", native_de "Solange", reuse_en "While", reuse_de "Solange";
+        action_math_add: native_en "Add", native_de "Addieren", reuse_en "Add", reuse_de "Addieren";
+        document_empty: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
+        inspector_empty_hint: native_en "Select a step in the document.", native_de "Wählen Sie einen Schritt im Dokument aus.", reuse_en "Select a step in the document.", reuse_de "Wählen Sie einen Schritt im Dokument aus.";
+        inspector_step_not_found: native_en "Step not found", native_de "Schritt nicht gefunden", reuse_en "Step not found", reuse_de "Schritt nicht gefunden";
+        inspector_id: native_en "Id", native_de "ID", reuse_en "Id", reuse_de "ID";
+        inspector_kind: native_en "Kind", native_de "Art", reuse_en "Kind", reuse_de "Art";
+        inspector_params: native_en "Params", native_de "Parameter", reuse_en "Params", reuse_de "Parameter";
     }
 }
 //#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_imperative_app`'s
-/// static manifest — the manifest itself has no config/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder.
-fn imperative_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(
-        is_de,
-        &[
-            ("addStep", "Add Step", "Schritt hinzufügen"),
-            ("addStepAt", "Add Step At", "Schritt bei Position hinzufügen"),
-            ("removeStep", "Remove Step", "Schritt entfernen"),
-            ("removeStepAt", "Remove Step At", "Schritt bei Position entfernen"),
-            ("moveStep", "Move Step", "Schritt verschieben"),
-            ("moveStepAt", "Move Step At", "Schritt bei Position verschieben"),
-            ("setStepParams", "Set Step Params", "Schrittparameter festlegen"),
-            ("setStepParamsAt", "Set Step Params At", "Schrittparameter bei Position festlegen"),
-            ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("run", "Run", "Ausführen"),
-        ],
-    )
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 fn build_document_tree(document: &ImperativeDocument, selected: &[String], labels: &ImperativeLabels) -> UiNode {
@@ -146,10 +132,10 @@ fn build_document_tree(document: &ImperativeDocument, selected: &[String], label
         .steps
         .iter()
         .enumerate()
-        .map(|(index, step)| tree_item_with_action(builder.item_id("step", &step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()), imperative_action("setSelection", Some(json!({ "ids": [step.id.clone()] })))))
+        .map(|(index, step)| tree_item_with_action(builder.item_id("step", &step.id), Label::data(format!("{}. {}", index + 1, step.kind)), Some(step.id.clone()), imperative_action("setSelection", Some(json!({ "ids": [step.id.clone()] })))))
         .collect();
     builder
-        .section_or_placeholder("imperative-play-document.steps", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, step_items, labels.document_empty)
+        .section_or_placeholder("imperative-play-document.steps", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, step_items, labels.document_empty)
         .selected(selected.iter().map(|id| format!("imperative-play-document.step.{id}")).collect())
         .build()
 }
@@ -158,14 +144,14 @@ fn build_catalogue_tree(labels: &ImperativeLabels) -> UiNode {
     let actions = [("state.set", labels.action_state_set), ("log.print", labels.action_log_print), ("control.if", labels.action_control_if), ("control.while", labels.action_control_while), ("math.add", labels.action_math_add)];
     let builder = PanelTreeBuilder::new("imperative-play-catalogue");
     let action_items: Vec<UiTreeItemNode> = actions.iter().map(|(kind, label)| tree_item_with_action(builder.item_id("action", kind), *label, Some((*kind).into()), imperative_action("addStep", Some(json!({ "kind": kind }))))).collect();
-    builder.section("imperative-play-catalogue.actions", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, action_items).selected(vec![]).build()
+    builder.section("imperative-play-catalogue.actions", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, action_items).selected(vec![]).build()
 }
 
 fn build_inspector_tree(document: &ImperativeDocument, selected: &[String], labels: &ImperativeLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "imperative-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![ui_text(labels.inspector_empty_hint)],
             presence: UiPresence::default(),
@@ -176,7 +162,7 @@ fn build_inspector_tree(document: &ImperativeDocument, selected: &[String], labe
     if steps.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "imperative-play-inspector.missing".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![ui_text(labels.inspector_step_not_found)],
             presence: UiPresence::default(),
@@ -185,7 +171,7 @@ fn build_inspector_tree(document: &ImperativeDocument, selected: &[String], labe
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "imperative-play-inspector.step".into(),
-        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into(),
+        label: Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
         default_open: Some(true),
         presence: UiPresence::default(),
         fields: vec![
@@ -222,9 +208,9 @@ fn render_main_table(document: &ImperativeDocument, run_output_json: &str, label
         IMPERATIVE_PLAY_APP_ID,
         TableScene::base(
             json!([
-                {"id":"index","label":labels.col_index},
-                {"id":"id","label":labels.col_id},
-                {"id":"kind","label":labels.col_kind},
+                {"id":"index","label":labels.col_index.as_str()},
+                {"id":"id","label":labels.col_id.as_str()},
+                {"id":"kind","label":labels.col_kind.as_str()},
             ])
             .to_string(),
             rows_json,
@@ -401,20 +387,15 @@ impl DocumentApp for ImperativePlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
-        let labels = resolve_labels::<ImperativeLabels>(config);
+        let labels = imperative_labels(config);
         match body_key {
             IMPERATIVE_PLAY_BODY_MAIN => render_main_table(document, &config.run_output_json, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => render_script(document),
             IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(document, &config.selected_step_ids, labels),
             IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(document, &config.selected_step_ids, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, ImperativeConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<ImperativeLabels>(cfg.projection);
-        AppLabelsOverlay::default().window_kind_label(IMPERATIVE_PLAY_WINDOW_MAIN, labels.window_main).window_kind_label(IMPERATIVE_PLAY_WINDOW_SCRIPT, labels.window_script).action_labels(imperative_action_labels(is_de_locale(cfg.projection)))
     }
 }
 
@@ -438,7 +419,7 @@ fn resolve_contains(document: &ImperativeDocument, owner: Option<&str>, slot: Op
 //#region 🔖️Manifest
 pub fn create_imperative_app() -> App {
     App::from_builder(
-        App::builder(IMPERATIVE_PLAY_APP_ID, "Imperative").document(["semio", "imperative"])
+        App::builder(IMPERATIVE_PLAY_APP_ID, LocalizedLabel::native("Imperative", "Imperativ")).document(["semio", "imperative"])
             .artifact_kind(ArtifactKindSpec {
                 id: "computation.imperative".into(),
                 name: "Imperative".into(),
@@ -452,54 +433,54 @@ pub fn create_imperative_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("imperative")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(IMPERATIVE_PLAY_WINDOW_MAIN, "Imperative", IMPERATIVE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "code")
-            .window_kind(IMPERATIVE_PLAY_WINDOW_SCRIPT, "Script", IMPERATIVE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor, "file-code")
+            .window_kind(IMPERATIVE_PLAY_WINDOW_MAIN, LocalizedLabel::native("Imperative", "Imperativ"), IMPERATIVE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "code")
+            .window_kind(IMPERATIVE_PLAY_WINDOW_SCRIPT, LocalizedLabel::native("Script", "Skript"), IMPERATIVE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor, "file-code")
             .default_layout(create_stack_layout(
                 &[IMPERATIVE_PLAY_WINDOW_MAIN.into(), IMPERATIVE_PLAY_WINDOW_SCRIPT.into()],
                 Some(&["Imperative".into(), "Script".into()]),
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 IMPERATIVE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 IMPERATIVE_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 IMPERATIVE_PLAY_BODY_INSPECTOR,
             )
             // 🔧️ Document-mutating step edits — dispatched as VCS operations with a true inverse.
             // The `*At` variants address a nested body via owner/slot fields (drag-and-drop into blocks).
-            .operation("addStep", "Add Step")
-            .operation("addStepAt", "Add Step At")
-            .operation("removeStep", "Remove Step")
-            .operation("removeStepAt", "Remove Step At")
-            .operation("moveStep", "Move Step")
-            .operation("moveStepAt", "Move Step At")
-            .operation("setStepParams", "Set Step Params")
-            .operation("setStepParamsAt", "Set Step Params At")
+            .operation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
+            .operation("addStepAt", LocalizedLabel::native("Add Step At", "Schritt bei Position hinzufügen"))
+            .operation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .operation("removeStepAt", LocalizedLabel::native("Remove Step At", "Schritt bei Position entfernen"))
+            .operation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
+            .operation("moveStepAt", LocalizedLabel::native("Move Step At", "Schritt bei Position verschieben"))
+            .operation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
+            .operation("setStepParamsAt", LocalizedLabel::native("Set Step Params At", "Schrittparameter bei Position festlegen"))
             // 👁️ Ephemeral view state / runtime effect — selection is scratch, `run` evaluates into config.
-            .view_action("setSelection", "Set Selection")
-            .view_action("run", "Run")
-            .view_action("setLocale", "Set Locale")
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("run", LocalizedLabel::native("Run", "Ausführen"))
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 📝️ Staged argument form for the panel-visible create action (the step kind is a choice).
             .action_args("addStep", vec![
-                ActionArgDef::select("kind", "Kind", vec![
-                    ActionArgOption::new("state.set", "Set State"),
-                    ActionArgOption::new("log.print", "Print Log"),
-                    ActionArgOption::new("control.if", "If"),
-                    ActionArgOption::new("control.while", "While"),
-                    ActionArgOption::new("math.add", "Add"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
+                    ActionArgOption::new("state.set", LocalizedLabel::native("Set State", "Zustand setzen")),
+                    ActionArgOption::new("log.print", LocalizedLabel::native("Print Log", "Log ausgeben")),
+                    ActionArgOption::new("control.if", LocalizedLabel::native("If", "Wenn")),
+                    ActionArgOption::new("control.while", LocalizedLabel::native("While", "Solange")),
+                    ActionArgOption::new("math.add", LocalizedLabel::native("Add", "Addieren")),
                 ]).default_value("log.print"),
             ])
             .keybinding("mod+z", "undo")
@@ -509,7 +490,7 @@ pub fn create_imperative_app() -> App {
             // source of truth, reused here rather than duplicated.
             .io(imperative_io()),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_document()).expect("default_document is a static, hand-built value with no non-finite floats or non-UTF8 keys"), "cylinder")
+    .example("demo", LocalizedLabel::native("Demo", "Demo"), serde_json::to_string(&default_document()).expect("default_document is a static, hand-built value with no non-finite floats or non-UTF8 keys"), "cylinder")
     .workflow("imperative", "Imperative", "graph")
 }
 //#endregion 🔖️Manifest

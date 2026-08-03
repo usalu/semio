@@ -19,7 +19,7 @@ page.on("console", (msg) => {
 page.on("pageerror", (e) => consoleMsgs.push({ type: "pageerror", text: e.message.slice(0, 500) }));
 
 await page.goto("http://127.0.0.1:6018/", { waitUntil: "domcontentloaded", timeout: 120000 });
-await page.waitForTimeout(10000);
+await page.waitForTimeout(25000);
 
 const bodyText = await page.locator("body").innerText();
 const hasRenderError = /Render error|Renderfehler|clearGhostWidget is not a function|Maximum update depth/i.test(bodyText);

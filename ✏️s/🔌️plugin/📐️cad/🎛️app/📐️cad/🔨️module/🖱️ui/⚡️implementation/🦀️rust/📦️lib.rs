@@ -38,7 +38,7 @@ use semio_framework_plugin::{
     MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, IconName, SET_ACTIVE_UTILITY_ACTION_ID,
     Terminology, UiFieldNode, UiGroupNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
-    UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement,
+    UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement,
     AppActionRegistry, ContextMenuItemSpec, ContextMenuRequest, Menu,
     WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode,
     WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure,
@@ -1093,7 +1093,7 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
                 "patchObject",
                 Some(json!({ "objectId": object.id, "field": "hidden", "value": object.visible })),
             ),
-            reveal_on_hover: Some(true),
+            placement: Some(UiTreeActionPlacement::Menu),
         },
         UiTreeItemAction {
             icon_id: if object.locked { "unlock" } else { "lock" }.into(),
@@ -1102,19 +1102,19 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
                 "patchObject",
                 Some(json!({ "objectId": object.id, "field": "locked", "value": !object.locked })),
             ),
-            reveal_on_hover: Some(true),
+            placement: Some(UiTreeActionPlacement::Menu),
         },
         UiTreeItemAction {
             icon_id: "copy".into(),
             label: Some(labels.duplicate.into()),
             action: cad_action("duplicateObject", Some(json!({ "objectId": object.id }))),
-            reveal_on_hover: Some(true),
+            placement: Some(UiTreeActionPlacement::Menu),
         },
         UiTreeItemAction {
             icon_id: "trash-2".into(),
             label: Some(labels.delete.into()),
             action: cad_action("deleteObject", Some(json!({ "objectId": object.id }))),
-            reveal_on_hover: Some(true),
+            placement: Some(UiTreeActionPlacement::Menu),
         },
     ]);
     if !primitive_items.is_empty() {
@@ -1154,7 +1154,7 @@ fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labe
                     "value": !reference.hidden,
                 })),
             ),
-            reveal_on_hover: Some(true),
+            placement: Some(UiTreeActionPlacement::Menu),
         },
         UiTreeItemAction {
             icon_id: if reference.locked { "unlock" } else { "lock" }.into(),
@@ -1168,7 +1168,7 @@ fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labe
                     "value": !reference.locked,
                 })),
             ),
-            reveal_on_hover: Some(true),
+            placement: Some(UiTreeActionPlacement::Menu),
         },
     ]);
     item

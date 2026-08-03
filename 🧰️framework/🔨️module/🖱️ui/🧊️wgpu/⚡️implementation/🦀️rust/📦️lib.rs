@@ -2550,6 +2550,15 @@ pub struct UiSectionNode {
     pub children: Vec<UiNode>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum UiTreeActionPlacement {
+    #[default]
+    Row,
+    Menu,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -2559,9 +2568,16 @@ pub struct UiTreeItemAction {
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub label: Option<Label>,
     pub action: ActionDescriptor,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub reveal_on_hover: Option<bool>,
+    pub placement: Option<UiTreeActionPlacement>,
+}
+
+impl UiTreeItemAction {
+    /** @emoji 📍️ Row actions paint on the tree header; menu actions belong in the row context menu. */
+    pub fn placement(&self) -> UiTreeActionPlacement {
+        self.placement.clone().unwrap_or_default()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -6298,6 +6314,7 @@ pub mod reconcile {
 //! them — no further reconcile-side change should be needed at that point.
 
 use crate::Label;
+use crate::UiTreeActionPlacement;
 use dsl::DslValue;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
@@ -6447,6 +6464,9 @@ fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
         children.push(ui_control_to_node(control.clone()));
     }
     for action in item.actions.iter().flatten() {
+        if action.placement() == UiTreeActionPlacement::Menu {
+            continue;
+        }
         children.push(tree_item_action_row(action));
     }
     for nested in item.items.iter().flatten() {
@@ -6874,7 +6894,7 @@ mod tests {
             control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true),
         menu: None,
     })),
-            actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some("Delete".into()), action: action(), reveal_on_hover: Some(true),
+            actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some("Delete".into()), action: action(), placement: Some(UiTreeActionPlacement::Menu),
         }]),
             ..tree_item("leaf", "Leaf")
         };
@@ -6886,9 +6906,8 @@ mod tests {
         let row = tree.children(section).next().unwrap();
 
         let row_children: Vec<NodeId> = tree.children(row).collect();
-        assert_eq!(row_children.len(), 2, "expected the embedded control plus one trailing action row");
+        assert_eq!(row_children.len(), 1, "menu-placement actions are not retained row children; only the embedded control remains");
         assert!(matches!(tree.node(row_children[0]).unwrap().spec.0, UiNode::Toggle(_)), "control comes first");
-        assert!(matches!(tree.node(row_children[1]).unwrap().spec.0, UiNode::Button(_)), "action follows the control");
     }
 
     #[test]
@@ -13787,6 +13806,7 @@ pub mod paint {
 
 use crate::arena::NodeId;
 use crate::chrome::{chrome_item_bg, item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY};
+use crate::UiTreeActionPlacement;
 use crate::component::ui::{
     UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode,
     UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNode, UiNumberStepperNode,
@@ -14575,12 +14595,10 @@ fn paint_tree_item(
         let (label_w, _) = atlas.measure_text(item.label.as_str(), theme.font_size_body);
         draw_text_on(draw, atlas, description, label_x + label_w + theme.gap_standard, row.y + (TREE_ROW_HEIGHT + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
     }
-    // 🔘️ Only always-visible actions (`reveal_on_hover` unset/false) paint: reveal-on-hover actions
-    // need live hover state this data model doesn't carry yet (see this function's own doc comment).
     let mut actions_x = row.x + row.w - theme.gap_standard;
     if let Some(icons) = icons {
         for action in item.actions.iter().flatten().rev() {
-            if action.reveal_on_hover.unwrap_or(false) {
+            if action.placement() == UiTreeActionPlacement::Menu {
                 continue;
             }
             actions_x -= TREE_ICON_SIZE + theme.padding_standard;
@@ -15055,7 +15073,7 @@ mod tests {
     fn tree_with_item_description() -> UiNode {
         let mut item = UiTreeItemNode::base("i1", "Item One");
         item.description = Some("desc".into());
-        item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), reveal_on_hover: Some(false),
+        item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None,
         }]);
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item],
@@ -18716,7 +18734,7 @@ mod tests {
     }
 
     fn tree_action_to_widget(action: &UiTreeItemAction) -> TreeItemAction<ActionDescriptor> {
-        TreeItemAction { icon_id: action.icon_id.clone(), label: action.label.clone(), event: action.action.clone(), reveal_on_hover: action.reveal_on_hover.unwrap_or(false) }
+        TreeItemAction { icon_id: action.icon_id.clone(), label: action.label.clone(), event: action.action.clone(), placement: action.placement() }
     }
 
     fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
@@ -19439,12 +19457,12 @@ mod tests {
     }
 
     #[test]
-    fn render_widget_tree_hides_reveal_on_hover_actions_when_not_hovered() {
+    fn render_widget_tree_row_actions_register_hits_without_hover() {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(), label: "Item".into(), description: None, icon_id: None, selected: false, highlighted: false,
             default_open: false, dimmed: false, event: None, hover_event: None, unhover_event: None,
-            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some("Del".into()), event: action(), reveal_on_hover: true }],
+            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some("Del".into()), event: action(), placement: UiTreeActionPlacement::Row }],
             draggable: false, drag_data: StdHashMap::new(), control: None, children: vec![],
         };
         let node = WidgetNode::<ActionDescriptor>::Tree {
@@ -19453,7 +19471,25 @@ mod tests {
         };
         render_widget(&node, VIEWPORT, &mut h.ctx());
         let action_hits = h.input.hit_targets.iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
-        assert_eq!(action_hits, 0, "a reveal_on_hover action must not register a hit target while its row is unhovered");
+        assert_eq!(action_hits, 1, "row-placement actions must register a hit target even when the row is unhovered");
+    }
+
+    #[test]
+    fn render_widget_tree_menu_placement_skips_row_action_hits() {
+        let mut h = WidgetHarness::new();
+        let item = TreeItem {
+            id: "i1".into(), label: "Item".into(), description: None, icon_id: None, selected: false, highlighted: false,
+            default_open: false, dimmed: false, event: None, hover_event: None, unhover_event: None,
+            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some("Del".into()), event: action(), placement: UiTreeActionPlacement::Menu }],
+            draggable: false, drag_data: StdHashMap::new(), control: None, children: vec![],
+        };
+        let node = WidgetNode::<ActionDescriptor>::Tree {
+            sections: vec![TreeSection { id: "s".into(), label: None, default_open: true, items: vec![item] }],
+            selected_ids: vec![], highlighted_ids: vec![], selection_change: None,
+        };
+        render_widget(&node, VIEWPORT, &mut h.ctx());
+        let action_hits = h.input.hit_targets.iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
+        assert_eq!(action_hits, 0, "menu-placement actions must not register row hit targets");
     }
 
     #[test]
@@ -19530,6 +19566,7 @@ use crate::draw::{DrawList, IconAtlas};
 use crate::geometry::Rect;
 use crate::input::{DragAxis, HitKind, HitTarget, InputState};
 use crate::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
+use crate::UiTreeActionPlacement;
 use crate::text::FontAtlas;
 use crate::theme::{Level, Rgba, Theme};
 use crate::IconName;
@@ -19649,7 +19686,7 @@ pub struct TreeItemAction<E> {
     pub icon_id: IconName,
     pub label: Option<String>,
     pub event: E,
-    pub reveal_on_hover: bool,
+    pub placement: UiTreeActionPlacement,
 }
 
 #[derive(Clone, Debug)]
@@ -20823,7 +20860,7 @@ fn render_tree_item<E: Clone>(
     }
     let mut actions_x = content.x + content.w - ctx.theme.gap_standard;
     for (index, action) in item.actions.iter().enumerate().rev() {
-        if action.reveal_on_hover && !hovered {
+        if action.placement == UiTreeActionPlacement::Menu {
             continue;
         }
         let label_w = action

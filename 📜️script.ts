@@ -66,6 +66,9 @@ const WORKSPACE_ROOT = import.meta.dir;
 
 const BUN = process.execPath;
 const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "./🧰️framework/🛍️product/🦑️repo/🔨️module/🔩️native/🥾️bootstrap");
+const REPO_CLIENT_DIR = join("🧰️framework", "🛍️product", "🦑️repo", "🔨️module", "💻️client");
+const REPO_CLIENT_GO = join(REPO_CLIENT_DIR, "⌨️cli", "⚡️implementation", "🐹️go");
+const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp", "⚡️implementation", "🐹️go");
 process.env.NX_ISOLATE_PLUGINS ??= "false";
 
 export { Script };
@@ -227,7 +230,7 @@ export class SetupScript extends Script {
     runCmd("git", ["config", "--local", "core.symlinks", "true"], { cwd: this.root });
     const repoClientPath = resolveCliBin(this.root);
     if (!existsSync(repoClientPath)) {
-      runCmd("go", ["build", "-o", repoClientPath, "./repo/client/mcp/go"], {
+      runCmd("go", ["build", "-o", repoClientPath, `./${REPO_MCP_GO}`], {
         cwd: this.root,
         env: { ...process.env, GOWORK: join(this.root, "go.work") },
         budgetMs: buildBudgetMs(),
@@ -292,8 +295,8 @@ export class SetupScript extends Script {
     console.log("[setup] C++ toolchain and vcpkg…");
     tryRun("bun", [join(this.root, "📜️script.ts"), "cpp", "setup"], { cwd: this.root });
     console.log("[setup] go build repo client…");
-    const clientOut = join(this.root, "repo", "client", process.platform === "win32" ? "client.exe" : "client");
-    tryRun("go", ["build", "-o", clientOut, "./repo/client/mcp/go"], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
+    const clientOut = resolveCliBin(this.root);
+    tryRun("go", ["build", "-o", clientOut, `./${REPO_MCP_GO}`], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
     console.log("[setup] dotnet restore…");
     tryRun("dotnet", ["restore", "Monorepo.sln"]);
     console.log("[setup] rustup wasm target…");
@@ -554,7 +557,7 @@ export class DevScript extends Script {
     const extra = slugs.slice(1);
     const bin = resolveCliBin(this.root);
     if (!existsSync(bin)) {
-      runCmd("go", ["build", "-o", bin, "./repo/client/mcp/go"], {
+      runCmd("go", ["build", "-o", bin, `./${REPO_MCP_GO}`], {
         cwd: this.root,
         env: { ...process.env, GOWORK: join(this.root, "go.work") },
         budgetMs: buildBudgetMs(),
@@ -726,17 +729,17 @@ export class TestScript extends Script {
       return;
     }
     if (rest[0] === "repo-client") {
-      await this.runRepoGoTest("./repo/client/cli/go", level, rest.slice(1));
+      await this.runRepoGoTest(`./${REPO_CLIENT_GO}`, level, rest.slice(1));
       return;
     }
     if (rest[0] === "repo-mcp") {
       const clientOut = resolveCliBin(this.root);
-      runCmd("go", ["build", "-o", clientOut, "./repo/client/mcp/go"], {
+      runCmd("go", ["build", "-o", clientOut, `./${REPO_MCP_GO}`], {
         cwd: this.root,
         env: { ...process.env, GOWORK: join(this.root, "go.work") },
         budgetMs: buildBudgetMs(),
       });
-      await this.runRepoGoTest("./repo/client/cli/go", level, ["-run", "Mcp|MCP|mcp", ...rest.slice(1)]);
+      await this.runRepoGoTest(`./${REPO_CLIENT_GO}`, level, ["-run", "Mcp|MCP|mcp", ...rest.slice(1)]);
       return;
     }
     if (rest[0] === "dsl") {
@@ -2810,15 +2813,12 @@ const POLICY_MCP_CONFIG_PATHS = [".cursor/mcp.json", ".mcp.json", ".vscode/mcp.j
 
 type PolicyMcpServerEntry = { type?: string; command?: string; args?: string[] };
 
-/** 🔎️True when a repo MCP server still launches via bun 📜️script.ts mcp stdio instead of repo/client/client. */
-function policyMcpRepoServerUsesBunScript(entry: PolicyMcpServerEntry): boolean {
+/** 🔎️True when a repo MCP server uses the cross-platform bootstrap that builds the native CLI on demand. */
+function policyMcpRepoServerUsesBootstrap(entry: PolicyMcpServerEntry): boolean {
   if ((entry.type ?? "stdio") !== "stdio") return false;
   const cmd = (entry.command ?? "").trim();
   const args = entry.args ?? [];
-  if (cmd !== "bun") return false;
-  const hasScript = args.some((a) => a.includes("📜️script.ts"));
-  const hasMcp = args.includes("mcp") || args.some((a) => a.includes("mcp"));
-  return hasScript && hasMcp;
+  return cmd === "bun" && args[0] === "./📜️script.ts" && args[1] === "dev" && args[2] === "mcp" && args[3] === "stdio" && Boolean(args[4]);
 }
 
 function policyMcpRepoServerFromJson(doc: unknown): PolicyMcpServerEntry | undefined {
@@ -2843,8 +2843,8 @@ function policyMcpRepoServerFromToml(content: string): PolicyMcpServerEntry | un
 }
 
 /**
- * 📏️MCP-config rule: the repo MCP server must exec `repo/client/client mcp <kind>` directly — not
- * `bun 📜️script.ts … mcp …`, which recompiles through go run and bypasses the budgeted binary path.
+ * 📏️MCP-config rule: every client launches through the Bun bootstrap so missing platform-specific binaries
+ * are built before stdio is handed to the native repo MCP server.
  */
 function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -2853,15 +2853,15 @@ function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
     if (!existsSync(abs)) continue;
     const content = readFileSync(abs, "utf8");
     const entry = relPath.endsWith(".toml") ? policyMcpRepoServerFromToml(content) : policyMcpRepoServerFromJson(JSON.parse(content) as unknown);
-    if (!entry || !policyMcpRepoServerUsesBunScript(entry)) continue;
+    if (entry && policyMcpRepoServerUsesBootstrap(entry)) continue;
     breaches.push({
       id: `mcp-config-${relPath}`,
-      summary: `"${relPath}" repo MCP server still uses bun 📜️script.ts mcp — point it at 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/⌨️cli/⚡️implementation/🐹️go/client`,
-      kind: "budget/mcp-config-repo-binary",
+      summary: `"${relPath}" does not use the portable repo MCP bootstrap`,
+      kind: "runtime/mcp-config-repo-bootstrap",
       scope: relPath,
       priority: "high",
-      reason: "The repo MCP server must exec the prebuilt 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/⌨️cli/⚡️implementation/🐹️go/client binary (args: mcp <kind>) so IDE tool calls skip bun 📜️script.ts and go run recompilation.",
-      solution: `In ${relPath}, set the repo server to command "🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/⌨️cli/⚡️implementation/🐹️go/client" with args ["mcp", "<kind>"] (e.g. cursor, codex, client) and type stdio.`,
+      reason: "A checked-in native executable is platform-specific and may be absent in a fresh checkout; the Bun router resolves or builds the correct binary without writing protocol noise to stdout.",
+      solution: `In ${relPath}, set command to "bun" and args to ["./📜️script.ts", "dev", "mcp", "stdio", "<kind>"].`,
     });
   }
   return breaches;

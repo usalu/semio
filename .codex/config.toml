@@ -1,6 +1,6 @@
 [mcp_servers.repo]
-command = "repo/client/client"
-args = ["mcp", "codex"]
+command = "bun"
+args = ["./📜️script.ts", "dev", "mcp", "stdio", "codex"]
 enabled = true
 cwd = "."
 

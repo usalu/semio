@@ -1,0 +1,7 @@
+🗺️Define plan for default driver UI affordances and placement axis
+🏷️Migrate framework UI node labels to LabelText and UiTreeActionPlacement
+🔌️Update plugin UI components and rust lib implementations
+🛠️Update repo client cli go main and bootstrap script hooks
+🐳️Update devcontainer post-attach and post-create scripts
+📝️Update tickets e2e test logs report json and cargo lock
+⚙️Update vscode windsurf mcp json and codex storybook configs

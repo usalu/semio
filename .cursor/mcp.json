@@ -2,11 +2,8 @@
   "mcpServers": {
     "repo": {
       "type": "stdio",
-      "command": "repo/client/client",
-      "args": ["mcp", "cursor"],
-      "env": {
-        "GOWORK": "${workspaceFolder}${/}go.work"
-      }
+      "command": "bun",
+      "args": ["./📜️script.ts", "dev", "mcp", "stdio", "cursor"]
     },
     "neo4j-compose": {
       "type": "stdio",

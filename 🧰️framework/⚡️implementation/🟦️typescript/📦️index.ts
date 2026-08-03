@@ -272,11 +272,13 @@ export type UiSectionNode = {
 };
 
 /** @emoji 🌳️ One hover-revealed row action on a {@link UiTreeItemNode}; renderer-side addition on top of the base wasm tree-item shape. */
+export type UiTreeActionPlacement = "row" | "menu";
+
 export type UiTreeItemAction = {
   readonly iconId: IconName;
   readonly label?: string;
   readonly action: ActionDescriptor;
-  readonly revealOnHover?: boolean;
+  readonly placement?: UiTreeActionPlacement;
 };
 
 export type UiTreeItemNode = {

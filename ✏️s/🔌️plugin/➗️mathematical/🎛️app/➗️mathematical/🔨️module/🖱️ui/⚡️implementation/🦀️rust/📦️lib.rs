@@ -10,7 +10,7 @@ use mathematical_engine::{algorithm_overlay, geometry_layers_json, mathematical_
 use mathematical_op::{MathConfigOperation, MathOperation};
 use mathematical_protocol::MathCommand;
 use semio_framework_plugin::{
-    app_labels, create_default_layout, localized_label_map, ui_text, ActionArgDef, ActionArgOption, App, AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    create_default_layout, ui_text, ActionArgDef, ActionArgOption, App, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
     MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence,
 };
 use store::DocumentPack;
@@ -23,50 +23,6 @@ const MATH_BODY_GRAPH: &str = "mathematical.play.graph";
 const MATH_BODY_GEOMETRY: &str = "mathematical.play.geometry";
 const MATH_DOCUMENT_SCHEMA: &str = "semio.mathematical/v1";
 //#endregion 🔖️Constants
-
-//#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s local helpers.
-fn is_de_locale(cfg: &MathConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
-
-fn resolve_labels<L: LocaleLabels>(cfg: &MathConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
-}
-//#endregion 🔖️Locale
-
-//#region 🔖️Terminology
-app_labels! {
-    /// 🗣️ Complete UI label set for the mathematical app; one field per label makes every locale combination compile-checked.
-    /// 🧮️ Graph/node/geometry vocabulary here is pure math terminology, not building-assembly terminology, so no reuse variant applies.
-    struct MathematicalLabels {
-        window_graph: &'static str = en: "Graph", de: "Graph";
-        window_geometry: &'static str = en: "Geometry", de: "Geometrie";
-        mode_edit: &'static str = en: "Edit", de: "Bearbeiten";
-        example_demo: &'static str = en: "Demo", de: "Demo";
-    }
-}
-//#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation declared in `create_mathematical_app`'s static manifest —
-/// the manifest itself has no config/locale parameter, so this overlay is how the command palette and Actions
-/// rail get a translated label without threading locale through the whole builder chain.
-fn mathematical_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(
-        is_de,
-        &[
-            ("setDocument", "Set Document", "Dokument festlegen"),
-            ("setAlgorithm", "Set Algorithm", "Algorithmus festlegen"),
-            ("setDirected", "Set Directed", "Gerichtet festlegen"),
-            ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
-            ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
-            ("setPoints", "Set Points", "Punkte festlegen"),
-        ],
-    )
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Render
 fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
@@ -261,19 +217,8 @@ impl DocumentApp for MathematicalPlayApp {
         match body_key {
             MATH_BODY_GRAPH => render_graph_window(&doc.projection.graph, &cfg.projection.camera),
             MATH_BODY_GEOMETRY => render_geometry_window(&doc.projection.geometry),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, MathConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<MathematicalLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(MATH_WINDOW_GRAPH, labels.window_graph)
-            .window_kind_label(MATH_WINDOW_GEOMETRY, labels.window_geometry)
-            .mode_label("edit", labels.mode_edit)
-            .action_labels(mathematical_action_labels(is_de))
-            .example_labels(std::collections::HashMap::from([("demo".to_string(), labels.example_demo.to_string())]))
     }
 }
 //#endregion 🔖️MathematicalPlayApp
@@ -281,7 +226,7 @@ impl DocumentApp for MathematicalPlayApp {
 //#region 🔖️Manifest
 pub fn create_mathematical_app() -> App {
     App::from_builder(
-        App::builder(MATH_APP_ID, "Mathematical")
+        App::builder(MATH_APP_ID, LocalizedLabel::native("Mathematical", "Mathematik"))
             .document(["semio", "mathematical"])
             .artifact_kind(ArtifactKindSpec {
                 id: "computation.mathematical".into(),
@@ -296,37 +241,37 @@ pub fn create_mathematical_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("math-app")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(MATH_WINDOW_GRAPH, "Graph", MATH_BODY_GRAPH, SurfaceKind::NodeGraph, "math-graph")
-            .window_kind(MATH_WINDOW_GEOMETRY, "Geometry", MATH_BODY_GEOMETRY, SurfaceKind::Canvas2d, "hexagon")
+            .window_kind(MATH_WINDOW_GRAPH, LocalizedLabel::native("Graph", "Graph"), MATH_BODY_GRAPH, SurfaceKind::NodeGraph, "math-graph")
+            .window_kind(MATH_WINDOW_GEOMETRY, LocalizedLabel::native("Geometry", "Geometrie"), MATH_BODY_GEOMETRY, SurfaceKind::Canvas2d, "hexagon")
             .default_layout(create_default_layout(&[MATH_WINDOW_GRAPH.into(), MATH_WINDOW_GEOMETRY.into()], "row", Some(&[60.0, 40.0]), Some(&["Graph".into(), "Geometry".into()])))
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .operation("setDocument", "Set Document")
-            .operation("setAlgorithm", "Set Algorithm")
-            .operation("setDirected", "Set Directed")
-            .operation("nodeGraphEdit", "Node Graph Edit")
-            .view_action("nodeGraphViewport", "Node Graph Viewport")
-            .operation("setPoints", "Set Points")
-            .view_action("setLocale", "Set Locale")
+            .operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"))
+            .operation("setAlgorithm", LocalizedLabel::native("Set Algorithm", "Algorithmus festlegen"))
+            .operation("setDirected", LocalizedLabel::native("Set Directed", "Gerichtet festlegen"))
+            .operation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
+            .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
+            .operation("setPoints", LocalizedLabel::native("Set Points", "Punkte festlegen"))
+            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 📝️ Staged argument forms for the graph analysis controls.
             .action_args("setAlgorithm", vec![
-                ActionArgDef::select("algorithm", "Algorithm", vec![
-                    ActionArgOption::new("topo", "Topological Order"),
-                    ActionArgOption::new("components", "Connected Components"),
-                    ActionArgOption::new("scc", "Strongly Connected Components"),
-                    ActionArgOption::new("bfs", "Breadth-First Distances"),
+                ActionArgDef::select("algorithm", LocalizedLabel::native("Algorithm", "Algorithmus"), vec![
+                    ActionArgOption::new("topo", LocalizedLabel::native("Topological Order", "Topologische Ordnung")),
+                    ActionArgOption::new("components", LocalizedLabel::native("Connected Components", "Zusammenhangskomponenten")),
+                    ActionArgOption::new("scc", LocalizedLabel::native("Strongly Connected Components", "Starke Zusammenhangskomponenten")),
+                    ActionArgOption::new("bfs", LocalizedLabel::native("Breadth-First Distances", "Breitensuche-Distanzen")),
                 ]).required(),
             ])
             .action_args("setDirected", vec![
-                ActionArgDef::toggle("directed", "Directed").default_value(true),
+                ActionArgDef::toggle("directed", LocalizedLabel::native("Directed", "Gerichtet")).default_value(true),
             ])
             // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS /
             // WORKFLOWS-END-TO-END-TYPED-PORTS) — `mathematical_io()` is this port information's single
             // source of truth, reused here rather than duplicated.
             .io(mathematical_io()),
     )
-    .example("demo", "Demo", <MathProjection as store::DocumentDsl>::print_dsl(&MathProjection::default()), "cylinder")
+    .example("demo", LocalizedLabel::native("Demo", "Demo"), <MathProjection as store::DocumentDsl>::print_dsl(&MathProjection::default()), "cylinder")
     .workflow("mathematical", "Mathematical", "graph")
 }
 //#endregion 🔖️Manifest

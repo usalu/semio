@@ -557,7 +557,7 @@ pub mod generation_forms {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Map, Value};
     use ui_wgpu::{
-        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
+        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, Label, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
         UiTreeSectionNode,
     };
 
@@ -764,7 +764,7 @@ pub mod generation_forms {
                 // 🚧️ Chrome literals ("Remove"/"Rename"/etc below) — genuinely static app copy, not yet
                 // routed through app_labels! (this crate predates the two-axis macro); flagged as a
                 // follow-up rather than fixed in this pass. `Label::data` unblocks compilation.
-                let mut actions = vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(Label::data("Remove")), action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))), reveal_on_hover: Some(true),
+                let mut actions = vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(Label::data("Remove")), action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))), placement: Some(UiTreeActionPlacement::Menu),
         }];
                 actions.insert(
                     0,
@@ -772,7 +772,7 @@ pub mod generation_forms {
                         icon_id: "pencil".into(),
                         label: Some(Label::data("Rename")),
                         action: generation_action(controller_id, "renameGeneration", Some(json!({ "id": generation.id, "name": format!("{} copy", generation.name) }))),
-                        reveal_on_hover: Some(true),
+                        placement: Some(UiTreeActionPlacement::Menu),
                     },
                 );
                 UiTreeItemNode {

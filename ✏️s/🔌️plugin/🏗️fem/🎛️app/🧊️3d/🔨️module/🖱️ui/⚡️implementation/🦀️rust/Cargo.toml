@@ -14,18 +14,15 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/�
 fem3d = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-fem-3d" }
 fem3d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-fem-3d-engine" }
 fem3d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-fem-3d-op" }
+fem3d_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-fem-3d-protocol" }
 fem3d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-fem-3d-dsl" }
 fem_shared = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🤝️shared/⚡️implementation/🦀️rust", package = "semio-s-plugin-fem-shared" }
 fem_core = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-fem-core" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
-# 🎯️ B1: this app's own `Config`/`ConfigOperation`/`Command` types are defined directly in this crate
-# (fem3d never got its own sibling `_engine`-config/`_op`-config-operation/`_protocol`-command split
-# fem2d already has — out of this ticket's one-crate scope to add those sibling crates), so `dsl`/
-# `protocol`/`serde` are needed here directly, mirroring what `fem2d_engine`/`fem2d_op` depend on.
-dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
-protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
-serde = { version = "1.0.219", features = ["derive"] }
+# 🎯️ B1: this crate's own `Config`/`ConfigOperation`/`Command` types now mirror `fem2d`'s crate split
+# exactly — they live in `fem3d_engine`/`fem3d_op`/`fem3d_protocol` respectively, so this crate no
+# longer needs `dsl`/`protocol`/`serde` directly (only `serde_json` for scene JSON building).
 serde_json = "1.0.140"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

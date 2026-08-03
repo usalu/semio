@@ -12,13 +12,7 @@ use procedural_2d_engine::{
 };
 use procedural_2d_op::{procedural2d_fixture_operations, Procedural2dConfigOperation, Procedural2dOperation};
 use procedural_2d_protocol::Procedural2dCommand;
-use semio_framework_plugin::{
-    build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabelsOverlayExt, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, Media, MediaClass, MediaError, MediaForm,
-    MediaPayload, MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, ui_declarative_sections_to_tree,
-};
+use semio_framework_plugin::{Label, build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, ui_declarative_sections_to_tree, AppLabels, Locale, LocalizedLabel, Terminology};
 
 use serde_json::{json, Value};
 
@@ -120,32 +114,32 @@ fn eval_preview_layers(play: &Procedural2dPlayView, preview: bool) -> String {
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the 2D flow app; one field per label makes every locale combination compile-checked.
     struct Procedural2dLabels {
-        sources: &'static str = en: "Sources", de: "Quellen";
-        components: &'static str = en: "Components", de: "Komponenten";
-        sinks: &'static str = en: "Sinks", de: "Senken";
-        show_mode_section: &'static str = en: "Show mode", de: "Anzeigemodus";
-        show_prefix: &'static str = en: "Show", de: "Anzeigen";
-        none: &'static str = en: "(none)", de: "(keine)";
-        selection: &'static str = en: "Selection", de: "Auswahl";
-        ids: &'static str = en: "Ids", de: "Kennungen";
-        schema_prefix: &'static str = en: "Schema:", de: "Schema:";
-        widgets_prefix: &'static str = en: "Widgets:", de: "Elemente:";
-        show_mode_prefix: &'static str = en: "Show mode:", de: "Anzeigemodus:";
-        generate_hint: &'static str = en: "Add a generation to edit input values.", de: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
-        preview_hint: &'static str = en: "(evaluate a generation to preview output)", de: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
-        source_slider: &'static str = en: "Slider", de: "Schieberegler";
-        source_note: &'static str = en: "Note", de: "Notiz";
-        component_add: &'static str = en: "Add", de: "Addieren";
-        component_and: &'static str = en: "And", de: "Und";
-        component_concat: &'static str = en: "Concat", de: "Verketten";
-        sink_preview: &'static str = en: "Preview", de: "Vorschau";
-        sink_export: &'static str = en: "Export", de: "Export";
-        window_main: &'static str = en: "Flow", de: "Fluss";
-        window_preview: &'static str = en: "Preview", de: "Vorschau";
-        window_generations: &'static str = en: "Generations", de: "Generationen";
-        window_generate_form: &'static str = en: "Form", de: "Formular";
-        window_generate_preview: &'static str = en: "Preview", de: "Vorschau";
-        delete_selection: &'static str = en: "Delete selection", de: "Auswahl löschen";
+        sources: native_en "Sources", native_de "Quellen", reuse_en "Sources", reuse_de "Quellen";
+        components: native_en "Components", native_de "Komponenten", reuse_en "Components", reuse_de "Komponenten";
+        sinks: native_en "Sinks", native_de "Senken", reuse_en "Sinks", reuse_de "Senken";
+        show_mode_section: native_en "Show mode", native_de "Anzeigemodus", reuse_en "Show mode", reuse_de "Anzeigemodus";
+        show_prefix: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";
+        none: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
+        selection: native_en "Selection", native_de "Auswahl", reuse_en "Selection", reuse_de "Auswahl";
+        ids: native_en "Ids", native_de "Kennungen", reuse_en "Ids", reuse_de "Kennungen";
+        schema_prefix: native_en "Schema:", native_de "Schema:", reuse_en "Schema:", reuse_de "Schema:";
+        widgets_prefix: native_en "Widgets:", native_de "Elemente:", reuse_en "Widgets:", reuse_de "Elemente:";
+        show_mode_prefix: native_en "Show mode:", native_de "Anzeigemodus:", reuse_en "Show mode:", reuse_de "Anzeigemodus:";
+        generate_hint: native_en "Add a generation to edit input values.", native_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.", reuse_en "Add a generation to edit input values.", reuse_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
+        preview_hint: native_en "(evaluate a generation to preview output)", native_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)", reuse_en "(evaluate a generation to preview output)", reuse_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
+        source_slider: native_en "Slider", native_de "Schieberegler", reuse_en "Slider", reuse_de "Schieberegler";
+        source_note: native_en "Note", native_de "Notiz", reuse_en "Note", reuse_de "Notiz";
+        component_add: native_en "Add", native_de "Addieren", reuse_en "Add", reuse_de "Addieren";
+        component_and: native_en "And", native_de "Und", reuse_en "And", reuse_de "Und";
+        component_concat: native_en "Concat", native_de "Verketten", reuse_en "Concat", reuse_de "Verketten";
+        sink_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        sink_export: native_en "Export", native_de "Export", reuse_en "Export", reuse_de "Export";
+        window_main: native_en "Flow", native_de "Fluss", reuse_en "Flow", reuse_de "Fluss";
+        window_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        window_generations: native_en "Generations", native_de "Generationen", reuse_en "Generations", reuse_de "Generationen";
+        window_generate_form: native_en "Form", native_de "Formular", reuse_en "Form", reuse_de "Formular";
+        window_generate_preview: native_en "Preview", native_de "Vorschau", reuse_en "Preview", reuse_de "Vorschau";
+        delete_selection: native_en "Delete selection", native_de "Auswahl löschen", reuse_en "Delete selection", reuse_de "Auswahl löschen";
     }
 }
 
@@ -156,8 +150,12 @@ fn is_de_locale(cfg: &Procedural2dConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &Procedural2dConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn procedural2d_locale(cfg: &Procedural2dConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+fn resolve_labels<L: AppLabels>(cfg: &Procedural2dConfig) -> &'static L {
+    L::labels(procedural2d_locale(cfg), Terminology::Native)
 }
 
 /// 🗣️ Resolves the active label set from the config-carried locale; falls back to native English.
@@ -166,39 +164,6 @@ fn procedural2d_labels(cfg: &Procedural2dConfig) -> &'static Procedural2dLabels 
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_procedural2d_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn procedural2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
-        ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
-        ("moveMediaNode", "Move Node", "Knoten verschieben"),
-        ("addWidget", "Add Widget", "Element hinzufügen"),
-        ("removeWidget", "Remove Widget", "Element entfernen"),
-        ("connectMediaPorts", "Connect Ports", "Ports verbinden"),
-        ("reorganize", "Reorganize", "Neu anordnen"),
-        ("addGeneration", "Add Generation", "Generation hinzufügen"),
-        ("removeGeneration", "Remove Generation", "Generation entfernen"),
-        ("renameGeneration", "Rename Generation", "Generation umbenennen"),
-        ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("selectNode", "Select Node", "Knoten auswählen"),
-        ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
-        ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
-        ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
-        ("generate", "Generate", "Generieren"),
-        ("setEvalOutputs", "Set Eval Outputs", "Auswertungsausgaben festlegen"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Canvas-Zeiger gedrückt"),
-        ("canvasPointerMove", "Canvas Pointer Move", "Canvas-Zeiger bewegt"),
-        ("canvasPointerUp", "Canvas Pointer Up", "Canvas-Zeiger losgelassen"),
-        ("canvasWheel", "Canvas Wheel", "Canvas-Mausrad"),
-        ("selectGeneration", "Select Generation", "Generation auswählen"),
-    ];
-    semio_framework_plugin::localized_label_map(is_de, ENTRIES)
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Panels
 fn build_document_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
@@ -210,7 +175,7 @@ fn build_document_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels)
             let id = widget_id(widget).to_string();
             tree_item_with_action(
                 format!("procedural2d-play-document.widget.{id}"),
-                id.clone(),
+                Label::data(id.clone()),
                 None,
                 procedural2d_action("setSelection", Some(json!({ "ids": [id] }))),
             )
@@ -219,7 +184,7 @@ fn build_document_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels)
     PanelTreeBuilder::new("procedural2d-play-document")
         .section_or_placeholder(
             "procedural2d-play-document.widgets",
-            Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
+            Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)),
             true,
             widget_items,
             labels.none,
@@ -291,7 +256,7 @@ fn build_catalogue_tree(labels: &Procedural2dLabels) -> UiNode {
                 .map(|mode| {
                     tree_item_with_action(
                         format!("procedural2d-play-catalogue.mode.{mode}"),
-                        format!("{} {mode}", labels.show_prefix),
+                        Label::data(format!("{} {mode}", labels.show_prefix.as_str())),
                         None,
                         procedural2d_action("setShowMode", Some(json!({ "value": mode }))),
                     )
@@ -305,12 +270,12 @@ fn build_inspector_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels
     if play.config.selected_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "procedural2d-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![
-                ui_text(format!("{} flow.fixture", labels.schema_prefix)),
-            ui_text(format!("{} {}", labels.widgets_prefix, play.fixture.widgets.len())),
-            ui_text(format!("{} {}", labels.show_mode_prefix, play.config.show_mode)),
+                ui_text(Label::data(format!("{} flow.fixture", labels.schema_prefix.as_str()))),
+            ui_text(Label::data(format!("{} {}", labels.widgets_prefix.as_str(), play.fixture.widgets.len()))),
+            ui_text(Label::data(format!("{} {}", labels.show_mode_prefix.as_str(), play.config.show_mode))),
             ],
             presence: UiPresence::default(),
             menu: None,
@@ -697,24 +662,10 @@ impl DocumentApp for Procedural2dPlayApp {
             PROCEDURAL2D_PLAY_BODY_DOCUMENT => build_document_tree(&play, labels),
             PROCEDURAL2D_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             PROCEDURAL2D_PLAY_BODY_INSPECTION => build_inspector_tree(&play, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    fn app_labels(&self, cfg: &ConfigView<'_, Procedural2dConfig>) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = procedural2d_labels(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        semio_framework_plugin::AppLabelsOverlay::default()
-            .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_MAIN, labels.window_main)
-            .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, labels.window_preview)
-            .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_GENERATIONS, labels.window_generations)
-            .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, labels.window_generate_form)
-            .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW, labels.window_generate_preview)
-            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
-            .mode_label("generate", if is_de { "Generieren" } else { "Generate" })
-            .action_labels(procedural2d_action_labels(is_de))
-            .example_labels(semio_framework_plugin::localized_label_map(is_de, &[("default", "Default", "Standard")]))
-    }
 
     /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level (the most frequent
     /// verbs on a procedural-2d canvas); the display-mode toggle, generation authoring, and generation
@@ -743,7 +694,7 @@ impl DocumentApp for Procedural2dPlayApp {
             .group("mode", |m| m.action("setShowMode"))
             .group("create", |m| m.action("addGeneration"))
             .group("methods", |m| m.action("selectGeneration"));
-        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
         }
         menu.build()
@@ -803,7 +754,7 @@ impl DocumentApp for Procedural2dPlayApp {
 //#region 🔖️Manifest
 pub fn create_procedural2d_app() -> App {
     App::from_builder(
-        App::builder(PROCEDURAL2D_PLAY_APP_ID, "Procedural 2D").document(["semio", "procedural", "2d"])
+        App::builder(PROCEDURAL2D_PLAY_APP_ID, LocalizedLabel::native("Procedural 2D", "Procedural 2D")).document(["semio", "procedural", "2d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.procedural".into(),
                 name: "2D Procedural".into(),
@@ -817,22 +768,22 @@ pub fn create_procedural2d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("procedural2d")
-            .mode("edit", "Edit", "pencil")
-            .mode("generate", "Generate", "sparkles")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
+            .mode("generate", LocalizedLabel::native("Generate", "Generieren"), "sparkles")
             .default_mode_id("edit")
-            .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL2D_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "flow-graph")
-            .window_kind(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, "Preview", PROCEDURAL2D_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "preview")
+            .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, LocalizedLabel::native("Flow", "Fluss"), PROCEDURAL2D_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "flow-graph")
+            .window_kind(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, LocalizedLabel::native("Preview", "Vorschau"), PROCEDURAL2D_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "preview")
             .window_kind(
                 PROCEDURAL2D_PLAY_WINDOW_GENERATIONS,
-                "Generations",
+                LocalizedLabel::native("Generations", "Generationen"),
                 PROCEDURAL2D_PLAY_BODY_GENERATIONS,
                 SurfaceKind::Canvas2d,
                 "sparkles",
             )
-            .window_kind(PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, "Form", PROCEDURAL2D_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d, "clipboard-list")
+            .window_kind(PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, LocalizedLabel::native("Form", "Formular"), PROCEDURAL2D_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d, "clipboard-list")
             .window_kind(
                 PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW,
-                "Preview",
+                LocalizedLabel::native("Preview", "Vorschau"),
                 PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW,
                 SurfaceKind::Canvas2d,
                 "preview",
@@ -862,57 +813,57 @@ pub fn create_procedural2d_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 PROCEDURAL2D_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 PROCEDURAL2D_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 PROCEDURAL2D_PLAY_BODY_INSPECTION,
             )
             // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
             // 🗂️ Referenced by `Procedural2dPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", "Edit Graph", ActionKind::Operation).with_category("selection"))
-            .operation("moveMediaNode", "Move Node")
-            .action_with(ActionDefinition::new_catalog("addWidget", "Add Widget", ActionKind::Operation).with_category("create"))
-            .operation("removeWidget", "Remove Widget")
-            .operation("connectMediaPorts", "Connect Ports")
-            .action_with(ActionDefinition::new_catalog("reorganize", "Reorganize", ActionKind::Operation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("addGeneration", "Add Generation", ActionKind::Operation).with_category("create"))
-            .operation("removeGeneration", "Remove Generation")
-            .operation("renameGeneration", "Rename Generation")
-            .operation("updateGenerationValues", "Update Generation Values")
+            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Operation).with_category("selection"))
+            .operation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
+            .action_with(ActionDefinition::new_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Operation).with_category("create"))
+            .operation("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"))
+            .operation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
+            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Operation).with_category("transform"))
+            .action_with(ActionDefinition::new_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Operation).with_category("create"))
+            .operation("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"))
+            .operation("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"))
+            .operation("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"))
             // 👁️ Ephemeral view actions — selection, hover, camera, the show-mode display toggle, and evaluation scratch (emit no operations).
-            .view_action("nodeGraphViewport", "Set Viewport")
-            .view_action("setSelection", "Set Selection")
-            .view_action("selectNode", "Select Node")
-            .view_action("nodeGraphSelect", "Node Graph Select")
-            .view_action("nodeGraphHover", "Node Graph Hover")
+            .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("selectNode", LocalizedLabel::native("Select Node", "Knoten auswählen"))
+            .view_action("nodeGraphSelect", LocalizedLabel::native("Node Graph Select", "Graph-Auswahl"))
+            .view_action("nodeGraphHover", LocalizedLabel::native("Node Graph Hover", "Graph-Hover"))
             // 🗂️ Referenced by `Procedural2dPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("setShowMode", "Set Show Mode", ActionKind::View).with_category("mode"))
-            .action_with(ActionDefinition::new_catalog("generate", "Generate", ActionKind::View).with_category("actions"))
-            .view_action("setEvalOutputs", "Set Eval Outputs")
-            .view_action("canvasPointerDown", "Canvas Pointer Down")
-            .view_action("canvasPointerMove", "Canvas Pointer Move")
-            .view_action("canvasPointerUp", "Canvas Pointer Up")
-            .view_action("canvasWheel", "Canvas Wheel")
-            .action_with(ActionDefinition::new_catalog("selectGeneration", "Select Generation", ActionKind::View).with_category("methods"))
+            .action_with(ActionDefinition::new_catalog("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View).with_category("mode"))
+            .action_with(ActionDefinition::new_catalog("generate", LocalizedLabel::native("Generate", "Generieren"), ActionKind::View).with_category("actions"))
+            .view_action("setEvalOutputs", LocalizedLabel::native("Set Eval Outputs", "Auswertungsausgaben festlegen"))
+            .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Canvas-Zeiger gedrückt"))
+            .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Canvas-Zeiger bewegt"))
+            .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Canvas-Zeiger losgelassen"))
+            .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Canvas-Mausrad"))
+            .action_with(ActionDefinition::new_catalog("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View).with_category("methods"))
             // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
             .action_args("addWidget", vec![
-                ActionArgDef::select("kind", "Kind", vec![
-                    ActionArgOption::new("inputSlider", "Slider"),
-                    ActionArgOption::new("inputNote", "Note"),
-                    ActionArgOption::new("neuron", "Component"),
-                    ActionArgOption::new("outputPreview", "Preview"),
-                    ActionArgOption::new("outputExport", "Export"),
+                ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
+                    ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),
+                    ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
+                    ActionArgOption::new("neuron", LocalizedLabel::native("Component", "Komponente")),
+                    ActionArgOption::new("outputPreview", LocalizedLabel::native("Preview", "Vorschau")),
+                    ActionArgOption::new("outputExport", LocalizedLabel::native("Export", "Export")),
                 ]).default_value("inputSlider"),
             ])
             .keybinding("mod+z", "undo")
@@ -922,7 +873,7 @@ pub fn create_procedural2d_app() -> App {
             .config(Procedural2dPlayApp::default().config_spec())
             .io(procedural2d_io()),
     )
-    .example("default", "Default", serde_json::to_string(&default_projection()).unwrap(), "file")
+    .example("default", LocalizedLabel::native("Default", "Standard"), serde_json::to_string(&default_projection()).unwrap(), "file")
     .workflow("procedural2d", "Procedural 2D", "layout")
 }
 //#endregion 🔖️Manifest

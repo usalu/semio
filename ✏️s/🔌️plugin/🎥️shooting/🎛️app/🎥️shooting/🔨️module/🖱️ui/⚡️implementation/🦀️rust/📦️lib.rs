@@ -7,12 +7,12 @@
 
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
     app_labels, build_icon_render_scene, build_world_3d_scene, create_default_layout,
-    localized_label_map, merge_world_selection_ids, LocaleLabels,
+    merge_world_selection_ids, AppLabels, Locale, Terminology,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
     ui_declarative_sections_to_tree, ui_text, tree_item_with_action, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, Emit, ActionKind,
-    App, ActionDescriptor, AppIo, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DslValue,
-    DocumentView, ConfigView, HostEffect, IconRenderExportItem, IconRenderScene, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MeasureSelectItem, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
+    App, ActionDescriptor, AppIo, DocumentApp, DslValue,
+    DocumentView, ConfigView, HostEffect, IconRenderExportItem, IconRenderScene, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MeasureSelectItem, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
     UiNode, UiPresence, UiTreeItemNode, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene,
     WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -51,13 +51,18 @@ const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 
 //#region 🔖️Locale
 /// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels`.
+/// `semio_framework_plugin::is_de_locale`/`resolve_labels`. `ShootingConfig` carries no terminology
+/// axis, so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
 fn is_de_locale(cfg: &ShootingConfig) -> bool {
     cfg.locale.starts_with("de")
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &ShootingConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn shooting_locale(cfg: &ShootingConfig) -> Locale {
+    if is_de_locale(cfg) { Locale::De } else { Locale::En }
+}
+
+fn resolve_labels<L: AppLabels>(cfg: &ShootingConfig) -> &'static L {
+    L::labels(shooting_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -276,115 +281,52 @@ fn asset_patch_for_field(field: &str, value: &Value) -> Option<ShootingAssetPatc
 /// 🗣️ Complete UI label set for the shooting app; one field per label makes every locale combination compile-checked.
 app_labels! {
     struct ShootingLabels {
-        shots: &'static str = en: "Shots", de: "Aufnahmen";
-        assets: &'static str = en: "Assets", de: "Objekte";
-        add_shot: &'static str = en: "Add Shot", de: "Aufnahme hinzufügen";
-        add_asset: &'static str = en: "Add Asset", de: "Objekt hinzufügen";
-        svg_rectangle: &'static str = en: "SVG Rectangle", de: "SVG Rechteck";
-        png_rectangle: &'static str = en: "PNG Rectangle", de: "PNG Rechteck";
-        svg_ellipse: &'static str = en: "SVG Ellipse", de: "SVG Ellipse";
-        png_ellipse: &'static str = en: "PNG Ellipse", de: "PNG Ellipse";
-        glb_asset: &'static str = en: "GLB Asset", de: "GLB-Objekt";
-        shot: &'static str = en: "Shot", de: "Aufnahme";
-        asset: &'static str = en: "Asset", de: "Objekt";
-        camera_label_placeholder: &'static str = en: "Camera label", de: "Kamera-Bezeichnung";
-        load_camera: &'static str = en: "Load camera", de: "Kamera laden";
-        shot_label_placeholder: &'static str = en: "Shot label", de: "Aufnahme-Bezeichnung";
-        no_shot: &'static str = en: "No shot", de: "Keine Aufnahme";
-        format_select_label: &'static str = en: "Format", de: "Format";
-        shape_select_label: &'static str = en: "Shape", de: "Form";
-        format_svg: &'static str = en: "SVG", de: "SVG";
-        format_png: &'static str = en: "PNG", de: "PNG";
-        shape_rectangle: &'static str = en: "Rectangle", de: "Rechteck";
-        shape_ellipse: &'static str = en: "Ellipse", de: "Ellipse";
-        window_scene: &'static str = en: "Scene", de: "Szene";
-        window_icon: &'static str = en: "Icon", de: "Symbol";
-        measure_center_model: &'static str = en: "Center Model", de: "Modell zentrieren";
-        measure_sun: &'static str = en: "Sun", de: "Sonne";
-        measure_sun_azimuth: &'static str = en: "Sun Azimuth", de: "Sonnenazimut";
-        measure_sun_elevation: &'static str = en: "Sun Elevation", de: "Sonnenhöhe";
-        measure_sun_intensity: &'static str = en: "Sun Intensity", de: "Sonnenintensität";
-        measure_ambient: &'static str = en: "Ambient", de: "Umgebungslicht";
-        measure_shadow: &'static str = en: "Shadow", de: "Schatten";
-        measure_roughness: &'static str = en: "Roughness", de: "Rauheit";
-        field_label: &'static str = en: "Label", de: "Bezeichnung";
-        field_format: &'static str = en: "Format", de: "Format";
-        field_shape: &'static str = en: "Shape", de: "Form";
-        field_width: &'static str = en: "Width", de: "Breite";
-        field_height: &'static str = en: "Height", de: "Höhe";
-        field_name: &'static str = en: "Name", de: "Name";
-        field_url: &'static str = en: "URL", de: "URL";
+        shots: native_en "Shots", native_de "Aufnahmen", reuse_en "Shots", reuse_de "Aufnahmen";
+        assets: native_en "Assets", native_de "Objekte", reuse_en "Assets", reuse_de "Objekte";
+        add_shot: native_en "Add Shot", native_de "Aufnahme hinzufügen", reuse_en "Add Shot", reuse_de "Aufnahme hinzufügen";
+        add_asset: native_en "Add Asset", native_de "Objekt hinzufügen", reuse_en "Add Asset", reuse_de "Objekt hinzufügen";
+        svg_rectangle: native_en "SVG Rectangle", native_de "SVG Rechteck", reuse_en "SVG Rectangle", reuse_de "SVG Rechteck";
+        png_rectangle: native_en "PNG Rectangle", native_de "PNG Rechteck", reuse_en "PNG Rectangle", reuse_de "PNG Rechteck";
+        svg_ellipse: native_en "SVG Ellipse", native_de "SVG Ellipse", reuse_en "SVG Ellipse", reuse_de "SVG Ellipse";
+        png_ellipse: native_en "PNG Ellipse", native_de "PNG Ellipse", reuse_en "PNG Ellipse", reuse_de "PNG Ellipse";
+        glb_asset: native_en "GLB Asset", native_de "GLB-Objekt", reuse_en "GLB Asset", reuse_de "GLB-Objekt";
+        shot: native_en "Shot", native_de "Aufnahme", reuse_en "Shot", reuse_de "Aufnahme";
+        asset: native_en "Asset", native_de "Objekt", reuse_en "Asset", reuse_de "Objekt";
+        camera_label_placeholder: native_en "Camera label", native_de "Kamera-Bezeichnung", reuse_en "Camera label", reuse_de "Kamera-Bezeichnung";
+        load_camera: native_en "Load camera", native_de "Kamera laden", reuse_en "Load camera", reuse_de "Kamera laden";
+        shot_label_placeholder: native_en "Shot label", native_de "Aufnahme-Bezeichnung", reuse_en "Shot label", reuse_de "Aufnahme-Bezeichnung";
+        no_shot: native_en "No shot", native_de "Keine Aufnahme", reuse_en "No shot", reuse_de "Keine Aufnahme";
+        format_select_label: native_en "Format", native_de "Format", reuse_en "Format", reuse_de "Format";
+        shape_select_label: native_en "Shape", native_de "Form", reuse_en "Shape", reuse_de "Form";
+        format_svg: native_en "SVG", native_de "SVG", reuse_en "SVG", reuse_de "SVG";
+        format_png: native_en "PNG", native_de "PNG", reuse_en "PNG", reuse_de "PNG";
+        shape_rectangle: native_en "Rectangle", native_de "Rechteck", reuse_en "Rectangle", reuse_de "Rechteck";
+        shape_ellipse: native_en "Ellipse", native_de "Ellipse", reuse_en "Ellipse", reuse_de "Ellipse";
+        window_scene: native_en "Scene", native_de "Szene", reuse_en "Scene", reuse_de "Szene";
+        window_icon: native_en "Icon", native_de "Symbol", reuse_en "Icon", reuse_de "Symbol";
+        measure_center_model: native_en "Center Model", native_de "Modell zentrieren", reuse_en "Center Model", reuse_de "Modell zentrieren";
+        measure_sun: native_en "Sun", native_de "Sonne", reuse_en "Sun", reuse_de "Sonne";
+        measure_sun_azimuth: native_en "Sun Azimuth", native_de "Sonnenazimut", reuse_en "Sun Azimuth", reuse_de "Sonnenazimut";
+        measure_sun_elevation: native_en "Sun Elevation", native_de "Sonnenhöhe", reuse_en "Sun Elevation", reuse_de "Sonnenhöhe";
+        measure_sun_intensity: native_en "Sun Intensity", native_de "Sonnenintensität", reuse_en "Sun Intensity", reuse_de "Sonnenintensität";
+        measure_ambient: native_en "Ambient", native_de "Umgebungslicht", reuse_en "Ambient", reuse_de "Umgebungslicht";
+        measure_shadow: native_en "Shadow", native_de "Schatten", reuse_en "Shadow", reuse_de "Schatten";
+        measure_roughness: native_en "Roughness", native_de "Rauheit", reuse_en "Roughness", reuse_de "Rauheit";
+        field_label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        field_format: native_en "Format", native_de "Format", reuse_en "Format", reuse_de "Format";
+        field_shape: native_en "Shape", native_de "Form", reuse_en "Shape", reuse_de "Form";
+        field_width: native_en "Width", native_de "Breite", reuse_en "Width", reuse_de "Breite";
+        field_height: native_en "Height", native_de "Höhe", reuse_en "Height", reuse_de "Höhe";
+        field_name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
+        field_url: native_en "URL", native_de "URL", reuse_en "URL", reuse_de "URL";
     }
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_shooting_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn shooting_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("setActiveShot", "Set Active Shot", "Aktive Aufnahme festlegen"),
-        ("setActiveAsset", "Set Active Asset", "Aktives Objekt festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setShotCamera", "Set Shot Camera", "Aufnahmekamera festlegen"),
-        ("saveCamera", "Save Camera", "Kamera speichern"),
-        ("loadSavedCamera", "Load Saved Camera", "Gespeicherte Kamera laden"),
-        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
-        ("setAmbientIntensity", "Set Ambient Intensity", "Umgebungslichtintensität festlegen"),
-        ("setMaterialRoughness", "Set Material Roughness", "Materialrauheit festlegen"),
-        ("setShadowEnabled", "Set Shadow Enabled", "Schatten aktivieren"),
-        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-        ("setActiveShotLabel", "Set Active Shot Label", "Bezeichnung der aktiven Aufnahme festlegen"),
-        ("setActiveShotFormat", "Set Active Shot Format", "Format der aktiven Aufnahme festlegen"),
-        ("setActiveShotShape", "Set Active Shot Shape", "Form der aktiven Aufnahme festlegen"),
-        ("patchShot", "Patch Shot", "Aufnahme aktualisieren"),
-        ("patchShots", "Patch Shots", "Aufnahmen aktualisieren"),
-        ("patchAsset", "Patch Asset", "Objekt aktualisieren"),
-        ("patchAssets", "Patch Assets", "Objekte aktualisieren"),
-        ("addShot", "Add Shot", "Aufnahme hinzufügen"),
-        ("addAsset", "Add Asset", "Objekt hinzufügen"),
-        ("importAsset", "Import Asset", "Objekt importieren"),
-        ("resetFixture", "Reset Fixture", "Vorgabe zurücksetzen"),
-        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
-        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
-        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setCameraDraftLabel", "Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"),
-        ("setCenterModel", "Set Center Model", "Modellzentrierung festlegen"),
-        ("worldSelect", "World Select", "Welt auswählen"),
-        ("worldHover", "World Hover", "Überfahren (Welt)"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
-        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
-        ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
-        ("saveDownload", "Save Download", "Download speichern"),
-        ("loadRequest", "Load Request", "Ladeanfrage"),
-        ("importAssetRequest", "Import Asset Request", "Objekt-Importanfrage"),
-        ("exportActiveShot", "Export Active Shot", "Aktive Aufnahme exportieren"),
-        ("exportAllShots", "Export All Shots", "Alle Aufnahmen exportieren"),
-    ])
-}
-
-/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_shooting_app`.
-fn shooting_utility_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("move", "Move", "Verschieben"),
-        ("rotate", "Rotate", "Drehen"),
-        ("scale", "Scale", "Skalieren"),
-    ])
-}
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️Panels
 /// 🌳️ Layers an `icon_id` onto the SDK's `tree_item_with_action` skeleton — the SDK primitive's third
 /// parameter is `description`, not an icon, so the shooting-specific icon assignment stays local.
-fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
+fn tree_item_with_icon(id: impl Into<String>, label: impl Into<Label>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None,
     ..tree_item_with_action(id, label, None, action) }
 }
@@ -396,7 +338,7 @@ fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> Ui
         .map(|shot| {
             tree_item_with_icon(
                 format!("shooting-shot:{}", shot.id),
-                shot.label.clone(),
+                Label::data(shot.label.clone()),
                 "camera",
                 shooting_action("setSelection", Some(json!({ "shotIds": [shot.id], "assetIds": [] }))),
             )
@@ -408,7 +350,7 @@ fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> Ui
         .map(|asset| {
             tree_item_with_icon(
                 format!("shooting-asset:{}", asset.id),
-                asset.name.clone(),
+                Label::data(asset.name.clone()),
                 "box",
                 shooting_action("setSelection", Some(json!({ "shotIds": [], "assetIds": [asset.id] }))),
             )
@@ -439,7 +381,7 @@ fn build_catalogue_tree(labels: &ShootingLabels) -> UiNode {
         .build()
 }
 
-fn catalog_shot_item(id: &str, label: &str, format: &str, shape: &str) -> UiTreeItemNode {
+fn catalog_shot_item(id: &str, label: impl Into<Label>, format: &str, shape: &str) -> UiTreeItemNode {
     tree_item_with_icon(
         format!("shooting-play-catalogue.{id}"),
         label,
@@ -466,12 +408,12 @@ fn build_inspector_tree(fixture: &ShootingFixture, cfg: &ShootingConfig, labels:
     }
     ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
         id: "shooting-play-inspector.empty".into(),
-        label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+        label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
         default_open: Some(true),
         children: vec![
-            ui_text(format!("Schema: {SHOOTING_FIXTURE_SCHEMA}")),
-            ui_text(format!("Shots: {}", fixture.shots.len())),
-            ui_text(format!("Assets: {}", fixture.assets.len())),
+            ui_text(Label::data(format!("Schema: {SHOOTING_FIXTURE_SCHEMA}"))),
+            ui_text(Label::data(format!("Shots: {}", fixture.shots.len()))),
+            ui_text(Label::data(format!("Assets: {}", fixture.assets.len()))),
         ],
         presence: UiPresence::default(),
         menu: None,
@@ -1291,7 +1233,7 @@ impl DocumentApp for ShootingPlayApp {
             SHOOTING_PLAY_BODY_DOCUMENT => build_document_tree(fixture, labels),
             SHOOTING_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             SHOOTING_PLAY_BODY_INSPECTION => build_inspector_tree(fixture, cfg.projection, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -1311,21 +1253,13 @@ impl DocumentApp for ShootingPlayApp {
         ])
     }
 
-    fn app_labels(&self, cfg: &ConfigView<'_, ShootingConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<ShootingLabels>(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(SHOOTING_PLAY_WINDOW_SCENE, labels.window_scene)
-            .window_kind_label(SHOOTING_PLAY_WINDOW_ICON, labels.window_icon)
-            .action_labels(shooting_action_labels(is_de_locale(cfg.projection)))
-            .utility_labels(shooting_utility_labels(is_de_locale(cfg.projection)))
-    }
 }
 //#endregion 🔖️ShootingPlayApp
 
 //#region 🔖️Manifest
 pub fn create_shooting_app() -> App {
     App::from_builder(
-        App::builder(SHOOTING_PLAY_APP_ID, "Shooting").document(["semio", "shooting"])
+        App::builder(SHOOTING_PLAY_APP_ID, LocalizedLabel::native("Shooting", "Shooting")).document(["semio", "shooting"])
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.shooting".into(),
                 name: "2D Shooting".into(),
@@ -1355,10 +1289,10 @@ pub fn create_shooting_app() -> App {
             })
             .media_output(shooting_engine::shooting_photos_out_port())
             .icon_id("camera")
-            .mode("edit", "Edit", "pencil")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
-            .window_kind(SHOOTING_PLAY_WINDOW_SCENE, "Scene", SHOOTING_PLAY_BODY_SCENE, SurfaceKind::World3d, "shooting-scene")
-            .window_kind(SHOOTING_PLAY_WINDOW_ICON, "Icon", SHOOTING_PLAY_BODY_ICON, SurfaceKind::IconRender, "image")
+            .window_kind(SHOOTING_PLAY_WINDOW_SCENE, LocalizedLabel::native("Scene", "Szene"), SHOOTING_PLAY_BODY_SCENE, SurfaceKind::World3d, "shooting-scene")
+            .window_kind(SHOOTING_PLAY_WINDOW_ICON, LocalizedLabel::native("Icon", "Symbol"), SHOOTING_PLAY_BODY_ICON, SurfaceKind::IconRender, "image")
             .default_layout(create_default_layout(
                 &[SHOOTING_PLAY_WINDOW_SCENE.into(), SHOOTING_PLAY_WINDOW_ICON.into()],
                 "row",
@@ -1367,84 +1301,84 @@ pub fn create_shooting_app() -> App {
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "Dokument"),
                 PanelGroup::Workbench,
                 SHOOTING_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
                 PanelGroup::Workbench,
                 SHOOTING_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
                 PanelGroup::Details,
                 SHOOTING_PLAY_BODY_INSPECTION,
             )
             // 🔧️ Document-mutating: dispatched as VCS operations with a true inverse.
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
-            .operation("setActiveExample", "Set Active Example")
-            .operation("setActiveShot", "Set Active Shot")
-            .operation("setActiveAsset", "Set Active Asset")
-            .view_action("setCamera", "Set Camera")
-            .operation("setShotCamera", "Set Shot Camera")
-            .operation("saveCamera", "Save Camera")
-            .view_action("loadSavedCamera", "Load Saved Camera")
-            .operation("setSunAzimuth", "Set Sun Azimuth")
-            .operation("setSunElevation", "Set Sun Elevation")
-            .operation("setSunIntensity", "Set Sun Intensity")
-            .operation("setAmbientIntensity", "Set Ambient Intensity")
-            .operation("setMaterialRoughness", "Set Material Roughness")
-            .operation("setShadowEnabled", "Set Shadow Enabled")
-            .operation("toggleSun", "Toggle Sun")
-            .operation("setActiveShotLabel", "Set Active Shot Label")
-            .operation("setActiveShotFormat", "Set Active Shot Format")
-            .operation("setActiveShotShape", "Set Active Shot Shape")
-            .operation("patchShots", "Patch Shots")
-            .operation("patchAssets", "Patch Assets")
-            .operation("addShot", "Add Shot")
-            .operation("addAsset", "Add Asset")
-            .operation("importAsset", "Import Asset")
-            .operation("resetFixture", "Reset Fixture")
-            .operation("translateSelection", "Translate Selection")
-            .operation("rotateSelection", "Rotate Selection")
-            .operation("scaleSelection", "Scale Selection")
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Operation) })
+            .operation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .operation("setActiveShot", LocalizedLabel::native("Set Active Shot", "Aktive Aufnahme festlegen"))
+            .operation("setActiveAsset", LocalizedLabel::native("Set Active Asset", "Aktives Objekt festlegen"))
+            .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
+            .operation("setShotCamera", LocalizedLabel::native("Set Shot Camera", "Aufnahmekamera festlegen"))
+            .operation("saveCamera", LocalizedLabel::native("Save Camera", "Kamera speichern"))
+            .view_action("loadSavedCamera", LocalizedLabel::native("Load Saved Camera", "Gespeicherte Kamera laden"))
+            .operation("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"))
+            .operation("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"))
+            .operation("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
+            .operation("setAmbientIntensity", LocalizedLabel::native("Set Ambient Intensity", "Umgebungslichtintensität festlegen"))
+            .operation("setMaterialRoughness", LocalizedLabel::native("Set Material Roughness", "Materialrauheit festlegen"))
+            .operation("setShadowEnabled", LocalizedLabel::native("Set Shadow Enabled", "Schatten aktivieren"))
+            .operation("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
+            .operation("setActiveShotLabel", LocalizedLabel::native("Set Active Shot Label", "Bezeichnung der aktiven Aufnahme festlegen"))
+            .operation("setActiveShotFormat", LocalizedLabel::native("Set Active Shot Format", "Format der aktiven Aufnahme festlegen"))
+            .operation("setActiveShotShape", LocalizedLabel::native("Set Active Shot Shape", "Form der aktiven Aufnahme festlegen"))
+            .operation("patchShots", LocalizedLabel::native("Patch Shots", "Aufnahmen aktualisieren"))
+            .operation("patchAssets", LocalizedLabel::native("Patch Assets", "Objekte aktualisieren"))
+            .operation("addShot", LocalizedLabel::native("Add Shot", "Aufnahme hinzufügen"))
+            .operation("addAsset", LocalizedLabel::native("Add Asset", "Objekt hinzufügen"))
+            .operation("importAsset", LocalizedLabel::native("Import Asset", "Objekt importieren"))
+            .operation("resetFixture", LocalizedLabel::native("Reset Fixture", "Vorgabe zurücksetzen"))
+            .operation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
+            .operation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
+            .operation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
             // 👁️ Ephemeral view state — selection, camera draft label, world picking.
-            .view_action("setSelection", "Set Selection")
-            .view_action("setCameraDraftLabel", "Set Camera Draft Label")
-            .view_action("setCenterModel", "Set Center Model")
-            .view_action("worldSelect", "World Select")
-            .view_action("setHover", "Set Hover")
-            .view_action("worldPick", "World Pick")
-            .view_action("setSelectionMethod", "Set Selection Method")
-            .view_action("worldPointerDown", "World Pointer Down")
-            .view_action("worldPointerMove", "World Pointer Move")
+            .view_action("setSelection", LocalizedLabel::native("Set Selection", "Auswahl festlegen"))
+            .view_action("setCameraDraftLabel", LocalizedLabel::native("Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"))
+            .view_action("setCenterModel", LocalizedLabel::native("Set Center Model", "Modellzentrierung festlegen"))
+            .view_action("worldSelect", LocalizedLabel::native("World Select", "Welt auswählen"))
+            .view_action("setHover", LocalizedLabel::native("Set Hover", "Überfahren festlegen"))
+            .view_action("worldPick", LocalizedLabel::native("World Pick", "Welt-Auswahl (Pick)"))
+            .view_action("setSelectionMethod", LocalizedLabel::native("Set Selection Method", "Auswahlmethode festlegen"))
+            .view_action("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"))
+            .view_action("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"))
             // 🐚️ Shell effects — export/import round-trips through the host.
-            .shell_action("saveDownload", "Save Download")
-            .shell_action("loadRequest", "Load Request")
-            .shell_action("importAssetRequest", "Import Asset Request")
-            .shell_action("exportActiveShot", "Export Active Shot")
-            .shell_action("exportAllShots", "Export All Shots")
+            .shell_action("saveDownload", LocalizedLabel::native("Save Download", "Download speichern"))
+            .shell_action("loadRequest", LocalizedLabel::native("Load Request", "Ladeanfrage"))
+            .shell_action("importAssetRequest", LocalizedLabel::native("Import Asset Request", "Objekt-Importanfrage"))
+            .shell_action("exportActiveShot", LocalizedLabel::native("Export Active Shot", "Aktive Aufnahme exportieren"))
+            .shell_action("exportAllShots", LocalizedLabel::native("Export All Shots", "Alle Aufnahmen exportieren"))
             // 📝️ Staged argument forms for the panel-visible create actions (defaults materialized host-side).
             .action_args("addShot", vec![
-                ActionArgDef::select("format", "Format", vec![ActionArgOption::new("svg", "SVG"), ActionArgOption::new("png", "PNG")]).default_value("png"),
-                ActionArgDef::select("shape", "Shape", vec![ActionArgOption::new("rectangle", "Rectangle"), ActionArgOption::new("ellipse", "Ellipse")]).default_value("rectangle"),
+                ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")), ActionArgOption::new("png", LocalizedLabel::native("PNG", "PNG"))]).default_value("png"),
+                ActionArgDef::select("shape", LocalizedLabel::native("Shape", "Form"), vec![ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("ellipse", LocalizedLabel::native("Ellipse", "Ellipse"))]).default_value("rectangle"),
             ])
             .action_args("addAsset", vec![
-                ActionArgDef::select("format", "Format", vec![ActionArgOption::new("glb", "GLB")]).default_value("glb"),
+                ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("glb", LocalizedLabel::native("GLB", "GLB"))]).default_value("glb"),
             ])
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", "Example", vec![
-                    ActionArgOption::new(SHOOTING_EXAMPLE_DEFAULT_ID, "Default Base Icon"),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new(SHOOTING_EXAMPLE_DEFAULT_ID, LocalizedLabel::native("Default Base Icon", "Standard-Basissymbol")),
                 ]).required(),
             ])
             // 🧰️ Transform gumball — an exclusive utility group scoped to the scene window (active utility is host-owned).
-            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
-            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
-            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
+            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", LocalizedLabel::native("Move", "Verschieben"), "move") })
+            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw") })
+            .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2") })
             .window_kind_utilities(SHOOTING_PLAY_WINDOW_SCENE, vec!["move".into(), "rotate".into(), "scale".into()])
             // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
             // `config_spec()`/`shooting_io()` are this same information's single source of truth, reused
@@ -1456,7 +1390,7 @@ pub fn create_shooting_app() -> App {
     )
     .example(
         SHOOTING_EXAMPLE_DEFAULT_ID,
-        "Default Base Icon",
+        LocalizedLabel::native("Default Base Icon", "Standard-Basissymbol"),
         default_fixture_json(),
         "camera",
     )

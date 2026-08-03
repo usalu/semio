@@ -243,7 +243,7 @@ fn render_extension_question(
     interactive: bool,
 ) -> UiNode {
     let Some((plugin_id, contribution)) = find_question_kind_contribution(contributions, &question.kind) else {
-        return ui_text(format!("Extension unavailable: {}", question.kind));
+        return ui_text(Label::data(format!("Extension unavailable: {}", question.kind)));
     };
     let Contribution::PlaybookBlockKind {
         app_id,
@@ -252,7 +252,7 @@ fn render_extension_question(
         ..
     } = contribution
     else {
-        return ui_text(format!("Extension unavailable: {}", question.kind));
+        return ui_text(Label::data(format!("Extension unavailable: {}", question.kind)));
     };
     let params = extension_params_value(question, values);
     let payload = extension_render_payload(question, &params, surface, interactive);
@@ -541,19 +541,19 @@ fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels: &FormsLab
         .iter()
         .map(|kind| {
             let (label, icon): (&str, &str) = match *kind {
-                "text" => (labels.kind_text, "type"),
-                "longText" => (labels.kind_long_text, "align-left"),
-                "number" => (labels.kind_number, "hash"),
-                "slider" => (labels.kind_slider, "sliders-horizontal"),
-                "boolean" => (labels.kind_boolean, "toggle-left"),
-                "single" => (labels.kind_single, "circle-dot"),
-                "multi" => (labels.kind_multi, "list-checks"),
-                "date" => (labels.kind_date, "calendar"),
-                "color" => (labels.kind_color, "palette"),
-                "image" => (labels.kind_image, "image"),
-                "file" => (labels.kind_file, "file"),
-                "vector" => (labels.kind_vector, "move-3d"),
-                "note" => (labels.kind_note, "sticky-note"),
+                "text" => (labels.kind_text.as_str(), "type"),
+                "longText" => (labels.kind_long_text.as_str(), "align-left"),
+                "number" => (labels.kind_number.as_str(), "hash"),
+                "slider" => (labels.kind_slider.as_str(), "sliders-horizontal"),
+                "boolean" => (labels.kind_boolean.as_str(), "toggle-left"),
+                "single" => (labels.kind_single.as_str(), "circle-dot"),
+                "multi" => (labels.kind_multi.as_str(), "list-checks"),
+                "date" => (labels.kind_date.as_str(), "calendar"),
+                "color" => (labels.kind_color.as_str(), "palette"),
+                "image" => (labels.kind_image.as_str(), "image"),
+                "file" => (labels.kind_file.as_str(), "file"),
+                "vector" => (labels.kind_vector.as_str(), "move-3d"),
+                "note" => (labels.kind_note.as_str(), "sticky-note"),
                 other => (other, "help-circle"),
             };
             (kind.to_string(), label.into(), icon.into())
@@ -649,7 +649,7 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsL
                     menu: None,
                     ..tree_item_with_action(
                         question.id.clone(),
-                        question.label.clone(),
+                        Label::data(question.label.clone()),
                         Some(question.kind.clone()),
                         forms_action("setSelection", Some(json!({ "ids": [question.id.clone()] }))),
                     )
@@ -663,7 +663,7 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsL
                 menu: None,
                 ..tree_item_with_action(
                     forms_play_step_tree_id(&step.id),
-                    step.title.clone(),
+                    Label::data(step.title.clone()),
                     Some(format!("{} questions", step.blocks.len())),
                     forms_action("setSelection", Some(json!({ "ids": [] }))),
                 )
@@ -673,7 +673,7 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsL
     PanelTreeBuilder::new("forms-play-document")
         .section_or_placeholder(
             "forms-play-document.steps",
-            Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
+            Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)),
             true,
             step_items,
             labels.no_steps_tree_item,
@@ -697,7 +697,7 @@ fn build_catalogue_tree(contributions: &[ProgramContributionEntry], labels: &For
                 menu: None,
                 ..tree_item_with_action(
                     format!("forms-play-catalogue.{kind}"),
-                    label,
+                    Label::data(label),
                     Some(kind.clone()),
                     forms_action("addQuestion", Some(json!({ "kind": kind }))),
                 )
@@ -722,7 +722,7 @@ fn build_catalogue_tree(contributions: &[ProgramContributionEntry], labels: &For
         },
     ];
     PanelTreeBuilder::new("forms-play-catalogue")
-        .section("forms-play-catalogue.kinds", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, kind_items)
+        .section("forms-play-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, kind_items)
         .section("forms-play-catalogue.actions", Some(labels.actions.into()), true, action_items)
         .build()
 }
@@ -740,7 +740,7 @@ fn inspector_text_field(question_ids: &[String], field_id: &str, label: impl Int
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
-            placeholder: mixed.placeholder,
+            placeholder: mixed.placeholder.map(Label::data),
             commit: None,
             on_change: inspector_patch(question_ids, field),
             min: None,
@@ -864,7 +864,7 @@ fn question_kind_editor_fields(
                 for option in options {
                     fields.push(UiNode::Field(UiFieldNode {
                         id: fid(&format!("option.{}", option.value)),
-                        label: format!("{} {}", labels.option, option.value),
+                        label: Label::data(format!("{} {}", labels.option.as_str(), option.value)),
                         description: None,
                         required: None,
                         error: None,
@@ -934,7 +934,7 @@ fn question_kind_editor_fields(
                 for field in vector_fields {
                     fields.push(UiNode::Field(UiFieldNode {
                         id: fid(&format!("vector.{}.label", field.key)),
-                        label: format!("{} {}", field.key, labels.vector_field_label_suffix),
+                        label: Label::data(format!("{} {}", field.key, labels.vector_field_label_suffix.as_str())),
                         description: None,
                         required: None,
                         error: None,
@@ -960,7 +960,7 @@ fn question_kind_editor_fields(
                     }));
                     fields.push(UiNode::Field(UiFieldNode {
                         id: fid(&format!("vector.{}.value", field.key)),
-                        label: format!("{} {}", field.key, labels.vector_field_value_suffix),
+                        label: Label::data(format!("{} {}", field.key, labels.vector_field_value_suffix.as_str())),
                         description: None,
                         required: None,
                         error: None,
@@ -986,7 +986,7 @@ fn question_kind_editor_fields(
                     fields.push(UiNode::Button(UiButtonNode {
                         id: Some(fid(&format!("vector.{}.remove", field.key))),
                         icon_id: "trash-2".into(),
-                        label: format!("{} {}", labels.remove, field.key),
+                        label: Label::data(format!("{} {}", labels.remove.as_str(), field.key)),
                         action: forms_action(
                             "removeVectorField",
                             Some(json!({ "questionId": question.id, "fieldKey": field.key })),
@@ -1063,12 +1063,12 @@ fn build_inspector_tree(
     if questions.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             id: "forms-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
             default_open: Some(true),
             children: vec![
-                ui_text(format!("Schema: {FORMS_DOCUMENT_SCHEMA}")),
-                ui_text(format!("Steps: {}", spec.steps.len())),
-                ui_text(format!("Questions: {}", flatten_questions(spec).len())),
+                ui_text(Label::data(format!("Schema: {FORMS_DOCUMENT_SCHEMA}"))),
+                ui_text(Label::data(format!("Steps: {}", spec.steps.len()))),
+                ui_text(Label::data(format!("Questions: {}", flatten_questions(spec).len()))),
             ],
             presence: UiPresence::default(),
             menu: None,
@@ -1084,7 +1084,7 @@ fn build_inspector_tree(
         .into_iter()
         .map(|(kind, label, _)| UiSelectItem {
             value: kind,
-            label,
+            label: Label::data(label),
         })
         .collect();
     let mut base_fields = vec![
@@ -1095,7 +1095,7 @@ fn build_inspector_tree(
             child: Box::new(UiNode::Select(UiSelectNode {
                 id: "forms-play-inspector.kind.select".into(),
                 value: kind_mixed.value,
-                placeholder: kind_mixed.placeholder,
+                placeholder: kind_mixed.placeholder.map(Label::data),
                 items: kind_items,
                 on_change: inspector_patch(&question_ids, "kind"),
                 presence: UiPresence::default(),
@@ -1113,7 +1113,7 @@ fn build_inspector_tree(
             if question_ids.len() == 1 {
                 question_ids[0].clone()
             } else {
-                format!("{} {}", question_ids.len(), term_labels.selected)
+                format!("{} {}", question_ids.len(), term_labels.selected.as_str())
             },
         ),
         UiNode::Field(UiFieldNode {
@@ -1125,7 +1125,7 @@ fn build_inspector_tree(
                 text: if required_mixed.uniform {
                     Some(if required_mixed.pressed { term_labels.yes.into() } else { term_labels.no.into() })
                 } else {
-                    Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
+                    Some(Label::data(UI_INSPECTOR_MIXED_PLACEHOLDER))
                 },
                 on_change: inspector_patch(&question_ids, "required"),
                 presence: UiPresence::selected(required_mixed.uniform && required_mixed.pressed),
@@ -1201,11 +1201,11 @@ fn render_image_question(question: &FormQuestion) -> UiNode {
     ui_image(
         format!("forms-try.{}.image", question.id),
         image_question_src(question),
-        Some(question.label.clone()),
+        Some(Label::data(question.label.clone())),
     )
 }
 
-fn ui_text_emphasized(value: impl Into<String>) -> UiNode {
+fn ui_text_emphasized(value: impl Into<Label>) -> UiNode {
     UiNode::Text(UiTextNode {
         value: value.into(),
         emphasize: Some(true),
@@ -1233,7 +1233,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
 fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) -> UiNode {
     UiNode::Field(UiFieldNode {
         id: format!("forms-try.{}", question.id),
-        label: question.label.clone(),
+        label: Label::data(question.label.clone()),
         description: question.description.clone(),
         required: question.required.filter(|required| *required),
         error: error.map(str::to_string),
@@ -1260,7 +1260,7 @@ fn render_try_question(
                 id: format!("forms-try.{key}.input"),
                 input_kind: question.kind.clone(),
                 value: json_string_value(&value),
-                placeholder: question.placeholder.clone(),
+                placeholder: question.placeholder.clone().map(Label::data),
                 commit: None,
                 on_change: try_value_action(&key),
                 min: None,
@@ -1325,7 +1325,7 @@ fn render_try_question(
                         .iter()
                         .map(|option| UiSelectItem {
                             value: option.value.clone(),
-                            label: option.label.clone(),
+                            label: Label::data(option.label.clone()),
                         })
                         .collect()
                 })
@@ -1359,7 +1359,7 @@ fn render_try_question(
                             UiNode::Toggle(UiToggleNode {
                                 id: format!("forms-try.{key}.{}.toggle", option.value),
                                 icon_id: "hash".into(),
-                                text: Some(option.label.clone()),
+                                text: Some(Label::data(option.label.clone())),
                                 on_change: forms_action(
                                     "setTryValue",
                                     Some(json!({ "key": key, "optionValue": option.value })),
@@ -1401,7 +1401,7 @@ fn render_try_question(
                     let field_value = array.get(index).cloned().unwrap_or(json!(field.value.unwrap_or(0.0)));
                     UiNode::Field(UiFieldNode {
                         id: format!("forms-try.{key}.{}", field.key),
-                        label: field.label.clone().unwrap_or_else(|| field.key.clone()),
+                        label: Label::data(field.label.clone().unwrap_or_else(|| field.key.clone())),
                         description: None,
                         required: None,
                         error: None,
@@ -1428,7 +1428,7 @@ fn render_try_question(
                 .collect();
             try_field(question, error, ui_stack_horizontal(steppers))
         }
-        "note" => ui_text(question.text.clone().unwrap_or_else(|| question.label.clone())),
+        "note" => ui_text(Label::data(question.text.clone().unwrap_or_else(|| question.label.clone()))),
         "image" => try_field(question, error, render_image_question(question)),
         "file" => try_field(
             question,
@@ -1451,7 +1451,7 @@ fn render_try_question(
         kind if is_extension_question_kind(kind) => {
             render_extension_question(question, values, contributions, "try", true)
         }
-        _ => ui_text(format!("Unsupported kind: {}", question.kind)),
+        _ => ui_text(Label::data(format!("Unsupported kind: {}", question.kind))),
     }
 }
 
@@ -1470,12 +1470,12 @@ fn render_try_wizard(spec: &FormSpec, config: &FormsConfig, contributions: &[Pro
         .map(|error| (error.block_id.as_str(), error.message.as_str()))
         .collect();
     let mut children = vec![
-        ui_text_emphasized(spec.title.clone().unwrap_or_else(|| labels.form_fallback_title.into())),
-        ui_text(format!("{} {} / {}", labels.step_progress, step_index + 1, spec.steps.len())),
-        ui_text_emphasized(step.title.clone()),
+        ui_text_emphasized(Label::data(spec.title.clone().unwrap_or_else(|| labels.form_fallback_title.into()))),
+        ui_text(Label::data(format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, spec.steps.len()))),
+        ui_text_emphasized(Label::data(step.title.clone())),
     ];
     if let Some(description) = &step.description {
-        children.push(ui_text(description.clone()));
+        children.push(ui_text(Label::data(description.clone())));
     }
     for question in visible {
         children.push(render_try_question(
@@ -1851,7 +1851,7 @@ impl DocumentApp for FormsPlayApp {
             FORMS_PLAY_BODY_DOCUMENT => build_document_tree(spec, &config.selected_ids, labels),
             FORMS_PLAY_BODY_CATALOGUE => build_catalogue_tree(&contributions, labels),
             FORMS_PLAY_BODY_INSPECTION => build_inspector_tree(spec, config, &contributions, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -2049,7 +2049,7 @@ mod tests {
             src: Some("https://example.com/picture.png".into()),
             ..question_shell("q-image".into(), "Picture".into(), "image".into())
         };
-        let node = render_try_question(&question, &Map::new(), &[], None, &FormsLabels::EN);
+        let node = render_try_question(&question, &Map::new(), &[], None, &FormsLabels::NATIVE_EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#""type":"image""#));
         assert!(json.contains("https://example.com/picture.png"));
@@ -2107,7 +2107,7 @@ mod tests {
     #[test]
     fn kind_editor_fields_are_editable_when_unset() {
         let question = question_shell("q-num".into(), "Amount".into(), "number".into());
-        let fields = question_kind_editor_fields(&question, &["q-num".into()], &[], "forms-blueprint.q-num", &FormsLabels::EN);
+        let fields = question_kind_editor_fields(&question, &["q-num".into()], &[], "forms-blueprint.q-num", &FormsLabels::NATIVE_EN);
         let json = serde_json::to_string(&fields).unwrap();
         assert!(json.contains("forms-blueprint.q-num.min"));
         assert!(json.contains("forms-blueprint.q-num.max"));
@@ -2153,7 +2153,7 @@ mod tests {
             &Map::new(),
             &building_component_contributions(),
             None,
-            &FormsLabels::EN,
+            &FormsLabels::NATIVE_EN,
         );
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("externalSlot"));
@@ -2162,7 +2162,7 @@ mod tests {
 
     #[test]
     fn extension_question_falls_back_without_contribution() {
-        let node = render_try_question(&building_component_question(), &Map::new(), &[], None, &FormsLabels::EN);
+        let node = render_try_question(&building_component_question(), &Map::new(), &[], None, &FormsLabels::NATIVE_EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Extension unavailable"));
     }

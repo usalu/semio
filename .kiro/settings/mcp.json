@@ -2,8 +2,8 @@
   "mcpServers": {
     "repo": {
       "type": "stdio",
-      "command": "repo/client/client",
-      "args": ["mcp", "kiro"]
+      "command": "bun",
+      "args": ["./📜️script.ts", "dev", "mcp", "stdio", "kiro"]
     },
     "neo4j-compose": {
       "type": "stdio",

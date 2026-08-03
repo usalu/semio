@@ -1884,10 +1884,7 @@
       "name": "🛠️dev🧰️repo🤖️mcp⌨️cursor",
       "type": "node-terminal",
       "request": "launch",
-      "command": "./🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client mcp cursor",
-      "env": {
-        "GOWORK": "${workspaceFolder}/go.work"
-      },
+      "command": "bun ./📜️script.ts dev mcp stdio cursor",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",

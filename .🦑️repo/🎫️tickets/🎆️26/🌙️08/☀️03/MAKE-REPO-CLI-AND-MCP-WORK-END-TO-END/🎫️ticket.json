@@ -1,0 +1,16 @@
+{
+  "title": "Make Repo CLI and MCP Work End to End",
+  "emoji": "🛠️",
+  "status": "closed",
+  "description": "Get the repo CLI and MCP tools working end to end across supported clients. Reproduce and fix the Cursor MCP server loading failure, make configuration and bootstrapping zero-touch and cross-platform, and verify CLI, MCP resources, and MCP tools through real client-facing stdio flows.",
+  "summary": "Repaired the repo CLI and MCP end to end by routing every IDE through the cross-platform Bun bootstrap, correcting canonical client and hook paths, fixing MCP server lifetime and close-path performance, restoring emoji-dated ticket discovery, and validating builds, CLI queries, MCP tools, resources, prompts, and client-specific handshakes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2421"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp",
+  "sessions": [
+    "⚪67bd0c9f6a554a8c90c065704039627a",
+    "⚪820b00ac24fe4e14bfcf090b22395c92",
+    "⚪7c2d48173d034925a86aede2cdceb873"
+  ]
+}

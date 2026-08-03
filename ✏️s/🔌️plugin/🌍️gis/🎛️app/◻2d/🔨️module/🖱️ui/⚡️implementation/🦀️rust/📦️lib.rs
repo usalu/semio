@@ -11,10 +11,10 @@ use gis2d_op::{Gis2dConfigOperation, GisMapOperation};
 use gis2d_protocol::Gis2dCommand;
 use framework_surface_tiled_map::{clamp_map_layer_weight, gis_map_layer_weight_slider_ids_json, gis_map_lod_scale_json, MapHost, GIS_MAP_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    app_labels, build_tiled_map_scene, create_default_layout, localized_label_map, tree_item_with_action,
+    app_labels, build_tiled_map_scene, create_default_layout, tree_item_with_action,
     MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ArtifactKindSpec, AppLabelsOverlay, AppLabelsOverlayExt,
-    ActionDefinition, ActionKind, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, TiledMapScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
+    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, ArtifactKindSpec,
+    ActionDefinition, ActionKind, ConfigView, DocumentApp, DocumentView, Emit, AppLabels, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, Terminology, TiledMapScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
     UiToggleNode, UiTreeItemNode, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -37,29 +37,30 @@ const GIS2D_PLAY_BODY_INSPECTION: &str = "gis2d.play.inspection";
 const GIS2D_PLAY_WINDOW_MAIN: &str = "gis2d-main";
 
 const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
-    ("raster", "Raster", "map"),
-    ("water", "Water", "droplets"),
-    ("land", "Land", "mountain"),
-    ("roads", "Roads", "route"),
+    ("raster", "Raster", "layers"),
+    ("water", "Water", "cloud"),
+    ("land", "Land", "trees"),
+    ("roads", "Roads", "compass"),
     ("buildings", "Buildings", "building"),
     ("borders", "Borders", "square-dashed"),
     ("labels", "Labels", "type"),
-    ("positions", "Positions", "map-pin"),
-    ("positionLabels", "Position Labels", "tag"),
+    ("positions", "Positions", "crosshair"),
+    ("positionLabels", "Position Labels", "tags"),
     ("routes", "Routes", "git-branch"),
     ("regions", "Regions", "layers"),
 ];
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical fix.
-fn is_de_locale(cfg: &Gis2dConfig) -> bool {
-    cfg.locale.starts_with("de")
+/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
+/// `semio_framework_plugin::resolve_labels` — `Gis2dConfig` carries no terminology axis, so this app
+/// is always `Terminology::Native`. Mirrors `shooting_ui`'s identical fix.
+fn gis2d_locale(cfg: &Gis2dConfig) -> Locale {
+    if cfg.locale.starts_with("de") { Locale::De } else { Locale::En }
 }
 
-fn resolve_labels<L: LocaleLabels>(cfg: &Gis2dConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
+fn resolve_labels<L: AppLabels>(cfg: &Gis2dConfig) -> &'static L {
+    L::labels(gis2d_locale(cfg), Terminology::Native)
 }
 //#endregion 🔖️Locale
 
@@ -212,7 +213,7 @@ fn layer_weight_slider_fields(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Ve
         .map(|(layer_id, label, value)| {
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: format!("gis2d-play-inspector.weight.{layer_id}"),
-                label: format!("{label} {}", labels.weight_suffix),
+                label: Label::data(format!("{label} {}", labels.weight_suffix.as_str())),
                 child: Box::new(UiNode::Slider(UiSliderNode {presence: UiPresence::default(),
                     id: format!("gis2d-play-inspector.weight.{layer_id}.slider"),
                     value,
@@ -286,7 +287,7 @@ fn gis2d_window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<Win
         .into_iter()
         .map(|(layer_id, label, value)| WindowMeasure::Slider {
             id: format!("gis2d-play-window.weight.{layer_id}"),
-            label: Some(format!("{label} {}", labels.weight_suffix)),
+            label: Some(format!("{label} {}", labels.weight_suffix.as_str())),
             value,
             min: 0.25,
             max: 3.0,
@@ -380,102 +381,70 @@ fn gis2d_window_measures(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> Vec<Win
 /// 🗣️ Complete UI label set for the GIS 2D app; one field per label makes every locale combination compile-checked.
 app_labels! {
     struct Gis2dPlayLabels {
-        window_map: &'static str = en: "Map", de: "Karte";
-        mode_edit: &'static str = en: "Edit", de: "Bearbeiten";
-        layer_raster: &'static str = en: "Raster", de: "Raster";
-        layer_water: &'static str = en: "Water", de: "Wasser";
-        layer_land: &'static str = en: "Land", de: "Land";
-        layer_roads: &'static str = en: "Roads", de: "Straßen";
-        layer_buildings: &'static str = en: "Buildings", de: "Gebäude";
-        layer_borders: &'static str = en: "Borders", de: "Grenzen";
-        layer_map_labels: &'static str = en: "Labels", de: "Beschriftungen";
-        layer_positions: &'static str = en: "Positions", de: "Positionen";
-        layer_position_labels: &'static str = en: "Position Labels", de: "Positionsbeschriftungen";
-        layer_routes: &'static str = en: "Routes", de: "Routen";
-        layer_regions: &'static str = en: "Regions", de: "Regionen";
-        map_view: &'static str = en: "Map View", de: "Kartenansicht";
-        render_mode: &'static str = en: "Render Mode", de: "Darstellungsmodus";
-        render_mode_image: &'static str = en: "Image", de: "Bild";
-        render_mode_vector: &'static str = en: "Vector", de: "Vektor";
-        render_mode_combined: &'static str = en: "Combined", de: "Kombiniert";
-        vector_style: &'static str = en: "Vector Style", de: "Vektorstil";
-        vector_style_colored: &'static str = en: "Colored", de: "Farbig";
-        vector_style_figure_ground: &'static str = en: "Figure Ground", de: "Figur-Grund";
-        vector_style_inverted_figure: &'static str = en: "Inverted Figure", de: "Invertierte Figur";
-        lod_mode: &'static str = en: "LOD Mode", de: "LOD-Modus";
-        lod_automatic: &'static str = en: "Automatic", de: "Automatisch";
-        selection_method: &'static str = en: "Selection Method", de: "Auswahlmethode";
-        selection_method_rectangle: &'static str = en: "Rectangle", de: "Rechteck";
-        selection_method_lasso: &'static str = en: "Lasso", de: "Lasso";
-        layers_group: &'static str = en: "Layers", de: "Ebenen";
-        layer_weights_group: &'static str = en: "Layer Weights", de: "Ebenengewichte";
-        weight_suffix: &'static str = en: "weight", de: "Gewicht";
-        selected_features: &'static str = en: "Selected Features", de: "Ausgewählte Objekte";
-        map_layer: &'static str = en: "Map Layer", de: "Kartenebene";
-        schema: &'static str = en: "Schema", de: "Schema";
-        layers_visible: &'static str = en: "Layers visible", de: "Sichtbare Ebenen";
-        field_id: &'static str = en: "Id", de: "Id";
-        field_label: &'static str = en: "Label", de: "Bezeichnung";
-        field_visible: &'static str = en: "Visible", de: "Sichtbar";
+        window_map: native_en "Map", native_de "Karte", reuse_en "Map", reuse_de "Karte";
+        mode_edit: native_en "Edit", native_de "Bearbeiten", reuse_en "Edit", reuse_de "Bearbeiten";
+        layer_raster: native_en "Raster", native_de "Raster", reuse_en "Raster", reuse_de "Raster";
+        layer_water: native_en "Water", native_de "Wasser", reuse_en "Water", reuse_de "Wasser";
+        layer_land: native_en "Land", native_de "Land", reuse_en "Land", reuse_de "Land";
+        layer_roads: native_en "Roads", native_de "Straßen", reuse_en "Roads", reuse_de "Straßen";
+        layer_buildings: native_en "Buildings", native_de "Gebäude", reuse_en "Buildings", reuse_de "Gebäude";
+        layer_borders: native_en "Borders", native_de "Grenzen", reuse_en "Borders", reuse_de "Grenzen";
+        layer_map_labels: native_en "Labels", native_de "Beschriftungen", reuse_en "Labels", reuse_de "Beschriftungen";
+        layer_positions: native_en "Positions", native_de "Positionen", reuse_en "Positions", reuse_de "Positionen";
+        layer_position_labels: native_en "Position Labels", native_de "Positionsbeschriftungen", reuse_en "Position Labels", reuse_de "Positionsbeschriftungen";
+        layer_routes: native_en "Routes", native_de "Routen", reuse_en "Routes", reuse_de "Routen";
+        layer_regions: native_en "Regions", native_de "Regionen", reuse_en "Regions", reuse_de "Regionen";
+        map_view: native_en "Map View", native_de "Kartenansicht", reuse_en "Map View", reuse_de "Kartenansicht";
+        render_mode: native_en "Render Mode", native_de "Darstellungsmodus", reuse_en "Render Mode", reuse_de "Darstellungsmodus";
+        render_mode_image: native_en "Image", native_de "Bild", reuse_en "Image", reuse_de "Bild";
+        render_mode_vector: native_en "Vector", native_de "Vektor", reuse_en "Vector", reuse_de "Vektor";
+        render_mode_combined: native_en "Combined", native_de "Kombiniert", reuse_en "Combined", reuse_de "Kombiniert";
+        vector_style: native_en "Vector Style", native_de "Vektorstil", reuse_en "Vector Style", reuse_de "Vektorstil";
+        vector_style_colored: native_en "Colored", native_de "Farbig", reuse_en "Colored", reuse_de "Farbig";
+        vector_style_figure_ground: native_en "Figure Ground", native_de "Figur-Grund", reuse_en "Figure Ground", reuse_de "Figur-Grund";
+        vector_style_inverted_figure: native_en "Inverted Figure", native_de "Invertierte Figur", reuse_en "Inverted Figure", reuse_de "Invertierte Figur";
+        lod_mode: native_en "LOD Mode", native_de "LOD-Modus", reuse_en "LOD Mode", reuse_de "LOD-Modus";
+        lod_automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";
+        selection_method: native_en "Selection Method", native_de "Auswahlmethode", reuse_en "Selection Method", reuse_de "Auswahlmethode";
+        selection_method_rectangle: native_en "Rectangle", native_de "Rechteck", reuse_en "Rectangle", reuse_de "Rechteck";
+        selection_method_lasso: native_en "Lasso", native_de "Lasso", reuse_en "Lasso", reuse_de "Lasso";
+        layers_group: native_en "Layers", native_de "Ebenen", reuse_en "Layers", reuse_de "Ebenen";
+        layer_weights_group: native_en "Layer Weights", native_de "Ebenengewichte", reuse_en "Layer Weights", reuse_de "Ebenengewichte";
+        weight_suffix: native_en "weight", native_de "Gewicht", reuse_en "weight", reuse_de "Gewicht";
+        selected_features: native_en "Selected Features", native_de "Ausgewählte Objekte", reuse_en "Selected Features", reuse_de "Ausgewählte Objekte";
+        map_layer: native_en "Map Layer", native_de "Kartenebene", reuse_en "Map Layer", reuse_de "Kartenebene";
+        schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
+        layers_visible: native_en "Layers visible", native_de "Sichtbare Ebenen", reuse_en "Layers visible", reuse_de "Sichtbare Ebenen";
+        field_id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
+        field_label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
+        field_visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
     }
 }
 
 /// 🗣️ Resolves a standard map layer's display label from its stable id; unknown ids fall back to the catalog's native English text.
 fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static str {
     match layer_id {
-        "raster" => labels.layer_raster,
-        "water" => labels.layer_water,
-        "land" => labels.layer_land,
-        "roads" => labels.layer_roads,
-        "buildings" => labels.layer_buildings,
-        "borders" => labels.layer_borders,
-        "labels" => labels.layer_map_labels,
-        "positions" => labels.layer_positions,
-        "positionLabels" => labels.layer_position_labels,
-        "routes" => labels.layer_routes,
-        "regions" => labels.layer_regions,
+        "raster" => labels.layer_raster.as_str(),
+        "water" => labels.layer_water.as_str(),
+        "land" => labels.layer_land.as_str(),
+        "roads" => labels.layer_roads.as_str(),
+        "buildings" => labels.layer_buildings.as_str(),
+        "borders" => labels.layer_borders.as_str(),
+        "labels" => labels.layer_map_labels.as_str(),
+        "positions" => labels.layer_positions.as_str(),
+        "positionLabels" => labels.layer_position_labels.as_str(),
+        "routes" => labels.layer_routes.as_str(),
+        "regions" => labels.layer_regions.as_str(),
         // 🗣️ unreachable in practice — the arms above already cover every id in GIS_MAP_LAYER_IDS.
         _ => "",
     }
 }
 //#endregion 🔖️Terminology
 
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in
-/// `create_gis2d_app`'s static manifest — the manifest itself has no `cfg`/locale parameter, so
-/// this overlay is how the command palette and Actions rail get a translated label without threading
-/// locale through the whole builder chain.
-fn gis2d_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("patchPositions", "Patch Positions", "Positionen aktualisieren"),
-        ("patchRoutes", "Patch Routes", "Routen aktualisieren"),
-        ("patchRoute", "Patch Route", "Route aktualisieren"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("toggleLayerVisibility", "Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"),
-        ("fitWorld", "Fit World", "Welt einpassen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setRenderMode", "Set Render Mode", "Darstellungsmodus festlegen"),
-        ("setVectorStyle", "Set Vector Style", "Vektorstil festlegen"),
-        ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
-        ("setFeatureSelection", "Set Feature Selection", "Objektauswahl festlegen"),
-        ("setHover", "Set Hover", "Überfahren festlegen"),
-        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("setSelectionMode", "Set Selection Mode", "Auswahlmodus festlegen"),
-        ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-        ("selectAll", "Select All", "Alles auswählen"),
-        ("deselect", "Deselect", "Abwählen"),
-        ("focusFeature", "Focus Feature", "Objekt fokussieren"),
-        ("setLayerStrokeScale", "Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"),
-        ("openSource", "Open Source", "Quelle öffnen"),
-    ])
-}
-//#endregion 🔖️CommandLabels
-
 //#region 🔖️Panels
 /// 🌳️ A layer tree item — `tree_item_with_action` plus the icon that identifies each map layer, since
 /// the SDK's `PanelKit` family has no icon-carrying constructor.
-fn gis2d_layer_tree_item(id: String, label: &str, description: Option<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
+fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: Option<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None,
     ..tree_item_with_action(id, label, description, action) }
 }
@@ -487,7 +456,7 @@ fn build_document_tree(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
         .map(|(id, _, icon)| {
             gis2d_layer_tree_item(
                 builder.item_id("layer", id),
-                gis2d_layer_label(id, labels),
+                Label::data(gis2d_layer_label(id, labels)),
                 Some((*id).into()),
                 icon,
                 gis2d_action("setSelection", Some(json!({ "ids": [id] }))),
@@ -495,7 +464,7 @@ fn build_document_tree(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
         })
         .collect();
     builder
-        .section("gis2d-play-document.layers", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, layer_items)
+        .section("gis2d-play-document.layers", Some(Label::data(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL)), true, layer_items)
         .selected(cfg.selected_ids.iter().map(|id| format!("gis2d-play-document.layer.{id}")).collect())
         .selection_change(gis2d_action("setSelection", None))
         .build()
@@ -509,20 +478,20 @@ fn build_catalogue_tree(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiNode {
         .map(|(id, _, icon)| {
             gis2d_layer_tree_item(
                 builder.item_id("layer", id),
-                gis2d_layer_label(id, labels),
+                Label::data(gis2d_layer_label(id, labels)),
                 None,
                 icon,
                 gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": id }))),
             )
         })
         .collect();
-    builder.section("gis2d-play-catalogue.layers", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, items).build()
+    builder.section("gis2d-play-catalogue.layers", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items).build()
 }
 
 fn map_view_field_group(cfg: &Gis2dConfig, labels: &Gis2dPlayLabels) -> UiInspectorFieldGroup {
     let lod_items: Vec<UiSelectItem> = lod_select_entries(labels)
         .into_iter()
-        .map(|(value, label)| UiSelectItem { value, label,
+        .map(|(value, label)| UiSelectItem { value, label: Label::data(label),
         })
         .collect();
     let selection: Value = serde_json::from_str(&cfg.feature_selection_json).unwrap_or(json!({"positions":[],"routes":[]}));
@@ -1098,7 +1067,7 @@ impl DocumentApp for Gis2dPlayApp {
             GIS2D_PLAY_BODY_DOCUMENT => build_document_tree(cfg.projection, labels),
             GIS2D_PLAY_BODY_CATALOGUE => build_catalogue_tree(cfg.projection, labels),
             GIS2D_PLAY_BODY_INSPECTION => build_inspector_tree(cfg.projection, labels),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
@@ -1109,15 +1078,6 @@ impl DocumentApp for Gis2dPlayApp {
     ) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<Gis2dPlayLabels>(cfg.projection);
         HashMap::from([(GIS2D_PLAY_WINDOW_MAIN.into(), gis2d_window_measures(cfg.projection, labels))])
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, Gis2dConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<Gis2dPlayLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(GIS2D_PLAY_WINDOW_MAIN, labels.window_map)
-            .mode_label("edit", labels.mode_edit)
-            .action_labels(gis2d_action_labels(is_de))
     }
 
     fn context_menu(

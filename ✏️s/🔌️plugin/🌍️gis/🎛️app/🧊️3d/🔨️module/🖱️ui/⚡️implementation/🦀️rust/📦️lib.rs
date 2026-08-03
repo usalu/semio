@@ -15,13 +15,12 @@ use gis3d_op::{Gis3dConfigOperation, Gis3dTerrainOperation};
 use gis3d_protocol::Gis3dCommand;
 use framework_surface_terrain::{build_terrain_scene_json, projection, TerrainDescriptorJson};
 use semio_framework_plugin::{
-    app_labels, build_world_3d_scene, create_default_layout, localized_label_map, ui_text,
+    build_world_3d_scene, create_default_layout, ui_text,
     world3d_scene_extended, world3d_selection_json,
-    ArtifactKindSpec, AppIo, ConfigView, DocumentApp, DocumentView, Emit, LocaleLabels, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
-    AppLabelsOverlay, AppLabelsOverlayExt, App,
+    ArtifactKindSpec, AppIo, ConfigView, DocumentApp, DocumentView, Emit, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, UiNode,
+    App,
 };
 use serde_json::{json, Value};
-use std::collections::HashMap;
 use store::DocumentPack;
 
 //#region 🔖️Constants
@@ -30,18 +29,6 @@ const GIS3D_PLAY_SURFACE: &str = "gis3d.play.composite";
 const GIS3D_PLAY_BODY_COMPOSITE: &str = "gis3d.play.composite";
 const GIS3D_PLAY_WINDOW_MAIN: &str = "gis3d-main";
 //#endregion 🔖️Constants
-
-//#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `gis2d_ui`'s identical fix.
-fn is_de_locale(cfg: &Gis3dConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
-
-fn resolve_labels<L: LocaleLabels>(cfg: &Gis3dConfig) -> &'static L {
-    if is_de_locale(cfg) { L::locale_labels_de() } else { L::locale_labels_en() }
-}
-//#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
 /// 📜️ Hand-rolled reader for the `.gisterrain` fixture's `origin`/`position` scenery lines — the
@@ -177,31 +164,6 @@ fn parse_descriptor(document: &Gis3dTerrainDocument) -> TerrainDescriptorJson {
     descriptor
 }
 //#endregion 🔖️DocumentHelpers
-
-//#region 🔖️Terminology
-/// 🗣️ Complete UI label set for the GIS 3D app; one field per label makes every locale combination compile-checked.
-app_labels! {
-    struct Gis3dPlayLabels {
-        window_terrain: &'static str = en: "Terrain", de: "Gelände";
-        mode_view: &'static str = en: "View", de: "Ansicht";
-    }
-}
-//#endregion 🔖️Terminology
-
-//#region 🔖️CommandLabels
-/// 🗣️ (action id) -> localized label for every view-action/operation declared in `create_gis3d_app`'s
-/// static manifest — the manifest itself has no `cfg`/locale parameter, so this overlay is how the
-/// command palette and Actions rail get a translated label without threading locale through the whole
-/// builder chain.
-fn gis3d_action_labels(is_de: bool) -> HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("worldSelect", "Select", "Auswählen"),
-        ("setExaggeration", "Set Exaggeration", "Überhöhung festlegen"),
-    ])
-}
-//#endregion 🔖️CommandLabels
 
 //#region 🔖️Render
 /// 📍️ GIS pins are emitted as plain `World3d` instances with no matching `meshesJson` entry —
@@ -369,17 +331,8 @@ impl DocumentApp for Gis3dPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>, cfg: &ConfigView<'_, Gis3dConfig>) -> UiNode {
         match body_key {
             GIS3D_PLAY_BODY_COMPOSITE => render_canvas(doc.projection, cfg.projection),
-            _ => ui_text(format!("Unknown body: {body_key}")),
+            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
-    }
-
-    fn app_labels(&self, cfg: &ConfigView<'_, Gis3dConfig>) -> AppLabelsOverlay {
-        let labels = resolve_labels::<Gis3dPlayLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
-        AppLabelsOverlay::default()
-            .window_kind_label(GIS3D_PLAY_WINDOW_MAIN, labels.window_terrain)
-            .mode_label("view", labels.mode_view)
-            .action_labels(gis3d_action_labels(is_de))
     }
 }
 //#endregion 🔖️Gis3dPlayApp
