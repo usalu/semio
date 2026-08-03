@@ -4448,7 +4448,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text", () => {
-    const fundedByMarkup = renderToStaticMarkup(createElement(Footer, { items: [navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem(), navbarFillItem("fillRight")] }));
+    const fundedByMarkup = renderToStaticMarkup(createElement(Footer, { items: [navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem("fundedByEn", "en"), navbarFillItem("fillRight")] }));
     expect(fundedByMarkup).toContain("<button");
     expect(fundedByMarkup).toContain("Funded by");
     expect(fundedByMarkup).toContain("z-40");
@@ -4983,7 +4983,7 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     ];
     const layout = {
       kind: "stack" as const,
-      children: [{ kind: "window" as const, id: "main", title: "Main Window" }],
+      children: [{ kind: "window" as const, id: "main", title: uiDataLabel("Main Window") }],
     };
 
     const retitledDeNative = retitleWindowLayoutNode(layout, windowKinds, [], "native", "de");
@@ -5014,7 +5014,7 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     ];
     const layout = {
       kind: "stack" as const,
-      children: [{ kind: "window" as const, id: "puzzle3d-main-top", title: "3D Editor" }],
+      children: [{ kind: "window" as const, id: "puzzle3d-main-top", title: uiDataLabel("3D Editor") }],
     };
 
     const retitled = retitleWindowLayoutNode(layout, windowKinds, extraInstances, "reuse", "de");

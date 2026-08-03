@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Button, ContextMenu, ContextMenuController, type ContextMenuItem } from "@semio-tech/ui-react";
+import { Button, ContextMenu, ContextMenuController, uiDataLabel, type ContextMenuItem } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
@@ -20,6 +20,9 @@ const meta = {
     layout: "centered",
   },
   tags: ["autodocs"],
+  args: {
+    title: uiDataLabel("Actions"),
+  },
 } satisfies Meta<typeof ContextMenu>;
 
 export default meta;
@@ -27,22 +30,22 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const sampleItems: ContextMenuItem[] = [
-  { id: "rename", label: "Rename", icon: "pencil", shortcut: "F2" },
-  { id: "duplicate", label: "Duplicate", icon: "copy", shortcut: "⌘️D" },
-  { id: "visible", label: "Visible", icon: "eye", checked: true },
-  { id: "sep-1", label: "", separator: true },
+  { id: "rename", label: uiDataLabel("Rename"), icon: "pencil", shortcut: "F2" },
+  { id: "duplicate", label: uiDataLabel("Duplicate"), icon: "copy", shortcut: "⌘️D" },
+  { id: "visible", label: uiDataLabel("Visible"), icon: "eye", checked: true },
+  { id: "sep-1", label: uiDataLabel(""), separator: true },
   {
     id: "transform",
-    label: "Transform",
+    label: uiDataLabel("Transform"),
     icon: "move",
     children: [
-      { id: "transform.move", label: "Move", icon: "move" },
-      { id: "transform.rotate", label: "Rotate", icon: "rotate-cw" },
-      { id: "transform.scale", label: "Scale", icon: "maximize-2", disabled: true },
+      { id: "transform.move", label: uiDataLabel("Move"), icon: "move" },
+      { id: "transform.rotate", label: uiDataLabel("Rotate"), icon: "rotate-cw" },
+      { id: "transform.scale", label: uiDataLabel("Scale"), icon: "maximize-2", disabled: true },
     ],
   },
-  { id: "sep-2", label: "", separator: true },
-  { id: "delete", label: "Delete", icon: "trash-2", destructive: true, shortcut: "⌫️" },
+  { id: "sep-2", label: uiDataLabel(""), separator: true },
+  { id: "delete", label: uiDataLabel("Delete"), icon: "trash-2", destructive: true, shortcut: "⌫️" },
 ];
 
 export const Default: Story = {
@@ -53,39 +56,39 @@ export const Default: Story = {
 };
 
 const groupedItems: ContextMenuItem[] = [
-  { id: "rename", label: "Rename", icon: "pencil", shortcut: "F2" },
-  { id: "duplicate", label: "Duplicate", icon: "copy", shortcut: "⌘️D" },
-  { id: "sep-header", label: "Transform", separator: true },
+  { id: "rename", label: uiDataLabel("Rename"), icon: "pencil", shortcut: "F2" },
+  { id: "duplicate", label: uiDataLabel("Duplicate"), icon: "copy", shortcut: "⌘️D" },
+  { id: "sep-header", label: uiDataLabel("Transform"), separator: true },
   {
     id: "menu.group.transform",
-    label: "Transform",
+    label: uiDataLabel("Transform"),
     icon: "move",
     children: [
-      { id: "transform.move", label: "Move", icon: "move", shortcut: "V" },
-      { id: "transform.rotate", label: "Rotate", icon: "rotate-cw" },
-      { id: "transform.scale", label: "Scale", icon: "maximize-2", disabled: true },
+      { id: "transform.move", label: uiDataLabel("Move"), icon: "move", shortcut: "V" },
+      { id: "transform.rotate", label: uiDataLabel("Rotate"), icon: "rotate-cw" },
+      { id: "transform.scale", label: uiDataLabel("Scale"), icon: "maximize-2", disabled: true },
     ],
   },
   {
     id: "menu.group.view",
-    label: "View",
+    label: uiDataLabel("View"),
     icon: "eye",
     children: [
-      { id: "view.fit", label: "Fit to Screen", icon: "scan" },
-      { id: "view.reset", label: "Reset Camera", icon: "refresh-ccw" },
+      { id: "view.fit", label: uiDataLabel("Fit to Screen"), icon: "scan" },
+      { id: "view.reset", label: uiDataLabel("Reset Camera"), icon: "refresh-ccw" },
     ],
   },
   {
     id: "menu.group.export",
-    label: "Export",
+    label: uiDataLabel("Export"),
     icon: "download",
     children: [
-      { id: "export.png", label: "Export as PNG", icon: "image" },
-      { id: "export.svg", label: "Export as SVG", icon: "file-code" },
+      { id: "export.png", label: uiDataLabel("Export as PNG"), icon: "image" },
+      { id: "export.svg", label: uiDataLabel("Export as SVG"), icon: "file-code" },
     ],
   },
-  { id: "sep-3", label: "", separator: true },
-  { id: "delete", label: "Delete", icon: "trash-2", destructive: true, shortcut: "⌫️" },
+  { id: "sep-3", label: uiDataLabel(""), separator: true },
+  { id: "delete", label: uiDataLabel("Delete"), icon: "trash-2", destructive: true, shortcut: "⌫️" },
 ];
 
 export const Grouped: Story = {
@@ -120,17 +123,17 @@ export const TextSelection: Story = {
 
 // #region 🎯️ContextMenuController
 const controllerItems: ContextMenuItem[] = [
-  { id: "focus", label: "Focus", icon: "focus", shortcut: "F" },
-  { id: "select", label: "Select", icon: "mouse-pointer", checked: false },
-  { id: "sep", label: "", separator: true },
-  { id: "delete", label: "Delete", icon: "trash-2", destructive: true, shortcut: "⌫️" },
+  { id: "focus", label: uiDataLabel("Focus"), icon: "focus", shortcut: "F" },
+  { id: "select", label: uiDataLabel("Select"), icon: "mouse-pointer", checked: false },
+  { id: "sep", label: uiDataLabel(""), separator: true },
+  { id: "delete", label: uiDataLabel("Delete"), icon: "trash-2", destructive: true, shortcut: "⌫️" },
 ];
 
 const numberedPreviewItems: ContextMenuItem[] = [
-  { id: "suggestion-0", label: "Capsule · port", icon: "box", checked: true },
-  { id: "suggestion-1", label: "Box · port", icon: "box", checked: false },
-  { id: "sep", label: "", separator: true },
-  { id: "delete", label: "Delete", icon: "trash-2", destructive: true, shortcut: "⌫️" },
+  { id: "suggestion-0", label: uiDataLabel("Capsule · port"), icon: "box", checked: true },
+  { id: "suggestion-1", label: uiDataLabel("Box · port"), icon: "box", checked: false },
+  { id: "sep", label: uiDataLabel(""), separator: true },
+  { id: "delete", label: uiDataLabel("Delete"), icon: "trash-2", destructive: true, shortcut: "⌫️" },
 ];
 
 /** @emoji 🎯️ Controlled fixed-position menu — mirrors how puzzle 2d canvas surfaces open a right-click menu at pointer coordinates. */
@@ -148,7 +151,7 @@ const ControlledContextMenuDemo = () => {
           setOpen(true);
         }}
       />
-      <ContextMenuController open={open} position={position} items={controllerItems} onOpenChange={setOpen} />
+      <ContextMenuController title={uiDataLabel("Actions")} open={open} position={position} items={controllerItems} onOpenChange={setOpen} />
     </div>
   );
 };
@@ -179,7 +182,7 @@ const NumberedPreviewContextMenuDemo = () => {
   return (
     <div className="relative flex size-40 items-center justify-center border text-sm text-muted-foreground">
       <Button id="context-menu-numbered-story-open" text="Open numbered menu" onClick={() => setOpen(true)} />
-      <ContextMenuController open={open} closeOnSelect={false} position={{ x: 120, y: 120 }} items={items} onOpenChange={setOpen} title="Suggest" />
+      <ContextMenuController open={open} closeOnSelect={false} position={{ x: 120, y: 120 }} items={items} onOpenChange={setOpen} title={uiDataLabel("Suggest")} />
     </div>
   );
 };

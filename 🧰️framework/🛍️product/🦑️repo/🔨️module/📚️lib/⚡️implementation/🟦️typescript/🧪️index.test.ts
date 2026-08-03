@@ -8,12 +8,9 @@ import { defineLint, type FileLinter } from "../../../../../../../🧰️framewo
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 import {
   PLAYGROUND_PORTS,
-  PLAYGROUND_SITE_DEV_PORTS,
-  PLAYGROUND_SITE_HOSTS,
   PLAYGROUND_LOCKED_EXAMPLE_ENV,
   allPlaygroundReservedPorts,
   playgroundDevPort,
-  playgroundEmbedUrl,
   frameworkOsPlaygroundDevEnv,
   resolveFrameworkOsPlaygroundPlugin,
   loadFrameworkOsPlaygroundCatalog,
@@ -563,21 +560,6 @@ describe("micro-commit", () => {
 });
 
 describe("playground static sites", () => {
-  test("PLAYGROUND_SITE_HOSTS maps each play to latest canonical host", () => {
-    expect(PLAYGROUND_SITE_HOSTS.compose).toBe("play.semio-tech.com");
-    expect(PLAYGROUND_SITE_HOSTS.cad).toBe("play.cad.semio-tech.com");
-    expect(PLAYGROUND_SITE_HOSTS["2d"]).toBe("play.2d.semio-tech.com");
-    expect(PLAYGROUND_SITE_HOSTS["3d"]).toBe("play.3d.semio-tech.com");
-    expect(PLAYGROUND_SITE_HOSTS["5d"]).toBe("play.5d.semio-tech.com");
-  });
-
-  test("playgroundEmbedUrl uses localhost in dev and public host in production", () => {
-    expect(playgroundEmbedUrl("cad", true)).toBe(`http://localhost:${PLAYGROUND_SITE_DEV_PORTS.cad}`);
-    expect(playgroundEmbedUrl("2d", true)).toBe(`http://localhost:${PLAYGROUND_SITE_DEV_PORTS["2d"]}`);
-    expect(playgroundEmbedUrl("cad", false)).toBe(`https://${PLAYGROUND_SITE_HOSTS.cad}`);
-    expect(playgroundEmbedUrl("5d", false)).toBe(`https://${PLAYGROUND_SITE_HOSTS["5d"]}`);
-  });
-
   test("PLAYGROUND_PORTS keeps cad and dag on distinct reserved dev ports", () => {
     expect(playgroundDevPort("cad")).toBe(6020);
     expect(playgroundDevPort("dag")).toBe(6017);

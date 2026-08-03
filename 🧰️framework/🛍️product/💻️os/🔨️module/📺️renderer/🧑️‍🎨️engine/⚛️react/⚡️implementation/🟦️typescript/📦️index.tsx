@@ -66,9 +66,11 @@ import {
   loadingBorderElementClass,
   renderControlIcon,
   resolveTranslationLabel,
+  uiDataLabel,
   uiI18n,
   useLabel,
   waitingBorderElementClass,
+  type UiLabel,
   type TreeDataItem,
   type TreeDataSection,
   type TreeDragAndDropController,
@@ -588,8 +590,17 @@ const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<Component
 //#endregion ComponentSceneHostRegistry
 
 /** @emoji 🗣️ Resolves a chrome translation key outside hook context (plain node-builder functions run there) — an alias of {@link shellLabel} scoped to this region. */
-function interpLabel(key: UiTranslationKey): string {
+function interpLabel(key: UiTranslationKey): UiLabel {
   return shellLabel(key);
+}
+
+/** @emoji 🕳️ Sanctioned wire-boundary mint point (see ui-react's `UiLabel` docstring): brands an
+ * already plugin/manifest-resolved string as {@link UiLabel} at the point it crosses from the wire
+ * representation (`ContextMenuItemSpec`/manifest strings, still plain `string`) into a ui-kit prop
+ * that requires a real translation-key lookup or explicit runtime data. This is the one place in this
+ * file allowed to do that minting — everywhere else must go through {@link useLabel} or `uiDataLabel`. */
+function wireLabel(value: string): UiLabel {
+  return value as UiLabel;
 }
 
 function ComponentSceneFallback() {
@@ -976,6 +987,7 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
   const scene = node.virtualFileSystem;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.file");
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -996,7 +1008,7 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
       schema={schema}
       rows={rows}
       selectedRowIds={selectedRowIds}
-      emptyMessage={scene.emptyMessage}
+      emptyMessage={scene.emptyMessage !== undefined ? wireLabel(scene.emptyMessage) : undefined}
       dragDrop={scene.dragDropEnabled ? { enabled: true } : undefined}
       onSelectionChange={(ids) =>
         onAction({
@@ -1084,6 +1096,7 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
       }}
     />
     <ContextMenuController
+      title={contextMenuTitleLabel}
       open={contextMenu != null}
       position={contextMenu ?? { x: 0, y: 0 }}
       items={contextMenu?.items ?? []}
@@ -1249,7 +1262,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext, pat
     case "section":
       // 🧭️ Same best-effort caveat as `field`: `Section` only forwards `id`/`className`, not `data-*`.
       return (
-        <Section id={node.id} title={node.label}>
+        <Section id={node.id} title={wireLabel(node.label)}>
           {node.children.map((child, index) => {
             const childPath = uiChildPath(path, child, index);
             return (
@@ -1263,7 +1276,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext, pat
     case "group":
       // 🧭️ `group` renders through the same `Section` component/caveat as `section` above.
       return (
-        <Section id={node.id} title={node.label}>
+        <Section id={node.id} title={wireLabel(node.label)}>
           {node.children.map((child, index) => {
             const childPath = uiChildPath(path, child, index);
             return (
@@ -2959,7 +2972,7 @@ function collectFrameworkLayoutWindowSeeds(node: WindowLayoutAxisNode | WindowLa
 function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
   if (node.kind === "window") {
     const id = node.instanceId ?? node.windowKindId;
-    return { kind: "window", id, title: resolveAppLabel(appLabelsOverlay, "windowKind", id, node.title ?? node.windowKindId) };
+    return { kind: "window", id, title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, node.title ?? node.windowKindId)) };
   }
   if (node.kind === "stack") {
     return {
@@ -2970,7 +2983,7 @@ function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | Win
         return {
           kind: "window" as const,
           id,
-          title: resolveAppLabel(appLabelsOverlay, "windowKind", id, child.title ?? child.windowKindId),
+          title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, child.title ?? child.windowKindId)),
         };
       }),
     };
@@ -2994,7 +3007,7 @@ export function retitleWindowLayoutNode(
     const extra = extraInstances.find((entry) => entry.id === node.id);
     const windowKindId = extra ? extra.windowKindId : node.id;
     const kind = windowKinds.find((entry) => entry.id === windowKindId);
-    const title = kind ? resolveManifestLabel(kind.label, terminology, locale) : (node.title ?? node.id);
+    const title = kind ? wireLabel(resolveManifestLabel(kind.label, terminology, locale)) : (node.title ?? uiDataLabel(node.id));
     return { ...node, title };
   }
   return {
@@ -3580,8 +3593,8 @@ function shellTabIcon(iconId: IconName | string): React.FC<{ size?: number }> {
  * are guaranteed complete for every key via `satisfies UiTranslationSchema`, so `?? key` is unreachable in
  * practice — kept only as a last-resort literal rather than a thrown error. `options` supports i18next
  * interpolation for keys with `{{placeholders}}`. */
-function shellLabel(key: UiTranslationKey, options?: Record<string, unknown>): string {
-  return resolveTranslationLabel(uiI18n.t(key, options)) ?? key;
+function shellLabel(key: UiTranslationKey, options?: Record<string, unknown>): UiLabel {
+  return wireLabel(resolveTranslationLabel(uiI18n.t(key, options)) ?? key);
 }
 
 /** @emoji 🧭️ The five panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
@@ -4824,6 +4837,14 @@ function selectCommandArg(id: string, label: string, options: readonly { readonl
   return { id, label, control: { kind: "select", options: options.map((option) => ({ ...option })) }, required: true };
 }
 
+/** @emoji 🚗️ Translated display name for a built-in driver id; a custom (user-authored) driver has no
+ * translation key, so its own {@link UiDriver.label} (genuine runtime data) is the correct fallback. */
+function driverDisplayLabel(driver: UiDriver): string {
+  if (driver.id === "default") return shellLabel("settings.driver.default");
+  if (driver.id === "compact") return shellLabel("settings.driver.compact");
+  return driver.label || driver.id;
+}
+
 /**
  * 🎛️ Os-level built-in commands — app introduction/theme/layout/locale/appearance/driver,
  * `scope: "os"`, handled
@@ -4930,7 +4951,7 @@ export function buildOsCommands(
         selectCommandArg(
           "driver",
           shellLabel("ui.settings.tab.driver"),
-          driverList.map((driver) => ({ value: driver.id, label: driver.label || driver.id })),
+          driverList.map((driver) => ({ value: driver.id, label: driverDisplayLabel(driver) })),
         ),
       ],
     },
@@ -5609,6 +5630,13 @@ export interface FrameworkOsShellProps {
   readonly shellId?: string;
   readonly storageNamespace?: string;
   readonly ownsPage?: boolean;
+  /** 🐚️ Skips the brand/app introduction auto-start (and any brand-owned tutorial's own auto-considered
+   * reveal) for a shell that's mounted but not the one the user is actually looking at — a live
+   * multi-shell page (e.g. the mit-bestand demonstrator's background panes) has no iframe boundary for
+   * the existing `window.self !== window.top` heuristic below to key off, so several shells would
+   * otherwise all auto-play their onboarding at once the moment they boot. Defaults to `false` (existing
+   * single-shell-per-page behavior unchanged). */
+  readonly suppressAutoIntroduction?: boolean;
 }
 
 /** @emoji 🐚️ Resolves the {@link ShellScope.storage} port for a shell mount: ephemeral brands always get
@@ -5669,6 +5697,7 @@ function FrameworkOsShellInner({
   locks: locksProp,
   defaults: defaultsProp,
   brand,
+  suppressAutoIntroduction = false,
 }: {
   readonly pluginFilter?: string;
   readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
@@ -5676,8 +5705,10 @@ function FrameworkOsShellInner({
   readonly locks?: ResolvedShellLocks;
   readonly defaults?: FrameworkOsDefaults;
   readonly brand?: ShellBrand;
+  readonly suppressAutoIntroduction?: boolean;
 }) {
   const scope = useShellScope();
+  const shellContextMenuTitleLabel = useLabel("ui.surfaceContextMenu.workspace");
   // 🏠️🧳️ `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
   // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
   // manifest's own `controllerId`/`panelTabs` on those apps below, never from a separate literal.
@@ -5831,6 +5862,10 @@ function FrameworkOsShellInner({
   // action) so a `session` refresh that leaves `panelJson` untouched reuses the same parsed `panel`
   // object — a prerequisite for any downstream `useMemo`/`React.memo` keyed on `panel` to bail.
   const panel = useMemo(() => (session ? parsePanelState(session.viewState) : null), [session?.viewState.panelJson]);
+  /** 🐚️ Mirrors `panel?.spawnedApps` for the unmount-cleanup effect below — same rationale as
+   * `loadedPluginsRef`: needs the latest value at teardown time without depending on it. */
+  const spawnedAppsRef = useRef<readonly SpawnedAppEntry[]>([]);
+  spawnedAppsRef.current = panel?.spawnedApps ?? [];
   const activeSpawnedEntry = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
   const activeAppTitle = appDocumentLabel(activeSpawnedEntry ? resolveDocumentByAppId(loadedPlugins, activeSpawnedEntry.appId, activeSpawnedEntry.document, uiTerminology) : session ? resolveAppDocument(session.app, uiTerminology) : []);
 
@@ -5856,9 +5891,10 @@ function FrameworkOsShellInner({
   useEffect(() => {
     if (!session || !activeIntroduction || shellState.tutorial.activeTutorialId != null) return;
     if (typeof window !== "undefined" && window.self !== window.top) return;
+    if (suppressAutoIntroduction) return;
     if (!replayIntroductionOnLoad && readStoredIntroductionSeen(introductionSeenKey)) return;
     dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
-  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId]);
+  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId, suppressAutoIntroduction]);
 
   // 🎥️ Zero per-app work: any app/brand that declares `tutorials` gets shell support automatically.
   // Brand-owned tutorials are shown ALONGSIDE the app's own (never replacing them, unlike `introduction`).
@@ -6063,13 +6099,24 @@ function FrameworkOsShellInner({
       pluginBackboneRouteUnregistersRef.current.clear();
       const primary = sessionRef.current;
       if (primary) {
-        // 🚧️ Wave 1 gap (documented, not silently dropped): only the primary session instance is
-        // destroyed here — studio-mode spawned apps (`panel.spawnedApps`) and external-slot contributor
-        // instances (`contributorInstancesRef`) are a separate, materially larger teardown surface,
-        // deferred to when studio/spawned-app multi-instance support is itself in scope.
         const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === primary.pluginId)?.handle;
         void plugin?.destroyApp(primary.instanceId).catch(() => {});
       }
+      // 🪶️ Closes the previously-documented Wave-1 gap: studio-mode spawned apps (`panel.spawnedApps`)
+      // and external-slot contributor instances (`contributorInstancesRef`) each hold a live plugin
+      // instance too — leaving them running past shell unmount was pure leaked memory (see
+      // REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). Best-effort: an instance the guest already dropped,
+      // or whose plugin already disposed, just rejects harmlessly via the same `.catch(() => {})`
+      // pattern the primary session's own destroy already used above.
+      for (const spawned of spawnedAppsRef.current) {
+        const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === spawned.pluginId)?.handle;
+        void plugin?.destroyApp(spawned.instanceId).catch(() => {});
+      }
+      for (const [pluginId, instanceId] of contributorInstancesRef.current) {
+        const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId)?.handle;
+        void plugin?.destroyApp(instanceId).catch(() => {});
+      }
+      contributorInstancesRef.current.clear();
       for (const entry of loadedPluginsRef.current) entry.handle.dispose();
     };
   }, []);
@@ -8992,7 +9039,7 @@ function FrameworkOsShellInner({
         return [
           {
             id: spawned.id,
-            title: appDocumentLabel(spawnedApp ? resolveAppDocument(spawnedApp, uiTerminology) : spawned.document),
+            title: wireLabel(appDocumentLabel(spawnedApp ? resolveAppDocument(spawnedApp, uiTerminology) : spawned.document)),
             fill: true,
             showControls: true,
             measures: chrome?.measures,
@@ -9241,8 +9288,16 @@ function FrameworkOsShellInner({
               onWindowClose={(windowId) => {
                 noteShellCommand("shell.windowClose", shellLabel("ui.shellCommand.windowClose"), { windowId });
                 if (studioMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
+                  const closedSpawned = panel.spawnedApps.find((entry) => entry.id === windowId);
                   const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
                   updateSpacePanel(buildSpacePanelState(panel.programs, nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
+                  // 🪶️ Closing a spawned app's window used to leave its plugin instance running forever
+                  // (see REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT's documented teardown gap) — the panel
+                  // entry was dropped from the UI, but nothing ever told the guest to free it.
+                  if (closedSpawned) {
+                    const closedPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.handle;
+                    void closedPlugin?.destroyApp(closedSpawned.instanceId).catch(() => {});
+                  }
                 }
                 clearPendingWorldProjection(windowId);
                 dispatch({
@@ -9454,6 +9509,7 @@ function FrameworkOsShellInner({
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
         <TextSelectionContextMenuHost />
         <ContextMenuController
+          title={shellContextMenuTitleLabel}
           open={shellContextMenu != null}
           position={shellContextMenu}
           items={shellContextMenu?.items ?? []}
@@ -10341,6 +10397,8 @@ function syncStatusLabel(status: DocumentSyncStatus | null): string | null {
 
 function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, status, onAction, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
   const open = cardKind != null;
+  const attachLabel = useLabel("ui.sync.attach");
+  const detachLabel = useLabel("ui.sync.detach");
   const placeholder = cardKind === "remote" ? "127.0.0.1:8787/studio-1/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
 
   const attachFromDraft = () => {
@@ -10376,11 +10434,11 @@ function SyncAttachCard({ activeUri, cardKind, draftPath, syncUtilities, status,
           <Input value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
           <div className="flex items-center gap-2">
             <Button type="button" onClick={attachFromDraft}>
-              Attach
+              {attachLabel}
             </Button>
             {activeUri ? (
               <Button type="button" onClick={onDetach}>
-                Detach
+                {detachLabel}
               </Button>
             ) : null}
           </div>
@@ -11104,7 +11162,7 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                 <SelectContent>
                   {host.drivers.map((driver) => (
                     <SelectItem key={driver.id} value={driver.id}>
-                      {driver.label}
+                      {driverDisplayLabel(driver)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -12398,6 +12456,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   const scene = node.canvas2d;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.canvas");
   const initialCamera = useMemo(() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }), [scene?.cameraX, scene?.cameraY, scene?.zoom]);
   const cameraRef = useRef<CanvasCamera>(initialCamera);
   cameraRef.current = initialCamera;
@@ -12595,6 +12654,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
     >
       <GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -16137,6 +16197,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const setWindowTitle = useContext(SetWindowTitleContext);
   const setWindowIcon = useContext(SetWindowIconContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.scene");
   const meshStylePalette = useMeshStylePalette();
   const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
   const sceneCameraJson = scene?.cameraJson ?? "{}";
@@ -16304,6 +16365,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const suggestionMenuOwnsThisWindow = worldSuggestionMenuOwnsWindow(interaction.suggestionMenu, windowInstanceId);
   const suggestionMenuCheckingPlacementLabel = useLabel("ui.host.checkingPlacement");
   const suggestionMenuNoPlacementLabel = useLabel("ui.host.noPlacement");
+  const suggestionMenuTitleLabel = useLabel("ui.surfaceContextMenu.placementSuggestions");
   useEffect(() => {
     if (!brushPreview) return;
     console.log(`[DEBUG] brushPreview`, { color: brushPreview.color, objectKindId: brushPreview.objectKindId, meshUrl: brushPreview.meshUrl });
@@ -17495,6 +17557,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         )
       ) : null}
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null && (contextMenu.items?.length ?? 0) > 0 && !suggestionMenuOwnsThisWindow}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -17504,6 +17567,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       />
       {suggestionMenuOwnsThisWindow ? (
         <ContextMenuController
+          title={suggestionMenuTitleLabel}
           open
           closeOnSelect={false}
           position={{ x: interaction.suggestionMenu!.x, y: interaction.suggestionMenu!.y }}
@@ -17773,7 +17837,7 @@ function FlowSpotlight({
         <Input
           autoFocus
           value={query}
-          placeholder="Type to add…"
+          placeholder={typeToAddLabel}
           className="min-w-0 flex-1 border-0 bg-transparent p-0 text-xs shadow-none focus-visible:ring-0"
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => {
@@ -17806,7 +17870,7 @@ function FlowSpotlight({
         {hasMore ? (
           <button
             type="button"
-            aria-label={expanded ? "Collapse suggestions" : "Show all suggestions"}
+            aria-label={expanded ? collapseSuggestionsLabel : showAllSuggestionsLabel}
             className="text-muted-foreground hover:bg-muted/40 hover:text-foreground shrink-0 rounded px-half text-2xs"
             onClick={() => setExpanded((value) => !value)}
           >
@@ -17820,7 +17884,7 @@ function FlowSpotlight({
         onWheel={(event) => event.stopPropagation()}
       >
         {visible.length === 0 ? (
-          <div className="text-muted-foreground px-single py-half text-2xs">No matches</div>
+          <div className="text-muted-foreground px-single py-half text-2xs">{noMatchesLabel}</div>
         ) : (
           visible.map((item, index) => {
             const globalIndex = expanded ? index : 0;
@@ -17972,6 +18036,7 @@ function WasmGraphSurface({
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.node");
   const sessionRef = useRef<FrameworkGraphSession | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -18284,6 +18349,7 @@ function WasmGraphSurface({
       <GraphSliderOverlays stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphActions.edit, { operator: "setSlider", widgetId, value })} />
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -18317,6 +18383,7 @@ function DiagramGraphFallback({
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const viewport = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.node");
   const initialNodes = useMemo(() => workflowNodesToDiagramNodes(parsedNodes), [parsedNodes]);
   const initialEdges = useMemo(() => workflowEdgesToDiagramEdges(parsedEdges), [parsedEdges]);
   const [nodes, setNodes] = useState(initialNodes);
@@ -18443,6 +18510,7 @@ function DiagramGraphFallback({
         }}
       />
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -19152,6 +19220,7 @@ export function FlowGraphCanvasHost({
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.flow");
   const sessionRef = useRef<FlowWasmSession | null>(null);
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -19796,6 +19865,7 @@ export function FlowGraphCanvasHost({
         <FlowSpotlight state={spotlight} sections={spotlightSections} onPreview={previewSpotlightItem} onCommit={commitSpotlightItem} onClose={closeSpotlight} />
       ) : null}
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -19919,6 +19989,7 @@ function WasmEditorSurface({
   const renameActiveRef = useRef(false);
   const lastHoverRangeRef = useRef<SpanRange | null>(null);
   const scenePack = useMemo(() => new Uint8Array(encodePackValue(scene)), [scene]);
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.editor");
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -20332,7 +20403,7 @@ function WasmEditorSurface({
             })()
           : null}
       </div>
-      <ContextMenuController open={contextMenu != null} position={contextMenu?.position ?? null} items={contextMenu?.items ?? []} onOpenChange={(open) => !open && dismissContextMenu()} />
+      <ContextMenuController title={contextMenuTitleLabel} open={contextMenu != null} position={contextMenu?.position ?? null} items={contextMenu?.items ?? []} onOpenChange={(open) => !open && dismissContextMenu()} />
       <textarea
         className="absolute inset-0 resize-none bg-transparent font-mono text-xs text-transparent caret-foreground opacity-0"
         value={scene.buffer}
@@ -20616,6 +20687,7 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
   const shellScope = useShellScopeOptional();
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.row");
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -20768,6 +20840,7 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
         }}
       />
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -20902,6 +20975,7 @@ function Paint2dCanvasSurface({
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.paint");
   const isNavigator = scene.viewMode === "navigator";
   const containerRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<RasterWasmSession | null>(null);
@@ -21335,6 +21409,7 @@ function Paint2dCanvasSurface({
         <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       ) : null}
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -21906,6 +21981,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   // 🐚️ Optional — this host is also unit-tested standalone, outside any `ShellScopeProvider`.
   const shellScope = useShellScopeOptional();
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.map");
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<MapRenderer | null>(null);
@@ -22405,7 +22481,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
       {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
-      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={contextMenu.items} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
+      <ContextMenuController title={contextMenuTitleLabel} open={contextMenu.open} position={contextMenu.position} items={contextMenu.items} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
       {hoveredFeature?.kind === "position" ? (
         <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" style={{ left: 0, top: 0 }}>
           {(() => {
@@ -22758,6 +22834,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.board");
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<Board2dWasmSession | null>(null);
@@ -23409,6 +23486,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     >
       <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -24263,6 +24341,8 @@ function InkViewportGrid({ camera, spacing, subdivisions, opacity, color }: { re
 //#region Overlays
 function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }: { readonly block: InkTextItem; readonly screenBounds: InkBounds; readonly onCommit: (paragraphs: readonly InkTextParagraph[]) => void; readonly onCancel: () => void }) {
   const editorRef = useRef<HTMLDivElement | null>(null);
+  const linkLabel = useLabel("ui.ink.link");
+  const linkUrlPromptLabel = useLabel("ui.ink.linkUrlPrompt");
   const applyCommand = (command: string, value?: string) => {
     editorRef.current?.focus();
     document.execCommand(command, false, value);
@@ -24323,11 +24403,11 @@ function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }: { rea
           className="hover:bg-muted rounded px-2 py-0.5 text-xs"
           onMouseDown={(event) => {
             event.preventDefault();
-            const url = window.prompt("Link URL");
+            const url = window.prompt(linkUrlPromptLabel);
             if (url) applyCommand("createLink", url);
           }}
         >
-          Link
+          {linkLabel}
         </button>
       </div>
       <div
@@ -24407,6 +24487,7 @@ const INK_MARQUEE_THRESHOLD_PX = 4;
 export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.inkCanvas;
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.ink");
   const rootRef = useRef<HTMLDivElement | null>(null);
   const gestureActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
@@ -25045,6 +25126,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
         />
       ) : null}
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -25064,6 +25146,7 @@ export function GraphTimelineHost({ node, onAction, requestContextMenu }: Compon
   const scene = node.graphTimeline;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.history");
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -25124,6 +25207,7 @@ export function GraphTimelineHost({ node, onAction, requestContextMenu }: Compon
         }
       />
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -25263,6 +25347,7 @@ function PalettePanel({ palette, controllerId, onAction }: { readonly palette: r
 export function BlockListHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.blockList;
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.step");
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -25349,6 +25434,7 @@ export function BlockListHost({ node, onAction, requestContextMenu }: ComponentS
       </div>
       <PalettePanel palette={palette} controllerId={node.controllerId} onAction={onAction} />
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -25485,6 +25571,7 @@ function SplitDiffPane({ rows, side }: { readonly rows: readonly SplitRow[]; rea
 export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.diffView;
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.diff");
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -25546,6 +25633,7 @@ export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSc
         <UnifiedDiff lines={lines} />
       )}
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}
@@ -25584,6 +25672,7 @@ function formatFeedTimestamp(timestampMs: number): string {
 export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.eventFeed;
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.event");
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -25671,6 +25760,7 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
         </div>
       ))}
       <ContextMenuController
+        title={contextMenuTitleLabel}
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={contextMenu?.items ?? []}

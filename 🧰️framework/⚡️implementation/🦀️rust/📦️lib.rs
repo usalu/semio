@@ -7775,7 +7775,7 @@ mod app_document_tests {
 
     #[test]
     fn tutorial_event_kind_round_trips_tagged_camel_case() {
-        let action = TutorialEventKind::Action { action: "addObjectKind".into(), args: Some(serde_json::json!({"kindId": "beam"})) };
+        let action = TutorialEventKind::Action { action: "addObjectKind".into(), args: Some(dsl::to_dsl_value(&serde_json::json!({"kindId": "beam"})).expect("tutorial action args")) };
         let json = serde_json::to_string(&action).unwrap();
         assert!(json.contains("\"kind\":\"action\""), "{json}");
         let round: TutorialEventKind = serde_json::from_str(&json).unwrap();
@@ -8012,13 +8012,13 @@ mod app_document_tests {
         assert!(forward.forward);
         assert_eq!(forward.document.len(), 2);
         let TutorialDocumentEventKind::Edit { forwards, .. } = &forward.document[0].kind else { panic!("expected Edit") };
-        assert_eq!(forwards[0].get("id").and_then(dsl::DslValue::as_str), Some("a"), "forward order applies oldest-first");
+        assert_eq!(forwards[0].get("id").and_then(DslValue::as_str), Some("a"), "forward order applies oldest-first");
 
         let backward = tutorial_slice(&def, 250.0, 0.0);
         assert!(!backward.forward);
         assert_eq!(backward.document.len(), 2);
         let TutorialDocumentEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
-        assert_eq!(backwards[0].get("id").and_then(dsl::DslValue::as_str), Some("b"), "backward order unwinds newest-first");
+        assert_eq!(backwards[0].get("id").and_then(DslValue::as_str), Some("b"), "backward order unwinds newest-first");
 
         let empty = tutorial_slice(&def, 250.0, 250.0);
         assert!(empty.document.is_empty());
@@ -8132,7 +8132,7 @@ mod app_document_tests {
     fn dispatch_action_effect_round_trips_camel_case() {
         let effect = HostEffect::DispatchAction {
             action: "advanceReconstruction".into(),
-            args: Some(json!({"jobId": "job-1"})),
+            args: Some(dsl::to_dsl_value(&json!({"jobId": "job-1"})).expect("dispatch action args")),
             delay_ms: 250,
         };
         let json = serde_json::to_string(&effect).unwrap();
@@ -8186,7 +8186,7 @@ mod app_document_tests {
             max_long_edge_px: 1600,
             fps_hint: 30.0,
             payload: None,
-            args: Some(json!({"streamId": "s1"})),
+            args: Some(dsl::to_dsl_value(&json!({"streamId": "s1"})).expect("media frame args")),
         };
         let json = serde_json::to_string(&effect).unwrap();
         assert!(json.contains("\"requestMediaFrames\""), "{json}");

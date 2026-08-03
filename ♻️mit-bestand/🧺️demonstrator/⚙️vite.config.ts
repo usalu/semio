@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, staticDirVitePlugin } from "../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, staticDirVitePlugin } from "../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_PANES } from "./🟦️brand.ts";
@@ -56,6 +56,7 @@ export default defineConfig({
       bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground",
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
+    playgroundFlowWasmDevStubPlugin(repoRoot),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
     ...semioAssetsVitePlugin(repoRoot),

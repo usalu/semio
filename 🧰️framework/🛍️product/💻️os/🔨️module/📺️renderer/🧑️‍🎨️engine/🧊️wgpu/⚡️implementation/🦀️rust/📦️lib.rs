@@ -18487,7 +18487,6 @@ pub mod shell {
                 label: "Plugin".into(),
                 version: "0.0.0".into(),
                 apps: vec![],
-                workflows: vec![],
                 examples: vec![],
                 capabilities: vec![],
                 contributions: vec![],

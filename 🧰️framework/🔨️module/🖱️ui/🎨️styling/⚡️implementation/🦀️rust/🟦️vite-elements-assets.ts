@@ -20,18 +20,14 @@ import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
 import {
   PLAYGROUND_PORTS,
-  PLAYGROUND_SITE_DEV_PORTS,
-  PLAYGROUND_SITE_HOSTS,
   allPlaygroundReservedPorts,
   playgroundDevPort,
   playgroundDevPortString,
-  playgroundEmbedUrl,
   playgroundPlayViteDefine,
   playgroundPortEnv,
   playgroundTestPort,
   playgroundTestPortString,
   type PlaygroundHostKind,
-  type PlaygroundSiteKind,
 } from "../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 // #endregion 🔌️Adapters
@@ -40,17 +36,13 @@ export type { PlaygroundAssetSpec };
 
 export {
   PLAYGROUND_PORTS,
-  PLAYGROUND_SITE_DEV_PORTS,
-  PLAYGROUND_SITE_HOSTS,
   allPlaygroundReservedPorts,
   playgroundDevPort,
   playgroundDevPortString,
-  playgroundEmbedUrl,
   playgroundPortEnv,
   playgroundTestPort,
   playgroundTestPortString,
   type PlaygroundHostKind,
-  type PlaygroundSiteKind,
 };
 
 //#region 🔖️ViteElementsAssets

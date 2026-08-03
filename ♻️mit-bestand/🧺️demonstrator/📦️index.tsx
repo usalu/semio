@@ -197,7 +197,17 @@ function DemonstratorPane({ pane, booted, focused }: { readonly pane: Demonstrat
     <div className="relative h-full w-full overflow-hidden bg-background" inert={!focused}>
       {booted ? (
         <PaneErrorBoundary paneLabel={pane.label}>
-          <FrameworkOsShell pluginFilter={pane.variant} plugins={boot.plugins} appId={boot.defaultAppId} locks={locks} defaults={defaults} brand={pane.brand} shellId={pane.id} storageNamespace={pane.id} />
+          <FrameworkOsShell
+            pluginFilter={pane.variant}
+            plugins={boot.plugins}
+            appId={boot.defaultAppId}
+            locks={locks}
+            defaults={defaults}
+            brand={pane.brand}
+            shellId={pane.id}
+            storageNamespace={pane.id}
+            suppressAutoIntroduction={!focused}
+          />
         </PaneErrorBoundary>
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-double bg-background">

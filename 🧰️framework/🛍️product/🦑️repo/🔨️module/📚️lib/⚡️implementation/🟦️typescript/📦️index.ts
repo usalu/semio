@@ -1827,30 +1827,6 @@ export const OS_HUB_PORT = 6070;
 /** @emoji 🔌️ Process env var for {@link OS_HUB_PORT}. */
 export const OS_HUB_PORT_ENV = "OS_HUB_PORT";
 
-/** @emoji 🌐️ Subset used by iframe static-site embed URLs (derived from manifest `site.embedKind`). */
-export type PlaygroundEmbedSiteKind = string;
-
-let playgroundEmbedSiteDevPortsCache: Readonly<Record<string, string>> | undefined;
-
-/** @emoji 🌐️ Builds embed-site dev port map from semio.app manifest `site.embedKind`. */
-function buildPlaygroundEmbedSiteDevPortsFromManifests(): Readonly<Record<string, string>> {
-  return {};
-}
-
-/** @emoji 🌐️ Resolves iframe embed dev ports after manifest scan is available. */
-export function resolvePlaygroundEmbedSiteDevPorts(): Readonly<Record<string, string>> {
-  playgroundEmbedSiteDevPortsCache ??= buildPlaygroundEmbedSiteDevPortsFromManifests();
-  return playgroundEmbedSiteDevPortsCache;
-}
-
-export const PLAYGROUND_EMBED_SITE_DEV_PORTS: Readonly<Record<string, string>> = new Proxy({} as Record<string, string>, {
-  get(_target, prop: string) {
-    return resolvePlaygroundEmbedSiteDevPorts()[prop];
-  },
-});
-
-export type PlaygroundSiteKind = string;
-
 /** @emoji 🔒️ Process env var locking a playground to one example (hides navbar dropdown). */
 export const PLAYGROUND_LOCKED_EXAMPLE_ENV = "PLAYGROUND_LOCKED_EXAMPLE_ID";
 
@@ -1907,35 +1883,6 @@ export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Re
   };
 }
 
-let playgroundSiteHostsCache: Readonly<Record<string, string>> | undefined;
-
-/** @emoji 🌐️ Builds production iframe hostnames from semio.app manifest `site.host`. */
-function buildPlaygroundSiteHostsFromManifests(): Readonly<Record<string, string>> {
-  return {};
-}
-
-function resolvePlaygroundSiteHosts(): Readonly<Record<string, string>> {
-  playgroundSiteHostsCache ??= buildPlaygroundSiteHostsFromManifests();
-  return playgroundSiteHostsCache;
-}
-
-/** @emoji 🌐️ Latest-only GitHub Pages hostnames for iframe-embeddable playground static sites. */
-export const PLAYGROUND_SITE_HOSTS: Readonly<Record<string, string>> = new Proxy({} as Record<string, string>, {
-  get(_target, prop: string) {
-    return resolvePlaygroundSiteHosts()[prop];
-  },
-});
-
-/** @emoji 🔌️ Local dev ports for iframe-embeddable playground static sites (from `playground-dev-ports.ts`). */
-export const PLAYGROUND_SITE_DEV_PORTS = PLAYGROUND_EMBED_SITE_DEV_PORTS;
-
-/** @emoji 🌐️ Playground iframe URL: localhost in dev, canonical host in production builds. */
-export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): string {
-  if (isDev) {
-    return `http://localhost:${PLAYGROUND_SITE_DEV_PORTS[kind]}`;
-  }
-  return `https://${PLAYGROUND_SITE_HOSTS[kind]}`;
-}
 //#endregion 🔌️PlaygroundDevPorts
 
 //#region 🖥️FrameworkOsPlaygroundDev

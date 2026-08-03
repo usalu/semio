@@ -1,0 +1,56 @@
+Wave 7 end-to-end verification (post-implementation), against the user's own live dev server at http://localhost:6029.
+
+Reported bug:
+  [plugin:vite:import-analysis] Failed to resolve import "@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js"
+  from OS_RENDER 📦️index.tsx:9801:27 (engine-loader map's "board-2d" entry).
+
+Root cause: ♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts mirrored os-dev's vite config but omitted
+`playgroundFlowWasmDevStubPlugin(repoRoot)`, which os-dev's own config includes specifically to stub
+out unresolvable `.../pkg/*.js` / `.wasm` engine imports (the engine-loader map is statically analyzed
+by Vite regardless of which variant/pane is actually active).
+
+Fix: added the import and inserted `playgroundFlowWasmDevStubPlugin(repoRoot),` into the plugins array
+right after `semioEmojiIndexHtmlVitePlugin(playDir),`.
+
+Verification (two independent fresh page loads, confirmed via performance.getEntriesByType('navigation')
+showing a single `navigate` entry each time — not a soft/HMR reload):
+- Network requests: `puzzle_2d.js` import now resolves to `/plugin-modules/puzzle/🟨️plugin-worker.js`
+  (the stub), not a 404/failed-resolve. Zero "Failed to resolve" console messages across both loads.
+- Full demonstrator flow manually driven end-to-end: overview grid (6 panes, all live FrameworkOsShell
+  instances, no iframes) -> click "Aggregator" card -> pane expands in place to full viewport (inert
+  removed) -> Aggregator's own introduction ("Die 3D-Ansicht") plays correctly (only because focused;
+  suppressAutoIntroduction={!focused} gates it) -> "Übersicht" button -> returns cleanly to overview
+  grid, veil/glass cards restored, button gone.
+
+Residual console noise, all confirmed pre-existing/external, not introduced by this refactor and not
+blocking the verified flow above:
+1. `[DEBUG] action '<name>' failed ... typed command channel ... dispatch_typed_command` for
+   setActiveExample / nodeGraphSelect / registerBrushMesh. Confirmed zero TS-side references to
+   `dispatch_typed_command` anywhere in the repo -- an external, in-progress Rust/WASM-plugin migration
+   away from string-keyed actions, already noted as pre-existing in the closed DEMONSTRATOR-2X3-GRID
+   ticket's summary (same "setActiveExample... typed command channel" noise existed before this
+   refactor, under the old iframe architecture). Not touched.
+2. `Error: Invalid <N> panel layout: <a>%, <b>%` from react-resizable-panels' internal <Group>
+   validation (thrown when `Object.keys(layout).length !== panelConstraints.length` --
+   node_modules/react-resizable-panels/dist/react-resizable-panels.js:709-720). Caught and self-healed
+   by the existing ShellRenderErrorBoundary every time (confirmed the app keeps working after). Traced
+   to the window-manager's dock/panel layout tree (renderModeDockNode / ResizablePanelGroup in
+   UI_REACT ~28556-28607), a transient race unrelated to shell-scoping -- registerAxisGroup /
+   onAxisLayoutChanged are already per-component-instance state (useCallback closures inside the
+   FrameworkOsShell-scoped component tree), not module globals, so it is not a cross-shell leak
+   introduced by this refactor.
+3. "You are calling ReactDOMClient.createRoot() on a container that has already been passed to
+   createRoot() before." -- confirmed via console message `[vite] invalidate /📦️index.tsx: Could not
+   Fast Refresh ("true" export is incompatible)`: this fires only when Vite's HMR tries (and fails) to
+   Fast-Refresh a module in the entry's import graph while the tab is open, invalidating and
+   re-executing the entry module in place instead of a full reload -- re-running the top-level
+   `createRoot(...).render(...)` call. ♻️mit-bestand/🧺️demonstrator/📦️index.tsx itself has zero named
+   exports, so this is triggered by a live edit elsewhere in the import graph (this repo has had heavy
+   concurrent-session file churn in OS_RENDER/UI_REACT all session). Did not reproduce as a distinct
+   fresh-load-only console entry once isolated to a single `navigate` entry with no concurrent edit in
+   flight; harmless even when it does fire (React re-renders into the same root, app keeps working).
+
+Conclusion: the user's originally reported bug is fixed and confirmed gone. The full expand-in-place,
+no-iframe demonstrator flow (this ticket's core deliverable) is verified working end to end live. The
+three residual console items above are pre-existing/external or dev-only artifacts, not regressions
+from this refactor, and none of them block the verified user flow.

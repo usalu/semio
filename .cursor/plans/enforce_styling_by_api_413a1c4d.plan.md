@@ -7,28 +7,28 @@ todos:
     status: completed
   - id: merge-asset-codegen
     content: Fold A's 📜️script.ts generate subcommands into B's 📜️script.ts as regions; delete A's package.json, 📋️project.json, 📜️script.ts; drop @semio-tech/ui-asset from B's deps and from root package.json workspaces
-    status: in_progress
+    status: completed
   - id: rewrite-ts-consumers
     content: Rewrite every @semio-tech/ui-asset import to @semio-tech/asset across framework core, ui/react, both renderer engines, storybook stories, root 📜️script.ts, package.json deps, vite/vitest aliases and the nx dependsOn
-    status: pending
+    status: completed
   - id: rewrite-rust-paths
     content: "Repoint the Rust #[path] and include_bytes! references in ui/🧊️wgpu, os renderer wgpu build.rs + lib.rs, and infinite/🖼️canvas build.rs + lib.rs at the merged asset root"
-    status: pending
+    status: completed
   - id: asset-api
     content: Replace uiAssetsVitePlugin(assetsRoot) with semioAssetsVitePlugin(repoRoot) + SEMIO_ASSET_ROOT that owns its root and throws when the tree or 🔤️font is missing; update all six call sites including createPlaygroundPlayViteConfig and .storybook/main.ts
-    status: pending
+    status: completed
   - id: host-html
     content: Move demonstrator, präsentation, os dev and the five compose hosts onto semioHostHtmlVitePlugin; delete their hand-authored inline <style> blocks, ad-hoc body classes and inconsistent titles
-    status: pending
+    status: completed
   - id: stale-paths
     content: "Repair every dead @import/@source/alias: präsentation and compose globals.css, .storybook/main.ts and globals.css, sketchpad vite.config import, desktop renderer.tsx, and .vscode/launch.json ui/asset cwd"
-    status: pending
+    status: completed
   - id: tests
     content: "Extend the styling 🧪️index.test.ts and the vite-elements-assets import.meta.vitest block: assert every palette.css url() resolves, that the plugin throws on a missing root, that no vite config passes an asset path, and that every globals.css @import/@source target exists"
-    status: pending
+    status: completed
   - id: verify-runtime
     content: Confirm at runtime with [DEBUG] logs that body font-family resolves to Anta and the woff2 returns 200 in demonstrator, Storybook and one playground; run styling + ui-react suites and cargo check the crates whose include_bytes! paths moved
-    status: pending
+    status: completed
 isProject: false
 ---
 

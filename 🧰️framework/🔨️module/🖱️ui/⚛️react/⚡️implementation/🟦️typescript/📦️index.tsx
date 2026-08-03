@@ -16230,7 +16230,7 @@ function NavbarExampleSelect({ id, label, value, options, onValueChange, classNa
             <SelectValue placeholder={resolvedLabel} />
           </span>
         </SelectTrigger>
-        <SelectContent forceMount>
+        <SelectContent>
           {resolvedOptions.map((row) => (
             <SelectItem key={row.id} value={row.id} icon={row.icon}>
               <span className="truncate">{row.label}</span>
@@ -37405,8 +37405,10 @@ if (treeVitest) {
       expect(selectMarkup).toContain('data-detail-panel-control="fill"');
     });
 
-    it("keeps a trailing chevron affordance on select and playground example dropdowns", async () => {
+    it("keeps select chevrons and mounts playground example options only while open", async () => {
       const { render } = await import("@testing-library/react");
+      const userEvent = (await import("@testing-library/user-event")).default;
+      const user = userEvent.setup();
       const selectMarkup = renderToStaticMarkup(
         <Select id="tooltip.manual" defaultValue="alpha">
           <SelectTrigger className="w-32">
@@ -37417,9 +37419,6 @@ if (treeVitest) {
           </SelectContent>
         </Select>,
       );
-      // 🧪️ The dropdown's option icons live inside Radix's portaled `SelectContent`, which never mounts
-      // under `renderToStaticMarkup` (no effects run, so the portal's `mounted` gate stays false) — a real
-      // DOM render (with `forceMount` on the content) is required to observe them.
       render(
         <NavbarExampleSelect
           id="playground.navbar.fixture"
@@ -37432,6 +37431,8 @@ if (treeVitest) {
           includeNoExample={false}
         />,
       );
+      expect(document.querySelector('[data-slot="select-content"]')).toBeNull();
+      await user.click(document.getElementById("playground.navbar.fixture.trigger")!);
       const exampleMarkup = document.body.innerHTML;
 
       expect(selectMarkup).toContain('data-slot="select-chevron"');

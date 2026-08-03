@@ -8,7 +8,7 @@ description = "Block 3D app — headless compute (constitutional: engine)"
 [lints]
 workspace = true
 [lib]
-crate-type = ["rlib", "cdylib"]
+crate-type = ["rlib"]
 path = "../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]

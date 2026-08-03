@@ -1,4 +1,7 @@
 //! 🖥️ Plugin-based OS kernel: hot-swappable WASM plugins, workflow, document VCS.
+// 🪶️ `linkage` (nightly, already the pinned toolchain workspace-wide): lets
+// `📦️plugin_bundle_installer_shim.rs`'s fallback stub declare itself weak — see that file's docstring.
+#![feature(linkage)]
 
 pub mod host {
     // #region host

@@ -23,7 +23,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
-import { semioFaviconVitePlugin } from "../../../../../../framework/module/ui/styling/🟦️vite-elements-assets.ts";
+import { semioFaviconVitePlugin, semioHostHtmlVitePlugin, semioEmojiIndexHtmlVitePlugin } from "../../../../../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 // #endregion 🔌️Adapters
@@ -34,16 +34,18 @@ const __dirname = path.dirname(__filename);
 export default defineConfig(async () => {
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
-  const workspaceRoot = path.resolve(__dirname, "../../../../../");
+  const workspaceRoot = path.resolve(__dirname, "../../../../../../..");
   return {
     resolve: {
       alias: {
         "@semio-tech/compose-js": path.resolve(__dirname, "../../js"),
         "@semio-tech/compose-sketchpad": path.resolve(__dirname, "../../sketchpad"),
-        "@semio-tech/asset": path.resolve(__dirname, "../../../../../asset"),
+        "@semio-tech/asset": path.resolve(workspaceRoot, "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/📦️index.ts"),
       },
     },
     plugins: [
+      ...semioHostHtmlVitePlugin(workspaceRoot, { title: "semio · docs", entry: "./js/index.ts" }),
+      semioEmojiIndexHtmlVitePlugin(path.resolve(__dirname, ".."), "index.html"),
       ...semioFaviconVitePlugin(workspaceRoot),
       tailwind.default(),
       {

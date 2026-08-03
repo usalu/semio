@@ -662,6 +662,8 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/framework-core-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] ui-wgpu locale/terminology axes freshness…");
     runCmd("bun", ["nx", "run", "@semio-tech/ui-wgpu-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    console.log("[verify] chrome i18n literal scan…");
+    runCmd("bun", ["nx", "run", "@semio-tech/ui-react:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] leveled test target coverage…");
     this.checkLeveledTestTargets();
     console.log("[verify] dsl fixture laws…");
