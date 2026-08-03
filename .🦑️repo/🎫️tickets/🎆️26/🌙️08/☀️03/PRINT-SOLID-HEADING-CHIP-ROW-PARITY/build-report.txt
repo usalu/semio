@@ -1,0 +1,32 @@
+note: Running TeX ...
+warning: verify-report.tex:4: Underfull \hbox (badness 10000) detected at line 4
+warning: verify-report.tex:5: Underfull \hbox (badness 10000) detected at line 5
+warning: verify-report.tex:6: Underfull \hbox (badness 10000) detected at line 6
+warning: verify-report.tex:8: Underfull \hbox (badness 10000) detected at line 8
+warning: verify-report.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: verify-report.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: verify-report.tex:14: Underfull \hbox (badness 10000) detected at line 14
+note: Running BibTeX on verify-report.aux ...
+note: Rerunning TeX because I was told to ...
+warning: verify-report.tex:4: Underfull \hbox (badness 10000) detected at line 4
+warning: verify-report.tex:5: Underfull \hbox (badness 10000) detected at line 5
+warning: verify-report.tex:6: Underfull \hbox (badness 10000) detected at line 6
+warning: verify-report.tex:8: Underfull \hbox (badness 10000) detected at line 8
+warning: verify-report.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: verify-report.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: verify-report.tex:14: Underfull \hbox (badness 10000) detected at line 14
+note: Rerunning TeX because I was told to ...
+warning: verify-report.tex:4: Underfull \hbox (badness 10000) detected at line 4
+warning: verify-report.tex:5: Underfull \hbox (badness 10000) detected at line 5
+warning: verify-report.tex:6: Underfull \hbox (badness 10000) detected at line 6
+warning: verify-report.tex:8: Underfull \hbox (badness 10000) detected at line 8
+warning: verify-report.tex:10: Underfull \hbox (badness 10000) detected at line 10
+warning: verify-report.tex:12: Underfull \hbox (badness 10000) detected at line 12
+warning: verify-report.tex:14: Underfull \hbox (badness 10000) detected at line 14
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/verify-report.register-toc` (517 B)
+note: Writing `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/verify-report.pdf` (14.5947265625 KiB)
+note: Writing `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/verify-report.blg` (233 B)
+note: Writing `/Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/PRINT-SOLID-HEADING-CHIP-ROW-PARITY/harness/verify-report.log` (49.0478515625 KiB)
+note: Skipped writing 5 intermediate files (use --keep-intermediates to keep them)

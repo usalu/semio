@@ -316,6 +316,43 @@ impl DocumentApp for HomeApp {
         }
     }
 
+    /// 🎯️ Bridges shell `{action,args}` JSON onto typed `HomeCommand` until every call site speaks OpBinary.
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<HomeCommand, String> {
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+        match action {
+            "createStudio" => Ok(HomeCommand::CreateStudio {
+                name: str_field("name").unwrap_or_else(|| "Untitled".into()),
+                kind: str_field("kind").unwrap_or_else(|| "catalog".into()),
+                folder_path: str_field("folderPath").or_else(|| str_field("folder_path")),
+            }),
+            "bindSpaceFile" => Ok(HomeCommand::BindSpaceFile {
+                space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
+                file_path: str_field("filePath").or_else(|| str_field("file_path")).unwrap_or_default(),
+            }),
+            "importSpace" => Ok(HomeCommand::ImportSpace { dsl: str_field("dsl").or_else(|| str_field("payload")) }),
+            "openSpace" => Ok(HomeCommand::OpenSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default() }),
+            "navigateVirtualFileSystemNode" => Ok(HomeCommand::NavigateVirtualFileSystemNode {
+                node_id: str_field("nodeId")
+                    .or_else(|| str_field("node_id"))
+                    .or_else(|| str_field("spaceId"))
+                    .or_else(|| str_field("space_id"))
+                    .unwrap_or_default(),
+            }),
+            "deleteVirtualFileSystemNode" => Ok(HomeCommand::DeleteVirtualFileSystemNode {
+                node_id: str_field("nodeId")
+                    .or_else(|| str_field("node_id"))
+                    .or_else(|| str_field("spaceId").map(|id| format!("studio:{id}")))
+                    .or_else(|| str_field("space_id").map(|id| format!("studio:{id}")))
+                    .unwrap_or_default(),
+            }),
+            "goHome" => Ok(HomeCommand::GoHome),
+            "setActivePanelTab" => Ok(HomeCommand::SetActivePanelTab {
+                tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default(),
+            }),
+            other => Err(format!("home: unhandled action id {other}")),
+        }
+    }
+
     fn handle(&self, command: &HomeCommand, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Emit<SHomeOperation, HomeConfigOperation> {
         let generation = doc.projection.catalog_generation;
         let bump = |value: u64| Emit::operations(vec![SHomeOperation::SetCatalogGeneration { value }]);
@@ -365,9 +402,13 @@ impl DocumentApp for HomeApp {
                 }
                 None => Emit::effect(HostEffect::RequestFileOpen { accept: ".os".into(), read_as: None, import_action: "importSpace".into(), multiple: false }),
             },
-            HomeCommand::OpenSpace { space_id } => Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }),
+            HomeCommand::OpenSpace { space_id } => {
+                eprintln!("[DEBUG] home openSpace id={space_id}");
+                Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") })
+            }
             HomeCommand::NavigateVirtualFileSystemNode { node_id } => {
                 let space_id = node_id.strip_prefix("studio:").unwrap_or(node_id);
+                eprintln!("[DEBUG] home navigateVirtualFileSystemNode id={space_id}");
                 Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") })
             }
             HomeCommand::DeleteVirtualFileSystemNode { node_id } => match node_id.strip_prefix("studio:") {
@@ -387,7 +428,10 @@ impl DocumentApp for HomeApp {
 
     fn render(&self, body_key: &str, _doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
         let labels = resolve_labels::<SHomeLabels>(cfg.projection);
-        match body_key {
+        // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
+        // strip it so Home's single body key still matches (same pattern as puzzle3d).
+        let base_body_key = body_key.split_once(':').map(|(base, _)| base).unwrap_or(body_key);
+        match base_body_key {
             S_HOME_BODY => render_home_vfs(labels),
             _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }

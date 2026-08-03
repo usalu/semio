@@ -1,0 +1,44 @@
+plugin registry catalog refreshed (36 plugin crates, 58 playgrounds) -> /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated
+[DEBUG] program build scope: block
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:2778:68
+     |
+2778 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2778 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+2778 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, String> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+    Finished `wasm-release` profile [optimized] target(s) in 0.95s
+
+  Transpiled JS Component Files:
+
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/semio-framework-host.d.ts         0.17 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/semio-framework-plugin.d.ts       0.64 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/semio-framework-types.d.ts        0.33 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-environment.d.ts         0.11 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-exit.d.ts                0.17 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-stderr.d.ts              0.16 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-stdin.d.ts               0.15 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-stdout.d.ts              0.16 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-terminal-input.d.ts      0.17 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-terminal-output.d.ts     0.17 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-terminal-stderr.d.ts      0.2 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-terminal-stdin.d.ts       0.2 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-cli-terminal-stdout.d.ts      0.2 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-clocks-monotonic-clock.d.ts  0.27 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-clocks-wall-clock.d.ts       0.16 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-io-error.d.ts                0.15 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-io-poll.d.ts                 0.23 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-io-streams.d.ts              0.73 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/interfaces/wasi-random-insecure-seed.d.ts    0.11 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/semio_s_plugin_block_component.core.wasm     2.49 MiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/semio_s_plugin_block_component.d.ts           2.2 KiB
+ - /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block/semio_s_plugin_block_component.js             239 KiB
+
+[DEBUG] built program block (wasm32-wasip2, wasm-release) -> /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/block

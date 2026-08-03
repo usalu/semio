@@ -960,6 +960,16 @@ export async function ensurePluginRegistry(filterPlugin?: string): Promise<void>
 }
 
 function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filterPlugin?: string): readonly PluginRegistryEntry[] {
+  // 🎯️ `SEMIO_PLUGIN_ONLY=<pluginId>` rebuilds one crate even under a studio host filter (`s`), which
+  // otherwise expands to the full catalog — needed for hot-swap iteration on the host itself.
+  const only = process.env.SEMIO_PLUGIN_ONLY?.trim();
+  if (only) {
+    const matched = entries.filter((entry) => entry.pluginId === only);
+    if (matched.length === 0) {
+      throw new Error(`SEMIO_PLUGIN_ONLY=${JSON.stringify(only)} matched no plugin crates`);
+    }
+    return matched;
+  }
   if (!filterPlugin || isStudioPluginFilter(filterPlugin)) return entries;
   if (entries.length === 0) {
     throw new Error(`no program build targets for filter ${JSON.stringify(filterPlugin)}`);

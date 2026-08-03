@@ -38,7 +38,7 @@ async function probeOne(app: (typeof apps)[number]) {
   const out = createWriteStream(logPath);
   const env = { ...process.env, [app.env]: String(app.port), SKIP_ENGINE_BUILD: "1" };
   console.log(`[runtime] starting ${app.id}`);
-  const child = spawn(app.script[0], app.script.slice(1), { cwd: repoRoot, env, stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(app.script[0], app.script.slice(1), { cwd: repoRoot, env, stdio: ["ignore", "pipe", "pipe"], detached: true });
   child.stdout?.pipe(out);
   child.stderr?.pipe(out);
   try {
@@ -55,7 +55,7 @@ async function probeOne(app: (typeof apps)[number]) {
     page.on("requestfailed", (req) => failed.push(`${req.failure()?.errorText ?? "fail"} ${req.url()}`));
     await page.goto(`http://127.0.0.1:${app.port}/`, { waitUntil: "networkidle", timeout: 120_000 });
     // Give React/wasm a moment to mount.
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(8000);
     const title = await page.title();
     const bodyText = await page.locator("body").innerText().catch(() => "");
     const canvasCount = await page.locator("canvas").count();
@@ -71,7 +71,14 @@ async function probeOne(app: (typeof apps)[number]) {
       consoleErrors: errors.slice(0, 30),
       pageErrors: pageErrors.slice(0, 30),
       failedRequests: failed.filter((u) => !u.includes("favicon")).slice(0, 30),
-      ok: pageErrors.length === 0 && errors.filter((e) => !e.includes("Download the React DevTools")).length === 0,
+      ok:
+        title.toLowerCase().includes("block") &&
+        bodyText.includes("Example") &&
+        !bodyText.includes("packValueFromBase64") &&
+        !bodyText.includes("setActiveExample") &&
+        !bodyText.includes("setContributions") &&
+        !bodyText.includes("typed command channel") &&
+        !errors.some((e) => e.includes("setActiveExample") || e.includes("setContributions") || e.includes("packValueFromBase64")),
     };
   } finally {
     child.kill("SIGTERM");

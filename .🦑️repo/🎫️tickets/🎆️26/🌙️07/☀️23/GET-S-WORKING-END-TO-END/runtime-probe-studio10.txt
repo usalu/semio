@@ -1,0 +1,64 @@
+HOME_TITLE semio · s · home
+AFTER_TITLE semio · s · studio
+AFTER_URL http://127.0.0.1:6070/spaces/default
+AFTER_BODY Catalogue | Parameters | Inspection | Fullscreen | semio · s · studio | Example | No example | ← Home | Workflow | Focus | Close | Window Options | Actions | Search | Utilities | Media VFS | Focus | Close | Name	Binding	Format |  | ▸️ | Workflow | 	 | 	 |  |  | ▸️ | Semio Emblem (draw.draw)) | 	 | 	 |  |  | source.json | 	 | 	 |  |  | inputs | 	 | 	 |  |  | outputs | 	 | 	 |  |  | ▸️ | Emblem Copy (draw.draw)) | 	 | 	 |  |  | source.json | 	 | 	 |  |  | inputs | 	 | 	 |  |  | outputs | 	 | 	 |  |  | ▸️ | Jack Notes (writer.writer)) | 	 | 	 |  |  | source.json | 	 | 	 |  |  | inputs | 	 | 	 |  |  | outputs | 	 | 	 |  |  | ▸️ | Raster Board (raster.raster)) | 	 | 	 |  |  | source.json | 	 | 	 |  |  | ▸️ | inputs | 	 | 	 |  |  | Brush Size | 	 | 	 |  |  | outputs | 	 | 	 |  |  | ▸️ | Note Board (note.document)) | 	 | 	 |  |  | source.json | 	 | 	 |  |  | inputs | 	 | 	 |  |  | outputs | 	 | 	 | Actions | Utilities | Compiled DAG | Focus | Close | Actions | Utilities | Display | Sync | Settings | Theme | History | Command | Search |  | Search for items |  | Find |  | Find items in this view
+INTERESTING_COUNT 59
+[error] [DEBUG] program worker flow-extension-bim crashed Event
+[warning] [DEBUG] program flow-extension-bim worker-backed load failed, falling back to main thread: program worker flow-extension-bim crashed
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] [DEBUG] program load failed flow-extension-bim TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6070/plugin-modules/flow-extension-bim/semio_s_plugin_flow_extension_bim.js?import
+[warning] [DEBUG] program trinity worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6070/plugin-modules/trinity/semio_s_plugin_trinity.js
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] [DEBUG] program load failed trinity TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6070/plugin-modules/trinity/semio_s_plugin_trinity.js?import
+[log] [DEBUG] plugin worker + draw (36 live)
+[log] [DEBUG] plugin worker + cad (36 live)
+[log] [DEBUG] plugin worker + animate (36 live)
+[log] [DEBUG] plugin worker + forms (36 live)
+[log] [DEBUG] plugin worker + s (36 live)
+[log] [DEBUG] plugin worker + gis (36 live)
+[log] [DEBUG] plugin worker + sourcing (36 live)
+[log] [DEBUG] plugin worker + remodel (36 live)
+[log] [DEBUG] plugin worker + architect (36 live)
+[log] [DEBUG] plugin worker + raster (36 live)
+[log] [DEBUG] plugin worker + reasoning-mindmap (36 live)
+[log] [DEBUG] plugin worker + dag (36 live)
+[log] [DEBUG] plugin worker + sourcing-module-beams (36 live)
+[log] [DEBUG] plugin worker + layout (36 live)
+[log] [DEBUG] plugin worker + flow (36 live)
+[log] [DEBUG] plugin worker + block (36 live)
+[log] [DEBUG] plugin worker + fem (36 live)
+[log] [DEBUG] plugin worker + imperative (36 live)
+[log] [DEBUG] plugin worker + mathematical (36 live)
+[log] [DEBUG] plugin worker + playbook (36 live)
+[log] [DEBUG] plugin worker + demonstrator (36 live)
+[log] [DEBUG] plugin worker + norm (36 live)
+[log] [DEBUG] plugin worker + note (36 live)
+[log] [DEBUG] plugin worker + puzzle (36 live)
+[log] [DEBUG] plugin worker + shooting (36 live)
+[log] [DEBUG] plugin worker + sourcing-module-windows (36 live)
+[log] [DEBUG] plugin worker + process (36 live)
+[log] [DEBUG] plugin worker + lowpoly (36 live)
+[log] [DEBUG] plugin worker + playbook-module-procedural (36 live)
+[log] [DEBUG] plugin worker + procedural (36 live)
+[log] [DEBUG] plugin worker + sourcing-module-slabs (36 live)
+[log] [DEBUG] plugin worker + vcs (36 live)
+[log] [DEBUG] plugin worker + writer (36 live)
+[log] [DEBUG] plugin worker + sequence (36 live)
+[warning] [DEBUG] setContributions push skipped [DEBUG] action 'setContributions' failed (handler): home: unhandled action id setContributions
+[warning] [DEBUG] skipping undeclared action selectRows home
+[error] [DEBUG] home navigateVirtualFileSystemNode id=
+[error] default
+[error] 
+[log] [DEBUG] host effect {navigate: Object}
+[log] [DEBUG] applyShellUri openSpace default
+[error] [DEBUG] openSpace id=
+[error] default
+[error]  nodes=
+[error] 5
+[error]  backbone=
+[error] None
+[error] 
+[log] [DEBUG] host effect {loadDocument: Object}
+[log] [DEBUG] loadDocument pack/spr for instance 2 pack 864 spr 166 pack0 137 83 80 75
+[log] [DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name
+[log] [DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name

@@ -1,0 +1,101 @@
+
+===== semio-s-app-block-2d-ui =====
+   Compiling bitflags v2.11.1
+   Compiling semio-s-plugin-block-shared v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🔨️module/🤝️shared/⚡️implementation/🦀️rust)
+   Compiling wit-bindgen-rt v0.36.0
+   Compiling wit-bindgen v0.36.0
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-2d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:2778:68
+     |
+2778 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2778 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+2778 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, String> {
+     |
+
+   Compiling semio-s-app-block-2d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-2d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-2d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-2d-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-app-block-2d-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 3.74s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_block_2d_ui-f288f9048554d254)
+
+running 1 test
+test command_from_action_bridges_set_active_example ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+
+exit=0
+
+===== semio-s-app-block-3d-ui =====
+   Compiling semio-s-app-block-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:2778:68
+     |
+2778 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2778 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+2778 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, String> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-app-block-3d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-3d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-3d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-3d-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-3d-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 2.12s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_block_3d_ui-31507d5f7833b604)
+
+running 1 test
+test command_from_action_bridges_set_active_example ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+
+exit=0
+
+===== semio-s-app-block-5d-ui =====
+   Compiling semio-s-app-block-5d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:2778:68
+     |
+2778 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2778 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+2778 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, String> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-app-block-5d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-5d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-5d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-5d-protocol v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-5d-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 3.20s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_block_5d_ui-8b3ba52ed0cf3f99)
+
+running 1 test
+test command_from_action_bridges_set_active_example ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+
+exit=0

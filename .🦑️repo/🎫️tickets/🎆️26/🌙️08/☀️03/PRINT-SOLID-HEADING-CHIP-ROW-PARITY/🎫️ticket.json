@@ -1,0 +1,13 @@
+{
+  "title": "Print Solid Heading Chip Row Parity",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "In the print templates the solid-filled heading tiers (part, chapter, section, subsubsection, subparagraph — the ones whose \\semio@heading@style@* is `solid`) render as one fully colored rectangle spanning the whole line width, with the title text at the left and the number at the right. They must instead follow the same chrome design as the outline headings, windows, panels and paragraphs: a chip on the left (title), a chip on the right (number), and only a bottom border stroke spanning the gap that connects the two chips — the area between the chips stays transparent (canvas). Fix in 🧰️framework/🛍️product/📓️print/⚡️implementation/🖋️latex/🖋️semio-window.sty %region Headings, verify by building the report/zukunftbau templates in light + dark and rasterizing the heading pages.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2424"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪97103970995b4cc89958a37338d460d0"
+  ]
+}

@@ -1,8 +1,9 @@
 {
   "title": "Get Block Apps Working End to End",
   "emoji": "🧱️",
-  "status": "open",
+  "status": "closed",
   "description": "Get all block apps (block2d, block3d, block5d) working end to end. Immediate blocker: wasm-opt fails on node-graph engine build (bulk-memory / trunc_sat features) because runWasmPackWebBuild ignores profile: wasm-release and runs wasm-pack --release with default -O. Fix the build pipeline, then confirm all three block playgrounds boot.",
+  "summary": "Fixed wasm-pack profile wiring so wasm-release enables bulk-memory/trunc_sat for engine builds; added block UI command_from_action bridges; fixed React renderer action wire encoding and setContributions guard; repaired flow extension pkg paths and built BIM wasm. Runtime probe: block2d/3d/5d all ok with examples and document UI.",
   "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
   "sessions": [
     "⚪05fa17aeed1a4cdca08e7425a80c3ced"

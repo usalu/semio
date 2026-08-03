@@ -10,9 +10,10 @@ import { oklabMix } from "../../../../🔨️module/🖱️ui/🎨️styling/⚡
 
 const printRoot = import.meta.dir;
 const repoRoot = getWorkspaceRoot();
-const tokensPath = join(repoRoot, "framework/ui/styling/🔣️tokens.json");
-const texDir = join(printRoot, "tex");
-const fontRoot = join(printRoot, "asset/font");
+const tokensPath = join(repoRoot, "🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🔣️tokens.json");
+const texDir = join(printRoot, "../🖋️latex");
+const templateRoot = join(printRoot, "📄️template");
+const fontRoot = join(printRoot, "🖼️asset/🔤️font");
 const distDir = join(printRoot, "dist");
 const tokensOut = join(texDir, "🖋️semio-tokens.sty");
 
@@ -37,31 +38,31 @@ const LEVELS_DEFAULT: StylingLevels = {
 const PRINT_FONTS: readonly { readonly family: string; readonly dir: string; readonly file: string; readonly url: string }[] = [
   {
     family: "Anta",
-    dir: "anta",
+    dir: "🔤️anta",
     file: "🔤️Anta-Regular.ttf",
     url: "https://raw.githubusercontent.com/google/fonts/main/ofl/anta/🔤️Anta-Regular.ttf",
   },
   {
     family: "Share Tech Mono",
-    dir: "share-tech-mono",
+    dir: "🔤️share-tech-mono",
     file: "🔤️ShareTechMono-Regular.ttf",
     url: "https://raw.githubusercontent.com/google/fonts/main/ofl/sharetechmono/🔤️ShareTechMono-Regular.ttf",
   },
   {
     family: "Noto Emoji",
-    dir: "noto-emoji",
+    dir: "😀️noto-emoji",
     file: "🔤️NotoEmoji-Regular.ttf",
     url: "https://raw.githubusercontent.com/google/fonts/main/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf",
   },
 ];
 
 const TEMPLATES: readonly { readonly id: string; readonly tex: string }[] = [
-  { id: "report", tex: "template/report/🖋️report.tex" },
-  { id: "paper", tex: "template/paper/🖋️paper.tex" },
-  { id: "flyer", tex: "template/flyer/🖋️flyer.tex" },
-  { id: "forschungsbericht", tex: "template/zukunftbau/🖋️forschungsbericht.tex" },
-  { id: "zwischenbericht", tex: "template/zukunftbau/🖋️zwischenbericht.tex" },
-  { id: "kompaktbericht", tex: "template/zukunftbau/🖋️kompaktbericht.tex" },
+  { id: "report", tex: "📄️template/📋️report/🖋️report.tex" },
+  { id: "paper", tex: "📄️template/📄️paper/🖋️paper.tex" },
+  { id: "flyer", tex: "📄️template/📰️flyer/🖋️flyer.tex" },
+  { id: "forschungsbericht", tex: "📄️template/🏗️zukunftbau/🖋️forschungsbericht.tex" },
+  { id: "zwischenbericht", tex: "📄️template/🏗️zukunftbau/🖋️zwischenbericht.tex" },
+  { id: "kompaktbericht", tex: "📄️template/🏗️zukunftbau/🖋️kompaktbericht.tex" },
 ];
 
 function deriveDarkTexSource(lightSource: string): string {
@@ -600,7 +601,7 @@ function resolveTemplates(filter: string[]): (typeof TEMPLATES)[number][] {
 }
 
 function collectWatchRoots(): string[] {
-  return [texDir, join(printRoot, "template"), fontRoot].filter((path) => existsSync(path));
+  return [texDir, templateRoot, fontRoot].filter((path) => existsSync(path));
 }
 
 async function watchTemplates(filter: string[]): Promise<void> {
@@ -749,7 +750,7 @@ class TestScript extends BundleScript {
     //#endregion
 
     //#region templatePdfNames / resolveTemplates
-    assert.deepEqual(templatePdfNames("template/report/🖋️report.tex"), { light: "report.pdf", dark: "report-dark.pdf" });
+    assert.deepEqual(templatePdfNames("📄️template/📋️report/🖋️report.tex"), { light: "report.pdf", dark: "report-dark.pdf" });
     assert.equal(resolveTemplates([]).length, TEMPLATES.length);
     assert.equal(resolveTemplates(["report", "report-dark"]).length, 1);
     assert.throws(() => resolveTemplates(["not-a-template"]));

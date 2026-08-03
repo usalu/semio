@@ -1,0 +1,24 @@
+[framework/editor/rs] wasm-pack build --profile wasm-release --target web --out-dir pkg --out-name framework_editor --no-pack
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+   Compiling semio-framework-os-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧬️schema/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-canvas v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/📜️history/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔢️value/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/💎️materialize/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔢️index/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling semio-framework-editor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust)
+    Finished `wasm-release` profile [optimized] target(s) in 27.81s
+[INFO]: found wasm-opt at "/Users/ueli/Documents/semio/node_modules/.bin/wasm-opt"
+[INFO]: Optimizing wasm binaries with `wasm-opt`...
+[INFO]: ✨   Done in 1m 10s
+[INFO]: 📦   Your wasm pkg is ready to publish at /Users/ueli/Documents/semio/🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust/pkg.
+[framework/editor/rs] wasm build done in 72.5s
+[framework/editor/rs] pkg/framework_editor_bg.wasm ready (2.36 MiB) + pkg/package.json restored

@@ -9,7 +9,6 @@ use block_3d::{Block3dDefinition, Block3dVortexKind, Block3dVortexTemplate, BLOC
 use block_3d_engine::Block3dConfig;
 use block_3d_op::{Block3dConfigOperation, Block3dOperation};
 use block_3d_protocol::Block3dCommand;
-use serde_json::Value;
 use block_shared::BlockRepresentation;
 use semio_framework_plugin::{
     tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media,

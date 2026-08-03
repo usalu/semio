@@ -1,0 +1,212 @@
+    fn command_id(&self, command: &SpaceCommand) -> &str {
+        match command {
+            SpaceCommand::PatchParameter { .. } => "patchParameter",
+            SpaceCommand::AddParameter { .. } => "addParameter",
+            SpaceCommand::RemoveParameter { .. } => "removeParameter",
+            SpaceCommand::SpawnApp { .. } => "spawnApp",
+            SpaceCommand::MoveMediaNode { .. } => "moveMediaNode",
+            SpaceCommand::ConnectMediaPorts { .. } => "connectMediaPorts",
+            SpaceCommand::DisconnectMediaEdge { .. } => "disconnectMediaEdge",
+            SpaceCommand::RemoveAppInstance { .. } => "removeAppInstance",
+            SpaceCommand::DeleteSelection => "deleteSelection",
+            SpaceCommand::CopyAppInstance => "copyAppInstance",
+            SpaceCommand::DuplicateAppInstance => "duplicateAppInstance",
+            SpaceCommand::PasteAppInstance => "pasteAppInstance",
+            SpaceCommand::RenameAppInstance { .. } => "renameAppInstance",
+            SpaceCommand::PatchMediaNodes { .. } => "patchMediaNodes",
+            SpaceCommand::PatchAppInstances { .. } => "patchAppInstances",
+            SpaceCommand::BindParameterField { .. } => "bindParameterField",
+            SpaceCommand::UnbindParameterField { .. } => "unbindParameterField",
+            SpaceCommand::ReorganizeWorkflow => "reorganizeWorkflow",
+            SpaceCommand::WorkflowEngagementSubmit { .. } => "workflowEngagementSubmit",
+            SpaceCommand::CompiledDagEngagementSubmit => "compiledDagEngagementSubmit",
+            SpaceCommand::NodeGraphEdit { .. } => "nodeGraphEdit",
+            SpaceCommand::SetActivePanelTab { .. } => "setActivePanelTab",
+            SpaceCommand::SelectInstance { .. } => "selectInstance",
+            SpaceCommand::NodeGraphSelect { .. } => "nodeGraphSelect",
+            SpaceCommand::SetMediaNodeSelection { .. } => "setMediaNodeSelection",
+            SpaceCommand::SetAppInstanceSelection { .. } => "setAppInstanceSelection",
+            SpaceCommand::NodeGraphHover { .. } => "nodeGraphHover",
+            SpaceCommand::TextHover { .. } => "textHover",
+            SpaceCommand::NodeGraphViewport { .. } => "nodeGraphViewport",
+            SpaceCommand::PresenceHeartbeat { .. } => "presenceHeartbeat",
+            SpaceCommand::WorkflowEngagementInput { .. } => "workflowEngagementInput",
+            SpaceCommand::CompiledDagEngagementInput { .. } => "compiledDagEngagementInput",
+            SpaceCommand::SetActiveExample { .. } => "setActiveExample",
+            SpaceCommand::ExportMedia { .. } => "exportMedia",
+            SpaceCommand::ImportMedia { .. } => "importMedia",
+            SpaceCommand::ImportMediaPayload { .. } => "importMediaPayload",
+            SpaceCommand::ExportStudioPack => "exportStudioPack",
+            SpaceCommand::ExportStudioDsl => "exportStudioDsl",
+            SpaceCommand::ImportSpacePack => "importSpacePack",
+            SpaceCommand::ImportSpacePackPayload { .. } => "importSpacePackPayload",
+            SpaceCommand::OpenSpace { .. } => "openSpace",
+            SpaceCommand::OpenInstance { .. } => "openInstance",
+            SpaceCommand::CloseFocusedInstance => "closeFocusedInstance",
+            SpaceCommand::GoHome => "goHome",
+            SpaceCommand::NavigateVirtualFileSystemNode { .. } => "navigateVirtualFileSystemNode",
+        }
+    }
+
+    /// 🎯️ Bridges shell `{action,args}` JSON onto typed `SpaceCommand` until every call site speaks OpBinary.
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<SpaceCommand, String> {
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+        let f64_field = |key: &str| {
+            args.and_then(|value| value.get(key)).and_then(|raw| raw.as_f64().or_else(|| raw.as_i64().map(|n| n as f64)).or_else(|| raw.as_u64().map(|n| n as f64)))
+        };
+        let bool_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_bool);
+        let string_vec = |key: &str| {
+            args.and_then(|value| value.get(key))
+                .and_then(Value::as_array)
+                .map(|items| items.iter().filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>())
+                .unwrap_or_default()
+        };
+        let json_field = |key: &str| {
+            args.and_then(|value| value.get(key)).map(|raw| {
+                if let Some(text) = raw.as_str() {
+                    text.to_string()
+                } else {
+                    raw.to_string()
+                }
+            })
+        };
+        let node_id = || str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("instanceId")).or_else(|| str_field("instance_id"));
+        match action {
+            "patchParameter" => Ok(SpaceCommand::PatchParameter {
+                parameter_id: str_field("parameterId").or_else(|| str_field("parameter_id")).unwrap_or_default(),
+                field: str_field("field").unwrap_or_default(),
+                value: json_field("value").unwrap_or_else(|| "null".into()),
+            }),
+            "addParameter" => Ok(SpaceCommand::AddParameter {
+                name: str_field("name").unwrap_or_else(|| "Parameter".into()),
+                kind: str_field("kind").or_else(|| str_field("type")).unwrap_or_else(|| "numeric".into()),
+            }),
+            "removeParameter" => Ok(SpaceCommand::RemoveParameter {
+                parameter_id: str_field("parameterId").or_else(|| str_field("parameter_id")).unwrap_or_default(),
+            }),
+            "spawnApp" => Ok(SpaceCommand::SpawnApp {
+                plugin_id: str_field("pluginId").or_else(|| str_field("plugin_id")).unwrap_or_default(),
+                app_id: str_field("appId").or_else(|| str_field("app_id")).unwrap_or_default(),
+                x: f64_field("x").unwrap_or(0.0),
+                y: f64_field("y").unwrap_or(0.0),
+            }),
+            "moveMediaNode" => Ok(SpaceCommand::MoveMediaNode {
+                node_id: node_id().unwrap_or_default(),
+                x: f64_field("x").unwrap_or(0.0),
+                y: f64_field("y").unwrap_or(0.0),
+            }),
+            "connectMediaPorts" => Ok(SpaceCommand::ConnectMediaPorts {
+                source_node_id: str_field("sourceNodeId").or_else(|| str_field("source_node_id")).unwrap_or_default(),
+                source_port_id: str_field("sourcePortId").or_else(|| str_field("source_port_id")).unwrap_or_default(),
+                target_node_id: str_field("targetNodeId").or_else(|| str_field("target_node_id")).unwrap_or_default(),
+                target_port_id: str_field("targetPortId").or_else(|| str_field("target_port_id")).unwrap_or_default(),
+            }),
+            "disconnectMediaEdge" => Ok(SpaceCommand::DisconnectMediaEdge {
+                edge_id: str_field("edgeId").or_else(|| str_field("edge_id")).unwrap_or_default(),
+            }),
+            "removeAppInstance" => Ok(SpaceCommand::RemoveAppInstance { node_id: node_id() }),
+            "deleteSelection" => Ok(SpaceCommand::DeleteSelection),
+            "copyAppInstance" => Ok(SpaceCommand::CopyAppInstance),
+            "duplicateAppInstance" => Ok(SpaceCommand::DuplicateAppInstance),
+            "pasteAppInstance" => Ok(SpaceCommand::PasteAppInstance),
+            "renameAppInstance" => Ok(SpaceCommand::RenameAppInstance { label: str_field("label").or_else(|| str_field("name")) }),
+            "patchMediaNodes" => {
+                let ids = string_vec("nodeIds");
+                Ok(SpaceCommand::PatchMediaNodes {
+                    node_ids: if ids.is_empty() { node_id().map(|id| vec![id]).unwrap_or_default() } else { ids },
+                    field: str_field("field").unwrap_or_default(),
+                    axis: str_field("axis"),
+                    value: json_field("value").unwrap_or_else(|| "null".into()),
+                })
+            }
+            "patchAppInstances" => {
+                let ids = string_vec("nodeIds");
+                Ok(SpaceCommand::PatchAppInstances {
+                    node_ids: if ids.is_empty() { node_id().map(|id| vec![id]).unwrap_or_default() } else { ids },
+                    field: str_field("field").unwrap_or_default(),
+                    value: json_field("value").unwrap_or_else(|| "null".into()),
+                })
+            }
+            "bindParameterField" => Ok(SpaceCommand::BindParameterField {
+                node_id: node_id().unwrap_or_default(),
+                field_path: str_field("fieldPath").or_else(|| str_field("field_path")).unwrap_or_default(),
+                parameter_id: str_field("parameterId").or_else(|| str_field("parameter_id")).unwrap_or_default(),
+            }),
+            "unbindParameterField" => Ok(SpaceCommand::UnbindParameterField {
+                node_id: node_id().unwrap_or_default(),
+                field_path: str_field("fieldPath").or_else(|| str_field("field_path")).unwrap_or_default(),
+            }),
+            "reorganizeWorkflow" => Ok(SpaceCommand::ReorganizeWorkflow),
+            "workflowEngagementSubmit" => Ok(SpaceCommand::WorkflowEngagementSubmit { value: str_field("value") }),
+            "compiledDagEngagementSubmit" => Ok(SpaceCommand::CompiledDagEngagementSubmit),
+            "nodeGraphEdit" => Ok(SpaceCommand::NodeGraphEdit {
+                operations_json: json_field("operations").or_else(|| json_field("operationsJson")).unwrap_or_else(|| "[]".into()),
+            }),
+            "setActivePanelTab" => Ok(SpaceCommand::SetActivePanelTab {
+                tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default(),
+            }),
+            "selectInstance" => Ok(SpaceCommand::SelectInstance { node_id: node_id() }),
+            "nodeGraphSelect" => Ok(SpaceCommand::NodeGraphSelect {
+                node_ids: string_vec("nodeIds"),
+                select_all: bool_field("selectAll").unwrap_or(false),
+            }),
+            "setMediaNodeSelection" => {
+                let ids = string_vec("nodeIds");
+                Ok(SpaceCommand::SetMediaNodeSelection {
+                    node_ids: if ids.is_empty() { string_vec("ids") } else { ids },
+                    select_all: bool_field("selectAll").unwrap_or(false),
+                })
+            }
+            "setAppInstanceSelection" => {
+                let ids = string_vec("nodeIds");
+                Ok(SpaceCommand::SetAppInstanceSelection { node_ids: if ids.is_empty() { string_vec("ids") } else { ids } })
+            }
+            "nodeGraphHover" => Ok(SpaceCommand::NodeGraphHover { hover_json: json_field("hover").or_else(|| json_field("hoverJson")) }),
+            "textHover" => Ok(SpaceCommand::TextHover { hover_json: json_field("hover").or_else(|| json_field("hoverJson")) }),
+            "nodeGraphViewport" => Ok(SpaceCommand::NodeGraphViewport {
+                viewport_json: json_field("viewport").or_else(|| json_field("viewportJson")).unwrap_or_else(|| "{}".into()),
+            }),
+            "presenceHeartbeat" => Ok(SpaceCommand::PresenceHeartbeat {
+                client_id: str_field("clientId").or_else(|| str_field("client_id")).unwrap_or_default(),
+                name: str_field("name").unwrap_or_default(),
+            }),
+            "workflowEngagementInput" => Ok(SpaceCommand::WorkflowEngagementInput { value: str_field("value").unwrap_or_default() }),
+            "compiledDagEngagementInput" => Ok(SpaceCommand::CompiledDagEngagementInput { value: str_field("value").unwrap_or_default() }),
+            "setActiveExample" => Ok(SpaceCommand::SetActiveExample {
+                example_id: str_field("exampleId").or_else(|| str_field("example_id")).unwrap_or_default(),
+            }),
+            "exportMedia" => Ok(SpaceCommand::ExportMedia {
+                node_id: node_id().unwrap_or_default(),
+                format: str_field("format").unwrap_or_default(),
+            }),
+            "importMedia" => Ok(SpaceCommand::ImportMedia {
+                node_id: node_id().unwrap_or_default(),
+                format: str_field("format").unwrap_or_default(),
+            }),
+            "importMediaPayload" => Ok(SpaceCommand::ImportMediaPayload {
+                payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default(),
+            }),
+            "exportStudioPack" => Ok(SpaceCommand::ExportStudioPack),
+            "exportStudioDsl" => Ok(SpaceCommand::ExportStudioDsl),
+            "importSpacePack" => Ok(SpaceCommand::ImportSpacePack),
+            "importSpacePackPayload" => Ok(SpaceCommand::ImportSpacePackPayload {
+                payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default(),
+            }),
+            "openSpace" => Ok(SpaceCommand::OpenSpace {
+                space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default(),
+            }),
+            "openInstance" => Ok(SpaceCommand::OpenInstance { node_id: node_id() }),
+            "closeFocusedInstance" => Ok(SpaceCommand::CloseFocusedInstance),
+            "goHome" => Ok(SpaceCommand::GoHome),
+            "navigateVirtualFileSystemNode" => Ok(SpaceCommand::NavigateVirtualFileSystemNode {
+                space_id: str_field("spaceId")
+                    .or_else(|| str_field("space_id"))
+                    .or_else(|| str_field("nodeId"))
+                    .or_else(|| str_field("node_id"))
+                    .unwrap_or_default(),
+            }),
+            other => Err(format!("space: unhandled action id {other}")),
+        }
+    }
+
+    fn handle(&self, command: &SpaceCommand, doc: &DocumentView<'_, OsProjection>, cfg: &ConfigView<'_, SpaceConfig>) -> Emit<OsOperation, SpaceConfigOperation> {

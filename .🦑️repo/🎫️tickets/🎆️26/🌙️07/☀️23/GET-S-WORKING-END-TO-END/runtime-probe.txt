@@ -1,0 +1,64 @@
+TITLE semio · os
+BODY_LEN 121
+BODY_SNIP Fullscreen |  | Loading plugins… |  | Display | Sync | Settings | Theme | Command | Search |  | Search for items |  | Find |  | Find items in this view
+LOG_COUNT 56
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[log] [vite] server connection lost. Polling for restart...
+[error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+[error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+[pageerror] TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6070/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%E2%9A%9B%EF%B8%8Freact/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F
+[error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[error] [DEBUG] program worker flow-extension-bim crashed Event
+[warning] [DEBUG] program flow-extension-bim worker-backed load failed, falling back to main thread: program worker flow-extension-bim crashed
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] [DEBUG] program load failed flow-extension-bim TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6070/plugin-modules/flow-extension-bim/semio_s_plugin_flow_extension_bim.js?import
+[warning] [DEBUG] program trinity worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6070/plugin-modules/trinity/semio_s_plugin_trinity.js
+[warning] [DEBUG] program block worker-backed load failed, falling back to main thread: Failed to resolve module specifier "@bytecodealliance/preview2-shim/cli". Relative references must start with either "/", "./", or "../".
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] [DEBUG] program load failed trinity TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6070/plugin-modules/trinity/semio_s_plugin_trinity.js?import
+[error] [DEBUG] program load failed block TypeError: Failed to resolve module specifier "@bytecodealliance/preview2-shim/cli". Relative references must start with either "/", "./", or "../".
+[log] [DEBUG] plugin worker + fem (36 live)
+[log] [DEBUG] plugin worker + draw (36 live)
+[log] [DEBUG] plugin worker + architect (36 live)
+[log] [DEBUG] plugin worker + animate (36 live)
+[log] [DEBUG] plugin worker + cad (36 live)
+[log] [DEBUG] plugin worker + mathematical (36 live)
+[log] [DEBUG] plugin worker + note (36 live)
+[error] 
+thread '<unnamed>' (1) panicked at 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/../../../../../../🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🔣️icon/🤖️generated/🦀️icon_name.rs:1575:9:
+unknown catalog icon name: selection
+[error] note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[error] [DEBUG] program load failed note Error: unreachable
+    at worker.onmessage (http://127.0.0.1:6070/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.ts:1006:22)
+[log] [DEBUG] plugin worker + layout (36 live)
+[log] [DEBUG] plugin worker + gis (36 live)
+[log] [DEBUG] plugin worker + imperative (36 live)
+[log] [DEBUG] plugin worker + puzzle (36 live)
+[log] [DEBUG] plugin worker + raster (36 live)
+[log] [DEBUG] plugin worker + flow (36 live)
+[log] [DEBUG] plugin worker + playbook (36 live)
+[log] [DEBUG] plugin worker + norm (36 live)
+[log] [DEBUG] plugin worker + forms (36 live)
+[log] [DEBUG] plugin worker + dag (36 live)
+[log] [DEBUG] plugin worker + demonstrator (36 live)
+[log] [DEBUG] plugin worker + s (36 live)
+[log] [DEBUG] plugin worker + process (36 live)
+[log] [DEBUG] plugin worker + remodel (36 live)
+[log] [DEBUG] plugin worker + sourcing (36 live)
+[log] [DEBUG] plugin worker + sourcing-module-beams (36 live)
+[log] [DEBUG] plugin worker + lowpoly (36 live)
+[log] [DEBUG] plugin worker + vcs (36 live)
+[log] [DEBUG] plugin worker + writer (36 live)
+[log] [DEBUG] plugin worker + sourcing-module-slabs (36 live)
+[log] [DEBUG] plugin worker + shooting (36 live)
+[log] [DEBUG] plugin worker + sourcing-module-windows (36 live)
+[log] [DEBUG] plugin worker + reasoning-mindmap (36 live)
+[log] [DEBUG] plugin worker + procedural (36 live)
+[log] [DEBUG] plugin worker + playbook-module-procedural (36 live)
+[log] [DEBUG] plugin worker + sequence (36 live)
+[error] [DEBUG] framework os boot failed TypeError: Cannot read properties of undefined (reading 'map')
+    at http://127.0.0.1:6070/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%E2%9A%9B%EF%B8%8Freact/%E2%9A%A1%EF%B8%8Fim

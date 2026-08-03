@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-dsl-family-recipe"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "The recipe family notation kit — ordered typed-call steps (name: target(args)), shared by process3d, playbook, and shome"
+
+
+[lints]
+workspace = true
+[lib]
+name = "dsl_family_recipe"
+path = "../../../../👪️family/🧑‍🍳️recipe/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl_core = { package = "semio-framework-os-kernel-dsl-core", path = "../../../../🫀️core/⚡️implementation/🦀️rust" }
+
+[dev-dependencies]
+dsl_grammar = { package = "semio-framework-os-kernel-dsl-grammar", path = "../../../../📖️grammar/⚡️implementation/🦀️rust" }

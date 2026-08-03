@@ -1,0 +1,8 @@
+grammar family-sheet
+start trace
+
+trace = IDENT "=" expr ARROW FLOAT
+expr = term {{"+" | "-"} term}*
+term = factor {{"*" | "/"} factor}*
+factor = FLOAT | IDENT | call | "-" factor
+call = IDENT "(" expr {"," expr}* ")"

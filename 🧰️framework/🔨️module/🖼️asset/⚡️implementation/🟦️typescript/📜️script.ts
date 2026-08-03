@@ -233,6 +233,7 @@ impl From<&str> for IconName {
             "list-filter" => "list",
             "notebook-pen" => "book-open",
             "pointer" => "mouse-pointer",
+            "selection" => "select-all",
             "scan-eye" => "eye",
             "square-dashed-mouse-pointer" => "mouse-pointer-2",
             "upload" => "hard-drive",
@@ -249,7 +250,9 @@ impl From<&str> for IconName {
         if let Some(icon) = Self::from_str(aliased) {
             return icon;
         }
-        panic!("unknown catalog icon name: {trimmed}");
+        // 🛡️ Unknown icon ids must not panic the WASM guest — fall back to a catalog icon so a
+        // single stale tool/label id cannot take down the whole OS shell boot.
+        Self::Circle
     }
 }
 

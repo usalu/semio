@@ -534,7 +534,9 @@ impl EditorHost {
     }
 
     pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), EditorError> {
-        let dsl = store::pack_rt::decode_pack_value(bytes)?;
+        // 📦️ Host TS `encodePackValue` is the wire-body twin of `encode_wire_value` (no SPK shell);
+        // accept that first, then fall back to `decode_pack_value` for native pack-shell callers/tests.
+        let dsl = store::pack_rt::decode_wire_value(bytes).or_else(|_| store::pack_rt::decode_pack_value(bytes))?;
         let value = store::pack_rt::dsl_value_to_json(dsl);
         self.sync_from_scene_value(&value)
     }

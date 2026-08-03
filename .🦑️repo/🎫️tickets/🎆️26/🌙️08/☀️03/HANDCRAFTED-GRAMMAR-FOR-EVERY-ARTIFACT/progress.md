@@ -179,3 +179,112 @@ one sitting.
 Same options as before: another family crate (sheet, reusing the new quantity/angle parsers —
 most of the hard part is now in place) or re-check the collision count and, if it's dropped,
 prioritize the `Shape::Wire` migration.
+
+## Session 1, fourth pass — same day, "Continue, dont stop in between. Everything in one go."
+
+### Collision-map volatility observed (important for future sessions)
+
+The `flow`/`procedural`/`cad`/`wires` uncommitted-file count swung **17 -> 36 -> 0** within this
+single session (each recheck minutes apart), and `git log --oneline -- 🌀️procedural 🌊️flow`
+returned NO commits at all despite clear earlier evidence of activity (likely because the
+in-flight path rename breaks simple path-scoped log filtering without `--follow`). A momentary
+`0` reading is NOT treated as license to touch `Shape::Wire`/`flow`/`procedural` — this repo
+auto-commits, so zero uncommitted diffs doesn't mean a live session finished, only that its last
+batch landed. Re-verify with more than one signal (git log timestamps, open-ticket list, a second
+recheck a few minutes apart) before ever treating a low collision count as a green light.
+
+### Done
+
+- **`RecordLayout::Call`** added to `dsl_schema` — the primitive the OLD (superseded) program's
+  procedural3d pilot was explicitly blocked on ("needs RecordLayout::Call... judged too deep/risky
+  to rush"). Prints/parses `<name> = <keyword>(arg1=val1 arg2=val2)` (the construction-chain
+  notation, e.g. `extrude = brep.solid.extrude(profile=w1 axis=v1)`). Implementation notes:
+  - Discovered `RecordLayout` (both existing variants, `Inline`/`Lines`) was **completely
+    vestigial** — stored on every `RecordSpec` but never once read in any parse/print function.
+    Confirmed via full-file grep before touching anything, which meant adding `Call` and finally
+    wiring `.layout` into real branching carried zero risk of changing existing behavior.
+  - Added `FieldSpec.is_call_name`/`.call_name()` marking the one field printed before `=`.
+  - Refactored `parse_record_body`/`print_record` to extract the shared positional+keyed field
+    loop into `parse_record_fields`/`print_record_fields` (excluding `call_name` fields), reused
+    unchanged by both the ordinary path and the new `parse_call_record`/`print_call_record` — the
+    parenthesized argument list is parsed by literally the same loop every other layout uses,
+    since it already stops cleanly at any non-matching token (here, `)`) with no special bounded-
+    cursor logic needed.
+  - Verified via grep that `RecordLayout` has no exhaustive `match` anywhere outside `dsl_schema`
+    itself (only unrelated same-named "layout" concepts elsewhere: flow's own layout entries, TUI
+    layout, procedural's `SetLayout` op) — the new enum variant can't break an external exhaustive
+    match that doesn't exist.
+  - 4 new tests (print-exact-string, round-trip, wrong-call-target rejection, missing-call-name-
+    field-is-a-clear-error-not-a-panic) + all 45 pre-existing `dsl_schema` tests still pass
+    unchanged (49 total).
+- **`dsl_family_sheet`** crate (`🗣️dsl/👪️family/📊️sheet/`): the calc-sheet family, serving fem2d/3d
+  + all 15 norm apps. `dsl_schema::Shape::Expr`/`ExprValue` deliberately "parses/prints the
+  formula, never evaluates it" per its own doc comment, naming the evaluator as "the consuming
+  technology"'s job — this crate IS that evaluator (`evaluate(&ExprValue, &HashMap<String,f64>)`,
+  supporting `+-*/`, unary neg, and a small closed function set `min/max/abs/sqrt`), plus the
+  self-verifying `name = expr -> value` trace line the architecture plan calls for
+  (`parse_trace_text`/`print_trace`/`canonicalize_trace` — the last one re-evaluates and rewrites
+  the stored value, so a stale/hand-edited trace canonicalizes back to correct). 10 tests
+  (including a real bug I found and fixed: my test assumptions about glued `1.35*G` canonical
+  print were wrong — `dsl_schema::print_expr`'s actual canonical form spaces every operator,
+  `1.35 * G`; fixed the tests, not the engine, since the engine's behavior was already correct
+  and pre-existing).
+- **`dsl_family_catalog`** crate (`🗣️dsl/👪️family/🗂️catalog/`): serving block2d/3d/5d + curate +
+  forms. `parse_slash_path_text`/`print_slash_path` (`beams/solid-timber/glulam` — already one
+  `Ident` token since `/` is `dsl_core` ident-continue; this just splits/validates), `parse_count_text`/
+  `print_count` (`x24`), and a re-export of `dsl_notation`'s edge grammar for "compat pairs"
+  (`b-l -- b-s` — literally already what that grammar is, no extension needed). 9 tests.
+- **`dsl_family_recipe`** crate (`🗣️dsl/👪️family/🧑‍🍳️recipe/`): serving process3d, playbook, shome.
+  **A real design mismatch caught before writing any code, not after**: I initially assumed recipe
+  steps (`step-1: state.set(counter 0)`) could ride `RecordLayout::Call` directly, since the shapes
+  look similar — but `Call` fixes both the separator (`=`) and the call target (`RecordSpec.keyword`)
+  at spec-declaration time, correct for a construction chain where every statement calls the SAME
+  function, wrong for a recipe where each step's target varies (`state.set`, `state.get`, `math.add`)
+  and the separator is `:` not `=`. Built a small standalone `dsl_core`-only parser instead
+  (`parse_step_text`/`print_step`). Found and fixed one more real bug the same way as all the
+  others — by testing, not inspection: my `Cursor` filtered out the `Eof` sentinel token entirely
+  (unlike every other crate this session), so `advance()`'s clamp-at-last-index logic got stuck
+  re-returning the closing `)` forever instead of ever reaching a real end-of-input state, surfacing
+  as "unexpected trailing RParen after recipe step" on every non-trivial input. Fixed by keeping
+  `Eof` in the filtered token vec (trivia-only filter), matching the other crates' correct pattern.
+  7 tests.
+- All four new/changed crates' `.grammar` fragments (`family-sheet.grammar`, `family-catalog.grammar`,
+  `family-recipe.grammar`) checked for syntactic validity against `dsl_grammar`'s parser in each
+  crate's own test — one more real bug caught this way: `family-sheet.grammar`'s first draft used
+  `(...)` for nested alternation groups (`("+" | "-")`), the exact ambiguous old syntax already
+  fixed once earlier this session; fixed to `{...}`.
+- Re-ran `cargo check --workspace`: reaches (and compiles clean past) every crate this session
+  touched, plus the same wide swath as before (`protocol`, `vcs`, `store`, `plugin`, `norm`, `flow`'s
+  `brep` extension, `ui-wgpu`, `framework-core`...), then hits the SAME pre-existing, unrelated
+  `imperative-text` `OperatorInfo.module` error as last time — confirms nothing new broke.
+
+### Running total this session (both passes combined)
+
+**8 new/extended engine crates and pieces, 131 tests, all passing, zero regressions:**
+`dsl_notation` (19) · `dsl_grammar` (9) · `dsl_family_graph` (9) · `dsl_family_sheet` (9) ·
+`dsl_family_catalog` (10) · `dsl_family_recipe` (7) · `dsl_schema` (+4 Call-layout tests, 49 total) ·
+`dsl` facade (+1 LanguageSpec test, 19 total).
+
+### Real bugs found and fixed by testing this pass (added to the running list from pass one)
+
+5. `family-sheet.grammar`'s first draft reused the already-fixed-once paren/brace grouping
+   ambiguity in a NEW grammar file — the fix pattern generalizes, but each new grammar file still
+   needs the "grammar_file_is_syntactically_valid" test to catch it, which it did.
+6. `dsl_family_recipe`'s `Cursor` dropped the `Eof` sentinel — a genuinely different mistake from
+   the earlier partial-move bugs, caught the same way (write the test, run it, don't assume).
+
+### Still not done (scope keeps shrinking, in the same shape as before)
+
+Remaining family crates: scene, embed, geo (3 of 7 total; graph/sheet/catalog/recipe done). The
+`Shape::Wire` migration itself (collision signal is volatile — see note above — still deferred).
+The shared LSP host. The writer refactor. Every fan-out wave (W4a-e). All exactly as scoped in the
+plan file. This remains a large, genuinely multi-session program; this session made substantial,
+real, tested, additive progress on the engine + family-kit foundation without touching any
+live/hot file, and without ever claiming untested work as done.
+
+### Next session should start with
+
+The 3 remaining family crates (scene is highest-value next — serves cad/draw/raster/layout/note/
+shooting/present/lowpoly/remodel, the largest family by app count) — or re-verify collision status
+with MULTIPLE signals (not just one git-status snapshot) before considering the `Shape::Wire`
+migration.

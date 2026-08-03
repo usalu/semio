@@ -1,9 +1,9 @@
 {
   "title": "Get S Working End to End",
   "emoji": "🐛️",
-  "status": "open",
+  "status": "closed",
   "description": "Get s working end to end. Dev build fails because framework/plugin/rs/lib.rs WindowMeasure::Slider, UiTreeSectionNode, UiButtonNode, UiSectionNode, and UiTreeNode initializers are missing the new waiting field after waiting-state was mirrored through React controls/trees/wgpu chrome. Fix compile and confirm bun run dev:s (or equivalent) builds plugins end to end.",
-  "summary": "Restored S studio end-to-end. Studio build failed because truncated WindowMeasure::Group bodies and related corruption blocked guest plugins (flow grid measures empty; lowpoly selection utility options empty + match-arm field injection; note Groups missing value/min/max/step/ready/loading/waiting/on_change). Restored the flow/lowpoly constructors, filled note Group fields, and updated the S e2e search-toggle selector to framework.window.sMediaGraph.search.toggle. Verified: SEMIO_PLUGIN=s bun ./📜️script.ts build (exit 0, 33 plugin crates including s + vite dist), SKIP_PLUGIN_BUILD=1 SEMIO_PLUGIN=s bun ./📜️script.ts dev, and bun ./📜️script.ts verify e2e PASS (home → studio → three windows → draw spawn via engagement → undo/palette/home navigation).",
+  "summary": "S studio E2E works: home → double-click Demo Studio → studio workbench (Workflow/Media VFS/Compiled DAG). Fixed Home/Space command_from_action bridges, body_key window-id suffix stripping, HostEffect {kind,value}→external-tag normalization, parseSpaceShellPath /spaces/ (was /studios/), LoadDocument pack/spr via AppChannelClient, scene pack wire decode for editor/node-graph (plus SEMIO_PLUGIN_ONLY rebuild escape).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2246"
   },

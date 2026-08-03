@@ -2172,6 +2172,30 @@ const NOTE_WORLD_NAVIGATION_ACTION_ID = "noteWorldNavigation";
  * (unlike {@link NOTE_WORLD_NAVIGATION_ACTION_ID}, which is fully shell-intercepted and never forwarded). */
 const NOTE_SHELL_COMMAND_ACTION_ID = "noteShellCommand";
 
+/** 🛡️ Action ids intercepted by `VcsDocumentApp::dispatch_action` before `command_from_action` — undeclared
+ * surface verbs (e.g. VFS `selectRows` on Home) must not be forwarded or they hard-error the bridge. */
+const FRAMEWORK_RESERVED_ACTION_IDS: ReadonlySet<string> = new Set([
+  "undo",
+  "redo",
+  "commitCheckpoint",
+  "createAlternative",
+  "switchAlternative",
+  "checkoutCheckpoint",
+  "copy",
+  "cut",
+  "paste",
+  "revertToCommand",
+  "setHistoryCommandFilter",
+  NOTE_SHELL_COMMAND_ACTION_ID,
+  "recordTutorial",
+  "startIntroduction",
+  "startTutorial",
+  "setActiveUtility",
+  "setActiveTool",
+  "suggestionsTick",
+  "fillBuildTick",
+]);
+
 /** 🧭️ Builds the `noteShellCommand` action descriptor `noteShellCommand` (the component helper) dispatches
  * through the standard `onAction` funnel — pure so it's testable without a session/component. */
 export function buildNoteShellCommandAction(controllerId: string, commandId: string, label: string, detail?: Record<string, unknown>): ActionDescriptor {
@@ -2844,14 +2868,14 @@ export interface SpaceShellPath {
 
 /** @emoji 🧭️ Parses `/spaces/:id` and `/spaces/:id/instances/:iid` shell paths; null for any other route (e.g. home). */
 export function parseSpaceShellPath(path: string): SpaceShellPath | null {
-  const match = /^\/studios\/([^/]+)(?:\/instances\/([^/]+))?$/.exec(path);
+  const match = /^\/spaces\/([^/]+)(?:\/instances\/([^/]+))?$/.exec(path);
   if (!match) return null;
   return { spaceId: match[1]!, instanceId: match[2] };
 }
 
 function buildSpacePrograms(loaded: readonly LoadedProgramState[]): readonly SpaceProgramEntry[] {
   return loaded.flatMap((entry) =>
-    entry.manifest.workflows.map((workflow) => ({
+    (entry.manifest.workflows ?? []).map((workflow) => ({
       pluginId: entry.handle.pluginId,
       workflowStepId: workflow.workflowStepId,
       appId: workflow.appId,
@@ -6336,8 +6360,19 @@ function FrameworkOsShellInner({
       if (contributionsJson && contributionsJson !== contributionsJsonRef.current) {
         contributionsJsonRef.current = contributionsJson;
         const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
+        // 🛡️ `setContributions` is an opt-in hint push — only `procedural3d`'s `Procedural3dCommand::SetContributions`
+        // (flow.extension hot-swap) and `forms`'s `FormsCommand::SetContributions` (playbook block-kind catalogue)
+        // actually implement it; it is deliberately NOT declared in either app's action catalog (same
+        // uncatalogued-bridge shape as `setLocale`), so catalog membership can't gate this call. Every other
+        // app's `DocumentApp::command_from_action` default rejects unknown ids — swallow that rejection here
+        // rather than gating by app id, so this stays correct if a future app adds its own `SetContributions`
+        // variant without this call site needing to know about it.
         if (pluginEntry) {
-          await pluginEntry.handle.handleAction(nextSession.instanceId, "setContributions", { json: contributionsJson });
+          try {
+            await pluginEntry.handle.handleAction(nextSession.instanceId, encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setContributions", args: { json: contributionsJson } }), nextSession.viewState);
+          } catch (error) {
+            console.warn("[DEBUG] setContributions push skipped", error instanceof Error ? error.message : String(error));
+          }
         }
       }
       // 🐢️ Merge-with-identity-preservation: unrequested/unchanged sections keep exactly the object
@@ -6682,11 +6717,17 @@ function FrameworkOsShellInner({
         }
         if ("loadDocument" in effect) {
           const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
-          if (pluginEntry?.handle.loadAppDocument) {
-            console.log("[DEBUG] loadDocument for instance", baseSession.instanceId, "bytes", effect.loadDocument.documentJson.length);
-            await pluginEntry.handle.loadAppDocument(baseSession.instanceId, effect.loadDocument.documentJson);
+          const payload = effect.loadDocument;
+          if (payload.pack && payload.spr && pluginEntry?.handle.loadAppDocumentPack) {
+            const packBytes = coerceWireBytes(payload.pack);
+            const sprBytes = coerceWireBytes(payload.spr);
+            console.log("[DEBUG] loadDocument pack/spr for instance", baseSession.instanceId, "pack", packBytes.length, "spr", sprBytes.length);
+            await pluginEntry.handle.loadAppDocumentPack(baseSession.instanceId, packBytes, sprBytes);
+          } else if (payload.documentJson && pluginEntry?.handle.loadAppDocument) {
+            console.log("[DEBUG] loadDocument for instance", baseSession.instanceId, "bytes", payload.documentJson.length);
+            await pluginEntry.handle.loadAppDocument(baseSession.instanceId, payload.documentJson);
           } else {
-            console.error("[os-shell] loadDocument: program has no loadAppDocument", baseSession.pluginId);
+            console.error("[os-shell] loadDocument: program has no pack/json loader", baseSession.pluginId, Object.keys(payload));
           }
           continue;
         }
@@ -7238,6 +7279,12 @@ function FrameworkOsShellInner({
         },
         dispatchWindowId,
       );
+      const declaredAction = targetSession.app.actions?.some((entry) => entry.id === action.action) ?? false;
+      if (!declaredAction && !FRAMEWORK_RESERVED_ACTION_IDS.has(action.action)) {
+        console.warn("[DEBUG] skipping undeclared action", action.action, targetSession.app.id);
+        return;
+      }
+
       const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
       if (interactiveAction) beginInteractivePluginAction();
       return plugin
@@ -8405,10 +8452,13 @@ function FrameworkOsShellInner({
         tutorialRecorderRef.current?.recordEvent({ kind: "command", command: commandId, args });
       }
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
-      if (!plugin?.handleCommand) return;
+      if (!plugin?.handleAction) return;
       const dispatchViewState = injectActiveUtility(session.viewState);
+      // 🎯️ App palette commands share the action wire + `command_from_action` bridge — there are no
+      // framework-reserved COMMANDS, so `handleCommand`/`kind:"command"` always hard-errors pointing at
+      // the typed channel (see `VcsDocumentApp::dispatch_command`).
       void plugin
-        .handleCommand(session.instanceId, JSON.stringify({ command: commandId, args }), dispatchViewState)
+        .handleAction(session.instanceId, encodeActionWire({ controllerId: session.app.controllerId, action: commandId, args }), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
         .catch((commandError) => {
           console.error("[DEBUG] command failed", commandError);
@@ -9673,6 +9723,8 @@ export type PluginWasmHandle = {
   readonly applyOperations?: (instanceId: number, operationsPack: string) => Promise<void>;
   readonly readAppDocument?: (instanceId: number) => Promise<string>;
   readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
+  /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
+  readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
   readonly detachBackbone?: (instanceId: number) => Promise<void>;
   readonly dispose: () => void;
@@ -9727,6 +9779,46 @@ type WireCommandEnvelope = { readonly kind: "action" | "command"; readonly name:
  * file reads either field (only `.requestedEffects`/`.uiScope`), confirmed by grep before this
  * adapter was written. `uiScope` stays `undefined` too (not sent over the wire yet), which
  * `resolveUiDirtyScope` already treats as `full` — the safe default. */
+/** 🎯️ DslValue serde encodes Rust enums as `{ kind, value }` (struct) / plain string (unit). Shell
+ * `HostEffect` consumers expect serde externally-tagged JSON (`{ navigate: { uri } }` / `"requestSync"`). */
+/** 🎯️ DslValue may ship `Vec<u8>` as a number array, a Uint8Array, or a `{ kind:"bytes", value }` object. */
+function coerceWireBytes(raw: unknown): Uint8Array {
+  if (raw instanceof Uint8Array) return raw;
+  if (Array.isArray(raw)) return Uint8Array.from(raw as number[]);
+  if (raw && typeof raw === "object") {
+    const record = raw as Record<string, unknown>;
+    if (record.kind === "bytes" && Array.isArray(record.value)) return Uint8Array.from(record.value as number[]);
+    if (Array.isArray(record.data)) return Uint8Array.from(record.data as number[]);
+  }
+  if (typeof raw === "string") {
+    // base64 fallback
+    const binary = atob(raw);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+  throw new Error(`[DEBUG] coerceWireBytes: unsupported payload ${JSON.stringify(raw)?.slice(0, 120)}`);
+}
+
+function normalizeWireHostEffect(raw: unknown): HostEffect {
+  if (typeof raw === "string") return raw as HostEffect;
+  if (!raw || typeof raw !== "object") {
+    throw new Error(`[DEBUG] invalid host effect: ${JSON.stringify(raw)}`);
+  }
+  const record = raw as Record<string, unknown>;
+  if (typeof record.kind === "string") {
+    const kind = record.kind;
+    if ("value" in record) {
+      return { [kind]: record.value } as HostEffect;
+    }
+    if ("fields" in record) {
+      return { [kind]: record.fields } as HostEffect;
+    }
+    return kind as HostEffect;
+  }
+  return raw as HostEffect;
+}
+
 async function performCommand(client: AppChannelClient, envelope: WireCommandEnvelope, viewState: unknown): Promise<InvocationResponse> {
   const frames = await client.command(encodePackValue(envelope), viewState);
   let output: unknown = null;
@@ -9739,7 +9831,7 @@ async function performCommand(client: AppChannelClient, envelope: WireCommandEnv
       const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
       diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
     } else if ("Effects" in frame) {
-      requestedEffects = frame.Effects.effects.map((bytes) => decodePackValue(new Uint8Array(bytes)) as HostEffect);
+      requestedEffects = frame.Effects.effects.map((bytes) => normalizeWireHostEffect(decodePackValue(new Uint8Array(bytes))));
     } else if ("Events" in frame) {
       events = frame.Events.events.map((bytes) => decodePackValue(new Uint8Array(bytes))) as InvocationResponse["events"];
     } else if ("Error" in frame) {
@@ -9802,7 +9894,7 @@ async function performRefreshUi(client: AppChannelClient, request: PluginUiRefre
   if (refreshSeq !== undefined) {
     for (const frame of frames) {
       if ("Effects" in frame && frame.Effects.in_reply_to === refreshSeq) {
-        requestedEffects = frame.Effects.effects.map((bytes) => decodePackValue(new Uint8Array(bytes)) as HostEffect);
+        requestedEffects = frame.Effects.effects.map((bytes) => normalizeWireHostEffect(decodePackValue(new Uint8Array(bytes))));
       }
     }
   }
@@ -9888,6 +9980,11 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
     },
     readAppDocument: undefined,
     loadAppDocument: undefined,
+    loadAppDocumentPack: async (instanceId, pack, spr) => {
+      const frames = await requireChannel(instanceId).loadDocument(pack, spr);
+      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed (${errorFrame.Error.code}): ${errorFrame.Error.message}`);
+    },
     attachBackbone: async (instanceId, uri) => {
       const frames = await requireChannel(instanceId).attachBackbone(uri);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
@@ -18252,16 +18349,24 @@ function WasmGraphSurface({
   }, []);
 
   useEffect(() => {
-    sessionRef.current?.syncFromScenePack?.(scenePack);
-    paintOverlays();
+    try {
+      sessionRef.current?.syncFromScenePack?.(scenePack);
+      paintOverlays();
+    } catch (error) {
+      console.warn("[DEBUG] WasmGraphSurface sync failed", error instanceof Error ? error.message : String(error));
+    }
   }, [scenePack, paintOverlays]);
 
   const onSessionReady = useCallback(
     (session: GraphWasmSession) => {
       sessionRef.current = session as FrameworkGraphSession;
       syncSessionCanvasTheme(sessionRef.current);
-      sessionRef.current.syncFromScenePack?.(scenePack);
-      paintOverlays();
+      try {
+        sessionRef.current.syncFromScenePack?.(scenePack);
+        paintOverlays();
+      } catch (error) {
+        console.warn("[DEBUG] WasmGraphSurface ready sync failed", error instanceof Error ? error.message : String(error));
+      }
     },
     [scenePack, paintOverlays],
   );
@@ -20184,8 +20289,12 @@ function WasmEditorSurface({
 
   const syncSession = useCallback(() => {
     if (renameActiveRef.current) return;
-    sessionRef.current?.syncFromScenePack?.(scenePack);
-    sessionRef.current?.renderFrame();
+    try {
+      sessionRef.current?.syncFromScenePack?.(scenePack);
+      sessionRef.current?.renderFrame();
+    } catch (error) {
+      console.warn("[DEBUG] WasmEditorSurface sync failed", error instanceof Error ? error.message : String(error));
+    }
   }, [scenePack]);
 
   const [sessionEpoch, setSessionEpoch] = useState(0);

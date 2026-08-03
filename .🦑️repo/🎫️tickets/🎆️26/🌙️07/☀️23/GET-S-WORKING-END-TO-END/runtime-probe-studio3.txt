@@ -1,0 +1,49 @@
+HOME_TITLE semio · s · home
+TARGET_COUNT_ROW 1 TEXT 1
+AFTER_TITLE semio · s · home
+AFTER_URL http://127.0.0.1:6070/?nocache=1785789466150
+AFTER_BODY Document | Fullscreen | semio · s · home | Studios | Close |  | Unknown body: s.home.vfs:s-home-main |  | Actions | Utilities | Display | Sync | Settings | Theme | History | Command | Search |  | Search for items |  | Find |  | Find items in this view
+INTERESTING_COUNT 43
+[error] [DEBUG] program worker flow-extension-bim crashed Event
+[warning] [DEBUG] program flow-extension-bim worker-backed load failed, falling back to main thread: program worker flow-extension-bim crashed
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] [DEBUG] program load failed flow-extension-bim TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6070/plugin-modules/flow-extension-bim/semio_s_plugin_flow_extension_bim.js?import
+[warning] [DEBUG] program trinity worker-backed load failed, falling back to main thread: Failed to fetch dynamically imported module: http://127.0.0.1:6070/plugin-modules/trinity/semio_s_plugin_trinity.js
+[error] Failed to load resource: the server responded with a status of 404 (Not Found)
+[error] [DEBUG] program load failed trinity TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6070/plugin-modules/trinity/semio_s_plugin_trinity.js?import
+[log] [DEBUG] plugin worker + block (36 live)
+[log] [DEBUG] plugin worker + animate (36 live)
+[log] [DEBUG] plugin worker + architect (36 live)
+[log] [DEBUG] plugin worker + cad (36 live)
+[log] [DEBUG] plugin worker + playbook (36 live)
+[log] [DEBUG] plugin worker + draw (36 live)
+[log] [DEBUG] plugin worker + fem (36 live)
+[log] [DEBUG] plugin worker + forms (36 live)
+[log] [DEBUG] plugin worker + gis (36 live)
+[log] [DEBUG] plugin worker + raster (36 live)
+[log] [DEBUG] plugin worker + note (36 live)
+[log] [DEBUG] plugin worker + imperative (36 live)
+[log] [DEBUG] plugin worker + dag (36 live)
+[log] [DEBUG] plugin worker + mathematical (36 live)
+[log] [DEBUG] plugin worker + process (36 live)
+[log] [DEBUG] plugin worker + demonstrator (36 live)
+[log] [DEBUG] plugin worker + flow (36 live)
+[log] [DEBUG] plugin worker + sourcing-module-beams (36 live)
+[log] [DEBUG] plugin worker + sourcing-module-windows (36 live)
+[log] [DEBUG] plugin worker + remodel (36 live)
+[log] [DEBUG] plugin worker + reasoning-mindmap (36 live)
+[log] [DEBUG] plugin worker + writer (36 live)
+[log] [DEBUG] plugin worker + puzzle (36 live)
+[log] [DEBUG] plugin worker + sequence (36 live)
+[log] [DEBUG] plugin worker + layout (36 live)
+[log] [DEBUG] plugin worker + sourcing (36 live)
+[log] [DEBUG] plugin worker + sourcing-module-slabs (36 live)
+[log] [DEBUG] plugin worker + norm (36 live)
+[log] [DEBUG] plugin worker + vcs (36 live)
+[log] [DEBUG] plugin worker + s (36 live)
+[log] [DEBUG] plugin worker + shooting (36 live)
+[log] [DEBUG] plugin worker + lowpoly (36 live)
+[log] [DEBUG] plugin worker + procedural (36 live)
+[log] [DEBUG] plugin worker + playbook-module-procedural (36 live)
+[warning] [DEBUG] setContributions push skipped [DEBUG] action 'setContributions' failed (handler): home: unhandled action id setContributions
+[warning] [DEBUG] skipping undeclared action selectRows home

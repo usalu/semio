@@ -1,0 +1,68 @@
+[
+  {
+    "id": "block2d",
+    "port": 6024,
+    "title": "semio · block · 2d",
+    "canvasCount": 0,
+    "rootHtml": 1,
+    "bodySnippet": "Document\nInspection\nFullscreen\nsemio · block · 2d\nExample\nHexagonal Cut Concrete Forest Left\nNode Kind\nClose\n\nNode kind: Hexagonal Cut Concrete Forest Left\n\n6 Handle Kinds, 11 Handles\n\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view",
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    ],
+    "pageErrors": [
+      "TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%E2%9A%9B%EF%B8%8Freact/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.tsx"
+    ],
+    "failedRequests": [
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%E2%99%BE%EF%B8%8Finfinite/%F0%9F%96%BC%EF%B8%8Fcanvas/%F0%9F%8E%A8%EF%B8%8Freact-renderer/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.tsx",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.ts",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/block2d-react/deps/three.js?v=3c28d464",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/block2d-react/deps/@react-three_fiber.js?v=3c28d464",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/block2d-react/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=3c28d464",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%E2%99%BE%EF%B8%8Finfinite/%F0%9F%8C%8D%EF%B8%8Fworld/%F0%9F%8E%A8%EF%B8%8Fr3f/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.tsx",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%8E%A8%EF%B8%8Fstyling/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.ts",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%96%B1%EF%B8%8Fui/%E2%9A%9B%EF%B8%8Freact/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.tsx",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%96%BC%EF%B8%8Fasset/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.ts",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/block2d-react/deps/react.js?v=3c28d464",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/block2d-react/deps/react_jsx-dev-runtime.js?v=3c28d464",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/block2d-react/deps/react-dom_client.js?v=3c28d464",
+      "net::ERR_CONNECTION_REFUSED http://127.0.0.1:6024/@fs/Users/ueli/Documents/semio/%E2%99%BB%EF%B8%8Fmit-bestand/%F0%9F%A7%BA%EF%B8%8Fdemonstrator/%E2%9A%9B%EF%B8%8Ffooter.tsx"
+    ],
+    "ok": true
+  },
+  {
+    "id": "block3d",
+    "port": 6025,
+    "title": "semio · block · 3d",
+    "canvasCount": 0,
+    "rootHtml": 1,
+    "bodySnippet": "Document\nInspection\nFullscreen\nsemio · block · 3d\nExample\nNakagin Capsule\nObject Kind\nClose\n\nObject kind: Capsule J\n\nmesh: /mesh/🧊️capsule_J.glb\n\n1 Vortices\n\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view",
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "ok": true
+  },
+  {
+    "id": "block5d",
+    "port": 6026,
+    "title": "semio · block · 5d",
+    "canvasCount": 0,
+    "rootHtml": 1,
+    "bodySnippet": "Document\nInspection\nFullscreen\nsemio · block · 5d\nExample\nHexagonal Cut Concrete Forest Left\nBoard\nFocus\nClose\n\nPart kind: Hexagonal Cut Concrete Forest Left\n\n2d grips: 1\n\nActions\nUtilities\nWorld\nFocus\nClose\n\nPart kind: Hexagonal Cut Concrete Forest Left\n\nmesh: /mesh/🧊️hexagonal-cut-concrete-forest-left.glb\n\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nF",
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "ok": true
+  }
+]

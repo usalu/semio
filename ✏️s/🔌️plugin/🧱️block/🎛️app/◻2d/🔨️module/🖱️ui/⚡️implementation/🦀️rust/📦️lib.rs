@@ -9,7 +9,6 @@ use block_2d::{Block2dDefinition, Block2dHandleKind, Block2dHandleTemplate, BLOC
 use block_2d_engine::Block2dConfig;
 use block_2d_op::{Block2dConfigOperation, Block2dOperation};
 use block_2d_protocol::Block2dCommand;
-use serde_json::Value;
 use block_shared::BlockCompatibilityRule;
 use semio_framework_plugin::{
     tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media,

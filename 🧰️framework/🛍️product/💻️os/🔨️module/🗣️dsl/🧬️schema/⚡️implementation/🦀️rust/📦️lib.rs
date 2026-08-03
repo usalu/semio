@@ -16,6 +16,15 @@ pub enum RecordLayout {
     /// Each field printed as its own line/statement (norm-family style) in Document mode;
     /// collapses to the same space-joined form as `Inline` when rendered in `JoinMode::Inline`.
     Lines,
+    /// `<name> = <keyword>(arg1=val1 arg2=val2)` — a named call assignment (the graph-family
+    /// construction-chain notation, e.g. `extrude = brep.solid.extrude(profile=w1 axis=v1)`).
+    /// Requires exactly one field marked [`FieldSpec::call_name`] (printed before `=`, must have
+    /// `Shape::Text`) and `RecordSpec.keyword` set (the dotted call target after `=`, e.g.
+    /// `"brep.solid.extrude"` — printed and matched as one token since `.` is `dsl_core`
+    /// ident-continue). Every other field prints/parses exactly as it would under `Inline`
+    /// (positional bare, keyed as `key=value`), just inside the parens instead of bare after the
+    /// keyword.
+    Call,
 }
 
 /// @emoji 🧩️ What one field's value looks like, textually. Covers all 16 grammar-shape
@@ -121,11 +130,15 @@ pub struct FieldSpec {
     /// an entity of kind `kind`. `None` for every field that isn't such an anchor. Not wire/hash
     /// relevant (LanguageService-only, see `Shape::Ref`'s doc comment) — purely an authoring aid.
     pub defines: Option<&'static str>,
+    /// The one field a `RecordLayout::Call` spec prints before `=` and parses as the assignment
+    /// target — see [`RecordLayout::Call`]. Always `false` outside a `Call`-layout spec; ignored
+    /// (never printed/parsed specially) for any other layout.
+    pub is_call_name: bool,
 }
 
 impl FieldSpec {
     pub fn new(id: u16, key: &str, shape: Shape) -> Self {
-        Self { id, key: key.to_string(), position: None, shape, optional: false, flatten: false, defines: None }
+        Self { id, key: key.to_string(), position: None, shape, optional: false, flatten: false, defines: None, is_call_name: false }
     }
 
     pub fn positional(mut self, index: u8) -> Self {
@@ -145,6 +158,13 @@ impl FieldSpec {
 
     pub fn defines(mut self, kind: &'static str) -> Self {
         self.defines = Some(kind);
+        self
+    }
+
+    /// @emoji 📛️ Marks this field as the one printed before `=` / parsed as the assignment target
+    /// in a `RecordLayout::Call` spec. See [`RecordLayout::Call`].
+    pub fn call_name(mut self) -> Self {
+        self.is_call_name = true;
         self
     }
 }
@@ -993,6 +1013,9 @@ fn parse_wire_node(cursor: &mut Cursor) -> Result<WireNode, TextError> {
 /// the record (it belongs to whatever comes next: a new statement, a closing brace, or EOF).
 fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
     cursor.limits.check_depth(depth, cursor.span())?;
+    if spec.layout == RecordLayout::Call {
+        return parse_call_record(cursor, spec, depth);
+    }
     if let Some(keyword) = &spec.keyword {
         if cursor.at_keyword(keyword) {
             cursor.advance();
@@ -1000,9 +1023,45 @@ fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Re
             return Err(TextError::new(format!("expected keyword '{keyword}', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
         }
     }
+    parse_record_fields(cursor, spec, depth)
+}
+
+/// @emoji 📛️ Parses a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The parenthesized
+/// argument list is parsed by the exact same [`parse_record_fields`] loop every other layout uses
+/// — it naturally stops at the first token that matches neither a positional slot nor a known
+/// key (here, always `)`), so no special "bounded sub-cursor" is needed to keep it from reading
+/// past the closing paren.
+fn parse_call_record(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
+    let name_field = spec
+        .fields
+        .iter()
+        .find(|f| f.is_call_name)
+        .ok_or_else(|| TextError::new("RecordLayout::Call requires exactly one field marked call_name()", cursor.span()))?;
+    let name = ident_like_text(&cursor.expect(TokenKind::Ident)?);
+    cursor.expect(TokenKind::Equals)?;
+    let keyword = spec.keyword.as_deref().ok_or_else(|| TextError::new("RecordLayout::Call requires RecordSpec.keyword (the call target)", cursor.span()))?;
+    if !cursor.at_keyword(keyword) {
+        return Err(TextError::new(format!("expected call target '{keyword}', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
+    }
+    cursor.advance();
+    cursor.expect(TokenKind::LParen)?;
+    let mut record = parse_record_fields(cursor, spec, depth)?;
+    cursor.expect(TokenKind::RParen)?;
+    record.fields.insert(name_field.id, FieldValue::Text(name));
+    Ok(record)
+}
+
+/// @emoji 🧾️ Parses a record's fields: positional fields in declaration order, then order-
+/// independent `key=value` attributes (LL(2): an `Ident` followed by `=` is always a key), until a
+/// token that is neither a known key nor an unfilled positional slot — which ends the record (it
+/// belongs to whatever comes next: a new statement, a closing brace/paren, or EOF). Excludes any
+/// field marked `call_name()` from both candidate sets: that field is consumed by the caller
+/// (`RecordLayout::Call`'s `<name> =` prefix) before this function ever runs, for a Call-layout
+/// spec, and no field is ever marked `call_name()` under any other layout.
+fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
     let mut record = RecordValue::default();
     let positional: Vec<&FieldSpec> = {
-        let mut p: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_some()).collect();
+        let mut p: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_some() && !f.is_call_name).collect();
         p.sort_by_key(|f| f.position.unwrap());
         p
     };
@@ -1032,7 +1091,7 @@ fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Re
     // bare leading keyword (`children { ... }`, no `=`) — `Table` fields (bare `key [...] {...}`
     // SoA form) are handled the same way, via their own lookahead branch below.
     let statements_field = spec.fields.iter().find(|f| f.position.is_none() && matches!(f.shape, Shape::Statements(_)));
-    let mut keyed: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_none() && !f.key.is_empty() && !matches!(f.shape, Shape::Statements(_))).collect();
+    let mut keyed: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_none() && !f.key.is_empty() && !f.is_call_name && !matches!(f.shape, Shape::Statements(_))).collect();
 
     loop {
         if let Some(key) = cursor.at_attr_key() {
@@ -1533,10 +1592,46 @@ fn keyed_field_rank(shape: &Shape) -> u8 {
 }
 
 pub fn print_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
+    if spec.layout == RecordLayout::Call {
+        print_call_record(value, spec, writer);
+        return;
+    }
     if let Some(keyword) = &spec.keyword {
         writer.atom(keyword);
     }
-    let mut positional: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_some()).collect();
+    print_record_fields(value, spec, writer);
+}
+
+/// @emoji 📛️ Prints a `RecordLayout::Call` record: `<name> = <keyword>(args)`. The argument list
+/// is built by [`print_record_fields`] — the exact same field-printing logic every other layout
+/// uses — rendered to its own `JoinMode::Inline` string and glued onto the keyword inside parens,
+/// so a positional/keyed field prints identically here as it would under `Inline` layout.
+fn print_call_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
+    let Some(name_field) = spec.fields.iter().find(|f| f.is_call_name) else {
+        debug_assert!(false, "RecordLayout::Call requires exactly one field marked call_name()");
+        return;
+    };
+    let name_text = match value.get(name_field.id) {
+        Some(fv @ FieldValue::Text(_)) => scalar_to_text(fv),
+        _ => String::new(),
+    };
+    writer.atom(name_text);
+    writer.atom("=");
+    if let Some(keyword) = &spec.keyword {
+        writer.atom(keyword);
+    }
+    let mut args_writer = Writer::new();
+    print_record_fields(value, spec, &mut args_writer);
+    let args_text = args_writer.render(JoinMode::Inline);
+    writer.glue();
+    writer.atom(format!("({args_text})"));
+}
+
+/// @emoji 🖨️ Prints a record's fields: positional bare in declaration order, then order-
+/// independent `key=value` attributes. Excludes any field marked `call_name()` — see
+/// [`parse_record_fields`]'s matching doc comment for why.
+fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
+    let mut positional: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_some() && !f.is_call_name).collect();
     positional.sort_by_key(|f| f.position.unwrap());
     for (index, field) in positional.iter().enumerate() {
         match value.get(field.id) {
@@ -1553,7 +1648,7 @@ pub fn print_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer)
         }
     }
 
-    let mut keyed: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_none() && !f.key.is_empty()).collect();
+    let mut keyed: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_none() && !f.key.is_empty() && !f.is_call_name).collect();
     keyed.sort_by_key(|f| keyed_field_rank(&f.shape));
     for field in keyed {
         match value.get(field.id) {
@@ -2247,6 +2342,54 @@ mod tests {
         assert_round_trip("edge a:Kind@out->b:Kind2@in", &spec);
         assert_round_trip("edge a--b", &spec);
         assert_round_trip("edge solo", &spec);
+    }
+
+    // --- RecordLayout::Call: `<name> = <keyword>(args)` construction-chain notation ---
+    fn call_spec() -> RecordSpec {
+        RecordSpec::new(
+            Some("brep.solid.extrude"),
+            RecordLayout::Call,
+            vec![
+                FieldSpec::new(0, "name", Shape::Text).call_name(),
+                FieldSpec::new(1, "profile", Shape::Text).positional(0),
+                FieldSpec::new(2, "axis", Shape::Text).positional(1),
+                FieldSpec::new(3, "height", Shape::Float).optional(),
+            ],
+        )
+    }
+
+    #[test]
+    fn call_layout_prints_name_equals_dotted_keyword_parens_args() {
+        let spec = call_spec();
+        let opts = ParseOptions::default();
+        let value = parse("extrude = brep.solid.extrude(w1 v1 height=6)", &spec, &opts).expect("parse");
+        assert_eq!(value.get(0), Some(&FieldValue::Text("extrude".to_string())));
+        assert_eq!(value.get(1), Some(&FieldValue::Text("w1".to_string())));
+        let printed = print(&value, &spec, JoinMode::Inline);
+        assert_eq!(printed, "extrude = brep.solid.extrude(w1 v1 height=6)");
+    }
+
+    #[test]
+    fn call_layout_round_trips_with_and_without_the_optional_keyed_arg() {
+        let spec = call_spec();
+        assert_round_trip("extrude = brep.solid.extrude(w1 v1 height=6)", &spec);
+        assert_round_trip("extrude = brep.solid.extrude(w1 v1)", &spec);
+    }
+
+    #[test]
+    fn call_layout_rejects_the_wrong_call_target() {
+        let spec = call_spec();
+        let opts = ParseOptions::default();
+        let err = parse("extrude = brep.solid.revolve(w1 v1)", &spec, &opts).unwrap_err();
+        assert!(err.to_string().contains("expected call target"), "unexpected error: {err}");
+    }
+
+    #[test]
+    fn call_layout_spec_without_a_call_name_field_is_a_clear_parse_error_not_a_panic() {
+        let bad_spec = RecordSpec::new(Some("brep.solid.extrude"), RecordLayout::Call, vec![FieldSpec::new(0, "profile", Shape::Text).positional(0)]);
+        let opts = ParseOptions::default();
+        let err = parse("extrude = brep.solid.extrude(w1)", &bad_spec, &opts).unwrap_err();
+        assert!(err.to_string().contains("call_name"), "unexpected error: {err}");
     }
 
     // --- primitive 10: packed tuples / lists / base64 ---
