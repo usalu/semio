@@ -1,0 +1,4 @@
+Repo MCP server (cursor mcpServers.repo) was not loaded in this Cursor session
+(GetDynamicTools catalog had no repo namespace; FetchMcpResource server=repo → Server not found).
+Ticket opened via repo CLI client instead:
+  🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client ticket open ...

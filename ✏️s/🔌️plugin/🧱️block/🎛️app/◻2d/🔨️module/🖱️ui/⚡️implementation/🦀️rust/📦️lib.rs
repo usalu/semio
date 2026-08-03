@@ -9,6 +9,7 @@ use block_2d::{Block2dDefinition, Block2dHandleKind, Block2dHandleTemplate, BLOC
 use block_2d_engine::Block2dConfig;
 use block_2d_op::{Block2dConfigOperation, Block2dOperation};
 use block_2d_protocol::Block2dCommand;
+use serde_json::Value;
 use block_shared::BlockCompatibilityRule;
 use semio_framework_plugin::{
     tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media,
@@ -192,6 +193,32 @@ impl DocumentApp for Block2dPlayApp {
             Block2dCommand::SetActiveExample { .. } => "setActiveExample",
             Block2dCommand::Edit { .. } => "edit",
             Block2dCommand::SetSelection { .. } => "setSelection",
+        }
+    }
+
+
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, String> {
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+        let str_vec_field = |key: &str| -> Vec<String> {
+            args.and_then(|value| value.get(key))
+                .and_then(|value| value.as_array())
+                .map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect())
+                .unwrap_or_default()
+        };
+        match action {
+            "patchNodeKind" => Ok(Block2dCommand::PatchNodeKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() }),
+            "addHandleKind" => Ok(Block2dCommand::AddHandleKind),
+            "removeHandleKind" => Ok(Block2dCommand::RemoveHandleKind { id: str_field("id").unwrap_or_default() }),
+            "addHandle" => Ok(Block2dCommand::AddHandle),
+            "removeHandle" => Ok(Block2dCommand::RemoveHandle { id: str_field("id").unwrap_or_default() }),
+            "addCompatibilityRule" => Ok(Block2dCommand::AddCompatibilityRule { source: str_field("source").unwrap_or_default(), target: str_field("target").unwrap_or_default() }),
+            "removeCompatibilityRule" => Ok(Block2dCommand::RemoveCompatibilityRule { id: str_field("id").unwrap_or_default() }),
+            "setActiveExample" => Ok(Block2dCommand::SetActiveExample { id: str_field("exampleId").or_else(|| str_field("id")).unwrap_or_default() }),
+            "edit" => Ok(Block2dCommand::Edit { text: str_field("text").unwrap_or_default() }),
+            "setSelection" => Ok(Block2dCommand::SetSelection { ids: str_vec_field("ids") }),
+            other => Err(format!(
+                "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+            )),
         }
     }
 
@@ -445,4 +472,10 @@ mod tests {
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
     }
 }
+
+    #[test]
+    fn command_from_action_bridges_set_active_example() {
+        let app = Block2dPlayApp;
+        assert!(matches!(app.command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "left" }))), Ok(Block2dCommand::SetActiveExample { id }) if id == "left"));
+    }
 //#endregion 🧪️Tests

@@ -1,0 +1,326 @@
+$ bun ./📜️script.ts nx run @semio-tech/flow-module-bim:wasm
+
+> nx run @semio-tech/flow-module-bim:wasm
+
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+> nx run @semio-tech/flow-module-bim:wasm
+$ bun nx run @semio-tech/flow-module-bim:wasm
+error: script "nx" was terminated by signal SIGTERM (Polite quit request)

@@ -6,7 +6,7 @@ import { join } from "node:path";
 class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
-      rsDir: join(this.root, "rs"),
+      rsDir: this.root,
       skipEnvVar: "FLOW_MODULE_CORE_SKIP_WASM_BUILD",
       logPrefix: "flow/module/core",
       wasmBaseName: "flow_extension_core",

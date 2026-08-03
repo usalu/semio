@@ -1,0 +1,16 @@
+fixed exports /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core/package.json
+fixed script /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core/📜️script.ts
+fixed exports /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/package.json
+fixed script /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/📜️script.ts
+fixed exports /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary/package.json
+fixed script /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary/📜️script.ts
+fixed exports /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧠️logic/package.json
+fixed script /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧠️logic/📜️script.ts
+fixed exports /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧮️math/package.json
+fixed script /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧮️math/📜️script.ts
+fixed exports /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list/package.json
+fixed script /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list/📜️script.ts
+fixed exports /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw/package.json
+fixed script /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw/📜️script.ts
+fixed exports /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📝️text/package.json
+fixed script /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📝️text/📜️script.ts

@@ -10,6 +10,7 @@ class WasmScript extends BundleScript {
       logPrefix: "flow/core",
       wasmBaseName: "flow_core",
       threads: false,
+      profile: "wasm-release",
       pkg: {
         name: "@semio-tech/flow-core",
         files: ["flow_core_bg.wasm", "flow_core.js", "flow_core.d.ts", "flow_core_bg.wasm.d.ts"],

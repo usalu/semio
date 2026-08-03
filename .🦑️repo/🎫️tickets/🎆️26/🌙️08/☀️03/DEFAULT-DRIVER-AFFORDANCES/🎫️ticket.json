@@ -1,0 +1,9 @@
+{
+  "title": "Default Driver Affordances",
+  "emoji": "🎮️",
+  "status": "open",
+  "description": "Default UI driver shows every affordance: row-vs-menu placement, sort/transfer drag handles, localized labels. Full-repo consistency across plugins and hosts.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": [],
+  "summary": "Default driver shows every affordance consistently: row|menu placement replaces hover-reveal; sort/transfer DragHandles with localized ui.tree.drag.*; catalogue/table/panel-unit/block-list/pane chrome honor handle vs surface. UiDriver + Pane drag-handle vitests pass; chrome-i18n clean. Repo MCP unavailable so ticket was opened manually."
+}

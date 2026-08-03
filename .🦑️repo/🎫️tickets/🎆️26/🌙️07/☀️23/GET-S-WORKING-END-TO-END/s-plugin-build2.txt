@@ -1,0 +1,48 @@
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:2778:68
+     |
+2778 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2778 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+2778 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, String> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+warning: unused import: `OsAppRegistration`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3299:72
+     |
+3299 |     use crate::registry::{os_app_registration, os_artifact_descriptor, OsAppRegistration, OsArtifactDescriptor};
+     |                                                                        ^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os` to apply 1 suggestion)
+   Compiling semio-framework-os-kernel-infinite-board-port-directed-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust)
+warning: unused imports: `OS_SPACE_BACKBONE_URI_PREFIX` and `create_os_space`
+  --> ✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:9:32
+   |
+ 9 |     create_ephemeral_os_space, create_os_space, delete_os_space, document_backbone_ref, encode_os_space_payload, export_os_space_pac...
+   |                                ^^^^^^^^^^^^^^^
+10 |     MemoryBackbonePort, OsBackbonePort, OsDocument, VcsError, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
+   |                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `sync_os_space_document_helper` is never used
+   --> ✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:197:4
+    |
+197 | fn sync_os_space_document_helper(document: &OsDocument, backbone_uri: &str, port: &Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-app-space-home-ui` (lib) generated 2 warnings (run `cargo fix --lib -p semio-s-app-space-home-ui` to apply 1 suggestion)
+   Compiling semio-s-app-space-space-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🪐️space/🎛️app/🪐️space/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-space-space-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🪐️space/🎛️app/🪐️space/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-space-space-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🪐️space/🎛️app/🪐️space/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+   Compiling semio-s-plugin-space v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🪐️space/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust)
+    Finished `wasm-release` profile [optimized] target(s) in 18.74s

@@ -1,0 +1,18 @@
+[framework/editor/rs] wasm-pack build --profile wasm-release --target web --out-dir pkg --out-name framework_editor --no-pack
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+   Compiling web-sys v0.3.103
+   Compiling wgpu-types v27.0.1
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling wgpu v27.0.1
+   Compiling vello v0.7.0
+   Compiling vello_svg v0.9.0
+   Compiling semio-framework-os-kernel-infinite-canvas v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust)
+   Compiling semio-framework-editor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust)
+    Finished `wasm-release` profile [optimized] target(s) in 24.04s
+[INFO]: found wasm-opt at "/Users/ueli/Documents/semio/node_modules/.bin/wasm-opt"
+[INFO]: Optimizing wasm binaries with `wasm-opt`...
+[INFO]: ✨   Done in 1m 05s
+[INFO]: 📦   Your wasm pkg is ready to publish at /Users/ueli/Documents/semio/🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust/pkg.
+[framework/editor/rs] wasm build done in 66.8s
+[framework/editor/rs] pkg/framework_editor_bg.wasm ready (2.36 MiB) + pkg/package.json restored

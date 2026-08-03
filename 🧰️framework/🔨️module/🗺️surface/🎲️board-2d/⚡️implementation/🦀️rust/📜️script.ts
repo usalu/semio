@@ -9,6 +9,7 @@ class WasmScript extends BundleScript {
       skipEnvVar: "FRAMEWORK_SURFACE_BOARD_2D_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/surface/board-2d/rs",
       wasmBaseName: "framework_surface_board_2d",
+      profile: "wasm-release",
       pkg: {
         name: "@semio-tech/framework-surface-board-2d-rs",
         files: ["framework_surface_board_2d_bg.wasm", "framework_surface_board_2d.js", "framework_surface_board_2d.d.ts", "framework_surface_board_2d_bg.wasm.d.ts"],

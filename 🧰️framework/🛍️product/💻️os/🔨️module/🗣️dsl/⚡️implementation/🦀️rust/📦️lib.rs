@@ -430,6 +430,63 @@ pub fn idiom(lang: &str) -> Option<IdiomHooks> {
     let registry = idiom_registry().lock().unwrap_or_else(|poison| poison.into_inner());
     registry.get(lang).copied()
 }
+
+/// @emoji 🎭️ Which of an app's three grammars (per the `handcrafted-grammar-for-every-artifact`
+/// program) a registered [`LanguageSpec`] describes. `Embedded` is `DslIdiom`'s existing Route B
+/// (a `Shape::Embed(lang)` host field), kept as its own variant rather than folded into `Document`
+/// since an embedded language has no `extension`/`DocumentCodec` of its own.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LanguageRole {
+    Document,
+    Config,
+    Ops,
+    Embedded,
+}
+
+/// @emoji 📖️ One app's grammar, registered once at plugin/idiom init: identity, the extension it
+/// opens (documents/configs only — an `.ops` grammar and an embedded idiom have none), the
+/// hand-authored `.grammar` spec text (once one exists for this language — most don't yet, hence
+/// `Option`, not a hard requirement, so registering ahead of writing the spec file isn't blocked),
+/// and the same [`IdiomHooks`] vtable `DslIdiom`-based registration already produces. This is
+/// deliberately additive alongside `IdiomHooks`/`register_idiom`/`idiom`, not a replacement: no
+/// existing registration (Jack's, or the `#[cfg(test)]` ones in this file) is touched by adding it.
+#[derive(Clone, Copy)]
+pub struct LanguageSpec {
+    pub id: &'static str,
+    pub extension: Option<&'static str>,
+    pub role: LanguageRole,
+    pub grammar: Option<&'static str>,
+    pub hooks: IdiomHooks,
+}
+
+static LANGUAGE_REGISTRY: OnceLock<Mutex<HashMap<&'static str, LanguageSpec>>> = OnceLock::new();
+
+fn language_registry() -> &'static Mutex<HashMap<&'static str, LanguageSpec>> {
+    LANGUAGE_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// @emoji 📌️ Registers one grammar under its `id` — called once per grammar at plugin init,
+/// alongside (not instead of) `register_document_codec_for_app`. Overwrites on re-registration,
+/// matching `register_idiom`'s hot-reload-safe behavior.
+pub fn register_language(spec: LanguageSpec) {
+    let mut registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    registry.insert(spec.id, spec);
+}
+
+/// @emoji 🔍️ Looks up a registered grammar by its `id` (e.g. `"fem2d"`, `"fem2dcfg"`, `"jack"`).
+pub fn language(id: &str) -> Option<LanguageSpec> {
+    let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    registry.get(id).copied()
+}
+
+/// @emoji 🔍️ Looks up a registered grammar by the file extension it opens — the resolution a
+/// writer (or any editor) needs to pick a language for a document it's opening by path/URI. `None`
+/// for extensions with no registered document/config grammar (op grammars and embedded idioms
+/// have no extension of their own and are never found this way).
+pub fn language_for_extension(ext: &str) -> Option<LanguageSpec> {
+    let registry = language_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    registry.values().find(|spec| spec.extension == Some(ext)).copied()
+}
 //#endregion 🔖️Idiom
 
 //#region 🔖️TestSupport
@@ -533,6 +590,24 @@ mod tests {
         assert_eq!(canonical, "hello world", "canonicalize normalizes through parse -> print");
         assert!((hooks.canonicalize)("not a greeting").is_err(), "a malformed idiom body must surface the idiom's own parse error");
         assert!(idiom("never-registered-lang").is_none(), "an unregistered lang must resolve to None, never a default/error");
+    }
+
+    #[test]
+    fn language_registry_resolves_by_id_and_by_extension() {
+        register_language(LanguageSpec {
+            id: "greet-doc",
+            extension: Some("greet"),
+            role: LanguageRole::Document,
+            grammar: None,
+            hooks: hooks_for::<GreetIdiom>(),
+        });
+        let by_id = language("greet-doc").expect("registered language must be found by its id");
+        assert_eq!(by_id.extension, Some("greet"));
+        assert_eq!(by_id.role, LanguageRole::Document);
+        let by_ext = language_for_extension("greet").expect("registered language must be found by its extension");
+        assert_eq!(by_ext.id, "greet-doc");
+        assert!(language("never-registered-id").is_none());
+        assert!(language_for_extension("never-registered-ext").is_none());
     }
 
     #[test]

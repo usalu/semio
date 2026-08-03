@@ -1,0 +1,20 @@
+error: unexpected argument 'catalogue_has' found
+
+Usage: cargo test [OPTIONS] [TESTNAME] [-- [ARGS]...]
+
+For more information, try '--help'.
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: `semio-framework-os-kernel-flow-core` (lib test) generated 6 warnings (run `cargo fix --lib -p semio-framework-os-kernel-flow-core --tests` to apply 6 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 14.84s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../🫀️core/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/flow_core-966f0daf912002d6)
+
+running 1 test
+test tests::contributed_extension_manifest_installs_catalogue_operator ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.01s
+

@@ -7,17 +7,28 @@ import { DEMONSTRATOR_PANES } from "./🟦️brand.ts";
 
 const demonstratorRoot = import.meta.dir;
 
-/** @emoji 🎪️ Builds every demonstrator pane's plugin crate + declared engines into the shared
- * `🧧framework/os/dev` `🔌️plugin-modules/` dir this page's own `⚙️vite.config.ts` static-serves from —
- * one live page hosting six panes needs all six variants' plugins available at once, unlike a single
- * `os/dev` session which only ever needs its own active variant. */
+/** @emoji 🎪️ Builds the demonstrator's plugin crate + every pane's declared engines into the shared
+ * `🧧framework/os/dev` `🔌️plugin-modules/` dir this page's own `⚙️vite.config.ts` static-serves from.
+ *
+ * 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: all six panes now share ONE plugin crate
+ * (`✏️s/🔌️plugin/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust` — see its docstring),
+ * so the plugin build only needs to run once, keyed off any one pane's variant (`buildPlugins`/
+ * `ensurePluginRegistry` resolve a variant to its plugin crate; all six now resolve to the same one).
+ * This also removes the six-way `writePlaygroundSession` race that used to exist here — each pane's
+ * `buildPlugins` call overwrote the same generated session file with its own variant, in array order.
+ * Engines still need a per-pane pass: only some panes declare one (e.g. only `verfolgen` needs
+ * tiled-map), and each variant's own registry row carries its own `engines` list independently even
+ * though they now share a `pluginId`. */
 async function buildDemonstratorPlugins(): Promise<void> {
-  for (const pane of DEMONSTRATOR_PANES) {
+  const primaryVariant = DEMONSTRATOR_PANES[0]?.variant;
+  if (primaryVariant) {
     if (process.env.SKIP_PLUGIN_BUILD === "1") {
-      await ensurePluginRegistry(pane.variant);
+      await ensurePluginRegistry(primaryVariant);
     } else {
-      await buildPlugins(pane.variant);
+      await buildPlugins(primaryVariant);
     }
+  }
+  for (const pane of DEMONSTRATOR_PANES) {
     await buildEngineWasm(pane.variant, "react");
   }
 }

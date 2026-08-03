@@ -3536,6 +3536,17 @@ export function useUiDriverDragSurface(): boolean {
   return useUiDriver().drag === "surface";
 }
 
+/** @emoji 🤝 Arm native HTML5 `draggable` only while a drag handle is pressed. */
+export function useNativeDragArm(): { readonly armed: boolean; readonly arm: () => void } {
+  const [armed, setArmed] = reactHostPort.useState(false);
+  const arm = reactHostPort.useCallback(() => {
+    setArmed(true);
+    window.addEventListener("pointerup", () => setArmed(false), { once: true });
+  }, []);
+  return { armed, arm };
+}
+
+
 /** @emoji 🎙️ The active driver's tooltip richness. */
 export function useUiDriverTooltips(): UiDriverTooltips {
   return useUiDriver().tooltips;
@@ -20763,7 +20774,7 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ 
   const accessibleLabel = useControlAccessibleLabel(id, label);
   const inlineText = useControlInlineText(id, label);
   const surfaceDrag = useUiDriverDragSurface();
-  const draggable = showDragHandle && Boolean(dragPointerProps);
+  const canDrag = showDragHandle && Boolean(dragPointerProps);
   return (
     <button
       type="button"
@@ -20774,7 +20785,7 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ 
       disabled={disabled}
       onClick={onClick}
       className={cn(windowPaneChromeToggleClass, className)}
-      {...(draggable && surfaceDrag ? dragPointerProps : {})}
+      {...(canDrag && surfaceDrag ? dragPointerProps : {})}
     >
       <span className={panelTabIconSlotClass}>{renderControlIcon(icon, "tiny")}</span>
       {inlineText !== undefined ? (
@@ -20782,7 +20793,9 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ 
           {inlineText}
         </span>
       ) : null}
-      {draggable && !surfaceDrag ? <DragHandle {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} /> : null}
+      {showDragHandle && !surfaceDrag ? (
+        <DragHandle labelId="ui.tree.drag.sort" {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} />
+      ) : null}
     </button>
   );
 };
@@ -21118,6 +21131,75 @@ export function usePointerDrag<TElement extends HTMLElement = HTMLDivElement>(ha
 }
 
 /** @emoji 📦️ Native HTML drag-and-drop event props for a host element. */
+/** @emoji 🌲 Panel tree-unit dock header — handle-only under the default driver, whole-header under surface drag. */
+function PanelTreeUnitHeader({
+  anchor,
+  tabId,
+  unit,
+  index,
+  unitDragActive,
+}: {
+  readonly anchor?: Anchor;
+  readonly tabId: string;
+  readonly unit: PanelTreeUnit;
+  readonly index: number;
+  readonly unitDragActive: boolean;
+}) {
+  const dock = usePanelDockContext();
+  const surfaceDrag = useUiDriverDragSurface();
+  const { armed, arm } = useNativeDragArm();
+  const unitDockDraggable = Boolean(dock && anchor);
+  const effectiveDraggable = unitDockDraggable && (surfaceDrag || armed);
+  const UnitIcon = unit.icon;
+  return (
+    <div
+      data-slot="panel-tree-unit-header"
+      draggable={effectiveDraggable}
+      onDragStart={
+        unitDockDraggable
+          ? (event) => {
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData(PANEL_TREE_UNIT_MIME, unit.id);
+              beginPanelTreeUnitDrag({ tabId, unitId: unit.id, label: unit.label ?? tabId });
+            }
+          : undefined
+      }
+      onDragEnd={unitDockDraggable ? () => endPanelTreeUnitDrag() : undefined}
+      onDragOver={
+        unitDockDraggable
+          ? (event) => {
+              if (event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) event.preventDefault();
+            }
+          : undefined
+      }
+      onDrop={
+        unitDockDraggable
+          ? (event) => {
+              if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME) || !dock || !anchor) return;
+              event.preventDefault();
+              const session = readActivePanelTreeUnitDrag();
+              if (!session) return;
+              dock.onTreeUnitDockDrop({ unitId: session.unitId, fromTabId: session.tabId, target: { anchor, tabId, index } });
+              endPanelTreeUnitDrag();
+            }
+          : undefined
+      }
+      className={cn(
+        "flex shrink-0 items-center gap-single px-single py-half text-2xs",
+        unitDragActive ? "text-emphasized" : "text-muted-foreground",
+        unitDockDraggable && surfaceDrag && "cursor-grab active:cursor-grabbing",
+        unitDragActive && dropZoneReadyFillClass,
+      )}
+    >
+      {UnitIcon ? <UnitIcon size={12} /> : null}
+      <span className="min-w-0 truncate">{unit.label}</span>
+      {unitDockDraggable && !surfaceDrag ? (
+        <DragHandle labelId="ui.tree.drag.sort" className="ms-auto" onPointerDown={arm} emphasized={unitDragActive} />
+      ) : null}
+    </div>
+  );
+}
+
 export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivElement>(
   handlers: {
     onDragStart?: React.DragEventHandler<TElement>;
@@ -21198,16 +21280,13 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   /** @emoji ♻️ Identity-only prop — included so memo re-renders when lazy tree sources must re-resolve. */
   readonly treeContentRevision?: unknown;
 }) {
-  const dock = usePanelDockContext();
   const flow = useFlow();
   const sortedUnits = [...units].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  const unitDockDraggable = Boolean(dock && anchor);
   const unitDragActive = usePanelTreeUnitDragActive();
   return (
     <>
       {sortedUnits.map((unit, index) => {
         const config = resolveTreePanelSource(unit.tree);
-        const UnitIcon = unit.icon;
         const unitPrefix = `${unit.id}:`;
         const unitOpenStates = treeOpenStates
           ? Object.fromEntries(
@@ -21221,49 +21300,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
         return (
           <React.Fragment key={unit.id}>
             {showUnitHeader ? (
-              <div
-                data-slot="panel-tree-unit-header"
-                draggable={unitDockDraggable}
-                onDragStart={
-                  unitDockDraggable
-                    ? (event) => {
-                        event.dataTransfer.effectAllowed = "move";
-                        event.dataTransfer.setData(PANEL_TREE_UNIT_MIME, unit.id);
-                        beginPanelTreeUnitDrag({ tabId, unitId: unit.id, label: unit.label ?? tabId });
-                      }
-                    : undefined
-                }
-                onDragEnd={unitDockDraggable ? () => endPanelTreeUnitDrag() : undefined}
-                onDragOver={
-                  unitDockDraggable
-                    ? (event) => {
-                        if (event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) event.preventDefault();
-                      }
-                    : undefined
-                }
-                onDrop={
-                  unitDockDraggable
-                    ? (event) => {
-                        if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME) || !dock || !anchor) return;
-                        event.preventDefault();
-                        const session = readActivePanelTreeUnitDrag();
-                        if (!session) return;
-                        dock.onTreeUnitDockDrop({ unitId: session.unitId, fromTabId: session.tabId, target: { anchor, tabId, index } });
-                        endPanelTreeUnitDrag();
-                      }
-                    : undefined
-                }
-                className={cn(
-                  "flex shrink-0 items-center gap-single px-single py-half text-2xs",
-                  unitDragActive ? "text-emphasized" : "text-muted-foreground",
-                  unitDockDraggable && "cursor-grab active:cursor-grabbing",
-                  unitDragActive && dropZoneReadyFillClass,
-                )}
-              >
-                {UnitIcon ? <UnitIcon size={12} /> : null}
-                <span className="min-w-0 truncate">{unit.label}</span>
-                {unitDockDraggable ? <DragHandle labelId="ui.tree.drag.sort" className="ms-auto" emphasized={unitDragActive} /> : null}
-              </div>
+              <PanelTreeUnitHeader anchor={anchor} tabId={tabId} unit={unit} index={index} unitDragActive={unitDragActive} />
             ) : null}
             <Tree
               className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden", config.className)}
@@ -21861,8 +21898,8 @@ export const Pane: React.FC<PaneProps> = ({
                 label={label ?? id}
                 disabled={toggleDisabled}
                 onClick={mobile ? undefined : onFoldToggle}
-                dragPointerProps={mobile ? undefined : dragPointerProps}
-                showDragHandle={!mobile && Boolean(onAnchorChange)}
+                dragPointerProps={mobile || !onAnchorChange ? undefined : dragPointerProps}
+                showDragHandle={!mobile}
                 emphasized={dragging}
               />
             }
@@ -26360,7 +26397,91 @@ interface TableDraggableRowProps<T> {
   onRowMouseLeave?: (row: T, index: number) => void;
 }
 
+/** @emoji 🖱 Native HTML5 table-row drag that honors the UI driver (handle vs surface). */
+function TableHtml5DragRow<T>({
+  row,
+  rowId,
+  index,
+  isSelected,
+  customRowClassName,
+  isDragging,
+  rowHeightClass,
+  visibleColumns,
+  rowDragProps,
+  onRowClick,
+  onRowContextMenu,
+  onRowDoubleClick,
+  onRowMouseEnter,
+  onRowMouseLeave,
+}: {
+  readonly row: T;
+  readonly rowId: string;
+  readonly index: number;
+  readonly isSelected: boolean;
+  readonly customRowClassName: string;
+  readonly isDragging: boolean;
+  readonly rowHeightClass: string;
+  readonly visibleColumns: TableColumn<T>[];
+  readonly rowDragProps?: (row: T, index: number) => React.HTMLAttributes<HTMLTableRowElement>;
+  readonly onRowClick?: (row: T, index: number, event: React.MouseEvent) => void;
+  readonly onRowContextMenu?: (row: T, index: number, event: React.MouseEvent) => void;
+  readonly onRowDoubleClick?: (row: T, index: number) => void;
+  readonly onRowMouseEnter?: (row: T, index: number) => void;
+  readonly onRowMouseLeave?: (row: T, index: number) => void;
+}) {
+  const driverSurfaceDrag = useUiDriverDragSurface();
+  const { armed, arm } = useNativeDragArm();
+  const dragProps = rowDragProps?.(row, index) ?? {};
+  const wantsDrag = Boolean(dragProps.draggable || dragProps.onDragStart);
+  const effectiveDraggable = wantsDrag && (driverSurfaceDrag || armed);
+  const baseRowClassName = cn(
+    borderNormalBottomClass,
+    rowHeightClass,
+    tableRowInteractiveClass,
+    isSelected && tableRowSelectedClass,
+    wantsDrag && driverSurfaceDrag && "cursor-grab active:cursor-grabbing",
+    isDragging && "opacity-50",
+    onRowClick && "cursor-selectable",
+    customRowClassName,
+  );
+  const { draggable: _ignoredDraggable, className: dragClassName, ...restDragProps } = dragProps;
+  return (
+    <tr
+      className={cn(baseRowClassName, dragClassName)}
+      draggable={effectiveDraggable || undefined}
+      {...restDragProps}
+      onClick={(e) => {
+        if (e.detail >= 2) {
+          onRowDoubleClick?.(row, index);
+          return;
+        }
+        onRowClick?.(row, index, e);
+      }}
+      onContextMenu={(e) => {
+        onRowContextMenu?.(row, index, e);
+      }}
+      onMouseEnter={() => onRowMouseEnter?.(row, index)}
+      onMouseLeave={() => onRowMouseLeave?.(row, index)}
+      role={onRowClick ? "button" : undefined}
+      tabIndex={onRowClick ? 0 : undefined}
+      data-row-id={rowId}
+    >
+      {visibleColumns.map((column, columnIndex) => (
+        <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
+          <div className="flex items-center h-full min-w-0 gap-1">
+            {wantsDrag && !driverSurfaceDrag && columnIndex === 0 ? (
+              <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} />
+            ) : null}
+            {column.accessor(row)}
+          </div>
+        </td>
+      ))}
+    </tr>
+  );
+}
+
 function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassName, activeId, rowHeightClass, visibleColumns, dragDrop, onRowClick, onRowContextMenu, onRowDoubleClick, onRowMouseEnter, onRowMouseLeave }: TableDraggableRowProps<T>) {
+  const driverSurfaceDrag = useUiDriverDragSurface();
   const canDragRow = !dragDrop?.canDrag || dragDrop.canDrag(rowId);
   const {
     attributes,
@@ -26389,7 +26510,7 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
       ref={combinedRef}
       style={style}
       className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
-      {...(canDragRow ? { ...attributes, ...listeners } : {})}
+      {...(canDragRow && driverSurfaceDrag ? { ...attributes, ...listeners } : canDragRow ? { ...attributes } : {})}
       onClick={(e) => {
         if (e.detail >= 2) {
           onRowDoubleClick?.(row, index);
@@ -26406,9 +26527,14 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
       tabIndex={onRowClick ? 0 : undefined}
       data-row-id={rowId}
     >
-      {visibleColumns.map((column) => (
+      {visibleColumns.map((column, columnIndex) => (
         <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
-          <div className="flex items-center h-full min-w-0">{column.accessor(row)}</div>
+          <div className="flex items-center h-full min-w-0 gap-1">
+            {canDragRow && !driverSurfaceDrag && columnIndex === 0 ? (
+              <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} />
+            ) : null}
+            {column.accessor(row)}
+          </div>
         </td>
       ))}
     </tr>
@@ -26594,36 +26720,26 @@ const Table = <T,>({
                   );
                 }
 
-                const baseRowClassName = cn(borderNormalBottomClass, rowHeightClass, tableRowInteractiveClass, isSelected && tableRowSelectedClass);
                 const isDragging = activeId === rowId;
 
                 return (
-                  <tr
+                  <TableHtml5DragRow
                     key={key}
-                    className={cn(baseRowClassName, customRowClassName, isDragging && "opacity-50", onRowClick && "cursor-selectable")}
-                    onClick={(e) => {
-                      if (e.detail >= 2) {
-                        onRowDoubleClick?.(row, index);
-                        return;
-                      }
-                      onRowClick?.(row, index, e);
-                    }}
-                    onContextMenu={(e) => {
-                      onRowContextMenu?.(row, index, e);
-                    }}
-                    onMouseEnter={() => onRowMouseEnter?.(row, index)}
-                    onMouseLeave={() => onRowMouseLeave?.(row, index)}
-                    role={onRowClick ? "button" : undefined}
-                    tabIndex={onRowClick ? 0 : undefined}
-                    data-row-id={rowId}
-                    {...rowDragProps?.(row, index)}
-                  >
-                    {visibleColumns.map((column) => (
-                      <td key={column.id} className={`${rowHeightClass} px-single py-0 align-middle text-sm [&_svg:not([class*='size-'])]:size-small [&_img]:size-small ${column.className || ""}`}>
-                        <div className="flex items-center h-full min-w-0">{column.accessor(row)}</div>
-                      </td>
-                    ))}
-                  </tr>
+                    row={row}
+                    rowId={rowId}
+                    index={index}
+                    isSelected={isSelected}
+                    customRowClassName={customRowClassName}
+                    isDragging={isDragging}
+                    rowHeightClass={rowHeightClass}
+                    visibleColumns={visibleColumns}
+                    rowDragProps={rowDragProps}
+                    onRowClick={onRowClick}
+                    onRowContextMenu={onRowContextMenu}
+                    onRowDoubleClick={onRowDoubleClick}
+                    onRowMouseEnter={onRowMouseEnter}
+                    onRowMouseLeave={onRowMouseLeave}
+                  />
                 );
               })
             )}
@@ -38282,7 +38398,9 @@ if (treeVitest) {
       );
       expect(markup).toContain('data-drag-role="transfer"');
       expect(markup).not.toContain('data-drag-role="sort"');
-      expect(markup).not.toContain('draggable="true"');
+      expect(markup).toContain('data-slot="tree-item-row"');
+      expect(markup).toMatch(/data-slot="tree-item-row"[^>]*draggable="false"/);
+      expect(markup).toContain('data-slot="drag-handle"');
     });
 
     it("compact driver collapses drag roles onto the row surface", () => {
@@ -38296,7 +38414,54 @@ if (treeVitest) {
       expect(markup).not.toContain('data-slot="drag-handle"');
       expect(markup).toContain('draggable="true"');
     });
-it("useControlInlineText hides labels only under an icons-only driver", () => {
+
+    it("table HTML5 drag rows expose a transfer handle under the default driver", () => {
+      const markup = renderToStaticMarkup(
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+          <Table
+            columns={[{ id: "name", header: "Name", accessor: (row: { name: string }) => row.name }]}
+            data={[{ id: "r1", name: "Row", _drag: { kind: "x" } }]}
+            getRowId={(row) => row.id}
+            rowDragProps={(row) =>
+              row._drag
+                ? {
+                    draggable: true,
+                    onDragStart: () => undefined,
+                  }
+                : {}
+            }
+          />
+        </UiDriverProvider>,
+      );
+      expect(markup).toContain('data-slot="drag-handle"');
+      expect(markup).toContain('data-drag-role="transfer"');
+      expect(markup).not.toMatch(/<tr[^>]*draggable="true"/);
+      expect(markup).not.toMatch(/<tr[^>]*cursor-grab/);
+    });
+
+    it("compact driver keeps table rows surface-draggable without a transfer handle", () => {
+      const markup = renderToStaticMarkup(
+        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+          <Table
+            columns={[{ id: "name", header: "Name", accessor: (row: { name: string }) => row.name }]}
+            data={[{ id: "r1", name: "Row", _drag: { kind: "x" } }]}
+            getRowId={(row) => row.id}
+            rowDragProps={(row) =>
+              row._drag
+                ? {
+                    draggable: true,
+                    onDragStart: () => undefined,
+                  }
+                : {}
+            }
+          />
+        </UiDriverProvider>,
+      );
+      expect(markup).not.toContain('data-slot="drag-handle"');
+      expect(markup).toContain('draggable="true"');
+    });
+
+    it("useControlInlineText hides labels only under an icons-only driver", () => {
       const iconsMarkup = renderToStaticMarkup(
         <UiDriverProvider driver={COMPACT_UI_DRIVER}>
           <Button id="settings.driver.compact" icon={<CheckIcon />} />

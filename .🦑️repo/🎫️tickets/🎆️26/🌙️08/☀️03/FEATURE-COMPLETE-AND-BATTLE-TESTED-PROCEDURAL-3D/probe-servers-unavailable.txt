@@ -1,0 +1,4 @@
+Runtime Playwright probe (procedural-3d-runtime-probe.mts) not executed: dev servers on 6018/6118 were not reachable at ticket close time.
+Run via launch.json entries 🛠️dev🔧️procedural🏙️3d⚛️react and 🛠️dev🔧️procedural🏙️3d🧊️wgpu🌐️wasm, then:
+  PROCEDURAL_3D_RENDERER=react bun .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️03/FEATURE-COMPLETE-AND-BATTLE-TESTED-PROCEDURAL-3D/procedural-3d-runtime-probe.mts
+  PROCEDURAL_3D_RENDERER=wgpu bun .../procedural-3d-runtime-probe.mts

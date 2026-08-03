@@ -1109,7 +1109,7 @@ impl DocumentApp for FlowPlayApp {
         match body_key {
             FLOW_PLAY_BODY_MAIN => render_main_graph(fixture, config),
             FLOW_PLAY_BODY_COMPILED => render_compiled_dag(fixture, config),
-            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(config, view_state.locale, view_state.terminology),
+            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(config, flow_locale(config), Terminology::Native),
             FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, config),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(config),
             FLOW_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_node_ids, labels),

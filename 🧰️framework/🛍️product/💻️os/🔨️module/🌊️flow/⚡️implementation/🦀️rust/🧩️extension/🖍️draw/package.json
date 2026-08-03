@@ -2,13 +2,13 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/flow-module-draw",
   "version": "0.1.0",
-  "description": "flow \u00b7 module \u00b7 draw",
+  "description": "flow · module · draw",
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./rs/pkg/flow_extension_draw.js",
-    "./pkg/flow_extension_draw.js": "./rs/pkg/flow_extension_draw.js",
-    "./pkg/flow_extension_draw_bg.wasm": "./rs/pkg/flow_extension_draw_bg.wasm"
+    ".": "./pkg/flow_extension_draw.js",
+    "./pkg/flow_extension_draw.js": "./pkg/flow_extension_draw.js",
+    "./pkg/flow_extension_draw_bg.wasm": "./pkg/flow_extension_draw_bg.wasm"
   },
   "scripts": {
     "wasm": "bun nx run @semio-tech/flow-module-draw:wasm"

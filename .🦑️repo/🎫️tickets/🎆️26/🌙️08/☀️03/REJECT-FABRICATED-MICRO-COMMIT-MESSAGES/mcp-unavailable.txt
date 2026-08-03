@@ -1,0 +1,1 @@
+repo MCP server not registered in this Cursor session catalog; ticket opened via repo CLI.

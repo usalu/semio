@@ -1,0 +1,26 @@
+
+  Transpiled JS Component Files:
+
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/semio-framework-host.d.ts         0.21 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/semio-framework-plugin.d.ts       0.64 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/semio-framework-types.d.ts        0.33 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-environment.d.ts         0.11 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-exit.d.ts                0.17 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-stderr.d.ts              0.16 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-stdin.d.ts               0.15 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-stdout.d.ts              0.16 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-terminal-input.d.ts      0.17 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-terminal-output.d.ts     0.17 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-terminal-stderr.d.ts      0.2 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-terminal-stdin.d.ts       0.2 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-cli-terminal-stdout.d.ts      0.2 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-clocks-monotonic-clock.d.ts  0.27 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-clocks-wall-clock.d.ts       0.16 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-io-error.d.ts                0.15 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-io-poll.d.ts                 0.23 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-io-streams.d.ts              0.73 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/interfaces/wasi-random-insecure-seed.d.ts    0.11 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/semio_s_plugin_space_component.core.wasm     2.53 MiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/semio_s_plugin_space_component.d.ts           2.2 KiB
+ - 🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules/s/semio_s_plugin_space_component.js             242 KiB
+

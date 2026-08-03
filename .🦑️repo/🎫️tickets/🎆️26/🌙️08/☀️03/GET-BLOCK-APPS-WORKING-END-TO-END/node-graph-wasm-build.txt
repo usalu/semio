@@ -1,0 +1,25 @@
+[framework/surface/node-graph/rs] wasm-pack build --profile wasm-release --target web --out-dir pkg --out-name framework_surface_node_graph --no-pack
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🛂️manifest/⚡️implementation/🦀️rust)
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-drawing v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🖊️drawing/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-normal-undirected v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-port v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/⚡️implementation/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-port-directed v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-port-directed-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-surface-node-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🗺️surface/🕸️node-graph/⚡️implementation/🦀️rust)
+    Finished `wasm-release` profile [optimized] target(s) in 1m 03s
+[INFO]: found wasm-opt at "/Users/ueli/Documents/semio/node_modules/.bin/wasm-opt"
+[INFO]: Optimizing wasm binaries with `wasm-opt`...
+[INFO]: ✨   Done in 6m 06s
+[INFO]: 📦   Your wasm pkg is ready to publish at /Users/ueli/Documents/semio/🧰️framework/🔨️module/🗺️surface/🕸️node-graph/⚡️implementation/🦀️rust/pkg.
+[framework/surface/node-graph/rs] wasm build done in 368.0s
+[framework/surface/node-graph/rs] pkg/framework_surface_node_graph_bg.wasm ready (29.92 MiB) + pkg/package.json restored

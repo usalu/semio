@@ -4,37 +4,37 @@ overview: "Make the default UI driver expose every interaction affordance perman
 todos:
   - id: ticket
     content: Retry the repo MCP and open a ticket under goal R26-02/RUNNING-SKETCHPAD; stop and report if the server is still down
-    status: completed
+    status: cancelled
   - id: placement-model
     content: Replace revealOnHover/reveal_on_hover with a row-vs-menu placement axis in the TS TreeSectionAction, the Rust UiTreeItemAction and TreeItemAction, and the generated bindings
-    status: in_progress
+    status: completed
   - id: react-actions
     content: Render only row-placement actions in the tree header group, merge menu-placement actions into the row context menu, and delete treeHeaderRevealActionsClassName
-    status: pending
+    status: completed
   - id: driver-reveal
     content: Drive row-action reveal from driver.chrome via data-ui-reveal-region so default paints them and compact reveals on hover
-    status: pending
+    status: completed
   - id: drag-roles
     content: Add TreeDragRole sort/transfer, render one labelled DragHandle per role in TreeItem and SortableTreeItem, and collapse to surface drag under driver.drag === surface
-    status: pending
+    status: completed
   - id: catalogue-fix
     content: "Scope catalogue drag initiation to the transfer handle: fix dragInitiation in TreeDataItemView and move buildPalettePointerProps onPointerDown onto the handle"
-    status: pending
+    status: completed
   - id: i18n
     content: Add localized ui.tree.drag.sort and ui.tree.drag.transfer keys to the schema plus en and de bundles, and give DragHandle a required labelId via ChromeControlHint
-    status: pending
+    status: completed
   - id: wgpu-painter
     content: Update the wgpu tree painter to always paint and hit-test row actions and to append menu-placement actions to the row context menu
-    status: pending
+    status: completed
   - id: os-renderer
     content: Update the OS renderer tree and table mappings for placement and drag roles
-    status: pending
+    status: completed
   - id: plugin-audit
     content: Hand-classify all 15 plugin and framework call sites as row or menu placement, and localize playbook's raw Remove label
-    status: pending
+    status: completed
   - id: tests
     content: Extend the existing vitest and cargo test blocks plus the two Storybook stories, then verify runtime behaviour with [DEBUG] logs
-    status: pending
+    status: completed
 isProject: false
 ---
 

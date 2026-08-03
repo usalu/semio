@@ -21,6 +21,7 @@
         "@types/node": "^22.19.6",
         "@types/react": "^19.2.8",
         "@vitest/coverage-v8": "^4.0.17",
+        "binaryen": "^130.0.0",
         "chevrotain": "^11.0.3",
         "eslint": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -298,6 +299,20 @@
       "name": "@semio-tech/mit-bestand-bericht",
       "version": "0.1.0",
     },
+    "♻️mit-bestand/🧺️demonstrator": {
+      "name": "@semio-tech/mit-bestand-demonstrator",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@tailwindcss/vite": "^4.1.18",
+        "@vitejs/plugin-react": "^5.1.2",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+      },
+    },
+    "✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim": {
+      "name": "@semio-tech/flow-module-bim",
+      "version": "0.1.0",
+    },
     "✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/⚡️implementation/🟦️typescript": {
       "name": "@semio-tech/animate-present-core",
       "version": "0.1.0",
@@ -508,6 +523,10 @@
       "name": "@semio-tech/puzzle-3d-rs",
       "version": "0.1.0",
     },
+    "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust": {
+      "name": "@semio-tech/puzzle-3d-ui-rs",
+      "version": "0.1.0",
+    },
     "✏️s/🔌️plugin/🧩️puzzle/🔨️module/🖼️asset/⚡️implementation/🟦️typescript": {
       "name": "@semio-tech/puzzle-asset",
       "version": "0.1.0",
@@ -564,8 +583,8 @@
         "@react-three/drei": "^10.7.7",
         "@react-three/fiber": "^9.5.0",
         "@react-three/postprocessing": "^3.0.4",
+        "@semio-tech/asset": "workspace:*",
         "@semio-tech/framework-core": "workspace:*",
-        "@semio-tech/ui-asset": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "@xstate/react": "^6.0.0",
         "@xyflow/react": "^12.10.0",
@@ -629,23 +648,11 @@
         "typescript": "^5.9.3",
       },
     },
-    "🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript": {
-      "name": "@semio-tech/ui-asset",
-      "version": "1.0.0",
-    },
     "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript": {
       "name": "@semio-tech/asset",
       "version": "1.0.0",
       "dependencies": {
-        "@semio-tech/ui-asset": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
-      },
-    },
-    "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🔣️icon": {
-      "name": "@semio-tech/icon",
-      "version": "1.0.0",
-      "devDependencies": {
-        "@semio-tech/logo": "*",
       },
     },
     "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🖼️image": {
@@ -735,8 +742,36 @@
         "vite": "^7.3.1",
       },
     },
-    "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep": {
+    "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list": {
+      "name": "@semio-tech/flow-module-list",
+      "version": "0.1.0",
+    },
+    "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep": {
       "name": "@semio-tech/flow-module-brep",
+      "version": "0.1.0",
+    },
+    "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary": {
+      "name": "@semio-tech/flow-module-dictionary",
+      "version": "0.1.0",
+    },
+    "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📝️text": {
+      "name": "@semio-tech/flow-module-text",
+      "version": "0.1.0",
+    },
+    "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw": {
+      "name": "@semio-tech/flow-module-draw",
+      "version": "0.1.0",
+    },
+    "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧠️logic": {
+      "name": "@semio-tech/flow-module-logic",
+      "version": "0.1.0",
+    },
+    "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧮️math": {
+      "name": "@semio-tech/flow-module-math",
+      "version": "0.1.0",
+    },
+    "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core": {
+      "name": "@semio-tech/flow-module-core",
       "version": "0.1.0",
     },
     "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/pkg": {
@@ -754,6 +789,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@react-three/fiber": "^9.5.0",
+        "@semio-tech/asset": "workspace:*",
         "@semio-tech/flow-core": "workspace:*",
         "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-editor-rs": "workspace:*",
@@ -765,7 +801,6 @@
         "@semio-tech/infinite-canvas-react-renderer": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/puzzle-2d-rs": "workspace:*",
-        "@semio-tech/ui-asset": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "fuse.js": "^7.1.0",
@@ -787,8 +822,8 @@
       "name": "@semio-tech/framework-renderer-wgpu",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/asset": "workspace:*",
         "@semio-tech/framework-core": "workspace:*",
-        "@semio-tech/ui-asset": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -1839,7 +1874,23 @@
 
     "@semio-tech/flow-core": ["@semio-tech/flow-core@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/pkg"],
 
-    "@semio-tech/flow-module-brep": ["@semio-tech/flow-module-brep@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep"],
+    "@semio-tech/flow-module-bim": ["@semio-tech/flow-module-bim@workspace:✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim"],
+
+    "@semio-tech/flow-module-brep": ["@semio-tech/flow-module-brep@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep"],
+
+    "@semio-tech/flow-module-core": ["@semio-tech/flow-module-core@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core"],
+
+    "@semio-tech/flow-module-dictionary": ["@semio-tech/flow-module-dictionary@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary"],
+
+    "@semio-tech/flow-module-draw": ["@semio-tech/flow-module-draw@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw"],
+
+    "@semio-tech/flow-module-list": ["@semio-tech/flow-module-list@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list"],
+
+    "@semio-tech/flow-module-logic": ["@semio-tech/flow-module-logic@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧠️logic"],
+
+    "@semio-tech/flow-module-math": ["@semio-tech/flow-module-math@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧮️math"],
+
+    "@semio-tech/flow-module-text": ["@semio-tech/flow-module-text@workspace:🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📝️text"],
 
     "@semio-tech/framework-core": ["@semio-tech/framework-core@workspace:🧰️framework/⚡️implementation/🟦️typescript"],
 
@@ -1865,8 +1916,6 @@
 
     "@semio-tech/graph-manifest": ["@semio-tech/graph-manifest@workspace:🧰️framework/🔨️module/🧮️math/🕸️graph/🛂️manifest/⚡️implementation/🦀️rust"],
 
-    "@semio-tech/icon": ["@semio-tech/icon@workspace:🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🔣️icon"],
-
     "@semio-tech/image": ["@semio-tech/image@workspace:🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🖼️image"],
 
     "@semio-tech/infinite-canvas-react-renderer": ["@semio-tech/infinite-canvas-react-renderer@workspace:🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementation/🟦️typescript"],
@@ -1881,11 +1930,15 @@
 
     "@semio-tech/mit-bestand-bericht": ["@semio-tech/mit-bestand-bericht@workspace:♻️mit-bestand/📋️bericht/⚡️implementation/🟦️typescript"],
 
+    "@semio-tech/mit-bestand-demonstrator": ["@semio-tech/mit-bestand-demonstrator@workspace:♻️mit-bestand/🧺️demonstrator"],
+
     "@semio-tech/print": ["@semio-tech/print@workspace:🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript"],
 
     "@semio-tech/puzzle-2d-rs": ["@semio-tech/puzzle-2d-rs@workspace:✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust"],
 
     "@semio-tech/puzzle-3d-rs": ["@semio-tech/puzzle-3d-rs@workspace:✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust"],
+
+    "@semio-tech/puzzle-3d-ui-rs": ["@semio-tech/puzzle-3d-ui-rs@workspace:✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust"],
 
     "@semio-tech/puzzle-5d-rs": ["@semio-tech/puzzle-5d-rs@workspace:✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/⚙️engine/⚡️implementation/🦀️rust"],
 
@@ -1900,8 +1953,6 @@
     "@semio-tech/trinity-jack-lsp": ["@semio-tech/trinity-jack-lsp@workspace:✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/🧠️lsp/⚡️implementation/🦀️rust"],
 
     "@semio-tech/trinity-ram": ["@semio-tech/trinity-ram@workspace:✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust"],
-
-    "@semio-tech/ui-asset": ["@semio-tech/ui-asset@workspace:🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript"],
 
     "@semio-tech/ui-react": ["@semio-tech/ui-react@workspace:🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript"],
 

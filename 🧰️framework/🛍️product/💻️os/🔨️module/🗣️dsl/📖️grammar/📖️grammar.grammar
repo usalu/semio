@@ -1,0 +1,18 @@
+grammar grammar
+start file
+
+file = header production*
+header = "grammar" IDENT extension-line? use-line* "start" IDENT
+extension-line = "extension" IDENT
+use-line = "use" IDENT
+production = IDENT "=" alternatives
+alternatives = sequence {"|" sequence}*
+sequence = symbol+
+symbol = literal | terminal | reference | macro-call | group
+literal = TEXT
+terminal = IDENT
+reference = IDENT
+macro-call = IDENT "(" macro-arg {"," macro-arg}* ")"
+macro-arg = TEXT | IDENT
+group = "{" alternatives "}" quantifier?
+quantifier = "?" | "*" | "+"

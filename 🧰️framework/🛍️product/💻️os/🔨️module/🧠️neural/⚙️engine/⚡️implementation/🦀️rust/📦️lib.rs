@@ -620,7 +620,7 @@ pub enum EvalError {
     CardinalityViolation(String),
     HeterogeneousList(String),
     CycleDetected,
-    PendingExtension { extension_id: String },
+    PendingExtension { extension_id: String, operator_id: String, node_hash: u64 },
 }
 
 impl std::fmt::Display for EvalError {
@@ -632,7 +632,7 @@ impl std::fmt::Display for EvalError {
             EvalError::CardinalityViolation(m) => write!(f, "cardinality violation: {m}"),
             EvalError::HeterogeneousList(m) => write!(f, "heterogeneous list: {m}"),
             EvalError::CycleDetected => write!(f, "cycle detected"),
-            EvalError::PendingExtension { extension_id } => write!(f, "pending extension: {extension_id}"),
+            EvalError::PendingExtension { extension_id, operator_id, .. } => write!(f, "pending extension {extension_id} operator {operator_id}"),
         }
     }
 }
@@ -1144,6 +1144,18 @@ impl NeuralCache {
         self.entries.lock().is_ok_and(|entries| entries.contains_key(&key))
     }
 
+    /// 🌱️ Pre-seeds a node output (host-mediated extension eval) so the next budgeted pass hits the cache.
+    pub fn seed(&self, key: u64, value: Dictionary) {
+        let epoch = self.epoch.load(Ordering::Relaxed);
+        if let Ok(mut entries) = self.entries.lock() {
+            entries.insert(key, (epoch, value));
+        }
+    }
+
+    pub fn get(&self, key: u64) -> Option<Dictionary> {
+        self.entries.lock().ok().and_then(|entries| entries.get(&key).map(|(_, dict)| dict.clone()))
+    }
+
     pub fn get_or_insert_with<F>(&self, key: u64, compute: F) -> Result<Dictionary, EvalError>
     where
         F: FnOnce() -> Result<Dictionary, EvalError>,
@@ -1349,6 +1361,16 @@ pub struct EvalChannels {
 pub struct BudgetedEval {
     pub channels: EvalChannels,
     pub remaining: Vec<String>,
+    pub pending_extension: Option<PendingExtensionEval>,
+}
+
+/// ⏳️ One contributed operator that must be evaluated in its owning plugin before the graph can resume.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PendingExtensionEval {
+    pub extension_id: String,
+    pub operator_id: String,
+    pub node_hash: u64,
+    pub input_json: String,
 }
 
 /// 🔄️ Topological evaluation over a neural tree.
@@ -1456,7 +1478,7 @@ impl<'a> Evaluator<'a> {
             // cluster is conservatively always charged as a miss.
             if let Some(sub_tree) = neuron.tree.as_deref() {
                 if spent >= budget {
-                    return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: budgeted_remaining_from(&order, index, dirty) });
+                    return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
                 }
                 let out = self.evaluate_cluster_sequential(sub_tree, &input, operator_infos, dispatch, cache)?;
                 outputs.insert(neuron_id.clone(), out);
@@ -1464,17 +1486,36 @@ impl<'a> Evaluator<'a> {
                 continue;
             }
             let merged = input.merge(&neuron.params);
-            let is_miss = !cache.contains(node_hash(&neuron.kind, &merged));
+            let key = node_hash(&neuron.kind, &merged);
+            let is_miss = !cache.contains(key);
             if is_miss && spent >= budget {
-                return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: budgeted_remaining_from(&order, index, dirty) });
+                return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: budgeted_remaining_from(&order, index, dirty), pending_extension: None });
             }
-            let out = evaluate_cached_output(cache, &neuron.kind, &merged, || dispatch(&neuron.kind, &merged));
+            let out = if let Some(cached) = cache.get(key) {
+                cached
+            } else {
+                match dispatch(&neuron.kind, &merged) {
+                    Err(EvalError::PendingExtension { extension_id, operator_id, node_hash }) => {
+                        let input_json = serde_json::to_string(&merged).unwrap_or_else(|_| "{}".into());
+                        return Ok(BudgetedEval {
+                            channels: EvalChannels { outputs, inputs },
+                            remaining: budgeted_remaining_from(&order, index, dirty),
+                            pending_extension: Some(PendingExtensionEval { extension_id, operator_id, node_hash, input_json }),
+                        });
+                    }
+                    Err(err) => eval_error_dictionary(&err),
+                    Ok(dict) => {
+                        cache.seed(key, dict.clone());
+                        dict
+                    }
+                }
+            };
             outputs.insert(neuron_id.clone(), out);
             if is_miss {
                 spent += 1;
             }
         }
-        Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: Vec::new() })
+        Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: Vec::new(), pending_extension: None })
     }
 
     pub fn evaluate_channels_with(

@@ -1,0 +1,10 @@
+{
+  "title": "Reject Fabricated Micro Commit Messages",
+  "emoji": "🛑️",
+  "status": "open",
+  "description": "Agents must not invent micro-commit messages by copying skill examples (wrong WIP epoch, counter 300, email@example.com, incomplete uloc). Harden micro-commit prepare validation, commit-msg hook, and SKILL.md so fabricated messages cannot be produced or committed.",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repomechanisms🎯️repocommitmechanism",
+  "sessions": [
+    "⚪e496e17eef7341d2b1c385e5597c5acf"
+  ]
+}

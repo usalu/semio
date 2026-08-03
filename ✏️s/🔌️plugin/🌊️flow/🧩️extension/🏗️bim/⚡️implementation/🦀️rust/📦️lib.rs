@@ -6,7 +6,7 @@ use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Fi
 fn material_schema() -> Schema {
     Schema {
         id: "material".into(),
-        extension: "bim".into(),
+        module: "bim".into(),
         name: "Material".into(),
         icon: "emoji:🧱️".into(),
         summary: "Building material with thermal and structural properties".into(),
@@ -17,7 +17,7 @@ fn material_schema() -> Schema {
 fn space_schema() -> Schema {
     Schema {
         id: "space".into(),
-        extension: "bim".into(),
+        module: "bim".into(),
         name: "Space".into(),
         icon: "emoji:🏠️".into(),
         summary: "Occupiable space with area and height".into(),
@@ -28,7 +28,7 @@ fn space_schema() -> Schema {
 fn wall_schema() -> Schema {
     Schema {
         id: "wall".into(),
-        extension: "bim".into(),
+        module: "bim".into(),
         name: "Wall".into(),
         icon: "emoji:🧱️".into(),
         summary: "Structural or partition wall".into(),
@@ -39,7 +39,7 @@ fn wall_schema() -> Schema {
 fn slab_schema() -> Schema {
     Schema {
         id: "slab".into(),
-        extension: "bim".into(),
+        module: "bim".into(),
         name: "Slab".into(),
         icon: "emoji:⬜️".into(),
         summary: "Horizontal slab element".into(),
@@ -50,7 +50,7 @@ fn slab_schema() -> Schema {
 fn column_schema() -> Schema {
     Schema {
         id: "column".into(),
-        extension: "bim".into(),
+        module: "bim".into(),
         name: "Column".into(),
         icon: "emoji:🏛️".into(),
         summary: "Vertical structural column".into(),
@@ -61,7 +61,7 @@ fn column_schema() -> Schema {
 fn window_schema() -> Schema {
     Schema {
         id: "window".into(),
-        extension: "bim".into(),
+        module: "bim".into(),
         name: "Window".into(),
         icon: "emoji:🪟️".into(),
         summary: "Glazed opening".into(),
@@ -72,7 +72,7 @@ fn window_schema() -> Schema {
 fn story_schema() -> Schema {
     Schema {
         id: "story".into(),
-        extension: "bim".into(),
+        module: "bim".into(),
         name: "Story".into(),
         icon: "emoji:🏢️".into(),
         summary: "Building story with elements and spaces".into(),
@@ -88,7 +88,7 @@ fn story_schema() -> Schema {
 fn building_schema() -> Schema {
     Schema {
         id: "building".into(),
-        extension: "bim".into(),
+        module: "bim".into(),
         name: "Building".into(),
         icon: "emoji:🏗️".into(),
         summary: "Assembled building model".into(),
@@ -560,7 +560,7 @@ pub fn register(registry: &mut Registry) {
     registry.finalize();
 }
 
-#[cfg(any(test, target_arch = "wasm32"))]
+#[cfg(any(test, target_arch = "wasm32", feature = "component-guest"))]
 fn module_registry() -> Registry {
     let mut registry = Registry::new();
     register(&mut registry);
@@ -703,6 +703,32 @@ mod tests {
     }
 }
 // #endregion 🔖️Tests
+
+// #region 🔖️PluginGuest
+#[cfg(feature = "component-guest")]
+mod plugin_guest {
+    use super::module_registry;
+    use flow_extension_sdk::build_manifest_json;
+    use semio_framework_core::Contribution;
+    use semio_framework_plugin::PluginBundle;
+
+    const PLUGIN_ID: &str = "flow-extension-bim";
+    const HOST_APP_ID: &str = "procedural3d-play";
+
+    fn bundle() -> PluginBundle {
+        let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
+        PluginBundle::new(PLUGIN_ID, "Flow Extension Bim", "0.1.0").contributes(Contribution::FlowExtension {
+            app_id: HOST_APP_ID.into(),
+            extension_id: "bim".into(),
+            label: "Bim".into(),
+            icon_id: "bim".into(),
+            manifest_json,
+        })
+    }
+
+    semio_framework_plugin::plugin_exports!(bundle);
+}
+// #endregion 🔖️PluginGuest
 
 // #region 🔖️WasmExt
 #[cfg(all(target_arch = "wasm32", feature = "standalone-wasm"))]

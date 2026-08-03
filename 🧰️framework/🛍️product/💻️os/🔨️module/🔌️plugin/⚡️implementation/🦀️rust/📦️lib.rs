@@ -1438,6 +1438,42 @@ pub mod app {
             assert_eq!(probe(app), after, "redo did not reapply the expected projection");
         }
 
+        /// 🧪️ Every declared app action must bridge through `command_from_action` and round-trip `command_id`.
+        pub fn assert_declared_actions_bridge_to_commands<A: DocumentApp + Default>(manifest: fn() -> App) {
+            use semio_framework_core::{effective_action_args, DslValue};
+            use store::pack_rt::dsl_value_to_json;
+            let definition = manifest().definition;
+            let app = A::default();
+            let skip = [
+                "undo",
+                "redo",
+                "commitCheckpoint",
+                "createAlternative",
+                "switchAlternative",
+                "checkoutCheckpoint",
+                "copy",
+                "cut",
+                "paste",
+                "revertToCommand",
+                "setHistoryCommandFilter",
+                "noteShellCommand",
+                "recordTutorial",
+                "startIntroduction",
+                "startTutorial",
+                "setActiveUtility",
+                "setActiveTool",
+            ];
+            for action in &definition.actions {
+                if skip.contains(&action.id.as_str()) {
+                    continue;
+                }
+                let staged = effective_action_args(&action.args, &DslValue::Object(Vec::new()));
+                let args_json = dsl_value_to_json(staged);
+                let command = app.command_from_action(&action.id, Some(&args_json)).unwrap_or_else(|error| panic!("action {} failed to bridge: {error}", action.id));
+                assert_eq!(app.command_id(&command), action.id.as_str(), "command_id mismatch for action {}", action.id);
+            }
+        }
+
         /// 🧪️ `command_a`/`command_b` are applied to two `paired_apps` instances, a neutral history action
         /// (`commitCheckpoint`) pumps each side's inbound operations, then `probe` must agree on both — the repeated
         /// two-instance-convergence test body (see `playbook-plugin`'s
@@ -5065,17 +5101,22 @@ pub mod plugin_runtime {
                                 SECTION_KIND_ENGAGEMENTS => channel_refresh_section(&instance.app.window_engagements(), probe.hash),
                                 SECTION_KIND_MEASURES => channel_refresh_section(&instance.app.window_measures(), probe.hash),
                                 SECTION_KIND_TOOLS => channel_refresh_section(&instance.app.tool_measures(), probe.hash),
-                                // 🗣️ Labels no longer need a runtime overlay round-trip — see the JSON
-                                // refresh-ui path's identical note above `let _ = &request.labels;`.
                                 SECTION_KIND_LABELS => (0u64, None),
                                 _ => (0u64, None),
                             };
                             section_frames.push(protocol::AppFrame::UiSection { in_reply_to: Some(seq), kind: probe.kind, key: probe.key.clone(), hash, body: body.map(|value| encode_wire_serialized(&value)) });
                         }
-                        Ok(section_frames)
+                        let pending = instance.app.pending_effects();
+                        Ok((section_frames, pending))
                     });
                     match outcome {
-                        Ok(section_frames) => frames.extend(section_frames),
+                        Ok((section_frames, pending_effects)) => {
+                            frames.extend(section_frames);
+                            if !pending_effects.is_empty() {
+                                let encoded = pending_effects.iter().map(|effect| encode_wire_serialized(effect)).collect();
+                                frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects: encoded });
+                            }
+                        }
                         Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
                     }
                 }

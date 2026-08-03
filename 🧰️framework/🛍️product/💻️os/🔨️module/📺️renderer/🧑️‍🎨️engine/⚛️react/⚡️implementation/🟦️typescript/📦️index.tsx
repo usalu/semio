@@ -295,6 +295,9 @@ import {
   useShellKeydown,
   detectShellLocale,
   disposeShellI18nInstance,
+  DragHandle,
+  useUiDriverDragSurface,
+  useNativeDragArm,
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/asset";
 import {
@@ -5771,6 +5774,7 @@ function FrameworkOsShellInner({
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
   const importSpaceInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
+  const contributionsJsonRef = useRef<string | null>(null);
   const spawnedRefreshGenerationRef = useRef(0);
   const contributorInstancesRef = useRef<Map<string, number>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
@@ -6329,6 +6333,13 @@ function FrameworkOsShellInner({
         // ⏱️ See `DocumentApp::pending_effects` — e.g. resuming a `flowEvalTick` chain after this refresh.
         if (response.requestedEffects?.length) await applyHostEffects(response.requestedEffects, nextSession);
       }
+      if (contributionsJson && contributionsJson !== contributionsJsonRef.current) {
+        contributionsJsonRef.current = contributionsJson;
+        const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
+        if (pluginEntry) {
+          await pluginEntry.handle.handleAction(nextSession.instanceId, "setContributions", { json: contributionsJson });
+        }
+      }
       // 🐢️ Merge-with-identity-preservation: unrequested/unchanged sections keep exactly the object
       // reference already in `cache` (dispatched from a prior refresh), so `mergeRecordPreservingIdentity`
       // bails on them via reference equality — this is what lets `InterpretedUiNode`'s `React.memo` (and
@@ -6749,6 +6760,25 @@ function FrameworkOsShellInner({
               payload,
               makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects),
             );
+          }
+          continue;
+        }
+        if ("requestPluginExchange" in effect) {
+          const { pluginId, appId, requestJson, responseAction } = effect.requestPluginExchange;
+          const request = JSON.parse(requestJson) as { operatorId?: string; inputJson?: string; nodeHash?: number };
+          const contributor = loadedPlugins.find((entry) => entry.handle.pluginId === pluginId);
+          if (contributor && request.operatorId && request.inputJson != null && request.nodeHash != null) {
+            try {
+              const bim = (await import("@semio-tech/flow-module-bim")) as { evaluate?: (kindId: string, inputJson: string) => string };
+              const outputJson = typeof bim.evaluate === "function" ? bim.evaluate(request.operatorId, request.inputJson) : "";
+              console.log("[DEBUG] requestPluginExchange resolved extension eval", { pluginId, appId, operatorId: request.operatorId, nodeHash: request.nodeHash });
+              await makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects)(responseAction, {
+                nodeHash: request.nodeHash,
+                outputJson,
+              });
+            } catch (error) {
+              console.warn("[os-shell] requestPluginExchange failed", { pluginId, appId, error });
+            }
           }
           continue;
         }
@@ -9767,6 +9797,15 @@ async function performRefreshUi(client: AppChannelClient, request: PluginUiRefre
 
   const frames = await client.refreshUi(probes, request.viewState ?? {});
   const sections = frames.filter((frame): frame is Extract<AppFrameValue, { readonly UiSection: unknown }> => "UiSection" in frame);
+  let requestedEffects: HostEffect[] = [];
+  const refreshSeq = sections[0]?.UiSection.in_reply_to;
+  if (refreshSeq !== undefined) {
+    for (const frame of frames) {
+      if ("Effects" in frame && frame.Effects.in_reply_to === refreshSeq) {
+        requestedEffects = frame.Effects.effects.map((bytes) => decodePackValue(new Uint8Array(bytes)) as HostEffect);
+      }
+    }
+  }
   if (sections.length !== probes.length) {
     const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
     throw new Error(errorFrame ? `[DEBUG] refreshUi failed (${errorFrame.Error.code}): ${errorFrame.Error.message}` : `[DEBUG] refreshUi: expected ${probes.length} UiSection frames, got ${sections.length}`);
@@ -9793,11 +9832,7 @@ async function performRefreshUi(client: AppChannelClient, request: PluginUiRefre
     else if (target.kind === "tools") tools = response;
     else labels = response;
   });
-  // ⏱️ `requestedEffects` stays empty: `plugin_exchange` only drains `pending_effects` when a
-  // `Command` in the SAME batch mutated the document — a pure `RefreshUi` batch never sets `mutated`,
-  // so no `Effects` frame can appear here. A refresh-triggered effect chain (e.g. resuming a
-  // `flowEvalTick`) is therefore a documented Wave 1 gap, not silently dropped.
-  return { windows, panels, engagements, measures, tools, labels };
+  return { windows, panels, engagements, measures, tools, labels, requestedEffects };
 }
 
 async function performContextMenu(client: AppChannelClient, request: PluginContextMenuRequest): Promise<readonly ContextMenuItemSpec[]> {
@@ -9887,6 +9922,17 @@ const ENGINE_SESSION_IMPORTERS: Record<string, () => Promise<EngineSessionWasmMo
 
 const engineSessionModulePromises = new Map<string, Promise<EngineSessionWasmModule>>();
 
+/** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: deliberately NOT wired through the framework core's
+ * `createLeasePool` — this cache's `dispose` would be a no-op. A wasm-bindgen ES-module engine is a
+ * module-scope singleton in its realm (`node_modules/@semio-tech/flow-core/flow_core.js`'s cached
+ * `wasm`/`wasmInstance`, `__wbg_init`/`initSync` both early-return once set); there is no deinit
+ * export, and `WebAssembly.Memory` never shrinks. Once instantiated, an engine's compiled code and
+ * memory high-water mark are pinned for the document's lifetime — that ceiling is real and cannot be
+ * evicted from here. The actual mitigation is prompt `session.free()` on every consuming surface's
+ * unmount (see each `*Host` component below) so the wasm-side allocator reuses freed pages instead of
+ * growing further; that keeps the ceiling from climbing, even though it can't lower it. True unload
+ * requires hosting an engine in a dedicated Worker whose `terminate()` actually releases the isolate —
+ * a larger follow-up, out of this slice. */
 async function createEngineSession<TSession>(engineKind: keyof typeof ENGINE_SESSION_IMPORTERS, sessionClassName: string): Promise<TSession> {
   let modulePromise = engineSessionModulePromises.get(engineKind);
   if (!modulePromise) {
@@ -9900,6 +9946,61 @@ async function createEngineSession<TSession>(engineKind: keyof typeof ENGINE_SES
   return new mod[sessionClassName]() as TSession;
 }
 //#endregion 🔖️EngineSessionLoader
+
+//#region 🔖️DemandFrameScheduler
+/** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: shared render-on-demand scheduler for wasm engine
+ * surfaces that used to run an unconditional `requestAnimationFrame` loop forever (flow node-graph,
+ * tiled-map, paint-2d, board-2d) — holding the tab at 60fps even fully idle, which also prevents the
+ * browser from throttling/backgrounding it. Mirrors the pattern already used correctly elsewhere in
+ * this file: `WasmGraphSurface` renders only from event handlers, and the r3f world uses
+ * `frameloop="demand"` + explicit `invalidate()` (`♾️infinite/🌍️world/🎨️r3f/…/📦️index.tsx`).
+ * `invalidate()` schedules a render on the next frame, then keeps rendering for `trailingWindowMs`
+ * after the LAST invalidate — this absorbs wasm-side eased/animated state (e.g. a spring settling)
+ * without needing a per-engine "is something still animating" query. `beginContinuous`/`endContinuous`
+ * cover genuinely continuous work (an active pointer gesture, a running compute progress indicator)
+ * where invalidate-per-event would be too coarse. */
+function createDemandFrameScheduler(render: () => void, opts?: { readonly trailingWindowMs?: number }): { invalidate(): void; beginContinuous(reason: string): void; endContinuous(reason: string): void; dispose(): void } {
+  const trailingWindowMs = opts?.trailingWindowMs ?? 250;
+  const continuousReasons = new Set<string>();
+  let raf = 0;
+  let trailingUntil = 0;
+  let disposed = false;
+
+  const tick = () => {
+    raf = 0;
+    if (disposed) return;
+    render();
+    if (continuousReasons.size > 0 || Date.now() < trailingUntil) {
+      raf = requestAnimationFrame(tick);
+    }
+  };
+  const ensureScheduled = () => {
+    if (disposed || raf !== 0) return;
+    raf = requestAnimationFrame(tick);
+  };
+
+  return {
+    invalidate() {
+      trailingUntil = Date.now() + trailingWindowMs;
+      ensureScheduled();
+    },
+    beginContinuous(reason: string) {
+      continuousReasons.add(reason);
+      ensureScheduled();
+    },
+    endContinuous(reason: string) {
+      continuousReasons.delete(reason);
+      if (continuousReasons.size === 0) trailingUntil = Date.now() + trailingWindowMs;
+    },
+    dispose() {
+      disposed = true;
+      continuousReasons.clear();
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+    },
+  };
+}
+//#endregion 🔖️DemandFrameScheduler
 
 //#region GraphSession
 export async function createGraphSession(): Promise<GraphWasmSession> {
@@ -17773,24 +17874,38 @@ function flattenFlowCatalogueItems(sections: readonly FlowCatalogueSection[]): F
   return out;
 }
 
-function scoreFlowCatalogueItem(item: FlowCatalogueItem, query: string): number | null {
+function scoreFlowCatalogueItem(item: FlowCatalogueItem, query: string, sectionTitle?: string): number | null {
   if (!query) return item.kind === "neuron" ? 1 : 2;
   const q = query.toLowerCase();
   const name = item.name.toLowerCase();
   const neuron = (item.neuronKind ?? "").toLowerCase();
   const abbr = item.abbreviation.toLowerCase();
+  const summary = item.summary.toLowerCase();
+  const section = (sectionTitle ?? "").toLowerCase();
   if (name === q || neuron === q || abbr === q) return 0;
-  if (name.startsWith(q) || neuron.startsWith(q) || abbr.startsWith(q)) return 1;
-  if (name.includes(q) || neuron.includes(q) || abbr.includes(q)) return 2;
+  if (name.startsWith(q) || neuron.startsWith(q) || abbr.startsWith(q) || section.startsWith(q)) return 1;
+  if (name.includes(q) || neuron.includes(q) || abbr.includes(q) || summary.includes(q) || section.includes(q)) return 2;
   return null;
 }
 
 /** @emoji 🔎️ Ranks catalogue items for the double-click spotlight (exact/prefix/substring; neurons first). */
 export function flowRankCatalogueSuggestions(sections: readonly FlowCatalogueSection[], query: string): FlowCatalogueItem[] {
-  const scored = flattenFlowCatalogueItems(sections)
-    .map((item) => ({ item, score: scoreFlowCatalogueItem(item, query.trim()) }))
-    .filter((row): row is { item: FlowCatalogueItem; score: number } => row.score != null)
-    .sort((a, b) => {
+  const scored: { item: FlowCatalogueItem; score: number }[] = [];
+  const walkGroup = (group: FlowCatalogueGroup, sectionTitle: string) => {
+    for (const item of group.items ?? []) {
+      const score = scoreFlowCatalogueItem(item, query.trim(), sectionTitle);
+      if (score != null) scored.push({ item, score });
+    }
+    for (const child of group.groups ?? []) walkGroup(child, sectionTitle);
+  };
+  for (const section of sections) {
+    for (const item of section.items ?? []) {
+      const score = scoreFlowCatalogueItem(item, query.trim(), section.title);
+      if (score != null) scored.push({ item, score });
+    }
+    for (const group of section.groups ?? []) walkGroup(group, section.title);
+  }
+  scored.sort((a, b) => {
       if (a.score !== b.score) return a.score - b.score;
       const aNeuron = a.item.kind === "neuron" ? 0 : 1;
       const bNeuron = b.item.kind === "neuron" ? 0 : 1;
@@ -19273,6 +19388,7 @@ export function FlowGraphCanvasHost({
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const contextMenuTitleLabel = useLabel("ui.surfaceContextMenu.flow");
   const sessionRef = useRef<FlowWasmSession | null>(null);
+  const schedulerRef = useRef<ReturnType<typeof createDemandFrameScheduler> | null>(null);
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -19367,6 +19483,7 @@ export function FlowGraphCanvasHost({
 
   const handleGesturePointerDown = useCallback(() => {
     isGestureActiveRef.current = true;
+    schedulerRef.current?.beginContinuous("gesture");
   }, []);
 
   useEffect(() => {
@@ -19410,6 +19527,8 @@ export function FlowGraphCanvasHost({
 
   const handleGesturePointerUp = useCallback(() => {
     isGestureActiveRef.current = false;
+    schedulerRef.current?.endContinuous("gesture");
+    schedulerRef.current?.invalidate();
     if (pendingCommitTimeoutRef.current != null) {
       clearTimeout(pendingCommitTimeoutRef.current);
       pendingCommitTimeoutRef.current = null;
@@ -19448,12 +19567,19 @@ export function FlowGraphCanvasHost({
   useEffect(() => {
     let cancelled = false;
     void createFlowSession().then((session) => {
-      if (cancelled) return;
+      if (cancelled) {
+        session.free();
+        return;
+      }
       sessionRef.current = session;
       setSessionReady(true);
     });
     return () => {
       cancelled = true;
+      // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was never freed on unmount — the wasm-side
+      // session (and everything it retains) leaked for the rest of the document's lifetime.
+      sessionRef.current?.free();
+      sessionRef.current = null;
     };
   }, []);
 
@@ -19470,7 +19596,6 @@ export function FlowGraphCanvasHost({
     if (!session || !canvas || !container || !sessionReady) return;
     const rect = container.getBoundingClientRect();
     const dpr = globalThis.devicePixelRatio || 1;
-    let raf = 0;
     let cancelled = false;
     let cleanupAttached: (() => void) | undefined;
     session
@@ -19489,14 +19614,18 @@ export function FlowGraphCanvasHost({
         resize();
         const ro = new ResizeObserver(resize);
         ro.observe(container);
-        const tick = () => {
+        // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was an unconditional 60fps `requestAnimationFrame`
+        // loop for the surface's entire lifetime — see `createDemandFrameScheduler`'s docstring.
+        const scheduler = createDemandFrameScheduler(() => {
           session.renderFrame();
-          raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
+          paintOverlays();
+        });
+        schedulerRef.current = scheduler;
+        scheduler.invalidate();
         cleanupAttached = () => {
           ro.disconnect();
-          if (raf) cancelAnimationFrame(raf);
+          scheduler.dispose();
+          schedulerRef.current = null;
         };
       })
       .catch(() => {
@@ -19518,6 +19647,7 @@ export function FlowGraphCanvasHost({
     }
     session.renderFrame();
     paintOverlays();
+    schedulerRef.current?.invalidate();
   }, [sceneSignature, paintOverlays, scene, sessionReady]);
 
   const flowGraphCanvasHostShellScope = useShellScopeOptional();
@@ -19530,6 +19660,7 @@ export function FlowGraphCanvasHost({
         /* gpu not ready */
       }
       paintOverlays();
+      schedulerRef.current?.invalidate();
     },
     true,
     flowGraphCanvasHostShellScope?.rootRef.current ?? undefined,
@@ -20699,6 +20830,23 @@ function dispatchCellAction(onAction: (action: ActionDescriptor) => void, descri
   });
 }
 
+function tableRowMenuPlacementItems(row: TableRowRecord, onAction: (action: ActionDescriptor) => void): ContextMenuItem[] {
+  const items: ContextMenuItem[] = [];
+  for (const value of Object.values(row)) {
+    if (!isTableCellRecord(value) || value.kind !== "buttons") continue;
+    for (const [index, button] of value.buttons.entries()) {
+      if ((button.placement ?? "row") !== "menu") continue;
+      items.push({
+        id: `table-row-action-${button.iconId}-${index}`,
+        label: button.label,
+        icon: button.iconId,
+        onSelect: () => dispatchCellAction(onAction, button.action, {}),
+      });
+    }
+  }
+  return items;
+}
+
 function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescriptor) => void): React.ReactNode {
   switch (cell.kind) {
     case "text":
@@ -20888,7 +21036,12 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
               mapContextMenu,
               shellContextMenuFallback,
             );
-            setContextMenu({ x: event.clientX, y: event.clientY, items });
+            const menuActions = tableRowMenuPlacementItems(row, onAction);
+            setContextMenu({
+              x: event.clientX,
+              y: event.clientY,
+              items: menuActions.length ? [...items, ...(items.length ? [{ id: "table-row-action-separator", separator: true } as ContextMenuItem] : []), ...menuActions] : items,
+            });
           })();
         }}
       />
@@ -21077,11 +21230,20 @@ function Paint2dCanvasSurface({
   //#region Session lifecycle
   useEffect(() => {
     let cancelled = false;
+    let createdSession: RasterWasmSession | null = null;
     void createRasterSession().then((session) => {
-      if (!cancelled) setWasmSession(session);
+      if (cancelled) {
+        session.free();
+        return;
+      }
+      createdSession = session;
+      setWasmSession(session);
     });
     return () => {
       cancelled = true;
+      // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was never freed on unmount — the wasm-side
+      // session (and everything it retains) leaked for the rest of the document's lifetime.
+      createdSession?.free();
     };
   }, []);
 
@@ -21754,7 +21916,6 @@ function serializeMapCanvasThemeJson(): string {
 class MapRenderer {
   readonly session: MapWasmSession;
   camera: MapCamera = { x: 0, y: 0, zoom: 1 };
-  private raf = 0;
   private disposed = false;
   private canvasEl: HTMLCanvasElement | null = null;
   private tileCache = new Map<string, ArrayBuffer>();
@@ -21775,6 +21936,7 @@ class MapRenderer {
   private logicalWidth = 1;
   private logicalHeight = 1;
   private dpr = 1;
+  private scheduler: ReturnType<typeof createDemandFrameScheduler> | null = null;
 
   constructor(tileUrlTemplate: string, vectorTileUrlTemplate: string, session: MapWasmSession) {
     this.session = session;
@@ -21849,11 +22011,13 @@ class MapRenderer {
     this.session.reclampCamera();
     const parsed = this.readCameraFromSession();
     if (parsed) this.camera = parsed;
+    this.invalidate();
     return true;
   }
 
   syncDescriptor(json: string): void {
     this.session.syncMapJson(json);
+    this.invalidate();
   }
 
   readCameraFromSession(): MapCamera | null {
@@ -21863,6 +22027,34 @@ class MapRenderer {
   applyCameraToSession(camera: MapCamera): void {
     this.camera = camera;
     this.session.setCamera(camera.x, camera.y, camera.zoom);
+    this.invalidate();
+  }
+
+  /** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: schedules one render (plus a brief trailing
+   * window — see `createDemandFrameScheduler`) instead of relying on the permanent loop this class
+   * used to run. Safe to call before `startLoop()`/after `stopLoop()` — it's a no-op until the
+   * scheduler exists. */
+  invalidate(): void {
+    this.scheduler?.invalidate();
+  }
+
+  /** 🪶️ Held down for the duration of a pan/zoom gesture (see `TiledMapHost`'s pointer handlers) so
+   * tile visibility keeps getting polled every frame while the viewport is actually moving, instead
+   * of only on each discrete `invalidate()`. */
+  beginContinuousInteraction(reason: string): void {
+    this.scheduler?.beginContinuous(reason);
+  }
+
+  endContinuousInteraction(reason: string): void {
+    this.scheduler?.endContinuous(reason);
+    this.invalidate();
+  }
+
+  /** 🪶️ Public wrapper so `TiledMapHost` can drive this from `useCanvasAppearanceSync` (fires on
+   * actual theme changes) instead of the old per-frame call inside the render loop. */
+  syncTheme(): void {
+    this.syncMapThemeFromDocument();
+    this.invalidate();
   }
 
   private needsRasterTiles(): boolean {
@@ -21893,6 +22085,9 @@ class MapRenderer {
       if (this.needsRasterTiles()) tasks.push(this.refreshRasterTiles());
       if (this.needsVectorTiles()) tasks.push(this.refreshVectorTiles());
       await Promise.all(tasks);
+      // 🪶️ Newly-uploaded tiles need a fresh frame to actually become visible — the old unconditional
+      // render loop covered this implicitly; the demand scheduler needs telling explicitly.
+      this.invalidate();
     })().finally(() => {
       this.refreshInFlight = null;
       if (this.tilesRefreshQueued) {
@@ -21996,22 +22191,28 @@ class MapRenderer {
     }
   }
 
+  /** 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: used to be an unconditional 60fps
+   * `requestAnimationFrame` loop for the surface's entire lifetime, no dirty check — see
+   * `createDemandFrameScheduler`'s docstring. Theme sync moved off the per-frame path onto
+   * `syncTheme()` (driven by `useCanvasAppearanceSync` in `TiledMapHost`, which only fires on actual
+   * theme changes); tile-visibility polling still runs every scheduled frame — cheap on its own
+   * (two wasm string reads, only *schedules* a refresh when the visible-tile key actually changed —
+   * see `pollVisibleTilesForRefresh`) but now only runs while something has called `invalidate()` or
+   * `beginContinuousInteraction()` (pan/zoom gestures — see `TiledMapHost`'s pointer handlers),
+   * instead of forever. */
   startLoop(): void {
-    const tick = () => {
+    if (this.scheduler) return;
+    this.scheduler = createDemandFrameScheduler(() => {
       if (this.disposed) return;
-      this.syncMapThemeFromDocument();
       this.pollVisibleTilesForRefresh();
       void this.session.renderFrame();
-      this.raf = requestAnimationFrame(tick);
-    };
-    this.raf = requestAnimationFrame(tick);
+    });
+    this.scheduler.invalidate();
   }
 
   stopLoop(): void {
-    if (this.raf) {
-      cancelAnimationFrame(this.raf);
-      this.raf = 0;
-    }
+    this.scheduler?.dispose();
+    this.scheduler = null;
   }
 
   dispose(): void {
@@ -22258,6 +22459,11 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
     };
   }, [clampCamera, readContainerSize, resolveMapPaneElement, scene?.tileUrlTemplate, scene?.vectorTileUrlTemplate]);
 
+  // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: theme sync used to run unconditionally every
+  // frame inside `MapRenderer`'s render loop (forcing a style recalc every frame via
+  // `serializeMapCanvasThemeJson`); now it only runs when the theme actually changes.
+  useCanvasAppearanceSync(() => rendererRef.current?.syncTheme(), true, shellScope?.rootRef.current ?? undefined);
+
   useEffect(() => {
     if (!scene) return;
     const renderer = rendererRef.current;
@@ -22402,6 +22608,9 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         userAdjustedCameraRef.current = true;
         canvas.setPointerCapture?.(event.pointerId);
         rendererRef.current?.session.pointerDownScreen(point.x, point.y, 1);
+        // 🪶️ Keeps the demand scheduler rendering continuously for the duration of the pan gesture —
+        // see `MapRenderer.beginContinuousInteraction`'s docstring.
+        rendererRef.current?.beginContinuousInteraction("pan");
       }
     };
     const onPointerMove = (event: PointerEvent): void => {
@@ -22447,6 +22656,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
         pointer.current.middleDown = false;
         panningRef.current = false;
         rendererRef.current?.session.pointerUpScreen(point.x, point.y);
+        rendererRef.current?.endContinuousInteraction("pan");
         if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
         mirrorSessionCameraToReact();
         rendererRef.current?.scheduleRefreshTiles();
@@ -25291,12 +25501,13 @@ function dispatchBlockListAction(onAction: (action: ActionDescriptor) => void, c
 
 //#region SortableRow
 /** 🧩️ Wraps a row in dnd-kit's sortable machinery so it can be reordered within its enclosing `SortableContext`. */
-function SortableRow({ id, children }: { readonly id: string; readonly children: (dragHandleProps: { readonly ref: (node: HTMLElement | null) => void; readonly style: React.CSSProperties }) => React.ReactNode }) {
+function SortableRow({ id, children }: { readonly id: string; readonly children: (dragHandleProps: { readonly attributes: React.HTMLAttributes<HTMLElement>; readonly listeners: Record<string, unknown> | undefined; readonly style: React.CSSProperties }) => React.ReactNode }) {
+  const surfaceDrag = useUiDriverDragSurface();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style: React.CSSProperties = { transform: DndCSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {children({ ref: setNodeRef, style })}
+    <div ref={setNodeRef} style={style} {...attributes} {...(surfaceDrag ? listeners : {})}>
+      {children({ attributes, listeners: surfaceDrag ? undefined : listeners, style })}
     </div>
   );
 }
@@ -25304,11 +25515,12 @@ function SortableRow({ id, children }: { readonly id: string; readonly children:
 
 //#region Block
 function BlockCard({ block, stepId, controllerId, onAction }: { readonly block: BlockRecord; readonly stepId: string; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+  const surfaceDrag = useUiDriverDragSurface();
   return (
     <SortableRow id={block.id}>
-      {() => (
-        <div className="semio-block-card flex items-center gap-2 rounded border border-border bg-background p-single" data-block-id={block.id}>
-          <Icon icon="grip-vertical" size="small" />
+      {({ attributes, listeners }) => (
+        <div className={cn("semio-block-card flex items-center gap-2 rounded border border-border bg-background p-single", surfaceDrag && "cursor-grab active:cursor-grabbing")} data-block-id={block.id}>
+          {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
           <div className="min-w-0 flex-1">
             <div className="truncate text-xs font-medium">{block.label}</div>
             <div className="truncate text-xs text-muted-foreground">{block.kind}</div>
@@ -25323,6 +25535,7 @@ function BlockCard({ block, stepId, controllerId, onAction }: { readonly block: 
 
 //#region Step
 function StepCard({ step, palette, controllerId, onAction }: { readonly step: StepRecord; readonly palette: readonly PaletteEntryRecord[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+  const surfaceDrag = useUiDriverDragSurface();
   const blockIds = useMemo(() => step.blocks.map((block) => block.id), [step.blocks]);
 
   function handleBlockDragEnd(event: DragEndEvent) {
@@ -25335,9 +25548,9 @@ function StepCard({ step, palette, controllerId, onAction }: { readonly step: St
 
   return (
     <SortableRow id={step.id}>
-      {() => (
+      {({ attributes, listeners }) => (
         <div
-          className="semio-step-card flex flex-col gap-2 rounded border border-border bg-background p-single"
+          className={cn("semio-step-card flex flex-col gap-2 rounded border border-border bg-background p-single", surfaceDrag && "cursor-grab active:cursor-grabbing")}
           data-step-id={step.id}
           onDragOver={(event) => {
             event.preventDefault();
@@ -25351,7 +25564,7 @@ function StepCard({ step, palette, controllerId, onAction }: { readonly step: St
           }}
         >
           <div className="flex items-center gap-2">
-            <Icon icon="grip-vertical" size="small" />
+            {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" attributes={attributes} listeners={listeners} onClick={(event) => event.stopPropagation()} /> : <Icon icon="grip-vertical" size="small" />}
             <div className="min-w-0 flex-1 truncate text-sm font-medium">{step.title}</div>
             <Button className="h-medium shrink-0 px-2" icon="trash-2" type="button" variant="outline" onClick={() => dispatchBlockListAction(onAction, controllerId, "removeStep", { stepId: step.id })} />
           </div>
@@ -25373,23 +25586,31 @@ function StepCard({ step, palette, controllerId, onAction }: { readonly step: St
 //#endregion Step
 
 //#region Palette
+function PaletteEntryRow({ entry, controllerId, onAction }: { readonly entry: PaletteEntryRecord; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+  const surfaceDrag = useUiDriverDragSurface();
+  const { armed, arm } = useNativeDragArm();
+  return (
+    <div
+      draggable={surfaceDrag || armed}
+      onDragStart={(event) => {
+        event.dataTransfer.setData(PALETTE_DRAG_MIME, entry.blockKind);
+        event.dataTransfer.effectAllowed = "copy";
+      }}
+      className={cn("flex items-center gap-1 rounded border border-border p-single text-xs", surfaceDrag && "cursor-grab active:cursor-grabbing")}
+      onClick={() => dispatchBlockListAction(onAction, controllerId, "addBlock", { kind: entry.blockKind })}
+    >
+      {!surfaceDrag ? <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" onPointerDown={arm} onClick={(event) => event.stopPropagation()} /> : null}
+      <Icon icon={entry.iconId} size="small" />
+      {entry.label}
+    </div>
+  );
+}
+
 function PalettePanel({ palette, controllerId, onAction }: { readonly palette: readonly PaletteEntryRecord[]; readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }) {
   return (
     <div className="semio-palette flex shrink-0 flex-col gap-1 border-l border-border p-single">
       {palette.map((entry) => (
-        <div
-          key={entry.blockKind}
-          draggable
-          onDragStart={(event) => {
-            event.dataTransfer.setData(PALETTE_DRAG_MIME, entry.blockKind);
-            event.dataTransfer.effectAllowed = "copy";
-          }}
-          className="flex cursor-grab items-center gap-1 rounded border border-border p-single text-xs"
-          onClick={() => dispatchBlockListAction(onAction, controllerId, "addBlock", { kind: entry.blockKind })}
-        >
-          <Icon icon={entry.iconId} size="small" />
-          {entry.label}
-        </div>
+        <PaletteEntryRow key={entry.blockKind} entry={entry} controllerId={controllerId} onAction={onAction} />
       ))}
     </div>
   );

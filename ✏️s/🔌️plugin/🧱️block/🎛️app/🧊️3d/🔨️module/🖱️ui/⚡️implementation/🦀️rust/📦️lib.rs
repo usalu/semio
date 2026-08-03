@@ -9,6 +9,7 @@ use block_3d::{Block3dDefinition, Block3dVortexKind, Block3dVortexTemplate, BLOC
 use block_3d_engine::Block3dConfig;
 use block_3d_op::{Block3dConfigOperation, Block3dOperation};
 use block_3d_protocol::Block3dCommand;
+use serde_json::Value;
 use block_shared::BlockRepresentation;
 use semio_framework_plugin::{
     tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media,
@@ -219,6 +220,33 @@ impl DocumentApp for Block3dPlayApp {
             Block3dCommand::Edit { .. } => "edit",
             Block3dCommand::SetSelection { .. } => "setSelection",
             Block3dCommand::SetActiveRepresentation { .. } => "setActiveRepresentation",
+        }
+    }
+
+
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, String> {
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+        let str_vec_field = |key: &str| -> Vec<String> {
+            args.and_then(|value| value.get(key))
+                .and_then(|value| value.as_array())
+                .map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect())
+                .unwrap_or_default()
+        };
+        match action {
+            "patchObjectKind" => Ok(Block3dCommand::PatchObjectKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() }),
+            "addRepresentation" => Ok(Block3dCommand::AddRepresentation),
+            "removeRepresentation" => Ok(Block3dCommand::RemoveRepresentation { id: str_field("id").unwrap_or_default() }),
+            "addVortexKind" => Ok(Block3dCommand::AddVortexKind),
+            "removeVortexKind" => Ok(Block3dCommand::RemoveVortexKind { id: str_field("id").unwrap_or_default() }),
+            "addVortex" => Ok(Block3dCommand::AddVortex),
+            "removeVortex" => Ok(Block3dCommand::RemoveVortex { id: str_field("id").unwrap_or_default() }),
+            "setActiveExample" => Ok(Block3dCommand::SetActiveExample { id: str_field("exampleId").or_else(|| str_field("id")).unwrap_or_default() }),
+            "edit" => Ok(Block3dCommand::Edit { text: str_field("text").unwrap_or_default() }),
+            "setSelection" => Ok(Block3dCommand::SetSelection { ids: str_vec_field("ids") }),
+            "setActiveRepresentation" => Ok(Block3dCommand::SetActiveRepresentation { representation_id: str_field("representationId").or_else(|| str_field("representation_id")) }),
+            other => Err(format!(
+                "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+            )),
         }
     }
 
@@ -480,4 +508,10 @@ mod tests {
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
     }
 }
+
+    #[test]
+    fn command_from_action_bridges_set_active_example() {
+        let app = Block3dPlayApp;
+        assert!(matches!(app.command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "capsule" }))), Ok(Block3dCommand::SetActiveExample { id }) if id == "capsule"));
+    }
 //#endregion 🧪️Tests

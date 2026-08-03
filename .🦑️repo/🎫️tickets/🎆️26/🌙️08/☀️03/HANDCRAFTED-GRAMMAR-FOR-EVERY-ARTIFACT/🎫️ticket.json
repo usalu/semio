@@ -1,0 +1,13 @@
+{
+  "title": "Handcrafted Grammar for Every Artifact",
+  "emoji": "📖️",
+  "status": "open",
+  "description": "Move from one generic dsl/protocol grammar to handcrafted document-specific grammars for every app/artifact: all ~53 document grammars, ~34 config grammars, ~53 op-line grammars, plus embedded languages (jack, construct, expr, md). Graph-like data reads over arrows (a@port -e1:Connection\u003e b@port {props}), reusing shared family grammar kits designed consistently. Every grammar ships a hand-authored .grammar spec file with a repo-wide conformance sweep, gets service from one shared LSP host, and is opened live in the writer with real diagnostics/completion/highlighting. Full architecture + execution program at /Users/ueli/.claude/plans/pack-spr-and-dsl-op-are-functional-kettle.md. Supersedes and absorbs the remaining W4-W6 scope of the closed ticket 26/07/31/DOMAIN-TRUE-NOTATION-FOR-EVERY-DSL-SUPERSEDED (its W0-W2 engine spine + fem2d/note pilots carry forward as the semantic-model layer this program builds notation on top of).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2406"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪32d69a7d541d423f9dd48f5eabf8adfc"
+  ]
+}

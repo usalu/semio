@@ -1,0 +1,43 @@
+[flow/module/bim] wasm-pack build --release --target web --out-dir pkg --out-name flow_extension_bim --no-pack
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+   Compiling serde_core v1.0.228
+   Compiling serde_json v1.0.149
+   Compiling serde v1.0.228
+   Compiling once_cell v1.21.4
+   Compiling syn v2.0.117
+   Compiling either v1.15.0
+   Compiling memchr v2.8.0
+   Compiling getrandom v0.3.4
+   Compiling slab v0.4.12
+   Compiling futures-util v0.3.32
+   Compiling wasm-bindgen-macro-support v0.2.126
+   Compiling thiserror-impl v2.0.18
+   Compiling serde_derive v1.0.228
+   Compiling rayon v1.12.0
+   Compiling thiserror v2.0.18
+   Compiling wasm-bindgen-macro v0.2.126
+   Compiling wasm-bindgen v0.2.126
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling js-sys v0.3.103
+   Compiling semio-s-kernel-flow-extension-wasm v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🕸️wasm)
+   Compiling semio-s-plugin-flow-extension-bim v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim/⚡️implementation/🦀️rust)
+warning: hidden lifetime parameters in types are deprecated
+   --> ✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim/⚡️implementation/🦀️rust/../../../../../../../✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim/⚡️implementation/🦀️rust/📦️lib.rs:166:24
+    |
+166 | fn operator_info(meta: OperatorMeta, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str]) -> OperatorInfo {
+    |                        ^^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+166 | fn operator_info(meta: OperatorMeta<'_>, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str]) -> OperatorInfo {
+    |                                    ++++
+
+
+    Finished `release` profile [optimized] target(s) in 29.62s
+[INFO]: ✨   Done in 30.41s
+[INFO]: 📦   Your wasm pkg is ready to publish at /Users/ueli/Documents/semio/✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim/⚡️implementation/🦀️rust/pkg.
+[flow/module/bim] wasm build done in 33.4s
+[flow/module/bim] pkg/flow_extension_bim_bg.wasm ready (0.41 MiB) + pkg/package.json restored

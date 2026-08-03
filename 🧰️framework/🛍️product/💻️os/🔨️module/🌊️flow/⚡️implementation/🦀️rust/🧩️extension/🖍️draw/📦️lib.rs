@@ -131,7 +131,7 @@ fn operator_info(id: &str, name: &str, abbr: &str, icon: &str, summary: &str, in
 fn drawing_schema() -> Schema {
     Schema {
         id: "draw.drawing".into(),
-        extension: "draw".into(),
+        module: "draw".into(),
         name: "Drawing".into(),
         icon: "emoji:🖊️".into(),
         summary: "Opaque 2D drawing handle".into(),

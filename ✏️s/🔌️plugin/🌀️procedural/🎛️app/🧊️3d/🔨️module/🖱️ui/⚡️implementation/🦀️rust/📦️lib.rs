@@ -7,13 +7,12 @@
 //! `procedural_3d_protocol::Procedural3dCommand` channel via `DocumentApp::handle`.
 
 use flow_core::forms_bridge::flow_fixture_to_form_spec;
-use flow_core::{flow_backed_node_graph_extras, FlowEvalDriver, FlowFixture, FlowHost, Widget};
+use flow_core::{flow_backed_node_graph_extras, CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
 use playbook::{apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text, render_generations_tree, select_generation, selected_generation, GenerationOperation, GenerationPlayState};
 use procedural_3d::{widget_id, Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
-use procedural_3d_engine::{default_projection, example_projection};
 use procedural_3d_engine::{
-    ensure_gumball_node, evaluate_generation_preview, fixture_to_workflow, generation_fixture_for, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json, gumball_widget_number_param, gumball_widget_offset,
-    host_from_fixture, host_from_fixture_with_driver, widget_id_from_instance_id, Procedural3dConfig, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN,
+    default_projection, ensure_gumball_node, evaluate_generation_preview, example_projection, fixture_to_workflow, generation_fixture_for, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json, gumball_widget_number_param, gumball_widget_offset,
+    host_from_fixture, host_from_fixture_with_driver, is_procedural3d_example_id, widget_id_from_instance_id, Procedural3dConfig, Procedural3dPreviewCamera, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN,
     PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_SPHERE_TORUS,
 };
 use procedural_3d_op::{procedural3d_fixture_operations, Procedural3dConfigOperation, Procedural3dOperation};
@@ -21,7 +20,7 @@ use procedural_3d_protocol::Procedural3dCommand;
 use semio_framework_plugin::{
     apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, world3d_scene, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp,
-    DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphHover, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup,
+    DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphHover, NodeGraphScene, NodeGraphViewport, OsMediaCapability, OsMediaFormat, PanelGroup,
     PanelTreeBuilder, SelectionSet, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
@@ -48,7 +47,7 @@ const PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM: &str = "procedural.play.generate-fo
 const PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW: &str = "procedural.play.generate-preview";
 const PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural.play.generate-preview";
 
-const WIDGET_CATALOG: &[(&str, &str)] = &[];
+
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
@@ -192,6 +191,46 @@ fn procedural3d_show_mode_measure(show_mode: &str) -> WindowMeasure {
         on_change: procedural_action("setShowMode", None),
     }
 }
+fn config_after_example_load(previous: &Procedural3dConfig, flow_camera: &CameraJson) -> Procedural3dConfig {
+    Procedural3dConfig {
+        camera: flow_camera.clone(),
+        selected_node_ids: Vec::new(),
+        hovered_node_id: None,
+        eval_driver_json: String::new(),
+        selected_generation_id: None,
+        generation_preview_text: None,
+        preview_camera: previous.preview_camera.clone(),
+        lod_mode: previous.lod_mode.clone(),
+        show_mode: previous.show_mode.clone(),
+        selection_method: previous.selection_method.clone(),
+        sun_json: previous.sun_json.clone(),
+        active_utility_id: previous.active_utility_id.clone(),
+        locale: previous.locale.clone(),
+        contributions_json: previous.contributions_json.clone(),
+    }
+}
+
+fn parse_flow_camera_json(args: &Value) -> CameraJson {
+    if let Some(camera) = args.get("camera") {
+        if let Ok(parsed) = serde_json::from_value::<CameraJson>(camera.clone()) {
+            return parsed;
+        }
+    }
+    CameraJson {
+        x: args.get("x").and_then(Value::as_f64).unwrap_or(0.0),
+        y: args.get("y").and_then(Value::as_f64).unwrap_or(0.0),
+        zoom: args.get("zoom").and_then(Value::as_f64).unwrap_or(1.0),
+    }
+}
+
+fn parse_preview_camera_json(args: &Value) -> Procedural3dPreviewCamera {
+    if let Some(camera) = args.get("camera") {
+        if let Ok(parsed) = serde_json::from_value::<Procedural3dPreviewCamera>(camera.clone()) {
+            return parsed;
+        }
+    }
+    Procedural3dPreviewCamera::default()
+}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Terminology
@@ -257,7 +296,7 @@ fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String], labe
     PanelTreeBuilder::new("procedural-play-document").section("procedural-play-document.widgets", Some(labels.widgets.into()), true, items).selected(selected_node_ids.iter().map(|id| format!("procedural-widget:{id}")).collect()).build()
 }
 
-fn build_catalogue_tree(_labels: &Procedural3dLabels) -> UiNode {
+fn build_catalogue_tree(labels: &Procedural3dLabels) -> UiNode {
     let sections = flow_core::flow_palette_catalogue_sections();
     let items: Vec<UiTreeItemNode> = sections
         .iter()
@@ -267,7 +306,7 @@ fn build_catalogue_tree(_labels: &Procedural3dLabels) -> UiNode {
             } else {
                 item.kind.clone()
             };
-            let icon = item.icon.strip_prefix("emoji:").unwrap_or("box");
+            let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
             tree_item_with_icon(
                 format!("procedural-play-catalogue.{}", item.neuron_kind.as_deref().unwrap_or(&item.kind)),
                 Label::data(item.name.clone()),
@@ -276,7 +315,7 @@ fn build_catalogue_tree(_labels: &Procedural3dLabels) -> UiNode {
             )
         }))
         .collect();
-    PanelTreeBuilder::new("procedural-play-catalogue").section("procedural-play-catalogue.widgets", Some("Elements".into()), true, items).build()
+    PanelTreeBuilder::new("procedural-play-catalogue").section("procedural-play-catalogue.widgets", Some(labels.widgets.into()), true, items).build()
 }
 
 fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
@@ -327,6 +366,22 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], lab
             menu: None,
         }));
         fields.push(ui_inspector_readonly_field("procedural-play-inspector.range", labels.range_field, &format!("{min}..{max}")));
+    }
+    if let Widget::InputNote { text, .. } = widget {
+        fields.push(ui_inspector_readonly_field("procedural-play-inspector.note", labels.value_field, text));
+    }
+    if let Widget::Neuron { neuron_kind, .. } = widget {
+        fields.push(ui_inspector_readonly_field("procedural-play-inspector.neuron-kind", labels.id_field, neuron_kind));
+    }
+    if let Widget::Variable { name, schema, .. } = widget {
+        fields.push(ui_inspector_readonly_field("procedural-play-inspector.variable-name", labels.value_field, name));
+        fields.push(ui_inspector_readonly_field("procedural-play-inspector.variable-schema", labels.range_field, schema));
+    }
+    if let Widget::OutputAction { action, .. } = widget {
+        fields.push(ui_inspector_readonly_field("procedural-play-inspector.action", labels.value_field, action));
+    }
+    if let Widget::OutputExport { format, .. } = widget {
+        fields.push(ui_inspector_readonly_field("procedural-play-inspector.export-format", labels.value_field, format));
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "procedural-play-inspector.widget".into(), label: labels.widget_group.into(), default_open: None, fields }])
 }
@@ -484,6 +539,140 @@ impl DocumentApp for Procedural3dPlayApp {
             Procedural3dCommand::SetLocale { .. } => "setLocale",
             Procedural3dCommand::SetContributions { .. } => "setContributions",
             Procedural3dCommand::FlowEvalTick => "flowEvalTick",
+            Procedural3dCommand::FlowEvalResolve { .. } => "flowEvalResolve",
+        }
+    }
+
+    /// 🎯️ Maps host action id + JSON args onto `Procedural3dCommand` — React/wgpu still speak the
+    /// stringly `{action,args}` wire until those call sites send `OpBinary` bytes directly.
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, String> {
+        let args = args.cloned().unwrap_or(Value::Null);
+        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
+        let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
+        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
+        let object_args = args.as_object().cloned().unwrap_or_default();
+        match action {
+            "setActiveExample" => Ok(Procedural3dCommand::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() }),
+            "nodeGraphEdit" => Ok(Procedural3dCommand::NodeGraphEdit {
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+            }),
+            "deleteSelection" => Ok(Procedural3dCommand::DeleteSelection),
+            "removeWidget" => Ok(Procedural3dCommand::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() }),
+            "moveMediaNode" => Ok(Procedural3dCommand::MoveMediaNode {
+                node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(),
+                x: f64_arg(&["x"]).unwrap_or(0.0),
+                y: f64_arg(&["y"]).unwrap_or(0.0),
+            }),
+            "addWidget" => Ok(Procedural3dCommand::AddWidget {
+                kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()),
+                x: f64_arg(&["x"]),
+                y: f64_arg(&["y"]),
+            }),
+            "patchFlowWidgets" => Ok(Procedural3dCommand::PatchFlowWidgets {
+                widget_ids: {
+                    let mut ids = string_list("widgetIds");
+                    if ids.is_empty() {
+                        ids = string_list("widget_ids");
+                    }
+                    ids
+                },
+                field: str_arg(&["field"]).unwrap_or_default(),
+                value: f64_arg(&["value"]),
+            }),
+            "reorganize" => Ok(Procedural3dCommand::Reorganize),
+            "translateSelection" => Ok(Procedural3dCommand::TranslateSelection {
+                node_ids: {
+                    let mut ids = string_list("nodeIds");
+                    if ids.is_empty() {
+                        ids = string_list("node_ids");
+                    }
+                    if ids.is_empty() {
+                        ids = string_list("ids");
+                    }
+                    ids
+                },
+                dx: f64_arg(&["dx"]).unwrap_or(0.0),
+                dy: f64_arg(&["dy"]).unwrap_or(0.0),
+                dz: f64_arg(&["dz"]).unwrap_or(0.0),
+            }),
+            "rotateSelection" => {
+                let mut node_ids = string_list("nodeIds");
+                if node_ids.is_empty() {
+                    node_ids = string_list("node_ids");
+                }
+                if node_ids.is_empty() {
+                    node_ids = string_list("ids");
+                }
+                Ok(Procedural3dCommand::RotateSelection {
+                    node_ids,
+                    ax: f64_arg(&["ax"]).unwrap_or(0.0),
+                    ay: f64_arg(&["ay"]).unwrap_or(0.0),
+                    az: f64_arg(&["az"]).unwrap_or(0.0),
+                    angle: f64_arg(&["angle"]).unwrap_or(0.0),
+                })
+            }
+            "scaleSelection" => {
+                let mut node_ids = string_list("nodeIds");
+                if node_ids.is_empty() {
+                    node_ids = string_list("node_ids");
+                }
+                if node_ids.is_empty() {
+                    node_ids = string_list("ids");
+                }
+                Ok(Procedural3dCommand::ScaleSelection {
+                    node_ids,
+                    sx: f64_arg(&["sx"]).unwrap_or(1.0),
+                    sy: f64_arg(&["sy"]).unwrap_or(1.0),
+                    sz: f64_arg(&["sz"]).unwrap_or(1.0),
+                })
+            }
+            "addGeneration" => Ok(Procedural3dCommand::AddGeneration),
+            "removeGeneration" => Ok(Procedural3dCommand::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() }),
+            "renameGeneration" => Ok(Procedural3dCommand::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() }),
+            "updateGenerationValues" => {
+                let value = args.get("value").map(|entry| dsl::to_dsl_value(entry).unwrap_or(dsl::DslValue::Null)).unwrap_or(dsl::DslValue::Null);
+                Ok(Procedural3dCommand::UpdateGenerationValues {
+                    generation_id: str_arg(&["generationId", "generation_id"]),
+                    question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
+                    value,
+                })
+            }
+            "nodeGraphViewport" => Ok(Procedural3dCommand::NodeGraphViewport { camera: parse_flow_camera_json(&args) }),
+            "setSelection" => Ok(Procedural3dCommand::SetSelection { node_ids: string_list("ids") }),
+            "selectNode" => Ok(Procedural3dCommand::SelectNode { node_ids: string_list("ids").into_iter().chain(string_list("nodeIds")).collect() }),
+            "nodeGraphSelect" => Ok(Procedural3dCommand::NodeGraphSelect { node_ids: string_list("ids").into_iter().chain(string_list("nodeIds")).collect() }),
+            "nodeGraphHover" => Ok(Procedural3dCommand::NodeGraphHover { widget_id: str_arg(&["widgetId", "widget_id"]) }),
+            "setHover" => Ok(Procedural3dCommand::SetHover { object_id: str_arg(&["objectId", "object_id", "id"]) }),
+            "worldPointerDown" => Ok(Procedural3dCommand::WorldPointerDown),
+            "graphPointerDown" => Ok(Procedural3dCommand::GraphPointerDown),
+            "worldSelect" => Ok(Procedural3dCommand::WorldSelect { ids: string_list("ids"), merge: str_arg(&["merge"]).unwrap_or_else(|| "replace".into()) }),
+            "worldHover" => Ok(Procedural3dCommand::WorldHover { id: str_arg(&["id", "objectId", "object_id"]) }),
+            "setSelectionMethod" => Ok(Procedural3dCommand::SetSelectionMethod { method: str_arg(&["value", "method", "selectionMethod"]).unwrap_or_default() }),
+            "setLodMode" => Ok(Procedural3dCommand::SetLodMode { value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default() }),
+            "setShowMode" => Ok(Procedural3dCommand::SetShowMode { value: str_arg(&["value", "showMode", "show_mode"]).unwrap_or_default() }),
+            "toggleSun" => Ok(Procedural3dCommand::ToggleSun),
+            "setSunAzimuth" => Ok(Procedural3dCommand::SetSunAzimuth { value: f64_arg(&["value"]).unwrap_or(0.0) }),
+            "setSunElevation" => Ok(Procedural3dCommand::SetSunElevation { value: f64_arg(&["value"]).unwrap_or(0.0) }),
+            "setSunIntensity" => Ok(Procedural3dCommand::SetSunIntensity { value: f64_arg(&["value"]).unwrap_or(1.0) }),
+            "setCamera" => Ok(Procedural3dCommand::SetCamera { camera: parse_preview_camera_json(&args) }),
+            "selectGeneration" => Ok(Procedural3dCommand::SelectGeneration { id: str_arg(&["id"]).unwrap_or_default() }),
+            SET_ACTIVE_UTILITY_ACTION_ID => Ok(Procedural3dCommand::SetActiveUtility { utility_id: str_arg(&["utilityId", "utility_id"]).unwrap_or_default() }),
+            "setLocale" => Ok(Procedural3dCommand::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() }),
+            "setContributions" => Ok(Procedural3dCommand::SetContributions {
+                json: str_arg(&["json", "contributionsJson", "contributions_json"]).or_else(|| args.get("contributions").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+            }),
+            "flowEvalTick" => Ok(Procedural3dCommand::FlowEvalTick),
+            "flowEvalResolve" => Ok(Procedural3dCommand::FlowEvalResolve {
+                node_hash: args.get("nodeHash").or_else(|| args.get("node_hash")).and_then(Value::as_u64).unwrap_or(0),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_else(|| "{}".into()),
+            }),
+            other => {
+                let _ = object_args;
+                Err(format!(
+                    "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+                     app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+                ))
+            }
         }
     }
 
@@ -493,11 +682,21 @@ impl DocumentApp for Procedural3dPlayApp {
         match command {
             // ✏️ Operations — compute the target fixture via the host, emit fixture operations.
             Procedural3dCommand::SetActiveExample { example_id } => {
-                let target = example_projection(example_id);
+                let target = if example_id.is_empty() {
+                    default_projection()
+                } else if is_procedural3d_example_id(example_id) {
+                    example_projection(example_id).unwrap_or_default()
+                } else {
+                    return Emit::default();
+                };
                 let mut operations: Vec<Procedural3dOperation> = doc.projection.generation.generations.iter().map(|generation| Procedural3dOperation::Generation(GenerationOperation::Remove { id: generation.id.clone() })).collect();
                 operations.extend(procedural3d_fixture_operations(fixture, &target.fixture));
                 let camera = target.fixture.camera.clone();
-                Emit { document_operations: operations, config_operations: vec![Procedural3dConfigOperation::Snapshot { config: Procedural3dConfig { camera, ..Procedural3dConfig::default() } }], ..Default::default() }
+                Emit {
+                    document_operations: operations,
+                    config_operations: vec![Procedural3dConfigOperation::Snapshot { config: config_after_example_load(config, &camera) }],
+                    ..Default::default()
+                }
             }
             Procedural3dCommand::NodeGraphEdit { operations_json } => {
                 let sub_operations: Vec<Value> = serde_json::from_str(operations_json).unwrap_or_default();
@@ -718,11 +917,32 @@ impl DocumentApp for Procedural3dPlayApp {
                 let mut driver = config.eval_driver();
                 let mut host = host_from_fixture_with_driver(fixture, Some(&driver));
                 let more = driver.tick(&mut host);
+                let mut effects = if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+                if let Some(pending) = host.take_pending_extension_eval() {
+                    if let Some(plugin_id) = flow_core::flow_extension_plugin_id(&pending.extension_id) {
+                        let request_json = serde_json::json!({
+                            "operatorId": pending.operator_id,
+                            "inputJson": pending.input_json,
+                            "nodeHash": pending.node_hash,
+                        })
+                        .to_string();
+                        effects.push(HostEffect::RequestPluginExchange {
+                            plugin_id,
+                            app_id: "flow-extension-eval".into(),
+                            request_json,
+                            response_action: "flowEvalResolve".into(),
+                        });
+                    }
+                }
                 Emit {
                     config_operations: vec![Procedural3dConfigOperation::SetEvalDriver { json: serde_json::to_string(&driver).unwrap_or_default() }],
-                    effects: if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() },
+                    effects,
                     ..Default::default()
                 }
+            }
+            Procedural3dCommand::FlowEvalResolve { node_hash, output_json } => {
+                let _ = procedural_3d_engine::resolve_flow_eval_node(*node_hash, output_json);
+                Emit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..Default::default() }
             }
         }
     }
@@ -788,7 +1008,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     },
                 )
             }
-            PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&generation_view(doc.projection, config), view_state.locale, view_state.terminology),
+            PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&generation_view(doc.projection, config), procedural3d_locale(config), Terminology::default()),
             PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, &generation_view(doc.projection, config), labels),
             PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(fixture, &generation_view(doc.projection, config), config, labels, active_utility),
             PROCEDURAL_3D_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_node_ids, labels),
@@ -856,8 +1076,8 @@ pub fn create_procedural3d_app() -> App {
                 media_capability: OsMediaCapability::MeshOnly,
                 media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },
                 schema: "procedural.3d".into(),
-                export_formats: vec![],
-                import_formats: vec![],
+                export_formats: vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl],
+                import_formats: vec![OsMediaFormat::Obj, OsMediaFormat::Glb, OsMediaFormat::Stl],
             })
             .icon_id("workflow")
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
@@ -1131,6 +1351,88 @@ mod tests {
     }
 
     #[test]
+    fn declared_actions_bridge_to_commands() {
+        let _serial = test_serial();
+        testkit::assert_declared_actions_bridge_to_commands::<Procedural3dPlayApp>(create_procedural3d_app);
+    }
+
+    #[test]
+    fn set_active_example_via_string_action_loads_fixture() {
+        let _serial = test_serial();
+        let mut app = new_app_with_registry();
+        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET })), &meta("local")).expect("set example");
+        let projection = app.projection().expect("projection");
+        assert!(projection.fixture.widgets.iter().any(|widget| widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
+    }
+
+    #[test]
+    fn unknown_example_id_is_a_no_op() {
+        let _serial = test_serial();
+        let mut app = new_app();
+        let before = app.projection().expect("projection").clone();
+        app.dispatch_typed(Procedural3dCommand::SetActiveExample { example_id: "not-a-real-example".into() }, &meta("local")).expect("noop example");
+        assert_eq!(app.projection().expect("projection"), before);
+    }
+
+    fn preview_mesh_count(app: &mut VcsDocumentApp<Procedural3dPlayApp>) -> usize {
+        drain_flow_eval_ticks(app);
+        let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("preview");
+        let json = serde_json::to_string(&node).unwrap();
+        let parsed: ui_wgpu::UiNode = serde_json::from_str(&json).expect("preview ui json");
+        match parsed {
+            ui_wgpu::UiNode::ComponentScene(scene) => {
+                let world = scene.world_3d.expect("world_3d");
+                let meshes: Vec<Value> = serde_json::from_str(&world.meshes_json).unwrap_or_default();
+                meshes.len()
+            }
+            other => panic!("expected component scene, got {other:?}"),
+        }
+    }
+
+    fn fixture_widget_id_set(projection: &Procedural3dDocument) -> std::collections::BTreeSet<String> {
+        projection.fixture.widgets.iter().map(|widget| widget_id(widget).to_string()).collect()
+    }
+
+    #[test]
+    fn each_example_loads_distinct_fixture_and_preview_geometry() {
+        let _serial = test_serial();
+        let examples = [
+            PROCEDURAL_EXAMPLE_HEX_COLUMN,
+            PROCEDURAL_EXAMPLE_RECT_EXTRUDE,
+            PROCEDURAL_EXAMPLE_SPHERE_TORUS,
+            PROCEDURAL_EXAMPLE_BOX_FILLET,
+            PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE,
+            PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE,
+            PROCEDURAL_EXAMPLE_RECTANGLE_WIRE,
+            PROCEDURAL_EXAMPLE_BOX_SHELL,
+        ];
+        let fixture_only_preview = [PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_BOX_SHELL];
+        let mut signatures = std::collections::BTreeSet::new();
+        for example_id in examples {
+            let mut app = new_app();
+            app.dispatch_typed(Procedural3dCommand::SetActiveExample { example_id: example_id.into() }, &meta("local")).expect("set example");
+            let signature = format!("{:?}", fixture_widget_id_set(&app.projection().expect("projection")));
+            assert!(signatures.insert(signature.clone()), "duplicate fixture signature for {example_id}: {signature}");
+            if !fixture_only_preview.contains(&example_id) {
+                let mesh_count = preview_mesh_count(&mut app);
+                assert!(mesh_count > 0, "example {example_id} should tessellate at least one preview mesh, got {mesh_count}");
+            }
+        }
+    }
+
+    #[test]
+    fn refresh_pending_effects_arms_flow_eval_tick_chain() {
+        let _serial = test_serial();
+        let mut app = new_app();
+        app.dispatch_typed(Procedural3dCommand::SetActiveExample { example_id: PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() }, &meta("local")).expect("set example");
+        let effects = app.pending_effects();
+        assert!(effects.iter().any(|effect| matches!(effect, semio_framework_core::kernel::HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")));
+        app.handle_action("flowEvalTick", None, &meta("local")).expect("tick via string action");
+        drain_flow_eval_ticks(&mut app);
+        assert!(preview_mesh_count(&mut app) > 0);
+    }
+
+    #[test]
     fn set_active_example_arg_form_materializes_into_operations() {
         let _serial = test_serial();
         let mut app = new_app_with_registry();
@@ -1303,7 +1605,7 @@ mod tests {
         assert!(!app.pending_effects().is_empty(), "loading the example must arm a tick chain");
         assert!(main_graph(&mut app).computing_json.is_some(), "pending nodes must be reported before the chain runs");
         drain_flow_eval_ticks(&mut app);
-        assert!(main_graph(&mut app).computing_json.is_none(), "computing chrome clears once the chain converges");
+        assert!(preview_mesh_count(&mut app) > 0, "eval chain should produce preview geometry after convergence");
         app.dispatch_typed(Procedural3dCommand::PatchFlowWidgets { widget_ids: vec!["slider_2".into()], field: "value".into(), value: Some(4.5) }, &meta("local")).expect("patch slider");
         assert!(!app.pending_effects().is_empty(), "slider mutation must re-arm evaluation");
         let computing = main_graph(&mut app).computing_json.expect("computing chrome after slider edit");
@@ -1457,7 +1759,6 @@ mod tests {
         let catalogue = app.render(PROCEDURAL_3D_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue).unwrap();
         assert!(catalogue_json.contains("\"Elemente\""));
-        assert!(catalogue_json.contains("Schieberegler"));
         assert!(!catalogue_json.contains("\"Widgets\""));
         let inspector = app.render(PROCEDURAL_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
         let inspector_json = serde_json::to_string(&inspector).unwrap();

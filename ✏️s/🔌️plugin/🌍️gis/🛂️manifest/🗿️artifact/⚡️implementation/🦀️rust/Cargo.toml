@@ -26,13 +26,11 @@ app = "gis3d-play"
 ports = { react = 6083, wgpu = 6183 }
 engines = ["./🧰️framework/🔨️module/🗺️surface/🏔️terrain/⚡️implementation/🦀️rust"]
 
-[[package.metadata.semio.playground]]
-variant = "verfolgen"
-app = "gis2d-play"
-brand = "entwerfen-mit-bestand-verfolgen"
-aliases = ["entwerfen-mit-bestand-verfolgen"]
-ports = { react = 6032, wgpu = 6132 }
-engines = ["./🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust"]
+# 🎪️ The `verfolgen` demonstrator row moved to
+# ✏️s/🔌️plugin/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/Cargo.toml — see that
+# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The `/osm`+`/vt` asset rows below
+# stay here too (copies also live on the bundle crate) since the standalone `gis2d` dev variant needs
+# them independently of the demonstrator.
 
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"

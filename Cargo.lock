@@ -7203,6 +7203,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-dsl-family-graph"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl-core",
+ "semio-framework-os-kernel-dsl-grammar",
+ "semio-framework-os-kernel-dsl-notation",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-dsl-fixture-sweep"
 version = "0.1.0"
 dependencies = [
@@ -7263,6 +7272,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-dsl-grammar"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl-core",
+ "semio-framework-os-kernel-dsl-notation",
+]
+
+[[package]]
+name = "semio-framework-os-kernel-dsl-notation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl-core",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-dsl-schema"
 version = "0.1.0"
 dependencies = [
@@ -7290,7 +7314,6 @@ dependencies = [
  "semio-framework-os-kernel-vcs",
  "semio-framework-ui-styling",
  "semio-framework-ui-wgpu",
- "semio-s-kernel-flow-extension-bim",
  "semio-s-kernel-flow-extension-brep",
  "semio-s-kernel-flow-extension-core",
  "semio-s-kernel-flow-extension-dictionary",
@@ -12952,19 +12975,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-kernel-flow-extension-bim"
-version = "0.1.0"
-dependencies = [
- "getrandom 0.3.4",
- "js-sys",
- "semio-framework-os-kernel-neural-engine",
- "semio-s-kernel-flow-extension-wasm",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "semio-s-kernel-flow-extension-brep"
 version = "0.1.0"
 dependencies = [
@@ -13242,6 +13252,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-plugin-demonstrator"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os",
+ "semio-framework-os-kernel-3d-brep",
+ "semio-framework-plugin",
+ "semio-s-app-cad",
+ "semio-s-app-cad-engine",
+ "semio-s-app-cad-ui",
+ "semio-s-app-gis-2d",
+ "semio-s-app-gis-2d-engine",
+ "semio-s-app-gis-2d-ui",
+ "semio-s-app-procedural-3d",
+ "semio-s-app-procedural-3d-engine",
+ "semio-s-app-procedural-3d-ui",
+ "semio-s-app-process-3d",
+ "semio-s-app-process-3d-engine",
+ "semio-s-app-process-3d-ui",
+ "semio-s-app-puzzle-3d-ui",
+ "semio-s-app-sourcing-curate",
+ "semio-s-app-sourcing-curate-ui",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-plugin-draw"
 version = "0.1.0"
 dependencies = [
@@ -13321,6 +13357,21 @@ dependencies = [
  "semio-framework-plugin",
  "semio-s-app-flow",
  "semio-s-app-flow-ui",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-extension-bim"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "js-sys",
+ "semio-framework-core",
+ "semio-framework-os-kernel-neural-engine",
+ "semio-framework-plugin",
+ "semio-s-kernel-flow-extension-wasm",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

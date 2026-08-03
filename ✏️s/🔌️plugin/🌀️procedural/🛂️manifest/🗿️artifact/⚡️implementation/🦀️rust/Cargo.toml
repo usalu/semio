@@ -25,12 +25,9 @@ app = "procedural3d-play"
 aliases = ["procedural 3d"]
 ports = { react = 6018, wgpu = 6118 }
 
-[[package.metadata.semio.playground]]
-variant = "generator"
-app = "procedural3d-play"
-brand = "entwerfen-mit-bestand-generator"
-aliases = ["entwerfen-mit-bestand-generator"]
-ports = { react = 6027, wgpu = 6127 }
+# 🎪️ The `generator` demonstrator row moved to
+# ✏️s/🔌️plugin/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/Cargo.toml — see that
+# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT).
 
 [lib]
 crate-type = ["cdylib", "rlib"]

@@ -363,7 +363,7 @@ fn reg_geo(registry: &mut Registry, id: &str, name: &str, abbr: &str, icon: &str
 fn geometry_schema() -> Schema {
     Schema {
         id: "geometry".into(),
-        extension: "brep".into(),
+        module: "brep".into(),
         name: "Geometry".into(),
         icon: "emoji:🔷️".into(),
         summary: "Opaque brep geometry handle".into(),
@@ -382,7 +382,7 @@ fn topology_element_schema(id: &str, name: &str, icon: &str) -> Schema {
 fn brep_schema() -> Schema {
     Schema {
         id: "brep".into(),
-        extension: "brep".into(),
+        module: "brep".into(),
         name: "Brep".into(),
         icon: "emoji:🧊️".into(),
         summary: "Construct, deconstruct, or modify a brep from vertices, edges, and faces".into(),

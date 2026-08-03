@@ -1,0 +1,10 @@
+{
+  "title": "Feature Complete and Battle Tested Procedural 3D",
+  "emoji": "🧱",
+  "status": "closed",
+  "description": "Fix shell action bridge and effect draining so procedural 3D preview and examples work at runtime; harden examples, catalogue, inspector, export, and probes.",
+  "summary": "Implemented command_from_action for procedural 3D and 2D so shell string actions (setActiveExample, flowEvalTick, etc.) reach typed commands. plugin_exchange RefreshUi drains pending_effects; React performRefreshUi returns requestedEffects; wgpu collects RefreshUi/command Effects (including in_reply_to: None) and queues deferred host actions after refresh. Example switching is a no-op for unknown ids and preserves display config; eight examples covered by distinct-fixture tests. Engine/UI: OutputPreview tessellation, export format declarations, catalogue emoji icon fix, inspector fields, flow extension contributions. Added testkit assert_declared_actions_bridge_to_commands and procedural runtime Playwright probe script (servers not up at close — see probe-servers-unavailable.txt). cargo test semio-s-app-procedural-3d-ui + semio-s-app-procedural-2d-ui: 53 tests passed.",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "sessions": [],
+  "absorbs": "2026/08/03/PROCEDURAL-3D-EXTENSION-NODE-DISCOVERY"
+}

@@ -10,6 +10,14 @@ workspace = true
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 
+# 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. Applies when 📜️script.ts builds with wasm-pack
+# `--profile wasm-release` (wasm-pack 0.15+ maps any custom profile name to this `custom` section,
+# ignoring `profile.release` above). Runs after wasm-bindgen, mirroring os-dev's plugin -Oz post-pass
+# (WASM_OPT_ARGS) minus `--low-memory-unused`: this module's stack-first memory layout means the
+# "low 1KB is unused" assumption binaryen makes for that flag is unverified here.
+[package.metadata.wasm-pack.profile.custom]
+wasm-opt = ["-Oz", "--strip-debug", "--strip-producers", "--enable-bulk-memory", "--enable-bulk-memory-opt", "--enable-call-indirect-overlong", "--enable-extended-const", "--enable-multivalue", "--enable-mutable-globals", "--enable-nontrapping-float-to-int", "--enable-reference-types", "--enable-sign-ext"]
+
 [lib]
 crate-type = ["rlib", "cdylib"]
 path = "../../../../../🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust/📦️lib.rs"

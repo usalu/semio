@@ -5,7 +5,7 @@
 
 //#region 🔌️Adapters
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, fstatSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { devNull, homedir } from "node:os";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -2253,10 +2253,20 @@ export function runWasmPackWebBuild(opts: {
   threads?: boolean;
   /** Optional Cargo feature flags passed to wasm-pack / cargo build. */
   cargoFeatures?: readonly string[];
+  /** 🎲️ When true, pass `--no-default-features` so crates that default to wasip2 guest features can still build a standalone wasm-bindgen web package. */
+  noDefaultFeatures?: boolean;
+  /** 🔿️ Cargo/wasm-pack profile. `release`/`dev` map to `--release`/`--dev`; any other name
+   * (e.g. `wasm-release`) passes `--profile <name>`. wasm-pack maps custom profile names onto
+   * `[package.metadata.wasm-pack.profile.custom]` (bulk-memory / trunc_sat enable flags). */
+  profile?: string;
+
 }): void {
-  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, threads = false, cargoFeatures = [] } = opts;
+  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, threads = false, cargoFeatures = [], noDefaultFeatures = false, profile = "release" } = opts;
   const pkgDir = join(rsDir, "pkg");
   const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
+  const packProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
+  const cargoProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
+  const cargoProfileDir = profile === "dev" ? "debug" : profile;
   if (process.env[skipEnvVar] === "1") {
     console.log(`[${logPrefix}] ${skipEnvVar}=1 → skipping wasm-pack build`);
     return;
@@ -2276,8 +2286,9 @@ export function runWasmPackWebBuild(opts: {
     return;
   }
   const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
-  console.log(`[${logPrefix}] ${buildLabel} --release --target web --out-dir pkg --no-pack`);
+  console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir pkg --out-name ${wasmBaseName} --no-pack`);
   const t0 = Date.now();
+  const featureArgs = [...(noDefaultFeatures ? (["--no-default-features"] as const) : []), ...cargoFeatures.flatMap((feature) => ["--features", feature])];
   let status: number;
   if (threads) {
     const repoRoot = getWorkspaceRoot();
@@ -2286,8 +2297,8 @@ export function runWasmPackWebBuild(opts: {
       console.error(`[${logPrefix}] missing package name in Cargo.toml`);
       process.exit(1);
     }
-    const cargoWasm = join(repoRoot, "target/wasm32-unknown-unknown/release", `${crateName.replace(/-/g, "_")}.wasm`);
-    const threadedCargoArgs = ["build", "--release", "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...cargoFeatures.flatMap((feature) => ["--features", feature])];
+    const cargoWasm = join(repoRoot, `target/wasm32-unknown-unknown/${cargoProfileDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
+    const threadedCargoArgs = ["build", ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...featureArgs];
     status = runCmdStatus("cargo", threadedCargoArgs, { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
     if (status !== 0) {
       console.error(`[${logPrefix}] cargo threaded build failed`);
@@ -2296,7 +2307,7 @@ export function runWasmPackWebBuild(opts: {
     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
     status = runCmdStatus(resolveWasmBindgenBin(), [cargoWasm, "--out-dir", "pkg", "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
   } else {
-    const wasmPackArgs = ["x", "wasm-pack", "build", "--release", "--target", "web", "--out-dir", "pkg", "--no-pack", ...cargoFeatures.flatMap((feature) => ["--", "--features", feature])];
+    const wasmPackArgs = ["x", "wasm-pack", "build", ...packProfileArgs, "--target", "web", "--out-dir", "pkg", "--out-name", wasmBaseName, "--no-pack", ...(featureArgs.length > 0 ? ["--", ...featureArgs] : [])];
     status = runCmdStatus(process.execPath, wasmPackArgs, { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
   }
   if (status !== 0) {
@@ -3527,8 +3538,16 @@ function readDiffBulletsInput(root: string, bulletsFile: string | null): string[
     const path = bulletsFile.startsWith("/") ? bulletsFile : join(root, bulletsFile);
     return normalizeBulletLines(readFileSync(path, "utf8"));
   }
+  // If stdin is not a TTY, check if data is available before reading to avoid blocking.
   if (!process.stdin.isTTY) {
-    return normalizeBulletLines(readFileSync(0, "utf8"));
+    try {
+      const stats = fstatSync(0);
+      if (stats.size > 0) {
+        return normalizeBulletLines(readFileSync(0, "utf8"));
+      }
+    } catch {
+      // ignore errors and fall through to empty
+    }
   }
   return [];
 }

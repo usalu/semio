@@ -1,0 +1,10 @@
+{
+  "title": "Get Block Apps Working End to End",
+  "emoji": "🧱️",
+  "status": "open",
+  "description": "Get all block apps (block2d, block3d, block5d) working end to end. Immediate blocker: wasm-opt fails on node-graph engine build (bulk-memory / trunc_sat features) because runWasmPackWebBuild ignores profile: wasm-release and runs wasm-pack --release with default -O. Fix the build pipeline, then confirm all three block playgrounds boot.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪05fa17aeed1a4cdca08e7425a80c3ced"
+  ]
+}

@@ -2,13 +2,13 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/flow-module-brep",
   "version": "0.1.0",
-  "description": "flow \u00b7 module \u00b7 brep",
+  "description": "flow · module · brep",
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./rs/pkg/flow_extension_brep.js",
-    "./pkg/flow_extension_brep.js": "./rs/pkg/flow_extension_brep.js",
-    "./pkg/flow_extension_brep_bg.wasm": "./rs/pkg/flow_extension_brep_bg.wasm"
+    ".": "./pkg/flow_extension_brep.js",
+    "./pkg/flow_extension_brep.js": "./pkg/flow_extension_brep.js",
+    "./pkg/flow_extension_brep_bg.wasm": "./pkg/flow_extension_brep_bg.wasm"
   },
   "scripts": {
     "wasm": "bun nx run @semio-tech/flow-module-brep:wasm"

@@ -1,0 +1,24 @@
+   Compiling semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🛂️manifest/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/⚡️implementation/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling semio-s-plugin-architect-spine-module v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🏛️architect/🔨️module/🦴️spine/⚡️implementation/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:2778:68
+     |
+2778 |         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+     |                                                                    ^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2778 -         fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+2778 +         fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, String> {
+     |
+
+warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
+   Compiling semio-s-plugin-architect-spine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🏛️architect/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust)
+    Finished `wasm-release` profile [optimized] target(s) in 2m 07s

@@ -1,0 +1,1 @@
+Repo MCP namespace unavailable in this Cursor session; ticket folder created manually for temps.

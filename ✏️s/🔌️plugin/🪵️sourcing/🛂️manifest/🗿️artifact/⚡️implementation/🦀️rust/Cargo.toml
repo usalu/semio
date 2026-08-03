@@ -18,12 +18,9 @@ app = "sourcing-curate"
 aliases = ["curate"]
 ports = { react = 6081, wgpu = 6181 }
 
-[[package.metadata.semio.playground]]
-variant = "aussuchen"
-app = "sourcing-curate"
-brand = "entwerfen-mit-bestand-aussuchen"
-aliases = ["entwerfen-mit-bestand-aussuchen"]
-ports = { react = 6030, wgpu = 6130 }
+# 🎪️ The `aussuchen` demonstrator row moved to
+# ✏️s/🔌️plugin/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/Cargo.toml — see that
+# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT).
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false

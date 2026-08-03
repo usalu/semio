@@ -1,0 +1,143 @@
+[flow/core] wasm-pack build --profile wasm-release --target web --out-dir pkg --out-name flow_core --no-pack
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+   Compiling semio-framework-os-kernel-infinite-board-port-directed v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust)
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary/📦️lib.rs:178:4
+    |
+178 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list/📦️lib.rs:215:4
+    |
+215 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧮️math/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧮️math/📦️lib.rs:503:4
+    |
+503 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧠️logic/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧠️logic/📦️lib.rs:58:4
+   |
+58 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📝️text/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📝️text/📦️lib.rs:45:4
+   |
+45 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/📦️lib.rs:1878:4
+     |
+1878 | fn module_registry() -> Registry {
+     |    ^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `tessellate_geometry_json_for_wasm` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/📦️lib.rs:2228:4
+     |
+2228 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core/📦️lib.rs:105:4
+    |
+105 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw/📦️lib.rs:143:4
+    |
+143 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+   Compiling semio-framework-os-kernel-infinite-board-port-directed-dag v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-flow-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/../../../🫀️core/⚡️implementation/🦀️rust/📦️lib.rs:1997:19
+     |
+1997 |     neural_cache: std::sync::Arc<NeuralCache>,
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1997 -     neural_cache: std::sync::Arc<NeuralCache>,
+1997 +     neural_cache: Arc<NeuralCache>,
+     |
+
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/../../../🫀️core/⚡️implementation/🦀️rust/📦️lib.rs:2028:48
+     |
+2028 |         Self::from_fixture_with_cache(fixture, std::sync::Arc::new(NeuralCache::new()))
+     |                                                ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2028 -         Self::from_fixture_with_cache(fixture, std::sync::Arc::new(NeuralCache::new()))
+2028 +         Self::from_fixture_with_cache(fixture, Arc::new(NeuralCache::new()))
+     |
+
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/../../../🫀️core/⚡️implementation/🦀️rust/📦️lib.rs:2034:76
+     |
+2034 |     pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: std::sync::Arc<NeuralCache>) -> Self {
+     |                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2034 -     pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: std::sync::Arc<NeuralCache>) -> Self {
+2034 +     pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: Arc<NeuralCache>) -> Self {
+     |
+
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/../../../🫀️core/⚡️implementation/🦀️rust/📦️lib.rs:1421:9
+     |
+1421 |     let mut state = FLOW_EXTENSION_STATE.lock().expect("flow extension registry");
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+
+    Finished `wasm-release` profile [optimized] target(s) in 19.23s
+[INFO]: found wasm-opt at "/Users/ueli/Documents/semio/node_modules/.bin/wasm-opt"
+[INFO]: Optimizing wasm binaries with `wasm-opt`...
+[INFO]: ✨   Done in 6m 26s
+[INFO]: 📦   Your wasm pkg is ready to publish at /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/pkg.
+[flow/core] wasm build done in 387.2s
+[flow/core] pkg/flow_core_bg.wasm ready (33.31 MiB) + pkg/package.json restored

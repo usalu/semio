@@ -177,6 +177,149 @@ function useSequentialPaneBoot(
 }
 //#endregion 🎪️DemonstratorPaneBoot
 
+//#region 🎪️DemonstratorSuspension
+/** @emoji 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: a booted pane that's fully offscreen or the
+ * tab is backgrounded releases its live shell (plugin worker, WASM instances, WebGL contexts — see
+ * the framework's teardown-on-unmount path) and shows a static poster instead, revived instantly on
+ * hover/focus. Only PRISTINE panes (never interacted with) are ever suspended: there is no document
+ * round-trip yet (`readAppDocument`/`loadAppDocument` are an unimplemented, documented Wave-1 gap in
+ * the framework core), so suspending a pane the user actually used would silently discard their work.
+ * This covers exactly the idle-tab case the demonstrator is mostly used for (an unattended
+ * kiosk/booth screen) without any feature loss for interactive use — see `DemonstratorPane`'s
+ * `onPointerDownCapture`/`onKeyDownCapture`, which permanently exempt a pane the moment it's touched. */
+const DEMONSTRATOR_SUSPENSION_POLICY = {
+  /** Booted pane fully offscreen (another pane is focused) — safe to release quickly. */
+  offscreenSuspendDelayMs: 30_000,
+  /** Booted pane sitting idle on the overview grid (nothing focused, no recent input). */
+  overviewIdleSuspendMs: 5 * 60_000,
+  /** Tab backgrounded — release aggressively regardless of the other two timers. */
+  hiddenTabSuspendMs: 60_000,
+  /** How often the suspension sweep re-evaluates every booted pane. */
+  sweepIntervalMs: 5_000,
+} as const;
+
+/** @emoji 🖼️ Composites every canvas inside a pane's container into one offscreen 2D canvas and
+ * returns it as a data URL — must run synchronously (not after a `requestAnimationFrame`, by which
+ * point a `preserveDrawingBuffer: false` WebGL backbuffer may already be cleared). Returns `null`
+ * when the pane has no canvases yet or every one samples blank; callers fall back to the existing
+ * "wird vorbereitet" placeholder visual in that case — no new failure mode. */
+function capturePanePoster(container: HTMLElement): string | null {
+  const canvases = container.querySelectorAll("canvas");
+  if (canvases.length === 0) return null;
+  const containerRect = container.getBoundingClientRect();
+  if (containerRect.width <= 0 || containerRect.height <= 0) return null;
+  const poster = document.createElement("canvas");
+  poster.width = Math.round(containerRect.width);
+  poster.height = Math.round(containerRect.height);
+  const ctx = poster.getContext("2d");
+  if (!ctx) return null;
+  let drewSomething = false;
+  canvases.forEach((canvas) => {
+    if (canvas.width === 0 || canvas.height === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    try {
+      ctx.drawImage(canvas, rect.left - containerRect.left, rect.top - containerRect.top, rect.width, rect.height);
+      drewSomething = true;
+    } catch {
+      /* tainted canvas or a lost GPU context — skip it; other canvases (or the placeholder fallback) still work */
+    }
+  });
+  if (!drewSomething) return null;
+  try {
+    return poster.toDataURL("image/png");
+  } catch {
+    return null;
+  }
+}
+
+/** @emoji 🎪️ Tracks which booted panes are pristine (never interacted with), suspended (poster shown,
+ * live shell released), and their captured posters — plus the sweep that suspends eligible panes on
+ * the {@link DEMONSTRATOR_SUSPENSION_POLICY} schedule. `focusedId` and (while nothing is focused) the
+ * most-recently-focused pane are always exempt, matching the policy's `keepLiveCount: 1`. */
+function usePaneSuspension(bootedIds: ReadonlySet<string>, focusedId: string | null, initialFocusId: string | null): {
+  readonly dirtyIds: ReadonlySet<string>;
+  readonly suspendedIds: ReadonlySet<string>;
+  readonly postersById: ReadonlyMap<string, string>;
+  readonly markDirty: (id: string) => void;
+  readonly registerContainer: (id: string, el: HTMLDivElement | null) => void;
+  readonly resumePane: (id: string) => void;
+} {
+  const [dirtyIds, setDirtyIds] = useState<ReadonlySet<string>>(new Set());
+  const [suspendedIds, setSuspendedIds] = useState<ReadonlySet<string>>(new Set());
+  const [postersById, setPostersById] = useState<ReadonlyMap<string, string>>(new Map());
+  const containersRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const unfocusedSinceRef = useRef<Map<string, number>>(new Map());
+  const prevFocusedIdRef = useRef<string | null>(focusedId);
+  const mostRecentFocusedIdRef = useRef<string | null>(initialFocusId ?? DEMONSTRATOR_PANES[0]?.id ?? null);
+
+  const markDirty = useCallback((id: string) => {
+    setDirtyIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+  }, []);
+
+  const registerContainer = useCallback((id: string, el: HTMLDivElement | null) => {
+    if (el) containersRef.current.set(id, el);
+    else containersRef.current.delete(id);
+  }, []);
+
+  const suspendPane = useCallback((id: string) => {
+    const container = containersRef.current.get(id);
+    if (container) {
+      const poster = capturePanePoster(container);
+      if (poster) setPostersById((prev) => new Map(prev).set(id, poster));
+    }
+    setSuspendedIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+  }, []);
+
+  const resumePane = useCallback((id: string) => {
+    unfocusedSinceRef.current.delete(id);
+    setSuspendedIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  // Records when a pane most recently stopped being focused (absence from the map = currently focused).
+  useEffect(() => {
+    const prev = prevFocusedIdRef.current;
+    if (prev && prev !== focusedId) unfocusedSinceRef.current.set(prev, Date.now());
+    if (focusedId) {
+      unfocusedSinceRef.current.delete(focusedId);
+      mostRecentFocusedIdRef.current = focusedId;
+    }
+    prevFocusedIdRef.current = focusedId;
+  }, [focusedId]);
+
+  // A pane booted via the warm-boot queue (never focused) still needs an "unfocused since" baseline.
+  useEffect(() => {
+    for (const id of bootedIds) {
+      if (id !== focusedId && !unfocusedSinceRef.current.has(id)) unfocusedSinceRef.current.set(id, Date.now());
+    }
+  }, [bootedIds, focusedId]);
+
+  useEffect(() => {
+    const sweep = () => {
+      const now = Date.now();
+      const hidden = document.hidden;
+      for (const id of bootedIds) {
+        if (id === focusedId) continue;
+        if (!focusedId && id === mostRecentFocusedIdRef.current) continue;
+        if (dirtyIds.has(id) || suspendedIds.has(id)) continue;
+        const since = unfocusedSinceRef.current.get(id);
+        if (since == null) continue;
+        const threshold = hidden ? DEMONSTRATOR_SUSPENSION_POLICY.hiddenTabSuspendMs : focusedId ? DEMONSTRATOR_SUSPENSION_POLICY.offscreenSuspendDelayMs : DEMONSTRATOR_SUSPENSION_POLICY.overviewIdleSuspendMs;
+        if (now - since >= threshold) suspendPane(id);
+      }
+    };
+    const interval = window.setInterval(sweep, DEMONSTRATOR_SUSPENSION_POLICY.sweepIntervalMs);
+    return () => window.clearInterval(interval);
+  }, [bootedIds, focusedId, dirtyIds, suspendedIds, suspendPane]);
+
+  return { dirtyIds, suspendedIds, postersById, markDirty, registerContainer, resumePane };
+}
+//#endregion 🎪️DemonstratorSuspension
+
 //#region 🎪️PaneErrorBoundary
 /** @emoji 🛟️ One pane crashing (a plugin boot failure, a render error) must never take down the other five
  * or the landing chrome around them — React error boundaries are the only mechanism that can catch a
@@ -209,14 +352,41 @@ class PaneErrorBoundary extends Component<{ readonly paneLabel: string; readonly
 /** @emoji 🎪️ One grid cell: either the brand-logo placeholder (not booted yet) or the live shell, wrapped
  * `inert` while not focused so it never steals pointer/keyboard/focus from whichever pane IS focused (or
  * from the overview's own hover cards) — the shell still renders and animates underneath, just inertly. */
-function DemonstratorPane({ pane, booted, focused }: { readonly pane: DemonstratorPaneSpec; readonly booted: boolean; readonly focused: boolean }) {
+function DemonstratorPane({
+  pane,
+  booted,
+  focused,
+  suspended,
+  posterDataUrl,
+  onDirty,
+  onContainerElement,
+}: {
+  readonly pane: DemonstratorPaneSpec;
+  readonly booted: boolean;
+  readonly focused: boolean;
+  readonly suspended: boolean;
+  readonly posterDataUrl: string | null;
+  readonly onDirty: () => void;
+  readonly onContainerElement: (id: string, el: HTMLDivElement | null) => void;
+}) {
   const boot = useMemo(() => resolvePlaygroundBoot(pane.variant), [pane.variant]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
+  const live = booted && !suspended;
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-background" inert={!focused}>
-      {booted ? (
+    <div
+      ref={(el) => onContainerElement(pane.id, el)}
+      className="relative h-full w-full overflow-hidden bg-background"
+      inert={!focused}
+      // 🎪️ Only a focused (non-inert) pane can ever actually receive these — capture-phase so a click
+      // deep inside the shell (a button, a canvas) still marks the pane dirty before anything inside
+      // it can stop propagation. See `usePaneSuspension`'s docstring for why this permanently exempts
+      // the pane from suspension.
+      onPointerDownCapture={onDirty}
+      onKeyDownCapture={onDirty}
+    >
+      {live ? (
         <PaneErrorBoundary paneLabel={pane.label}>
           <FrameworkOsShell
             pluginFilter={pane.variant}
@@ -230,6 +400,8 @@ function DemonstratorPane({ pane, booted, focused }: { readonly pane: Demonstrat
             suppressAutoIntroduction={!focused}
           />
         </PaneErrorBoundary>
+      ) : booted && suspended && posterDataUrl ? (
+        <img src={posterDataUrl} alt="" className="h-full w-full object-cover" aria-hidden />
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-double bg-background">
           <div className="size-huge text-foreground opacity-40 [&_svg]:h-full [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: ENTWERFEN_MIT_BESTAND_LOGO_SVG }} aria-hidden />
@@ -312,6 +484,14 @@ function DemonstratorLanding() {
   const [introductionStep, setIntroductionStep] = useState(0);
   const [showIntroduction, setShowIntroduction] = useState(!initialFocusId);
   const [focusedId, setFocusedId] = useState<string | null>(initialFocusId);
+  const { suspendedIds, postersById, markDirty, registerContainer, resumePane } = usePaneSuspension(bootedIds, focusedId, initialFocusId);
+  const promoteAndResume = useCallback(
+    (id: string) => {
+      promote(id);
+      resumePane(id);
+    },
+    [promote, resumePane],
+  );
   const [hoveredPaneId, setHoveredPaneId] = useState<string | null>(null);
   const [revealRect, setRevealRect] = useState<RevealRectPx | null>(null);
   const hoveredPaneIdRef = useRef<string | null>(null);
@@ -344,7 +524,7 @@ function DemonstratorLanding() {
 
   const focusPane = useCallback(
     (id: string) => {
-      promote(id);
+      promoteAndResume(id);
       setFocusedId(id);
       setShowIntroduction(false);
       hoveredPaneIdRef.current = null;
@@ -359,7 +539,7 @@ function DemonstratorLanding() {
       }
       window.history.replaceState(null, "", `#${id}`);
     },
-    [promote, applyPaneScroll, touchListMode, scrollListToPaneIndex],
+    [promoteAndResume, applyPaneScroll, touchListMode, scrollListToPaneIndex],
   );
 
   const returnToOverview = useCallback(() => {
@@ -416,10 +596,10 @@ function DemonstratorLanding() {
     if (!touchListMode || focusedId) return;
     const current = Math.round(listProgress);
     const pane = DEMONSTRATOR_PANES[current];
-    if (pane) promote(pane.id);
+    if (pane) promoteAndResume(pane.id);
     const next = DEMONSTRATOR_PANES[current + 1];
-    if (next) promote(next.id);
-  }, [touchListMode, listProgress, focusedId, promote]);
+    if (next) promoteAndResume(next.id);
+  }, [touchListMode, listProgress, focusedId, promoteAndResume]);
 
   const refreshRevealRect = useCallback((paneId: string | null, offset: ScrollOffset) => {
     if (!paneId) {
@@ -501,10 +681,12 @@ function DemonstratorLanding() {
 
   const overviewChrome = (
     <>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex items-center justify-between gap-tiny px-double py-single">
-        <div className="pointer-events-auto">{aProjectOfLuhUdkFooterItem("landingProjectOf", "de", false).content}</div>
-        <div className="pointer-events-auto">{fundedByZukunftBauFooterItem("landingFundedBy", "de", false).content}</div>
-      </div>
+      {!hoveredPaneId && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex items-center justify-between gap-tiny px-double py-single">
+          <div className="pointer-events-auto">{aProjectOfLuhUdkFooterItem("landingProjectOf", "de", false).content}</div>
+          <div className="pointer-events-auto">{fundedByZukunftBauFooterItem("landingFundedBy", "de", false).content}</div>
+        </div>
+      )}
 
       {showIntroduction && (
         <UIIntroduction
@@ -516,11 +698,12 @@ function DemonstratorLanding() {
         />
       )}
 
-      <div
-        className="pointer-events-none absolute left-double top-double z-20 size-workbench text-foreground [&_svg]:h-full [&_svg]:w-full"
-        dangerouslySetInnerHTML={{ __html: ENTWERFEN_MIT_BESTAND_LOGO_SVG }}
-        aria-hidden
-      />
+      {!hoveredPaneId && (
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center z-20 text-foreground">
+          <div className="size-huge" dangerouslySetInnerHTML={{ __html: ENTWERFEN_MIT_BESTAND_LOGO_SVG }} aria-hidden />
+          <span className="mt-2 text-xl font-semibold">Entwerfen mit Bestand</span>
+        </div>
+      )}
     </>
   );
 
@@ -554,7 +737,15 @@ function DemonstratorLanding() {
             const veilOpacity = showOverviewLayer ? demonstratorListVeilOpacity(listProgress - paneIndex) : 0;
             return (
               <section key={pane.id} className="relative w-full shrink-0 snap-start overflow-hidden" style={{ height: "100dvh", minHeight: "100dvh" }}>
-                <DemonstratorPane pane={pane} booted={bootedIds.has(pane.id)} focused={isFocused} />
+                <DemonstratorPane
+                  pane={pane}
+                  booted={bootedIds.has(pane.id)}
+                  focused={isFocused}
+                  suspended={suspendedIds.has(pane.id)}
+                  posterDataUrl={postersById.get(pane.id) ?? null}
+                  onDirty={() => markDirty(pane.id)}
+                  onContainerElement={registerContainer}
+                />
                 {showOverviewLayer && (
                   <>
                     <div className="pointer-events-none absolute inset-0 z-30">
@@ -591,7 +782,16 @@ function DemonstratorLanding() {
         }}
       >
         {DEMONSTRATOR_PANES.map((pane) => (
-          <DemonstratorPane key={pane.id} pane={pane} booted={bootedIds.has(pane.id)} focused={focusedId === pane.id} />
+          <DemonstratorPane
+            key={pane.id}
+            pane={pane}
+            booted={bootedIds.has(pane.id)}
+            focused={focusedId === pane.id}
+            suspended={suspendedIds.has(pane.id)}
+            posterDataUrl={postersById.get(pane.id) ?? null}
+            onDirty={() => markDirty(pane.id)}
+            onContainerElement={registerContainer}
+          />
         ))}
       </div>
 
@@ -618,7 +818,7 @@ function DemonstratorLanding() {
                     onMouseEnter={() => {
                       hoveredPaneIdRef.current = pane.id;
                       setHoveredPaneId(pane.id);
-                      promote(pane.id);
+                      promoteAndResume(pane.id);
                       applyPaneScroll(paneIndex);
                       refreshRevealRect(pane.id, scrollOffsetForPaneIndex(paneIndex));
                     }}

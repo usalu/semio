@@ -3583,6 +3583,15 @@ describe("s workflow flow routing", () => {
     ];
     expect(flowRankCatalogueSuggestions(sections, "add").map((item) => item.neuronKind ?? item.kind)).toEqual(["math.add"]);
     expect(flowRankCatalogueSuggestions(sections, "sl").map((item) => item.kind)).toEqual(["inputSlider"]);
+    const brepSections = [
+      {
+        id: "brep",
+        title: "Brep",
+        items: [{ kind: "neuron", neuronKind: "brep.prim3d.box", name: "Box", abbreviation: "Box", icon: "emoji:📦️", summary: "Axis-aligned box" }],
+      },
+    ];
+    expect(flowRankCatalogueSuggestions(brepSections, "brep").map((item) => item.neuronKind ?? item.kind)).toEqual(["brep.prim3d.box"]);
+    expect(flowRankCatalogueSuggestions(brepSections, "box").map((item) => item.neuronKind ?? item.kind)).toEqual(["brep.prim3d.box"]);
     const empty = flowRankCatalogueSuggestions(sections, "");
     expect(empty[0]?.kind).toBe("neuron");
     expect(empty.some((item) => item.kind === "inputSlider")).toBe(true);

@@ -9,6 +9,7 @@ use block_5d::{Block5dDefinition, Block5dGripKind, Block5dGripTemplate, BLOCK_5D
 use block_5d_engine::Block5dConfig;
 use block_5d_op::{Block5dConfigOperation, Block5dOperation};
 use block_5d_protocol::Block5dCommand;
+use serde_json::Value;
 use semio_framework_plugin::{
     create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode,
@@ -190,6 +191,30 @@ impl DocumentApp for Block5dPlayApp {
             Block5dCommand::SetActiveExample { .. } => "setActiveExample",
             Block5dCommand::Edit { .. } => "edit",
             Block5dCommand::SetSelection { .. } => "setSelection",
+        }
+    }
+
+
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, String> {
+        let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+        let str_vec_field = |key: &str| -> Vec<String> {
+            args.and_then(|value| value.get(key))
+                .and_then(|value| value.as_array())
+                .map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect())
+                .unwrap_or_default()
+        };
+        match action {
+            "patchPartKind" => Ok(Block5dCommand::PatchPartKind { field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() }),
+            "addGripKind" => Ok(Block5dCommand::AddGripKind),
+            "removeGripKind" => Ok(Block5dCommand::RemoveGripKind { id: str_field("id").unwrap_or_default() }),
+            "addGrip" => Ok(Block5dCommand::AddGrip),
+            "removeGrip" => Ok(Block5dCommand::RemoveGrip { id: str_field("id").unwrap_or_default() }),
+            "setActiveExample" => Ok(Block5dCommand::SetActiveExample { id: str_field("exampleId").or_else(|| str_field("id")).unwrap_or_default() }),
+            "edit" => Ok(Block5dCommand::Edit { text: str_field("text").unwrap_or_default() }),
+            "setSelection" => Ok(Block5dCommand::SetSelection { ids: str_vec_field("ids") }),
+            other => Err(format!(
+                "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+            )),
         }
     }
 
@@ -425,4 +450,10 @@ mod tests {
         assert!(definition.artifact_kinds.iter().any(|kind| kind.id == "kit.catalog"));
     }
 }
+
+    #[test]
+    fn command_from_action_bridges_set_active_example() {
+        let app = Block5dPlayApp;
+        assert!(matches!(app.command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "forest" }))), Ok(Block5dCommand::SetActiveExample { id }) if id == "forest"));
+    }
 //#endregion 🧪️Tests

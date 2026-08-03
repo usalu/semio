@@ -9,6 +9,7 @@ class WasmScript extends BundleScript {
       skipEnvVar: "FRAMEWORK_SURFACE_TERRAIN_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/surface/terrain/rs",
       wasmBaseName: "framework_surface_terrain",
+      profile: "wasm-release",
       pkg: {
         name: "@semio-tech/framework-surface-terrain-rs",
         files: ["framework_surface_terrain_bg.wasm", "framework_surface_terrain.js", "framework_surface_terrain.d.ts", "framework_surface_terrain_bg.wasm.d.ts"],

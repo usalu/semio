@@ -5965,6 +5965,26 @@ pub mod program_bridge {
             Err(format!("plugin sent no Done for seq {seq}"))
         }
 
+        fn decode_effects_frame(effects: &[Vec<u8>]) -> Result<Vec<HostEffect>, String> {
+            effects.iter().map(|bytes| decode_wire::<HostEffect>(bytes)).collect()
+        }
+
+        fn collect_refresh_effects(frames: &[AppFrame], seq: u64) -> Result<Vec<HostEffect>, String> {
+            let mut requested_effects = Vec::new();
+            for frame in frames {
+                match frame {
+                    AppFrame::Effects { in_reply_to: Some(reply), effects } if *reply == seq => {
+                        requested_effects.extend(decode_effects_frame(effects)?);
+                    }
+                    AppFrame::Effects { in_reply_to: None, effects } => {
+                        requested_effects.extend(decode_effects_frame(effects)?);
+                    }
+                    _ => {}
+                }
+            }
+            Ok(requested_effects)
+        }
+
         fn invocation_from_frames(frames: &[AppFrame], seq: u64) -> Result<InvocationResult, String> {
             let mut output = DslValue::Null;
             let mut diagnostics = Vec::new();
@@ -5979,7 +5999,10 @@ pub mod program_bridge {
                         saw_invocation = true;
                     }
                     AppFrame::Effects { in_reply_to: Some(reply), effects } if *reply == seq => {
-                        requested_effects = effects.iter().map(|bytes| decode_wire::<HostEffect>(bytes)).collect::<Result<Vec<_>, _>>()?;
+                        requested_effects.extend(decode_effects_frame(effects)?);
+                    }
+                    AppFrame::Effects { in_reply_to: None, effects } => {
+                        requested_effects.extend(decode_effects_frame(effects)?);
                     }
                     AppFrame::Events { in_reply_to: Some(reply), events: evs } if *reply == seq => {
                         events = evs.iter().map(|bytes| decode_wire::<AppEvent>(bytes)).collect::<Result<Vec<_>, _>>()?;
@@ -6045,10 +6068,13 @@ pub mod program_bridge {
             expect_done(&frames, seq)
         }
 
-        pub fn render_with_document(runtime: &WasmPluginRuntime, instance_id: u32, body_key: &str, view_state: &ViewState, _document_dsl: Option<&str>) -> Result<UiNode, String> {
+        pub fn render_with_document(runtime: &WasmPluginRuntime, instance_id: u32, body_key: &str, view_state: &ViewState, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<HostEffect>>) -> Result<UiNode, String> {
             let _ = _document_dsl;
             let seq = next_seq();
             let frames = exchange(runtime, instance_id, vec![AppCommand::RefreshUi { seq, sections: vec![SectionProbe { kind: SECTION_KIND_WINDOW, key: body_key.to_string(), hash: None }], view_state: pack_view_state(view_state)? }])?;
+            if let Some(sink) = refresh_effects {
+                sink.extend(collect_refresh_effects(&frames, seq)?);
+            }
             for frame in &frames {
                 if let AppFrame::UiSection { in_reply_to, body, .. } = frame {
                     if in_reply_to == &Some(seq) {
@@ -6211,15 +6237,15 @@ pub mod program_bridge {
         }
 
         pub async fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewState) -> Result<UiNode, String> {
-            self.render_with_document(instance_id, body_key, view_state, None).await
+            self.render_with_document(instance_id, body_key, view_state, None, None).await
         }
 
-        pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewState, document_dsl: Option<&str>) -> Result<UiNode, String> {
+        pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewState, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<HostEffect>>) -> Result<UiNode, String> {
             match &self.backend {
                 #[cfg(target_arch = "wasm32")]
                 ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, body_key, view_state, document_dsl).await,
                 #[cfg(not(target_arch = "wasm32"))]
-                ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::render_with_document(runtime, instance_id, body_key, view_state, document_dsl),
+                ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::render_with_document(runtime, instance_id, body_key, view_state, document_dsl, refresh_effects),
             }
         }
 
@@ -13639,7 +13665,7 @@ pub mod shell {
                     contributor_instances.insert(slot.plugin_id.clone(), id);
                     id
                 };
-                let rendered = program.render_with_document(instance_id, &slot.body_key, view_state, Some(slot.params_json.as_str())).await?;
+                let rendered = program.render_with_document(instance_id, &slot.body_key, view_state, Some(slot.params_json.as_str()), None).await?;
                 Box::pin(resolve_external_slots_in_tree(rendered, plugins, contributor_instances, view_state)).await
             }
             UiNode::Stack(mut stack) => {
@@ -14122,13 +14148,12 @@ pub mod shell {
             self.window_ui.clear();
             let mut view_state = session.view_state.clone();
             view_state.contributions_json = Some(Self::contributions_json_from_plugins(&self.plugins));
+            let mut refresh_effects = Vec::new();
             {
                 let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
                 for kind in &session.app.window_kinds {
-                    // 🧰️ Inject the host-owned active utility for this window kind so the plugin renders its
-                    // live-preview overlay for the right utility (Architecture Decision 4).
                     view_state.active_utility_id = self.active_utility_by_window.get(&kind.id).cloned();
-                    let node = program.render(session.instance_id, &kind.body_key, &view_state).await?;
+                    let node = program.render_with_document(session.instance_id, &kind.body_key, &view_state, None, Some(&mut refresh_effects)).await?;
                     let resolved = self.resolve_external_slots(node, &view_state).await?;
                     let ui = match validate_window_body_surface(kind, &resolved) {
                         Ok(()) => resolved,
@@ -14142,7 +14167,7 @@ pub mod shell {
             let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
             for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
                 let body_key = tab.body_key.as_deref().unwrap_or_default();
-                let node = program.render(session.instance_id, body_key, &view_state).await?;
+                let node = program.render_with_document(session.instance_id, body_key, &view_state, None, Some(&mut refresh_effects)).await?;
                 let resolved = self.resolve_external_slots(node, &view_state).await?;
                 self.panel_ui.insert(tab.id().to_string(), resolved);
             }
@@ -14182,7 +14207,39 @@ pub mod shell {
                     }
                 }
             }
+            self.queue_host_effects(&session.app.controller_id, refresh_effects);
             Ok(())
+        }
+
+        fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework_core::kernel::HostEffect>) {
+            for effect in effects {
+                match effect {
+                    semio_framework_core::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
+                        self.apply_set_active_utility(&window_id, &utility_id);
+                    }
+                    semio_framework_core::kernel::HostEffect::Navigate { uri } => {
+                        self.push_uri(uri);
+                    }
+                    semio_framework_core::kernel::HostEffect::LoadDocument { pack, spr } => {
+                        if let Some(session) = self.session.clone() {
+                            if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
+                                if let Err(error) = plugin.load_app_document_pack(session.instance_id, &pack, &spr) {
+                                    eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}");
+                                }
+                            }
+                        }
+                    }
+                    semio_framework_core::kernel::HostEffect::DispatchAction { action: dispatch_action_id, args, .. } => {
+                        self.deferred_actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: dispatch_action_id, args });
+                    }
+                    semio_framework_core::kernel::HostEffect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => {
+                        for descriptor in request_media_frames(controller_id, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), optional_dsl_value_as_json(args)) {
+                            self.deferred_actions.push(descriptor);
+                        }
+                    }
+                    _ => {}
+                }
+            }
         }
 
         fn ensure_framework_panel_ui(&mut self, session: &ActiveSession) {

@@ -5,7 +5,7 @@
     "wasm": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🏗️bim",
+        "cwd": "✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim",
         "command": "bun ./📜️script.ts wasm"
       }
     }

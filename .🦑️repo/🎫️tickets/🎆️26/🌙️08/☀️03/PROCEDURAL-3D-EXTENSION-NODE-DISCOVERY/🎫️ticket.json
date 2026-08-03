@@ -1,9 +1,9 @@
 {
   "title": "Procedural 3D Extension Node Discovery",
   "emoji": "🔦",
-  "status": "open",
+  "status": "closed",
   "description": "Fix procedural 3D double-click spotlight to discover extension nodes; runtime-installable flow extensions with Contribution::FlowExtension and host-mediated eval.",
-  "summary": "",
+  "summary": "Flow stack rename module→extension; runtime FlowExtension registry with catalogue_json wired into flow-backed NodeGraphScene and React sync (null-safe). Contribution::FlowExtension + procedural setContributions installs contributed manifests. EvalError::PendingExtension + budgeted eval pause; FlowEvalTick emits RequestPluginExchange; flowEvalResolve seeds procedural neural cache. BIM relocated to ✏️s/🔌️plugin/🌊️flow/🧩️extension/🏗️bim as component guest contributing flow.extension (dropped from flow_core builtins). React applyHostEffects handles requestPluginExchange via flow-module-bim evaluate + flowEvalResolve dispatch. Tests: flow_core contributed manifest + catalogue extras; spotlight ranking cases added (full vitest blocked by missing @semio-tech/infinite-world-r3f in isolation).",
   "goal": "🎯️r2602",
   "sessions": []
 }

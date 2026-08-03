@@ -254,6 +254,7 @@ fn render_main_graph(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -
         NodeGraphScene {
             editable: Some(true),
             operators: flow_extras.operators,
+            catalogue_json: flow_extras.catalogue_json,
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
             fixture_json: flow_extras.fixture_json,
@@ -397,6 +398,75 @@ impl DocumentApp for Procedural2dPlayApp {
         }
     }
 
+    /// 🎯️ Maps host action id + JSON args onto `Procedural2dCommand`.
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<Self::Command, String> {
+        let args = args.cloned().unwrap_or(Value::Null);
+        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
+        let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
+        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
+        match action {
+            "nodeGraphEdit" => Ok(Procedural2dCommand::NodeGraphEdit {
+                operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(|value| value.to_string())).unwrap_or_else(|| "[]".into()),
+            }),
+            "moveMediaNode" => Ok(Procedural2dCommand::MoveMediaNode {
+                node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(),
+                x: f64_arg(&["x"]).unwrap_or(0.0),
+                y: f64_arg(&["y"]).unwrap_or(0.0),
+            }),
+            "addWidget" => Ok(Procedural2dCommand::AddWidget {
+                kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()),
+                neuron_kind: str_arg(&["neuronKind", "neuron_kind"]),
+                x: f64_arg(&["x"]),
+                y: f64_arg(&["y"]),
+            }),
+            "removeWidget" => Ok(Procedural2dCommand::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() }),
+            "connectMediaPorts" => Ok(Procedural2dCommand::ConnectMediaPorts {
+                source_node_id: str_arg(&["sourceNodeId", "source_node_id"]).unwrap_or_default(),
+                source_port_id: str_arg(&["sourcePortId", "source_port_id"]).unwrap_or_default(),
+                target_node_id: str_arg(&["targetNodeId", "target_node_id"]).unwrap_or_default(),
+                target_port_id: str_arg(&["targetPortId", "target_port_id"]).unwrap_or_default(),
+            }),
+            "reorganize" => Ok(Procedural2dCommand::Reorganize),
+            "addGeneration" => Ok(Procedural2dCommand::AddGeneration),
+            "removeGeneration" => Ok(Procedural2dCommand::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() }),
+            "renameGeneration" => Ok(Procedural2dCommand::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() }),
+            "updateGenerationValues" => {
+                let value = args.get("value").map(|entry| dsl::to_dsl_value(entry).unwrap_or(dsl::DslValue::Null)).unwrap_or(dsl::DslValue::Null);
+                Ok(Procedural2dCommand::UpdateGenerationValues {
+                    generation_id: str_arg(&["generationId", "generation_id"]),
+                    question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
+                    value,
+                })
+            }
+            "nodeGraphViewport" => {
+                let viewport_json = str_arg(&["viewportJson", "viewport_json"])
+                    .or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() }))
+                    .unwrap_or_else(|| "{}".into());
+                Ok(Procedural2dCommand::NodeGraphViewport { viewport_json })
+            }
+            "setSelection" => Ok(Procedural2dCommand::SetSelection { ids: string_list("ids") }),
+            "selectNode" => Ok(Procedural2dCommand::SelectNode { ids: string_list("ids") }),
+            "nodeGraphSelect" => Ok(Procedural2dCommand::NodeGraphSelect { ids: string_list("ids") }),
+            "nodeGraphHover" => Ok(Procedural2dCommand::NodeGraphHover),
+            "setShowMode" => Ok(Procedural2dCommand::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() }),
+            "generate" => Ok(Procedural2dCommand::Generate),
+            "setEvalOutputs" => Ok(Procedural2dCommand::SetEvalOutputs {
+                outputs_json: str_arg(&["outputsJson", "outputs_json", "evalJson"]).unwrap_or_else(|| "{}".into()),
+            }),
+            "canvasPointerDown" => Ok(Procedural2dCommand::CanvasPointerDown),
+            "canvasPointerMove" => Ok(Procedural2dCommand::CanvasPointerMove),
+            "canvasPointerUp" => Ok(Procedural2dCommand::CanvasPointerUp),
+            "canvasWheel" => Ok(Procedural2dCommand::CanvasWheel),
+            "selectGeneration" => Ok(Procedural2dCommand::SelectGeneration { id: str_arg(&["id"]) }),
+            "flowEvalTick" => Ok(Procedural2dCommand::FlowEvalTick),
+            "setLocale" => Ok(Procedural2dCommand::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() }),
+            other => Err(format!(
+                "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+            )),
+        }
+    }
+
     fn handle(&self, command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> Emit<Procedural2dOperation, Procedural2dConfigOperation> {
         let fixture = &doc.projection.fixture;
         let config = cfg.projection;
@@ -525,7 +595,7 @@ impl DocumentApp for Procedural2dPlayApp {
         match body_key {
             PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play, labels),
             PROCEDURAL2D_PLAY_BODY_PREVIEW => render_preview_canvas(&play),
-            PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play, view_state.locale, view_state.terminology),
+            PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play, procedural2d_locale(cfg.projection), Terminology::Native),
             PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => render_generate_form(&play, labels),
             PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&play, labels),
             PROCEDURAL2D_PLAY_BODY_DOCUMENT => build_document_tree(&play, labels),
@@ -809,6 +879,11 @@ mod tests {
     /// 🧬️ A wrapper carrying the real action registry so default-materialization + kind discipline run.
     fn new_app_with_registry() -> VcsDocumentApp<Procedural2dPlayApp> {
         testkit::new_app_with_registry::<Procedural2dPlayApp>(create_procedural2d_app)
+    }
+
+    #[test]
+    fn declared_actions_bridge_to_commands() {
+        testkit::assert_declared_actions_bridge_to_commands::<Procedural2dPlayApp>(create_procedural2d_app);
     }
 
     #[test]

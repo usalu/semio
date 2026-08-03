@@ -1,0 +1,2 @@
+cargo test -p semio-s-app-procedural-3d-ui -p semio-s-app-procedural-2d-ui -- --test-threads=1
+(see agent run 2026-08-03 — all lib tests passed)

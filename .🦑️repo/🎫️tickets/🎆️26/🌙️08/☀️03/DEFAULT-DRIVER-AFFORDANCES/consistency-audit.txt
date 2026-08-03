@@ -1,0 +1,21 @@
+[DEBUG] Default driver affordance consistency audit
+
+Plugin UiTreeItemAction placements (all explicit):
+- Row: puzzle3d hide/lock, cad object/reference hide/lock, process step enabled, sourcing remove
+- Menu: cad duplicate/delete, process remove step/machine, playbook remove/rename, lowpoly flip, os history revert
+
+React/OS host consistency:
+- Tree: placement row vs menu + mergeTreeRowContextMenu
+- Table: row buttons filtered; menu buttons merged into row context menu
+- Table HTML5 + dnd-kit rows: transfer/sort handles under default; surface under compact
+- Panel tree unit headers: sort handle arm under default; surface under compact
+- BlockListHost palette/steps/blocks: DragHandle under default; surface under compact
+- WindowPaneChromeToggle: always paints handle under default even without onAnchorChange
+
+Verified:
+- UiDriver vitest: 9 passed
+- Pane drag-handle vitest: 3 passed
+- check-chrome-i18n: clean
+- cargo check: procedural-2d/3d-ui + flow-ui finished
+
+Repo MCP unavailable — ticket folder created manually; cannot ticket_close via MCP.

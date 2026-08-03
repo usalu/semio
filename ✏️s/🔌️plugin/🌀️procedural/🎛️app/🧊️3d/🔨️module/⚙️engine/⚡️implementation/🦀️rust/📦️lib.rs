@@ -67,6 +67,9 @@ static PROCEDURAL_NEURAL_CACHE: std::sync::OnceLock<std::sync::Arc<flow_core::ne
 pub fn procedural_neural_cache() -> std::sync::Arc<flow_core::neural::NeuralCache> {
     PROCEDURAL_NEURAL_CACHE.get_or_init(|| std::sync::Arc::new(flow_core::neural::NeuralCache::new())).clone()
 }
+pub fn resolve_flow_eval_node(node_hash: u64, output_json: &str) -> Result<(), flow_core::FlowCoreError> {
+    flow_core::seed_flow_eval_node_cache(&procedural_neural_cache(), node_hash, output_json)
+}
 //#endregion 🔖️EvalCache
 
 //#region 🔖️Types
@@ -278,8 +281,24 @@ pub fn empty_procedural3d_projection() -> Procedural3dDocument {
     Procedural3dDocument::default()
 }
 
-/// 🧾️ Builds the initial projection for a named example (or the empty/default fixture).
-pub fn example_projection(example_id: &str) -> Procedural3dDocument {
+/// 🧾️ Whether `example_id` names a bundled procedural-3d example fixture.
+pub fn is_procedural3d_example_id(example_id: &str) -> bool {
+    matches!(
+        example_id,
+        PROCEDURAL_EXAMPLE_HEX_COLUMN
+            | "demo"
+            | PROCEDURAL_EXAMPLE_RECT_EXTRUDE
+            | PROCEDURAL_EXAMPLE_SPHERE_TORUS
+            | PROCEDURAL_EXAMPLE_BOX_FILLET
+            | PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE
+            | PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE
+            | PROCEDURAL_EXAMPLE_RECTANGLE_WIRE
+            | PROCEDURAL_EXAMPLE_BOX_SHELL
+    )
+}
+
+/// 🧾️ Builds the projection for a named bundled example; unknown ids return `None`.
+pub fn example_projection(example_id: &str) -> Option<Procedural3dDocument> {
     let dsl = match example_id {
         PROCEDURAL_EXAMPLE_HEX_COLUMN | "demo" => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT),
         PROCEDURAL_EXAMPLE_RECT_EXTRUDE => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT),
@@ -289,15 +308,14 @@ pub fn example_projection(example_id: &str) -> Procedural3dDocument {
         PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT),
         PROCEDURAL_EXAMPLE_RECTANGLE_WIRE => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT),
         PROCEDURAL_EXAMPLE_BOX_SHELL => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT),
-        "" => None,
         _ => None,
     };
-    dsl.and_then(|text| Procedural3dDocument::parse_dsl(text).ok()).unwrap_or_default()
+    dsl.and_then(|text| Procedural3dDocument::parse_dsl(text).ok())
 }
 
 /// 🧾️ Serializes an example's bare projection for registration via `App::example`.
 pub fn example_document_json(example_id: &str) -> String {
-    serde_json::to_string(&example_projection(example_id)).unwrap_or_default()
+    serde_json::to_string(&example_projection(example_id).unwrap_or_default()).unwrap_or_default()
 }
 
 pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlayState) -> FlowFixture {
@@ -326,11 +344,11 @@ pub fn preview_camera_json(cfg: &Procedural3dConfig) -> String {
 pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) -> String {
     let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json(&cfg.selection_method, &cfg.selected_node_ids, cfg.hovered_node_id.as_deref())).unwrap_or_else(|_| json!({}));
     let show_mode = if cfg.show_mode.is_empty() { "shaded" } else { cfg.show_mode.as_str() };
-    let (show_edges, selection_mode, targets) = match show_mode {
-        "wireframe" => (true, "mesh", json!({ "mesh": false, "vertex": false, "edge": true, "face": false })),
-        "points" => (false, "vertex", json!({ "mesh": false, "vertex": true, "edge": false, "face": false })),
-        "shaded+edges" => (true, "mesh", json!({ "mesh": true, "vertex": false, "edge": true, "face": false })),
-        _ => (false, "mesh", json!({ "mesh": true, "vertex": false, "edge": false, "face": false })),
+    let (show_edges, selection_mode) = match show_mode {
+        "wireframe" => (true, "mesh"),
+        "points" => (false, "mesh"),
+        "shaded+edges" => (true, "mesh"),
+        _ => (false, "mesh"),
     };
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode".into(), json!(active_utility));
@@ -338,8 +356,6 @@ pub fn preview_selection_json(cfg: &Procedural3dConfig, active_utility: &str) ->
         object.insert("showEdges".into(), json!(show_edges));
         object.insert("selectionMode".into(), json!(selection_mode));
         object.insert("granularity".into(), json!(selection_mode));
-        object.insert("targets".into(), targets);
-        object.insert("componentIds".into(), json!([]));
     }
     value.to_string()
 }
@@ -530,7 +546,7 @@ pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, cfg: &P
     let mut instances: Vec<Value> = Vec::new();
     for widget in &fixture.widgets {
         let id = widget_id(widget).to_string();
-        let preview = matches!(widget, Widget::Neuron { preview: true, .. });
+        let preview = matches!(widget, Widget::Neuron { preview: true, .. } | Widget::OutputPreview { .. });
         if !preview {
             continue;
         }

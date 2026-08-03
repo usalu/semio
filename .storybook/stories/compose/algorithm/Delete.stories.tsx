@@ -24,7 +24,7 @@ import {
   type AlgorithmWindowDef,
 } from "@semio-tech/compose-algorithm";
 
-import { MetabolismKit as metabolismKit } from "@semio-tech/asset";
+import { MetabolismKit as metabolismKit } from "@semio-tech/compose-fixture";
 
 const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
 const defaultPieceIds = ((rawDesign.pieces as { id: string }[] | undefined) ?? []).slice(0, 3).map((p) => p.id);

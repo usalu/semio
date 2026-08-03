@@ -1,0 +1,95 @@
+[flow/core] wasm-pack build --profile wasm-release --target web --out-dir pkg --out-name flow_core --no-pack
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel-infinite-board-port-directed v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-playbook v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust)
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary/📦️lib.rs:178:4
+    |
+178 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📝️text/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📝️text/📦️lib.rs:45:4
+   |
+45 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list/📦️lib.rs:215:4
+    |
+215 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧠️logic/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧠️logic/📦️lib.rs:58:4
+   |
+58 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧮️math/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🧮️math/📦️lib.rs:503:4
+    |
+503 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+   Compiling semio-s-kernel-flow-extension-brep v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep)
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core/📦️lib.rs:105:4
+    |
+105 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw/📦️lib.rs:143:4
+    |
+143 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `module_registry` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/📦️lib.rs:1878:4
+     |
+1878 | fn module_registry() -> Registry {
+     |    ^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+
+warning: function `tessellate_geometry_json_for_wasm` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep/📦️lib.rs:2228:4
+     |
+2228 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+error: failed to build archive at `/Users/ueli/Documents/semio/target/wasm32-unknown-unknown/wasm-release/deps/libinfinite_board_port_directed-bc192e50b9a50cbf.rlib`: failed to open object file: No such file or directory (os error 2)
+
+
+error: could not compile `semio-framework-os-kernel-infinite-board-port-directed` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+Error: `cargo build` failed, see the output above for details
+Caused by: `cargo build` failed, see the output above for details
+[flow/core] wasm build failed

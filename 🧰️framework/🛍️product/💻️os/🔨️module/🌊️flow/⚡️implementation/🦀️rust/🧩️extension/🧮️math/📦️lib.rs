@@ -483,7 +483,7 @@ fn move_out() -> Vec<ChannelSpec> {
 fn schema(id: &str, name: &str) -> Schema {
     Schema {
         id: id.into(),
-        extension: "math".into(),
+        module: "math".into(),
         name: name.into(),
         icon: "emoji:🧭️".into(),
         summary: format!("{name} with x, y, z decimal fields"),

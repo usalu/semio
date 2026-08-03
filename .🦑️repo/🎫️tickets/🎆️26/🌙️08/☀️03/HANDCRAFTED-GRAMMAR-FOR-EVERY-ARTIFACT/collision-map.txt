@@ -1,0 +1,43 @@
+[P0] Collision map — snapshot at ticket open, 2026-08-03
+
+Purpose: identify plugins/trees with live concurrent work TODAY so fan-out waves
+(W4a-e) avoid them and defer to W4e or later. Re-run at the start of every wave.
+
+## Open tickets dated 🎆️26/🌙️08/☀️03 (today) touching program-relevant trees
+
+- FIX-NUMERIC-TYPE-MISMATCH-IN-WIRES-DSL-FIXTURE-ROUND-TRIP
+  -> DIRECT COLLISION with the engine chokepoint (dsl fixture round-trip law,
+     wires app). Engine work in P1 must NOT touch wires fixtures/tests.
+     wires app itself deferred; re-check this ticket's status before W4a.
+- FIX-CAD-PROTOCOL-SCHEMA-IMPORTS
+- FIX-CAD-GIZMO-PRESS-TRANSITION
+- FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL
+- FEATURE-COMPLETE-AND-BATTLE-TESTED-PROCEDURAL-3D
+- PROCEDURAL-3D-EXTENSION-NODE-DISCOVERY
+- GET-PROCEDURAL-3D-WORKING-END-TO-END (dated 🌙️07/☀️31, still relevant)
+- FIX-EMPTY-PROCEDURAL-3D-FLOW-ON-EXAMPLES / FIX-EMPTY-PROCEDURAL-3D-FLOW-GRAPH
+- FIX-PUZZLE-3D-PER-WINDOW-INSTANCE-STATE
+- FIX-STALE-NODE-GRAPH-SCENE-GOLDEN-TEST (node-graph surface — trinity/dag adjacent)
+- WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE (flow config/schema)
+- TOTAL-JSON-PURGE (dated 🌙️08/☀️01 — may overlap with our "delete JSON smuggling" P5 sweep;
+  coordinate/dedupe rather than redo when W4x reaches JSON-field cleanup)
+- FIX-CUT-CONCRETE-CAD-EXAMPLE / CURATE-CAD-IN-PALETTE-ACTION-FLAGS (cad examples)
+
+## git status --porcelain evidence (uncommitted, confirms tickets above are LIVE, not stale)
+
+- 🌀️procedural (◻2d, 🧊️3d): 🖱️ui, ⚙️engine, 📡️protocol all modified
+- 🌊️flow: 🖱️ui modified; large in-flight rename moving 🧩️extension/🏗️bim (and
+  presumably 📐️brep/🖍️draw/🧮️math siblings) from 🧰️framework/…/🌊️flow/⚡️implementation
+  into ✏️s/🔌️plugin/🌊️flow/🧩️extension/** (R and A/D entries)
+- Matches the old (now-closed) ticket's note about a live rename blocking CAD/W3.
+
+## Program impact
+
+- W4e (procedural×2, flow, block×3, puzzle×3, vcs, cad) confirmed correctly
+  scheduled LAST; re-scan before dispatch, expect this list to still be live.
+- P1 engine work: touch 🗣️dsl/**, 🎒️pack/🔢️value/**, 🏪️store/** only. Do NOT
+  touch any wires/procedural/cad/flow/puzzle app-specific code or fixtures in P1-P3.
+  If dsl_fixture_sweep needs a wires-fixture regenerate as a side effect of the
+  WireValue/EdgeArrow change, coordinate explicitly (flag, don't silently edit)
+  because of FIX-NUMERIC-TYPE-MISMATCH-IN-WIRES-DSL-FIXTURE-ROUND-TRIP above.
+- No git-mutating commands used to produce this map (git status --porcelain only).

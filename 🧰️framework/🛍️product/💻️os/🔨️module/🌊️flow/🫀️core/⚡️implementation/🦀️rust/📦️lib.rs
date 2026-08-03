@@ -1371,16 +1371,17 @@ pub fn install_builtin_flow_extensions(registry: &mut neural::Registry) {
     flow_extension_list::register(registry);
     flow_extension_brep::register(registry);
     flow_extension_draw::register(registry);
-    flow_extension_bim::register(registry);
 }
 
 struct ContributedExtensionStub {
     extension_id: String,
+    operator_id: String,
 }
 
 impl neural::Operation for ContributedExtensionStub {
-    fn evaluate(&self, _input: &Dictionary) -> Result<Dictionary, EvalError> {
-        Err(EvalError::PendingExtension { extension_id: self.extension_id.clone() })
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+        let node_hash = neural::node_hash(&self.operator_id, input);
+        Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
     }
 }
 
@@ -1390,10 +1391,11 @@ fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &st
         if registry.operator_info(&info.id).is_some() {
             continue;
         }
-        let stub = ContributedExtensionStub { extension_id: manifest.id.clone() };
+        let extension_id = manifest.id.clone();
+        let operator_id = info.id.clone();
         registry.register_operator(
             info,
-            vec![OperatorImpl { schemas: vec![], operation: Box::new(stub) }],
+            vec![OperatorImpl { schemas: vec![], operation: Box::new(ContributedExtensionStub { extension_id, operator_id }) }],
             &[],
         );
     }
@@ -1465,6 +1467,18 @@ pub fn flow_extension_registry() -> Arc<neural::Registry> {
 
 fn flow_registry() -> Arc<neural::Registry> {
     flow_extension_registry()
+}
+
+/// 🔌️ Resolves the contributor plugin id for an installed contributed extension.
+pub fn flow_extension_plugin_id(extension_id: &str) -> Option<String> {
+    installed_flow_extensions().into_iter().find(|info| info.id == extension_id).and_then(|info| info.plugin_id)
+}
+
+/// 🌱️ Seeds a shared neural cache entry from a host-mediated extension eval response.
+pub fn seed_flow_eval_node_cache(cache: &NeuralCache, node_hash: u64, output_json: &str) -> Result<(), FlowCoreError> {
+    let dict: Dictionary = serde_json::from_str(output_json)?;
+    cache.seed(node_hash, dict);
+    Ok(())
 }
 
 /// 📚️ Extension-grouped catalogue sections (static widget sections merged at host).
@@ -2000,6 +2014,7 @@ pub struct FlowHost {
     /// 🖐️ `true` while a coalescing gesture (drag, inline note edit) is in progress — guards
     /// `begin_change` from checkpointing mid-gesture; see `begin_gesture`/`commit_gesture_history`.
     gesture_active: bool,
+    pending_extension_eval: Option<neural::PendingExtensionEval>,
 }
 
 impl Default for FlowHost {
@@ -2044,6 +2059,7 @@ impl FlowHost {
             history_store,
             pending_change: false,
             gesture_active: false,
+            pending_extension_eval: None,
         };
         host.rebuild_dag();
         host.history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None));
@@ -2697,6 +2713,7 @@ impl FlowHost {
     /// entries swept early by that other call's completion; the next tick simply recomputes them —
     /// extra work, never a wrong result.
     pub fn evaluate_step(&mut self, budget: usize) -> Vec<String> {
+        self.pending_extension_eval = None;
         let tree = self.build_tree();
         let seeds = self.build_seeds();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
@@ -2716,7 +2733,8 @@ impl FlowHost {
             evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
         };
         match budgeted {
-            Ok(BudgetedEval { channels, remaining }) => {
+            Ok(BudgetedEval { channels, remaining, pending_extension }) => {
+                self.pending_extension_eval = pending_extension;
                 self.outputs = channels.outputs.clone();
                 self.apply_preview_outputs(&channels.outputs);
                 self.apply_export_outputs(&channels.outputs);
@@ -2744,6 +2762,11 @@ impl FlowHost {
                 Vec::new()
             }
         }
+    }
+
+    /// 🔌️ Consumes the last budgeted step's contributed-extension eval request, if any.
+    pub fn take_pending_extension_eval(&mut self) -> Option<neural::PendingExtensionEval> {
+        self.pending_extension_eval.take()
     }
 
     /// 👀️ Probes which widget ids still need evaluation without computing anything (`budget = 0`) —
@@ -6242,7 +6265,18 @@ mod tests {
         assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
         assert!(extras.operators.iter().any(|info| info.id == "math.add"));
         assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
+        assert!(extras.catalogue_json.as_ref().is_some_and(|json| json.contains("brep") || json.contains("math")));
         assert!(extras.lod_json.as_ref().is_some_and(|json| json.contains(r#""automatic":true"#)));
+    }
+
+    #[test]
+    fn contributed_extension_manifest_installs_catalogue_operator() {
+        let manifest = r#"{"schema":"flow.extension","id":"stubext","name":"Stub","version":"0.0.1","activationEvents":[],"contributes":{"schemas":[],"operators":[{"id":"stubext.echo","extension":"stubext","name":"Echo","abbreviation":"Echo","icon":"emoji:📣️","summary":"Echo","inputs":[],"outputs":[]}],"widgets":[],"commands":[],"settings":[]}}"#;
+        install_flow_extension_manifest("stub-plugin", manifest);
+        assert!(flow_extension_registry().operator_info("stubext.echo").is_some());
+        let sections = flow_catalogue_sections();
+        assert!(sections.iter().any(|section| section.id == "stubext"));
+        uninstall_flow_extension("stubext");
     }
 
     #[test]

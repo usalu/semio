@@ -1,0 +1,8 @@
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests ../../../🫀️core/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/flow_core-9cf24b129b9d8c1f)
+
+running 1 test
+test tests::catalogue_has_module_sections ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 95 filtered out; finished in 0.01s
+

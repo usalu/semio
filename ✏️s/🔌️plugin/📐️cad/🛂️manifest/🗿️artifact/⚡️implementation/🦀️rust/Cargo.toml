@@ -17,16 +17,15 @@ variant = "cad"
 app = "cad-play"
 ports = { react = 6020, wgpu = 6120 }
 
-[[package.metadata.semio.playground]]
-variant = "koordinator"
-app = "cad-play"
-brand = "entwerfen-mit-bestand-koordinator"
-aliases = ["entwerfen-mit-bestand-koordinator"]
-ports = { react = 6028, wgpu = 6128 }
-
+# 🎪️ The `koordinator` demonstrator row moved to
+# ✏️s/🔌️plugin/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/Cargo.toml — see that
+# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The `/cad-fixture` asset row below
+# stays here too (a copy also lives on the bundle crate) since the standalone `cad` dev variant needs
+# it independently of the demonstrator.
 [[package.metadata.semio.assets]]
 kind = "static-dir"
 route = "/cad-fixture"
+app = "cad-play"
 root = "✏️s/🔌️plugin/📐️cad/🧫️fixture"
 
 [lib]

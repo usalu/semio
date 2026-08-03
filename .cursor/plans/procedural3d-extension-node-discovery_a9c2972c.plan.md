@@ -7,22 +7,22 @@ todos:
     status: completed
   - id: rename
     content: "W1: rename flow module to extension across dirs, crates, lib names, SDK types, flow.module schema, and OperatorInfo.module/NodeGraphOperatorRecord.module (+ TS mirror)"
-    status: in_progress
+    status: completed
   - id: registry
     content: "W2: replace flow_registry() OnceLock with a runtime-installable FlowExtension registry (install/uninstall/installed/registry/catalogue) plus install_builtin_flow_extensions()"
-    status: pending
+    status: completed
   - id: catalogue
     content: "W3: add catalogue_json to FlowBackedNodeGraphExtras, wire into NodeGraphScene for all flow-backed apps, fix the React truthiness guard, drive the procedural 3D side panel from the same catalogue, improve spotlight ranking"
-    status: pending
+    status: completed
   - id: contribution
     content: "W4: add Contribution::FlowExtension, declare contributes/consumes topics, and install contributed extensions at runtime via a procedural 3D setContributions command"
-    status: pending
+    status: completed
   - id: remote-eval
     content: "W5: add EvalError::PendingExtension, HostEffect::RequestPluginExchange, flowEvalResolve cache seeding, and relocate the bim crate to a standalone flow extension plugin as the proof case"
-    status: pending
+    status: completed
   - id: verify
     content: "W6: extend existing tests, run cargo/TS suites, verify both renderers at runtime with [DEBUG] logs, update launch.json, close the ticket"
-    status: pending
+    status: completed
 isProject: false
 ---
 

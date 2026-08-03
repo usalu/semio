@@ -2,13 +2,13 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/flow-module-text",
   "version": "0.1.0",
-  "description": "flow \u00b7 module \u00b7 text",
+  "description": "flow · module · text",
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./rs/pkg/flow_extension_text.js",
-    "./pkg/flow_extension_text.js": "./rs/pkg/flow_extension_text.js",
-    "./pkg/flow_extension_text_bg.wasm": "./rs/pkg/flow_extension_text_bg.wasm"
+    ".": "./pkg/flow_extension_text.js",
+    "./pkg/flow_extension_text.js": "./pkg/flow_extension_text.js",
+    "./pkg/flow_extension_text_bg.wasm": "./pkg/flow_extension_text_bg.wasm"
   },
   "scripts": {
     "wasm": "bun nx run @semio-tech/flow-module-text:wasm"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { createWriteStream, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, watch, writeFileSync } from "node:fs";
+import { createWriteStream, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -1107,6 +1107,35 @@ function formatPluginSizeBytes(n: number): string {
   return `${(n / (1024 * 1024)).toFixed(2)}MB`;
 }
 
+type EngineWasmSizeRow = PluginWasmSizeBreakdown & { readonly engineId: string; readonly file: string };
+
+const ENGINE_SIZE_REPORT_PATH = join(pluginOutRoot, ".engine-size-report.json");
+
+/** @emoji 📏️ Every wasm-bindgen engine's `*_bg.wasm` currently built under `node_modules/@semio-tech/*`
+ * (flow-core, node-graph, editor, tiled-map, paint, terrain, board-2d — see `runWasmPackWebBuild`'s
+ * `profile` option). These packages are workspace-symlinked (bun links `node_modules/@semio-tech/<pkg>`
+ * to the crate dir), so each entry's realpath is resolved before scanning its `pkg/` dir. Reuses
+ * `analyzePluginWasmModule` verbatim — it's generic wasm section accounting, not plugin-specific. */
+function collectEngineWasmSizeRows(): EngineWasmSizeRow[] {
+  const scopeDir = join(repoRoot, "node_modules/@semio-tech");
+  if (!existsSync(scopeDir)) return [];
+  const rows: EngineWasmSizeRow[] = [];
+  for (const entry of readdirSync(scopeDir, { withFileTypes: true })) {
+    let pkgDir: string;
+    try {
+      pkgDir = join(realpathSync(join(scopeDir, entry.name)), "pkg");
+    } catch {
+      continue;
+    }
+    if (!existsSync(pkgDir)) continue;
+    for (const file of readdirSync(pkgDir)) {
+      if (!file.endsWith("_bg.wasm")) continue;
+      rows.push({ engineId: entry.name, file, ...analyzePluginWasmModule(join(pkgDir, file)) });
+    }
+  }
+  return rows.sort((a, b) => b.totalBytes - a.totalBytes);
+}
+
 /** @emoji 📏️`plugin size` — measures every built plugin's core wasm (total/code/data/name bytes,
  * function count, memory initial/max pages), prints a per-plugin + total report, and persists
  * `.size-report.json` so the next run prints deltas — makes wasm-release/wasm-opt/dedup regressions
@@ -1142,6 +1171,28 @@ class PluginSizeScript extends BundleScript {
     }
     console.log(`[DEBUG] total: ${formatPluginSizeBytes(totalBytes)} (code ${formatPluginSizeBytes(totalCode)}, data ${formatPluginSizeBytes(totalData)}, name ${formatPluginSizeBytes(totalName)}, ${totalFunctions} functions across ${rows.length} modules)`);
     writeFileSync(PLUGIN_SIZE_REPORT_PATH, `${JSON.stringify(rows, null, 2)}\n`);
+
+    const engineRows = collectEngineWasmSizeRows();
+    if (engineRows.length === 0) return;
+    const previousEngineRows: readonly EngineWasmSizeRow[] = existsSync(ENGINE_SIZE_REPORT_PATH) ? (JSON.parse(readFileSync(ENGINE_SIZE_REPORT_PATH, "utf8")) as EngineWasmSizeRow[]) : [];
+    const previousEngineByKey = new Map(previousEngineRows.map((row) => [`${row.engineId}/${row.file}`, row]));
+    let engineTotalBytes = 0;
+    let engineTotalCode = 0;
+    let engineTotalData = 0;
+    let engineTotalName = 0;
+    console.log(`[DEBUG] engine wasm size report (${engineRows.length} modules)`);
+    for (const row of engineRows) {
+      engineTotalBytes += row.totalBytes;
+      engineTotalCode += row.codeBytes;
+      engineTotalData += row.dataBytes;
+      engineTotalName += row.nameBytes;
+      const previousRow = previousEngineByKey.get(`${row.engineId}/${row.file}`);
+      const delta = previousRow ? row.totalBytes - previousRow.totalBytes : null;
+      const deltaLabel = delta === null ? "(new)" : delta === 0 ? "(=)" : `(${delta > 0 ? "+" : ""}${formatPluginSizeBytes(delta)})`;
+      console.log(`[DEBUG]   ${row.engineId.padEnd(40)} total=${formatPluginSizeBytes(row.totalBytes)} code=${formatPluginSizeBytes(row.codeBytes)} data=${formatPluginSizeBytes(row.dataBytes)} name=${formatPluginSizeBytes(row.nameBytes)} ${deltaLabel}`);
+    }
+    console.log(`[DEBUG] engine total: ${formatPluginSizeBytes(engineTotalBytes)} (code ${formatPluginSizeBytes(engineTotalCode)}, data ${formatPluginSizeBytes(engineTotalData)}, name ${formatPluginSizeBytes(engineTotalName)} across ${engineRows.length} modules)`);
+    writeFileSync(ENGINE_SIZE_REPORT_PATH, `${JSON.stringify(engineRows, null, 2)}\n`);
   }
 }
 //#endregion 🪶️PluginSizeMeasurement

@@ -2641,6 +2641,14 @@ export type HostEffect =
         readonly documentSelectedIds: readonly string[];
         readonly documentHighlightedIds?: readonly string[];
       };
+    }
+  | {
+      readonly requestPluginExchange: {
+        readonly pluginId: string;
+        readonly appId: string;
+        readonly requestJson: string;
+        readonly responseAction: string;
+      };
     };
 
 /**

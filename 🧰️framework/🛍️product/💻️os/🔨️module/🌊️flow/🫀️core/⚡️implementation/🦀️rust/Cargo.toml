@@ -10,6 +10,14 @@ workspace = true
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 
+# 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. Applies when 📜️script.ts builds with wasm-pack
+# `--profile wasm-release` (wasm-pack 0.15+ maps any custom profile name to this `custom` section,
+# ignoring `profile.release` above). Runs after wasm-bindgen, mirroring os-dev's plugin -Oz post-pass
+# (WASM_OPT_ARGS) minus `--low-memory-unused`: this module's stack-first memory layout means the
+# "low 1KB is unused" assumption binaryen makes for that flag is unverified here.
+[package.metadata.wasm-pack.profile.custom]
+wasm-opt = ["-Oz", "--strip-debug", "--strip-producers", "--enable-bulk-memory", "--enable-bulk-memory-opt", "--enable-call-indirect-overlong", "--enable-extended-const", "--enable-multivalue", "--enable-mutable-globals", "--enable-nontrapping-float-to-int", "--enable-reference-types", "--enable-sign-ext"]
+
 [lib]
 name = "flow_core"
 crate-type = ["rlib", "cdylib"]
@@ -22,7 +30,6 @@ protocol = { path = "../../../../../../../../🧰️framework/🛍️product/�
 dsl = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 flow_extension_brep = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📐️brep", default-features = false, package = "semio-s-kernel-flow-extension-brep" }
 flow_extension_draw = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🖍️draw", default-features = false, package = "semio-s-kernel-flow-extension-draw" }
-flow_extension_bim = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🏗️bim", default-features = false, package = "semio-s-kernel-flow-extension-bim" }
 flow_extension_core = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/🫀️core", default-features = false, package = "semio-s-kernel-flow-extension-core" }
 flow_extension_dictionary = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📖️dictionary", default-features = false, package = "semio-s-kernel-flow-extension-dictionary" }
 flow_extension_list = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🧩️extension/📃️list", default-features = false, package = "semio-s-kernel-flow-extension-list" }
