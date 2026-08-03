@@ -1,0 +1,72 @@
+{
+  "frameSnaps": [
+    {
+      "url": "http://127.0.0.1:6027/",
+      "rootChildren": 3,
+      "canvas": 0,
+      "bodyText": "Vollbild |  | Plugins werden geladen… |  | Anzeige | Sync | Ein Projekt von | und | Gefördert durch | Settings | Befehl | Suche |  | Nach Elemente"
+    },
+    {
+      "url": "http://127.0.0.1:6028/",
+      "rootChildren": 3,
+      "canvas": 0,
+      "bodyText": "Vollbild |  | Plugins werden geladen… |  | Anzeige | Sync | Ein Projekt von | und | Gefördert durch | Settings | Befehl | Suche |  | Nach Elemente"
+    },
+    {
+      "url": "http://127.0.0.1:6023/",
+      "rootChildren": 3,
+      "canvas": 0,
+      "bodyText": "Vollbild |  | Plugins werden geladen… |  | Anzeige | Sync | Ein Projekt von | und | Gefördert durch | Settings | Befehl | Suche |  | Nach Elemente"
+    },
+    {
+      "url": "http://127.0.0.1:6030/",
+      "rootChildren": 3,
+      "canvas": 0,
+      "bodyText": "Dokument | Vollbild | semio · sourcing · curate | Beispiel | Demo Stock | Pool | Fokussieren | Schließen | Beams | Windows | Slabs | Auswählen"
+    },
+    {
+      "url": "http://127.0.0.1:6031/",
+      "rootChildren": 3,
+      "canvas": 0,
+      "bodyText": "Dokument | Katalog | Workshop | Inspektion | Vollbild | semio · process · 3d | Beispiel | Timber Beam Joinery | Workpiece | Schließen |  | Obe"
+    },
+    {
+      "url": "http://127.0.0.1:6032/",
+      "rootChildren": 3,
+      "canvas": 1,
+      "bodyText": "Dokument | Katalog | Inspektion | Vollbild | semio · gis · 2d | Beispiel | Reuse Map | Map | Schließen | Fensteroptionen | Aktionen | Hilfsmit"
+    }
+  ],
+  "panes": [
+    {
+      "href": "http://127.0.0.1:6027/",
+      "x": 240,
+      "y": 225
+    },
+    {
+      "href": "http://127.0.0.1:6028/",
+      "x": 720,
+      "y": 225
+    },
+    {
+      "href": "http://127.0.0.1:6023/",
+      "x": 1200,
+      "y": 225
+    },
+    {
+      "href": "http://127.0.0.1:6030/",
+      "x": 240,
+      "y": 675
+    },
+    {
+      "href": "http://127.0.0.1:6031/",
+      "x": 720,
+      "y": 675
+    },
+    {
+      "href": "http://127.0.0.1:6032/",
+      "x": 1200,
+      "y": 675
+    }
+  ]
+}

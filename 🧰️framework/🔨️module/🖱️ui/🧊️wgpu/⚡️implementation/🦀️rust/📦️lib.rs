@@ -5,6 +5,162 @@ mod icon_name_gen;
 
 pub use icon_name_gen::IconName;
 
+//#region 🔖️UiAxes
+#[path = "🤖️generated.rs"]
+mod ui_axes_gen;
+
+pub use ui_axes_gen::{Locale, Terminology};
+//#endregion 🔖️UiAxes
+
+//#region 🔖️Label
+// 🎗️ Replaces raw `String` labels on `UiNode` and the app manifest — a `Label` is only constructible
+// from `app_labels!`-produced `LabelText` or explicit runtime data (`Label::data`), so a hardcoded
+// literal assigned to a label field (`label: "LOD".into()`) does not compile. See ticket
+// 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND.
+use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
+
+/// 🎗️ A display-ready UI string. No `From<&str>`/`From<String>` on purpose.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct Label(String);
+
+impl Label {
+    /// 📊️ Genuine runtime data (file names, counts, user content) rendered as a label. Passing a
+    /// string literal here is a gate violation (see the Rust twin of `uiDataLabel`'s TS lint).
+    pub fn data(value: impl Into<String>) -> Self {
+        Self(value.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    pub fn into_string(self) -> String {
+        self.0
+    }
+}
+
+impl From<LabelText> for Label {
+    fn from(text: LabelText) -> Self {
+        Self(text.0.to_string())
+    }
+}
+
+impl std::fmt::Display for Label {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::borrow::Borrow<str> for Label {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+
+/// 🧵️ A localized static template, produced only by `app_labels!` (never construct directly — the
+/// hidden constructor is the macro's, not a public API; committed source calling it is a gate
+/// violation, mirroring the TS `__from_app_labels` ban).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct LabelText(&'static str);
+
+impl LabelText {
+    #[doc(hidden)]
+    pub const fn __from_app_labels(text: &'static str) -> Self {
+        Self(text)
+    }
+
+    pub fn as_str(self) -> &'static str {
+        self.0
+    }
+
+    /// 🧵️ Named-placeholder runtime fill, e.g. `labels.selected_count.fill(&[("count", &n.to_string())])`
+    /// — substitution, not `format!`, so word order never has to match across locales.
+    pub fn fill(self, args: &[(&str, &str)]) -> Label {
+        let mut out = self.0.to_string();
+        for (name, value) in args {
+            out = out.replace(&format!("{{{name}}}"), value);
+        }
+        Label(out)
+    }
+}
+
+/// 🗺️ Full locale×terminology matrix for a manifest label, resolved shell-side per active axes —
+/// the multilingual replacement for `AppLabelsOverlay`'s stringly-typed per-id maps. TS mirror is
+/// the hand-generated `LocalizedLabel` type in `framework/⚡️implementation/🟦️typescript/🤖️generated/🟦️ui-axes.ts`
+/// (not ts-rs-derived — the wire shape below is manually kept in sync with that type).
+#[derive(Clone, Debug, PartialEq)]
+pub struct LocalizedLabel {
+    cells: [[Cow<'static, str>; Locale::COUNT]; Terminology::COUNT],
+}
+
+impl LocalizedLabel {
+    /// 🗺️ Builds the full matrix from a resolver called once per (terminology, locale) cell.
+    pub fn from_fn(mut resolve: impl FnMut(Terminology, Locale) -> String) -> Self {
+        let cells = std::array::from_fn(|ti| {
+            let terminology = Terminology::ALL[ti];
+            std::array::from_fn(|li| Cow::Owned(resolve(terminology, Locale::ALL[li])))
+        });
+        Self { cells }
+    }
+
+    /// 📊️ Locale-invariant runtime data (fixture names, proper nouns) broadcast to every cell.
+    pub fn data(value: impl Into<String>) -> Self {
+        let value = value.into();
+        Self::from_fn(|_, _| value.clone())
+    }
+
+    /// 🌐️ Terminology-invariant framework-owned text (same copy regardless of terminology, real
+    /// per-locale translation) — for the framework's own built-in manifest text (history actions,
+    /// panel tabs, …), which has no app-declared terminology axis. The exhaustive match on `Locale`
+    /// (no catch-all) means adding a locale breaks every call site here until translated.
+    pub fn native(en: &str, de: &str) -> Self {
+        Self::from_fn(|_terminology, locale| {
+            match locale {
+                Locale::En => en,
+                Locale::De => de,
+            }
+            .to_string()
+        })
+    }
+
+    pub fn resolve(&self, terminology: Terminology, locale: Locale) -> &str {
+        &self.cells[terminology.index()][locale.index()]
+    }
+}
+
+impl Serialize for LocalizedLabel {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeMap;
+        let mut outer = serializer.serialize_map(Some(Terminology::COUNT))?;
+        for terminology in Terminology::ALL {
+            let inner: std::collections::BTreeMap<&str, &str> =
+                Locale::ALL.iter().map(|&locale| (locale.as_str(), self.resolve(terminology, locale))).collect();
+            outer.serialize_entry(terminology.as_str(), &inner)?;
+        }
+        outer.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for LocalizedLabel {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let raw: std::collections::HashMap<String, std::collections::HashMap<String, String>> = Deserialize::deserialize(deserializer)?;
+        Ok(Self::from_fn(|terminology, locale| {
+            raw.get(terminology.as_str()).and_then(|m| m.get(locale.as_str())).cloned().unwrap_or_default()
+        }))
+    }
+}
+
+/// 🗣️ Two-axis label set; implement via `semio_framework_plugin::app_labels!` only — the macro emits
+/// an exhaustive `match (terminology, locale)` with no catch-all, so a `Locale`/`Terminology` variant
+/// added to the generated axes fails every implementor's build until covered.
+pub trait AppLabels: Sized + 'static {
+    fn labels(locale: Locale, terminology: Terminology) -> &'static Self;
+}
+//#endregion 🔖️Label
+
 // #region component
 // 🧩️ Declarative UI component model (declarative `UiNode` tree, scene records, `SurfaceKind`, `WindowLayout`/`WindowEngagement`/`WindowMeasure`, `UtilityNode`) — moved verbatim from framework/core/rs/lib.rs; JSON wire format is byte-identical to the pre-move version (see the inline `*_wire_format_tests` mods). Ungated (default features) so wasm32-wasip2 program builds stay dependency-clean; must never reference `semio_framework_core`.
 pub mod component {
@@ -223,6 +379,317 @@ pub struct ContextMenuItemSpec {
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub children: Option<Vec<ContextMenuItemSpec>>,
 }
+
+//#region 🗂️ContextMenuOrganizer
+/// 🗂️ Canonical ribbon-parent taxonomy — Rust twin of ui-react's closed `UiRibbonParentCategory`
+/// union (`🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx` ~3317). Id
+/// spelling and order are load-bearing: `organize_context_menu` sorts `menu.group.<category>` rows by
+/// this order (unknown categories sort after, in emit order) and `ribbon_parent_label` covers exactly
+/// these 20 ids.
+pub const RIBBON_PARENT_CATEGORIES: [&str; 20] = [
+    "history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings",
+    "methods", "mode", "targets", "export", "tools", "utilities", "sync",
+];
+
+/// 🗂️ EN/DE label for a `RIBBON_PARENT_CATEGORIES` id — hand-maintained Rust twin of ui-react's
+/// `uiRibbonParentEn`/`uiRibbonParentDe` bundles (same file as above, ~3826/~3797). `None` for any id
+/// outside the closed 20-id taxonomy — callers (`shell_context_menu_item_from_spec`) fall back to the
+/// raw category id in that case.
+pub fn ribbon_parent_label(category: &str, is_de: bool) -> Option<&'static str> {
+    Some(match (category, is_de) {
+        ("history", false) => "History",
+        ("history", true) => "Verlauf",
+        ("hand", false) => "Hand",
+        ("hand", true) => "Hand",
+        ("selection", false) => "Selection",
+        ("selection", true) => "Auswahl",
+        ("lasso", false) => "Lasso",
+        ("lasso", true) => "Lasso",
+        ("filter", false) => "Filter",
+        ("filter", true) => "Filter",
+        ("open", false) => "Open",
+        ("open", true) => "Öffnen",
+        ("save", false) => "Save",
+        ("save", true) => "Speichern",
+        ("transfer", false) => "Transfer",
+        ("transfer", true) => "Transfer",
+        ("transform", false) => "Transform",
+        ("transform", true) => "Transformieren",
+        ("create", false) => "Create",
+        ("create", true) => "Erstellen",
+        ("view", false) => "View",
+        ("view", true) => "Ansicht",
+        ("actions", false) => "Actions",
+        ("actions", true) => "Aktionen",
+        ("settings", false) => "Settings",
+        ("settings", true) => "Einstellungen",
+        ("methods", false) => "Methods",
+        ("methods", true) => "Methoden",
+        ("mode", false) => "Mode",
+        ("mode", true) => "Modus",
+        ("targets", false) => "Targets",
+        ("targets", true) => "Ziele",
+        ("export", false) => "Export",
+        ("export", true) => "Export",
+        ("tools", false) => "Tools",
+        ("tools", true) => "Werkzeuge",
+        ("utilities", false) => "Utilities",
+        ("utilities", true) => "Hilfsmittel",
+        ("sync", false) => "Sync",
+        ("sync", true) => "Sync",
+        _ => return None,
+    })
+}
+
+const CONTEXT_MENU_ROW_BUDGET: usize = 9;
+const CONTEXT_MENU_PRIMARY_BUDGET: usize = 5;
+
+fn context_menu_is_bare_separator(item: &ContextMenuItemSpec) -> bool {
+    item.separator == Some(true) && item.label.is_none()
+}
+
+/// 🗂️ D1: a separator carrying a `label` is a non-interactive section header, not a divider.
+fn context_menu_is_header(item: &ContextMenuItemSpec) -> bool {
+    item.separator == Some(true) && item.label.is_some()
+}
+
+fn context_menu_is_group_row(item: &ContextMenuItemSpec) -> bool {
+    item.id.starts_with("menu.group.")
+}
+
+fn context_menu_group_category(item: &ContextMenuItemSpec) -> &str {
+    item.id.strip_prefix("menu.group.").unwrap_or(item.id.as_str())
+}
+
+fn context_menu_taxonomy_rank(category: &str) -> usize {
+    RIBBON_PARENT_CATEGORIES.iter().position(|known| *known == category).unwrap_or(RIBBON_PARENT_CATEGORIES.len())
+}
+
+fn context_menu_separator_row(seed: usize) -> ContextMenuItemSpec {
+    ContextMenuItemSpec { id: format!("separator-organized-{seed}"), separator: Some(true), ..Default::default() }
+}
+
+/// 🗂️ Collapses a run of consecutive bare (unlabeled) separators down to one, then drops a bare
+/// separator left at the very start or end (nothing to separate from/to). A labeled separator (header,
+/// see `context_menu_is_header`) is never touched by this — it always survives in place, adjacent bare
+/// separators collapse/drop around it independently.
+fn context_menu_normalize_separators(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
+    let mut out: Vec<ContextMenuItemSpec> = Vec::with_capacity(items.len());
+    for item in items {
+        if context_menu_is_bare_separator(&item) && out.last().map(context_menu_is_bare_separator).unwrap_or(false) {
+            continue;
+        }
+        out.push(item);
+    }
+    if out.first().map(context_menu_is_bare_separator).unwrap_or(false) {
+        out.remove(0);
+    }
+    while out.last().map(context_menu_is_bare_separator).unwrap_or(false) {
+        out.pop();
+    }
+    out
+}
+
+/// 🗂️ Merges rows sharing a `menu.group.<category>` id at the position of the first occurrence,
+/// concatenating and deduping their `children` by id (first occurrence wins).
+fn context_menu_merge_group_rows(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
+    let mut out: Vec<ContextMenuItemSpec> = Vec::with_capacity(items.len());
+    let mut group_index: HashMap<String, usize> = HashMap::new();
+    for item in items {
+        if context_menu_is_group_row(&item) {
+            if let Some(&index) = group_index.get(&item.id) {
+                let children = out[index].children.get_or_insert_with(Vec::new);
+                for child in item.children.unwrap_or_default() {
+                    if !children.iter().any(|existing| existing.id == child.id) {
+                        children.push(child);
+                    }
+                }
+            } else {
+                group_index.insert(item.id.clone(), out.len());
+                out.push(item);
+            }
+        } else {
+            out.push(item);
+        }
+    }
+    out
+}
+
+/// 🗂️ ≤9-interactive-row emission (D2 rule): plain leaves/headers in emit order, then group rows in
+/// taxonomy order (unknown categories after, emit order), then — only if any exist — a separator
+/// followed by destructive leaves.
+fn context_menu_emit_within_budget(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
+    let mut leaves_and_headers: Vec<ContextMenuItemSpec> = Vec::new();
+    let mut group_rows: Vec<ContextMenuItemSpec> = Vec::new();
+    let mut destructive_leaves: Vec<ContextMenuItemSpec> = Vec::new();
+    for item in items {
+        if context_menu_is_group_row(&item) {
+            group_rows.push(item);
+        } else if item.destructive == Some(true) {
+            destructive_leaves.push(item);
+        } else {
+            leaves_and_headers.push(item);
+        }
+    }
+    group_rows.sort_by_key(|group| context_menu_taxonomy_rank(context_menu_group_category(group)));
+    let mut out = leaves_and_headers;
+    out.extend(group_rows);
+    if !destructive_leaves.is_empty() {
+        out.push(context_menu_separator_row(out.len()));
+        out.extend(destructive_leaves);
+    }
+    out
+}
+
+/// 🗂️ >9-interactive-row emission (D2 rule): the first 5 plain leaves outside any header section stay
+/// primaries; every header's trailing run of leaves folds into a group keyed by that header's own
+/// (slugified) label; every other plain leaf buckets into `menu.group.<category_of(action) ?? "actions">`;
+/// pre-existing group rows pass through unchanged; groups then sort in taxonomy order and, if the
+/// primaries+groups row count is still over budget, the excess trailing groups fold into one
+/// `menu.group.more`. Destructive leaves are carried separately and appended last, after a separator.
+fn context_menu_emit_over_budget(items: Vec<ContextMenuItemSpec>, category_of: &dyn Fn(&str) -> Option<String>) -> Vec<ContextMenuItemSpec> {
+    fn bucket_mut(buckets: &mut Vec<ContextMenuItemSpec>, id: String) -> usize {
+        match buckets.iter().position(|bucket| bucket.id == id) {
+            Some(index) => index,
+            None => {
+                buckets.push(ContextMenuItemSpec { id, label: None, children: Some(Vec::new()), ..Default::default() });
+                buckets.len() - 1
+            }
+        }
+    }
+
+    let mut primaries: Vec<ContextMenuItemSpec> = Vec::new();
+    let mut existing_groups: Vec<ContextMenuItemSpec> = Vec::new();
+    let mut destructive_leaves: Vec<ContextMenuItemSpec> = Vec::new();
+    let mut bucketed_groups: Vec<ContextMenuItemSpec> = Vec::new();
+    let mut current_header_key: Option<String> = None;
+
+    for item in items {
+        if context_menu_is_header(&item) {
+            current_header_key = item.label.clone();
+            continue;
+        }
+        if context_menu_is_group_row(&item) {
+            existing_groups.push(item);
+            current_header_key = None;
+            continue;
+        }
+        if item.destructive == Some(true) {
+            destructive_leaves.push(item);
+            continue;
+        }
+        if let Some(header_label) = &current_header_key {
+            let slug = header_label.to_lowercase().split_whitespace().collect::<Vec<_>>().join("-");
+            let index = bucket_mut(&mut bucketed_groups, format!("menu.group.{slug}"));
+            bucketed_groups[index].children.get_or_insert_with(Vec::new).push(item);
+            continue;
+        }
+        if primaries.len() < CONTEXT_MENU_PRIMARY_BUDGET {
+            primaries.push(item);
+            continue;
+        }
+        let category = category_of(item.action.as_deref().unwrap_or(item.id.as_str())).unwrap_or_else(|| "actions".into());
+        let index = bucket_mut(&mut bucketed_groups, format!("menu.group.{category}"));
+        bucketed_groups[index].children.get_or_insert_with(Vec::new).push(item);
+    }
+
+    let mut groups = existing_groups;
+    groups.extend(bucketed_groups);
+    groups.sort_by_key(|group| context_menu_taxonomy_rank(context_menu_group_category(group)));
+
+    let mut out = primaries;
+    out.extend(groups);
+    if out.len() > CONTEXT_MENU_ROW_BUDGET {
+        let fold_from = CONTEXT_MENU_ROW_BUDGET - 1;
+        let overflowing_groups = out.split_off(fold_from);
+        let mut folded_children: Vec<ContextMenuItemSpec> = Vec::new();
+        for group in overflowing_groups {
+            folded_children.extend(group.children.unwrap_or_default());
+        }
+        out.push(ContextMenuItemSpec { id: "menu.group.more".into(), label: None, children: Some(folded_children), ..Default::default() });
+    }
+    if !destructive_leaves.is_empty() {
+        out.push(context_menu_separator_row(out.len()));
+        out.extend(destructive_leaves);
+    }
+    out
+}
+
+/// 🗂️ Pure organizer enforced at every context-menu funnel (SDK `VcsDocumentApp::context_menu`, shell
+/// builders) — recurses into `children`, normalizes separators (labeled = kept header, bare
+/// leading/trailing/doubled = dropped), merges duplicate `menu.group.<category>` rows (deduping their
+/// children by id), then applies the ≤9-row / >9-row emission policy from D2 of the grouped-context-menu
+/// mechanism design (`context_menu_emit_within_budget`/`context_menu_emit_over_budget`).
+/// `category_of` resolves a leaf's dispatched action id to a `RIBBON_PARENT_CATEGORIES` id (`None`
+/// buckets into `"actions"`) — pass `AppActionRegistry::category_of` at the SDK funnel, or
+/// `ActionDefinition.category` lookups in shell builders.
+pub fn organize_context_menu(items: Vec<ContextMenuItemSpec>, category_of: &dyn Fn(&str) -> Option<String>) -> Vec<ContextMenuItemSpec> {
+    let items: Vec<ContextMenuItemSpec> = items
+        .into_iter()
+        .map(|item| {
+            let children = item.children.map(|children| organize_context_menu(children, category_of));
+            ContextMenuItemSpec { children, ..item }
+        })
+        .collect();
+    let items = context_menu_merge_group_rows(context_menu_normalize_separators(items));
+    let interactive_count = items.iter().filter(|item| item.separator != Some(true)).count();
+    if interactive_count <= CONTEXT_MENU_ROW_BUDGET {
+        context_menu_emit_within_budget(items)
+    } else {
+        context_menu_emit_over_budget(items, category_of)
+    }
+}
+
+/// 🗂️ Declarative input row for `build_shell_context_menu_specs` — Rust twin of the TS `ShellMenuAction`
+/// the shell fallback builder consumes (`buildShellContextMenuItems`, renderer). `kind` is the raw
+/// `ActionKind`/`CommandKind` discriminant string, carried through for host-side styling parity (unused
+/// by the builder itself).
+#[derive(Clone, Debug, PartialEq)]
+pub struct ShellMenuAction {
+    pub id: String,
+    pub label: String,
+    pub icon: Option<String>,
+    pub keys: Option<String>,
+    pub kind: String,
+    pub category: Option<String>,
+    pub in_palette: bool,
+    pub arg_carrying: bool,
+}
+
+/// 🗂️ Shell fallback context menu (window-background right-click, "no plugin resolved a menu") builder
+/// — filters to `in_palette` actions, emits one leaf per action (an `arg_carrying` action routes
+/// through the reserved `"shell.openActionPane"` action id with `{"actionId": id}` args so the host can
+/// prompt for arguments before dispatch), appends a fixed `"shell.openPalette"` leaf when
+/// `include_palette`, then runs the whole thing through `organize_context_menu` (D5) exactly like every
+/// plugin-emitted menu.
+pub fn build_shell_context_menu_specs(actions: &[ShellMenuAction], include_palette: bool) -> Vec<ContextMenuItemSpec> {
+    let mut items: Vec<ContextMenuItemSpec> = actions
+        .iter()
+        .filter(|action| action.in_palette)
+        .map(|action| ContextMenuItemSpec {
+            id: action.id.clone(),
+            label: Some(action.label.clone()),
+            icon: action.icon.clone(),
+            shortcut: action.keys.clone(),
+            action: Some(if action.arg_carrying { "shell.openActionPane".into() } else { action.id.clone() }),
+            args: action
+                .arg_carrying
+                .then(|| DslValue::Object(vec![("actionId".into(), DslValue::String(action.id.clone()))])),
+            ..Default::default()
+        })
+        .collect();
+    if include_palette {
+        items.push(ContextMenuItemSpec {
+            id: "shell.openPalette".into(),
+            label: Some("Command Palette".into()),
+            action: Some("shell.openPalette".into()),
+            ..Default::default()
+        });
+    }
+    let categories: HashMap<String, Option<String>> = actions.iter().map(|action| (action.id.clone(), action.category.clone())).collect();
+    organize_context_menu(items, &|id| categories.get(id).cloned().flatten())
+}
+//#endregion 🗂️ContextMenuOrganizer
 
 /// 🖱️ Payload of the WIT `context-menu` export's request — mirrors `context-menu-request-json`'s
 /// `json` string. `surface` carries scene-target info (`World3D`/`nodeGraph`/`tiledMap`/... hit-test
@@ -1677,6 +2144,7 @@ pub mod ui {
 //! 🧩 Declarative UI graph types shared by kernel, plugins, and renderers.
 
 use crate::IconName;
+use crate::Label;
 use dsl::DslValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -1686,6 +2154,9 @@ pub use super::layout::{ActionDescriptor, StyleSpec, UiPresence, UiState, UiStat
 pub use super::layout::{
     ContextMenuHit, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse,
     ContextMenuSelectionGroup, ContextMenuSurfaceTarget, ContextMenuTextContext, UiMenuRef,
+};
+pub use super::layout::{
+    build_shell_context_menu_specs, organize_context_menu, ribbon_parent_label, ShellMenuAction, RIBBON_PARENT_CATEGORIES,
 };
 //#endregion 🔖Action
 
@@ -1721,8 +2192,8 @@ pub struct UiStackNode {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiDropOverlaySpec {
-    pub title: String,
-    pub hint: String,
+    pub title: Label,
+    pub hint: Label,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub accept: Option<String>,
@@ -1732,7 +2203,7 @@ pub struct UiDropOverlaySpec {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiTextNode {
-    pub value: String,
+    pub value: Label,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub emphasize: Option<bool>,
@@ -1755,7 +2226,7 @@ pub struct UiButtonNode {
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub id: Option<String>,
     pub icon_id: IconName,
-    pub label: String,
+    pub label: Label,
     pub action: ActionDescriptor,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -1788,7 +2259,7 @@ pub struct UiImageNode {
     pub src: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub alt: Option<String>,
+    pub alt: Option<Label>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
@@ -1806,7 +2277,7 @@ pub struct UiInputNode {
     pub value: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub placeholder: Option<String>,
+    pub placeholder: Option<Label>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub commit: Option<String>,
@@ -1836,7 +2307,7 @@ pub struct UiInputNode {
 #[serde(rename_all = "camelCase")]
 pub struct UiSelectItem {
     pub value: String,
-    pub label: String,
+    pub label: Label,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1848,7 +2319,7 @@ pub struct UiSelectNode {
     pub items: Vec<UiSelectItem>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub placeholder: Option<String>,
+    pub placeholder: Option<Label>,
     pub on_change: ActionDescriptor,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
@@ -1866,7 +2337,7 @@ pub struct UiToggleNode {
     pub icon_id: IconName,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub text: Option<String>,
+    pub text: Option<Label>,
     pub on_change: ActionDescriptor,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
@@ -1888,7 +2359,7 @@ pub struct UiToggleNode {
 #[serde(rename_all = "camelCase")]
 pub struct UiGroupNode {
     pub id: String,
-    pub label: String,
+    pub label: Label,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_open: Option<bool>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
@@ -1902,7 +2373,7 @@ pub struct UiGroupNode {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiKeyValueEntry {
-    pub label: String,
+    pub label: Label,
     pub value: String,
 }
 
@@ -2042,7 +2513,7 @@ impl UiControlNode {
 #[serde(rename_all = "camelCase")]
 pub struct UiFieldNode {
     pub id: String,
-    pub label: String,
+    pub label: Label,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2063,7 +2534,7 @@ pub struct UiFieldNode {
 pub struct UiSectionNode {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none", alias = "title")]
-    pub label: Option<String>,
+    pub label: Option<Label>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_open: Option<bool>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
@@ -2080,7 +2551,7 @@ pub struct UiTreeItemAction {
     pub icon_id: IconName,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub label: Option<String>,
+    pub label: Option<Label>,
     pub action: ActionDescriptor,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -2092,7 +2563,7 @@ pub struct UiTreeItemAction {
 #[serde(rename_all = "camelCase")]
 pub struct UiTreeItemNode {
     pub id: String,
-    pub label: String,
+    pub label: Label,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub description: Option<String>,
@@ -2143,7 +2614,7 @@ pub struct UiTreeItemNode {
 
 impl UiTreeItemNode {
     /** @emoji 🌳️ Builds a tree item with optional extensions unset. */
-    pub fn base(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn base(id: impl Into<String>, label: impl Into<Label>) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
@@ -2172,7 +2643,7 @@ pub struct UiTreeSectionNode {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub label: Option<String>,
+    pub label: Option<Label>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_open: Option<bool>,
@@ -2238,7 +2709,7 @@ pub fn ui_tree_stamp_presence(
 #[serde(rename_all = "camelCase")]
 pub struct UiInspectorFieldGroup {
     pub id: String,
-    pub label: String,
+    pub label: Label,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_open: Option<bool>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
@@ -2318,7 +2789,7 @@ pub fn ui_inspector_mixed_slider(values: &[f64]) -> UiInspectorMixedNumber {
 
 pub fn ui_inspector_readonly_field(
     id: impl Into<String>,
-    label: impl Into<String>,
+    label: impl Into<Label>,
     value: impl Into<String>,
 ) -> UiNode {
     let id = id.into();
@@ -2357,7 +2828,7 @@ pub fn ui_inspector_readonly_field(
  * callers' patch handlers branch on whichever key the dispatched action actually carries. */
 pub fn ui_inspector_stepper_field(
     id: impl Into<String>,
-    label: impl Into<String>,
+    label: impl Into<Label>,
     values: &[f64],
     step: f64,
     action: ActionDescriptor,
@@ -2389,7 +2860,7 @@ pub fn ui_inspector_stepper_field(
  * `values` via {@link ui_inspector_mixed_toggle}. */
 pub fn ui_inspector_toggle_field(
     id: impl Into<String>,
-    label: impl Into<String>,
+    label: impl Into<Label>,
     icon_id: impl Into<IconName>,
     values: &[bool],
     action: ActionDescriptor,
@@ -2423,7 +2894,7 @@ pub fn ui_inspector_toggle_field(
  * component with `value` (absolute) or `delta` (relative, offset-preserving across multi-select). */
 pub fn ui_inspector_vec3_group(
     id: impl Into<String>,
-    label: impl Into<String>,
+    label: impl Into<Label>,
     values: &[[f64; 3]],
     step: f64,
     axis_action: impl Fn(&str) -> ActionDescriptor,
@@ -2439,9 +2910,10 @@ pub fn ui_inspector_vec3_group(
         default_open: Some(true),
         presence: UiPresence::default(),
         children: vec![
-            ui_inspector_stepper_field(format!("{id}.x"), "X", &xs, step, axis_action("x")),
-            ui_inspector_stepper_field(format!("{id}.y"), "Y", &ys, step, axis_action("y")),
-            ui_inspector_stepper_field(format!("{id}.z"), "Z", &zs, step, axis_action("z")),
+            // 🔤️ Axis symbols (X/Y/Z) are mathematical notation, not translatable UI chrome.
+            ui_inspector_stepper_field(format!("{id}.x"), Label::data("X"), &xs, step, axis_action("x")),
+            ui_inspector_stepper_field(format!("{id}.y"), Label::data("Y"), &ys, step, axis_action("y")),
+            ui_inspector_stepper_field(format!("{id}.z"), Label::data("Z"), &zs, step, axis_action("z")),
         ],
     })
 }
@@ -2490,7 +2962,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                 presence: UiPresence::default(),
                 items: vec![UiTreeItemNode {
                     id: "empty".into(),
-                    label: "—".into(),
+                    label: Label::data("—"),
                     description: None,
                     icon_id: None,
                     presence: UiPresence::default(),
@@ -2551,6 +3023,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                 input
                     .placeholder
                     .clone()
+                    .map(Label::into_string)
                     .or_else(|| if input.value.is_empty() { None } else { Some(input.value.clone()) })
             } else {
                 None
@@ -2632,7 +3105,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
         UiNode::Separator(_) => UiTreeItemNode {
             menu: None,
             id: format!("{}.sep", fallback_id),
-            label: "—".into(),
+            label: Label::data("—"),
             description: None,
             icon_id: None,
             presence: UiPresence::default(),
@@ -2650,7 +3123,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
         other => UiTreeItemNode {
             menu: None,
             id: fallback_id,
-            label: format!("{other:?}"),
+            label: Label::data(format!("{other:?}")),
             description: None,
             icon_id: None,
             presence: UiPresence::default(),
@@ -2672,7 +3145,7 @@ fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
     UiTreeItemNode {
             menu: None,
         id,
-        label: String::new(),
+        label: Label::data(String::new()),
         description: None,
         icon_id: None,
         presence: UiPresence::default(),
@@ -3869,7 +4342,7 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
 }
 
 /** @emoji 🖼️ Builds an image node rendering a source URL or path. */
-pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<String>) -> UiNode {
+pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<Label>) -> UiNode {
     UiNode::Image(UiImageNode {
             menu: None,
         id: id.into(),
@@ -3916,7 +4389,7 @@ impl Default for UiNode {
     }
 }
 
-pub fn ui_text(value: impl Into<String>) -> UiNode {
+pub fn ui_text(value: impl Into<Label>) -> UiNode {
     UiNode::Text(UiTextNode {
             menu: None,
         value: value.into(),
@@ -4385,10 +4858,10 @@ pub fn build_event_feed_scene(
 //#region 🔖️StatusBuilders
 /** @emoji 🗂️ Builds an empty-state placeholder: a centered title, optional description text, and an
  * optional call-to-action button. */
-pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: Option<UiButtonNode>) -> UiNode {
+pub fn ui_empty_state(id: &str, title: Label, description: Option<Label>, action: Option<UiButtonNode>) -> UiNode {
     let mut children = vec![UiNode::Text(UiTextNode {
             menu: None,
-        value: title.into(),
+        value: title,
         emphasize: Some(true),
         data_attributes: None,
         presence: UiPresence::default(),
@@ -4414,10 +4887,10 @@ pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: 
 }
 
 /** @emoji ⚠️ Builds an error-state placeholder: an emphasized message and an optional retry button. */
-pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) -> UiNode {
+pub fn ui_error_state(id: &str, message: Label, retry: Option<ActionDescriptor>) -> UiNode {
     let mut children = vec![UiNode::Text(UiTextNode {
             menu: None,
-        value: message.into(),
+        value: message,
         emphasize: Some(true),
         data_attributes: None,
         presence: UiPresence::default(),
@@ -4427,7 +4900,9 @@ pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) 
             menu: None,
             id: Some(format!("{id}.retry")),
             icon_id: IconName::RotateCw,
-            label: "Retry".into(),
+            // 🚧️ Framework-level fallback copy (not app content); not yet routed through app_labels!
+            // since this SDK-level builder predates the two-axis macro — flagged for a follow-up pass.
+            label: Label::data("Retry"),
             action: retry,
             style: None,
             presence: UiPresence::default(),
@@ -4475,17 +4950,17 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
         children: vec![
             UiNode::Text(UiTextNode {
             menu: None,
-                value: title.into(),
+                value: Label::data(title),
                 emphasize: Some(true),
                 data_attributes: None,
                 presence: UiPresence::default(),
             }),
-            ui_text(message),
+            ui_text(Label::data(message)),
             UiNode::Button(UiButtonNode {
             menu: None,
                 id: Some("recovery.restartApp".into()),
                 icon_id: IconName::RotateCcw,
-                label: restart_label.into(),
+                label: Label::data(restart_label),
                 action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.restartApp".into(), args: args.clone() },
                 style: None,
                 presence: UiPresence::default(),
@@ -4494,7 +4969,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
             menu: None,
                 id: Some("recovery.disablePlugin".into()),
                 icon_id: IconName::Link2Off,
-                label: disable_label.into(),
+                label: Label::data(disable_label),
                 action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.disablePlugin".into(), args: args.clone() },
                 style: None,
                 presence: UiPresence::default(),
@@ -4503,7 +4978,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
             menu: None,
                 id: Some("recovery.showDiagnostics".into()),
                 icon_id: IconName::Info,
-                label: diagnostics_label.into(),
+                label: Label::data(diagnostics_label),
                 action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.showDiagnostics".into(), args },
                 style: None,
                 presence: UiPresence::default(),
@@ -4514,7 +4989,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
 
 /** @emoji 📥️ Builds a drop-zone `Stack` for importing files: `drop_overlay` supplies the hover-state
  * title/hint/accept copy, `drop_action` fires once the drop completes. */
-pub fn ui_import_drop_zone(id: &str, title: &str, hint: &str, accept: Option<&str>, drop_action: ActionDescriptor) -> UiNode {
+pub fn ui_import_drop_zone(id: &str, title: Label, hint: Label, accept: Option<&str>, drop_action: ActionDescriptor) -> UiNode {
     UiNode::Stack(UiStackNode {
             menu: None,
         direction: "vertical".into(),
@@ -4524,7 +4999,7 @@ pub fn ui_import_drop_zone(id: &str, title: &str, hint: &str, accept: Option<&st
         presence: UiPresence::default(),
         activate: None,
         drop_action: Some(drop_action),
-        drop_overlay: Some(UiDropOverlaySpec { title: title.into(), hint: hint.into(), accept: accept.map(Into::into),
+        drop_overlay: Some(UiDropOverlaySpec { title: title.clone(), hint: hint.clone(), accept: accept.map(Into::into),
         }),
         children: vec![ui_text(title), ui_text(hint)],
     })
@@ -4561,7 +5036,7 @@ mod ui_node_wire_format_tests {
             children: vec![
                 UiNode::Text(UiTextNode {
             menu: None,
-                    value: "Hello".into(),
+                    value: Label::data("Hello"),
                     emphasize: Some(true),
                     data_attributes: None,
                     presence: UiPresence::default(),
@@ -4570,7 +5045,7 @@ mod ui_node_wire_format_tests {
             menu: None,
                     id: Some("btn1".into()),
                     icon_id: IconName::Save,
-                    label: "Save".into(),
+                    label: Label::data("Save"),
                     action: act("save"),
                     style: None,
                     presence: UiPresence::default(),
@@ -4584,7 +5059,7 @@ mod ui_node_wire_format_tests {
                     id: "inp1".into(),
                     input_kind: "text".into(),
                     value: "abc".into(),
-                    placeholder: Some("type...".into()),
+                    placeholder: Some(Label::data("type...")),
                     commit: None,
                     min: None,
                     max: None,
@@ -4598,9 +5073,9 @@ mod ui_node_wire_format_tests {
                     id: "sel1".into(),
                     value: "a".into(),
                     items: vec![
-                        UiSelectItem { value: "a".into(), label: "A".into(),
+                        UiSelectItem { value: "a".into(), label: Label::data("A"),
         },
-                        UiSelectItem { value: "b".into(), label: "B".into(),
+                        UiSelectItem { value: "b".into(), label: Label::data("B"),
         },
                     ],
                     placeholder: None,
@@ -4618,12 +5093,12 @@ mod ui_node_wire_format_tests {
                 UiNode::Group(UiGroupNode {
             menu: None,
                     id: "grp1".into(),
-                    label: "Group".into(),
+                    label: Label::data("Group"),
                     default_open: Some(true),
                     presence: UiPresence::default(),
                     children: vec![UiNode::Text(UiTextNode {
             menu: None,
-                        value: "child".into(),
+                        value: Label::data("child"),
                         emphasize: None,
                         data_attributes: None,
                         presence: UiPresence::default(),
@@ -4631,7 +5106,7 @@ mod ui_node_wire_format_tests {
                 }),
                 UiNode::KeyValue(UiKeyValueNode {
             menu: None,
-                    entries: vec![UiKeyValueEntry { label: "K".into(), value: "V".into(),
+                    entries: vec![UiKeyValueEntry { label: Label::data("K"), value: "V".into(),
         }],
                     presence: UiPresence::default(),
                 }),
@@ -4676,13 +5151,13 @@ mod ui_node_wire_format_tests {
                 UiNode::Field(UiFieldNode {
             menu: None,
                     id: "field1".into(),
-                    label: "Field".into(),
+                    label: Label::data("Field"),
                     description: Some("desc".into()),
                     required: Some(true),
                     error: None,
                     child: Box::new(UiNode::Text(UiTextNode {
             menu: None,
-                        value: "child".into(),
+                        value: Label::data("child"),
                         emphasize: None,
                         data_attributes: None,
                         presence: UiPresence::default(),
@@ -4692,7 +5167,7 @@ mod ui_node_wire_format_tests {
                 UiNode::Section(UiSectionNode {
             menu: None,
                     id: "sec1".into(),
-                    label: Some("Section".into()),
+                    label: Some(Label::data("Section")),
                     default_open: Some(true),
                     presence: UiPresence::default(),
                     children: vec![],
@@ -4701,11 +5176,11 @@ mod ui_node_wire_format_tests {
             menu: None,
                     sections: vec![UiTreeSectionNode {
                         id: "treesec1".into(),
-                        label: Some("Items".into()),
+                        label: Some(Label::data("Items")),
                         default_open: Some(true),
                         presence: UiPresence::default(),
                         items: vec![{
-                            let mut item = UiTreeItemNode::base("item1", "Item 1");
+                            let mut item = UiTreeItemNode::base("item1", Label::data("Item 1"));
                             item.presence.selected = true;
                             item
                         }],
@@ -4720,7 +5195,7 @@ mod ui_node_wire_format_tests {
             menu: None,
                     id: "img1".into(),
                     src: "icon.png".into(),
-                    alt: Some("alt text".into()),
+                    alt: Some(Label::data("alt text")),
                     presence: UiPresence::default(),
                 }),
                 UiNode::ComponentScene(UiComponentSceneNode {
@@ -4796,10 +5271,10 @@ mod ui_node_wire_format_tests {
     /// 🌀️ `presence.status` follows the same skip-if-default convention as `presence.selected`: the whole `presence` key is absent when fully default, and round-trips when set.
     #[test]
     fn ui_tree_item_loading_status_skips_when_default_and_roundtrips_when_set() {
-        let idle = UiTreeItemNode::base("idle", "Idle");
+        let idle = UiTreeItemNode::base("idle", Label::data("Idle"));
         assert!(!serde_json::to_string(&idle).unwrap().contains("presence"));
 
-        let mut loading = UiTreeItemNode::base("loading1", "Loading");
+        let mut loading = UiTreeItemNode::base("loading1", Label::data("Loading"));
         loading.presence.status = UiStatus::Loading;
         let json = serde_json::to_string(&loading).unwrap();
         assert!(json.contains("\"presence\":{\"status\":\"loading\"}"));
@@ -4810,10 +5285,10 @@ mod ui_node_wire_format_tests {
     /// 🌀️ `waiting` follows the same skip-if-default convention as `loading`: absent when unset, round-trips when set.
     #[test]
     fn ui_tree_item_waiting_status_skips_when_default_and_roundtrips_when_set() {
-        let idle = UiTreeItemNode::base("idle", "Idle");
+        let idle = UiTreeItemNode::base("idle", Label::data("Idle"));
         assert!(!serde_json::to_string(&idle).unwrap().contains("presence"));
 
-        let mut waiting = UiTreeItemNode::base("waiting1", "Waiting");
+        let mut waiting = UiTreeItemNode::base("waiting1", Label::data("Waiting"));
         waiting.presence.status = UiStatus::Waiting;
         let json = serde_json::to_string(&waiting).unwrap();
         assert!(json.contains("\"presence\":{\"status\":\"waiting\"}"));
@@ -4824,7 +5299,7 @@ mod ui_node_wire_format_tests {
     /// 🚫️ `presence.state == Hidden` short-circuits everything else — round-trips like any other state.
     #[test]
     fn ui_tree_item_hidden_state_roundtrips() {
-        let mut hidden = UiTreeItemNode::base("hidden1", "Hidden");
+        let mut hidden = UiTreeItemNode::base("hidden1", Label::data("Hidden"));
         hidden.presence.state = UiState::Hidden;
         assert!(!hidden.presence.visible());
         let json = serde_json::to_string(&hidden).unwrap();
@@ -4837,7 +5312,7 @@ mod ui_node_wire_format_tests {
     /// mirror staying byte-for-byte (see `ui/styling/js/index.ts`'s `UI_STATES`).
     #[test]
     fn ui_tree_item_celebrating_state_roundtrips() {
-        let mut celebrating = UiTreeItemNode::base("celebrating1", "Celebrating");
+        let mut celebrating = UiTreeItemNode::base("celebrating1", Label::data("Celebrating"));
         celebrating.presence.state = UiState::Celebrating;
         assert!(celebrating.presence.visible());
         let json = serde_json::to_string(&celebrating).unwrap();
@@ -4858,9 +5333,9 @@ mod ui_node_wire_format_tests {
         assert_presence_serializes(UiNode::Stack(UiStackNode {
             menu: None, direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![] }), "Stack");
         assert_presence_serializes(UiNode::Text(UiTextNode {
-            menu: None, value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
+            menu: None, value: Label::data("x"), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
         assert_presence_serializes(UiNode::Button(UiButtonNode {
-            menu: None, id: None, icon_id: IconName::CircleDot, label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
+            menu: None, id: None, icon_id: IconName::CircleDot, label: Label::data("l"), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
         assert_presence_serializes(UiNode::Separator(UiSeparatorNode {
             menu: None, presence: UiPresence::default() }), "Separator");
         assert_presence_serializes(UiNode::Input(UiInputNode {
@@ -4880,12 +5355,12 @@ mod ui_node_wire_format_tests {
         assert_presence_serializes(UiNode::IconSelect(UiIconSelectNode {
             menu: None, id: "i".into(), value: "v".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("a"), presence: UiPresence::default() }), "IconSelect");
         assert_presence_serializes(UiNode::Field(UiFieldNode {
-            menu: None, id: "i".into(), label: "l".into(), description: None, required: None, error: None, child: Box::new(UiNode::Text(UiTextNode {
-            menu: None, value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })), presence: UiPresence::default() }), "Field");
+            menu: None, id: "i".into(), label: Label::data("l"), description: None, required: None, error: None, child: Box::new(UiNode::Text(UiTextNode {
+            menu: None, value: Label::data("x"), emphasize: None, data_attributes: None, presence: UiPresence::default() })), presence: UiPresence::default() }), "Field");
         assert_presence_serializes(UiNode::Section(UiSectionNode {
             menu: None, id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section");
         assert_presence_serializes(UiNode::Group(UiGroupNode {
-            menu: None, id: "i".into(), label: "l".into(), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
+            menu: None, id: "i".into(), label: Label::data("l"), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
         assert_presence_serializes(UiNode::Tree(UiTreeNode {
             menu: None, sections: vec![], presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }), "Tree");
         assert_presence_serializes(UiNode::Image(UiImageNode {
@@ -5097,6 +5572,162 @@ mod ui_node_wire_format_tests {
         assert_menu_serializes(UiNode::Tree(UiTreeNode {
             menu: None, sections: vec![], presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }), "Tree");
     }
+
+    //#region 🗂️OrganizeContextMenuTests
+    fn menu_leaf(id: &str) -> ContextMenuItemSpec {
+        ContextMenuItemSpec { id: id.into(), label: Some(id.into()), action: Some(id.into()), ..Default::default() }
+    }
+
+    fn menu_destructive(id: &str) -> ContextMenuItemSpec {
+        ContextMenuItemSpec { destructive: Some(true), ..menu_leaf(id) }
+    }
+
+    fn menu_group(category: &str, children: Vec<ContextMenuItemSpec>) -> ContextMenuItemSpec {
+        ContextMenuItemSpec { id: format!("menu.group.{category}"), label: None, children: Some(children), ..Default::default() }
+    }
+
+    fn menu_header(label: &str) -> ContextMenuItemSpec {
+        ContextMenuItemSpec { id: format!("header-{label}"), label: Some(label.into()), separator: Some(true), ..Default::default() }
+    }
+
+    fn menu_separator(id: &str) -> ContextMenuItemSpec {
+        ContextMenuItemSpec { id: id.into(), separator: Some(true), ..Default::default() }
+    }
+
+    fn no_category(_id: &str) -> Option<String> {
+        None
+    }
+
+    #[test]
+    fn organize_context_menu_emits_as_is_within_budget() {
+        let items = vec![menu_leaf("a"), menu_leaf("b"), menu_group("view", vec![menu_leaf("c")])];
+        let organized = organize_context_menu(items.clone(), &no_category);
+        assert_eq!(organized, items, "within budget with leaves already before groups, nothing is reordered: {organized:?}");
+    }
+
+    #[test]
+    fn organize_context_menu_puts_destructive_leaves_last_after_a_separator() {
+        let items = vec![menu_destructive("delete"), menu_leaf("a"), menu_leaf("b")];
+        let organized = organize_context_menu(items, &no_category);
+        assert_eq!(organized.len(), 4, "a separator is inserted before the destructive tail: {organized:?}");
+        assert_eq!(organized[0].id, "a");
+        assert_eq!(organized[1].id, "b");
+        assert_eq!(organized[2].separator, Some(true));
+        assert_eq!(organized[2].label, None, "the inserted separator is bare, not a header");
+        assert_eq!(organized[3].id, "delete");
+        assert_eq!(organized[3].destructive, Some(true));
+    }
+
+    #[test]
+    fn organize_context_menu_merges_same_id_groups_and_dedupes_children_by_id() {
+        let items = vec![
+            menu_group("view", vec![menu_leaf("zoomIn"), menu_leaf("zoomOut")]),
+            menu_leaf("a"),
+            menu_group("view", vec![menu_leaf("zoomOut"), menu_leaf("resetZoom")]),
+        ];
+        let organized = organize_context_menu(items, &no_category);
+        assert_eq!(organized.iter().filter(|item| item.id == "menu.group.view").count(), 1, "only one merged row remains: {organized:?}");
+        let view_group = organized.iter().find(|item| item.id == "menu.group.view").expect("merged view group present");
+        let child_ids: Vec<&str> = view_group.children.as_ref().unwrap().iter().map(|child| child.id.as_str()).collect();
+        assert_eq!(child_ids, vec!["zoomIn", "zoomOut", "resetZoom"], "children concat in first-seen order, deduped by id: {child_ids:?}");
+    }
+
+    #[test]
+    fn organize_context_menu_collapses_doubled_bare_separators_and_drops_leading_trailing_ones() {
+        let items = vec![
+            menu_separator("lead-bare"),
+            menu_leaf("a"),
+            menu_separator("dup-1"),
+            menu_separator("dup-2"),
+            menu_leaf("b"),
+            menu_separator("trail-bare"),
+        ];
+        let organized = organize_context_menu(items, &no_category);
+        assert_eq!(organized.len(), 3, "leading/trailing bare separators drop, the doubled run collapses to one: {organized:?}");
+        assert_eq!(organized[0].id, "a");
+        assert_eq!(organized[1].separator, Some(true));
+        assert_eq!(organized[1].label, None, "the surviving separator is bare, not a header");
+        assert_eq!(organized[2].id, "b");
+    }
+
+    #[test]
+    fn organize_context_menu_keeps_a_labeled_separator_as_a_non_interactive_header() {
+        let items = vec![menu_leaf("a"), menu_header("Recent"), menu_leaf("b")];
+        let organized = organize_context_menu(items.clone(), &no_category);
+        assert_eq!(organized, items, "a header is preserved in place, untouched by budget/ordering: {organized:?}");
+        assert_eq!(organized[1].label.as_deref(), Some("Recent"));
+        assert_eq!(organized[1].separator, Some(true));
+    }
+
+    #[test]
+    fn organize_context_menu_sorts_group_rows_in_taxonomy_order_unknown_last() {
+        let items = vec![
+            menu_group("mystery", vec![menu_leaf("x")]),
+            menu_group("export", vec![menu_leaf("y")]),
+            menu_group("view", vec![menu_leaf("z")]),
+        ];
+        let organized = organize_context_menu(items, &no_category);
+        let ids: Vec<&str> = organized.iter().map(|item| item.id.as_str()).collect();
+        assert_eq!(ids, vec!["menu.group.view", "menu.group.export", "menu.group.mystery"], "view < export < unknown category: {ids:?}");
+    }
+
+    #[test]
+    fn organize_context_menu_folds_overflow_groups_into_menu_group_more() {
+        let mut items: Vec<ContextMenuItemSpec> = (0..5).map(|index| menu_leaf(&format!("primary{index}"))).collect();
+        for category in ["hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform"] {
+            items.push(menu_group(category, vec![menu_leaf(&format!("{category}-child"))]));
+        }
+        assert!(items.len() > 9, "fixture must exceed the row budget to exercise the >9 path");
+        let organized = organize_context_menu(items, &no_category);
+        assert_eq!(organized.len(), 9, "primaries + groups clamp to the 9-row budget: {organized:?}");
+        assert_eq!(organized.last().unwrap().id, "menu.group.more");
+        assert!(!organized.last().unwrap().children.as_ref().unwrap().is_empty(), "the folded group carries the overflowing groups' children");
+    }
+
+    #[test]
+    fn organize_context_menu_buckets_overflow_leaves_by_category_of() {
+        let mut items: Vec<ContextMenuItemSpec> = (0..5).map(|index| menu_leaf(&format!("primary{index}"))).collect();
+        for index in 0..6 {
+            items.push(menu_leaf(&format!("overflow{index}")));
+        }
+        let categorize = |id: &str| if id.starts_with("overflow") { Some("view".to_string()) } else { None };
+        let organized = organize_context_menu(items, &categorize);
+        assert_eq!(organized.len(), 6, "5 primaries + 1 view group: {organized:?}");
+        assert_eq!(organized[5].id, "menu.group.view");
+        assert_eq!(organized[5].children.as_ref().unwrap().len(), 6);
+    }
+
+    #[test]
+    fn ribbon_parent_label_covers_exactly_the_twenty_taxonomy_ids_and_rejects_unknown() {
+        assert_eq!(RIBBON_PARENT_CATEGORIES.len(), 20);
+        for category in RIBBON_PARENT_CATEGORIES {
+            assert!(ribbon_parent_label(category, false).is_some(), "missing EN label for {category:?}");
+            assert!(ribbon_parent_label(category, true).is_some(), "missing DE label for {category:?}");
+        }
+        assert_eq!(ribbon_parent_label("not-a-category", false), None);
+    }
+
+    #[test]
+    fn build_shell_context_menu_specs_shapes_arg_carrying_actions_and_appends_the_palette() {
+        let actions = vec![
+            ShellMenuAction {
+                id: "shell.rename".into(), label: "Rename".into(), icon: None, keys: None,
+                kind: "Operation".into(), category: None, in_palette: true, arg_carrying: true,
+            },
+            ShellMenuAction {
+                id: "shell.hidden".into(), label: "Hidden".into(), icon: None, keys: None,
+                kind: "Operation".into(), category: None, in_palette: false, arg_carrying: false,
+            },
+        ];
+        let specs = build_shell_context_menu_specs(&actions, true);
+        assert_eq!(specs.len(), 2, "the non-palette action is filtered out, the palette leaf is appended: {specs:?}");
+        assert_eq!(specs[0].id, "shell.rename");
+        assert_eq!(specs[0].action.as_deref(), Some("shell.openActionPane"), "arg-carrying actions route through the reserved action");
+        assert_eq!(specs[0].args, Some(DslValue::Object(vec![("actionId".into(), DslValue::String("shell.rename".into()))])));
+        assert_eq!(specs[1].id, "shell.openPalette");
+        assert_eq!(specs[1].action.as_deref(), Some("shell.openPalette"));
+    }
+    //#endregion 🗂️OrganizeContextMenuTests
 }
 //#endregion 🔖️WireFormatGoldenTests
 // #endregion ui
@@ -20677,6 +21308,7 @@ pub use component::layout::{
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
     FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
     framework_panel_tab_label,
+    build_shell_context_menu_specs, organize_context_menu, ribbon_parent_label, ShellMenuAction, RIBBON_PARENT_CATEGORIES,
 };
 pub use component::utilities::{utility_button, utility_collection, utility_separator, utility_toggle, UtilityCategory, UtilityNode};
 pub use component::ui::*;

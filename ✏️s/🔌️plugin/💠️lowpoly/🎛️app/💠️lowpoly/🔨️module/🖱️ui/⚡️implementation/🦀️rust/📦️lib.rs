@@ -2326,7 +2326,7 @@ pub fn create_lowpoly_app() -> App {
                 import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
             })
             .icon_id("shapes")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .mode("paint", "Paint", "paintbrush")
             .mode_layout("paint", "lowpoly-paint")
             .default_mode_id("edit")

@@ -1,0 +1,13 @@
+{
+  "title": "Multi-Instance Shell Framework For Composable Apps",
+  "emoji": "🐚️",
+  "status": "open",
+  "description": "Refactor the framework so multiple FrameworkOsShell instances can coexist on one HTML page without iframes: per-shell theme/appearance/brand, locale (i18next per-shell instance), keybinding dispatch gated to the active shell, element-id resolution scoped to the shell root instead of document-wide, plugin WASM runtime with refcounted module leases and per-document backbone routing (replacing the single global relay slot), namespaced storage, and a per-shell portal layer replacing document.body portals. Also make the wgpu (Rust/Trunk) renderer canvas-parameterized and disposable (mount/unmount) instead of a module-top-level boot hardcoded to #root. Then rebuild the mit-bestand demonstrator (♻️mit-bestand/🧺️demonstrator/) as ONE page with six live, interactive FrameworkOsShell instances (replacing the current six pointer-events-none iframes) with registry-driven pane config, a sequential warm-boot queue, and expand-in-place focus (no navigation to standalone pages; deep links via #\u003cpane\u003e hash). This directly resolves the DEMONSTRATOR-2X3-GRID follow-up (\"get all six app panes loading end to end instead of white empty iframes\") by eliminating the iframe approach entirely, and is the general composability mechanism for apps appearing together on one page (per goal: Apps within sketchpad, issue #355). Full plan at /Users/ueli/.claude/plans/apps-must-be-designed-soft-kurzweil.md — 8 waves: (0) ShellScope skeleton + multi-shell dev harness, (1) plugin runtime refcounted leases + per-document backbone routing, (2) theme/appearance/CSS container-scoping, (3) element-id scoping + portal layer, (4) keyboard gating + misc singleton scoping, (5) per-shell i18n + storage namespacing, (6) wgpu multi-mount rewrite, (7) demonstrator rebuild + dead-code cleanup.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2419"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪c85d175aef894b5f951be1bb0a047659"
+  ]
+}

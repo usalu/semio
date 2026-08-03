@@ -1356,7 +1356,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     document: vec!["semio".into(), "draw".into()],
                     icon_id: None,
                     controller_id: "draw-play".into(),
-                    modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                    modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                     default_mode_id: "edit".into(),
                     window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                         id: "composite".into(),
@@ -1411,7 +1411,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
@@ -1454,7 +1454,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 document: vec!["semio".into(), "note".into()],
                 icon_id: None,
                 controller_id: "note-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
@@ -1520,7 +1520,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
@@ -1642,7 +1642,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 document: vec!["semio".into(), id.into()],
                 icon_id: None,
                 controller_id: format!("{id}-play"),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: id.into(),
@@ -4776,7 +4776,7 @@ pub mod registry {
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: "draw".into(),

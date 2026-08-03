@@ -3113,7 +3113,7 @@ pub fn create_cad_app() -> App {
             .icon_id("box")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "cad"])
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE, SurfaceKind::World3d, "cad-shape")
             .window_kind(CAD_PLAY_WINDOW_BUILDING, "Building", CAD_PLAY_BODY_BUILDING, SurfaceKind::World3d, "landmark")
@@ -3213,7 +3213,7 @@ pub fn create_cad_app() -> App {
         CAD_EXAMPLE_FOREST_LEFT,
         "Hexagonal Cut Concrete Forest Left",
         &serde_json::to_string(&forest_play_scene()).unwrap(),
-        "trees",
+        "list-tree",
     )
     .workflow("cad", "CAD", "model")
 }

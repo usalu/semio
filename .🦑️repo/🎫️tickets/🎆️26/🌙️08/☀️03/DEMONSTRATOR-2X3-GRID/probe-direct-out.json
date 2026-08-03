@@ -1,0 +1,175 @@
+{
+  "generator": {
+    "url": "http://127.0.0.1:6027/",
+    "snap": {
+      "title": "Entwerfen mit Bestand · Generator",
+      "readyState": "complete",
+      "rootChildren": 6,
+      "canvas": [
+        {
+          "w": 803,
+          "h": 707,
+          "cw": 803,
+          "ch": 707
+        },
+        {
+          "w": 803,
+          "h": 707,
+          "cw": 803,
+          "ch": 707
+        },
+        {
+          "w": 374,
+          "h": 707,
+          "cw": 375,
+          "ch": 707
+        }
+      ],
+      "bodyText": "Dokument\nKatalog\nInspektion\nVollbild\nsemio · procedural · 3d\nBeispiel\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFokussieren\nSchließen\nFensteroptionen\nAktionen\nHilfsmittel\nPreview\nFokussieren\nSchließen\nLädt…\nProjektion\nFensteroptionen\nAktionen\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nu",
+      "bg": "rgb(247, 243, 227)"
+    },
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[DEBUG] action failed setActiveExample {exampleId: hexagonal-mushroom-column} Error: [DEBUG] action 'setActiveExample' failed (handler): action 'setActiveExample' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —              app actions are dispatched exclusive",
+      "[DEBUG] action failed nodeGraphSelect {surfaceId: procedural.play, nodeIds: Array(0)} Error: [DEBUG] action 'nodeGraphSelect' failed (handler): action 'nodeGraphSelect' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —              app actions are dispatched exc"
+    ],
+    "logs": []
+  },
+  "koordinator": {
+    "url": "http://127.0.0.1:6028/",
+    "snap": {
+      "title": "Entwerfen mit Bestand · Koordinator",
+      "readyState": "complete",
+      "rootChildren": 6,
+      "canvas": [
+        {
+          "w": 588,
+          "h": 337,
+          "cw": 589,
+          "ch": 338
+        },
+        {
+          "w": 588,
+          "h": 337,
+          "cw": 589,
+          "ch": 338
+        },
+        {
+          "w": 588,
+          "h": 337,
+          "cw": 589,
+          "ch": 338
+        },
+        {
+          "w": 588,
+          "h": 337,
+          "cw": 589,
+          "ch": 338
+        }
+      ],
+      "bodyText": "Dokument\nKatalog\nInspektion\nVollbild\nsemio · cad\nBeispiel\nHexagonal Cut Concrete Forest Left\nShape\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nBuilding\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nEnergy\nFokussieren\nSchließen\nProjektion\n",
+      "bg": "rgb(247, 243, 227)"
+    },
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "Failed to fetch dynamically imported module: http://127.0.0.1:6028/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%E",
+      "[DEBUG] action failed setActiveExample {exampleId: hexagonal-cut-concrete-forest-left} Error: [DEBUG] action 'setActiveExample' failed (handler): action 'setActiveExample' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —              app actions are dispatched "
+    ],
+    "logs": []
+  },
+  "aggregator": {
+    "url": "http://127.0.0.1:6023/",
+    "snap": {
+      "title": "Entwerfen mit Bestand · Aggregator",
+      "readyState": "complete",
+      "rootChildren": 6,
+      "canvas": [
+        {
+          "w": 390,
+          "h": 707,
+          "cw": 390,
+          "ch": 707
+        },
+        {
+          "w": 787,
+          "h": 707,
+          "cw": 787,
+          "ch": 707
+        }
+      ],
+      "bodyText": "Dokument\nKatalog\nInspektion\nVollbild\nEntwerfen mit Bestand · Aggregator\nBeispiel\nConcrete Forest\nTop\nFokussieren\nSchließen\nProjektion\nAktionen\nSuche\nHilfsmittel\nPerspective\nFokussieren\nSchließen\nProjektion\nAktionen\nSuche\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nund\nGefördert durch\nEinste",
+      "bg": "rgb(247, 243, 227)"
+    },
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[DEBUG] action failed setActiveExample {exampleId: concrete-forest} Error: [DEBUG] action 'setActiveExample' failed (handler): action 'setActiveExample' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —              app actions are dispatched exclusively through",
+      "[DEBUG] action failed registerBrushMesh {surfaceId: puzzle.3d.play.viewport, url: /mesh/🧊️hexagonal-cut-concrete-forest-left.glb, positions: Array(2541), indices: Array(2874)} Error: [DEBUG] action 'registerBrushMesh' failed (handler): action 'registerBrushMesh' is not a framework-reserved action (",
+      "[DEBUG] action failed registerBrushMesh {surfaceId: puzzle.3d.play.viewport, url: /mesh/🧊️hexagonal-cut-concrete-forest-right.glb, positions: Array(2541), indices: Array(2874)} Error: [DEBUG] action 'registerBrushMesh' failed (handler): action 'registerBrushMesh' is not a framework-reserved action "
+    ],
+    "logs": []
+  },
+  "aussuchen": {
+    "url": "http://127.0.0.1:6030/",
+    "snap": {
+      "title": "Entwerfen mit Bestand · Aussuchen",
+      "readyState": "complete",
+      "rootChildren": 0,
+      "canvas": [],
+      "bodyText": "",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Cannot read properties of undefined (reading 'some')",
+      "[DEBUG] action failed setActiveExample {exampleId: demo-stock} Error: [DEBUG] action 'setActiveExample' failed (handler): action 'setActiveExample' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —              app actions are dispatched exclusively through the ",
+      "Cannot read properties of undefined (reading 'some')",
+      "[DEBUG] action failed setActiveExample {exampleId: demo-stock} Error: [DEBUG] action 'setActiveExample' failed (handler): action 'setActiveExample' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —              app actions are dispatched exclusively through the "
+    ],
+    "logs": [
+      "warning: %s\n\n%s\n An error occurred in the <FrameworkOsShell> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to lea",
+      "warning: %s\n\n%s\n An error occurred in the <FrameworkOsShell> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to lea"
+    ]
+  },
+  "bearbeiten": {
+    "url": "http://127.0.0.1:6031/",
+    "snap": {
+      "title": "Entwerfen mit Bestand · Bearbeiten",
+      "readyState": "complete",
+      "rootChildren": 6,
+      "canvas": [
+        {
+          "w": 1187,
+          "h": 707,
+          "cw": 1187,
+          "ch": 707
+        }
+      ],
+      "bodyText": "Dokument\nKatalog\nWorkshop\nInspektion\nVollbild\nsemio · process · 3d\nBeispiel\nTimber Beam Joinery\nWorkpiece\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nund\nGefördert durch\nEinstellungen\nVerlauf\nBefehl\nSuche\n\nNach Elementen suchen\n\nFinden\n\nEl",
+      "bg": "rgb(247, 243, 227)"
+    },
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[DEBUG] action failed setActiveExample {exampleId: timber-beam-joinery} Error: [DEBUG] action 'setActiveExample' failed (handler): action 'setActiveExample' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —              app actions are dispatched exclusively thr"
+    ],
+    "logs": []
+  },
+  "verfolgen": {
+    "url": "http://127.0.0.1:6032/",
+    "snap": {
+      "title": "Entwerfen mit Bestand · Verfolgen",
+      "readyState": "complete",
+      "rootChildren": 0,
+      "canvas": [],
+      "bodyText": "",
+      "bg": "rgba(0, 0, 0, 0)"
+    },
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Cannot read properties of undefined (reading 'some')"
+    ],
+    "logs": [
+      "warning: %s\n\n%s\n An error occurred in the <FrameworkOsShell> component. Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to lea"
+    ]
+  }
+}

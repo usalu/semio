@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
 description = "Declarative UI components (default) and retained-mode wgpu engine (feature \"engine\") shared by plugins and renderers"
+build = "build.rs"
 
 
 [lints]

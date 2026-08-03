@@ -3281,7 +3281,7 @@ mod tests {
             modes: crate::ui::Modes::one(ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
-                icon_id: "square-pen".into(),
+                icon_id: "pencil".into(),
                 tools: Vec::new(),
                 layout_id: None,
                 commands: Vec::new(),
@@ -3335,7 +3335,7 @@ mod tests {
             modes: crate::ui::Modes::one(ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
-                icon_id: "square-pen".into(),
+                icon_id: "pencil".into(),
                 tools: Vec::new(),
                 layout_id: None,
                 commands: Vec::new(),
@@ -3429,7 +3429,7 @@ pub mod ui {
 
 use serde::{Deserialize, Serialize};
 use dsl::DslValue;
-use ui_wgpu::{ActionDescriptor, NamedLayout, SurfaceKind, WindowLayout, WindowOptions};
+use ui_wgpu::{ActionDescriptor, Label, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
 use crate::mesh::{MediaPortSpec, ArtifactKindSpec, ConfigSpec, CommandGrammar, AppIo};
 use crate::IconName;
 
@@ -3600,19 +3600,19 @@ impl ActionArgDef {
 /// @emoji 🎛️ Canonical catalog icon for a declared app mode id.
 pub fn catalog_mode_icon_id(id: &str) -> IconName {
     match id {
-        "edit" | "main" => "square-pen".into(),
+        "edit" | "main" => "pencil".into(),
         "paint" => "paintbrush".into(),
         "generate" => "sparkles".into(),
-        "explore" => "compass".into(),
-        "builder" => "blocks".into(),
+        "explore" => "focus".into(),
+        "builder" => "component".into(),
         "curate" => "folder-open".into(),
-        "blueprint" => "drafting-compass".into(),
-        "review" => "search-check".into(),
-        "report" => "file-chart-column".into(),
+        "blueprint" => "cad-shape".into(),
+        "review" => "search".into(),
+        "report" => "bar-chart-3".into(),
         "view" => "eye".into(),
         "capture" => "camera".into(),
         "model" => "box".into(),
-        "analyze" => "microscope".into(),
+        "analyze" => "search".into(),
         _ => "layers".into(),
     }
 }
@@ -3621,10 +3621,10 @@ pub fn catalog_mode_icon_id(id: &str) -> IconName {
 pub fn catalog_example_icon_id(id: &str) -> IconName {
     match id {
         "empty" | "default" => "file".into(),
-        "demo" => "flask-conical".into(),
+        "demo" => "cylinder".into(),
         "semio" => "sparkles".into(),
-        _ if id.contains("capsule") || id.contains("nakagin") => "building-2".into(),
-        _ if id.contains("forest") || id.contains("concrete") => "trees".into(),
+        _ if id.contains("capsule") || id.contains("nakagin") => "building".into(),
+        _ if id.contains("forest") || id.contains("concrete") => "list-tree".into(),
         _ if id.contains("hex") => "hexagon".into(),
         _ => "file-text".into(),
     }
@@ -3636,15 +3636,15 @@ pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
         "undo" => "undo-2".into(),
         "redo" => "redo-2".into(),
         "commitCheckpoint" => "git-commit".into(),
-        "createAlternative" => "git-branch-plus".into(),
+        "createAlternative" => "git-branch".into(),
         "switchAlternative" => "git-branch".into(),
-        "checkoutCheckpoint" => "git-compare".into(),
-        "revertToCommand" => "history".into(),
+        "checkoutCheckpoint" => "git-branch".into(),
+        "revertToCommand" => "clock".into(),
         "copy" => "copy".into(),
         "cut" => "scissors".into(),
-        "paste" => "clipboard-paste".into(),
-        "setHistoryCommandFilter" => "list-filter".into(),
-        "noteShellCommand" => "notebook-pen".into(),
+        "paste" => "clipboard".into(),
+        "setHistoryCommandFilter" => "list".into(),
+        "noteShellCommand" => "book-open".into(),
         "setActiveUtility" => "wrench".into(),
         "setActiveTool" => "hammer".into(),
         "startIntroduction" => "graduation-cap".into(),
@@ -3654,13 +3654,13 @@ pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
             "mouse-pointer".into()
         }
         "clearSelection" | "deselect" => "mouse-pointer-2".into(),
-        "selectAll" => "square-dashed-mouse-pointer".into(),
-        "setCamera" | "setCamera2d" | "setCamera3d" | "nodeGraphViewport" => "video".into(),
+        "selectAll" => "mouse-pointer-2".into(),
+        "setCamera" | "setCamera2d" | "setCamera3d" | "nodeGraphViewport" => "camera".into(),
         "setProjection" | "setProjectionParam" => "scan".into(),
         "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "graphPointerDown" | "worldPointerDown" => {
-            "pointer".into()
+            "mouse-pointer".into()
         }
-        "worldHover" | "setHover" | "nodeGraphHover" | "textHover" | "referenceHover" => "scan-eye".into(),
+        "worldHover" | "setHover" | "nodeGraphHover" | "textHover" | "referenceHover" => "eye".into(),
         "worldPick" => "crosshair".into(),
         "engagementInput" | "engagementAbort" | "engagementControlSelect" | "editorEngagementInput"
         | "graphEngagementInput" | "resultsEngagementInput" | "workflowEngagementInput"
@@ -3672,24 +3672,24 @@ pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
         "search" => "search".into(),
         "exportProgram" | "exportRegistersCsv" | "exportMedia" | "exportStudioPack" | "exportStudioDsl"
         | "exportVideoFromDeck" => "download".into(),
-        "importMedia" | "importSpacePack" | "importFrames" | "importVideo" | "openSource" => "upload".into(),
-        "goHome" => "house".into(),
+        "importMedia" | "importSpacePack" | "importFrames" | "importVideo" | "openSource" => "hard-drive".into(),
+        "goHome" => "home".into(),
         "openSpace" | "openInstance" => "folder-open".into(),
-        "navigateVirtualFileSystemNode" => "folder-tree".into(),
-        "setActiveExample" | "setActivePanelTab" => "layout-panel-left".into(),
-        "copyPrompt" => "clipboard-copy".into(),
-        "evaluate" => "calculator".into(),
-        "recomputeRewrite" | "reorganize" => "refresh-cw".into(),
-        "textEdit" | "formatDocument" | "requestCompletions" => "text-cursor-input".into(),
+        "navigateVirtualFileSystemNode" => "folder".into(),
+        "setActiveExample" | "setActivePanelTab" => "panel-left".into(),
+        "copyPrompt" => "copy".into(),
+        "evaluate" => "hash".into(),
+        "recomputeRewrite" | "reorganize" => "rotate-cw".into(),
+        "textEdit" | "formatDocument" | "requestCompletions" => "typography".into(),
         "textSelect" => "text-cursor".into(),
         "paintStrokeBegin" | "paintStroke" | "paintAt" | "paintSample" => "paintbrush".into(),
         "transformBegin" => "move".into(),
         "incrementViaCommand" | "setLabelViaCommand" => "plus".into(),
         _ => match kind {
             ActionKind::View => "eye".into(),
-            ActionKind::Shell => "terminal".into(),
-            ActionKind::Operation => "zap".into(),
-            ActionKind::History => "history".into(),
+            ActionKind::Shell => "code".into(),
+            ActionKind::Operation => "sparkles".into(),
+            ActionKind::History => "clock".into(),
             ActionKind::Clipboard => "clipboard".into(),
         },
     }
@@ -3704,7 +3704,7 @@ pub fn catalog_command_icon_id(id: &str) -> IconName {
         "app.export" | "incrementViaCommand" | "setLabelViaCommand" => "download".into(),
         "mode.focus" => "focus".into(),
         "animate.resetGrid" => "grid-3x3".into(),
-        _ => "terminal".into(),
+        _ => "code".into(),
     }
 }
 
@@ -3764,6 +3764,20 @@ impl ActionDefinition {
     /// @emoji 🎨️ Sets palette visibility for this action.
     pub fn in_palette(self, in_palette: bool) -> Self {
         self.with_in_palette(in_palette)
+    }
+
+    /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category (a `ui_wgpu::RIBBON_PARENT_CATEGORIES`
+    /// id) — read back by `AppActionRegistry::category_of` and fed into `organize_context_menu`'s
+    /// `category_of` lookup at the context-menu funnel, so an overflowing flat menu buckets this
+    /// action's row into `menu.group.<category>` instead of `menu.group.actions`.
+    pub fn with_category(mut self, category: impl Into<String>) -> Self {
+        self.category = Some(category.into());
+        self
+    }
+
+    /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category — see `with_category`.
+    pub fn category(self, category: impl Into<String>) -> Self {
+        self.with_category(category)
     }
 }
 
@@ -6129,14 +6143,14 @@ pub struct ViewState {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub contributions_json: Option<String>,
-    /// 🗣️ Active UI locale (e.g. "en", "de"); plugins resolve their own label set from this.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub locale: Option<String>,
-    /// 🗣️ Active terminology id ("native" default, or an app-declared alternative term set).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub terminology: Option<String>,
+    /// 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
+    /// `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
+    /// `detectShellLocale`) before the first `render`, so "nobody set the locale" is unrepresentable.
+    #[serde(default)]
+    pub locale: Locale,
+    /// 🗣️ Active terminology id (`Native` default, or an app-declared alternative term set).
+    #[serde(default)]
+    pub terminology: Terminology,
     /// 🪟️ The window instance a `render`/`handle_action` call targets — programs key all per-window
     /// option state (grid, LOD, selection mode, …) off this, never off `active_window_kind_id`, so that
     /// two window instances of the same kind (e.g. split top/perspective panes) never share options.
@@ -7152,7 +7166,7 @@ mod app_document_tests {
             modes: Modes::one(crate::ui::ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
-                icon_id: "square-pen".into(),
+                icon_id: "pencil".into(),
                 tools: Vec::new(),
                 layout_id: None,
                 commands: Vec::new(),
@@ -7240,7 +7254,7 @@ mod app_document_tests {
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
-                icon_id: "square-pen".into(),
+                icon_id: "pencil".into(),
                 tools: vec![ToolRef::new("fill"), ToolRef::new("brush")],
                 layout_id: None,
                 commands: Vec::new(),
@@ -7261,7 +7275,7 @@ mod app_document_tests {
                 crate::ui::ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
-                icon_id: "square-pen".into(),
+                icon_id: "pencil".into(),
                     tools: vec![ToolRef::new("fill")],
                     layout_id: None,
                     commands: Vec::new(),
@@ -7269,7 +7283,7 @@ mod app_document_tests {
                 crate::ui::ModeDefinition {
                     id: "view".into(),
                     label: "View".into(),
-                icon_id: "square-pen".into(),
+                icon_id: "pencil".into(),
                     tools: Vec::new(),
                     layout_id: None,
                     commands: Vec::new(),
@@ -7288,7 +7302,7 @@ mod app_document_tests {
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
-                icon_id: "square-pen".into(),
+                icon_id: "pencil".into(),
                 tools: vec![ToolRef::new("fill"), ToolRef::new("ghost")],
                 layout_id: None,
                 commands: Vec::new(),
@@ -8031,6 +8045,7 @@ mod app_document_tests {
         let round: CommandDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(round, command);
     }
+
 
     #[test]
     fn command_ref_only_resolves_mode_scope_commands() {

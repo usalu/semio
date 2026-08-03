@@ -889,7 +889,7 @@ pub fn create_fem2d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("fem-app")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(FEM2D_WINDOW_MODEL, "Model", FEM2D_BODY_MODEL, SurfaceKind::Canvas2d, "fem-model")
             .window_kind(FEM2D_WINDOW_RESULTS, "Results", FEM2D_BODY_RESULTS, SurfaceKind::Canvas2d, "bar-chart-3")

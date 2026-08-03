@@ -16,7 +16,7 @@ import { useState } from "react";
 
 // 🧪️#region 🩺️NavbarExampleSelect
 const exampleOptions = [
-  { id: "nakagin", label: "Nakagin Capsule Tower", icon: "building-2" },
+  { id: "nakagin", label: "Nakagin Capsule Tower", icon: "building" },
   { id: "villa", label: "Villa Savoye", icon: "landmark" },
   { id: "farnsworth", label: "Farnsworth House", icon: "home" },
 ] as const;

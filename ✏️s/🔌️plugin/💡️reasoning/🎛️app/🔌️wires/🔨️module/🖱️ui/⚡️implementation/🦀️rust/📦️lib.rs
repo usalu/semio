@@ -695,7 +695,7 @@ pub fn create_wires_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("reasoning-wires")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind("reasoning-wires-composite", "Canvas", WIRES_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, "git-branch")
             .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, WIRES_PLAY_BODY_DOCUMENT)

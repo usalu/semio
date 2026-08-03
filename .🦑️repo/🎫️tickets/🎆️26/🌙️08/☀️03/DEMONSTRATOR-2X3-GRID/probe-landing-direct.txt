@@ -1,0 +1,29 @@
+[DEBUG] ready 0/0 
+[DEBUG] ready 6/6 6027/ root=3 canvas=0 | 6028/ root=3 canvas=0 | 6023/ root=3 canvas=0 | 6030/ root=3 canvas=0 | 6031/ root=3 canvas=0 | 6032/ root=3 canvas=1
+[DEBUG] panes [
+  {
+    href: "http://127.0.0.1:6027/",
+    x: 240,
+    y: 225,
+  }, {
+    href: "http://127.0.0.1:6028/",
+    x: 720,
+    y: 225,
+  }, {
+    href: "http://127.0.0.1:6023/",
+    x: 1200,
+    y: 225,
+  }, {
+    href: "http://127.0.0.1:6030/",
+    x: 240,
+    y: 675,
+  }, {
+    href: "http://127.0.0.1:6031/",
+    x: 720,
+    y: 675,
+  }, {
+    href: "http://127.0.0.1:6032/",
+    x: 1200,
+    y: 675,
+  }
+]

@@ -1908,7 +1908,7 @@ mod tests {
             modes: semio_framework_core::Modes::one(ModeDefinition {
                 id: "default".into(),
                 label: "Default".into(),
-                icon_id: "square-pen".into(),
+                icon_id: "pencil".into(),
                 tools: vec![],
                 layout_id: None,
                 commands: vec![],
@@ -23224,7 +23224,7 @@ mod command_registry_tests {
             modes: Modes::one(ModeDefinition {
                 id: "default".into(),
                 label: "Default".into(),
-                icon_id: "square-pen".into(),
+                icon_id: "pencil".into(),
                 tools: vec![],
                 layout_id: None,
                 commands: mode_commands,
@@ -29476,6 +29476,8 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("settings.tab.theme", true) => "Design",
         ("settings.tab.commands", false) => "Commands",
         ("settings.tab.commands", true) => "Befehle",
+        ("settings.theme.select", false) => "Theme",
+        ("settings.theme.select", true) => "Design",
         ("settings.theme.reset", false) => "Reset",
         ("settings.theme.reset", true) => "Zurücksetzen",
         ("settings.theme.delete", false) => "Delete",

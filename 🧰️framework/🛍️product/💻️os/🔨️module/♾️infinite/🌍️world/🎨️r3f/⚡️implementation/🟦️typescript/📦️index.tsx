@@ -1627,6 +1627,16 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
 }
 //#endregion 🧭️WorldOrbitViewGizmoViewport
 
+/** @emoji 🎯️ Emits every navigation-cube selection so an unchanged spec can still restore a camera moved by orbit controls. */
+function dispatchProjectionGizmoHit(hit: ProjectionGizmoHit, currentSpec: WorldProjectionSpec | undefined, onSpecSelect: (spec: WorldProjectionSpec) => void, onViewSelect?: (view: OrbitCameraViewId) => void): void {
+  const spec = resolveProjectionGizmoSpec(hit, currentSpec);
+  onSpecSelect(spec);
+  const view = worldProjectionSpecToOrbitView(spec);
+  if (view) {
+    onViewSelect?.(view);
+  }
+}
+
 /** @emoji 🧭️ CAD Z-up viewport navigation cube (faces / corners / center) anchored bottom-right above the folded projection pane. */
 export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactElement | null {
   const { size } = useThree();
@@ -1651,16 +1661,7 @@ export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactEleme
         axisColors={axisColors}
         neutralColor={neutralColor}
         axisScale={axisScale}
-        onHitSelect={(hit) => {
-          const spec = resolveProjectionGizmoSpec(hit, props.projectionSpec);
-          // 🧭️ Skip only true no-operations (e.g. center while already on the same perspective kind).
-          if (props.projectionSpec && worldProjectionSpecsEqual(spec, props.projectionSpec)) return;
-          props.onSpecSelect(spec);
-          const view = worldProjectionSpecToOrbitView(spec);
-          if (view) {
-            props.onViewSelect?.(view);
-          }
-        }}
+        onHitSelect={(hit) => dispatchProjectionGizmoHit(hit, props.projectionSpec, props.onSpecSelect, props.onViewSelect)}
       />
     </GizmoHelper>
   );
@@ -2708,11 +2709,6 @@ export function projectionGizmoFaceToOrthographicView(axis: "x" | "y" | "z", sig
     return sign > 0 ? "back" : "front";
   }
   return sign > 0 ? "top" : "bottom";
-}
-
-/** @emoji 🧭️ Structural equality for {@link WorldProjectionSpec} (gizmo no-operation when a hit cannot change angle). */
-export function worldProjectionSpecsEqual(a: WorldProjectionSpec, b: WorldProjectionSpec): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
 }
 
 /** @emoji 🧭️ Resolves a navigation-cube hit into orientation only — never changes projection mode.
@@ -4420,6 +4416,15 @@ if (import.meta.vitest) {
   });
 
   describe("resolveProjectionGizmoSpec", () => {
+    it("dispatches a repeated gizmo orientation so an orbited camera snaps back", () => {
+      const current = { mode: { kind: "orthographic" as const }, orientation: { type: "cardinal" as const, view: "top" as const } };
+      const selectedSpecs: WorldProjectionSpec[] = [];
+      const selectedViews: OrbitCameraViewId[] = [];
+      dispatchProjectionGizmoHit({ type: "face", axis: "z", sign: 1 }, current, (spec) => selectedSpecs.push(spec), (view) => selectedViews.push(view));
+      expect(selectedSpecs).toEqual([current]);
+      expect(selectedViews).toEqual(["top"]);
+    });
+
     it("sets orientation only and preserves the active projection mode", () => {
       expect(resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 }, { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } })).toEqual({
         mode: { kind: "threePoint", fov: 50 },

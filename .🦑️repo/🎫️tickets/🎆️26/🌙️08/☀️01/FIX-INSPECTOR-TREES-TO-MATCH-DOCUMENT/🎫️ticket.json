@@ -2,7 +2,7 @@
   "title": "Fix Inspector Trees To Match Document",
   "status": "closed",
   "goal": "ui/side-panels",
-  "summary": "History and CAD Inspection are pure UiTreeNode side panels like Document/Catalogue (no Stack roots).",
+  "summary": "History/Inspection match Settings/Theme tree shape: React no longer wraps non-trees in empty-label hosts; wgpu Settings/Theme are Trees; History actions use label+control; inspector fields no longer duplicate values.",
   "created": "2026-08-01",
   "client": "cursor-chat",
   "llm": "gpt-5-5",
@@ -16,6 +16,10 @@
     "multiple empty-state inspector fallbacks",
     "\ufe0fframework/.../\ud83d\uddb1\ufe0fui/.../\ud83d\udce6\ufe0flib.rs (tree_icon_id)",
     "framework plugin lib.rs (ui_history_panel Tree)",
-    "cad ui lib.rs (empty inspector tree)"
+    "cad ui lib.rs (empty inspector tree)",
+    "os react index.tsx (uiNodeToTreePanelConfig)",
+    "os wgpu shell settings trees",
+    "framework plugin ui_history_panel Button controls",
+    "ui_wgpu ui_declarative Field\u2192tree"
   ]
 }

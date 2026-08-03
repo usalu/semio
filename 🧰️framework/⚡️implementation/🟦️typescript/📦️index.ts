@@ -551,7 +551,10 @@ export type UiMenuRef = {
 };
 
 /** 🌐️ A 3D world surface scene payload — mirrors the wasm `componentScene` node's `world3d` field. */
-/** 🖱️ Serializable context-menu entry emitted by plugins (`contextMenuJson`) and mapped to UI {@link ContextMenuItem} by hosts. */
+/** 🖱️ One row of a resolved context menu — TS twin of the Rust `ContextMenuItemSpec`
+ * (`🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs`). Plugins build these with
+ * `MenuBuilder`; the host maps them through `ContextMenuController` (React) / `render_context_menu`
+ * (wgpu) unchanged. */
 export type ContextMenuItemSpec = {
   readonly id: string;
   readonly label?: string;
@@ -568,6 +571,216 @@ export type ContextMenuItemSpec = {
   readonly hoverArgs?: Record<string, unknown>;
   readonly children?: readonly ContextMenuItemSpec[];
 };
+
+//#region 🗂️ContextMenuOrganizer
+/** 🗂️ Canonical ribbon-parent taxonomy — TS twin of the Rust `RIBBON_PARENT_CATEGORIES` const
+ * (`🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs`) and of ui-react's closed
+ * `UiRibbonParentCategory` union (`🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx`
+ * ~3419). Id spelling and order are load-bearing: `organizeContextMenu` sorts `menu.group.<category>`
+ * rows by this order (unknown categories sort after, in emit order). */
+const RIBBON_PARENT_CATEGORIES = [
+  "history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings",
+  "methods", "mode", "targets", "export", "tools", "utilities", "sync",
+] as const;
+
+const CONTEXT_MENU_ROW_BUDGET = 9;
+const CONTEXT_MENU_PRIMARY_BUDGET = 5;
+
+function contextMenuIsBareSeparator(item: ContextMenuItemSpec): boolean {
+  return item.separator === true && item.label === undefined;
+}
+
+/** 🗂️ D1: a separator carrying a `label` is a non-interactive section header, not a divider. */
+function contextMenuIsHeader(item: ContextMenuItemSpec): boolean {
+  return item.separator === true && item.label !== undefined;
+}
+
+function contextMenuIsGroupRow(item: ContextMenuItemSpec): boolean {
+  return item.id.startsWith("menu.group.");
+}
+
+function contextMenuGroupCategory(item: ContextMenuItemSpec): string {
+  return item.id.startsWith("menu.group.") ? item.id.slice("menu.group.".length) : item.id;
+}
+
+function contextMenuTaxonomyRank(category: string): number {
+  const index = (RIBBON_PARENT_CATEGORIES as readonly string[]).indexOf(category);
+  return index === -1 ? RIBBON_PARENT_CATEGORIES.length : index;
+}
+
+function contextMenuSeparatorRow(seed: number): ContextMenuItemSpec {
+  return { id: `separator-organized-${seed}`, separator: true };
+}
+
+/** 🗂️ Collapses a run of consecutive bare (unlabeled) separators down to one, then drops a bare
+ * separator left at the very start or end (nothing to separate from/to). A labeled separator (header,
+ * see `contextMenuIsHeader`) is never touched by this — it always survives in place, adjacent bare
+ * separators collapse/drop around it independently. */
+function contextMenuNormalizeSeparators(items: readonly ContextMenuItemSpec[]): ContextMenuItemSpec[] {
+  const out: ContextMenuItemSpec[] = [];
+  for (const item of items) {
+    if (contextMenuIsBareSeparator(item) && out.length > 0 && contextMenuIsBareSeparator(out[out.length - 1]!)) {
+      continue;
+    }
+    out.push(item);
+  }
+  if (out.length > 0 && contextMenuIsBareSeparator(out[0]!)) {
+    out.shift();
+  }
+  while (out.length > 0 && contextMenuIsBareSeparator(out[out.length - 1]!)) {
+    out.pop();
+  }
+  return out;
+}
+
+/** 🗂️ Merges rows sharing a `menu.group.<category>` id at the position of the first occurrence,
+ * concatenating and deduping their `children` by id (first occurrence wins). */
+function contextMenuMergeGroupRows(items: readonly ContextMenuItemSpec[]): ContextMenuItemSpec[] {
+  const out: ContextMenuItemSpec[] = [];
+  const groupIndex = new Map<string, number>();
+  for (const item of items) {
+    if (contextMenuIsGroupRow(item)) {
+      const index = groupIndex.get(item.id);
+      if (index !== undefined) {
+        const children = out[index]!.children ? [...out[index]!.children!] : [];
+        for (const child of item.children ?? []) {
+          if (!children.some((existing) => existing.id === child.id)) {
+            children.push(child);
+          }
+        }
+        out[index] = { ...out[index]!, children };
+      } else {
+        groupIndex.set(item.id, out.length);
+        out.push(item);
+      }
+    } else {
+      out.push(item);
+    }
+  }
+  return out;
+}
+
+/** 🗂️ ≤9-interactive-row emission (D2 rule): plain leaves/headers in emit order, then group rows in
+ * taxonomy order (unknown categories after, emit order), then — only if any exist — a separator
+ * followed by destructive leaves. */
+function contextMenuEmitWithinBudget(items: readonly ContextMenuItemSpec[]): ContextMenuItemSpec[] {
+  const leavesAndHeaders: ContextMenuItemSpec[] = [];
+  const groupRows: ContextMenuItemSpec[] = [];
+  const destructiveLeaves: ContextMenuItemSpec[] = [];
+  for (const item of items) {
+    if (contextMenuIsGroupRow(item)) {
+      groupRows.push(item);
+    } else if (item.destructive === true) {
+      destructiveLeaves.push(item);
+    } else {
+      leavesAndHeaders.push(item);
+    }
+  }
+  groupRows.sort((a, b) => contextMenuTaxonomyRank(contextMenuGroupCategory(a)) - contextMenuTaxonomyRank(contextMenuGroupCategory(b)));
+  const out = [...leavesAndHeaders, ...groupRows];
+  if (destructiveLeaves.length > 0) {
+    out.push(contextMenuSeparatorRow(out.length));
+    out.push(...destructiveLeaves);
+  }
+  return out;
+}
+
+/** 🗂️ >9-interactive-row emission (D2 rule): the first 5 plain leaves outside any header section stay
+ * primaries; every header's trailing run of leaves folds into a group keyed by that header's own
+ * (slugified) label; every other plain leaf buckets into `menu.group.<categoryOf(action) ?? "actions">`;
+ * pre-existing group rows pass through unchanged; groups then sort in taxonomy order and, if the
+ * primaries+groups row count is still over budget, the excess trailing groups fold into one
+ * `menu.group.more`. Destructive leaves are carried separately and appended last, after a separator. */
+function contextMenuEmitOverBudget(
+  items: readonly ContextMenuItemSpec[],
+  categoryOf: (id: string) => string | undefined,
+): ContextMenuItemSpec[] {
+  function bucketMut(buckets: ContextMenuItemSpec[], id: string): number {
+    const index = buckets.findIndex((bucket) => bucket.id === id);
+    if (index !== -1) return index;
+    buckets.push({ id, label: undefined, children: [] });
+    return buckets.length - 1;
+  }
+
+  const primaries: ContextMenuItemSpec[] = [];
+  const existingGroups: ContextMenuItemSpec[] = [];
+  const destructiveLeaves: ContextMenuItemSpec[] = [];
+  const bucketedGroups: ContextMenuItemSpec[] = [];
+  let currentHeaderKey: string | undefined;
+
+  for (const item of items) {
+    if (contextMenuIsHeader(item)) {
+      currentHeaderKey = item.label;
+      continue;
+    }
+    if (contextMenuIsGroupRow(item)) {
+      existingGroups.push(item);
+      currentHeaderKey = undefined;
+      continue;
+    }
+    if (item.destructive === true) {
+      destructiveLeaves.push(item);
+      continue;
+    }
+    if (currentHeaderKey !== undefined) {
+      const slug = currentHeaderKey.toLowerCase().split(/\s+/).join("-");
+      const index = bucketMut(bucketedGroups, `menu.group.${slug}`);
+      bucketedGroups[index] = { ...bucketedGroups[index]!, children: [...(bucketedGroups[index]!.children ?? []), item] };
+      continue;
+    }
+    if (primaries.length < CONTEXT_MENU_PRIMARY_BUDGET) {
+      primaries.push(item);
+      continue;
+    }
+    const category = categoryOf(item.action ?? item.id) ?? "actions";
+    const index = bucketMut(bucketedGroups, `menu.group.${category}`);
+    bucketedGroups[index] = { ...bucketedGroups[index]!, children: [...(bucketedGroups[index]!.children ?? []), item] };
+  }
+
+  const groups = [...existingGroups, ...bucketedGroups];
+  groups.sort((a, b) => contextMenuTaxonomyRank(contextMenuGroupCategory(a)) - contextMenuTaxonomyRank(contextMenuGroupCategory(b)));
+
+  let out = [...primaries, ...groups];
+  if (out.length > CONTEXT_MENU_ROW_BUDGET) {
+    const foldFrom = CONTEXT_MENU_ROW_BUDGET - 1;
+    const overflowingGroups = out.slice(foldFrom);
+    out = out.slice(0, foldFrom);
+    const foldedChildren: ContextMenuItemSpec[] = [];
+    for (const group of overflowingGroups) {
+      foldedChildren.push(...(group.children ?? []));
+    }
+    out.push({ id: "menu.group.more", label: undefined, children: foldedChildren });
+  }
+  if (destructiveLeaves.length > 0) {
+    out.push(contextMenuSeparatorRow(out.length));
+    out.push(...destructiveLeaves);
+  }
+  return out;
+}
+
+/** 🗂️ Pure organizer enforced at every context-menu funnel — recurses into `children`, normalizes
+ * separators (labeled = kept header, bare leading/trailing/doubled = dropped), merges duplicate
+ * `menu.group.<category>` rows (deduping their children by id), then applies the ≤9-row / >9-row
+ * emission policy from D2 of the grouped-context-menu mechanism design
+ * (`contextMenuEmitWithinBudget`/`contextMenuEmitOverBudget`). `categoryOf` resolves a leaf's
+ * dispatched action id to a `RIBBON_PARENT_CATEGORIES` id (`undefined` buckets into `"actions"`) —
+ * branch-for-branch twin of the Rust `organize_context_menu`
+ * (`🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs`). */
+export function organizeContextMenu(
+  items: readonly ContextMenuItemSpec[],
+  categoryOf: (id: string) => string | undefined,
+): ContextMenuItemSpec[] {
+  const mapped = items.map((item) => ({
+    ...item,
+    children: item.children ? organizeContextMenu(item.children, categoryOf) : item.children,
+  }));
+  const normalized = contextMenuMergeGroupRows(contextMenuNormalizeSeparators(mapped));
+  const interactiveCount = normalized.filter((item) => item.separator !== true).length;
+  return interactiveCount <= CONTEXT_MENU_ROW_BUDGET
+    ? contextMenuEmitWithinBudget(normalized)
+    : contextMenuEmitOverBudget(normalized, categoryOf);
+}
+//#endregion 🗂️ContextMenuOrganizer
 
 export type World3dScene = {
   readonly cameraJson: string;
@@ -1385,6 +1598,19 @@ export function createMemoryStoragePort(): StoragePort {
     remove: (key) => {
       map.delete(key);
     },
+  };
+}
+
+/** 🐚️ Namespaces a {@link StoragePort} under `semio.shell.<namespace>.` so several {@link FrameworkOsShell}
+ * instances sharing one browser storage origin (e.g. several demonstrator panes) don't read/write each
+ * other's `semio.os.dock`/`ui.chrome.*` keys. Not needed for a single page-owning shell — that shell's
+ * default (unprefixed) storage is the intended shared surface. */
+export function createScopedStoragePort(base: StoragePort, namespace: string): StoragePort {
+  const prefix = `semio.shell.${namespace}.`;
+  return {
+    get: (key) => base.get(`${prefix}${key}`),
+    set: (key, value) => base.set(`${prefix}${key}`, value),
+    remove: (key) => base.remove(`${prefix}${key}`),
   };
 }
 
@@ -3119,6 +3345,60 @@ if (import.meta.vitest) {
       expect(boot.variant).toBe("aggregator");
       expect(boot.defaultAppId).toBe("puzzle3d-play");
       expect(boot.plugins).toEqual([{ pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/🟨️puzzle_plugin.js", contributes: [], consumes: [] }]);
+    });
+  });
+
+  describe("organizeContextMenu", () => {
+    const menuLeaf = (id: string): ContextMenuItemSpec => ({ id, label: id, action: id });
+    const menuDestructive = (id: string): ContextMenuItemSpec => ({ ...menuLeaf(id), destructive: true });
+
+    it("keeps a flat within-budget menu as-is, with groups sorted after leaves", () => {
+      const items = [menuLeaf("a"), menuLeaf("b"), { id: "menu.group.view", children: [menuLeaf("c")] }];
+      expect(organizeContextMenu(items, () => undefined)).toEqual(items);
+    });
+
+    it("shares the Rust fixture's grouped structure for a flat 12-item over-budget menu", () => {
+      // 🗂️ Mirrors `organize_context_menu_buckets_overflow_leaves_by_category_of` (5 primaries + N
+      // categorized overflow leaves) combined with `organize_context_menu_puts_destructive_leaves_last_after_a_separator`
+      // (a trailing destructive leaf) — same shape the Rust test suite asserts for an equivalent input.
+      const items: ContextMenuItemSpec[] = [
+        menuLeaf("primary0"),
+        menuLeaf("primary1"),
+        menuLeaf("primary2"),
+        menuLeaf("primary3"),
+        menuLeaf("primary4"),
+        menuLeaf("overflow0"),
+        menuLeaf("overflow1"),
+        menuLeaf("overflow2"),
+        menuLeaf("overflow3"),
+        menuLeaf("overflow4"),
+        menuLeaf("overflow5"),
+        menuDestructive("delete"),
+      ];
+      const categoryOf = (id: string): string | undefined => (id.startsWith("overflow") ? "view" : undefined);
+      const organized = organizeContextMenu(items, categoryOf);
+
+      expect(organized.map((item) => item.id)).toEqual([
+        "primary0",
+        "primary1",
+        "primary2",
+        "primary3",
+        "primary4",
+        "menu.group.view",
+        "separator-organized-6",
+        "delete",
+      ]);
+      expect(organized[5]!.children?.map((child) => child.id)).toEqual([
+        "overflow0",
+        "overflow1",
+        "overflow2",
+        "overflow3",
+        "overflow4",
+        "overflow5",
+      ]);
+      expect(organized[6]!.separator).toBe(true);
+      expect(organized[6]!.label).toBeUndefined();
+      expect(organized[7]!.destructive).toBe(true);
     });
   });
 }

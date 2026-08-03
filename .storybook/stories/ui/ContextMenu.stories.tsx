@@ -27,21 +27,22 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const sampleItems: ContextMenuItem[] = [
-  { id: "rename", label: "Rename", shortcut: "F2" },
-  { id: "duplicate", label: "Duplicate", shortcut: "⌘️D" },
-  { id: "visible", label: "Visible", checked: true },
+  { id: "rename", label: "Rename", icon: "pencil", shortcut: "F2" },
+  { id: "duplicate", label: "Duplicate", icon: "copy", shortcut: "⌘️D" },
+  { id: "visible", label: "Visible", icon: "eye", checked: true },
   { id: "sep-1", label: "", separator: true },
   {
     id: "transform",
     label: "Transform",
+    icon: "move",
     children: [
-      { id: "transform.move", label: "Move" },
-      { id: "transform.rotate", label: "Rotate" },
-      { id: "transform.scale", label: "Scale", disabled: true },
+      { id: "transform.move", label: "Move", icon: "move" },
+      { id: "transform.rotate", label: "Rotate", icon: "rotate-cw" },
+      { id: "transform.scale", label: "Scale", icon: "maximize-2", disabled: true },
     ],
   },
   { id: "sep-2", label: "", separator: true },
-  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫️" },
+  { id: "delete", label: "Delete", icon: "trash-2", destructive: true, shortcut: "⌫️" },
 ];
 
 export const Default: Story = {
@@ -75,17 +76,17 @@ export const TextSelection: Story = {
 
 // #region 🎯️ContextMenuController
 const controllerItems: ContextMenuItem[] = [
-  { id: "focus", label: "Focus", shortcut: "F" },
-  { id: "select", label: "Select", checked: false },
+  { id: "focus", label: "Focus", icon: "focus", shortcut: "F" },
+  { id: "select", label: "Select", icon: "mouse-pointer", checked: false },
   { id: "sep", label: "", separator: true },
-  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫️" },
+  { id: "delete", label: "Delete", icon: "trash-2", destructive: true, shortcut: "⌫️" },
 ];
 
 const numberedPreviewItems: ContextMenuItem[] = [
   { id: "suggestion-0", label: "Capsule · port", icon: "box", checked: true },
   { id: "suggestion-1", label: "Box · port", icon: "box", checked: false },
   { id: "sep", label: "", separator: true },
-  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫️" },
+  { id: "delete", label: "Delete", icon: "trash-2", destructive: true, shortcut: "⌫️" },
 ];
 
 /** @emoji 🎯️ Controlled fixed-position menu — mirrors how puzzle 2d canvas surfaces open a right-click menu at pointer coordinates. */

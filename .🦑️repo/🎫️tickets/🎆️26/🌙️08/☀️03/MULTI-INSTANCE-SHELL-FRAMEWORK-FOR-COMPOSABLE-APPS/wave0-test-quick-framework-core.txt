@@ -1,0 +1,70 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-core:test-quick
+
+> nx run @semio-tech/framework-core:test-quick
+
+> bun ./📜️script.ts test quick
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🟦️typescript
+
+ ❯ |@semio-tech/framework-core| 📦️index.ts (27 tests | 1 failed) 13ms
+     × rebuilds program rows when the generated session variant is stale 7ms
+ ❯ |@semio-tech/framework-core| 📦️index.ts (27 tests | 1 failed) 14ms
+     × rebuilds program rows when the generated session variant is stale 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-core| 📦️index.ts > PlaygroundResolution > rebuilds program rows when the generated session variant is stale
+ FAIL  |@semio-tech/framework-core| 📦️index.ts > PlaygroundResolution > rebuilds program rows when the generated session variant is stale
+AssertionError: expected [ { pluginId: 'puzzle', …(3) } ] to deeply equal [ { pluginId: 'puzzle', …(3) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "consumes": [],
+      "contributes": [],
+-     "moduleUrl": "/plugin-modules/puzzle/🟨️puzzle_plugin.js",
++     "moduleUrl": "/plugin-modules/puzzle/semio_s_plugin_puzzle.js",
+      "pluginId": "puzzle",
+    },
+  ]
+
+ ❯ ð¦ï¸index.ts:3347:28
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 52 passed (54)
+   Start at  12:54:36
+   Duration  165ms (transform 116ms, setup 0ms, import 142ms, tests 28ms, environment 0ms)
+
+Warning: command "bun ./📜️script.ts test quick" exited with non-zero status code
+
+
+ NX   Running target test-quick for project @semio-tech/framework-core failed
+
+Failed tasks:
+
+- @semio-tech/framework-core:test-quick
+
+Hint: run the command with --verbose for more details.
+
+1361 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1362 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1363 |  */
+1364 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1365 |   const status = runCmdInternal(cmd, args, opts);
+1366 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-core:test-quick exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:563:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:814:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:849:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:2903:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

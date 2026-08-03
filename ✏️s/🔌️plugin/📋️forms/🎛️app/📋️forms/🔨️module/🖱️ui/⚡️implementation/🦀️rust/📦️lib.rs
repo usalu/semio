@@ -1931,7 +1931,7 @@ pub fn create_forms_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("forms")
-            .mode("blueprint", "Blueprint", "drafting-compass")
+            .mode("blueprint", "Blueprint", "cad-shape")
             .default_mode_id("blueprint")
             .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT, SurfaceKind::BlockList, "clipboard-list")
             .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY, SurfaceKind::Canvas2d, "play")
@@ -1997,8 +1997,8 @@ pub fn create_forms_app() -> App {
             .io(forms_engine::forms_io()),
     )
     .example("default", "Contact", forms_engine::default_example_json(), "file")
-    .example("onboarding", "Onboarding", forms_engine::onboarding_example_json(), "user-plus")
-    .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_TEXT, "building-2")
+    .example("onboarding", "Onboarding", forms_engine::onboarding_example_json(), "user")
+    .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_TEXT, "building")
     .workflow("forms", "Forms", "data")
 }
 //#endregion 🔖️Manifest

@@ -6,7 +6,7 @@
 //! `DocumentApp::handle`.
 
 use base64::Engine;
-use process_3d::{MeasureKind, Pose, Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin, Workshop, WorkshopMachine, WorkshopMachinePatch};
+use process_3d::{MeasureKind, Pose, Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin, WorkshopMachine, WorkshopMachinePatch};
 use process_3d_engine::{
     axis_angle_from_up_to, capability_for_measure_kind, catalog_machine, default_document, export_process3d_model, find_capability, import_process3d_model, installed_catalogs, measure_for_capability, next_step_id, plate_document,
     processed_mesh, processed_volume, validate_capability, validation_context_for_stock, validation_reason, Process3dConfig,
@@ -38,6 +38,7 @@ const PROCESS_3D_PLAY_SURFACE_MAIN: &str = "process.play";
 const PROCESS_3D_PLAY_BODY_MAIN: &str = "process.play.main";
 const PROCESS_3D_PLAY_BODY_DOCUMENT: &str = "process.play.document";
 const PROCESS_3D_PLAY_BODY_CATALOGUE: &str = "process.play.catalogue";
+const PROCESS_3D_PLAY_BODY_WORKSHOP: &str = "process.play.workshop";
 const PROCESS_3D_PLAY_BODY_INSPECTION: &str = "process.play.inspection";
 const PROCESS_3D_PLAY_WINDOW_MAIN: &str = "process-workpiece";
 const PROCESS3D_FALLBACK_MESH_KIND: &str = "box";
@@ -429,6 +430,10 @@ app_labels! {
         stock_kind_sphere: &'static str = en: "Sphere", de: "Kugel";
         import_model: &'static str = en: "Import Model…", de: "Modell importieren…";
         step_control: &'static str = en: "Step", de: "Schritt";
+        workshop: &'static str = en: "Workshop", de: "Werkstatt";
+        machines: &'static str = en: "Machines", de: "Maschinen";
+        remove_machine: &'static str = en: "Remove Machine", de: "Maschine entfernen";
+        installed: &'static str = en: "Installed", de: "Installiert";
     }
 }
 
@@ -456,6 +461,9 @@ fn process3d_measure_label<'a>(measure: &ProcessMeasure, labels: &'a Process3dLa
 /// rail get a translated label without threading locale through the whole builder chain.
 const PROCESS3D_ACTION_LABEL_ENTRIES: &[(&str, &str, &str)] = &[
     ("addStep", "Add Step", "Schritt hinzufügen"),
+    ("addWorkshopMachine", "Add Machine", "Maschine hinzufügen"),
+    ("removeWorkshopMachine", "Remove Machine", "Maschine entfernen"),
+    ("updateWorkshopMachine", "Update Machine", "Maschine aktualisieren"),
     ("setStock", "Set Stock", "Rohteil festlegen"),
     ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
     ("removeSelectedStep", "Remove Selected Step", "Ausgewählten Schritt entfernen"),
@@ -590,31 +598,49 @@ fn build_document_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, label
     PanelTreeBuilder::new("process3d-play-document").section("process3d-play-document.stock", Some(labels.stock.into()), true, vec![stock_item]).section("process3d-play-document.steps", Some(labels.steps.into()), true, step_items).build()
 }
 
-/// 🏭️ Builds one catalogue tree item per machine modification kind across all modules, disabling
-/// (non-clickable, with a reason) any kind the current stock doesn't satisfy.
+/// 🏷️ Display label for a catalog id, resolved against `installed_catalogs()` — falls back to the raw
+/// id if the catalog that seeded a workshop machine was since uninstalled (never resolved back, per
+/// `WorkshopMachine::catalog_id`'s informational-only contract).
+fn catalog_label(catalog_id: &str) -> String {
+    installed_catalogs().into_iter().find(|catalog| catalog.catalog_id() == catalog_id).map(|catalog| catalog.label().to_string()).unwrap_or_else(|| catalog_id.to_string())
+}
+
+/// 🏭️ Builds one catalogue tree item per workshop machine capability, grouped by the machine's source
+/// catalog (uncataloged/generic machines first, open by default), disabling (non-clickable, with a
+/// reason) any capability the current stock doesn't satisfy.
 fn build_catalogue_tree(fixture: &Process3dDocument, labels: &Process3dLabels) -> UiNode {
     let ctx = validation_context_for_stock(&fixture.stock);
     let mut builder = PanelTreeBuilder::new("process3d-play-catalogue");
-    for module in ALL_MODULES {
-        let items: Vec<UiTreeItemNode> = module
-            .machines
+    let mut sections: Vec<(Option<&str>, Vec<&WorkshopMachine>)> = Vec::new();
+    for machine in &fixture.workshop.machines {
+        let key = machine.catalog_id.as_deref();
+        match sections.iter_mut().find(|(existing, _)| *existing == key) {
+            Some(section) => section.1.push(machine),
+            None => sections.push((key, vec![machine])),
+        }
+    }
+    sections.sort_by_key(|(key, _)| key.is_some());
+    for (catalog_id, machines) in sections {
+        let items: Vec<UiTreeItemNode> = machines
             .iter()
             .flat_map(|machine| {
-                machine.modification_kinds.iter().map(move |kind| {
-                    let failures = validate_modification(machine, kind, &ctx);
-                    let id = format!("process3d-catalogue.{}.{}.{}", module.id, machine.id, kind.id);
-                    let label = format!("{} — {}", machine.label, kind.label);
+                machine.capabilities.iter().map(move |capability| {
+                    let failures = validate_capability(capability, &ctx);
+                    let id = format!("process3d-catalogue.{}.{}", machine.id, capability.id);
+                    let label = format!("{} — {}", machine.label, capability.label);
                     if failures.is_empty() {
-                        iconed_tree_item_with_action(id, label, kind.icon_id, process3d_action("addStep", Some(json!({ "moduleId": module.id, "machineId": machine.id, "modificationKindId": kind.id }))))
+                        iconed_tree_item_with_action(id, label, &capability.icon_id, process3d_action("addStep", Some(json!({ "machineId": machine.id, "capabilityId": capability.id }))))
                     } else {
-                        UiTreeItemNode { icon_id: Some(kind.icon_id.into()), menu: None,
+                        UiTreeItemNode { icon_id: Some(capability.icon_id.as_str().into()), menu: None,
         ..tree_item_desc(id, label, Some(validation_reason(&failures)))
     }
                     }
                 })
             })
             .collect();
-        builder = builder.section(format!("process3d-play-catalogue.{}", module.id), Some(module.label.into()), module.id == "geometry", items);
+        let section_id = format!("process3d-play-catalogue.{}", catalog_id.unwrap_or("workshop"));
+        let section_label = catalog_id.map(catalog_label).unwrap_or_else(|| labels.workshop.into());
+        builder = builder.section(section_id, Some(section_label), catalog_id.is_none(), items);
     }
     let stock_items = vec![
         iconed_tree_item_with_action("process3d-catalogue.stock-box", labels.stock_kind_box, "box", process3d_action("setStock", Some(json!({ "kind": "box" })))),
@@ -623,6 +649,48 @@ fn build_catalogue_tree(fixture: &Process3dDocument, labels: &Process3dLabels) -
         iconed_tree_item_with_action("process3d-catalogue.stock-import", labels.import_model, "folder-open", process3d_action("loadModelRequest", None)),
     ];
     builder.section("process3d-play-catalogue.stock", Some(labels.stock.into()), false, stock_items).build()
+}
+
+/// 🛠️ The workshop configuration panel: "Machines" (the document's own workshop machines — select,
+/// remove) plus one section per installed catalog (its machines — add if not yet installed, dimmed
+/// "installed" description otherwise).
+fn build_workshop_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, labels: &Process3dLabels) -> UiNode {
+    let mut builder = PanelTreeBuilder::new("process3d-play-workshop");
+    let machine_items: Vec<UiTreeItemNode> = fixture
+        .workshop
+        .machines
+        .iter()
+        .map(|machine| {
+            let target = format!("machine:{}", machine.id);
+            UiTreeItemNode {
+                icon_id: Some(machine.icon_id.as_str().into()),
+                presence: UiPresence::selected(cfg.selected_id.as_deref() == Some(target.as_str())),
+                action: Some(process3d_action("setSelection", Some(json!({ "id": target })))),
+                actions: Some(vec![UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove_machine.into()), action: process3d_action("removeWorkshopMachine", Some(json!({ "id": machine.id }))), reveal_on_hover: Some(true) }]),
+                menu: None,
+                ..UiTreeItemNode::base(format!("process3d-workshop.machine.{}", machine.id), machine.label.clone())
+            }
+        })
+        .collect();
+    builder = builder.section("process3d-play-workshop.machines", Some(labels.machines.into()), true, machine_items);
+    for catalog in installed_catalogs() {
+        let catalog_id = catalog.catalog_id();
+        let items: Vec<UiTreeItemNode> = catalog
+            .machines()
+            .into_iter()
+            .map(|machine| {
+                let id = format!("process3d-workshop.catalog.{catalog_id}.{}", machine.id);
+                let already_installed = fixture.workshop.machines.iter().any(|existing| existing.id == machine.id);
+                if already_installed {
+                    UiTreeItemNode { icon_id: Some(machine.icon_id.as_str().into()), dimmed: Some(true), menu: None, ..tree_item_desc(id, machine.label.clone(), Some(labels.installed.to_string())) }
+                } else {
+                    iconed_tree_item_with_action(id, machine.label.clone(), &machine.icon_id, process3d_action("addWorkshopMachine", Some(json!({ "catalogId": catalog_id, "machineId": machine.id }))))
+                }
+            })
+            .collect();
+        builder = builder.section(format!("process3d-play-workshop.catalog.{catalog_id}"), Some(catalog.label().into()), false, items);
+    }
+    builder.build()
 }
 
 fn build_stock_inspector(stock: &Stock, fixture: &Process3dDocument, labels: &Process3dLabels) -> UiNode {
@@ -657,15 +725,67 @@ fn build_stock_inspector(stock: &Stock, fixture: &Process3dDocument, labels: &Pr
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "process3d-inspector.stock".into(), label: labels.stock.into(), default_open: Some(true), fields }])
 }
 
-fn build_step_inspector(step: &ProcessStep, stock: &Stock, labels: &Process3dLabels) -> UiNode {
+/// 🏷️ Human-readable summary of one capability rule, for the machine inspector's readonly rule list.
+fn describe_capability_rule(rule: &process_3d::CapabilityRule) -> String {
+    let (quantity, parameter, margin, is_min) = match rule {
+        process_3d::CapabilityRule::Min { quantity, parameter, margin } => (*quantity, parameter, *margin, true),
+        process_3d::CapabilityRule::Max { quantity, parameter, margin } => (*quantity, parameter, *margin, false),
+    };
+    let axis = match quantity {
+        process_3d::StockQuantity::Width => "width",
+        process_3d::StockQuantity::Depth => "depth",
+        process_3d::StockQuantity::Height => "height",
+        process_3d::StockQuantity::MaxDimension => "max dimension",
+        process_3d::StockQuantity::MinDimension => "min dimension",
+    };
+    let comparator = if is_min { "≥" } else { "≤" };
+    if margin != 0.0 {
+        format!("{axis} {comparator} {parameter} ± {margin}m")
+    } else {
+        format!("{axis} {comparator} {parameter}")
+    }
+}
+
+/// 🛠️ Inspector for a selected workshop machine: its label, plus one field group per capability with a
+/// number field for every parameter and a readonly summary of its rules.
+fn build_machine_inspector(machine: &WorkshopMachine, labels: &Process3dLabels) -> UiNode {
+    let target = format!("machine:{}", machine.id);
+    let machine_fields = vec![text_field("process3d-inspector.label", labels.label_field, &machine.label, &target, "label")];
+    let mut groups = vec![UiInspectorFieldGroup { presence: UiPresence::default(), id: "process3d-inspector.machine".into(), label: labels.workshop.into(), default_open: Some(true), fields: machine_fields }];
+    for capability in &machine.capabilities {
+        let mut fields: Vec<UiNode> = capability
+            .parameters
+            .iter()
+            .map(|parameter| {
+                let field = format!("{}.{}", capability.id, parameter.id);
+                number_field(format!("process3d-inspector.{field}"), parameter.label.clone(), parameter.value, &target, &field)
+            })
+            .collect();
+        if !capability.rules.is_empty() {
+            let summary = capability.rules.iter().map(describe_capability_rule).collect::<Vec<_>>().join("; ");
+            fields.push(ui_inspector_readonly_field(format!("process3d-inspector.{}.rules", capability.id), labels.validation_warning, summary));
+        }
+        groups.push(UiInspectorFieldGroup { presence: UiPresence::default(), id: format!("process3d-inspector.{}", capability.id), label: capability.label.clone(), default_open: Some(true), fields });
+    }
+    ui_inspector_groups_to_tree(&groups)
+}
+
+fn build_step_inspector(step: &ProcessStep, fixture: &Process3dDocument, labels: &Process3dLabels) -> UiNode {
     let target = format!("step:{}", step.id);
     let mut fields = vec![text_field("process3d-inspector.label", labels.label_field, &step.label, &target, "label")];
     if let Some(origin) = &step.origin {
-        if let Some((module, machine, kind)) = find_modification(&origin.module_id, &origin.machine_id, &origin.modification_kind_id) {
-            fields.push(ui_inspector_readonly_field("process3d-inspector.origin", labels.provenance, format!("{} · {} · {}", module.label, machine.label, kind.label)));
-            let failures = validate_modification(machine, kind, &validation_context_for_stock(stock));
-            if !failures.is_empty() {
-                fields.push(ui_inspector_readonly_field("process3d-inspector.validation", labels.validation_warning, validation_reason(&failures)));
+        match find_capability(&fixture.workshop, &origin.machine_id, &origin.capability_id) {
+            Some((machine, capability)) => {
+                fields.push(ui_inspector_readonly_field("process3d-inspector.origin", labels.provenance, format!("{} · {}", machine.label, capability.label)));
+                let failures = validate_capability(capability, &validation_context_for_stock(&fixture.stock));
+                if !failures.is_empty() {
+                    fields.push(ui_inspector_readonly_field("process3d-inspector.validation", labels.validation_warning, validation_reason(&failures)));
+                }
+            }
+            // 🏭️ Unresolvable provenance (the machine/capability was since removed from the workshop) —
+            // StepOrigin is purely informational, so this shows the raw ids and never blocks the step.
+            None => {
+                fields.push(ui_inspector_readonly_field("process3d-inspector.origin", labels.provenance, format!("{} · {}", origin.machine_id, origin.capability_id)));
             }
         }
     }
@@ -713,7 +833,12 @@ fn build_inspector_tree(fixture: &Process3dDocument, cfg: &Process3dConfig, labe
         return build_stock_inspector(&fixture.stock, fixture, labels);
     }
     if let Some(step) = fixture.steps.iter().find(|step| step.id == selected_id) {
-        return build_step_inspector(step, &fixture.stock, labels);
+        return build_step_inspector(step, fixture, labels);
+    }
+    if let Some(machine_id) = selected_id.strip_prefix("machine:") {
+        if let Some(machine) = fixture.workshop.machines.iter().find(|machine| machine.id == machine_id) {
+            return build_machine_inspector(machine, labels);
+        }
     }
     ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
         id: "process3d-play-inspector.missing".into(),
@@ -869,6 +994,9 @@ impl DocumentApp for Process3dPlayApp {
             Process3dCommand::SetDocument { .. } => "setDocument",
             Process3dCommand::SetActiveExample { .. } => "setActiveExample",
             Process3dCommand::AddStep { .. } => "addStep",
+            Process3dCommand::AddWorkshopMachine { .. } => "addWorkshopMachine",
+            Process3dCommand::RemoveWorkshopMachine { .. } => "removeWorkshopMachine",
+            Process3dCommand::UpdateWorkshopMachine { .. } => "updateWorkshopMachine",
             Process3dCommand::RemoveStep { .. } => "removeStep",
             Process3dCommand::RemoveSelectedStep => "removeSelectedStep",
             Process3dCommand::MoveStep { .. } => "moveStep",
@@ -923,29 +1051,56 @@ impl DocumentApp for Process3dPlayApp {
                     ..Default::default()
                 }
             }
-            Process3dCommand::AddStep { measure, module_id, machine_id, modification_kind_id, position } => {
-                let resolved = if let (Some(module_id), Some(machine_id), Some(modification_kind_id)) = (module_id.as_deref(), machine_id.as_deref(), modification_kind_id.as_deref()) {
-                    find_modification(module_id, machine_id, modification_kind_id)
+            Process3dCommand::AddStep { measure, machine_id, capability_id, position } => {
+                let resolved = if let (Some(machine_id), Some(capability_id)) = (machine_id.as_deref(), capability_id.as_deref()) {
+                    find_capability(&fixture.workshop, machine_id, capability_id).map(|(machine, capability)| (machine.clone(), capability.clone()))
                 } else {
                     let measure_kind = match measure.as_deref().unwrap_or("cut") {
                         "drill" => MeasureKind::Drill,
                         "attach" => MeasureKind::Attach,
                         _ => MeasureKind::Cut,
                     };
-                    let (machine, kind) = geometry_machine_for_measure(measure_kind);
-                    Some((&GEOMETRY_MODULE, machine, kind))
+                    Some(capability_for_measure_kind(&fixture.workshop, measure_kind))
                 };
-                let Some((module, machine, kind)) = resolved else {
+                let Some((machine, capability)) = resolved else {
                     return Emit::default();
                 };
-                let failures = validate_modification(machine, kind, &validation_context_for_stock(&fixture.stock));
+                let failures = validate_capability(&capability, &validation_context_for_stock(&fixture.stock));
                 if !failures.is_empty() {
                     return Emit::default();
                 }
-                let origin = StepOrigin { module_id: module.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
-                let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, *position) };
+                let origin = StepOrigin { machine_id: machine.id.clone(), capability_id: capability.id.clone() };
+                let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: measure_for_capability(&capability, *position) };
                 let step_id = step.id.clone();
                 Emit { document_operations: insert_step_operations(fixture, step), config_operations: vec![Process3dConfigOperation::SetSelectedId { value: Some(step_id) }], ..Default::default() }
+            }
+            Process3dCommand::AddWorkshopMachine { catalog_id, machine_id } => match catalog_machine(catalog_id, machine_id) {
+                Some(machine) => match add_workshop_machine_operation(fixture, machine) {
+                    Some(operation) => {
+                        let selected = format!("machine:{machine_id}");
+                        Emit { document_operations: vec![operation], config_operations: vec![Process3dConfigOperation::SetSelectedId { value: Some(selected) }], ..Default::default() }
+                    }
+                    None => Emit::default(),
+                },
+                None => Emit::default(),
+            },
+            Process3dCommand::RemoveWorkshopMachine { id } => match remove_workshop_machine_operation(fixture, id) {
+                Some(operation) => {
+                    let mut config_operations = Vec::new();
+                    if config.selected_id.as_deref() == Some(format!("machine:{id}").as_str()) {
+                        config_operations.push(Process3dConfigOperation::SetSelectedId { value: None });
+                    }
+                    Emit { document_operations: vec![operation], config_operations, ..Default::default() }
+                }
+                None => Emit::default(),
+            },
+            Process3dCommand::UpdateWorkshopMachine { machine } => {
+                if fixture.workshop.machines.iter().any(|existing| existing.id == machine.id) {
+                    let patch = WorkshopMachinePatch { label: Some(machine.label.clone()), icon_id: Some(machine.icon_id.clone()), capabilities: Some(machine.capabilities.clone()) };
+                    Emit::operations(vec![Process3dOperation::Machines { collection: CollectionOperation::Patch { id: machine.id.clone(), patch } }])
+                } else {
+                    Emit::default()
+                }
             }
             Process3dCommand::RemoveStep { id } => match remove_step_operations(fixture, id) {
                 Some(operations) => {
@@ -994,7 +1149,7 @@ impl DocumentApp for Process3dPlayApp {
                     _ => SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 },
                 };
                 let stock = Stock { id: fixture.stock.id.clone(), label: resolve_labels::<Process3dLabels>(config).stock.into(), solid, pose: Pose::default() };
-                let document = Process3dDocument { stock, steps: Vec::new(), resolved_up_to: None };
+                let document = Process3dDocument { workshop: fixture.workshop.clone(), stock, steps: Vec::new(), resolved_up_to: None };
                 Emit {
                     document_operations: vec![Process3dOperation::SetDocument { document }],
                     config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }],
@@ -1059,9 +1214,9 @@ impl DocumentApp for Process3dPlayApp {
                     "attach" => MeasureKind::Attach,
                     _ => MeasureKind::Cut,
                 };
-                let (machine, kind) = geometry_machine_for_measure(measure_kind);
-                let origin = StepOrigin { module_id: GEOMETRY_MODULE.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
-                let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, Some(*position)) };
+                let (machine, capability) = capability_for_measure_kind(&fixture.workshop, measure_kind);
+                let origin = StepOrigin { machine_id: machine.id.clone(), capability_id: capability.id.clone() };
+                let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: measure_for_capability(&capability, Some(*position)) };
                 let step_id = step.id.clone();
                 Emit {
                     document_operations: insert_step_operations(fixture, step),
@@ -1161,6 +1316,7 @@ impl DocumentApp for Process3dPlayApp {
             }
             PROCESS_3D_PLAY_BODY_DOCUMENT => build_document_tree(doc.projection, config, labels),
             PROCESS_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(doc.projection, labels),
+            PROCESS_3D_PLAY_BODY_WORKSHOP => build_workshop_tree(doc.projection, config, labels),
             PROCESS_3D_PLAY_BODY_INSPECTION => build_inspector_tree(doc.projection, config, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
@@ -1218,7 +1374,7 @@ pub fn create_process3d_app() -> App {
                 import_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl],
             })
             .icon_id("hammer")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind_with_engagement(
                 PROCESS_3D_PLAY_WINDOW_MAIN,
@@ -1231,6 +1387,7 @@ pub fn create_process3d_app() -> App {
             .default_layout(create_default_layout(&[PROCESS_3D_PLAY_WINDOW_MAIN.into()], "row", None, Some(&["Workpiece".into()])))
             .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_DOCUMENT)
             .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_CATALOGUE)
+            .panel_tab("workshop", "Workshop", PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_WORKSHOP)
             .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PROCESS_3D_PLAY_BODY_INSPECTION)
             // 🔧️ Palette-visible create/mutate actions (staged arg forms attached below).
             .operation("addStep", "Add Step")
@@ -1242,6 +1399,9 @@ pub fn create_process3d_app() -> App {
             .shell_action("loadModelRequest", "Load Model…")
             // 🔧️ Internal document mutations dispatched by panel/viewport wiring (not palette-worthy).
             .action_with(internal_action("setDocument", "Set Document", ActionKind::Operation))
+            .action_with(internal_action("addWorkshopMachine", "Add Machine", ActionKind::Operation))
+            .action_with(internal_action("removeWorkshopMachine", "Remove Machine", ActionKind::Operation))
+            .action_with(internal_action("updateWorkshopMachine", "Update Machine", ActionKind::Operation))
             .action_with(internal_action("importModelFile", "Import Model File", ActionKind::Operation))
             .action_with(internal_action("removeStep", "Remove Step", ActionKind::Operation))
             .action_with(internal_action("moveStep", "Move Step", ActionKind::Operation))
@@ -1384,7 +1544,7 @@ mod tests {
     #[test]
     fn add_step_action_inserts_and_selects() {
         let mut app = new_app();
-        app.dispatch_typed(Process3dCommand::AddStep { measure: Some("drill".into()), module_id: None, machine_id: None, modification_kind_id: None, position: None }, &testkit::meta("local")).expect("add step");
+        app.dispatch_typed(Process3dCommand::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }, &testkit::meta("local")).expect("add step");
         let document = app.projection().expect("projection");
         assert_eq!(document.steps.len(), 5);
         let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
@@ -1397,7 +1557,7 @@ mod tests {
         let mut app = new_app();
         testkit::assert_undo_redo_round_trip(
             &mut app,
-            Process3dCommand::AddStep { measure: Some("cut".into()), module_id: None, machine_id: None, modification_kind_id: None, position: None },
+            Process3dCommand::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None },
             |app| app.projection().expect("projection").steps.len(),
             4,
             5,
@@ -1537,75 +1697,159 @@ mod tests {
         assert!(node_json.contains("processed"), "expected the processed mesh id in scene json: {node_json}");
     }
 
-    /// 🪵️ The default timber beam (0.24m tall) fits the circular saw's 0.184m diameter but not the
-    /// table saw's 0.315m or the diamond saw's 0.35m — a real mix of valid and disabled items.
+    /// 🪵️ The default timber beam (0.24m tall) exceeds both the circular saw's 0.065m max cut depth
+    /// and the table saw's 0.102m — both wood machines list, both are disabled with a reason.
     #[test]
-    fn catalogue_lists_wood_and_concrete_with_mixed_validity_on_default_stock() {
+    fn catalogue_lists_workshop_wood_machines_with_mixed_validity_on_default_stock() {
         let mut app = new_app();
         let node = app.render(PROCESS_3D_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let node_json = serde_json::to_string(&node).expect("catalogue json");
         assert!(node_json.contains("Circular Saw"), "expected wood's circular saw in the catalogue: {node_json}");
         assert!(node_json.contains("Table Saw"), "expected wood's table saw in the catalogue: {node_json}");
-        assert!(node_json.contains("Diamond Saw"), "expected concrete's diamond saw in the catalogue: {node_json}");
         assert!(node_json.contains("needs stock"), "expected at least one disabled-item validation reason: {node_json}");
     }
 
     #[test]
     fn add_step_via_catalogue_sets_origin_and_builds_capability_sized_tool() {
         let mut app = new_app();
-        let result = app
-            .dispatch_typed(Process3dCommand::AddStep { measure: None, module_id: Some("wood".into()), machine_id: Some("circularSaw".into()), modification_kind_id: Some("crosscut".into()), position: None }, &testkit::meta("local"))
-            .expect("add step");
-        assert!(!result.operations.is_empty(), "circular saw crosscut should be valid against the default timber beam stock");
+        // 🪚️ Circular saw's realistic 0.065m max cut depth needs a shallower stock than the default 0.24m beam.
+        app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }, &testkit::meta("local")).expect("shrink stock to fit circular saw");
+        let result = app.dispatch_typed(Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }, &testkit::meta("local")).expect("add step");
+        assert!(!result.operations.is_empty(), "circular saw crosscut should be valid against the shrunk stock");
         let document = app.projection().expect("projection");
         let last = document.steps.last().expect("inserted step");
         let origin = last.origin.as_ref().expect("origin");
-        assert_eq!(origin.module_id, "wood");
         assert_eq!(origin.machine_id, "circularSaw");
-        assert_eq!(origin.modification_kind_id, "crosscut");
+        assert_eq!(origin.capability_id, "crosscut");
         let ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius, .. }, .. } = &last.measure else {
             panic!("expected a cylinder cut tool, got {:?}", last.measure);
         };
         assert!((radius - 0.092).abs() < 1e-9, "circular saw diameter 0.184 should size the tool to radius 0.092, got {radius}");
     }
 
-    /// 🪵️ Table saw needs >= 0.315m stock height; the default timber beam is only 0.24m tall.
+    /// 🪵️ Table saw needs stock height <= 0.102m; the default timber beam is 0.24m tall.
     #[test]
     fn add_step_via_catalogue_rejected_when_validation_fails() {
         let mut app = new_app();
-        let result = app
-            .dispatch_typed(Process3dCommand::AddStep { measure: None, module_id: Some("wood".into()), machine_id: Some("tableSaw".into()), modification_kind_id: Some("crosscut".into()), position: None }, &testkit::meta("local"))
-            .expect("add step");
-        assert!(result.operations.is_empty(), "table saw crosscut should be rejected server-side against undersized stock");
+        let result = app.dispatch_typed(Process3dCommand::AddStep { measure: None, machine_id: Some("tableSaw".into()), capability_id: Some("crosscut".into()), position: None }, &testkit::meta("local")).expect("add step");
+        assert!(result.operations.is_empty(), "table saw crosscut should be rejected server-side against oversized stock");
     }
 
     #[test]
-    fn measure_arg_routes_to_geometry_module() {
+    fn measure_arg_routes_to_generic_machine() {
         let mut app = new_app();
-        app.dispatch_typed(Process3dCommand::AddStep { measure: Some("cut".into()), module_id: None, machine_id: None, modification_kind_id: None, position: None }, &testkit::meta("local")).expect("add step");
+        app.dispatch_typed(Process3dCommand::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }, &testkit::meta("local")).expect("add step");
         let document = app.projection().expect("projection");
         let last = document.steps.last().expect("inserted step");
         let origin = last.origin.as_ref().expect("origin");
-        assert_eq!(origin.module_id, "geometry");
         assert_eq!(origin.machine_id, "saw");
-        assert_eq!(origin.modification_kind_id, "cut");
+        assert_eq!(origin.capability_id, "cut");
         assert!(matches!(last.measure, ProcessMeasure::Cut { .. }));
     }
 
     #[test]
-    fn inspector_shows_validation_warning_after_stock_shrinks_below_step_requirement() {
+    fn inspector_shows_validation_warning_after_stock_grows_above_step_requirement() {
         let mut app = new_app();
+        app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }, &testkit::meta("local")).expect("shrink stock to fit circular saw");
         let add_result = app
-            .dispatch_typed(Process3dCommand::AddStep { measure: None, module_id: Some("wood".into()), machine_id: Some("circularSaw".into()), modification_kind_id: Some("crosscut".into()), position: None }, &testkit::meta("local"))
+            .dispatch_typed(Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }, &testkit::meta("local"))
             .expect("add step");
         assert!(!add_result.operations.is_empty());
-        app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }, &testkit::meta("local")).expect("shrink stock");
+        app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.5), text: None }, &testkit::meta("local")).expect("grow stock");
         let step_id = app.projection().expect("projection").steps.last().expect("step").id.clone();
         app.dispatch_typed(Process3dCommand::SetSelection { id: Some(step_id) }, &testkit::meta("local")).expect("select");
         let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
         let node_json = serde_json::to_string(&node).expect("inspector json");
-        assert!(node_json.contains("needs stock"), "expected a validation warning after shrinking stock below the step's requirement: {node_json}");
+        assert!(node_json.contains("needs stock"), "expected a validation warning after growing stock above the step's max cut depth: {node_json}");
     }
+
+    //#region 🔖️WorkshopUiTests
+    #[test]
+    fn add_workshop_machine_action_installs_and_selects() {
+        let mut app = new_app();
+        let result = app.dispatch_typed(Process3dCommand::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }, &testkit::meta("local")).expect("add machine");
+        assert!(!result.operations.is_empty(), "adding an uninstalled catalog machine must emit an operation");
+        let document = app.projection().expect("projection");
+        assert!(document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"), "chopSaw should now be in the workshop");
+        let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
+        let node_json = serde_json::to_string(&node).unwrap();
+        assert!(!node_json.contains("No selection"), "expected the newly added machine to be selected: {node_json}");
+    }
+
+    #[test]
+    fn add_workshop_machine_action_is_idempotent_when_already_installed() {
+        let mut app = new_app();
+        app.dispatch_typed(Process3dCommand::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }, &testkit::meta("local")).expect("add machine");
+        let count_after_first = app.projection().expect("projection").workshop.machines.len();
+        let result = app.dispatch_typed(Process3dCommand::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }, &testkit::meta("local")).expect("add machine again");
+        assert!(result.operations.is_empty(), "adding an already-installed machine must be a no-op");
+        assert_eq!(app.projection().expect("projection").workshop.machines.len(), count_after_first);
+    }
+
+    #[test]
+    fn undo_after_add_workshop_machine_restores_previous_machine_count() {
+        let mut app = new_app();
+        testkit::assert_undo_redo_round_trip(
+            &mut app,
+            Process3dCommand::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() },
+            |app| app.projection().expect("projection").workshop.machines.len(),
+            7,
+            8,
+        );
+    }
+
+    #[test]
+    fn remove_workshop_machine_action_removes_and_clears_selection() {
+        let mut app = new_app();
+        app.dispatch_typed(Process3dCommand::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }, &testkit::meta("local")).expect("add machine");
+        let result = app.dispatch_typed(Process3dCommand::RemoveWorkshopMachine { id: "chopSaw".into() }, &testkit::meta("local")).expect("remove machine");
+        assert!(!result.operations.is_empty());
+        let document = app.projection().expect("projection");
+        assert!(!document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"));
+        let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
+        let node_json = serde_json::to_string(&node).unwrap();
+        assert!(node_json.contains("No selection"), "removing the selected machine must clear the selection: {node_json}");
+    }
+
+    #[test]
+    fn workshop_machine_parameter_edit_resizes_future_tool() {
+        let mut app = new_app();
+        app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }, &testkit::meta("local")).expect("shrink stock to fit circular saw");
+        app.dispatch_typed(Process3dCommand::PatchInspector { target: "machine:circularSaw".into(), field: "crosscut.bladeDiameter".into(), number: Some(0.4), text: None }, &testkit::meta("local")).expect("edit parameter");
+        let result =
+            app.dispatch_typed(Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }, &testkit::meta("local")).expect("add step");
+        assert!(!result.operations.is_empty());
+        let document = app.projection().expect("projection");
+        let last = document.steps.last().expect("inserted step");
+        let ProcessMeasure::Cut { tool: SolidSpec::Cylinder { radius, .. }, .. } = &last.measure else {
+            panic!("expected a cylinder cut tool, got {:?}", last.measure);
+        };
+        assert!((radius - 0.2).abs() < 1e-9, "edited blade diameter 0.4 should size the next tool to radius 0.2, got {radius}");
+    }
+
+    #[test]
+    fn catalogue_reflects_workshop_after_machine_removal() {
+        let mut app = new_app();
+        let before = app.render(PROCESS_3D_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&before).unwrap().contains("Circular Saw"));
+        app.dispatch_typed(Process3dCommand::RemoveWorkshopMachine { id: "circularSaw".into() }, &testkit::meta("local")).expect("remove machine");
+        let after = app.render(PROCESS_3D_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+        assert!(!serde_json::to_string(&after).unwrap().contains("Circular Saw"), "removed machine must disappear from the catalogue tree");
+    }
+
+    #[test]
+    fn step_inspector_shows_raw_provenance_after_machine_removal() {
+        let mut app = new_app();
+        app.dispatch_typed(Process3dCommand::PatchInspector { target: "beam".into(), field: "height".into(), number: Some(0.05), text: None }, &testkit::meta("local")).expect("shrink stock to fit circular saw");
+        app.dispatch_typed(Process3dCommand::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }, &testkit::meta("local")).expect("add step");
+        let step_id = app.projection().expect("projection").steps.last().expect("step").id.clone();
+        app.dispatch_typed(Process3dCommand::RemoveWorkshopMachine { id: "circularSaw".into() }, &testkit::meta("local")).expect("remove machine");
+        app.dispatch_typed(Process3dCommand::SetSelection { id: Some(step_id) }, &testkit::meta("local")).expect("select step");
+        let node = app.render(PROCESS_3D_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
+        let node_json = serde_json::to_string(&node).unwrap();
+        assert!(node_json.contains("circularSaw") && node_json.contains("crosscut"), "step provenance must survive machine removal as raw ids: {node_json}");
+    }
+    //#endregion 🔖️WorkshopUiTests
 
     //#region 🔖️MediaTests
     #[test]

@@ -1,82 +1,58 @@
-warning: function `tessellate_geometry_json_for_wasm` is never used
-    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs:2223:4
-     |
-2223 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
-     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     |
-     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+warning: unused import: `UiStackNode`
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:96:48
+   |
+96 |     UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+   |                                                ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
 
-warning: `semio-s-kernel-flow-module-brep` (lib) generated 1 warning
-   Compiling semio-s-app-flow-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
 warning: unnecessary qualification
-   --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:161:16
-    |
-161 |     registry: &semio_framework_plugin::AppActionRegistry,
-    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-    = note: requested on the command line with `-W unused-qualifications`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:2726:38
+     |
+2726 |     fn minimal_tutorial(id: &str) -> semio_framework_core::TutorialDefinition {
+     |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
-    |
-161 -     registry: &semio_framework_plugin::AppActionRegistry,
-161 +     registry: &AppActionRegistry,
-    |
-
-warning: unnecessary qualification
-   --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:167:10
-    |
-167 | ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |
-help: remove the unnecessary path segments
-    |
-167 - ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-167 + ) -> Vec<ContextMenuItemSpec> {
-    |
-
-warning: unnecessary qualification
-    --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1466:23
      |
-1466 |         let request = semio_framework_plugin::ContextMenuRequest {
-     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2726 -     fn minimal_tutorial(id: &str) -> semio_framework_core::TutorialDefinition {
+2726 +     fn minimal_tutorial(id: &str) -> TutorialDefinition {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:3551:64
+     |
+3551 |     fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+     |                                                                ^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1466 -         let request = semio_framework_plugin::ContextMenuRequest {
-1466 +         let request = ContextMenuRequest {
+3551 -     fn command_from_action(&self, action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, String> {
+3551 +     fn command_from_action(&self, action: &str, _args: Option<&Value>) -> Result<Self::Command, String> {
      |
 
-error[E0599]: no method named `test_projection` found for struct `VcsDocumentApp<A>` in the current scope
-    --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1766:26
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:7035:37
      |
-1766 |         let before = app.test_projection().synapses.len();
-     |                          ^^^^^^^^^^^^^^^
+7035 |             assert_eq!(action.kind, semio_framework_core::ActionKind::Clipboard);
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
-help: there is a method `projection` with a similar name
+help: remove the unnecessary path segments
      |
-1766 -         let before = app.test_projection().synapses.len();
-1766 +         let before = app.projection().synapses.len();
-     |
-
-error[E0599]: no method named `test_projection` found for struct `VcsDocumentApp<A>` in the current scope
-    --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1776:25
-     |
-1776 |         let after = app.test_projection();
-     |                         ^^^^^^^^^^^^^^^
-     |
-help: there is a method `projection` with a similar name
-     |
-1776 -         let after = app.test_projection();
-1776 +         let after = app.projection();
+7035 -             assert_eq!(action.kind, semio_framework_core::ActionKind::Clipboard);
+7035 +             assert_eq!(action.kind, ActionKind::Clipboard);
      |
 
-warning: unused variable: `labels`
-   --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:737:72
-    |
-737 | fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
-    |                                                                        ^^^^^^ help: if this is intentional, prefix it with an underscore: `_labels`
-    |
-    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+warning: `semio-framework-plugin` (lib test) generated 4 warnings (run `cargo fix --lib -p semio-framework-plugin --tests` to apply 4 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 8.56s
+     Running unittests ../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_framework_plugin-fbcaab3c7999e31b)
 
-For more information about this error, try `rustc --explain E0599`.
-warning: `semio-s-app-flow-ui` (lib test) generated 4 warnings
-error: could not compile `semio-s-app-flow-ui` (lib test) due to 2 previous errors; 4 warnings emitted
+running 1 test
+test plugin_runtime::semio_plugin_macro_tests::ui_history_panel_filters_rows_and_gates_the_backwards_action ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 129 filtered out; finished in 0.00s
+

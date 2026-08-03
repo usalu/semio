@@ -1,0 +1,166 @@
+{
+  "frameSnaps": [
+    {
+      "url": "http://127.0.0.1:6029/generator/",
+      "error": null,
+      "rootChildren": 0,
+      "canvas": 0,
+      "bodyText": ""
+    },
+    {
+      "url": "http://127.0.0.1:6029/koordinator/",
+      "error": null,
+      "rootChildren": 0,
+      "canvas": 0,
+      "bodyText": ""
+    },
+    {
+      "url": "http://127.0.0.1:6029/aggregator/",
+      "error": null,
+      "rootChildren": 0,
+      "canvas": 0,
+      "bodyText": ""
+    },
+    {
+      "url": "http://127.0.0.1:6029/aussuchen/",
+      "error": null,
+      "rootChildren": 0,
+      "canvas": 0,
+      "bodyText": ""
+    },
+    {
+      "url": "http://127.0.0.1:6029/bearbeiten/",
+      "error": null,
+      "rootChildren": 0,
+      "canvas": 0,
+      "bodyText": ""
+    },
+    {
+      "url": "http://127.0.0.1:6029/verfolgen/",
+      "error": null,
+      "rootChildren": 0,
+      "canvas": 0,
+      "bodyText": ""
+    }
+  ],
+  "paneProbe": [
+    {
+      "href": "http://127.0.0.1:6029/generator/",
+      "x": 240,
+      "y": 225,
+      "w": 240,
+      "h": 136
+    },
+    {
+      "href": "http://127.0.0.1:6029/koordinator/",
+      "x": 720,
+      "y": 225,
+      "w": 240,
+      "h": 136
+    },
+    {
+      "href": "http://127.0.0.1:6029/aggregator/",
+      "x": 1200,
+      "y": 225,
+      "w": 240,
+      "h": 136
+    },
+    {
+      "href": "http://127.0.0.1:6029/aussuchen/",
+      "x": 240,
+      "y": 675,
+      "w": 240,
+      "h": 136
+    },
+    {
+      "href": "http://127.0.0.1:6029/bearbeiten/",
+      "x": 720,
+      "y": 675,
+      "w": 240,
+      "h": 136
+    },
+    {
+      "href": "http://127.0.0.1:6029/verfolgen/",
+      "x": 1200,
+      "y": 675,
+      "w": 240,
+      "h": 136
+    }
+  ],
+  "hoverShots": {
+    "generator": {
+      "href": "http://127.0.0.1:6029/generator/",
+      "x": 240,
+      "y": 225,
+      "w": 240,
+      "h": 136
+    },
+    "koordinator": {
+      "href": "http://127.0.0.1:6029/koordinator/",
+      "x": 720,
+      "y": 225,
+      "w": 240,
+      "h": 136
+    },
+    "aggregator": {
+      "href": "http://127.0.0.1:6029/aggregator/",
+      "x": 1200,
+      "y": 225,
+      "w": 240,
+      "h": 136
+    },
+    "aussuchen": {
+      "href": "http://127.0.0.1:6029/aussuchen/",
+      "x": 240,
+      "y": 675,
+      "w": 240,
+      "h": 136
+    },
+    "bearbeiten": {
+      "href": "http://127.0.0.1:6029/bearbeiten/",
+      "x": 720,
+      "y": 675,
+      "w": 240,
+      "h": 136
+    },
+    "verfolgen": {
+      "href": "http://127.0.0.1:6029/verfolgen/",
+      "x": 1200,
+      "y": 675,
+      "w": 240,
+      "h": 136
+    }
+  },
+  "errors": [
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
+}

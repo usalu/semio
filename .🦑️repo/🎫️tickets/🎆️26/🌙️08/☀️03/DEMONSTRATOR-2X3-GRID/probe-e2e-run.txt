@@ -1,0 +1,65 @@
+{
+  "iframes": [
+    {
+      "title": "Generator",
+      "src": "/generator/",
+      "access": "ok",
+      "childCount": 2,
+      "bg": "rgba(0, 0, 0, 0)",
+      "hasCanvas": false,
+      "hasRoot": true,
+      "bodyText": ""
+    },
+    {
+      "title": "Koordinator",
+      "src": "/koordinator/",
+      "access": "ok",
+      "childCount": 2,
+      "bg": "rgba(0, 0, 0, 0)",
+      "hasCanvas": false,
+      "hasRoot": true,
+      "bodyText": ""
+    },
+    {
+      "title": "Aggregator",
+      "src": "/aggregator/",
+      "access": "ok",
+      "childCount": 2,
+      "bg": "rgba(0, 0, 0, 0)",
+      "hasCanvas": false,
+      "hasRoot": true,
+      "bodyText": ""
+    },
+    {
+      "title": "Aussuchen",
+      "src": "/aussuchen/",
+      "access": "ok",
+      "childCount": 2,
+      "bg": "rgba(0, 0, 0, 0)",
+      "hasCanvas": false,
+      "hasRoot": true,
+      "bodyText": ""
+    },
+    {
+      "title": "Bearbeiten",
+      "src": "/bearbeiten/",
+      "access": "ok",
+      "childCount": 2,
+      "bg": "rgba(0, 0, 0, 0)",
+      "hasCanvas": false,
+      "hasRoot": true,
+      "bodyText": ""
+    },
+    {
+      "title": "Verfolgen",
+      "src": "/verfolgen/",
+      "access": "ok",
+      "childCount": 2,
+      "bg": "rgba(0, 0, 0, 0)",
+      "hasCanvas": false,
+      "hasRoot": true,
+      "bodyText": ""
+    }
+  ],
+  "errors": []
+}

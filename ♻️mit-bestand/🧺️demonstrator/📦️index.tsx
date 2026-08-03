@@ -52,10 +52,14 @@ function paneRow(paneIndex: number): number {
   return Math.floor(paneIndex / DEMONSTRATOR_GRID_COLUMNS);
 }
 
+/** @emoji 🔗 Navigates into a pane. Dev uses the playground's own Vite origin so absolute `/@vite`,
+ * `/asset`, and `/@fs` URLs resolve; production keeps the static same-origin `/slug/` path. */
 function paneAppUrl(pane: DemonstratorAppPane): string {
+  if (import.meta.env.DEV) return `http://127.0.0.1:${pane.devPort}/`;
   return pane.href;
 }
 
+/** @emoji 🖼️ Iframe preview src — same origin rules as {@link paneAppUrl}; path-prefix proxies break Vite. */
 function paneEmbedUrl(pane: DemonstratorAppPane): string {
   return paneAppUrl(pane);
 }
@@ -309,8 +313,8 @@ function DemonstratorLanding() {
                 onMouseEnter={() => {
                   hoveredPaneIdRef.current = pane.id;
                   setHoveredPaneId(pane.id);
-                  scrollTargetRef.current = scrollOffsetForPaneIndex(paneIndex);
-                  refreshRevealRect(pane.id, scrollCurrentRef.current);
+                  applyPaneScroll(paneIndex);
+                  refreshRevealRect(pane.id, scrollOffsetForPaneIndex(paneIndex));
                 }}
                 onMouseLeave={() => {
                   if (hoveredPaneIdRef.current === pane.id) {

@@ -1,0 +1,82 @@
+$ bun ./📜️script.ts nx run @semio-tech/ui-react:typecheck
+
+> nx run @semio-tech/ui-react:typecheck
+
+> bun ./📜️script.ts typecheck
+
+../../../../../⚡️implementation/🟦️typescript/📦️index.ts(59,8): error TS2307: Cannot find module './generated/manifest.ts' or its corresponding type declarations.
+../../../../../⚡️implementation/🟦️typescript/📦️index.ts(1926,53): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+../../../../../⚡️implementation/🟦️typescript/📦️index.ts(2608,23): error TS2358: The left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+../../../../../⚡️implementation/🟦️typescript/📦️index.ts(2608,96): error TS2352: Conversion of type 'string' to type 'ArrayBuffer' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+📦️index.tsx(1455,33): error TS2322: Type 'string' is not assignable to type '"s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | "trinity" | "writer" | "window" | ... 229 more ... | "zoom-out"'.
+📦️index.tsx(2799,49): error TS2345: Argument of type 'Node' is not assignable to parameter of type 'Node | null'.
+📦️index.tsx(6449,71): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+📦️index.tsx(6944,35): error TS7006: Parameter '_' implicitly has an 'any' type.
+📦️index.tsx(6944,38): error TS7006: Parameter 'index' implicitly has an 'any' type.
+📦️index.tsx(7078,111): error TS7006: Parameter 'id' implicitly has an 'any' type.
+📦️index.tsx(7132,36): error TS7006: Parameter 'interaction' implicitly has an 'any' type.
+📦️index.tsx(7132,49): error TS7006: Parameter 'index' implicitly has an 'any' type.
+📦️index.tsx(7568,39): error TS2322: Type '"gauge"' is not assignable to type 'ControlIcon'.
+📦️index.tsx(7748,31): error TS7006: Parameter 'def' implicitly has an 'any' type.
+📦️index.tsx(8618,29): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { size?: number | undefined; }, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | ... 4 more ... | undefined', gave the following error.
+    Type '{ size: number; className: string; }' is not assignable to type 'IntrinsicAttributes & { size?: number | undefined; }'.
+      Property 'className' does not exist on type 'IntrinsicAttributes & { size?: number | undefined; }'.
+  Overload 2 of 2, '(props: { size?: number | undefined; }): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | ... 4 more ... | undefined', gave the following error.
+    Type '{ size: number; className: string; }' is not assignable to type 'IntrinsicAttributes & { size?: number | undefined; }'.
+      Property 'className' does not exist on type 'IntrinsicAttributes & { size?: number | undefined; }'.
+📦️index.tsx(9260,10): error TS2741: Property 'children' is missing in type '{ ref: RefObject<HTMLDivElement | null>; sessionGhost: false; "data-level": string; "data-slot": string; "data-anchor": "top-left" | "top-middle" | "top-right" | ... 4 more ... | "left-middle"; "data-panel-chrome-tab-bar-placeholder": string; "aria-hidden": "true"; className: string; style: { ...; } | undefined; }' but required in type 'GhostRegionShellProps'.
+📦️index.tsx(9423,15): error TS2540: Cannot assign to 'right' because it is a read-only property.
+📦️index.tsx(9923,16): error TS2322: Type '{ xmlns: string; className: string; style: { width: string; height: string; }; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+  Property 'xmlns' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+📦️index.tsx(15820,94): error TS2322: Type 'string' is not assignable to type '"s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | "trinity" | "writer" | "window" | ... 229 more ... | "zoom-out"'.
+📦️index.tsx(28320,7): error TS2322: Type 'readonly { id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }[] | { ...; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }[]'.
+  Type '{ id: string; title: string; iconId: string; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }[]'.
+    Type '{ id: string; title: string; iconId: string; }' is not assignable to type '{ id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }'.
+      Types of property 'iconId' are incompatible.
+        Type 'string' is not assignable to type '"s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | "trinity" | "writer" | "window" | ... 229 more ... | "zoom-out"'.
+📦️index.tsx(29027,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: string; utilityBar: JSX.Element; utilityBarFolded: false; children: JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(29087,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: string; children: JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(33355,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }'.
+📦️index.tsx(33358,44): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }'.
+📦️index.tsx(33366,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "s" | "home" | "animate" | "architect" | "dag" | "draw" | "flow" | "forms" | "imperative" | "layout" | "note" | "puzzle" | "raster" | "sequence" | ... 232 more ... | "zoom-out"; }'.
+📦️index.tsx(34313,17): error TS2741: Property 'iconId' is missing in type '{ id: string; title: string; active: true; search: { input: { id: string; value: string; placeholder: string; onChange: React.Dispatch<React.SetStateAction<string>>; }; }; children: JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(34498,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: string; active: true; search: { input: { value: string; placeholder: string; onChange: () => void; onAbort: () => number; }; }; children: JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+../../../🎨️styling/⚡️implementation/🟦️typescript/📦️index.ts(226,29): error TS2540: Cannot assign to 'aliases' because it is a read-only property.
+../../../🎨️styling/⚡️implementation/🟦️typescript/📦️index.ts(227,30): error TS2540: Cannot assign to 'variants' because it is a read-only property.
+../../../🎨️styling/⚡️implementation/🟦️typescript/📦️index.ts(228,35): error TS2540: Cannot assign to 'themedAliases' because it is a read-only property.
+../../../🎨️styling/⚡️implementation/🟦️typescript/📦️index.ts(229,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
+../../../🖼️asset/⚡️implementation/🟦️typescript/🟦️icon_resolver.ts(6,15): error TS2305: Module '"../../../../\uD83E\uDDEE\uFE0Fmath/\uD83D\uDD78\uFE0Fgraph/\uD83D\uDDE3\uFE0Fdsl/\uD83E\uDEC0\uFE0Fcore/\u26A1\uFE0Fimplementation/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex.ts"' has no exported member 'UiThemeIcons'.
+../../../../🖼️asset/⚡️implementation/🟦️typescript/🟦️icon_resolver.ts(6,15): error TS2305: Module '"../../../\uD83E\uDDEE\uFE0Fmath/\uD83D\uDD78\uFE0Fgraph/\uD83D\uDDE3\uFE0Fdsl/\uD83E\uDEC0\uFE0Fcore/\u26A1\uFE0Fimplementation/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDFE6\uFE0Ftypescript/\uD83D\uDCE6\uFE0Findex.ts"' has no exported member 'UiThemeIcons'.
+../../../../../🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts(1411,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts(1412,81): error TS2339: Property 'toString' does not exist on type 'never'.
+Warning: command "bun ./📜️script.ts typecheck" exited with non-zero status code
+
+
+ NX   Running target typecheck for project @semio-tech/ui-react failed
+
+Failed tasks:
+
+- @semio-tech/ui-react:typecheck
+
+Hint: run the command with --verbose for more details.
+
+1361 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1362 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1363 |  */
+1364 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1365 |   const status = runCmdInternal(cmd, args, opts);
+1366 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/ui-react:typecheck exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:1366:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:563:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:814:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts:849:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:2903:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

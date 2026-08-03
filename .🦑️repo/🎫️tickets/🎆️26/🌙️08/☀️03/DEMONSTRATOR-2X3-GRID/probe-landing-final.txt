@@ -1,0 +1,86 @@
+[DEBUG] loading=0 canvas=0 ui=0 127.0.0.1:6027/ c=0 load=false | 127.0.0.1:6028/ c=0 load=false | 127.0.0.1:6023/ c=0 load=false | 127.0.0.1:6030/ c=0 load=false | 127.0.0.1:6031/ c=0 load=false | 127.0.0.1:6032/ c=0 load=false
+[DEBUG] loading=0 canvas=5 ui=6 127.0.0.1:6027/ c=0 load=false | 127.0.0.1:6028/ c=4 load=false | 127.0.0.1:6023/ c=2 load=false | 127.0.0.1:6030/ c=1 load=false | 127.0.0.1:6031/ c=1 load=false | 127.0.0.1:6032/ c=1 load=false
+{
+  "frameSnaps": [
+    {
+      "url": "http://127.0.0.1:6027/",
+      "rootChildren": 3,
+      "canvas": 0,
+      "loading": false,
+      "bodyText": "Dokument | Katalog | Inspektion | Vollbild | semio · procedural · 3d | Beispiel | Hexagonal Mushroom Column | Edit"
+    },
+    {
+      "url": "http://127.0.0.1:6028/",
+      "rootChildren": 3,
+      "canvas": 4,
+      "loading": false,
+      "bodyText": "Dokument | Katalog | Inspektion | Vollbild | semio · cad | Beispiel | Hexagonal Cut Concrete Forest Left | Shape | F"
+    },
+    {
+      "url": "http://127.0.0.1:6023/",
+      "rootChildren": 3,
+      "canvas": 2,
+      "loading": false,
+      "bodyText": "Dokument | Katalog | Inspektion | Vollbild | Entwerfen mit Bestand · Aggregator | Beispiel | Concrete Forest | Top"
+    },
+    {
+      "url": "http://127.0.0.1:6030/",
+      "rootChildren": 3,
+      "canvas": 1,
+      "loading": false,
+      "bodyText": "Dokument | Vollbild | semio · sourcing · curate | Beispiel | Demo Stock | Pool | Fokussieren | Schließen | Beams | Win"
+    },
+    {
+      "url": "http://127.0.0.1:6031/",
+      "rootChildren": 3,
+      "canvas": 1,
+      "loading": false,
+      "bodyText": "Dokument | Katalog | Workshop | Inspektion | Vollbild | semio · process · 3d | Beispiel | Timber Beam Joinery | Work"
+    },
+    {
+      "url": "http://127.0.0.1:6032/",
+      "rootChildren": 3,
+      "canvas": 1,
+      "loading": false,
+      "bodyText": "Dokument | Katalog | Inspektion | Vollbild | semio · gis · 2d | Beispiel | Reuse Map | Map | Schließen | Fensteroption"
+    }
+  ],
+  "panes": [
+    {
+      "href": "http://127.0.0.1:6027/",
+      "x": 240,
+      "y": 225,
+      "label": "GeneratorParametrische AbläufeDemonstrat"
+    },
+    {
+      "href": "http://127.0.0.1:6028/",
+      "x": 720,
+      "y": 225,
+      "label": "KoordinatorModelle koordinierenDemonstra"
+    },
+    {
+      "href": "http://127.0.0.1:6023/",
+      "x": 1200,
+      "y": 225,
+      "label": "AggregatorBestand zusammensetzenDemonstr"
+    },
+    {
+      "href": "http://127.0.0.1:6030/",
+      "x": 240,
+      "y": 675,
+      "label": "AussuchenBestand sichtenDemonstrator öff"
+    },
+    {
+      "href": "http://127.0.0.1:6031/",
+      "x": 720,
+      "y": 675,
+      "label": "BearbeitenBauteile anpassenDemonstrator "
+    },
+    {
+      "href": "http://127.0.0.1:6032/",
+      "x": 1200,
+      "y": 675,
+      "label": "VerfolgenHerkunft verfolgenDemonstrator "
+    }
+  ]
+}

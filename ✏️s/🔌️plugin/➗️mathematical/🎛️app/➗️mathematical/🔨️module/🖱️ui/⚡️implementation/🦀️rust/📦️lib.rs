@@ -296,7 +296,7 @@ pub fn create_mathematical_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("math-app")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(MATH_WINDOW_GRAPH, "Graph", MATH_BODY_GRAPH, SurfaceKind::NodeGraph, "math-graph")
             .window_kind(MATH_WINDOW_GEOMETRY, "Geometry", MATH_BODY_GEOMETRY, SurfaceKind::Canvas2d, "hexagon")
@@ -326,7 +326,7 @@ pub fn create_mathematical_app() -> App {
             // source of truth, reused here rather than duplicated.
             .io(mathematical_io()),
     )
-    .example("demo", "Demo", <MathProjection as store::DocumentDsl>::print_dsl(&MathProjection::default()), "flask-conical")
+    .example("demo", "Demo", <MathProjection as store::DocumentDsl>::print_dsl(&MathProjection::default()), "cylinder")
     .workflow("mathematical", "Mathematical", "graph")
 }
 //#endregion 🔖️Manifest

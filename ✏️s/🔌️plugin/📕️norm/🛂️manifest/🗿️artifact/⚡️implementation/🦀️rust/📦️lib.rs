@@ -303,7 +303,7 @@ macro_rules! define_norm_family_app {
                             import_formats: vec![],
                         })
                         .io(norm_io($variant, concat!("semio.norm.", $variant, "/v1"), ARTIFACT_KIND_ID))
-                        .mode("edit", "Edit", "square-pen")
+                        .mode("edit", "Edit", "pencil")
                         .default_mode_id("edit")
                         .window_kind(WINDOW_INPUTS, "Inputs", BODY_INPUTS, SurfaceKind::Canvas2d, "download")
                         .window_kind(WINDOW_RESULTS, "Results", BODY_RESULTS, SurfaceKind::Canvas2d, "bar-chart-3")

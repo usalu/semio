@@ -1503,7 +1503,7 @@ pub fn create_rewrite_app() -> App {
     App::from_builder(
         App::builder(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite").document(["semio", "trinity", "rewrite"])
             .icon_id("trinity-rewrite")
-            .mode("explore", "Explore", "compass")
+            .mode("explore", "Explore", "focus")
             .default_mode_id("explore")
             .window_kind(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, "Before", TRINITY_REWRITE_PLAY_BODY_BEFORE, SurfaceKind::NodeGraph, "git-branch")
             .window_kind(TRINITY_REWRITE_PLAY_WINDOW_AFTER, "After", TRINITY_REWRITE_PLAY_BODY_AFTER, SurfaceKind::NodeGraph, "arrow-right")

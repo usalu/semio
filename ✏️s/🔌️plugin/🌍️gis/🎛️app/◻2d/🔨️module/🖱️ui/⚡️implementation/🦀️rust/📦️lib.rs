@@ -1229,7 +1229,7 @@ pub fn create_gis2d_app() -> App {
             .media_input(gis2d_features_in_port())
             .media_output(gis2d_map_out_port())
             .icon_id("gis2d")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(GIS2D_PLAY_WINDOW_MAIN, "Map", GIS2D_PLAY_BODY_COMPOSITE, SurfaceKind::TiledMap, "globe")
             .default_layout(create_default_layout(

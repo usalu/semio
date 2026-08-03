@@ -282,6 +282,9 @@ import {
   type TutorialSlice,
   type TutorialClockPort,
   type TutorialChapterMarker,
+  type ShellScope,
+  createShellScope,
+  ShellScopeProvider,
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/ui-asset";
 import {
@@ -310,7 +313,9 @@ import {
   NamedLayoutStore,
   createBrowserStoragePort,
   createMemoryStoragePort,
+  createScopedStoragePort,
   createNamedLayout,
+  type StoragePort,
   type DockSkeleton,
   type DockUiPanelState,
   type DockUiState,
@@ -848,7 +853,8 @@ export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, onAction: UiIn
     selectedIds: treeNode.selectedIds as string[] | undefined,
     highlightedIds: treeNode.highlightedIds,
     onSelectionChange: treeNode.selectionChange ? (selectedIds) => dispatchUiAction(onAction, treeNode.selectionChange!, { ids: selectedIds }) : undefined,
-    sortableSections: sections.length > 1,
+    // 🌲️ Match Settings/Theme: section drag handles only when the tree declares drop/reorder intent.
+    sortableSections: Boolean(treeNode.dropAction) && sections.length > 1,
   };
 }
 
@@ -901,8 +907,8 @@ function DeclarativeTreePanel({ treeNode, onAction }: { readonly treeNode: UiTre
       waiting: section.waiting,
       items: uiTreeItemsToTreeData(section.items, onAction),
     }));
-    return { sections, sortableSections: sections.length > 1 };
-  }, [onAction, treeNode.sections]);
+    return { sections, sortableSections: Boolean(treeNode.dropAction) && sections.length > 1 };
+  }, [onAction, treeNode.dropAction, treeNode.sections]);
   const config = useMemo(
     (): TreePanelConfig => ({
       ...sectionConfig,
@@ -3320,22 +3326,130 @@ function isTreeNode(node: UiNode): node is UiTreeNode {
 }
 
 export function uiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
-  if (isTreeNode(node)) return { ...uiTreeNodeToTreePanelConfig(node, onAction), dragAndDropController: declarativeTreeDragController(node, onAction) };
+  if (isTreeNode(node)) {
+    return {
+      ...uiTreeNodeToTreePanelConfig(node, onAction),
+      dragAndDropController: node.dropAction ? declarativeTreeDragController(node, onAction) : undefined,
+    };
+  }
+  return declarativeUiNodeToTreePanelConfig(node, onAction);
+}
+
+/** @emoji 🌲️ Maps non-tree declarative UI (stack/section/field/controls) to the same TreePanel shape Settings/Theme use — never an empty-label wrapper host (that rendered as a lone document icon above nested content). */
+function declarativeUiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
+  if (node.type === "stack") {
+    const emphasized = node.children.find((child) => child.type === "text" && child.emphasize);
+    const bodyChildren = node.children.filter((child) => !(child.type === "text" && child.emphasize));
+    const sectionNodes = bodyChildren.filter((child) => child.type === "section");
+    if (sectionNodes.length > 0 && sectionNodes.length === bodyChildren.length) {
+      return {
+        sections: sectionNodes.map((section) => ({
+          id: section.id,
+          label: section.label ?? "",
+          defaultOpen: section.defaultOpen,
+          items: section.children.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${section.id}.${index}`, onAction)),
+        })),
+        sortableSections: false,
+      };
+    }
+    return {
+      sections: [
+        {
+          id: node.id ?? "panel.body",
+          label: emphasized && emphasized.type === "text" ? emphasized.value : "",
+          defaultOpen: true,
+          items: bodyChildren.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${node.id ?? "panel.body"}.${index}`, onAction)),
+        },
+      ],
+      sortableSections: false,
+    };
+  }
+  if (node.type === "section") {
+    return {
+      sections: [
+        {
+          id: node.id,
+          label: node.label ?? "",
+          defaultOpen: node.defaultOpen,
+          items: node.children.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${node.id}.${index}`, onAction)),
+        },
+      ],
+      sortableSections: false,
+    };
+  }
   return {
     sections: [
       {
         id: "panel.body",
         label: "",
-        items: [
-          {
-            id: "panel.body.content",
-            label: "",
-            control: <ChromeAwareWindowScrollSurface className="min-h-0 flex-1">{interpretUiNode(node, { onAction })}</ChromeAwareWindowScrollSurface>,
-          },
-        ],
+        defaultOpen: true,
+        items: declarativeUiChildToTreeItems(node, "panel.body.0", onAction),
       },
     ],
+    sortableSections: false,
   };
+}
+
+function isUiControlNode(node: UiNode): node is UiControlNode {
+  switch (node.type) {
+    case "button":
+    case "input":
+    case "select":
+    case "toggle":
+    case "slider":
+    case "numberStepper":
+    case "ring":
+    case "iconSelect":
+    case "keyValue":
+      return true;
+    default:
+      return false;
+  }
+}
+
+function declarativeUiChildToTreeItems(node: UiNode, fallbackId: string, onAction: (action: ActionDescriptor) => void): TreeDataItem[] {
+  switch (node.type) {
+    case "field": {
+      const control = isUiControlNode(node.child) ? renderUiControl(node.child, onAction) : <InterpretedUiNode node={node.child} onAction={onAction} />;
+      return [{ id: node.id, label: node.label, description: node.description, control }];
+    }
+    case "text":
+      return [{ id: `${fallbackId}.text`, label: node.value }];
+    case "button":
+      return [{ id: node.id ?? fallbackId, label: node.label, control: renderUiControl(node, onAction) }];
+    case "input":
+    case "select":
+    case "toggle":
+    case "slider":
+    case "numberStepper":
+    case "ring":
+    case "iconSelect":
+    case "keyValue":
+      return [{ id: node.id, label: node.placeholder ?? node.id, control: renderUiControl(node, onAction) }];
+    case "stack":
+      return node.children.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${fallbackId}.${index}`, onAction));
+    case "group":
+      return [
+        {
+          id: node.id,
+          label: node.label,
+          defaultOpen: node.defaultOpen,
+          items: node.children.flatMap((child, index) => declarativeUiChildToTreeItems(child, `${node.id}.${index}`, onAction)),
+        },
+      ];
+    case "tree":
+      return uiTreeNodeToTreePanelConfig(node, onAction).sections.flatMap((section) => section.items);
+    case "separator":
+      return [{ id: `${fallbackId}.sep`, label: "—" }];
+    default:
+      return [
+        {
+          id: fallbackId,
+          label: node.type,
+          control: <ChromeAwareWindowScrollSurface className="min-h-0 flex-1">{interpretUiNode(node, { onAction })}</ChromeAwareWindowScrollSurface>,
+        },
+      ];
+  }
 }
 
 function shellTabIcon(iconId: IconName | string): React.FC<{ size?: number }> {
@@ -5115,7 +5229,7 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   bootstrapElementsSurfaceChromeDocument(locks.appearance ?? (ephemeral ? "system" : readStoredUiChromeAppearance()));
   // 🐢️ No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
-  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} locks={locks} defaults={defaults} brand={options.brand} />);
+  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
 }
 //#endregion Boot
 
@@ -5322,7 +5436,59 @@ class TutorialRecorder {
 }
 //#endregion 🎥️TutorialRecorder
 
-export function FrameworkOsShell({
+//#region 🐚️ShellMount
+/** @emoji 🐚️ Public props for {@link FrameworkOsShell} — the multi-instance-safe entry point. `shellId`,
+ * `storageNamespace`, and `ownsPage` exist so several shells can be mounted on one page: `ownsPage`
+ * gates the handful of behaviors that are legitimately page-global (document title, browser history
+ * sync via `bootFrameworkOs`), `storageNamespace` prefixes this shell's durable storage keys so
+ * co-mounted shells don't share `semio.os.dock`/`ui.chrome.*` state. */
+export interface FrameworkOsShellProps {
+  readonly pluginFilter?: string;
+  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly appId?: string;
+  readonly locks?: ResolvedShellLocks;
+  readonly defaults?: FrameworkOsDefaults;
+  readonly brand?: ShellBrand;
+  readonly shellId?: string;
+  readonly storageNamespace?: string;
+  readonly ownsPage?: boolean;
+}
+
+/** @emoji 🐚️ Resolves the {@link ShellScope.storage} port for a shell mount: ephemeral brands always get
+ * an in-memory port (never durable, regardless of namespace); a namespaced non-ephemeral shell gets a
+ * scoped view over browser storage; a bare non-ephemeral shell (the historical single-app-per-page
+ * case) gets the plain shared browser port. */
+function resolveShellScopeStorage(ephemeral: boolean, storageNamespace: string | undefined): StoragePort {
+  if (ephemeral) return createMemoryStoragePort();
+  const browser = createBrowserStoragePort();
+  return storageNamespace ? createScopedStoragePort(browser, storageNamespace) : browser;
+}
+
+/** @emoji 🐚️ Mounts a `.semio-scope` root (theme/appearance/id scoping lands with later waves) carrying a
+ * {@link ShellScope} — the seam that lets several of these coexist on one page — around the actual shell
+ * implementation in {@link FrameworkOsShellInner}. */
+export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactElement {
+  const { shellId, storageNamespace, ownsPage = false, brand, ...innerProps } = props;
+  const ephemeral = isEphemeralShellBrand(brand);
+  const [scope] = useState<ShellScope>(() => createShellScope({ shellId, ownsPage, storage: resolveShellScopeStorage(ephemeral, storageNamespace) }));
+  const setRoot = useCallback((node: HTMLDivElement | null) => {
+    scope.rootRef.current = node;
+  }, [scope]);
+  const setPortalLayer = useCallback((node: HTMLDivElement | null) => {
+    scope.portalLayerRef.current = node;
+  }, [scope]);
+  return (
+    <div ref={setRoot} className="semio-scope" data-shell-id={scope.shellId} style={{ height: "100%", width: "100%", isolation: "isolate" }}>
+      <ShellScopeProvider scope={scope}>
+        <FrameworkOsShellInner {...innerProps} brand={brand} />
+        <div data-semio-portal-layer ref={setPortalLayer} />
+      </ShellScopeProvider>
+    </div>
+  );
+}
+//#endregion 🐚️ShellMount
+
+function FrameworkOsShellInner({
   pluginFilter,
   plugins,
   appId,
@@ -8065,7 +8231,8 @@ export function FrameworkOsShell({
   );
   const introductionUtilityId = useMemo(() => {
     if (!session) return null;
-    return introductionElementIds.find((id) => session.app.utilities.some((utility) => utility.id === id)) ?? null;
+    const utilities = session.app.utilities ?? [];
+    return introductionElementIds.find((id) => utilities.some((utility) => utility.id === id)) ?? null;
   }, [introductionElementIds, session]);
   const introductionActionWindowSegment = useMemo(() => {
     for (const id of introductionElementIds) {

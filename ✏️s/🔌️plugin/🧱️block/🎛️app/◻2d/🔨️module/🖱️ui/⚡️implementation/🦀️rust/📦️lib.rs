@@ -346,7 +346,7 @@ pub fn create_block2d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("layout-grid")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(BLOCK2D_WINDOW_BOARD, "Node Kind", BLOCK2D_BODY_BOARD, SurfaceKind::Board2d, "layout-grid")
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, BLOCK2D_BODY_DOCUMENT)
@@ -363,8 +363,8 @@ pub fn create_block2d_app() -> App {
             .view_action("setSelection", "Set Selection")
             .io(block_2d_engine::block2d_io()),
     )
-    .example(BLOCK2D_EXAMPLE_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "trees")
-    .example(BLOCK2D_EXAMPLE_RIGHT, "Hexagonal Cut Concrete Forest Right", serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "trees")
+    .example(BLOCK2D_EXAMPLE_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
+    .example(BLOCK2D_EXAMPLE_RIGHT, "Hexagonal Cut Concrete Forest Right", serde_json::to_string(&block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "list-tree")
     .workflow("block2d", "Block 2D", "model")
 }
 //#endregion 🔖️Manifest

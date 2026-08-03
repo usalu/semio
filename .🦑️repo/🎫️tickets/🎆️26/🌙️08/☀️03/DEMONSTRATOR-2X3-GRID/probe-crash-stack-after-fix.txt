@@ -1,0 +1,34 @@
+{
+  "aussuchen": {
+    "snap": {
+      "title": "Entwerfen mit Bestand · Aussuchen",
+      "rootChildren": 6,
+      "bodyText": "Dokument\nVollbild\nsemio · sourcing · curate\nBeispiel\nDemo Stock\nPool\nFokussieren\nSchließen\nBeams\nWindows\nSlabs\nAuswählen\nName\tModule\tTypology\tAvailability\tCurated\n\nGlulam GL24h 200×400\n\t\nbeams\n\t\nbeams / solid-timber / glulam\n\t\n24\n\t\n−\n+\n\n\nKVH C24 100×200\n\t\nbeams\n\t\nbeams / solid-timber / kvh\n\t\n60\n\t\n−\n+\n\n\nSteel IPE 200\n\t\nbeams\n\t\nbeams / steel / ipe\n\t\n12\n\t\n−\n+\n\n\nSteel HEA 160\n\t\nbeams\n\t\nbeams / steel /",
+      "canvas": [
+        {
+          "w": 410,
+          "h": 627
+        }
+      ]
+    },
+    "errors": [
+      "console: [DEBUG] action failed setActiveExample {exampleId: demo-stock} Error: [DEBUG] action 'setActiveExample' failed (handler): action 'setActiveExample' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) —              app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)\n    at performCommand (http://127.0.0.1:6030/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%E2%9A%9B%EF%B8%8Freact/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.tsx?t=1785753832524:7811:13)"
+    ]
+  },
+  "verfolgen": {
+    "snap": {
+      "title": "Entwerfen mit Bestand · Verfolgen",
+      "rootChildren": 6,
+      "bodyText": "Dokument\nKatalog\nInspektion\nVollbild\nsemio · gis · 2d\nBeispiel\nReuse Map\nMap\nSchließen\nFensteroptionen\nAktionen\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nund\nGefördert durch\nEinstellungen\nVerlauf\nBefehl\nSuche\n\nNach Elementen suchen\n\nFinden\n\nElemente in dieser Ansicht finden\n\nDie Karte\nÜberspringen\n\nIm Verfolgen sehen Sie, woher Bestandskomponenten stammen und wohin sie gehen. Zoomen Sie",
+      "canvas": [
+        {
+          "w": 1267,
+          "h": 627
+        }
+      ]
+    },
+    "errors": [
+      "NoCompatibleDevice\n"
+    ]
+  }
+}

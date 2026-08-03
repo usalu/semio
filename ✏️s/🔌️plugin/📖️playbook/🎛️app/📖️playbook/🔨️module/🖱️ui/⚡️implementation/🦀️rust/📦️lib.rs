@@ -277,7 +277,7 @@ pub fn create_playbook_play_app() -> App {
                 export_formats: vec![],
                 import_formats: vec![],
             })
-            .mode("builder", "Builder", "blocks")
+            .mode("builder", "Builder", "component")
             .default_mode_id("builder")
             .window_kind(PLAYBOOK_PLAY_WINDOW_BUILDER, "Builder", PLAYBOOK_PLAY_BODY_BUILDER, SurfaceKind::BlockList, "clipboard-list")
             .default_layout(create_default_layout(&[PLAYBOOK_PLAY_WINDOW_BUILDER.into()], "row", None, None))

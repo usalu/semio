@@ -7,9 +7,6 @@ rust-version = "1.88"
 
 [lints]
 workspace = true
-[package.metadata.component]
-package = "semio:process-module-robotic"
-
 [package.metadata.semio]
 contributes = ["process.machines"]
 
@@ -17,12 +14,12 @@ contributes = ["process.machines"]
 wasm-opt = false
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/🏭️process/🧩️extension/🤖️robotic/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
 process_3d = { path = "../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-process-3d" }
-semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 serde_json = "1.0.140"
 

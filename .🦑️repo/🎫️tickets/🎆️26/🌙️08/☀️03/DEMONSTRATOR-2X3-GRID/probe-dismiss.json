@@ -1,0 +1,134 @@
+{
+  "controls": [
+    {
+      "tag": "A",
+      "text": "GeneratorParametrische AbläufeDemonstrator öffnen",
+      "aria": null,
+      "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+    },
+    {
+      "tag": "A",
+      "text": "KoordinatorModelle koordinierenDemonstrator öffnen",
+      "aria": null,
+      "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+    },
+    {
+      "tag": "A",
+      "text": "AggregatorBestand zusammensetzenDemonstrator öffnen",
+      "aria": null,
+      "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+    },
+    {
+      "tag": "A",
+      "text": "AussuchenBestand sichtenDemonstrator öffnen",
+      "aria": null,
+      "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+    },
+    {
+      "tag": "A",
+      "text": "BearbeitenBauteile anpassenDemonstrator öffnen",
+      "aria": null,
+      "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+    },
+    {
+      "tag": "A",
+      "text": "VerfolgenHerkunft verfolgenDemonstrator öffnen",
+      "aria": null,
+      "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "aria": "Leibniz Universität Hannover",
+      "cls": "inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "aria": "Universität der Künste Berlin",
+      "cls": "inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Gefördert durch",
+      "aria": null,
+      "cls": "inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-mut"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Skip",
+      "aria": null,
+      "cls": "flex h-medium w-auto items-center justify-center border-0 bg-transparent transit"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Next",
+      "aria": null,
+      "cls": "text-element justify-center gap-single text-xs font-medium bg-transparent cursor"
+    }
+  ],
+  "frameSnaps": [
+    {
+      "url": "http://127.0.0.1:6027/",
+      "canvas": 3,
+      "bodyText": "Dokument | Katalog | Inspektion | Vollbild | semio · procedural · 3d | Beispiel | Hexagonal "
+    },
+    {
+      "url": "http://127.0.0.1:6028/",
+      "canvas": 4,
+      "bodyText": "Dokument | Katalog | Inspektion | Vollbild | semio · cad | Beispiel | Hexagonal Cut Concrete"
+    },
+    {
+      "url": "http://127.0.0.1:6023/",
+      "canvas": 2,
+      "bodyText": "Dokument | Katalog | Inspektion | Vollbild | Entwerfen mit Bestand · Aggregator | Beispiel"
+    },
+    {
+      "url": "http://127.0.0.1:6030/",
+      "canvas": 1,
+      "bodyText": "Dokument | Vollbild | semio · sourcing · curate | Beispiel | Demo Stock | Pool | Fokussieren"
+    },
+    {
+      "url": "http://127.0.0.1:6031/",
+      "canvas": 1,
+      "bodyText": "Dokument | Katalog | Workshop | Inspektion | Vollbild | semio · process · 3d | Beispiel | Timb"
+    },
+    {
+      "url": "http://127.0.0.1:6032/",
+      "canvas": 1,
+      "bodyText": "Dokument | Katalog | Inspektion | Vollbild | semio · gis · 2d | Beispiel | Reuse Map | Map | Sch"
+    }
+  ],
+  "panes": [
+    {
+      "href": "http://127.0.0.1:6027/",
+      "x": 240,
+      "y": 225
+    },
+    {
+      "href": "http://127.0.0.1:6028/",
+      "x": 720,
+      "y": 225
+    },
+    {
+      "href": "http://127.0.0.1:6023/",
+      "x": 1200,
+      "y": 225
+    },
+    {
+      "href": "http://127.0.0.1:6030/",
+      "x": 240,
+      "y": 675
+    },
+    {
+      "href": "http://127.0.0.1:6031/",
+      "x": 720,
+      "y": 675
+    },
+    {
+      "href": "http://127.0.0.1:6032/",
+      "x": 1200,
+      "y": 675
+    }
+  ]
+}

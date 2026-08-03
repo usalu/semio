@@ -1,9 +1,9 @@
 {
   "title": "Demonstrator 2x3 Grid",
   "emoji": "🎪",
-  "status": "open",
+  "status": "closed",
   "description": "Extend the Entwerfen mit Bestand demonstrator from a 3-app horizontal strip into a 2x3 grid by adding Aussuchen (sourcing), Bearbeiten (process 3d) and Verfolgen (gis 2d) as fully branded apps, and generalize the cursor-driven scroll and tint effect from one axis to both. Follow-up: get all six app panes loading end to end instead of white empty iframes.",
-  "summary": "",
+  "summary": "## Summary\nGot the Entwerfen-mit-Bestand demonstrator 2×3 grid working end-to-end: all six playgrounds boot, landing iframes show real app UI, and hover untints the hovered pane.\n\n### Root fixes\n1. **Aussuchen / Verfolgen white crash** — `FrameworkOsShell` called `session.app.utilities.some(...)` while empty `utilities` are omitted on the wire (`serde skip_serializing_if`). Guard with `utilities ?? []`.\n2. **Landing iframes empty under `/slug/` proxy** — Vite absolute `/@vite`, `/asset`, `/@fs` hit the landing origin and 404. In DEV, `paneAppUrl` / `paneEmbedUrl` now use `http://127.0.0.1:${devPort}/`; production keeps `/slug/`.\n3. **Hover reveal lag** — `onMouseEnter` now snaps scroll via `applyPaneScroll` so the untint hole matches the pinned pane immediately.\n4. **Earlier (same ticket)** — process machine extensions + process protocol made rlib-only so bearbeiten wasm links; six playground variants/brands/wiring.\n\n### Runtime verification\n- Direct ports 6027/6028/6023/6030/6031/6032 serve branded shells with UI (verfolgen may lack WebGPU in headless).\n- Landing 6029 iframes load all six after DEV direct-port fix; hover screenshots show CAD/sourcing/process content behind glass cards.\n- Residual noise: `setActiveExample` still rejected as non-framework-reserved on the old action path (typed command channel) — apps still boot with default examples.\n\n### Files\n- `♻️mit-bestand/🧺️demonstrator/📦️index.tsx` (DEV embed URLs, hover snap)\n- `♻️mit-bestand/🧺️demonstrator/🟦️brand.ts` (+ wiring/vite/package/launch from earlier)\n- `🧰️framework/.../renderer/.../📦️index.tsx` (utilities ?? [])\n- Process extension crates / process-3d-protocol Cargo.toml (rlib-only)\n- Ticket probes/logs under this folder\n",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": []
 }

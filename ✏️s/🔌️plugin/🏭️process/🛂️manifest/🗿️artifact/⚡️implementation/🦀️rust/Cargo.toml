@@ -11,6 +11,7 @@ workspace = true
 package = "semio:process"
 
 [package.metadata.semio]
+consumes = ["process.machines"]
 
 [[package.metadata.semio.playground]]
 variant = "process3d"

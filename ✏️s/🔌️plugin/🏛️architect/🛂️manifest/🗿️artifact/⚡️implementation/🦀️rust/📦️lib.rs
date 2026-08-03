@@ -1792,9 +1792,9 @@ fn create_architect_app() -> App {
         App::builder(ARCHITECT_APP_ID, "Architect")
             .document(["semio", "architect"])
             .icon_id("architect")
-            .mode("edit", "Edit", "square-pen")
-            .mode("review", "Review", "search-check")
-            .mode("report", "Report", "file-chart-column")
+            .mode("edit", "Edit", "pencil")
+            .mode("review", "Review", "search")
+            .mode("report", "Report", "bar-chart-3")
             .default_mode_id("edit")
             .window_kind(ARCHITECT_WINDOW_ADJACENCY, "Adjacency", ARCHITECT_BODY_ADJACENCY, SurfaceKind::Canvas2d, "grid-3x3")
             .window_kind(ARCHITECT_WINDOW_GRAPH, "Graph", ARCHITECT_BODY_GRAPH, SurfaceKind::NodeGraph, "architect-graph")
@@ -1862,7 +1862,7 @@ fn create_architect_app() -> App {
                 Some(&["Adjacency".into(), "Graph".into(), "Register".into(), "Report".into()]),
             )),
     )
-    .example("sample", "Sample Clinic", serde_json::to_string(&sample_plugin()).expect("sample_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"), "flask-conical")
+    .example("sample", "Sample Clinic", serde_json::to_string(&sample_plugin()).expect("sample_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"), "cylinder")
     .example("empty", "Empty Program", serde_json::to_string(&empty_plugin()).expect("empty_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"), "file")
     .workflow("architect", "Architect", "data")
 }

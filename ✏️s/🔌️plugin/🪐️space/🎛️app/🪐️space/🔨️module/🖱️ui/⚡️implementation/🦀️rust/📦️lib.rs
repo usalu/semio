@@ -1924,7 +1924,7 @@ mod tests {
     fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str], document_schema: &str, ports: Vec<MediaPortSpec>) -> AppDefinition {
         let definition = App::builder(app_id, label)
             .document(document.iter().map(|segment| segment.to_string()))
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .window_kind("main", "Main", format!("{app_id}.main"), SurfaceKind::Canvas2d, "square-pen")
             .io(AppIo::from_document(document_schema, MediaType { class: MediaClass::Data, form: MediaForm::Value }, ArtifactPresentation { id: app_id.into(), name: label.into(), dimension: String::new(), component_kind: app_id.into() }).with_ports(ports))
             .build_definition();

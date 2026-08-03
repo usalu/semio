@@ -1393,7 +1393,7 @@ pub fn create_remodel_app() -> App {
             .icon_id("remodel-app")
             .mode("capture", "Capture", "camera")
             .mode("model", "Model", "box")
-            .mode("analyze", "Analyze", "microscope")
+            .mode("analyze", "Analyze", "search")
             .default_mode_id("model")
             .window_kind(REMODEL_PLAY_WINDOW_MAIN, "Model", REMODEL_PLAY_BODY_MAIN, SurfaceKind::World3d, "remodel-model")
             .window_kind(REMODEL_PLAY_WINDOW_FRAMES, "Frames", REMODEL_PLAY_BODY_FRAMES, SurfaceKind::Canvas2d, "layout-grid")

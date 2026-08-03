@@ -804,7 +804,7 @@ pub fn create_procedural2d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("procedural2d")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .mode("generate", "Generate", "sparkles")
             .default_mode_id("edit")
             .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL2D_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "flow-graph")

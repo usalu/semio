@@ -1,0 +1,13 @@
+{
+  "title": "Compile-Time Checked UI Labels Across Locale, Terminology and Brand",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Make wrong-language/wrong-terminology/wrong-brand UI labels impossible to ship: generate Locale/Terminology as cross-language enums (JSON -\u003e Rust + TS, mirroring the icon/entity-kinds codegen precedent), extend app_labels! to an exhaustive two-axis (locale x terminology) macro, introduce a Label/LabelText/LocalizedLabel type family in ui_wgpu that replaces every raw String label on the UiNode wire and the app manifest, delete the stringly-typed AppLabelsOverlay runtime patch entirely, brand a UiLabel type on the TS/React side so component text props reject plain string literals, fix first-paint locale resolution (currently async, causing an English flash and the demonstrator's English \"Close\"/\"Back\" chrome under German-locked brands), lock reuse terminology on all six mit-bestand brands, and replace the dead/vacuous chrome-i18n scan gate with a structural one wired into the root verify gate. Full design in the approved plan at /Users/ueli/.claude/plans/there-are-still-plenty-sprightly-journal.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2418"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪92a06a330e1b495a8809fdfbfb9f0e00"
+  ]
+}

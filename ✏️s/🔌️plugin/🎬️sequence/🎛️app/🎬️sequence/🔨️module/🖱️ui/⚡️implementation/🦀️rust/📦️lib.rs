@@ -616,7 +616,7 @@ pub fn create_sequence_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("sequence")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(SEQUENCE_PLAY_WINDOW_MAIN, "Sequence", SEQUENCE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "list-ordered")
             .window_kind(SEQUENCE_PLAY_WINDOW_SCRIPT, "Script", SEQUENCE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor, "file-code")
@@ -690,7 +690,7 @@ pub fn create_sequence_app() -> App {
             .config(SequencePlayApp.config_spec())
             .io(sequence_engine::sequence_io()),
     )
-    .example("demo", "Demo", sequence_example_json(), "flask-conical")
+    .example("demo", "Demo", sequence_example_json(), "cylinder")
     .workflow("sequence", "Sequence", "graph")
 }
 //#endregion 🔖️Manifest

@@ -1231,7 +1231,7 @@ pub fn create_flow_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("flow")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .mode("generate", "Generate", "sparkles")
             .default_mode_id("edit")
             .window_kind(FLOW_PLAY_WINDOW_MAIN, "Flow", FLOW_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "flow-graph")
@@ -1344,7 +1344,7 @@ pub fn create_flow_app() -> App {
             // channel surface consistent with `shooting_ui::create_shooting_app`'s convention.
             .config(FlowPlayApp::default().config_spec()),
     )
-    .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"), "flask-conical")
+    .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"), "cylinder")
     .workflow("flow", "Flow", "graph")
 }
 //#endregion 🔖️Manifest

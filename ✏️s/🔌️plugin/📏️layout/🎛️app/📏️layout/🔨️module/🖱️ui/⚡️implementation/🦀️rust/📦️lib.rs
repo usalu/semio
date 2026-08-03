@@ -1650,7 +1650,7 @@ pub fn create_layout_app() -> App {
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("layout")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::Canvas2d, "layout")
             .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "preview")
@@ -1727,7 +1727,7 @@ pub fn create_layout_app() -> App {
             .config(LayoutPlayApp::default().config_spec())
             .io(layout_engine::layout_io()),
     )
-    .example("sample", "Sample", layout_engine::layout_sample_document_json(), "flask-conical")
+    .example("sample", "Sample", layout_engine::layout_sample_document_json(), "cylinder")
     .workflow("layout", "Layout", "layout")
 }
 //#endregion 🔖️Manifest

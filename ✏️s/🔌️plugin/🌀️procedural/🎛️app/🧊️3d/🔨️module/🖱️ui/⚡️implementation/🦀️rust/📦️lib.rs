@@ -1013,7 +1013,7 @@ pub fn create_procedural3d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("workflow")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .mode("generate", "Generate", "sparkles")
             .default_mode_id("edit")
             .mode_layout("generate", "procedural3d-generate")
@@ -1168,7 +1168,7 @@ pub fn create_procedural3d_app() -> App {
     .example(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECT_EXTRUDE), "box")
     .example(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_TORUS), "circle")
     .example(PROCEDURAL_EXAMPLE_BOX_FILLET, "Box Fillet Preview", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_BOX_FILLET), "box")
-    .example(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, "Sphere Box Fuse", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE), "blend")
+    .example(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, "Sphere Box Fuse", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE), "combine")
     .example(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, "Face Sweep Extrude", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE), "layers")
     .example(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, "Rectangle Wire Preview", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE), "square")
     .example(PROCEDURAL_EXAMPLE_BOX_SHELL, "Box Shell Preview", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_BOX_SHELL), "box")

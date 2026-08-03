@@ -1,0 +1,132 @@
+[DEBUG] controls [
+  {
+    "tag": "A",
+    "text": "GeneratorParametrische AbläufeDemonstrator öffnen",
+    "aria": null,
+    "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+  },
+  {
+    "tag": "A",
+    "text": "KoordinatorModelle koordinierenDemonstrator öffnen",
+    "aria": null,
+    "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+  },
+  {
+    "tag": "A",
+    "text": "AggregatorBestand zusammensetzenDemonstrator öffnen",
+    "aria": null,
+    "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+  },
+  {
+    "tag": "A",
+    "text": "AussuchenBestand sichtenDemonstrator öffnen",
+    "aria": null,
+    "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+  },
+  {
+    "tag": "A",
+    "text": "BearbeitenBauteile anpassenDemonstrator öffnen",
+    "aria": null,
+    "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+  },
+  {
+    "tag": "A",
+    "text": "VerfolgenHerkunft verfolgenDemonstrator öffnen",
+    "aria": null,
+    "cls": "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col item"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "aria": "Leibniz Universität Hannover",
+    "cls": "inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
+  },
+  {
+    "tag": "A",
+    "text": "",
+    "aria": "Universität der Künste Berlin",
+    "cls": "inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Gefördert durch",
+    "aria": null,
+    "cls": "inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-mut"
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Skip",
+    "aria": null,
+    "cls": "flex h-medium w-auto items-center justify-center border-0 bg-transparent transit"
+  },
+  {
+    "tag": "BUTTON",
+    "text": "Next",
+    "aria": null,
+    "cls": "text-element justify-center gap-single text-xs font-medium bg-transparent cursor"
+  }
+]
+[DEBUG] step 0 none
+[DEBUG] hover generator [
+  {
+    t: 0,
+    l: 0,
+    w: 1440,
+    h: 900,
+  }
+]
+[DEBUG] hover koordinator [
+  {
+    t: 0,
+    l: 0,
+    w: 588,
+    h: 900,
+  }
+]
+[DEBUG] hover aggregator [
+  {
+    t: 0,
+    l: 0,
+    w: 3,
+    h: 900,
+  }
+]
+[DEBUG] hover aussuchen [
+  {
+    t: 0,
+    l: 0,
+    w: 1440,
+    h: 221,
+  }, {
+    t: 221,
+    l: 734,
+    w: 706,
+    h: 679,
+  }
+]
+[DEBUG] hover bearbeiten [
+  {
+    t: 0,
+    l: 0,
+    w: 1440,
+    h: 15,
+  }, {
+    t: 15,
+    l: 0,
+    w: 262,
+    h: 885,
+  }
+]
+[DEBUG] hover verfolgen [
+  {
+    t: 0,
+    l: 0,
+    w: 1440,
+    h: 1,
+  }, {
+    t: 1,
+    l: 0,
+    w: 334,
+    h: 899,
+  }
+]

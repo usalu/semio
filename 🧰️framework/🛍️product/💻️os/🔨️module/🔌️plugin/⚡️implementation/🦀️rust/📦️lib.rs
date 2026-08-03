@@ -2229,7 +2229,7 @@ mod app_builder_tests {
         let result = std::panic::catch_unwind(|| {
             App::builder("bad-app", "Bad")
                 .document(["semio", "bad"])
-                .mode("edit", "Edit", "square-pen")
+                .mode("edit", "Edit", "pencil")
                 .mode_tools("edit", vec![])
                 .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .default_layout(create_default_layout(&["missing".into()], "row", None, None))
@@ -2242,7 +2242,7 @@ mod app_builder_tests {
     fn build_definition_accepts_valid_manifest() {
         let definition = App::builder("good-app", "Good")
             .document(["semio", "good"])
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .mode_tools("edit", vec![])
             .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, "good.document")
@@ -2255,12 +2255,33 @@ mod app_builder_tests {
         assert_eq!(definition.panel_tabs.len(), 2);
     }
 
+
+    #[test]
+    fn catalog_chrome_icons_resolve_to_vendored_icon_names() {
+        for mode in ["edit", "paint", "generate", "explore", "builder", "review", "report"] {
+            let icon = semio_framework_core::catalog_mode_icon_id(mode);
+            assert_eq!(IconName::from_str(icon.as_str()), Some(icon), "mode {mode} -> {}", icon.as_str());
+        }
+        assert_eq!(IconName::from("menu").as_str(), "list");
+        assert_eq!(IconName::from("square-pen").as_str(), "pencil");
+        assert_eq!(IconName::from("trees").as_str(), "list-tree");
+        let definition = App::builder("icon-app", "Icon")
+            .document(["semio", "icon"])
+            .mode("edit", "Edit", "pencil")
+            .mode_tools("edit", vec![])
+            .window_kind("main", "Main", "icon.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+            .default_layout(create_default_layout(&["main".into()], "row", None, None))
+            .build_definition();
+        assert_eq!(definition.modes.first().icon_id.as_str(), "pencil");
+    }
+
+
     #[test]
     fn build_definition_rejects_terminology_document_for_undeclared_terminology() {
         let result = std::panic::catch_unwind(|| {
             App::builder("bad-terminology-app", "Bad")
                 .document(["semio", "bad"])
-                .mode("edit", "Edit", "square-pen")
+                .mode("edit", "Edit", "pencil")
                 .mode_tools("edit", vec![])
                 .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .default_layout(create_default_layout(&["main".into()], "row", None, None))
@@ -2274,7 +2295,7 @@ mod app_builder_tests {
     fn build_definition_accepts_declared_terminology_document() {
         let definition = App::builder("good-terminology-app", "Good")
             .document(["semio", "good"])
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .mode_tools("edit", vec![])
             .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
@@ -2290,7 +2311,7 @@ mod app_builder_tests {
     fn minimal_app(id: &str) -> AppBuilder {
         App::builder(id, "App")
             .document(["semio", id])
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .window_kind("main", "Main", format!("{id}.main"), SurfaceKind::Canvas2d, IconName::AppWindow)
     }
 
@@ -3253,9 +3274,18 @@ fn history_panel_icon_id(kind: ActionKind) -> IconName {
 pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool) -> UiNode {
     let act = |action: &str, args: Option<DslValue>| ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args };
     let action_item = |id: &str, icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| {
-        let mut item = UiTreeItemNode::base(id, if is_de { label_de } else { label_en });
+        let label = if is_de { label_de } else { label_en };
+        let mut item = UiTreeItemNode::base(id, label);
         item.icon_id = Some(icon_id);
-        item.action = Some(act(action, None));
+        item.control = Some(UiControlNode::Button(UiButtonNode {
+            id: Some(format!("{id}.run")),
+            icon_id,
+            label: label.into(),
+            action: act(action, None),
+            style: None,
+            presence: if enabled { UiPresence::default() } else { UiPresence::state(UiState::Disabled) },
+            menu: None,
+        }));
         if !enabled {
             item.presence = UiPresence::state(UiState::Disabled);
         }
@@ -3948,6 +3978,14 @@ impl AppActionRegistry {
     fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
         self.commands.get(id)
     }
+
+    /// 🗂️ Ribbon-parent-taxonomy category (a `ui_wgpu::RIBBON_PARENT_CATEGORIES` id) for a declared
+    /// action id — the `organize_context_menu` `category_of` lookup at the `VcsDocumentApp::context_menu`
+    /// funnel. `None` for a command id (`CommandDefinition.category` is an unrelated footer-tab
+    /// grouping, not this taxonomy) and for any action that never called `.with_category(...)`.
+    pub fn category_of(&self, id: &str) -> Option<String> {
+        self.actions.get(id).and_then(|action| action.category.clone())
+    }
 }
 
 //#region 🖱️MenuBuilder
@@ -4080,6 +4118,24 @@ impl<'a> Menu<'a> {
             id: id.into(),
             label: Some(label.into()),
             icon: Some(icon_id.into().as_str().to_string()),
+            children: (!children.is_empty()).then_some(children),
+            ..Default::default()
+        });
+        self
+    }
+
+    /// 🗂️ Appends a taxonomy group row (`menu.group.<category>`, `label: None` — the host resolves the
+    /// localized label via `ui_wgpu::ribbon_parent_label`) built by a fresh `Menu` sharing this app's
+    /// registry. Unlike `submenu`, a group's id/label are not bespoke: `organize_context_menu` (run at
+    /// the `VcsDocumentApp::context_menu` funnel) merges every row sharing the same category across the
+    /// whole level, dedupes their children by id, and orders groups by the canonical
+    /// `RIBBON_PARENT_CATEGORIES` taxonomy — see D3/the canonical migration pattern in the
+    /// grouped-context-menu mechanism design.
+    pub fn group(mut self, category: impl Into<String>, build: impl FnOnce(Menu<'a>) -> Menu<'a>) -> Self {
+        let children = build(Menu::of(self.registry)).build();
+        self.items.push(ContextMenuItemSpec {
+            id: format!("menu.group.{}", category.into()),
+            label: None,
             children: (!children.is_empty()).then_some(children),
             ..Default::default()
         });
@@ -5253,6 +5309,9 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         app.pending_effects(&doc, &cfg)
     }
 
+    /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
+    /// single funnel — a raw-vec emitter is grouped for free, and an emitter that already built its own
+    /// `Menu::group(...)` rows is never re-flattened (`organize_context_menu` is idempotent on already-organized input).
     fn context_menu(&mut self, request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
         if self.refresh_cache().is_err() {
             return Vec::new();
@@ -5260,7 +5319,8 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         let VcsDocumentApp { app, cache, registry, .. } = self;
         let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
-        app.context_menu(request, &doc, &cfg, registry)
+        let items = app.context_menu(request, &doc, &cfg, registry);
+        ui_wgpu::organize_context_menu(items, &|id| registry.category_of(id))
     }
 
     fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
@@ -6022,35 +6082,34 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
 //#endregion 🔖️RefreshUi
 
 //#region 🔖️ContextMenu
-/// 🖱️ On-demand context-menu computation (WIT `context-menu` export's SDK entry point) — never
-/// cached, never part of `refresh_ui`. `request_json` is the combined wire shape (`{ menu, surface,
-/// windowInstanceId, point, viewState }`, matching TS `PluginContextMenuRequest`); this splits it
-/// into a typed `ViewState` (framework-core, not available inside `ui_wgpu`) plus the smaller
-/// `ContextMenuRequest` passed to `DocumentApp::context_menu`/`PluginApp::context_menu`.
-pub fn plugin_context_menu(instance_id: u32, request_json: &str) -> Result<String, String> {
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct ContextMenuWireRequest {
-        // 🧮️ B1: kept for wire-shape compatibility with the host's request payload (still sent) but no
-        // longer forwarded into `DocumentApp::context_menu`, which dropped `ViewState` entirely.
-        #[allow(dead_code)]
-        view_state: ViewState,
-        menu: UiMenuRef,
-        #[serde(default)]
-        surface: Option<ContextMenuSurfaceTarget>,
-        #[serde(default)]
-        window_instance_id: Option<String>,
-        #[serde(default)]
-        point: Option<ContextMenuPoint>,
-    }
+/// 🖱️ Wire shape for an on-demand context-menu request — mirrors TS `PluginContextMenuRequest` minus
+/// `viewState` (B1 dropped `ViewState` from `DocumentApp::context_menu` entirely, so this struct no
+/// longer parses-and-discards a field it never forwards). Module-scoped (not nested in
+/// `plugin_context_menu`) so `plugin_exchange`'s `AppCommand::ContextMenu` arm below can decode the
+/// same typed shape directly off the binary wire instead of round-tripping through JSON strings.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ContextMenuWireRequest {
+    menu: UiMenuRef,
+    #[serde(default)]
+    surface: Option<ContextMenuSurfaceTarget>,
+    #[serde(default)]
+    window_instance_id: Option<String>,
+    #[serde(default)]
+    point: Option<ContextMenuPoint>,
+}
 
+impl From<ContextMenuWireRequest> for ContextMenuRequest {
+    fn from(wire: ContextMenuWireRequest) -> Self {
+        ContextMenuRequest { menu: wire.menu, surface: wire.surface, window_instance_id: wire.window_instance_id, point: wire.point }
+    }
+}
+
+/// 🖱️ On-demand context-menu computation (WIT `context-menu` export's SDK entry point) — never
+/// cached, never part of `refresh_ui`. String-in/string-out JSON entry point for the WIT boundary.
+pub fn plugin_context_menu(instance_id: u32, request_json: &str) -> Result<String, String> {
     let wire: ContextMenuWireRequest = serde_json::from_str(request_json).map_err(|error| error.to_string())?;
-    let request = ContextMenuRequest {
-        menu: wire.menu,
-        surface: wire.surface,
-        window_instance_id: wire.window_instance_id,
-        point: wire.point,
-    };
+    let request: ContextMenuRequest = wire.into();
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
         let items = instance.app.context_menu(&request);
@@ -6240,15 +6299,20 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 }
             }
             protocol::AppCommand::ContextMenu { seq, request } => {
-                let request_value: Value = decode_wire_serialized_or(&request, Value::Null);
-                let request_json = serde_json::to_string(&request_value).unwrap_or_else(|_| "{}".into());
-                match plugin_context_menu(instance_id, &request_json) {
-                    Ok(response_json) => {
-                        let items_value = serde_json::from_str::<Value>(&response_json)
-                            .ok()
-                            .and_then(|value| value.get("items").cloned())
-                            .unwrap_or_else(|| Value::Array(Vec::new()));
-                        frames.push(protocol::AppFrame::ContextMenu { in_reply_to: seq, items: encode_wire_serialized(&items_value) });
+                // 🗂️ Decodes straight into the typed wire shape and encodes the typed response straight
+                // back out — no intermediate `Value`/JSON-string hop through `plugin_context_menu`
+                // (which stays as the separate string-in/string-out entry point the WIT boundary needs).
+                match decode_wire_serialized::<ContextMenuWireRequest>(&request) {
+                    Ok(wire) => {
+                        let request: ContextMenuRequest = wire.into();
+                        let outcome = with_instances_mut(|list| {
+                            let instance = find_instance(list, instance_id)?;
+                            Ok(instance.app.context_menu(&request))
+                        });
+                        match outcome {
+                            Ok(items) => frames.push(protocol::AppFrame::ContextMenu { in_reply_to: seq, items: encode_wire_serialized(&items) }),
+                            Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+                        }
                     }
                     Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
                 }
@@ -6478,8 +6542,9 @@ mod semio_plugin_macro_tests {
     };
     use crate::{selection_count_phrase, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState, ui_text};
     use ui_wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
+    use super::ContextMenuWireRequest;
     use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
-    use semio_framework_core::{ActionArgDef, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+    use semio_framework_core::{ActionArgDef, ActionDefinition, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
     use ui_wgpu::FRAMEWORK_HISTORY_BODY_KEY;
     use serde::{Deserialize, Serialize};
     use serde_json::json;
@@ -6762,7 +6827,11 @@ mod semio_plugin_macro_tests {
         }
 
         /// 🧪️ Menu = always "setLabelRequired"; "incrementViaCommand" gated on a non-empty label
-        /// (a selection-guard stand-in) — exercises `Menu::action`/`Menu::command`/`Menu::when`.
+        /// (a selection-guard stand-in) — exercises `Menu::action`/`Menu::command`/`Menu::when`. The
+        /// `flatLeaf1..10` branch only fires for the magic `"flat-menu-test"` label (so
+        /// `contract_registry`-backed tests, which never set that label, are untouched) — a flat >9-row
+        /// menu fixture for `context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu` below,
+        /// proving `VcsDocumentApp::context_menu` runs every emitter through `organize_context_menu`.
         fn context_menu(
             &self,
             _request: &ContextMenuRequest,
@@ -6772,7 +6841,10 @@ mod semio_plugin_macro_tests {
         ) -> Vec<ContextMenuItemSpec> {
             Menu::of(registry)
                 .action("setLabelRequired")
-                .when(!doc.projection.label.is_empty(), |m| m.command("incrementViaCommand"))
+                .when(!doc.projection.label.is_empty() && doc.projection.label != "flat-menu-test", |m| m.command("incrementViaCommand"))
+                .when(doc.projection.label == "flat-menu-test", |m| {
+                    (1..=10).fold(m, |m, index| m.action(format!("flatLeaf{index}")))
+                })
                 .build()
         }
     }
@@ -6785,7 +6857,7 @@ mod semio_plugin_macro_tests {
         App::from_builder(
             App::builder("synthetic-play", "Synthetic")
                 .document(["state"])
-                .mode("edit", "Edit", "square-pen")
+                .mode("edit", "Edit", "pencil")
                 .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow),
         )
     }
@@ -6802,7 +6874,7 @@ mod semio_plugin_macro_tests {
         let app = App::from_builder(
             App::builder("synthetic-play", "Synthetic")
                 .document(["state"])
-                .mode("edit", "Edit", "square-pen")
+                .mode("edit", "Edit", "pencil")
                 .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .operation("setLabelRequired", "Set Label")
                 .action_args("setLabelRequired", vec![ActionArgDef::text("value", "Value").required()])
@@ -7200,6 +7272,7 @@ mod semio_plugin_macro_tests {
         assert_eq!(all_tree.sections.len(), 2, "Actions + Commands sections");
         assert_eq!(all_tree.sections[0].label.as_deref(), Some("Actions"));
         assert_eq!(all_tree.sections[0].items.len(), 5, "undo/redo/commit/alternative/filter");
+        assert!(all_tree.sections[0].items.iter().all(|item| item.control.is_some()), "Actions rows use label+control like Settings/Theme");
         assert_eq!(all_tree.sections[1].label.as_deref(), Some("Commands"));
         assert_eq!(all_tree.sections[1].items.len(), 2);
         assert!(all_tree.sections[1].items[0].actions.is_some(), "the revertible entry must offer backwards");
@@ -7467,6 +7540,82 @@ mod semio_plugin_macro_tests {
             }
         );
     }
+
+    //#region 🗂️GroupedContextMenu
+    #[test]
+    fn action_definition_with_category_sets_the_ribbon_taxonomy_field() {
+        let action = ActionDefinition::new_catalog("x", "X", ActionKind::Operation).with_category("view");
+        assert_eq!(action.category.as_deref(), Some("view"));
+    }
+
+    #[test]
+    fn menu_group_produces_a_group_row_keyed_by_category() {
+        let registry = contract_registry();
+        let items = Menu::of(&registry).action("setLabelRequired").group("export", |m| m.command("incrementViaCommand")).build();
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[1].id, "menu.group.export");
+        assert_eq!(items[1].label, None, "group rows travel with no label — the host resolves it via `ribbon_parent_label`");
+        let children: Vec<&str> = items[1].children.as_ref().unwrap().iter().map(|child| child.id.as_str()).collect();
+        assert_eq!(children, vec!["incrementViaCommand"]);
+    }
+
+    /// 🧪️ A registry declaring `setLabelRequired` plus ten `flatLeaf1..10` actions (four carrying a
+    /// `RIBBON_PARENT_CATEGORIES` category via `with_category`) — feeds `TestApp::context_menu`'s
+    /// `"flat-menu-test"` branch below.
+    fn flat_menu_registry() -> AppActionRegistry {
+        let app = App::from_builder(
+            App::builder("flat-menu-test", "FlatMenuTest")
+                .document(["state"])
+                .mode("edit", "Edit", "pencil")
+                .window_kind("main", "Main", "flat-menu-test.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                .operation("setLabelRequired", "Set Label")
+                .action_args("setLabelRequired", vec![ActionArgDef::text("value", "Value").required()])
+                .operation("flatLeaf1", "Flat Leaf 1")
+                .operation("flatLeaf2", "Flat Leaf 2")
+                .operation("flatLeaf3", "Flat Leaf 3")
+                .operation("flatLeaf4", "Flat Leaf 4")
+                .action_with(ActionDefinition::new_catalog("flatLeaf5", "Flat Leaf 5", ActionKind::Operation).with_category("view"))
+                .action_with(ActionDefinition::new_catalog("flatLeaf6", "Flat Leaf 6", ActionKind::Operation).with_category("view"))
+                .action_with(ActionDefinition::new_catalog("flatLeaf7", "Flat Leaf 7", ActionKind::Operation).with_category("export"))
+                .action_with(ActionDefinition::new_catalog("flatLeaf8", "Flat Leaf 8", ActionKind::Operation).with_category("export"))
+                .operation("flatLeaf9", "Flat Leaf 9")
+                .operation("flatLeaf10", "Flat Leaf 10"),
+        );
+        AppActionRegistry::from_definition(&app.definition)
+    }
+
+    /// 🖱️ End to end through `VcsDocumentApp::context_menu`: a synthetic emitter's 11 flat leaves come
+    /// back as 5 primaries + 3 taxonomy-sorted `menu.group.<category>` rows — proving the funnel applies
+    /// `organize_context_menu` to every emitter, not just ones that call `Menu::group` themselves.
+    #[test]
+    fn context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu() {
+        let mut app = VcsDocumentApp::with_registry(TestApp::default(), flat_menu_registry());
+        app.dispatch_typed(TestCommand::SetLabel { value: "flat-menu-test".into() }, &meta()).expect("set label");
+        let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
+
+        let organized = app.context_menu(&request);
+        let ids: Vec<&str> = organized.iter().map(|item| item.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            vec!["setLabelRequired", "flatLeaf1", "flatLeaf2", "flatLeaf3", "flatLeaf4", "menu.group.view", "menu.group.actions", "menu.group.export"],
+            "5 primaries, then groups in RIBBON_PARENT_CATEGORIES taxonomy order (view < actions < export): {ids:?}"
+        );
+        let view_children: Vec<&str> = organized[5].children.as_ref().unwrap().iter().map(|child| child.id.as_str()).collect();
+        assert_eq!(view_children, vec!["flatLeaf5", "flatLeaf6"]);
+        let actions_children: Vec<&str> = organized[6].children.as_ref().unwrap().iter().map(|child| child.id.as_str()).collect();
+        assert_eq!(actions_children, vec!["flatLeaf9", "flatLeaf10"], "uncategorized overflow leaves default to menu.group.actions");
+    }
+
+    #[test]
+    fn context_menu_wire_request_without_view_state_still_parses() {
+        let wire: ContextMenuWireRequest =
+            serde_json::from_str(r#"{"menu":{"id":"window"}}"#).expect("viewState is no longer a required field");
+        assert_eq!(wire.menu.id, "window");
+        assert!(wire.surface.is_none());
+        assert!(wire.window_instance_id.is_none());
+        assert!(wire.point.is_none());
+    }
+    //#endregion 🗂️GroupedContextMenu
 
     #[test]
     fn view_action_emitting_ops_is_rejected() {

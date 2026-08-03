@@ -1355,7 +1355,7 @@ pub fn create_shooting_app() -> App {
             })
             .media_output(shooting_engine::shooting_photos_out_port())
             .icon_id("camera")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(SHOOTING_PLAY_WINDOW_SCENE, "Scene", SHOOTING_PLAY_BODY_SCENE, SurfaceKind::World3d, "shooting-scene")
             .window_kind(SHOOTING_PLAY_WINDOW_ICON, "Icon", SHOOTING_PLAY_BODY_ICON, SurfaceKind::IconRender, "image")

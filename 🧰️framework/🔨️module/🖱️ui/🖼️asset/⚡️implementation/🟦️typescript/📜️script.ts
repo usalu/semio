@@ -196,7 +196,51 @@ impl std::fmt::Display for IconName {
 
 impl From<&str> for IconName {
     fn from(value: &str) -> Self {
-        Self::from_str(value).unwrap_or(Self::AlertCircle)
+        let trimmed = value.trim();
+        if let Some(icon) = Self::from_str(trimmed) {
+            return icon;
+        }
+        let aliased = match trimmed {
+            "square-pen" => "pencil",
+            "menu" => "list",
+            "circle-off" => "eye-off",
+            "trees" => "list-tree",
+            "gauge" => "sliders-horizontal",
+            "building-2" => "building",
+            "compass" => "focus",
+            "microscope" => "search",
+            "drafting-compass" => "cad-shape",
+            "search-check" => "search",
+            "file-chart-column" => "bar-chart-3",
+            "blocks" => "component",
+            "flask-conical" => "cylinder",
+            "blend" => "combine",
+            "user-plus" => "user",
+            "clipboard-paste" => "clipboard",
+            "clipboard-copy" => "copy",
+            "git-branch-plus" | "git-compare" => "git-branch",
+            "history" => "clock",
+            "house" => "home",
+            "list-filter" => "list",
+            "notebook-pen" => "book-open",
+            "pointer" => "mouse-pointer",
+            "scan-eye" => "eye",
+            "square-dashed-mouse-pointer" => "mouse-pointer-2",
+            "upload" => "hard-drive",
+            "video" => "camera",
+            "folder-tree" => "folder",
+            "layout-panel-left" => "panel-left",
+            "refresh-cw" => "rotate-cw",
+            "text-cursor-input" => "typography",
+            "terminal" => "code",
+            "zap" => "sparkles",
+            "calculator" => "hash",
+            _ => trimmed,
+        };
+        if let Some(icon) = Self::from_str(aliased) {
+            return icon;
+        }
+        panic!("unknown catalog icon name: {trimmed}");
     }
 }
 

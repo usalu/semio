@@ -1,0 +1,11 @@
+{
+  "title": "Fix Projection Pane Toggle",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "There is a bug that when clicking on projection pane toggle then wrongly nothing happens",
+  "summary": "Stopped pane pointer events at the pane boundary so the 3D canvas host cannot steal pointer capture from the projection toggle; added a compact-driver regression covering a pointer-capturing ancestor.",
+  "goal": "🎯r26021🎯runningsketchpad",
+  "sessions": [
+    "⚪916265b6778a4ebfa2be340e7840c833"
+  ]
+}

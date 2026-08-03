@@ -84,6 +84,7 @@ import {
   type IntroductionStepDefinition,
   type ShellLocale,
   type ShellTerminology,
+  type StoragePort,
   panelTabFirstDraggableElementId,
   pickMostSpecificCanvasTarget,
   sortCanvasPickTargetsGeneralFirst,
@@ -297,6 +298,68 @@ export function configureHostPorts(overrides: HostPortOverrides): void {
   iconRenderPort = overrides.iconRender ?? defaultIconRenderPort;
 }
 // #endregion 🔌️PortWiring
+
+// #region 🐚️ShellScope
+/** @emoji 🐚️ Per-mounted-`FrameworkOsShell` scope — the seam every document-global mechanism (element
+ * ids, theming, i18n, keybindings, storage, portals, ...) threads through so several shells can coexist
+ * on one page. Populated incrementally: this wave only carries what shell-root DOM scoping and storage
+ * namespacing need; theming/i18n/keyboard/selection fields land with their own waves. */
+export interface ShellScope {
+  readonly shellId: string;
+  /** The shell's own root element (the `.semio-scope` div `FrameworkOsShell` renders into). */
+  readonly rootRef: { current: HTMLElement | null };
+  /** Fixed-position overlay layer, last child of the shell root — the portal target for menus, drag
+   * ghosts, and dialogs so they never escape to `document.body` and collide with another shell. */
+  readonly portalLayerRef: { current: HTMLElement | null };
+  readonly storage: StoragePort;
+  /** True only for the shell `bootFrameworkOs` mounts as the sole app on its own page — gates the
+   * handful of behaviors that are legitimately page-global (document title, browser history sync). */
+  readonly ownsPage: boolean;
+  /** `querySelector` scoped to this shell's root, replacing document-wide lookups. */
+  query(selector: string): HTMLElement | null;
+  /** `querySelectorAll` scoped to this shell's root, replacing document-wide lookups. */
+  queryAll(selector: string): HTMLElement[];
+}
+
+let shellScopeAutoIdSeq = 0;
+
+/** @emoji 🐚️ Creates a fresh {@link ShellScope}. Call once per shell mount (e.g. from a lazy `useState`
+ * initializer) — the scope's identity must stay stable for the shell instance's lifetime. */
+export function createShellScope(options: { readonly shellId?: string; readonly storage: StoragePort; readonly ownsPage?: boolean }): ShellScope {
+  const shellId = options.shellId ?? `shell-${(shellScopeAutoIdSeq += 1)}`;
+  const rootRef: { current: HTMLElement | null } = { current: null };
+  const portalLayerRef: { current: HTMLElement | null } = { current: null };
+  return {
+    shellId,
+    rootRef,
+    portalLayerRef,
+    storage: options.storage,
+    ownsPage: options.ownsPage ?? false,
+    query: (selector) => rootRef.current?.querySelector<HTMLElement>(selector) ?? null,
+    queryAll: (selector) => (rootRef.current ? Array.from(rootRef.current.querySelectorAll<HTMLElement>(selector)) : []),
+  };
+}
+
+export const ShellScopeContext = React.createContext<ShellScope | null>(null);
+
+export function ShellScopeProvider({ scope, children }: { readonly scope: ShellScope; readonly children: React.ReactNode }): React.ReactElement {
+  return React.createElement(ShellScopeContext.Provider, { value: scope }, children);
+}
+
+/** @emoji 🐚️ Reads the enclosing shell's scope — throws outside a {@link ShellScopeProvider} rather than
+ * silently falling back to page-global state, so a missing provider fails loudly during development. */
+export function useShellScope(): ShellScope {
+  const scope = React.useContext(ShellScopeContext);
+  if (!scope) throw new Error("[DEBUG] useShellScope called outside a ShellScopeProvider");
+  return scope;
+}
+
+/** @emoji 🐚️ Like {@link useShellScope} but returns `null` outside a provider — for the rare leaf element
+ * usable both inside a shell and standalone (e.g. a docs-site embed of a single component). */
+export function useShellScopeOptional(): ShellScope | null {
+  return React.useContext(ShellScopeContext);
+}
+// #endregion 🐚️ShellScope
 
 // #region 🔖️IconRenderPort
 export type { IconRenderCamera, IconRenderFormat, IconRenderShape, IconRenderLights, IconRenderMaterial, IconRenderPort, IconRenderRequest, IconRenderResult, ThemeAppearanceName, ThemePaletteGroup, UiTheme } from "@semio-tech/ui-styling";
@@ -1344,6 +1407,41 @@ export function resolveMetabolismIconSvg(name: MetabolismIconName, icons: UiThem
 
 const CATALOG_ICON_ALIASES: Partial<Record<string, IconName>> = {
   trash: "trash-2",
+  menu: "list",
+  "circle-off": "eye-off",
+  "square-pen": "pencil",
+  trees: "list-tree",
+  gauge: "sliders-horizontal",
+  "building-2": "building",
+  compass: "focus",
+  microscope: "search",
+  "drafting-compass": "cad-shape",
+  "search-check": "search",
+  "file-chart-column": "bar-chart-3",
+  blocks: "component",
+  "flask-conical": "cylinder",
+  blend: "combine",
+  "user-plus": "user",
+  "clipboard-paste": "clipboard",
+  "clipboard-copy": "copy",
+  "git-branch-plus": "git-branch",
+  "git-compare": "git-branch",
+  history: "clock",
+  house: "home",
+  "list-filter": "list",
+  "notebook-pen": "book-open",
+  pointer: "mouse-pointer",
+  "scan-eye": "eye",
+  "square-dashed-mouse-pointer": "mouse-pointer-2",
+  upload: "hard-drive",
+  video: "camera",
+  "folder-tree": "folder",
+  "layout-panel-left": "panel-left",
+  "refresh-cw": "rotate-cw",
+  "text-cursor-input": "typography",
+  terminal: "code",
+  zap: "sparkles",
+  calculator: "hash",
 };
 
 function coerceIconSource(source: IconSource): Icon {
@@ -1367,6 +1465,10 @@ function coerceIconSource(source: IconSource): Icon {
     const decoded = decodeIcon(key);
     if (decoded) {
       return decoded;
+    }
+    // 🎟️ Kebab catalog-shaped ids that are not vendored must surface as missing glyphs, not label text.
+    if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key)) {
+      return { kind: "catalog", key: key as IconName };
     }
     return { kind: "text", text: key };
   }
@@ -1784,7 +1886,7 @@ export interface ContextMenuProps {
 /**
  * 🧩️ Right-click host: always suppresses the native menu; opens the shared viewport-fixed menu only when `items` is non-empty.
  **/
-export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title = "Menu", titleIcon = "menu" }) => {
+export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title = "Menu", titleIcon = "list" }) => {
   const [open, setOpen] = reactHostPort.useState(false);
   const [point, setPoint] = reactHostPort.useState<{ x: number; y: number } | null>(null);
   const hasItems = !!items?.length;
@@ -2131,7 +2233,7 @@ export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): C
 /**
  * 🧩️ Controlled right-click menu whose title chip bottom-left anchors at viewport coordinates (puzzle 2d canvas bridge), keeping the first row beside the pointer. Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
-export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title = "Menu", titleIcon = "menu", closeOnSelect = true }) => {
+export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title = "Menu", titleIcon = "list", closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
@@ -13271,7 +13373,13 @@ function SelectLabel({ className, ...props }: React.ComponentProps<typeof Select
 /**
  * SelectItem holds the data fields for a SelectItem record.
  **/
-function SelectItem({ className, children, id, ...props }: React.ComponentProps<typeof SelectPrimitive.Item> & { id?: string }) {
+function SelectItem({
+  className,
+  children,
+  id,
+  icon,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Item> & { id?: string; icon?: IconSource }) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -13289,6 +13397,7 @@ function SelectItem({ className, children, id, ...props }: React.ComponentProps<
           <CheckIconAlt className="size-tiny" />
         </SelectPrimitive.ItemIndicator>
       </span>
+      {icon ? <span data-slot="select-item-icon" className="inline-flex shrink-0"><Icon icon={icon} size="small" /></span> : null}
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   );
@@ -15504,7 +15613,7 @@ function NavbarExampleSelect({ id, label, value, options, onValueChange, classNa
   const resolvedOptions = reactHostPort.useMemo(() => {
     const withoutSentinels = options.filter((row) => row.id !== NAVBAR_NO_EXAMPLE_ID && row.id !== "empty");
     if (!includeNoExample) return withoutSentinels;
-    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel, icon: "circle-off" as IconName }, ...withoutSentinels];
+    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel, icon: "eye-off" as IconName }, ...withoutSentinels];
   }, [includeNoExample, options, noExampleLabel]);
   if (resolvedOptions.length === 0) return null;
   const resolvedValue = !value || value === NAVBAR_NO_EXAMPLE_ID ? NAVBAR_NO_EXAMPLE_ID : value;
@@ -15515,17 +15624,14 @@ function NavbarExampleSelect({ id, label, value, options, onValueChange, classNa
       <Select id={`${id}.select`} value={resolvedValue} onValueChange={(next) => onValueChange(normalizePlaygroundExampleId(next))}>
         <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={`${id}.trigger`} size="sm">
           <span className="flex min-w-0 flex-1 items-center gap-single">
-            {selectedOption ? <Icon icon={selectedOption.icon} size="small" className="shrink-0" /> : null}
+            {selectedOption ? <span data-slot="navbar-example-icon" className="inline-flex shrink-0"><Icon icon={selectedOption.icon} size="small" /></span> : null}
             <SelectValue placeholder={resolvedLabel} />
           </span>
         </SelectTrigger>
         <SelectContent>
           {resolvedOptions.map((row) => (
-            <SelectItem key={row.id} value={row.id}>
-              <span className="flex items-center gap-single">
-                <Icon icon={row.icon} size="small" className="shrink-0" />
-                <span className="truncate">{row.label}</span>
-              </span>
+            <SelectItem key={row.id} value={row.id} icon={row.icon}>
+              <span className="truncate">{row.label}</span>
             </SelectItem>
           ))}
         </SelectContent>
@@ -20924,6 +21030,7 @@ export const Pane: React.FC<PaneProps> = ({
   const lastAnchorRef = reactHostPort.useRef(anchor);
   lastAnchorRef.current = anchor;
   const resizable = resizableProp ?? Boolean(onSizeChange);
+  const stopPointerPropagation = reactHostPort.useCallback((event: React.PointerEvent<HTMLDivElement>) => event.stopPropagation(), []);
 
   const dragPointerProps = usePointerDrag<HTMLSpanElement>({
     onStart: () => {
@@ -20980,6 +21087,10 @@ export const Pane: React.FC<PaneProps> = ({
         data-dragging={dragging ? "true" : undefined}
         {...(dimWhenOpen && !effectiveFolded ? { "data-dim": true } : {})}
         dir={flow.inline === "rtl" ? "rtl" : undefined}
+        onPointerDown={stopPointerPropagation}
+        onPointerMove={stopPointerPropagation}
+        onPointerUp={stopPointerPropagation}
+        onPointerCancel={stopPointerPropagation}
         className={cn(
           "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-visible",
           getLevelZClass("pane"),
@@ -31330,7 +31441,7 @@ if (import.meta.vitest) {
       expect(chrome?.style.position).toBe("fixed");
       expect(chrome?.style.left).toBe("123px");
       expect(chrome?.style.top).toBe("calc(87px - var(--size-medium))");
-      expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon-kind]')).toBeTruthy();
+      expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon="list"]')).toBeTruthy();
     });
 
     it("wraps context menu rows in window chrome with a title chip and no enlarge control", async () => {
@@ -31343,7 +31454,7 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(document.querySelector('[data-slot="context-menu-content"]')).toBeTruthy();
         expect(document.querySelector('[data-slot="context-menu-title-chip"]')?.textContent).toContain("Actions");
-        expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon-kind]')).toBeTruthy();
+        expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon="list"]')).toBeTruthy();
         expect(document.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
         expect(document.querySelector('[data-slot="mode-dock-maximize"]')).toBeNull();
         expect(document.querySelector('[data-slot="window-chrome-controls"]')).toBeNull();
@@ -35067,6 +35178,28 @@ if (import.meta.vitest) {
         expect(onFoldToggle).toHaveBeenCalledTimes(2);
       });
 
+      it("Pane isolates toggle pointer events from a pointer-capturing canvas host", () => {
+        const hostPointerDown = vi.fn();
+        const onFoldToggle = vi.fn();
+        const { container } = render(
+          <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+            <div onPointerDown={hostPointerDown}>
+              <PaneHost>
+                <Pane id="projection-pane" anchor="bottom-right" icon="camera" label="Projection" folded onFoldToggle={onFoldToggle}>
+                  <div>Modes</div>
+                </Pane>
+              </PaneHost>
+            </div>
+          </UiDriverProvider>,
+        );
+        const toggle = container.querySelector('[data-slot="window-pane-chrome-toggle"]') as HTMLElement;
+        fireEvent.pointerDown(toggle, { pointerId: 1, clientX: 10, clientY: 10 });
+        fireEvent.pointerUp(toggle, { pointerId: 1, clientX: 10, clientY: 10 });
+        fireEvent.click(toggle);
+        expect(hostPointerDown).not.toHaveBeenCalled();
+        expect(onFoldToggle).toHaveBeenCalledTimes(1);
+      });
+
       it("Pane drag handle calls onAnchorChange once per anchor crossed, resolved against the PaneHost's bounds", () => {
         let anchor: Anchor = "top-left";
         const onAnchorChange = vi.fn((next: Anchor) => {
@@ -36449,7 +36582,7 @@ if (treeVitest) {
           id="playground.navbar.fixture"
           value="nakagin"
           options={[
-            { id: "nakagin", label: "Nakagin Capsule Tower with an intentionally long label", icon: "building-2" },
+            { id: "nakagin", label: "Nakagin Capsule Tower with an intentionally long label", icon: "building" },
             { id: "villa", label: "Villa Savoye", icon: "landmark" },
           ]}
           onValueChange={() => undefined}
@@ -36465,6 +36598,10 @@ if (treeVitest) {
       expect(exampleMarkup).toContain('data-slot="select-trigger"');
       expect(exampleMarkup).toContain('data-slot="select-chevron"');
       expect(exampleMarkup).toContain('data-icon="chevron-down"');
+      expect(exampleMarkup).toContain('data-slot="navbar-example-icon"');
+      expect(exampleMarkup.match(/data-slot="navbar-example-icon"/g)?.length).toBe(1);
+      expect(exampleMarkup).toContain('data-slot="select-item-icon"');
+      expect(exampleMarkup).not.toMatch(/data-slot="select-item"[\s\S]*?<span className="flex items-center gap-single">[\s\S]*?data-icon-kind/);
     });
 
     it("renders section and item content slots flush under their headers", () => {

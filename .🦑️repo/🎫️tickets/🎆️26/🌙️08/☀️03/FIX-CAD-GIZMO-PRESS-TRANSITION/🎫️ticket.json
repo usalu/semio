@@ -1,0 +1,14 @@
+{
+  "title": "Fix CAD Gizmo Press Transition",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When pressing the CAD projection gizmo incorrectly nothing happens. Ensure every gizmo press transitions the camera properly, including presses that currently resolve to the active projection spec.",
+  "summary": "Fixed CAD navigation-gizmo presses being discarded when the selected projection spec structurally matched the stored spec. Every press now enters the shared 280 ms projection snap pipeline, allowing a repeated target to restore a camera moved by orbit controls. Added an in-file regression test for repeated Top selection. Verified with bun nx test @semio-tech/infinite-world-r3f (2 files, 200 tests) and live in CAD: two consecutive presses on the same center target each emitted a gizmo hit and completed projection snap under temporary [DEBUG] instrumentation, which was removed afterward.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2417"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": [
+    "⚪c5bba92cafff42c389da1b865504010f"
+  ]
+}

@@ -2055,7 +2055,7 @@ pub fn create_draw_app() -> App {
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("draw")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind_with_engagement(DRAW_PLAY_WINDOW_CANVAS, "Canvas", DRAW_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, engagement, "pen-tool")
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, DRAW_PLAY_BODY_LAYERS)

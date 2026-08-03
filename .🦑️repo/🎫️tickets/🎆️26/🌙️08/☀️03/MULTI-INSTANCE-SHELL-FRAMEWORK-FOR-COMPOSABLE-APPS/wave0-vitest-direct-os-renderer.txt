@@ -1,0 +1,71 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript
+
+stderr | 🧪️index.test.ts
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/framework-renderer-react| 🧪️index.test.ts (288 tests | 4 failed) 694ms
+     × preserves batched UI refreshes through the React program adapter 12ms
+     × attaches a drag-and-drop controller to tree panels whose items carry drag data 1ms
+     × parses studio and studio+instance shell paths, and rejects non-studio routes 0ms
+     × folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > framework plugin runtime > preserves batched UI refreshes through the React program adapter
+AssertionError: expected { windows: [ { …(3) } ], …(5) } to deeply equal { windows: [ { …(3) } ] }
+
+- Expected
++ Received
+
+@@ -1,6 +1,11 @@
+  {
++   "engagements": undefined,
++   "labels": undefined,
++   "measures": undefined,
++   "panels": [],
++   "tools": undefined,
+    "windows": [
+      {
+        "hash": "1",
+        "key": "overview",
+        "value": {
+
+ ❯ ð§ªï¸index.test.ts:953:118
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > s workflow flow routing > attaches a drag-and-drop controller to tree panels whose items carry drag data
+AssertionError: expected undefined to be defined
+ ❯ ð§ªï¸index.test.ts:3618:42
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > s workflow flow routing > parses studio and studio+instance shell paths, and rejects non-studio routes
+AssertionError: expected null to deeply equal { spaceId: 'my-studio', …(1) }
+
+- Expected:
+{
+  "instanceId": undefined,
+  "spaceId": "my-studio",
+}
+
++ Received:
+null
+
+ ❯ ð§ªï¸index.test.ts:3642:54
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > s workflow flow routing > folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId
+SyntaxError: Unexpected token 'p', "pk:BgoyZC5"... is not valid JSON
+ ❯ ð§ªï¸index.test.ts:3662:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 284 passed (288)
+   Start at  12:55:23
+   Duration  8.76s (transform 3.43s, setup 0ms, import 7.37s, tests 694ms, environment 523ms)
+

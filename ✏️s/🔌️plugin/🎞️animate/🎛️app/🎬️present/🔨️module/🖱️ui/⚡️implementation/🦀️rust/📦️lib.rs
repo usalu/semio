@@ -739,7 +739,7 @@ pub fn create_animate_present_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("animate")
-            .mode("main", "Edit", "square-pen")
+            .mode("main", "Edit", "pencil")
             .default_mode_id("main")
             .window_kind(ANIMATE_PRESENT_PLAY_WINDOW_MAIN, "Tile editor", ANIMATE_PRESENT_PLAY_BODY_MAIN, SurfaceKind::Canvas2d, "grid-3x3")
             .default_layout(create_default_layout(
@@ -804,7 +804,7 @@ pub fn create_animate_present_app() -> App {
             .config(AnimatePresentPlayApp.config_spec())
             .io(present_engine::present_io()),
     )
-    .example("demo", "Demo", present::default_present_deck().print_dsl(), "flask-conical")
+    .example("demo", "Demo", present::default_present_deck().print_dsl(), "cylinder")
     .workflow("animate", "Animate", "deck")
 }
 //#endregion 🔖️Manifest

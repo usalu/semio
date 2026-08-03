@@ -856,7 +856,7 @@ pub fn create_writer_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("writer")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_MAIN, SurfaceKind::TextEditor, "document-jack")
             .default_layout(create_default_layout(

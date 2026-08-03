@@ -1286,7 +1286,7 @@ pub fn create_note_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("note")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::InkCanvas, note_canvas_engagement(&document, &NoteCamera::default(), &[], ""), "pen-tool")
             .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::InkCanvas, note_navigator_engagement("selectDirect"), "focus")

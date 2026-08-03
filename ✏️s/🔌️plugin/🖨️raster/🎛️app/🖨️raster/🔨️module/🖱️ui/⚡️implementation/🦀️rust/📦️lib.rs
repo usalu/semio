@@ -733,7 +733,7 @@ pub fn create_raster_app() -> App {
                 import_formats: vec![OsMediaFormat::Png],
             })
             .icon_id("raster")
-            .mode("edit", "Edit", "square-pen")
+            .mode("edit", "Edit", "pencil")
             .default_mode_id("edit")
             .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, "Composite", RASTER_PLAY_BODY_COMPOSITE, SurfaceKind::Paint2d, "image")
             .window_kind(RASTER_PLAY_WINDOW_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_NAVIGATOR, SurfaceKind::Paint2d, "focus")
