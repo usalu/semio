@@ -686,7 +686,11 @@ class TestScript extends BundleScript {
     //#region Window layout
     const windowSource = readFileSync(join(texDir, "semio-window.sty"), "utf8");
     const tableSource = readFileSync(join(texDir, "semio-table.sty"), "utf8");
-    assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-3\\semio@stroke@hairline\\relax/);
+    assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-\\semio@stroke@hairline-5\.75pt\\relax/);
+    assert.match(windowSource, /overlay~unbroken=\{\\semio_window_header_overlay_baseline:\\semio@window@break@record\{1\}/);
+    assert.match(windowSource, /overlay~first=\{\\semio_window_header_overlay_baseline:\}/);
+    assert.match(windowSource, /\\semio@window@header@invoke@tcb/);
+    assert.match(tableSource, /\\semio@table@long@title@chrome@row[\s\S]*?\\semio@window@header@invoke/);
     assert.match(windowSource, /semio~window~table\/\.style=\{\s*semio~window,\s*toprule=0pt,/);
     assert.match(windowSource, /\\semio_window_table_border_finish: \{[\s\S]*?frame\.north~west[\s\S]*?frame\.south~west/);
     assert.match(windowSource, /semio~window~table\/\.style=\{[\s\S]*?finish=\{\\semio_window_table_border_finish:\}/);

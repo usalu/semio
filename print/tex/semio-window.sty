@@ -77,7 +77,9 @@
 \providecommand{\semio@chrome@icon@scale@footer}{1}
 % Layout spacing (defined here, not in the generated semio-tokens.sty):
 % \semio@spacing@par  = gap after body paragraphs (\parskip)
+% \semio@spacing@single = block↔block / block↔paragraph junction (\semio@block@before)
 % \semio@spacing@table@outer = air above/below tables
+% \semio@window@gap = \semio@spacing@par after preamble (WindowArrangement H/V)
 \providecommand{\semio@spacing@par}{0.5em}
 \providecommand{\semio@spacing@table@outer}{0.85em}
 
@@ -833,6 +835,13 @@
     -- ([xshift=\dimexpr\semio@stroke@hairline/2\relax]frame.south~west);
 }
 
+\cs_new_protected:Npn \semio_window_header_overlay_baseline: {
+  \draw[
+    draw=semio-chrome-border-normal,
+    line~width=\semio@stroke@hairline,
+  ] (frame.north~west) -- (frame.north~east);
+}
+
 \tcbset{
   semio~window/.style={
     enhanced,
@@ -860,15 +869,15 @@
     before~skip=0pt,
     after~skip=\semio@spacing@table@outer,
     parbox=false,
-    % 🪟 Repeat the header chip row (title chip + hierarchy chip, see
-    % \semio@window@header@repeat) on every continuation page-part of a
-    % genuinely broken window, and record how many parts this instance
-    % rendered into into so the *next* compile pass can show the ":<N>"
-    % suffix on page 1 too (see \semio@window@break@record and the
-    % `.window-breaks` aux file loaded by \semio_window_break_aux_load:).
-    overlay~unbroken={\semio@window@break@record{1}},
-    overlay~middle={\semio@window@header@repeat},
-    overlay~last={\semio@window@header@repeat\semio@window@break@record{\arabic{tcbbreakpart}}},
+    % 🪟 Redraw the muted title/number chip row in the overlay on every page-part
+    % (unbroken, first, middle, last) so the gap baseline is not covered by
+    % colback — see \semio@window@header@overlay. Record break parts on
+    % unbroken/last for the ":<N>" suffix on page 1 next pass
+    % (\semio@window@break@record, `.window-breaks` aux).
+    overlay~unbroken={\semio_window_header_overlay_baseline:\semio@window@break@record{1}},
+    overlay~first={\semio_window_header_overlay_baseline:},
+    overlay~middle={\semio@window@header@overlay@continuation},
+    overlay~last={\semio@window@header@overlay@continuation\semio@window@break@record{\arabic{tcbbreakpart}}},
   },
   semio~window~table/.style={
     semio~window,
@@ -882,6 +891,11 @@
   semio~window~row/.style={
     semio~window,
     width=\linewidth,
+    % LR-arrangement: WindowColumn/WindowRow supply inter-item air via
+    % \semio@window@gap (= \semio@spacing@par); suppress tcolorbox external
+    % skips so only that token governs both axes.
+    before~skip=0pt,
+    after~skip=0pt,
   },
   semio~window~image~cover/.style={
     clip~upper=true,
@@ -1261,13 +1275,13 @@
   \makeatletter
   \ifvmode\else\par\fi
   \semio@noindent@noparskip
-  \semio@window@header@invoke
+  \semio@window@header@invoke@tcb
   \makeatother
   \group_end:
   % 🧲 Keep the next vertical-list item flush with the header outside the
-  % rendering group; a grouped \nointerlineskip restores \prevdepth on exit.
-  \par
-  \nointerlineskip
+  % rendering group; only in vertical mode (\nointerlineskip touches \prevdepth).
+  \ifvmode\else\par\fi
+  \ifvmode\nointerlineskip\fi
 }
 
 \cs_new_protected:Npn \semio_window_kind_number_set:n #1 {
@@ -1886,6 +1900,7 @@
   \ExplSyntaxOff
   \makeatletter
   \setlength { \semio@block@sep@skip } { \semio@spacing@single }
+  \setlength { \semio@window@gap } { \semio@spacing@par }
   \setlength { \parskip } { \semio@spacing@par }
   \setlength { \parindent } { 0pt }
   % LR-2.6: keep the shared 0.5em document \parskip (above) from leaking into
@@ -1973,7 +1988,9 @@
   \use:c { semio@window@leave }
 }
 \cs_new_protected:Npn \semio_window_generic_end: {
-  \bool_if:NF \l_semio_window_textfit_bool { \par }
+  \bool_if:NF \l_semio_window_textfit_bool {
+    \bool_if:NF \l_semio_window_in_item_bool { \par }
+  }
   \end{tcolorbox}
   \semio_window_generic_end_tail:
 }
@@ -2153,24 +2170,33 @@
 }
 \ExplSyntaxOff
 
-% 🪟 Redraws the *exact* header chip row (same \semio@window@header@muted
-% routine used for page 1, above/before the box) as a tcolorbox `overlay`
-% anchored to that page-part's own `frame` node, so a continuation page of a
-% genuinely broken window shows the identical title/hierarchy chip chrome —
-% just with the live `\thetcbbreakpart` part index appended to the number.
-% Wired into the `semio~window` tcbset style as `overlay middle=` /
-% `overlay last=` (never fires for `unbroken` or single-part boxes, so a
-% window that never breaks renders byte-for-byte as before). Defined outside
-% ExplSyntaxOn — it needs real (non-ignored) spaces for the `\node[...]` key
-% list (see the ExplSyntaxOn note above).
-\newcommand{\semio@window@header@repeat}{%
+% 🪟 Redraws the muted title/number chip row (same \semio@window@header@muted
+% as \semio@window@header@invoke) as a tcolorbox overlay above colback, on
+% every page-part. Long tables call \semio@window@header@invoke inline (no
+% tcolorbox). Wired as `overlay unbroken=` / `overlay first=` / `overlay
+% middle=` / `overlay last=` on `semio~window` (Table, Figure, generic
+% \Window, and \WindowItem rows inherit via semio~window~tier~* /
+% semio~window~table / semio~window~row).
+% 🪟 On page 1 / unbroken parts the inline chip row is already typeset; redraw
+% only the shared baseline where colback covered it. Continuation parts redraw
+% the full chip row (no inline header on those pages).
+\newcommand{\semio@window@header@overlay@continuation}{%
   \edef\semio@window@header@part@num{\arabic{tcbbreakpart}}%
   \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%
     \semio@window@header@muted{\semio@window@header@number:\semio@window@header@part@num}{\semio@window@header@title}%
   };%
 }
 
-\ExplSyntaxOff
+\newcommand{\semio@window@header@overlay}{%
+  \ifnum\value{tcbbreakpart}=1\relax
+    \semio_window_header_overlay_baseline:
+  \else
+    \semio@window@header@overlay@continuation
+  \fi
+}
+
+\newcommand{\semio@window@header@repeat}{\semio@window@header@overlay}
+
 %endregion WindowBreakParts chrome
 
 % LR-2.8: deliver the running-header section name via the marks mechanism, not a
@@ -3011,14 +3037,14 @@
 % builders set \semio@window@cap@titleh *inside* the \sbox that measures each chip,
 % so that length has reverted by the time this macro runs in the surrounding row,
 % while \ht+\dp of the tab box persists and is exactly the chip height.
+% Open connector spacer between title and number tabs (no stroke here — the
+% shared full-width baseline row below supplies the bottom edge for both chips).
 \newcommand{\semio@window@header@gap@open}[1]{%
   \raisebox{0pt}[\dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax][0pt]{%
     \vbox to \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax{%
       \vfil
       \nointerlineskip
-      \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \semio@window@stroke@h{#1}{\semio@window@gap@w}%
-      }%
+      \hbox to \dimexpr\semio@window@gap@w\relax{\hfil}%
     }%
   }%
 }
@@ -3031,55 +3057,73 @@
   \ifvmode\nointerlineskip\fi
 }
 
+\newif\ifsemio@window@header@draw@baseline
+\semio@window@header@draw@baselinetrue
+
 \newcommand{\semio@window@header@muted}[2]{%
+  \semio@window@header@draw@baselinetrue
+  \semio@window@header@muted@core{#1}{#2}%
+}
+
+\newcommand{\semio@window@header@invoke@tcb}{%
+  \semio@window@header@draw@baselinefalse
+  \semio@window@header@muted@core{\semio@window@header@number@page1}{\semio@window@header@title}%
+}
+
+\newcommand{\semio@window@header@muted@core}[2]{%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
   \edef\semio@window@header@numval{#1}%
-  % LR-tabbleed: the component frame below (tcolorbox) is drawn one boxrule
-  % (= one hairline) OUTSIDE \linewidth on the left, so a title row of exactly
-  % \linewidth left the left tab one hairline inside the body's left border. Bleed
-  % the whole row one hairline into the left margin and widen it to match, so the
-  % left tab lands flush on the body's left border while the right tab stays put
-  % on the (already-flush) right border. Muted title bars (table / figure /
-  % contents / window): the title and number are TABS sitting on the component's
-  % top edge, so the middle stays open (paper shows through) with NO top line —
-  % only a baseline stroke joins the tabs; fill lives inside the tabs and body.
   \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
     \setlength{\semio@window@gap@w}{%
       \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box\relax
     }%
     \semio@window@header@row@wrap{%
-      \hskip-\semio@stroke@hairline\relax
-      \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
-        \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@open{semio-chrome-border-normal}%
+      \vbox{%
+        \hskip-\semio@stroke@hairline\relax
+        \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+          \usebox{\semio@window@tab@box}%
+          \semio@window@header@gap@open{semio-chrome-border-normal}%
+        }%
+        \ifsemio@window@header@draw@baseline
+          \nointerlineskip
+          \hskip-\semio@stroke@hairline\relax
+          \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+            \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
+          }%
+        \fi
       }%
     }%
   \else
     \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{#1}}%
-    % Baseline spans the gap PLUS one hairline of overlap into the number tab, and
-    % the tab is pulled back the same hairline (so it stays flush-right): the
-    % baseline stroke's right end thus lands under the number tab's left border
-    % instead of a rounding-hairline short of it, closing the sub-pixel notch that
-    % opened at that corner. Total row width is unchanged (the +hairline in gap@w
-    % and the -hairline \hskip cancel).
     \setlength{\semio@window@gap@w}{%
       \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
     }%
     \semio@window@header@row@wrap{%
-      \hskip-\semio@stroke@hairline\relax
-      \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
-        \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@open{semio-chrome-border-normal}%
+      \vbox{%
         \hskip-\semio@stroke@hairline\relax
-        \usebox{\semio@window@ctrl@box}%
+        \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+          \usebox{\semio@window@tab@box}%
+          \semio@window@header@gap@open{semio-chrome-border-normal}%
+          \hskip-\semio@stroke@hairline\relax
+          \usebox{\semio@window@ctrl@box}%
+        }%
+        \ifsemio@window@header@draw@baseline
+          \nointerlineskip
+          \hskip-\semio@stroke@hairline\relax
+          \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+            \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
+          }%
+        \fi
       }%
     }%
   \fi
 }
 
 %region WindowArrangement
+% H/V gap between tiles: \semio@window@gap, synced to \semio@spacing@par (0.5em) in
+% \AfterEndPreamble — same unit as paragraph \parskip.
 \newlength{\semio@window@gap}
-\setlength{\semio@window@gap}{\semio@spacing@single}
+\setlength{\semio@window@gap}{\semio@spacing@par}
 \gdef\semio@window@valign{top}
 \gdef\semio@window@halign{left}
 \newcommand{\semio@window@height@dim}{}
@@ -3198,6 +3242,11 @@
   \dim_set:Nn \l_semio_window_arrangement_height_dim { \textheight }
   \keys_set:nn { semio / window / arrangement } {#1}
   \group_begin:
+    \ExplSyntaxOff
+    \makeatletter
+    \setlength{\parskip}{0pt}%
+    \makeatother
+    \ExplSyntaxOn
     \semio_window_item_provide:n { \dim_use:N \l_semio_window_arrangement_height_dim }
     #2
   \group_end:

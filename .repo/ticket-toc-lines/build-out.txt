@@ -1,0 +1,61 @@
+﻿print: fonts ready under print/asset/font (0 downloaded, 3 total)
+note: Running TeX ...
+bun : Fontconfig error: Cannot load default config file: No such file: (null)
+At C:\Users\Kinosh\AppData\Local\Temp\ps-script-924e0231-8c6a-4527-b9dc-cf98781c1754.ps1:91 char:34
++ cd e:\semio\mit-bestand\bericht; bun ./script.ts build 2>&1 | Out-Fil ...
++                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Fontconfig erro...ch file: (null):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: zwischenbericht.tex:129: Underfull \hbox (badness 10000) detected at line 129
+warning: zwischenbericht.tex:129: Underfull \hbox (badness 10000) detected at line 129
+warning: zwischenbericht.tex:143: Overfull \hbox (8.66183pt too wide) in paragraph at lines 142--143
+warning: zwischenbericht.tex:164: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: zwischenbericht.tex:188: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: zwischenbericht.tex:197: Underfull \hbox (badness 10000) in paragraph at lines 195--197
+warning: zwischenbericht.tex:197: Underfull \hbox (badness 10000) in paragraph at lines 195--197
+warning: zwischenbericht.tex:197: Underfull \hbox (badness 10000) in paragraph at lines 195--197
+warning: zwischenbericht.tex:197: Underfull \hbox (badness 10000) in paragraph at lines 195--197
+warning: zwischenbericht.tex:200: Underfull \hbox (badness 3108) in paragraph at lines 199--200
+warning: zwischenbericht.tex:200: Underfull \hbox (badness 1281) in paragraph at lines 199--200
+warning: zwischenbericht.tex:200: Underfull \hbox (badness 1708) in paragraph at lines 199--200
+warning: zwischenbericht.tex:200: Underfull \hbox (badness 1005) in paragraph at lines 199--200
+warning: zwischenbericht.tex:200: Underfull \hbox (badness 1931) in paragraph at lines 199--200
+warning: zwischenbericht.tex:200: Underfull \hbox (badness 4156) in paragraph at lines 199--200
+warning: zwischenbericht.tex:200: Underfull \hbox (badness 1796) in paragraph at lines 199--200
+warning: zwischenbericht.tex:203: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: zwischenbericht.tex:205: Underfull \hbox (badness 1184) in paragraph at lines 204--205
+warning: zwischenbericht.tex:205: Underfull \hbox (badness 1728) in paragraph at lines 204--205
+warning: zwischenbericht.tex:205: Underfull \hbox (badness 2005) in paragraph at lines 204--205
+warning: zwischenbericht.tex:224: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: zwischenbericht.tex:230: Underfull \hbox (badness 3058) in paragraph at lines 229--230
+warning: zwischenbericht.tex:249: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: zwischenbericht.tex:262: Underfull \hbox (badness 2521) in paragraph at lines 261--262
+warning: zwischenbericht.tex:276: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: zwischenbericht.tex:304: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: zwischenbericht.tex:317: Underfull \hbox (badness 5446) in paragraph at lines 316--317
+warning: zwischenbericht.tex:317: Underfull \hbox (badness 1824) in paragraph at lines 316--317
+warning: zwischenbericht.tex:340: Overfull \hbox (29.75224pt too wide) in paragraph at lines 339--340
+warning: zwischenbericht.tex:355: Underfull \vbox (badness 10000) has occurred while \output is active
+error: zwischenbericht.tex:383: Missing control sequence inserted
+note: Writing `E:\semio\mit-bestand\bericht\zwischenbericht\dist\zwischenbericht.log` (59.904296875 KiB)
+error: halted on potentially-recoverable error as specified
+492 |   clearStaleTocAuxFiles(workDir, outDir, jobname);
+493 |   clearStaleTocAuxFiles(dirname(texAbs), outDir, jobname);
+494 |   const args = ["--keep-logs", "--keep-intermediates", "--synctex", "--reruns", "2", "-Z", 
+`search-path=${texDir}`, "-Z", `search-path=${workDir}`, "--outdir", outDir, texFile];
+495 |   const env = tectonicEnv(workDir);
+496 |   const build = spawnSync(tectonic, args, { cwd: workDir, stdio: "inherit", env });
+497 |   if (build.status !== 0) throw new Error(`tectonic build failed for ${texAbs}`);
+                                          ^
+error: tectonic build failed for E:\semio\mit-bestand\bericht\zwischenbericht\zwischenbericht.tex
+      at compilePrintDocument (E:\semio\print\script.ts:497:37)
+      at compilePrintDocumentWithPanels (E:\semio\print\script.ts:299:3)
+      at compileLightAndDark (E:\semio\print\script.ts:514:9)
+      at buildPrintDocument (E:\semio\print\script.ts:523:9)
+      at async buildDocument (E:\semio\mit-bestand\bericht\script.ts:27:9)
+      at async run (E:\semio\mit-bestand\bericht\script.ts:65:11)
+      at async run (E:\semio\repo\lib\js\index.ts:813:19)
+      at async runBundleScriptMain (E:\semio\repo\lib\js\index.ts:843:16)
+
+Bun v1.3.13 (Windows x64)
