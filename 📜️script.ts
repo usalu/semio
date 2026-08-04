@@ -1740,6 +1740,98 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
  *   norm family's `Operation` type instead of a per-family derive.
  */
 const POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST = new Set<string>(["Value", "SetDocumentOperation"]);
+
+/**
+ * 🎫️ W1 grammar-engine wave (`.claude/plans/the-final-goal-for-jolly-spindle.md` `## Master wave
+ * plan` `W1 — Grammar engine`, design ruling B-R4): every `*.rs` file that defines a real
+ * `impl protocol::OperationDiff<...>` diff type but does not yet ALSO give that type a
+ * `protocol::DiffCodec` impl (via `#[derive(dsl::DslDiff)]` or a hand-rolled impl) — seeded at W1
+ * with every file that fails the check today. `DiffCodec` is deliberately NOT (yet) a hard
+ * supertrait bound of `OperationDiff` (see that trait's doc comment in `protocol_command/rs/lib.rs`)
+ * — this allowlist is the shrinking-list enforcement mechanism instead, exactly like
+ * `POLICY_PACK_COMPLETENESS_ALLOWLIST`/`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST` before it.
+ * `writer_op/rs/lib.rs` (`WriterDiff`) and `note_op/rs/lib.rs` (`NoteDiff`) are the two W1
+ * proof-of-mechanism types and are deliberately NOT in this list. A handful of entries are
+ * permanently-test-fixture files (`protocol_command`/`protocol_causal`/`protocol_crdt`/
+ * `protocol_testkit`/`plugin`/`db_document`/`db_engine`'s own `AddDiff`/`DummyDiff`/`TestDiff`/
+ * `RegisterDiff`/`GraphDiff`/`CausalAddDiff`/`HashDiff`/`BenchDiff` law/bench fixtures, used to test
+ * the trait machinery itself, never a real document type) — those are expected to stay allowlisted forever,
+ * mirrored by `POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`'s precedent for permanent entries.
+ * Full coverage (all real diff types deriving/implementing `DiffCodec`, then `DiffCodec` promoted to
+ * a hard supertrait bound) is wave 6's "Lane C (B5)" item. Remove an entry once that file's diff
+ * type gets a `DiffCodec` impl.
+ */
+const POLICY_DIFF_COMPLETENESS_ALLOWLIST = new Set<string>([
+  // permanent: trait-machinery test fixtures, never real document types
+  "🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/📄️document/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧪️testkit/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧪️testkit/⚡️implementation/🦀️rust/benches/protocol.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔀️crdt/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🎮️command/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔗️causal/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs",
+  // deferred to W6: real diff types not yet covered by #[derive(dsl::DslDiff)]
+  "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs",
+  "compose/client/lib/rs/lib.rs",
+  "✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/📕️norm/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌿️vcs/🎛️app/🌿️vcs/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌿️vcs/🎛️app/🌿️vcs/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌍️gis/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/📜️imperative/🎛️app/📜️imperative/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🏛️architect/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🏛️architect/🔨️module/🦴️spine/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/➗️mathematical/🎛️app/➗️mathematical/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/📏️layout/🎛️app/📏️layout/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/📖️playbook/🧩️extension/🌀️procedural/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/💠️lowpoly/🎛️app/💠️lowpoly/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+]);
+
+/**
+ * 🎫️ W1 grammar-engine wave, design ruling B-R2 ("`.grammar` = generated normative artifact"): every
+ * app's `🗣️dsl` crate is expected to eventually commit a `📖️<ext>.grammar` file generated by
+ * `dsl_grammar::from_record_spec` and checked by `dsl_grammar::Recognizer` against that app's own
+ * fixtures. `dsl_grammar::from_record_spec` itself landed at W1 (real, but v1-scoped — see its doc
+ * comment for exactly which `Shape`s it covers), proven against `pack_cli`'s own `sample_spec`-shaped
+ * fixture in `dsl_grammar`'s own test suite; committing a real `.grammar` file per app (and wiring
+ * the recognizer sweep into the fixture-sweep crate) is deferred in full to a later wave. No app has
+ * adopted B-R2 yet, so this list intentionally has no entries to enumerate one-by-one today — it
+ * exists now (empty) so the later wave that starts committing `.grammar` files has the shrinking-list
+ * mechanism ready, matching every other completeness allowlist's convention in this file. See
+ * `.claude/plans/the-final-goal-for-jolly-spindle.md` `## Master wave plan` `W8` for the "grammar-file
+ * allowlist → empty" gate this list is measured against once it starts being populated.
+ */
+const POLICY_GRAMMAR_FILE_ALLOWLIST = new Set<string>([]);
 //#endregion 🔧️PolicyAllowlists
 
 //#region 🔧️PolicyRuleRegionFormat
@@ -2454,6 +2546,69 @@ function policyCommandEnvelopeCompletenessBreaches(repoRoot: string): BreachReco
 }
 //#endregion 🔧️PolicyRuleCommandEnvelopeCompleteness
 
+//#region 🔧️PolicyRuleDiffCompleteness
+/**
+ * 📏️W1 grammar-engine wave rule (design ruling B-R4) — mirrors `policyCommandEnvelopeCompletenessBreaches`'s
+ * shrinking-allowlist pattern one step further: every file that defines a real `impl
+ * protocol::OperationDiff<...>` for some type must ALSO give that same type a `protocol::DiffCodec`
+ * impl (via `#[derive(dsl::DslDiff)]` or a hand-rolled `impl DiffCodec for`) — a diff is a first-class
+ * grammared value now, not serde-only. `POLICY_DIFF_COMPLETENESS_ALLOWLIST` tracks not-yet-converted
+ * (or permanently-exempt trait-machinery-fixture) files exactly like `POLICY_PACK_COMPLETENESS_ALLOWLIST`
+ * does for the pack lock step. File-level (not per-type) detection, matching this file's established
+ * convention: a file "has a diff impl" if some line matches `impl ... OperationDiff<...>`, and "has
+ * DiffCodec coverage" if it mentions `dsl::DslDiff` (the derive) or `DiffCodec for` (a hand-rolled impl)
+ * anywhere in the same file.
+ */
+function policyDiffCompletenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const diffImplPattern = /\bimpl\b[^\n{]*\bOperationDiff\s*</;
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (POLICY_DIFF_COMPLETENESS_ALLOWLIST.has(relPath)) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    if (!diffImplPattern.test(content)) continue;
+    const hasDiffCodec = content.includes("dsl::DslDiff") || content.includes("DiffCodec for");
+    if (hasDiffCodec) continue;
+    breaches.push({
+      id: `diff-completeness-${relPath}`,
+      summary: `"${relPath}" implements protocol::OperationDiff but never gives that diff type a protocol::DiffCodec impl`,
+      kind: "dsl-migration/diff-completeness",
+      scope: relPath,
+      priority: "high",
+      reason: "Design ruling B-R4: every OperationDiff::Diff type must also be a grammared DiffCodec value (print/parse/encode/decode_diff) — via #[derive(dsl::DslDiff)] or a hand-rolled impl.",
+      solution: `Add #[derive(dsl::DslDiff)] to ${relPath}'s diff type (or a hand-rolled impl DiffCodec for it), or if it's a genuine trait-machinery test fixture / not-yet-converted real type, add "${relPath}" to POLICY_DIFF_COMPLETENESS_ALLOWLIST citing why.`,
+    });
+  }
+  return breaches;
+}
+//#endregion 🔧️PolicyRuleDiffCompleteness
+
+//#region 🔧️PolicyRuleGrammarFileCompleteness
+/**
+ * 📏️W1 grammar-engine wave rule (design ruling B-R2) — the mirror-image of every other completeness
+ * rule in this file: instead of scanning for real files that are missing something, this one simply
+ * asserts `POLICY_GRAMMAR_FILE_ALLOWLIST` shrinks to empty over time (see that constant's doc comment
+ * for the current, deliberately-empty W1 state — no app has committed a `.grammar` file yet, so
+ * there is nothing to enumerate as a breach today). Kept as its own real (if currently vacuous)
+ * policy function — not a bare constant check inline elsewhere — so a later wave that starts seeding
+ * this allowlist with committed-but-stale `.grammar` files gets real breach reporting for free.
+ */
+function policyGrammarFileBreaches(_repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of POLICY_GRAMMAR_FILE_ALLOWLIST) {
+    breaches.push({
+      id: `grammar-file-completeness-${relPath}`,
+      summary: `"${relPath}" is tracked in POLICY_GRAMMAR_FILE_ALLOWLIST as missing/stale its generated .grammar file`,
+      kind: "dsl-migration/grammar-file-completeness",
+      scope: relPath,
+      priority: "low",
+      reason: "Design ruling B-R2: each app's 🗣️dsl crate is expected to commit a .grammar file generated by dsl_grammar::from_record_spec, checked by dsl_grammar::Recognizer against that app's own fixtures.",
+      solution: `Generate and commit ${relPath}'s .grammar file via dsl_grammar::from_record_spec, then remove it from POLICY_GRAMMAR_FILE_ALLOWLIST.`,
+    });
+  }
+  return breaches;
+}
+//#endregion 🔧️PolicyRuleGrammarFileCompleteness
+
 //#region 🔧️PolicyRuleProtocolMigration
 /**
  * 🔒️Names that must never again be reached through a re-created `vcs::` shim: the temporary CW3
@@ -2905,6 +3060,8 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyDslCompletenessBreaches(repoRoot));
   breaches.push(...policyPackCompletenessBreaches(repoRoot));
   breaches.push(...policyCommandEnvelopeCompletenessBreaches(repoRoot));
+  breaches.push(...policyDiffCompletenessBreaches(repoRoot));
+  breaches.push(...policyGrammarFileBreaches(repoRoot));
   breaches.push(...policyProtocolMigrationBreaches(repoRoot));
   breaches.push(...policyDbServerOnlyBreaches(repoRoot));
   breaches.push(...policyNoPackFilesBreaches(repoRoot));

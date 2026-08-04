@@ -41,20 +41,8 @@ impl Default for Fem3dConfig {
     }
 }
 
-impl store::ConfigRecord for Fem3dConfig {}
+store::impl_whole_record_config!(Fem3dConfig);
 
-/// 🧮️ Whole-record diff for `fem3d_op::Fem3dConfigOperation` (lives here, not in `fem3d_op`, since
-/// `protocol::OperationDiff`/`Fem3dConfig` are both foreign to that crate — the orphan rule requires at
-/// least one local type). Mirrors `Fem3dOperation::SetDocument`'s existing "whole-document replace"
-/// pattern: `apply` ignores `base` entirely.
-impl protocol::OperationDiff<Fem3dConfig> for Fem3dConfig {
-    fn apply(&self, _base: &Fem3dConfig) -> Fem3dConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 // #endregion 🔖️Config
 
 // #region 🔖️Io

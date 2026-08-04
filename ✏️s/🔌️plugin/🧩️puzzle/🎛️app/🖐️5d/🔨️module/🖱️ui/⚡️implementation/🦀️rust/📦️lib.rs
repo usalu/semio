@@ -456,19 +456,8 @@ impl store::DocumentPack for Puzzle5dRuntime {
     }
 }
 
-impl store::ConfigRecord for Puzzle5dRuntime {}
+store::impl_whole_record_config!(Puzzle5dRuntime);
 
-/// @emoji 🧮️ Whole-record diff — every `Puzzle5dConfigOperation` is a full-config `Snapshot` (see
-/// `Puzzle5dConfigOperation` below), so `apply` ignores `base` entirely, matching
-/// `puzzle_3d_ui::Puzzle3dRuntime`'s identical pattern.
-impl protocol::OperationDiff<Puzzle5dRuntime> for Puzzle5dRuntime {
-    fn apply(&self, _base: &Puzzle5dRuntime) -> Puzzle5dRuntime {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 /// @emoji 🧮️ B1: `Puzzle5dConfig`'s operation enum — lives here (in `ui`, not a lower `op`/`engine`
 /// crate) because `Puzzle5dConfig` itself is a type alias for `Puzzle5dRuntime`, which is (and stays)
@@ -634,7 +623,7 @@ fn window_instance_ids(kind_id: &str) -> Vec<String> {
 }
 
 fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 fn puzzle5d_grip_full_id(part_id: &str, grip_id: &str) -> String {

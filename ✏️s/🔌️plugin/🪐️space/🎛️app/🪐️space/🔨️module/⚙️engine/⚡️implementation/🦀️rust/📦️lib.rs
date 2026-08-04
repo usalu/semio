@@ -92,19 +92,8 @@ impl Default for SpaceConfig {
     }
 }
 
-impl store::ConfigRecord for SpaceConfig {}
+store::impl_whole_record_config!(SpaceConfig);
 
-/// @emoji 🧮️ Whole-record diff for `space_op::SpaceConfigOperation` (lives here, not in `space_op`,
-/// since `protocol::OperationDiff`/`SpaceConfig` are both foreign to that crate — the orphan rule
-/// requires at least one local type). Mirrors `shooting_engine::ShootingConfig`'s identical pattern.
-impl protocol::OperationDiff<SpaceConfig> for SpaceConfig {
-    fn apply(&self, _base: &SpaceConfig) -> SpaceConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Parameters

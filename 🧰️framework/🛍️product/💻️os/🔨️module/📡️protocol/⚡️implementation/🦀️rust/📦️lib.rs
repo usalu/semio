@@ -24,8 +24,8 @@ pub use protocol_causal::{
 };
 pub use protocol_channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, SectionProbe, CHANNEL_VERSION};
 pub use protocol_command::{
-    apply_collection_operation, collection_diff_from_operation, invert_collection_operation, operation_descriptor, register_operation_descriptor, CollectionDiff, CollectionOperation, CommandOutcome, Edit, Identified, ItemPatch, OpBinary, OpText,
-    Operation, OperationDescriptor, OperationDiff, OperationEvent, OperationMeta, OperationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
+    apply_collection_operation, collection_diff_from_operation, invert_collection_operation, operation_descriptor, register_operation_descriptor, CollectionDiff, CollectionOperation, CommandOutcome, DiffCodec, Edit, Identified, ItemPatch, OpBinary,
+    OpText, Operation, OperationDescriptor, OperationDiff, OperationEvent, OperationMeta, OperationUpcaster, Patchable, ReconcileReport, ReconcileSeverity,
 };
 pub use protocol_core::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, OperationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy};
 pub use protocol_crdt::merge_concurrent_diffs;

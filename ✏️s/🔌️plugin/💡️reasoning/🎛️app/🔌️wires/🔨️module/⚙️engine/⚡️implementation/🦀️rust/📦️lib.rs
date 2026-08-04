@@ -37,20 +37,8 @@ impl Default for WiresConfig {
     }
 }
 
-impl store::ConfigRecord for WiresConfig {}
+store::impl_whole_record_config!(WiresConfig);
 
-/// @emoji 🧮️ Whole-record diff for `reasoning_wires_op::WiresConfigOperation` (lives here, not in
-/// `reasoning_wires_op`, since `protocol::OperationDiff`/`WiresConfig` are both foreign to that crate —
-/// the orphan rule requires at least one local type). Mirrors `shooting_engine::ShootingConfig`'s
-/// identical "whole-record replace" impl: `apply` ignores `base` entirely.
-impl protocol::OperationDiff<WiresConfig> for WiresConfig {
-    fn apply(&self, _base: &WiresConfig) -> WiresConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️DocumentHelpers

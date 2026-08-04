@@ -77,20 +77,8 @@ impl Default for ShootingConfig {
     }
 }
 
-impl store::ConfigRecord for ShootingConfig {}
+store::impl_whole_record_config!(ShootingConfig);
 
-/// @emoji 🧮️ Whole-record diff for `shooting_op::ShootingConfigOperation` (lives here, not in
-/// `shooting_op`, since `protocol::OperationDiff`/`ShootingConfig` are both foreign to that crate —
-/// the orphan rule requires at least one local type). Mirrors `ShootingOperation::SetFixture`'s
-/// existing "whole-document replace" pattern: `apply` ignores `base` entirely.
-impl protocol::OperationDiff<ShootingConfig> for ShootingConfig {
-    fn apply(&self, _base: &ShootingConfig) -> ShootingConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

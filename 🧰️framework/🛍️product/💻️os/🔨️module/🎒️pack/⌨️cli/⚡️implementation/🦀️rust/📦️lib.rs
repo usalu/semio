@@ -52,8 +52,39 @@ fn registry_names() -> String {
     names.join(", ")
 }
 
+/// @emoji 🔎️ W1 foundation of the DSL registry unification (design ruling B-R3): a schema resolver
+/// this crate's CLI functions (`to-dsl`/`from-dsl`/`diff --schema`) can be driven through, so they
+/// stop being schema-blind without `pack_cli` itself taking on any app dependency — the trait, not an
+/// implementation, lives here; the real fan-in implementation is the NEW `dsl_registry` crate
+/// (`🗣️dsl/📇️registry`), which depends on the app `🗣️dsl` crates this crate deliberately does not.
+pub trait SchemaResolver {
+    fn resolve(&self, schema: &str) -> Option<dsl_schema::RecordSpec>;
+    /// @emoji 📇️ Every schema name this resolver knows, for help/error text — default empty so a
+    /// resolver that only cares about `resolve` doesn't have to implement it.
+    fn names(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+/// @emoji 🧬️ The crate's own fixed 2-entry demonstration table (`sample_spec`/`note_spec`), wrapped
+/// as a `SchemaResolver` — what every CLI subcommand resolves through by default when no external
+/// resolver is supplied. `main_impl`'s public behavior is unchanged: this is a refactor of
+/// `resolve_schema`'s prior free-function body into the new trait shape, not a behavior change.
+struct BuiltinRegistry;
+
+impl SchemaResolver for BuiltinRegistry {
+    fn resolve(&self, schema: &str) -> Option<dsl_schema::RecordSpec> {
+        schema_registry().get(schema).map(|spec_fn| spec_fn())
+    }
+    fn names(&self) -> Vec<String> {
+        let mut names: Vec<String> = schema_registry().keys().map(|s| s.to_string()).collect();
+        names.sort_unstable();
+        names
+    }
+}
+
 fn resolve_schema(name: &str) -> Option<dsl_schema::RecordSpec> {
-    schema_registry().get(name).map(|spec_fn| spec_fn())
+    BuiltinRegistry.resolve(name)
 }
 //#endregion 🔖️Registry
 

@@ -412,8 +412,14 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// straight through the still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack
 /// encoding respectively), same local-bridge shape as `semio_compose_rs`'s `KitSnapshot`. `Operation`/
 /// `OperationDiff` delegate straight through to the `Value` impls above too.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Puzzle2dPlayProjection(pub Value);
+
+impl PartialEq for Puzzle2dPlayProjection {
+    fn eq(&self, other: &Self) -> bool {
+        store::pack_rt::json_values_equal(&self.0, &other.0)
+    }
+}
 
 impl store::DocumentDsl for Puzzle2dPlayProjection {
     const EXTENSION: &'static str = "puzzle2d-play";

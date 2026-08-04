@@ -325,7 +325,7 @@ struct CadPlayView {
 }
 
 fn cad_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: CAD_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(CAD_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 fn camera_json(camera: &CadCamera) -> String {

@@ -48,7 +48,7 @@ use std::sync::{LazyLock, Mutex};
 
 //#region 🔖️DocumentHelpers
 fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: S_PLAY_CONTROLLER_ID.into(), action: action.into(), args: optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(S_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🖱️ On-demand space workflow context menu from hit-test and selection snapshot.

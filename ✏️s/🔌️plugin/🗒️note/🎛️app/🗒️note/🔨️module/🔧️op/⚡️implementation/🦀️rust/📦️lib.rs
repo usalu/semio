@@ -59,9 +59,10 @@ pub enum NoteOperation {
 
 /// 🧩️ Snapshot diff wrapping the forward `NoteOperation` — `apply` replays it, `absorb` keeps the latest
 /// (coalescing a whole gesture's `SetBlocks` stream into one edit).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDiff)]
 pub struct NoteDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(statements)]
     pub operation: Option<NoteOperation>,
 }
 
@@ -253,6 +254,38 @@ mod tests {
         let pre = note_engine::empty_note_document();
         store::test_support::assert_operation_round_trip(&pre, NoteOperation::SetGridSpacing { spacing: Some(48.0) });
     }
+
+    //#region 🔖️DiffCodec
+    /// 🧬️ W1 `DiffCodec` law: `parse_diff(print_diff(d)) == d` and `decode_diff(encode_diff(d)) == d`
+    /// — `NoteDiff` is one of the handful of real diff types proving the `#[derive(dsl::DslDiff)]`
+    /// mechanism (see `POLICY_DIFF_COMPLETENESS_ALLOWLIST` in `script.ts` for the rest, deferred to W6).
+    #[test]
+    fn note_diff_print_parse_round_trips() {
+        use protocol::DiffCodec;
+        let diffs = vec![
+            NoteDiff { operation: Some(NoteOperation::SetGridSpacing { spacing: Some(48.0) }) },
+            NoteDiff { operation: Some(NoteOperation::SetDocument { document: note_engine::empty_note_document() }) },
+            NoteDiff::default(),
+        ];
+        for diff in diffs {
+            let printed = diff.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line: {printed:?}");
+            let parsed = NoteDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff failed for {printed:?}: {e}"));
+            assert_eq!(parsed, diff, "DiffCodec text round trip diverged for {printed:?}");
+        }
+    }
+
+    #[test]
+    fn note_diff_encode_decode_round_trips() {
+        use protocol::DiffCodec;
+        let diffs = vec![NoteDiff { operation: Some(NoteOperation::SetGridSpacing { spacing: Some(48.0) }) }, NoteDiff::default()];
+        for diff in diffs {
+            let bytes = diff.encode_diff().expect("encode_diff");
+            let decoded = NoteDiff::decode_diff(&bytes).expect("decode_diff");
+            assert_eq!(decoded, diff, "DiffCodec binary round trip diverged");
+        }
+    }
+    //#endregion 🔖️DiffCodec
 
     /// 🗑️ `PutAsset`'s inverse must be composed (touch only the one key), not a whole-document
     /// `SetDocument` snapshot that would also clobber every other pending change.

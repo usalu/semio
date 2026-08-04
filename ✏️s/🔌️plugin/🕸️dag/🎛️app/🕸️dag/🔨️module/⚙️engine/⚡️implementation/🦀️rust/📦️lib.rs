@@ -51,20 +51,8 @@ impl Default for DagConfig {
     }
 }
 
-impl store::ConfigRecord for DagConfig {}
+store::impl_whole_record_config!(DagConfig);
 
-/// 🧮️ Whole-record diff for `dag_op::DagConfigOperation` (lives here, not in `dag_op`, since
-/// `protocol::OperationDiff`/`DagConfig` are both foreign to that crate — the orphan rule requires at
-/// least one local type). Mirrors `DagOperation::SetDocument`'s "whole-document replace" pattern:
-/// `apply` ignores `base` entirely.
-impl protocol::OperationDiff<DagConfig> for DagConfig {
-    fn apply(&self, _base: &DagConfig) -> DagConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 /// 🎥️ Reassembles the kernel's `DagCamera` from `DagConfig`'s flattened scalar fields — the seam
 /// `dag_ui` uses wherever the old `DagPlayRuntime::camera` field was read.

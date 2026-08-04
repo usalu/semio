@@ -49,20 +49,8 @@ impl Default for FormsConfig {
     }
 }
 
-impl store::ConfigRecord for FormsConfig {}
+store::impl_whole_record_config!(FormsConfig);
 
-/// @emoji 🧮️ Whole-record diff for `forms_op::FormsConfigOperation` (lives here, not in `forms_op`,
-/// since `protocol::OperationDiff`/`FormsConfig` are both foreign to that crate — the orphan rule
-/// requires at least one local type). Mirrors `shooting_engine::ShootingConfig`'s identical pattern:
-/// `apply` ignores `base` entirely.
-impl protocol::OperationDiff<FormsConfig> for FormsConfig {
-    fn apply(&self, _base: &FormsConfig) -> FormsConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

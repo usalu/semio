@@ -234,7 +234,7 @@ struct RegisterBlockItem {
 
 //#region 🔖️Helpers
 fn architect_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: ARCHITECT_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(ARCHITECT_APP_ID).action(action, args)
 }
 
 fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {

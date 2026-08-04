@@ -161,18 +161,8 @@ pub fn default_utility_params_json() -> String {
     .to_string()
 }
 
-impl store::ConfigRecord for LowpolyConfig {}
+store::impl_whole_record_config!(LowpolyConfig);
 
-/// @emoji 🧮️ Whole-record diff for `lowpoly_op::LowpolyConfigOperation` — mirrors
-/// `shooting_engine::ShootingConfig`'s identical pattern (`apply` ignores `base` entirely).
-impl protocol::OperationDiff<LowpolyConfig> for LowpolyConfig {
-    fn apply(&self, _base: &LowpolyConfig) -> LowpolyConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

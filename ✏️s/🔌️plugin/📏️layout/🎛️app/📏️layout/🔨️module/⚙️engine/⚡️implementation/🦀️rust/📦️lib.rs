@@ -80,20 +80,8 @@ impl Default for LayoutConfig {
     }
 }
 
-impl store::ConfigRecord for LayoutConfig {}
+store::impl_whole_record_config!(LayoutConfig);
 
-/// @emoji 🧮️ Whole-record diff for `layout_op::LayoutConfigOperation` (lives here, not in `layout_op`,
-/// since `protocol::OperationDiff`/`LayoutConfig` are both foreign to that crate — the orphan rule
-/// requires at least one local type). Mirrors `LayoutOperation::SetDataFields`'s "whole-field replace"
-/// shape one level up: `apply` ignores `base` entirely.
-impl protocol::OperationDiff<LayoutConfig> for LayoutConfig {
-    fn apply(&self, _base: &LayoutConfig) -> LayoutConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

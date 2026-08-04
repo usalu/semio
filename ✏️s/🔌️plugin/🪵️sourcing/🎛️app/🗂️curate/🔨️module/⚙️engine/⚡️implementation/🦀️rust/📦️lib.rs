@@ -42,20 +42,8 @@ impl Default for SourcingCurateConfig {
     }
 }
 
-impl store::ConfigRecord for SourcingCurateConfig {}
+store::impl_whole_record_config!(SourcingCurateConfig);
 
-/// @emoji 🧮️ Whole-record diff for `sourcing_op::SourcingCurateConfigOperation` (lives here, not in
-/// `sourcing_op`, since `protocol::OperationDiff`/`SourcingCurateConfig` are both foreign to that crate
-/// — the orphan rule requires at least one local type). Mirrors `SourcingOperation::SetDocument`'s
-/// existing "whole-document replace" pattern: `apply` ignores `base` entirely.
-impl protocol::OperationDiff<SourcingCurateConfig> for SourcingCurateConfig {
-    fn apply(&self, _base: &SourcingCurateConfig) -> SourcingCurateConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

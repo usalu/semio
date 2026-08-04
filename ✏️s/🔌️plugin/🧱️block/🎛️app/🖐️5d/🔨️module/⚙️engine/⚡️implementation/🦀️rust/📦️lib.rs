@@ -80,19 +80,8 @@ impl Default for Block5dConfig {
     }
 }
 
-impl store::ConfigRecord for Block5dConfig {}
+store::impl_whole_record_config!(Block5dConfig);
 
-/// @emoji 🧮️ Whole-record diff for `block_5d_op::Block5dConfigOperation` — lives here (not in
-/// `block_5d_op`) since `protocol::OperationDiff`/`Block5dConfig` are both foreign to that crate (the
-/// orphan rule needs one local type); mirrors `shooting_engine`'s identical pattern.
-impl protocol::OperationDiff<Block5dConfig> for Block5dConfig {
-    fn apply(&self, _base: &Block5dConfig) -> Block5dConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

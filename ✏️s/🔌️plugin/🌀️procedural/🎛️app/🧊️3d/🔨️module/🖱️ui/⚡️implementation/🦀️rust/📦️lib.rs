@@ -56,7 +56,7 @@ const PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural.play.gener
 
 //#region 🔖️DocumentHelpers
 fn procedural_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PROCEDURAL_3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(PROCEDURAL_3D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🎯️ B1: the typed-command counterpart of the pre-B1 `mesh_selection_ids` (JSON-args) — falls back

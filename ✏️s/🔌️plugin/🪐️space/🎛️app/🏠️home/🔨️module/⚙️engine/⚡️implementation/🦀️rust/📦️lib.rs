@@ -32,18 +32,8 @@ impl Default for HomeConfig {
     }
 }
 
-impl store::ConfigRecord for HomeConfig {}
+store::impl_whole_record_config!(HomeConfig);
 
-/// @emoji 🧮️ Whole-record diff for `home_op::HomeConfigOperation` — mirrors `space_engine::SpaceConfig`'s
-/// identical pattern (see its doc comment for the full rationale).
-impl protocol::OperationDiff<HomeConfig> for HomeConfig {
-    fn apply(&self, _base: &HomeConfig) -> HomeConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🧪️Tests

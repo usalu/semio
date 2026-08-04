@@ -77,19 +77,8 @@ impl Default for Block2dConfig {
     }
 }
 
-impl store::ConfigRecord for Block2dConfig {}
+store::impl_whole_record_config!(Block2dConfig);
 
-/// @emoji 🧮️ Whole-record diff for `block_2d_op::Block2dConfigOperation` — lives here (not in
-/// `block_2d_op`) since `protocol::OperationDiff`/`Block2dConfig` are both foreign to that crate (the
-/// orphan rule needs one local type); mirrors `shooting_engine`'s identical pattern.
-impl protocol::OperationDiff<Block2dConfig> for Block2dConfig {
-    fn apply(&self, _base: &Block2dConfig) -> Block2dConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

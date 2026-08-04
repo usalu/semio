@@ -94,19 +94,8 @@ impl Default for Block3dConfig {
     }
 }
 
-impl store::ConfigRecord for Block3dConfig {}
+store::impl_whole_record_config!(Block3dConfig);
 
-/// @emoji 🧮️ Whole-record diff for `block_3d_op::Block3dConfigOperation` — lives here (not in
-/// `block_3d_op`) since `protocol::OperationDiff`/`Block3dConfig` are both foreign to that crate (the
-/// orphan rule needs one local type); mirrors `shooting_engine`'s identical pattern.
-impl protocol::OperationDiff<Block3dConfig> for Block3dConfig {
-    fn apply(&self, _base: &Block3dConfig) -> Block3dConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

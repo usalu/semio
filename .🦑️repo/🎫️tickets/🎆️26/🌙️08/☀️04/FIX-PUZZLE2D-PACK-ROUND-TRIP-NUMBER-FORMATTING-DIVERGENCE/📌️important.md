@@ -1,0 +1,6 @@
+# Fix Puzzle Pack Round Trip Number Formatting Divergence
+
+- Root Cause: In JSON (`serde_json::Value`), numbers can be stored as integer variants (`PosInt(3)`) or float variants (`Float(3.0)`). Standard `serde_json::Value::eq` treats integer and float representations of the same numeric value as non-equal. `DslValue` wire format represents numbers as IEEE-754 `f64` (`DslValue::Number(f64)`). Upon pack encode/decode round trip, numbers decode through `DslValue::Number(f64)`, which produces float `serde_json::Number` variants when converted back to JSON. Comparing projections using derived `PartialEq` caused spurious test failures whenever source projections parsed integer numbers from DSL/JSON text while post-round-trip projections held float representations (or vice-versa).
+- Solution:
+  1. Added [`store::pack_rt::json_values_equal`](file:///Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs#L296-L300) in `store` crate to provide semantic JSON value equality through `DslValue` normalization, treating integer-valued floats (`3` and `3.0`) as semantically equal.
+  2. Implemented `PartialEq` for `Puzzle2dPlayProjection`, `Puzzle3dPlayProjection`, and `Puzzle5dPlayProjection` via `store::pack_rt::json_values_equal`.

@@ -1274,20 +1274,8 @@ impl Default for DrawConfig {
     }
 }
 
-impl store::ConfigRecord for DrawConfig {}
+store::impl_whole_record_config!(DrawConfig);
 
-/// @emoji 🧮️ Whole-record diff for `draw_op::DrawConfigOperation` (lives here, not in `draw_op`,
-/// since `protocol::OperationDiff`/`DrawConfig` are both foreign to that crate — the orphan rule
-/// requires at least one local type). Mirrors `DrawOperation::backwards`'s existing "whole-document
-/// replace" pattern.
-impl protocol::OperationDiff<DrawConfig> for DrawConfig {
-    fn apply(&self, _base: &DrawConfig) -> DrawConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

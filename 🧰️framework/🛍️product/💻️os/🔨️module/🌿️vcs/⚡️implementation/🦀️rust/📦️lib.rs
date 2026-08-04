@@ -7,10 +7,11 @@ use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 use thiserror::Error;
 
-// This crate's own body spells the trait name bare (`crate::Operation<P>` in `apply_operation`/
-// `absorb_diff` below, disambiguating the trait from the same-named generic parameter) — a private
-// (non-`pub`) import keeps that ergonomics without re-exposing `protocol::Operation` on `vcs`'s own
-// public API (dependents import `protocol::Operation` directly).
+// This crate's own body spells the trait name bare (`crate::Operation<P>` in `apply_operation`
+// below, disambiguating the trait from the same-named generic parameter) — a private (non-`pub`)
+// import keeps that ergonomics without re-exposing `protocol::Operation` on `vcs`'s own public API
+// (dependents import `protocol::Operation` directly). `OperationDiff` is imported for its `apply`
+// method, called on `Operation::Diff` inside `apply_operation`.
 use protocol::{Edit, Operation, OperationDiff};
 
 static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -239,12 +240,6 @@ where
     operation.diff(projection).apply(projection)
 }
 
-pub fn absorb_diff<P, Operation>(_projection: &P, existing: &mut Operation::Diff, incoming: Operation::Diff)
-where
-    Operation: crate::Operation<P>,
-{
-    existing.absorb(incoming);
-}
 //#endregion 🔖️Operation
 //#region 🔖️MergeStrategy
 // 🎞️ `merge_concurrent_diffs` (real per-`MergeStrategyKind` dispatch) lives in `protocol_crdt`. The

@@ -105,20 +105,8 @@ impl Default for Process3dConfig {
     }
 }
 
-impl store::ConfigRecord for Process3dConfig {}
+store::impl_whole_record_config!(Process3dConfig);
 
-/// @emoji 🧮️ Whole-record diff for `process_3d_op::Process3dConfigOperation` (lives here, not in
-/// `process_3d_op`, since `protocol::OperationDiff`/`Process3dConfig` are both foreign to that crate —
-/// the orphan rule requires at least one local type). Mirrors `Process3dOperation::SetDocument`'s
-/// existing "whole-document replace" pattern: `apply` ignores `base` entirely.
-impl protocol::OperationDiff<Process3dConfig> for Process3dConfig {
-    fn apply(&self, _base: &Process3dConfig) -> Process3dConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

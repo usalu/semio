@@ -486,19 +486,8 @@ impl store::DocumentPack for Puzzle3dRuntime {
     }
 }
 
-impl store::ConfigRecord for Puzzle3dRuntime {}
+store::impl_whole_record_config!(Puzzle3dRuntime);
 
-/// @emoji 🧮️ Whole-record diff — every `Puzzle3dConfigOperation` is a full-config `Snapshot` (see
-/// `puzzle_3d_op::Puzzle3dConfigOperation`), so `apply` ignores `base` entirely, matching
-/// `shooting_engine::ShootingConfig`'s identical pattern.
-impl protocol::OperationDiff<Puzzle3dRuntime> for Puzzle3dRuntime {
-    fn apply(&self, _base: &Puzzle3dRuntime) -> Puzzle3dRuntime {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 /// @emoji 🧮️ B1: `Puzzle3dConfig`'s operation enum — lives here (in `ui`, not a lower `op`/`engine`
 /// crate) because `Puzzle3dConfig` itself is a type alias for `Puzzle3dRuntime`, which is (and stays)
@@ -871,7 +860,7 @@ fn window_instance_ids(config: &Puzzle3dConfig, kind_id: &str) -> Vec<String> {
 }
 
 fn puzzle3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 fn camera_json(camera: &Puzzle3dCamera) -> String {

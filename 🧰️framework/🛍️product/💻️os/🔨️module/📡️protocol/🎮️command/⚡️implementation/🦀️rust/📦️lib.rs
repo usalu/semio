@@ -115,6 +115,28 @@ pub trait OpBinary: Sized {
 }
 //#endregion 🔖️OpBinary
 
+//#region 🔖️DiffCodec
+/// @emoji 🧬️ Grammared twin of [`OpText`]/[`OpBinary`], but for a technology's `OperationDiff::Diff`
+/// value rather than its `Operation`: the W1 foundation of the `handcrafted-grammar-for-every-artifact`
+/// program's diff track (design ruling B-R4 at `.claude/plans/the-final-goal-for-jolly-spindle.md`) —
+/// today every `*Diff` type is serde-only, this trait promotes a diff to a first-class grammared value
+/// exactly like `OpText`/`OpBinary` already did for operations. In practice emitted by
+/// `#[derive(dsl::DslDiff)]` through the same `RecordSpec`-generation machinery `DslRecord`/
+/// `DslDocument` already use (a diff is structurally just another record). Schema id convention:
+/// `"<doc-schema>#diff"`. Deliberately NOT (yet) a supertrait bound of [`OperationDiff`] — W1 only
+/// proves the mechanism on a handful of real diff types (tracked in `script.ts`'s
+/// `POLICY_DIFF_COMPLETENESS_ALLOWLIST`); wiring it as a hard bound across all diff types is deferred
+/// to wave 6 (`## Master wave plan` `W6 — Lane C (B5)`), once every type is covered.
+/// LAWS: `Diff::parse_diff(&d.print_diff()) == d`, `Diff::decode_diff(&d.encode_diff()?)? == d`,
+/// `print_diff` output never contains `\n`, and `encode_diff` is deterministic.
+pub trait DiffCodec: Sized {
+    fn print_diff(&self) -> String;
+    fn parse_diff(line: &str) -> Result<Self, dsl_core::TextError>;
+    fn encode_diff(&self) -> Result<Vec<u8>, protocol_core::ProtocolError>;
+    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol_core::ProtocolError>;
+}
+//#endregion 🔖️DiffCodec
+
 //#region 🔖️Meta
 /// @emoji 🧾️ Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
 /// `store::OperationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare

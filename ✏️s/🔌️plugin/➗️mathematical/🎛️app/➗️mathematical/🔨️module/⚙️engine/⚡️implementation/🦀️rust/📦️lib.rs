@@ -29,20 +29,8 @@ impl Default for MathConfig {
     }
 }
 
-impl store::ConfigRecord for MathConfig {}
+store::impl_whole_record_config!(MathConfig);
 
-/// @emoji 🧮️ Whole-record diff for `mathematical_op::MathConfigOperation` (lives here, not in
-/// `mathematical_op`, since `protocol::OperationDiff`/`MathConfig` are both foreign to that crate —
-/// the orphan rule requires at least one local type). Mirrors `shooting_engine::ShootingConfig`'s
-/// pattern: `apply` ignores `base` entirely.
-impl protocol::OperationDiff<MathConfig> for MathConfig {
-    fn apply(&self, _base: &MathConfig) -> MathConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

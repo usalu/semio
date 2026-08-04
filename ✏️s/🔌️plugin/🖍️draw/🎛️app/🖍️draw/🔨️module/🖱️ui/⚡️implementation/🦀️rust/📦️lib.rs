@@ -58,7 +58,7 @@ const DRAW_PLAY_EXAMPLE_DEFAULT_ID: &str = "semio";
 
 //#region 🔖️DocumentHelpers
 fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: DRAW_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(DRAW_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 fn canvas_point_to_world(camera: &draw::DrawCamera, x: f64, y: f64, viewport_w: f64, viewport_h: f64) -> (f64, f64) {

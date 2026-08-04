@@ -62,7 +62,7 @@ fn play_view(projection: &Procedural2dDocument, config: &Procedural2dConfig) -> 
 
 //#region 🔖️DocumentHelpers
 fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PROCEDURAL2D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(PROCEDURAL2D_PLAY_APP_ID).action(action, args)
 }
 
 fn eval_preview_layers(play: &Procedural2dPlayView, preview: bool) -> String {

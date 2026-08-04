@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
 pub use dsl_core::*;
-pub use dsl_derive::{DslDocument, DslEnum, DslOps, DslRecord, DslScalar};
+pub use dsl_derive::{DslDiff, DslDocument, DslEnum, DslOps, DslRecord, DslScalar};
 pub use dsl_schema::*;
 
 pub use dsl_schema::{from_dsl_value, to_dsl_value};
@@ -431,16 +431,20 @@ pub fn idiom(lang: &str) -> Option<IdiomHooks> {
     registry.get(lang).copied()
 }
 
-/// @emoji 🎭️ Which of an app's three grammars (per the `handcrafted-grammar-for-every-artifact`
+/// @emoji 🎭️ Which of an app's four grammars (per the `handcrafted-grammar-for-every-artifact`
 /// program) a registered [`LanguageSpec`] describes. `Embedded` is `DslIdiom`'s existing Route B
 /// (a `Shape::Embed(lang)` host field), kept as its own variant rather than folded into `Document`
-/// since an embedded language has no `extension`/`DocumentCodec` of its own.
+/// since an embedded language has no `extension`/`DocumentCodec` of its own. `Diff` is the W1
+/// addition (design ruling B-R4): a registered `#[derive(dsl::DslDiff)]` diff type, conventionally
+/// registered under the id `"<doc-schema>#diff"` — additive alongside the other three roles, no
+/// existing registration is affected by this variant's addition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LanguageRole {
     Document,
     Config,
     Ops,
     Embedded,
+    Diff,
 }
 
 /// @emoji 📖️ One app's grammar, registered once at plugin/idiom init: identity, the extension it

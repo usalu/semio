@@ -1,0 +1,16 @@
+{
+  "title": "Fix Dev Dashboard Rust Cli Package Name",
+  "emoji": "🛠️",
+  "status": "closed",
+  "description": "Fix package ID specification repo_cli error when running script.ts in repo cli by updating package name to semio-framework-repo-cli.",
+  "goal": "AI-OPTIMIZED-REPO",
+  "sessions": [],
+  "summary": "Updated Cargo package ID reference in `🧰️framework/🛍️product/🦑️repo/🔨️module/⌨️cli/⚡️implementation/🦀️rust/📜️script.ts` from `repo_cli` to `semio-framework-repo-cli` to match the crate name in `Cargo.toml`. Passed `devToolingEnv()` to `runCmd` and `runCmdStatus` for robust sccache/sandbox toolchain fallback. Verified cargo build and execution.",
+  "files": {
+    "created": [],
+    "updated": [
+      "🧰️framework/🛍️product/🦑️repo/🔨️module/⌨️cli/⚡️implementation/🦀️rust/📜️script.ts"
+    ],
+    "deleted": []
+  }
+}

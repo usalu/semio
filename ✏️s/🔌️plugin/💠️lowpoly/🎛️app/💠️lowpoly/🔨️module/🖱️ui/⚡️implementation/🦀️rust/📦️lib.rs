@@ -54,7 +54,7 @@ const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[("box", "Cube", "box"), ("pla
 
 //#region 🔖️Config
 fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: LOWPOLY_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(LOWPOLY_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 fn utility_param_f32(params: &Value, key: &str, default: f32) -> f32 {

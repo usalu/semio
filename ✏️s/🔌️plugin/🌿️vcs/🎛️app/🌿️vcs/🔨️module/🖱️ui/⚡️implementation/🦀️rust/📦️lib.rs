@@ -41,7 +41,7 @@ fn demo_authors() -> Vec<vcs_kernel::Author> {
 }
 
 fn vcs_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: VCS_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(VCS_PLAY_APP_ID).action(action, args)
 }
 
 fn vcs_demo_projection_diff_operations(current: &VcsDemoProjection, next: &VcsDemoProjection) -> Vec<VcsDemoOperation> {

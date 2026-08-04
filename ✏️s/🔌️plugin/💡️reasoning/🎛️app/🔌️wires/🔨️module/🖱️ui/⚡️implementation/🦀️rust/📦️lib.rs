@@ -42,7 +42,7 @@ const WIRES_DOCUMENT_RELATIONSHIP_PREFIX: &str = "wires-play-document.relationsh
 
 //#region 🔖️DocumentHelpers
 fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: WIRES_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(WIRES_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 fn dsl_to_json(value: &DslValue) -> Value {

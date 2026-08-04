@@ -68,7 +68,7 @@ fn available_modules() -> Vec<ModuleCatalogue> {
 
 //#region 🔖️Document
 fn sourcing_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(SOURCING_CONTROLLER_ID).action(action, args)
 }
 
 /// 👁️ Was `document.runtime.selected_object_id` — B1 moved the selected-object pointer onto

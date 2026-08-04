@@ -29,20 +29,8 @@ impl Default for ImperativeConfig {
     }
 }
 
-impl store::ConfigRecord for ImperativeConfig {}
+store::impl_whole_record_config!(ImperativeConfig);
 
-/// @emoji 🧮️ Whole-record diff for `imperative_op::ImperativeConfigOperation` (lives here, not in
-/// `imperative_op`, since `protocol::OperationDiff`/`ImperativeConfig` are both foreign to that crate —
-/// the orphan rule requires at least one local type). Mirrors `shooting_engine::ShootingConfig`'s
-/// pattern: `apply` ignores `base` entirely.
-impl protocol::OperationDiff<ImperativeConfig> for ImperativeConfig {
-    fn apply(&self, _base: &ImperativeConfig) -> ImperativeConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

@@ -1,18 +1,18 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Builds/tests the `repo_cli` crate and execs the `semio` binary (nx bridge for `repo/cli/rs`). */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {
-    runCmd("cargo", ["build", "-p", "repo_cli", "--release"], { cwd: this.repoRoot });
+    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli", "--release"], { cwd: this.repoRoot, env: devToolingEnv() });
   }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["repo_cli"], this.repoRoot, rest);
+    await runCargoTestBudgeted(["semio-framework-repo-cli"], this.repoRoot, rest);
   }
 }
 
@@ -23,10 +23,10 @@ class TestScript extends BundleScript {
  */
 class RunScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("cargo", ["build", "-p", "repo_cli", "--release"], { cwd: this.repoRoot });
+    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli", "--release"], { cwd: this.repoRoot, env: devToolingEnv() });
     const binName = process.platform === "win32" ? "semio.exe" : "semio";
     const bin = join(this.repoRoot, "target", "release", binName);
-    const status = runCmdStatus(bin, segments, { cwd: this.repoRoot });
+    const status = runCmdStatus(bin, segments, { cwd: this.repoRoot, env: devToolingEnv() });
     process.exit(status);
   }
 }

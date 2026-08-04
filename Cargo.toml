@@ -9,6 +9,7 @@ members = [
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧪️fixture-sweep/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🖋️notation/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/📖️grammar/⚡️implementation/🦀️rust",
+    "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/📇️registry/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/👪️family/🕸️graph/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/👪️family/📊️sheet/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/👪️family/🗂️catalog/⚡️implementation/🦀️rust",

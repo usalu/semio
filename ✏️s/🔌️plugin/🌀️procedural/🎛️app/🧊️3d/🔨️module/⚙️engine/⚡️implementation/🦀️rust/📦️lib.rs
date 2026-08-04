@@ -217,20 +217,8 @@ impl Procedural3dConfig {
     }
 }
 
-impl store::ConfigRecord for Procedural3dConfig {}
+store::impl_whole_record_config!(Procedural3dConfig);
 
-/// @emoji 🧮️ Whole-record diff for `procedural_3d_op::Procedural3dConfigOperation` (lives here, not in
-/// `procedural_3d_op`, since `protocol::OperationDiff`/`Procedural3dConfig` are both foreign to that
-/// crate — the orphan rule requires at least one local type). Mirrors `ShootingConfig`'s identical
-/// "whole-record replace" pattern.
-impl protocol::OperationDiff<Procedural3dConfig> for Procedural3dConfig {
-    fn apply(&self, _base: &Procedural3dConfig) -> Procedural3dConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Types
 
 //#region 🔖️Io

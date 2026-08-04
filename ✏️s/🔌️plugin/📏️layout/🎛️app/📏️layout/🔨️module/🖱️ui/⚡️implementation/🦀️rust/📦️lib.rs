@@ -62,7 +62,7 @@ struct PreflightIssue {
 
 //#region 🔖️DocumentHelpers
 fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: LAYOUT_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(LAYOUT_PLAY_APP_ID).action(action, args)
 }
 
 fn active_page<'a>(doc: &'a LayoutDocument, config: &LayoutConfig) -> Option<&'a Page> {

@@ -49,20 +49,8 @@ impl Default for NoteConfig {
     }
 }
 
-impl store::ConfigRecord for NoteConfig {}
+store::impl_whole_record_config!(NoteConfig);
 
-/// @emoji 🧮️ Whole-record diff for `note_op::NoteConfigOperation` (lives here, not in `note_op`, since
-/// `protocol::OperationDiff`/`NoteConfig` are both foreign to that crate — the orphan rule requires at
-/// least one local type). Mirrors `NoteOperation::SetDocument`'s "whole-document replace" pattern:
-/// `apply` ignores `base` entirely.
-impl protocol::OperationDiff<NoteConfig> for NoteConfig {
-    fn apply(&self, _base: &NoteConfig) -> NoteConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️DocumentHelpers

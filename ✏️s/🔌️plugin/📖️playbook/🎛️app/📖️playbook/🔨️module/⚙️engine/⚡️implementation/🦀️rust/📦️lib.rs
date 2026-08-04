@@ -25,18 +25,8 @@ impl Default for PlaybookConfig {
     }
 }
 
-impl store::ConfigRecord for PlaybookConfig {}
+store::impl_whole_record_config!(PlaybookConfig);
 
-/// @emoji 🧮️ Whole-record diff for `playbook_op::PlaybookConfigOperation` — mirrors
-/// `writer_engine::WriterConfig`'s own `OperationDiff` impl (`apply` ignores `base` entirely).
-impl protocol::OperationDiff<PlaybookConfig> for PlaybookConfig {
-    fn apply(&self, _base: &PlaybookConfig) -> PlaybookConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

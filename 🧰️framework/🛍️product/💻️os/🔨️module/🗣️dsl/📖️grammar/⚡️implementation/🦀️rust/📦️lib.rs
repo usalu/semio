@@ -452,6 +452,63 @@ pub fn canonicalize(text: &str) -> Result<String, TextError> {
 }
 //#endregion 🔖️Writer
 
+//#region 🔖️FromRecordSpec
+/// @emoji 🏗️ W1 skeleton of design ruling B-R2 ("`.grammar` = generated normative artifact"):
+/// mechanically lowers a `dsl_schema::RecordSpec` — the same value every `#[derive(dsl::Dsl...)]`
+/// macro already builds — into a [`GrammarFile`] a [`Recognizer`] can check real printed text
+/// against. v1 scope (real, not a stub, but genuinely partial): a flat `RecordLayout::Inline`/
+/// `RecordLayout::Lines` record whose fields are all `Shape::Bool`/`Int`/`UInt`/`Float`/`Text`/
+/// `Bytes64`/`List` of one of those — exactly the shape `dsl_derive`'s `record_codegen` already
+/// covers for the common case, and the one this crate's own `round_trip_matrix_over_representative_
+/// grammars` test exercises by hand today. Any other `Shape` (`Record`/`Statements`/`Block`/`Map`/
+/// `Table`/`Wire`/…) is a genuine gap, not silently approximated — `Err` names the unsupported shape
+/// so a caller knows exactly what's missing rather than shipping a grammar that would falsely reject
+/// (or worse, falsely accept) real documents. Full coverage — including nested records/statements —
+/// is deferred to a later wave (`POLICY_GRAMMAR_FILE_ALLOWLIST` in the root `📜️script.ts` tracks
+/// which apps still lack a committed `.grammar` file; every app is seeded there today since no app
+/// has adopted B-R2 yet).
+pub fn from_record_spec(id: &str, spec: &dsl_schema::RecordSpec) -> Result<GrammarFile, String> {
+    let mut symbols = Vec::new();
+    if let Some(keyword) = &spec.keyword {
+        symbols.push(Symbol::Literal(keyword.clone()));
+    }
+
+    let mut positional_fields: Vec<&dsl_schema::FieldSpec> = spec.fields.iter().filter(|f| f.position.is_some()).collect();
+    positional_fields.sort_by_key(|f| f.position.expect("filtered on position.is_some()"));
+    for field in positional_fields {
+        let symbol = terminal_for_shape(&field.shape)?;
+        symbols.push(if field.optional { Symbol::Optional(Box::new(symbol)) } else { symbol });
+    }
+
+    let mut keyed_fields: Vec<&dsl_schema::FieldSpec> = spec.fields.iter().filter(|f| f.position.is_none()).collect();
+    keyed_fields.sort_by_key(|f| f.id);
+    for field in keyed_fields {
+        let value_symbol = terminal_for_shape(&field.shape)?;
+        let entry = Symbol::Group(vec![Alternative { symbols: vec![Symbol::Literal(field.key.clone()), Symbol::Terminal("EQUALS".to_string()), value_symbol] }]);
+        symbols.push(if field.optional { Symbol::Optional(Box::new(entry)) } else { entry });
+    }
+
+    let production = Production { name: "document".to_string(), alternatives: vec![Alternative { symbols }] };
+    Ok(GrammarFile { id: id.to_string(), extension: None, uses: Vec::new(), start: "document".to_string(), productions: vec![production] })
+}
+
+/// @emoji 🧭️ [`from_record_spec`]'s per-field shape lowering — see that function's doc comment for
+/// exactly which `Shape` variants v1 covers. `Text` matches `{IDENT | TEXT}` (a `Group` alternation)
+/// since the engine's "bare-preferred" printing law (`dsl_core::is_bare_ident`) means an identical
+/// field can print as either token kind depending on its value.
+fn terminal_for_shape(shape: &dsl_schema::Shape) -> Result<Symbol, String> {
+    match shape {
+        dsl_schema::Shape::Bool => Ok(Symbol::Terminal("IDENT".to_string())),
+        dsl_schema::Shape::Int | dsl_schema::Shape::UInt => Ok(Symbol::Terminal("INT".to_string())),
+        dsl_schema::Shape::Float => Ok(Symbol::Terminal("FLOAT".to_string())),
+        dsl_schema::Shape::Text => Ok(Symbol::Group(vec![Alternative { symbols: vec![Symbol::Terminal("IDENT".to_string())] }, Alternative { symbols: vec![Symbol::Terminal("TEXT".to_string())] }])),
+        dsl_schema::Shape::Bytes64 => Ok(Symbol::Terminal("TEXT".to_string())),
+        dsl_schema::Shape::List(inner) => Ok(Symbol::Star(Box::new(terminal_for_shape(inner)?))),
+        other => Err(format!("dsl_grammar::from_record_spec: v1 lowering does not yet cover {other:?} — see this function's doc comment")),
+    }
+}
+//#endregion 🔖️FromRecordSpec
+
 //#region 🔖️Recognizer
 /// @emoji 🧭️ What the recognizer can check TODAY: `Literal`/`Terminal`/`Ref`/`Group`/quantifiers
 /// against a real `dsl_core`-lexed token stream, plus macros that have a registered matcher. Only
@@ -694,5 +751,51 @@ mod tests {
         assert!(recognizer.recognize("beam e3").expect("recognize"));
         assert!(!recognizer.recognize("beam").expect("recognize"));
     }
+
+    //#region 🔖️FromRecordSpecTests
+    /// 🧬️ Mirrors `pack_cli`'s own `sample_spec()` (three keyed scalar fields, no keyword) — the
+    /// "smallest possible schema" the pack CLI already uses as its own demonstration fixture.
+    fn sample_record_spec() -> dsl_schema::RecordSpec {
+        dsl_schema::RecordSpec::new(
+            None,
+            dsl_schema::RecordLayout::Lines,
+            vec![dsl_schema::FieldSpec::new(1, "name", dsl_schema::Shape::Text), dsl_schema::FieldSpec::new(2, "age", dsl_schema::Shape::UInt), dsl_schema::FieldSpec::new(3, "active", dsl_schema::Shape::Bool)],
+        )
+    }
+
+    #[test]
+    fn from_record_spec_lowers_a_flat_scalar_record_and_recognizes_its_own_printed_text() {
+        let spec = sample_record_spec();
+        let grammar = from_record_spec("sample", &spec).expect("from_record_spec");
+        assert_eq!(grammar.id, "sample");
+        assert_eq!(grammar.start, "document");
+        // The generated grammar must itself be a well-formed `.grammar` file: round trips through
+        // this crate's own parser/printer exactly like a hand-authored one.
+        let printed = print_grammar(&grammar);
+        let reparsed = parse_grammar(&printed).unwrap_or_else(|e| panic!("generated grammar failed to reparse: {e}\n{printed}"));
+        assert_eq!(reparsed, grammar);
+
+        // The generated grammar accepts REAL printed text from the record it was lowered from — not
+        // hand-typed fixture text — proving the mechanism against the actual printer, not a guess.
+        let mut record = dsl_schema::RecordValue::default();
+        record.fields.insert(1, dsl_schema::FieldValue::Text("Ada Lovelace".to_string()));
+        record.fields.insert(2, dsl_schema::FieldValue::UInt(42));
+        record.fields.insert(3, dsl_schema::FieldValue::Bool(true));
+        let mut writer = dsl_schema::Writer::new();
+        dsl_schema::print_record(&record, &spec, &mut writer);
+        let text = writer.render(dsl_schema::JoinMode::Inline);
+
+        let recognizer = Recognizer::compile(&grammar);
+        assert!(recognizer.recognize(&text).expect("recognize"), "generated grammar must accept its own record's real printed text: {text:?}");
+        assert!(!recognizer.recognize("this is not a valid record at all").expect("recognize"), "generated grammar must reject unrelated text");
+    }
+
+    #[test]
+    fn from_record_spec_reports_unsupported_shapes_instead_of_silently_approximating() {
+        let spec = dsl_schema::RecordSpec::new(None, dsl_schema::RecordLayout::Inline, vec![dsl_schema::FieldSpec::new(1, "nested", dsl_schema::Shape::Map(Box::new(dsl_schema::Shape::Text)))]);
+        let error = from_record_spec("unsupported", &spec).expect_err("Shape::Map must be a reported gap, not a silent approximation");
+        assert!(error.contains("Map"), "error should name the unsupported shape: {error}");
+    }
+    //#endregion 🔖️FromRecordSpecTests
 }
 //#endregion 🔖️Tests

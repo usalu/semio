@@ -118,19 +118,8 @@ impl FlowConfig {
     }
 }
 
-impl store::ConfigRecord for FlowConfig {}
+store::impl_whole_record_config!(FlowConfig);
 
-/// @emoji 🧮️ Whole-record diff for `flow_op::FlowConfigOperation` (lives here, not in `flow_op`, since
-/// `protocol::OperationDiff`/`FlowConfig` are both foreign to that crate — the orphan rule requires at
-/// least one local type). Mirrors `ShootingConfig`'s "whole-record replace" pattern.
-impl protocol::OperationDiff<FlowConfig> for FlowConfig {
-    fn apply(&self, _base: &FlowConfig) -> FlowConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Types

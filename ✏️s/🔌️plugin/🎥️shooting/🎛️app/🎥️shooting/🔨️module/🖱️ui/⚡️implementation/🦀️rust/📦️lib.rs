@@ -45,7 +45,7 @@ const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 
 //#region 🔖️DocumentHelpers
 fn shooting_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: SHOOTING_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(SHOOTING_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 fn camera_json(camera: &ShootingCamera) -> String {

@@ -151,19 +151,8 @@ impl Default for Gis2dConfig {
     }
 }
 
-impl store::ConfigRecord for Gis2dConfig {}
+store::impl_whole_record_config!(Gis2dConfig);
 
-/// @emoji 🧮️ Whole-record diff for `gis2d_op::Gis2dConfigOperation` (lives here, not in `gis2d_op`,
-/// since `protocol::OperationDiff`/`Gis2dConfig` are both foreign to that crate — the orphan rule
-/// requires at least one local type) — mirrors `shooting_engine::ShootingConfig`'s identical impl.
-impl protocol::OperationDiff<Gis2dConfig> for Gis2dConfig {
-    fn apply(&self, _base: &Gis2dConfig) -> Gis2dConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

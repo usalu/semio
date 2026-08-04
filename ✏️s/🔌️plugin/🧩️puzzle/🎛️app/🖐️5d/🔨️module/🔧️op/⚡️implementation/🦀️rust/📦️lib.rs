@@ -396,8 +396,14 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// (JSON text / JSON-bridge pack encoding respectively), same local-bridge shape as `puzzle_2d`'s
 /// `Puzzle2dPlayProjection`, `puzzle_3d`'s `Puzzle3dPlayProjection` and `semio_compose_rs`'s `KitSnapshot`.
 /// `Operation`/`OperationDiff` delegate straight through to the `Value` impls above too.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Puzzle5dPlayProjection(pub Value);
+
+impl PartialEq for Puzzle5dPlayProjection {
+    fn eq(&self, other: &Self) -> bool {
+        store::pack_rt::json_values_equal(&self.0, &other.0)
+    }
+}
 
 impl store::DocumentDsl for Puzzle5dPlayProjection {
     const EXTENSION: &'static str = "puzzle5d-play";

@@ -1371,6 +1371,28 @@ pub mod app {
     }
     //#endregion 🔖️Terminology
 
+    //#region 🔖️ActionFactory
+    // 🎯️ Shared ~30x hand-rolled `fn x_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    // ActionDescriptor { controller_id: X_CONTROLLER_ID.into(), action: action.into(), args:
+    // optional_json_to_dsl(args) } }` body — every app keeps its own locally-named wrapper (so call
+    // sites never change), delegating to `ActionFactory::new(X_CONTROLLER_ID).action(action, args)`.
+
+    /// 🎯️ Constructs `ActionDescriptor`s bound to one controller id.
+    pub struct ActionFactory {
+        controller_id: &'static str,
+    }
+
+    impl ActionFactory {
+        pub const fn new(controller_id: &'static str) -> Self {
+            Self { controller_id }
+        }
+
+        pub fn action(&self, action: &str, args: Option<Value>) -> ActionDescriptor {
+            ActionDescriptor { controller_id: self.controller_id.into(), action: action.into(), args: semio_framework_core::optional_json_to_dsl(args) }
+        }
+    }
+    //#endregion 🔖️ActionFactory
+
     //#region 🔖️Testkit
     pub mod testkit {
         //! 🧪️ Generic test-harness helpers for `DocumentApp` implementors. Factors out the ~24x duplicated
@@ -7427,6 +7449,7 @@ pub mod engagement {
 }
 
 pub use app::testkit;
+pub use app::ActionFactory;
 pub use app::{
     node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, HistoryView, KeybindingSpec,
     MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBundle, VcsDocumentApp, WindowKindSpec,

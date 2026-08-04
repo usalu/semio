@@ -157,18 +157,8 @@ impl Default for WriterConfig {
     }
 }
 
-impl store::ConfigRecord for WriterConfig {}
+store::impl_whole_record_config!(WriterConfig);
 
-/// @emoji 🧮️ Whole-record diff for `writer_op::WriterConfigOperation` — mirrors
-/// `shooting_engine::ShootingConfig`'s own `OperationDiff` impl (`apply` ignores `base` entirely).
-impl protocol::OperationDiff<WriterConfig> for WriterConfig {
-    fn apply(&self, _base: &WriterConfig) -> WriterConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

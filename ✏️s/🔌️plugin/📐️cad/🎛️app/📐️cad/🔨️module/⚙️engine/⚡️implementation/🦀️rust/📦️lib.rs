@@ -2987,20 +2987,8 @@ impl Default for CadConfig {
     }
 }
 
-impl store::ConfigRecord for CadConfig {}
+store::impl_whole_record_config!(CadConfig);
 
-/// @emoji 🧮️ Whole-record diff for `cad_document_op::CadConfigOperation` (lives here, not in
-/// `cad_document_op`, since `protocol::OperationDiff`/`CadConfig` are both foreign to that crate — the
-/// orphan rule requires at least one local type). Mirrors `CadOperation::SetScene`'s "whole-document
-/// replace" pattern: `apply` ignores `base` entirely.
-impl protocol::OperationDiff<CadConfig> for CadConfig {
-    fn apply(&self, _base: &CadConfig) -> CadConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document ports (`3d.cad`,
 /// `ThreeD×Brep`) plus the two workflow ports the port recipe adds: `geometry:in` (accepts geometry

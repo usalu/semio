@@ -48,19 +48,8 @@ impl Default for Gis3dConfig {
     }
 }
 
-impl store::ConfigRecord for Gis3dConfig {}
+store::impl_whole_record_config!(Gis3dConfig);
 
-/// @emoji 🧮️ Whole-record diff for `gis3d_op::Gis3dConfigOperation` (lives here, not in `gis3d_op`,
-/// since `protocol::OperationDiff`/`Gis3dConfig` are both foreign to that crate — the orphan rule
-/// requires at least one local type) — mirrors `gis2d_engine::Gis2dConfig`'s identical impl.
-impl protocol::OperationDiff<Gis3dConfig> for Gis3dConfig {
-    fn apply(&self, _base: &Gis3dConfig) -> Gis3dConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

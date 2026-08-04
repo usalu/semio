@@ -692,6 +692,71 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
 }
 //#endregion 🔖️DslDocument
 
+//#region 🔖️DslDiff
+/// @emoji 🧬️ W1 foundation of the `handcrafted-grammar-for-every-artifact` diff track (design ruling
+/// B-R4): emits a `protocol::DiffCodec` impl from the SAME `RecordSpec`-generation machinery
+/// `#[derive(DslRecord)]`/`#[derive(DslDocument)]` already use — a diff is structurally just another
+/// record, so this reuses `record_codegen` verbatim rather than reinventing field lowering. Unlike
+/// `DslDocument` there is no `EXTENSION`/file-extension concept (a diff is never opened as its own
+/// file) and no `DocumentPack` (the pack/binary side is `DiffCodec::encode_diff`/`decode_diff`
+/// instead, routed through the same `store::pack_rt` the `DocumentPack` impl above uses — every
+/// crate that already derives an operation/document alongside its diff already depends on `store`).
+#[proc_macro_derive(DslDiff, attributes(dsl))]
+pub fn derive_dsl_diff(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident.clone();
+    let container = parse_container_attrs(&input);
+    let Data::Struct(data) = &input.data else {
+        return syn::Error::new_spanned(&input, "DslDiff only supports structs").to_compile_error().into();
+    };
+    let (spec_exprs, to_value_stmts, from_value_stmts, field_idents) = record_codegen(&data.fields);
+    let keyword_expr = match &container.keyword {
+        Some(k) => quote! { Some(#k.to_string()) },
+        None => quote! { None },
+    };
+    let layout_expr = if container.lines_layout {
+        quote! { ::dsl::RecordLayout::Lines }
+    } else {
+        quote! { ::dsl::RecordLayout::Inline }
+    };
+
+    let expanded = quote! {
+        impl #name {
+            pub fn __dsl_diff_spec() -> ::dsl::RecordSpec {
+                ::dsl::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
+            }
+            pub fn __dsl_diff_to_record(&self) -> ::dsl::RecordValue {
+                let mut record = ::dsl::RecordValue::default();
+                #(#to_value_stmts)*
+                record
+            }
+            pub fn __dsl_diff_from_record(record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
+                #(#from_value_stmts)*
+                Ok(Self { #(#field_idents),* })
+            }
+        }
+
+        impl ::protocol::DiffCodec for #name {
+            fn print_diff(&self) -> String {
+                ::dsl::__rt::print_inline_record(&self.__dsl_diff_to_record(), &Self::__dsl_diff_spec())
+            }
+            fn parse_diff(line: &str) -> Result<Self, ::dsl::TextError> {
+                let record = ::dsl::__rt::parse_inline_record(line, &Self::__dsl_diff_spec())?;
+                Self::__dsl_diff_from_record(&record)
+            }
+            fn encode_diff(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                ::store::pack_rt::encode_document(&Self::__dsl_diff_spec(), &self.__dsl_diff_to_record(), &::store::PackEncodeOptions::default()).map_err(::protocol::ProtocolError::from)
+            }
+            fn decode_diff(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                let (record, _report) = ::store::pack_rt::decode_document(bytes, &Self::__dsl_diff_spec(), &::store::PackDecodeOptions::default()).map_err(::protocol::ProtocolError::from)?;
+                Self::__dsl_diff_from_record(&record).map_err(|error| ::protocol::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
+            }
+        }
+    };
+    expanded.into()
+}
+//#endregion 🔖️DslDiff
+
 //#region 🔖️DslScalar
 #[proc_macro_derive(DslScalar, attributes(dsl))]
 pub fn derive_dsl_scalar(input: TokenStream) -> TokenStream {

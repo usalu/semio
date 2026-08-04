@@ -21,10 +21,11 @@ pub enum WriterOperation {
     },
 }
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslDiff)]
 #[serde(rename_all = "camelCase")]
 pub struct WriterDiff {
     pub text: Option<String>,
+    #[dsl(block)]
     pub document: Option<WriterProjection>,
 }
 
@@ -187,6 +188,34 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&WriterOperation::SetText { text: "line one\nline two".into() });
         store::test_support::assert_op_line_round_trip(&WriterOperation::SetDocument { document: jack_projection() });
     }
+
+    //#region 🔖️DiffCodec
+    /// 🧬️ W1 `DiffCodec` law: `parse_diff(print_diff(d)) == d` and `decode_diff(encode_diff(d)) == d`
+    /// — `WriterDiff` is one of the handful of real diff types proving the `#[derive(dsl::DslDiff)]`
+    /// mechanism (see `POLICY_DIFF_COMPLETENESS_ALLOWLIST` in `script.ts` for the rest, deferred to W6).
+    #[test]
+    fn writer_diff_print_parse_round_trips() {
+        use protocol::DiffCodec;
+        let diffs = vec![WriterDiff { text: Some("hello".into()), document: None }, WriterDiff { text: None, document: Some(jack_projection()) }, WriterDiff::default()];
+        for diff in diffs {
+            let printed = diff.print_diff();
+            assert!(!printed.contains('\n'), "print_diff must be one line: {printed:?}");
+            let parsed = WriterDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff failed for {printed:?}: {e}"));
+            assert_eq!(parsed, diff, "DiffCodec text round trip diverged for {printed:?}");
+        }
+    }
+
+    #[test]
+    fn writer_diff_encode_decode_round_trips_and_matches_text() {
+        use protocol::DiffCodec;
+        let diffs = vec![WriterDiff { text: Some("hello".into()), document: None }, WriterDiff { text: None, document: Some(jack_projection()) }, WriterDiff::default()];
+        for diff in diffs {
+            let bytes = diff.encode_diff().expect("encode_diff");
+            let decoded = WriterDiff::decode_diff(&bytes).expect("decode_diff");
+            assert_eq!(decoded, diff, "DiffCodec binary round trip diverged");
+        }
+    }
+    //#endregion 🔖️DiffCodec
 
     //#region 🔖️ConfigTests
     #[test]

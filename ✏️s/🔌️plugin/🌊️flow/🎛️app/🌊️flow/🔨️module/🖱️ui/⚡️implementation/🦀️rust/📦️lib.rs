@@ -51,7 +51,7 @@ const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] =
 
 //#region 🔖️DocumentHelpers
 fn flow_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: FLOW_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(FLOW_PLAY_APP_ID).action(action, args)
 }
 
 fn apply_canvas_options(host: &mut FlowHost, config: &FlowConfig) {

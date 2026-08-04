@@ -1,0 +1,10 @@
+{
+  "title": "Fix Stale DeleteSelection Action Assertion in Trinity-Jack Test",
+  "emoji": "🛠️",
+  "status": "open",
+  "description": "Fix context_menu_stays_within_row_budget_and_ends_with_delete_selection assertion in semio-s-app-trinity-jack-ui",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪22ed27c16b6849d6be5edc4fa66b0b2c"
+  ]
+}

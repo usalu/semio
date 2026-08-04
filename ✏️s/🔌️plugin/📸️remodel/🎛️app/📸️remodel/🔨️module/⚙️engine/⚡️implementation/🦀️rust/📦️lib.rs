@@ -119,19 +119,8 @@ impl Default for RemodelConfig {
     }
 }
 
-impl store::ConfigRecord for RemodelConfig {}
+store::impl_whole_record_config!(RemodelConfig);
 
-/// @emoji 🧮️ Whole-record diff for `remodel_op::RemodelConfigOperation` — mirrors
-/// `shooting_engine::ShootingConfig`'s identical impl (the orphan rule requires this to live beside the
-/// local `RemodelConfig` type, not in `remodel_op`).
-impl protocol::OperationDiff<RemodelConfig> for RemodelConfig {
-    fn apply(&self, _base: &RemodelConfig) -> RemodelConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

@@ -225,18 +225,8 @@ impl store::DocumentPack for Puzzle2dPlayRuntime {
     }
 }
 
-impl store::ConfigRecord for Puzzle2dPlayRuntime {}
+store::impl_whole_record_config!(Puzzle2dPlayRuntime);
 
-/// @emoji 🧮️ Whole-record diff — every `Puzzle2dConfigOperation` is a full-config `Snapshot`, matching
-/// `puzzle_3d_ui::Puzzle3dConfigOperation`'s identical pattern.
-impl protocol::OperationDiff<Puzzle2dPlayRuntime> for Puzzle2dPlayRuntime {
-    fn apply(&self, _base: &Puzzle2dPlayRuntime) -> Puzzle2dPlayRuntime {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 /// @emoji 🧮️ B1: `Puzzle2dConfig`'s operation enum — lives here (in `ui`, not a lower `op`/`engine`
 /// crate) since `Puzzle2dConfig` is a type alias for the ui-crate-local `Puzzle2dPlayRuntime`. Mirrors
@@ -311,7 +301,7 @@ fn example_fixture(json_text: &str) -> Value {
 }
 
 fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🪟️ B1: was host-pushed `view_state.window_instances` filtered by `window_kind_id`; puzzle2d has

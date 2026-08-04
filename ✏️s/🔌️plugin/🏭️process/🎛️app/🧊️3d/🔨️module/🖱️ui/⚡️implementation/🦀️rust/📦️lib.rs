@@ -55,7 +55,7 @@ const PROCESS3D_DEFAULT_UTILITY: &str = "select";
 
 //#region 🔖️DocumentHelpers
 fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PROCESS_3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(PROCESS_3D_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🧰️ Host effect that programmatically switches the workpiece window's active utility — the active

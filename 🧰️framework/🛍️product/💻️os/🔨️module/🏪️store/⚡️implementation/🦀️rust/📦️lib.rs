@@ -26,8 +26,8 @@ use std::sync::{Arc, Mutex};
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
 // `vcs` directly (see the crate doc comment above).
 pub use vcs::{
-    absorb_diff, apply_collection_operation, apply_operation, collection_diff_from_operation, content_addressed_checkpoint_id, create_document_vcs_id, invert_collection_operation, Alternative, Author, Change, Checkpoint, CollectionDiff,
-    CollectionOperation, DocumentVcs, Identified, ItemPatch, Patchable, VcsError,
+    apply_collection_operation, apply_operation, collection_diff_from_operation, content_addressed_checkpoint_id, create_document_vcs_id, invert_collection_operation, Alternative, Author, Change, Checkpoint, CollectionDiff, CollectionOperation,
+    DocumentVcs, Identified, ItemPatch, Patchable, VcsError,
 };
 
 //#region 🔖️Schemas
@@ -282,6 +282,11 @@ pub mod pack_rt {
             DslValue::Array(items) => serde_json::Value::Array(items.into_iter().map(dsl_value_to_json).collect()),
             DslValue::Object(entries) => serde_json::Value::Object(entries.into_iter().map(|(k, v)| (k, dsl_value_to_json(v))).collect::<serde_json::Map<_, _>>()),
         }
+    }
+
+    /// @emoji ⚖️ Semantic JSON value equality — normalizes numeric representation (`3` vs `3.0`).
+    pub fn json_values_equal(a: &serde_json::Value, b: &serde_json::Value) -> bool {
+        json_value_to_dsl(a) == json_value_to_dsl(b)
     }
 
     /// @emoji 🔧️ Rewrites fractionless floats in a `DslValue` tree to whole-number floats for integer fields.
@@ -580,6 +585,28 @@ where
 
 /// @emoji 🧮️ Config projections use the same DSL law as documents — `ConfigRecord` marks config types.
 pub trait ConfigRecord: DocumentDsl {}
+
+/// @emoji 🎯️ Marks `$ty` as whole-record (no field-level diff — an operation replaces the entire
+/// config) with the trivial `ConfigRecord` + `OperationDiff<Self>` pair every hand-rolled
+/// `impl store::ConfigRecord for XConfig {}` + `impl protocol::OperationDiff<XConfig> for XConfig {
+/// fn apply(...) -> XConfig { self.clone() } fn absorb(...) { *self = other; } }` duo repeated
+/// (~33 crates) — `impl_whole_record_config!(XConfig);` replaces both. The orphan rule still
+/// requires the macro invoked from `$ty`'s own crate (relies on the caller already having
+/// `protocol` in scope by name, exactly as every hand-rolled impl this replaces already did).
+#[macro_export]
+macro_rules! impl_whole_record_config {
+    ($ty:ty) => {
+        impl $crate::ConfigRecord for $ty {}
+        impl protocol::OperationDiff<$ty> for $ty {
+            fn apply(&self, _base: &$ty) -> $ty {
+                self.clone()
+            }
+            fn absorb(&mut self, other: Self) {
+                *self = other;
+            }
+        }
+    };
+}
 
 pub fn config_spec_from_record_spec(spec: &dsl::RecordSpec) -> semio_framework_core::ConfigSpec {
     use semio_framework_core::{ConfigFieldSpec, ConfigSpec};

@@ -52,7 +52,7 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Terminology
 
 fn block5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: BLOCK5D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(BLOCK5D_PLAY_APP_ID).action(action, args)
 }
 
 //#region 🔖️Panels

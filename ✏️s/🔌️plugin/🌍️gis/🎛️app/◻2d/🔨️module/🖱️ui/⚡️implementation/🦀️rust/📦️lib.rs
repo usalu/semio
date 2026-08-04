@@ -132,7 +132,7 @@ fn merge_feature_selection(current_json: &str, positions: Vec<String>, routes: V
 }
 
 fn gis2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: GIS2D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(GIS2D_PLAY_APP_ID).action(action, args)
 }
 
 /// 🌉️ Diffs one feature collection before/after an in-place edit into granular id-keyed

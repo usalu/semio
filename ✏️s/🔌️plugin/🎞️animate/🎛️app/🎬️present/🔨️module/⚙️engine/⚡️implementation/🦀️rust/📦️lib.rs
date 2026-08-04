@@ -354,20 +354,8 @@ impl Default for PresentConfig {
     }
 }
 
-impl store::ConfigRecord for PresentConfig {}
+store::impl_whole_record_config!(PresentConfig);
 
-/// @emoji 🧮️ Whole-record diff for `present_op::PresentConfigOperation` (lives here rather than in
-/// `present_op`, matching `shooting_engine::ShootingConfig`'s note on the orphan rule): mirrors
-/// `PresentOperation::SetDeck`'s existing "whole-document replace" pattern — `apply` ignores `base`
-/// entirely.
-impl protocol::OperationDiff<PresentConfig> for PresentConfig {
-    fn apply(&self, _base: &PresentConfig) -> PresentConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

@@ -617,19 +617,8 @@ impl Default for SequenceConfig {
     }
 }
 
-impl store::ConfigRecord for SequenceConfig {}
+store::impl_whole_record_config!(SequenceConfig);
 
-/// @emoji 🧮️ Whole-record diff for `sequence_op::SequenceConfigOperation` (lives here rather than in
-/// `sequence_op`, matching `shooting_engine::ShootingConfig`'s note on the orphan rule): mirrors
-/// `SequenceOperation`'s existing "whole-document replace" pattern — `apply` ignores `base` entirely.
-impl protocol::OperationDiff<SequenceConfig> for SequenceConfig {
-    fn apply(&self, _base: &SequenceConfig) -> SequenceConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

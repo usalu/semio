@@ -49,18 +49,8 @@ impl Default for Procedural2dConfig {
     }
 }
 
-impl store::ConfigRecord for Procedural2dConfig {}
+store::impl_whole_record_config!(Procedural2dConfig);
 
-/// @emoji 🧮️ Whole-record diff for `procedural_2d_op::Procedural2dConfigOperation` — mirrors
-/// `shooting_engine::ShootingConfig`'s own impl (`apply` ignores `base` entirely, ops always snapshot).
-impl protocol::OperationDiff<Procedural2dConfig> for Procedural2dConfig {
-    fn apply(&self, _base: &Procedural2dConfig) -> Procedural2dConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 impl Procedural2dConfig {
     /// 🧵️ Decodes `eval_driver_json` back into a live `FlowEvalDriver` — empty/malformed decodes to

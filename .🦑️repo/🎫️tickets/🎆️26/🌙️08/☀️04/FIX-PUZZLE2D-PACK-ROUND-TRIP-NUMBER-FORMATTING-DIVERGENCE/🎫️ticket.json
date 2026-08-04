@@ -1,0 +1,16 @@
+{
+  "title": "Fix Puzzle Pack Round Trip Number Formatting Divergence",
+  "emoji": "🛠️",
+  "status": "closed",
+  "description": "Fix pack round-trip number formatting divergence across puzzle 2d, 3d, and 5d projections via store::pack_rt::json_values_equal",
+  "goal": "🎯r2603",
+  "files": [
+    "🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs",
+    "✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+    "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs",
+    "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs"
+  ],
+  "sessions": [
+    "b9bf401b-f401-4640-b4b9-bd25d8175744"
+  ]
+}

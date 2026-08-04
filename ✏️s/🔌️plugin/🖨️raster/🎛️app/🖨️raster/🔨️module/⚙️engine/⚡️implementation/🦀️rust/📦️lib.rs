@@ -295,20 +295,8 @@ impl Default for RasterConfig {
     }
 }
 
-impl store::ConfigRecord for RasterConfig {}
+store::impl_whole_record_config!(RasterConfig);
 
-/// @emoji 🧮️ Whole-record diff for `raster_op::RasterConfigOperation` (lives here, not in `raster_op`,
-/// since `protocol::OperationDiff`/`RasterConfig` are both foreign to that crate — the orphan rule
-/// requires at least one local type). Mirrors `RasterOperation::ReplaceDocument`'s existing
-/// "whole-document replace" pattern.
-impl protocol::OperationDiff<RasterConfig> for RasterConfig {
-    fn apply(&self, _base: &RasterConfig) -> RasterConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

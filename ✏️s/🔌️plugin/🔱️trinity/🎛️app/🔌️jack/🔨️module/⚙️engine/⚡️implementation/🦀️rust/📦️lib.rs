@@ -73,19 +73,8 @@ impl Default for JackConfig {
     }
 }
 
-impl store::ConfigRecord for JackConfig {}
+store::impl_whole_record_config!(JackConfig);
 
-/// @emoji 🧮️ Whole-record diff for `trinity_jack_op::JackConfigOperation` — mirrors
-/// `shooting_engine::ShootingConfig`'s own `OperationDiff<Self>` impl (the orphan rule requires the
-/// local type, hence living here rather than in `trinity_jack_op`).
-impl protocol::OperationDiff<JackConfig> for JackConfig {
-    fn apply(&self, _base: &JackConfig) -> JackConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

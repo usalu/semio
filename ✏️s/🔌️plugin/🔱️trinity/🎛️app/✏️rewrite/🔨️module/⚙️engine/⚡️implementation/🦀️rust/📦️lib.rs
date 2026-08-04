@@ -66,19 +66,8 @@ impl Default for RewriteConfig {
     }
 }
 
-impl store::ConfigRecord for RewriteConfig {}
+store::impl_whole_record_config!(RewriteConfig);
 
-/// @emoji 🧮️ Whole-record diff for `rewrite_op::RewriteConfigOperation` — mirrors
-/// `shooting_engine::ShootingConfig`'s own `OperationDiff<Self>` impl (the orphan rule requires the
-/// local type, hence living here rather than in `rewrite_op`).
-impl protocol::OperationDiff<RewriteConfig> for RewriteConfig {
-    fn apply(&self, _base: &RewriteConfig) -> RewriteConfig {
-        self.clone()
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 //#endregion 🔖️Config
 
 //#region 🔖️Io

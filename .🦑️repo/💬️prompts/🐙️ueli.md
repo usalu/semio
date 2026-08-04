@@ -365,6 +365,19 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Make sure os/s follows this architecture:
+
+every plugin registers artifacts, apps
+
+
+---
+
+Design proper error handeling, boundaries, strategies, mechanisms, etc
+distingiush between os, module, plugin, app, extension level, renderer, etc
+e.g. currently in os http://127.0.0.1:6070/spaces/space-1 doesnt even render a page.
+
+---
+
 pack/spr and dsl/op are currently one way of structurally representing data.
 Instead of having one grammar for a dsl, protocol move to handcrafted document specific grammars for every app/artifact.
 e.g. graphlike data should represent data over arrows, such as <-, -e1-, -c:Connection> etc
@@ -590,15 +603,20 @@ The target is:
     - spectator (readonly)
 
 A draft is a volatile artifact.
-Am asset is a persisted artifact.
-A space for personal use is an atelier (private or public, single writer, multi reader)
-A space for a group of users is a studio (private or public, multi writer, multi reader)
-A space that is not changing anymore is an archive (private or public, no writer, multi reader)
-All apps are accessible over a node in the workflow.
+An asset is a persisted artifact.
+A space for personal use is an atelier (private or public, single writer, multi reader).
+A space for a group of users is a studio (private or public, multi writer, multi reader).
+A space that is not changing anymore is an archive (private or public, no writer, multi reader).
+All apps are accessible over a node in the workflow (appears in catalgue of space).
 All apps are nondestructive.
 All apps have a core library that computes headlessly and a ui to visualize and edit configuration of the app node.
+All apps define commands
+Every artifact has a diff.
+Every artifact has custom grammars for: a binary pack and a dsl representation, a binary protocol for commands and a text op representation of commands.
+Every operation yields a diff.
+Every operation has backwards operations to invert the operation.
 Make sure to identify all gaps and plan all mechanisms and refactor to achieve this architecture.
-End to end for a workforce of agents
+End to end for a workforce of agents.
 
 ---
 

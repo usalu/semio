@@ -100,7 +100,7 @@ fn seed_before_pane_camera(state: &RewriteRuleState) -> Camera {
 }
 
 fn rewrite_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: TRINITY_REWRITE_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(TRINITY_REWRITE_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 fn parse_fixture_json(json: &str) -> Option<GraphFixture> {

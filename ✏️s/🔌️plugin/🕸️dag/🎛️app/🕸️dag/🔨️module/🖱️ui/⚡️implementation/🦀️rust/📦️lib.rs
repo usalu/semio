@@ -32,7 +32,7 @@ const DAG_PLAY_WINDOW_COMPILED: &str = "dag-compiled-dag";
 
 //#region 🔖️DocumentHelpers
 fn dag_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: DAG_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(DAG_PLAY_APP_ID).action(action, args)
 }
 
 /// 🗑️ Operations removing `node_ids` and every edge touching them, for delete-node / delete-selection.

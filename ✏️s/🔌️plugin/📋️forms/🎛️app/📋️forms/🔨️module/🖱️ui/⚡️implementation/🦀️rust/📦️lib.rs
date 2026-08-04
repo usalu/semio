@@ -60,7 +60,7 @@ static FORM_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 //#region 🔖️DocumentHelpers
 fn forms_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: FORMS_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
+    semio_framework_plugin::ActionFactory::new(FORMS_PLAY_CONTROLLER_ID).action(action, args)
 }
 
 /// 🔠️ B1: `config.try_values_json`'s parsed form — the Try wizard's in-progress answer overrides
