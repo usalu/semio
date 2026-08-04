@@ -212,11 +212,11 @@ macro_rules! define_norm_family_app {
                     }
                 }
 
-                fn handle(&self, command: &Command, doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Emit<Operation, NormConfigOperation> {
+                fn handle(&self, command: &Command, doc: &DocumentView<'_, Document>, _cfg: &ConfigView<'_, NormConfig>) -> Result<Emit<Operation, NormConfigOperation>, Fault> {
                     match command {
-                        Command::SetDocument { document } => Emit::commit(vec![SetDocumentOperation::SetDocument { document: document.clone() }], "setDocument"),
-                        Command::Evaluate => Emit::commit(vec![SetDocumentOperation::SetDocument { document: doc.projection.clone() }], "evaluate"),
-                        Command::SetSelectedCheckIndex { index } => Emit::config(vec![NormConfigOperation::SetSelectedCheckIndex { index: *index }]),
+                        Command::SetDocument { document } => Ok(Emit::commit(vec![SetDocumentOperation::SetDocument { document: document.clone() }], "setDocument"),
+                        Command::Evaluate => Ok(Emit::commit(vec![SetDocumentOperation::SetDocument { document: doc.projection.clone() }], "evaluate"),
+                        Command::SetSelectedCheckIndex { index } => Ok(Emit::config(vec![NormConfigOperation::SetSelectedCheckIndex { index: *index }]),
                     }
                 }
 

@@ -811,12 +811,12 @@ impl DocumentApp for NotePlayApp {
         }
     }
 
-    fn handle(&self, command: &NoteCommand, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Emit<NoteOperation, NoteConfigOperation> {
+    fn handle(&self, command: &NoteCommand, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> Result<Emit<NoteOperation, NoteConfigOperation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
             // 📷️ Config-only: the free/live canvas camera never touches the document.
-            NoteCommand::SetCamera { camera } => Emit::config(vec![NoteConfigOperation::SetCamera { camera: camera.clone() }]),
+            NoteCommand::SetCamera { camera } => Ok(Emit::config(vec![NoteConfigOperation::SetCamera { camera: camera.clone() }]),
             NoteCommand::SetCameraZoom { value } => {
                 let mut camera = config.camera.clone();
                 camera.zoom = *value;
@@ -824,23 +824,23 @@ impl DocumentApp for NotePlayApp {
             }
             // 🧰️ Host-owned utility switch — B1 moved the active utility from the deleted
             // `view_state.active_utility_id` into `cfg.active_utility_id`, so it now needs a real write.
-            NoteCommand::SetActiveUtility { utility_id } => Emit::config(vec![NoteConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }]),
-            NoteCommand::SetLocale { value } => Emit::config(vec![NoteConfigOperation::SetLocale { value: value.clone() }]),
+            NoteCommand::SetActiveUtility { utility_id } => Ok(Emit::config(vec![NoteConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }]),
+            NoteCommand::SetLocale { value } => Ok(Emit::config(vec![NoteConfigOperation::SetLocale { value: value.clone() }]),
 
             NoteCommand::SetGridVisible { value } => {
                 let next = value.unwrap_or(!document.grid_visible.unwrap_or(true));
                 Emit::operations(vec![NoteOperation::SetGridVisible { visible: Some(next) }])
             }
-            NoteCommand::SetGridSpacing { value } => Emit::operations(vec![NoteOperation::SetGridSpacing { spacing: Some(value.max(4.0)) }]),
-            NoteCommand::SetGridSubdivisions { value } => Emit::operations(vec![NoteOperation::SetGridSubdivisions { value: Some(value.round().clamp(1.0, 16.0)) }]),
-            NoteCommand::SetGridOpacity { value } => Emit::operations(vec![NoteOperation::SetGridOpacity { opacity: Some(value.clamp(0.05, 1.0)) }]),
+            NoteCommand::SetGridSpacing { value } => Ok(Emit::operations(vec![NoteOperation::SetGridSpacing { spacing: Some(value.max(4.0)) }]),
+            NoteCommand::SetGridSubdivisions { value } => Ok(Emit::operations(vec![NoteOperation::SetGridSubdivisions { value: Some(value.round().clamp(1.0, 16.0)) }]),
+            NoteCommand::SetGridOpacity { value } => Ok(Emit::operations(vec![NoteOperation::SetGridOpacity { opacity: Some(value.clamp(0.05, 1.0)) }]),
             NoteCommand::SetSnapEnabled { value } => {
                 let next = value.unwrap_or(!document.snap_enabled.unwrap_or(false));
                 Emit::operations(vec![NoteOperation::SetSnapEnabled { enabled: Some(next) }])
             }
-            NoteCommand::SetSnapGridSpacing { value } => Emit::operations(vec![NoteOperation::SetSnapGridSpacing { spacing: Some(value.max(1.0)) }]),
-            NoteCommand::SetPencilWidth { value } => Emit::operations(vec![NoteOperation::SetPencilWidth { width: Some(value.clamp(1.0, 24.0)) }]),
-            NoteCommand::SetEraserRadius { value } => Emit::operations(vec![NoteOperation::SetEraserRadius { radius: Some(value.clamp(4.0, 48.0)) }]),
+            NoteCommand::SetSnapGridSpacing { value } => Ok(Emit::operations(vec![NoteOperation::SetSnapGridSpacing { spacing: Some(value.max(1.0)) }]),
+            NoteCommand::SetPencilWidth { value } => Ok(Emit::operations(vec![NoteOperation::SetPencilWidth { width: Some(value.clamp(1.0, 24.0)) }]),
+            NoteCommand::SetEraserRadius { value } => Ok(Emit::operations(vec![NoteOperation::SetEraserRadius { radius: Some(value.clamp(4.0, 48.0)) }]),
 
             NoteCommand::AddBlock { kind, x, y } => {
                 let block = create_block_by_kind(kind, *x, *y);
@@ -905,9 +905,9 @@ impl DocumentApp for NotePlayApp {
                 let ids: Vec<String> = flatten_blocks(&document.blocks).into_iter().map(|block| block_id(block).into()).collect();
                 Emit::config(vec![NoteConfigOperation::SetSelection { block_ids: ids }])
             }
-            NoteCommand::ClearSelection => Emit::config(vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }]),
-            NoteCommand::SetSelection { ids } => Emit::config(vec![NoteConfigOperation::SetSelection { block_ids: ids.clone() }]),
-            NoteCommand::SetHover { block_id } => Emit::config(vec![NoteConfigOperation::SetHoveredBlock { block_id: block_id.clone() }]),
+            NoteCommand::ClearSelection => Ok(Emit::config(vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }]),
+            NoteCommand::SetSelection { ids } => Ok(Emit::config(vec![NoteConfigOperation::SetSelection { block_ids: ids.clone() }]),
+            NoteCommand::SetHover { block_id } => Ok(Emit::config(vec![NoteConfigOperation::SetHoveredBlock { block_id: block_id.clone() }]),
             NoteCommand::NudgeSelection { dx, dy } => nudge(document, config, *dx, *dy),
             NoteCommand::NudgeSelectionUp => nudge(document, config, 0.0, -NUDGE_STEP),
             NoteCommand::NudgeSelectionDown => nudge(document, config, 0.0, NUDGE_STEP),
@@ -917,7 +917,7 @@ impl DocumentApp for NotePlayApp {
             NoteCommand::NudgeSelectionDownFast => nudge(document, config, 0.0, NUDGE_STEP_FAST),
             NoteCommand::NudgeSelectionLeftFast => nudge(document, config, -NUDGE_STEP_FAST, 0.0),
             NoteCommand::NudgeSelectionRightFast => nudge(document, config, NUDGE_STEP_FAST, 0.0),
-            NoteCommand::EngagementInput { value } => Emit::config(vec![NoteConfigOperation::SetEngagementInput { value: value.clone() }]),
+            NoteCommand::EngagementInput { value } => Ok(Emit::config(vec![NoteConfigOperation::SetEngagementInput { value: value.clone() }]),
             NoteCommand::EngagementSubmit { value } => {
                 let mut document_operations = Vec::new();
                 if config.selected_block_ids.len() == 1 {
@@ -928,7 +928,7 @@ impl DocumentApp for NotePlayApp {
                 }
                 Emit { document_operations, config_operations: vec![NoteConfigOperation::SetEngagementInput { value: String::new() }], ..Default::default() }
             }
-            NoteCommand::NavigatorEngagementInput => Emit::default(),
+            NoteCommand::NavigatorEngagementInput => Ok(Emit::default(),
             NoteCommand::SetActiveExample { example_id } => {
                 let next_document = if example_id == "semio" { semio_example_document() } else { empty_note_document() };
                 Emit { document_operations: vec![NoteOperation::SetDocument { document: next_document }], config_operations: vec![NoteConfigOperation::SetSelection { block_ids: Vec::new() }], ..Default::default() }
@@ -954,7 +954,7 @@ impl DocumentApp for NotePlayApp {
                 let data = note_dsl::print_dsl(document);
                 Emit::effect(HostEffect::DownloadMediaExport { filename: "🗒️semio.note.dsl".into(), mime_type: "text/plain".into(), data, encoding: None })
             }
-            NoteCommand::LoadRequest => Emit::effect(HostEffect::RequestFileOpen { accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }),
+            NoteCommand::LoadRequest => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(), read_as: None, import_action: "setFixtureJson".into(), multiple: false }),
             NoteCommand::InkApplyEvents { events_json, phase, select_ids } => {
                 let events: Vec<NoteCanvasEvent> = serde_json::from_str(events_json).unwrap_or_default();
                 let mut config_operations = Vec::new();

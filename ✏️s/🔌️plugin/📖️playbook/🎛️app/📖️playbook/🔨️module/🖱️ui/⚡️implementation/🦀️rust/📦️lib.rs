@@ -97,7 +97,7 @@ impl DocumentApp for PlaybookPlayApp {
         }
     }
 
-    fn handle(&self, command: &PlaybookCommand, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>) -> Emit<PlaybookOperation, PlaybookConfigOperation> {
+    fn handle(&self, command: &PlaybookCommand, doc: &DocumentView<'_, PlaybookSpec>, cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookOperation, PlaybookConfigOperation>, Fault> {
         let spec = doc.projection;
         let config = cfg.projection;
         match command {
@@ -131,10 +131,10 @@ impl DocumentApp for PlaybookPlayApp {
                 let remaining: Vec<String> = config.selected_ids.iter().filter(|id| *id != block_id).cloned().collect();
                 Emit { document_operations: vec![remove_block_operation(step_id, block_id)], config_operations: vec![PlaybookConfigOperation::SetSelectedIds { ids: remaining }], ..Default::default() }
             }
-            PlaybookCommand::MoveBlock { block_id, from_step_id, to_step_id, index } => Emit::operations(vec![move_block_operation(block_id, from_step_id, to_step_id, *index)]),
-            PlaybookCommand::UpdatePlaybook { value } => Emit::amend(vec![update_playbook_title_operation(Some(value.clone()).filter(|title| !title.is_empty()))], "playbook.title"),
-            PlaybookCommand::SetSelection { ids } => Emit::config(vec![PlaybookConfigOperation::SetSelectedIds { ids: ids.clone() }]),
-            PlaybookCommand::SetLocale { value } => Emit::config(vec![PlaybookConfigOperation::SetLocale { value: value.clone() }]),
+            PlaybookCommand::MoveBlock { block_id, from_step_id, to_step_id, index } => Ok(Emit::operations(vec![move_block_operation(block_id, from_step_id, to_step_id, *index)]),
+            PlaybookCommand::UpdatePlaybook { value } => Ok(Emit::amend(vec![update_playbook_title_operation(Some(value.clone()).filter(|title| !title.is_empty()))], "playbook.title"),
+            PlaybookCommand::SetSelection { ids } => Ok(Emit::config(vec![PlaybookConfigOperation::SetSelectedIds { ids: ids.clone() }]),
+            PlaybookCommand::SetLocale { value } => Ok(Emit::config(vec![PlaybookConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

@@ -7190,7 +7190,9 @@ name = "semio-framework-os-kernel-dsl-core"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -7244,6 +7246,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os",
  "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-space",
  "semio-framework-os-kernel-store",
  "semio-s-app-animate-present",
  "semio-s-app-block-2d",
@@ -8086,6 +8089,7 @@ dependencies = [
 name = "semio-framework-os-kernel-pack-core"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl-core",
  "thiserror 2.0.18",
 ]
 
@@ -8218,6 +8222,7 @@ dependencies = [
 name = "semio-framework-os-kernel-protocol-core"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-pack-core",
  "serde",
  "serde_json",
@@ -8300,6 +8305,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-space"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel-vcs",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "zip 2.4.2",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-store"
 version = "0.1.0"
 dependencies = [
@@ -8351,6 +8370,7 @@ dependencies = [
 name = "semio-framework-os-kernel-store-worker"
 version = "0.1.0"
 dependencies = [
+ "console_error_panic_hook",
  "js-sys",
  "semio-framework-os-kernel-store-sync",
  "tokio",
@@ -8448,6 +8468,7 @@ name = "semio-framework-os-kernel-vcs"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-protocol",
  "serde",
  "serde_json",
@@ -8461,8 +8482,10 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -8515,6 +8538,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-os",
  "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-workflow",
@@ -8529,6 +8553,7 @@ dependencies = [
 name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
+ "console_error_panic_hook",
  "semio-framework-core",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
@@ -8547,6 +8572,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",

@@ -626,7 +626,7 @@ impl DocumentApp for ModuleApp {
         }
     }
 
-    fn handle(&self, command: &Command, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> Emit<ModulePayloadOperation, semio_framework_plugin::NoConfigOperation> {
+    fn handle(&self, command: &Command, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<Emit<ModulePayloadOperation, semio_framework_plugin::NoConfigOperation>, Fault> {
         match command {
             Command::ExportSolid { format } => {
                 let mut payload = doc.projection.clone();

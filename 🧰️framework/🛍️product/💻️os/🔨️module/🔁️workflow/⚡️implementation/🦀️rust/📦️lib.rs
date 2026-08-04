@@ -14,6 +14,20 @@ use std::collections::{HashMap, HashSet};
 
 pub const WORKFLOW_SCHEMA: &str = "workflow.graph";
 
+/// 🪶️ W3 "the inversion" document schema — the persisted `s.workflow` artifact (graph + parameters +
+/// inputs/bindings, see [`WorkflowDocument`]), distinct from `WORKFLOW_SCHEMA` (the bare graph-only
+/// sub-shape still embedded as `WorkflowDocument.graph`). Registered as a builtin artifact kind by
+/// os-core's `seed_builtin_artifact_kinds`.
+pub const S_WORKFLOW_SCHEMA: &str = "s.workflow";
+
+/// 🚧️ W5/W6: `s.run`/`s.automation` schema ids are reserved here (the plan's schema lattice puts
+/// `RunDocument`/`AutomationDocument` in this crate, execution in `🏃️run`) — full bodies are
+/// deliberately NOT built in W3 (SpaceRunner rework is W5, automation dispatcher is W6); inventing a
+/// shape now without the runner rework driving it risks rework. See
+/// `.claude/plans/the-final-goal-for-jolly-spindle.md` `### Workflow / Run / Automation (Track C)`.
+pub const S_RUN_SCHEMA: &str = "s.run";
+pub const S_AUTOMATION_SCHEMA: &str = "s.automation";
+
 //#region 🔖️MediaContract
 /// 🤝️ A connect-time negotiated wire contract between two `WorkflowMediaPort`s — stored on
 /// `WorkflowEdge` so later passes (`validate_workflow`, merge reconciliation) can re-check it
@@ -624,6 +638,844 @@ pub struct WorkflowFixture {
 }
 //#endregion 🔖️WorkflowFixture
 
+//#region 🔖️WorkflowParameters
+// 🎛️ Ported down from `framework/product/os/core`'s `instance::🔖️Parameters` region (W3 "the
+// inversion" — see `## The inversion` in the plan) verbatim except for the `Os` -> `Workflow` rename:
+// none of it actually needed the os-core plugin/artifact registry (`validate_workflow_parameter_config_binding`
+// takes an already-resolved `ConfigSpec` as a plain argument, it never looks one up itself), so the
+// whole region is pure and belongs at this layer. os-core keeps only the registry LOOKUP
+// (`os_app_registration(...).config`) that feeds this function's `config_spec` argument.
+pub const WORKFLOW_PARAMETER_PORT_PREFIX: &str = "param.";
+
+static WORKFLOW_PARAMETER_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// @emoji 🆔️ Fallback id minter for a parameter created without a caller-supplied id — every real
+/// caller (`os-core`'s `OsWorkflowStore::add_parameter`) supplies one via its own id minter instead, so
+/// this counter is scoped independently to this crate (not the same sequence as os-core's `create_os_id`).
+fn create_workflow_parameter_id() -> String {
+    let n = WORKFLOW_PARAMETER_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+    format!("param-{n}")
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum WorkflowParameterType {
+    Numeric,
+    Categorical,
+    Toggle,
+    Text,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowParameterFieldSpec {
+    pub field_path: String,
+    pub label: String,
+    #[serde(rename = "type")]
+    pub parameter_type: WorkflowParameterType,
+}
+
+/// 🎯️ `field_path` names a `ConfigFieldSpec.key` in the target node's app's declared `ConfigSpec` —
+/// see `validate_workflow_parameter_config_binding` (type-checks against the field's `ConfigFieldShape`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowParameterBinding {
+    pub parameter_id: String,
+    pub node_id: String,
+    pub field_path: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum WorkflowParameter {
+    Numeric {
+        id: String,
+        name: String,
+        value: f64,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        min: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        max: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        step: Option<f64>,
+    },
+    Categorical {
+        id: String,
+        name: String,
+        value: String,
+        options: Vec<String>,
+    },
+    Toggle {
+        id: String,
+        name: String,
+        value: bool,
+    },
+    Text {
+        id: String,
+        name: String,
+        value: String,
+    },
+}
+
+pub type WorkflowParameterPatch = serde_json::Value;
+
+pub fn workflow_parameter_id(parameter: &WorkflowParameter) -> &str {
+    match parameter {
+        WorkflowParameter::Numeric { id, .. } | WorkflowParameter::Categorical { id, .. } | WorkflowParameter::Toggle { id, .. } | WorkflowParameter::Text { id, .. } => id,
+    }
+}
+
+pub fn workflow_parameter_name(parameter: &WorkflowParameter) -> String {
+    match parameter {
+        WorkflowParameter::Numeric { name, .. } | WorkflowParameter::Categorical { name, .. } | WorkflowParameter::Toggle { name, .. } | WorkflowParameter::Text { name, .. } => name.clone(),
+    }
+}
+
+pub fn workflow_parameter_value(parameter: &WorkflowParameter) -> serde_json::Value {
+    match parameter {
+        WorkflowParameter::Numeric { value, .. } => serde_json::Value::from(*value),
+        WorkflowParameter::Categorical { value, .. } => serde_json::Value::from(value.clone()),
+        WorkflowParameter::Toggle { value, .. } => serde_json::Value::from(*value),
+        WorkflowParameter::Text { value, .. } => serde_json::Value::from(value.clone()),
+    }
+}
+
+pub fn workflow_parameter_types_compatible(left: &WorkflowParameterType, right: &WorkflowParameterType) -> bool {
+    left == right
+}
+
+pub fn create_default_workflow_parameter(parameter_type: &WorkflowParameterType, name: &str, id: Option<&str>) -> WorkflowParameter {
+    let parameter_id = id.map(str::to_string).unwrap_or_else(create_workflow_parameter_id);
+    match parameter_type {
+        WorkflowParameterType::Numeric => WorkflowParameter::Numeric { id: parameter_id, name: name.into(), value: 0.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) },
+        WorkflowParameterType::Categorical => WorkflowParameter::Categorical { id: parameter_id, name: name.into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] },
+        WorkflowParameterType::Toggle => WorkflowParameter::Toggle { id: parameter_id, name: name.into(), value: false },
+        WorkflowParameterType::Text => WorkflowParameter::Text { id: parameter_id, name: name.into(), value: String::new() },
+    }
+}
+
+fn clamp_workflow_numeric_value(value: f64, min: Option<f64>, max: Option<f64>, step: Option<f64>) -> f64 {
+    let mut next = value;
+    if let Some(min) = min.filter(|v| v.is_finite()) {
+        next = next.max(min);
+    }
+    if let Some(max) = max.filter(|v| v.is_finite()) {
+        next = next.min(max);
+    }
+    if let Some(step) = step.filter(|v| v.is_finite() && *v > 0.0) {
+        let anchor = min.filter(|v| v.is_finite()).unwrap_or(0.0);
+        next = anchor + ((next - anchor) / step).round() * step;
+        if let Some(min) = min.filter(|v| v.is_finite()) {
+            next = next.max(min);
+        }
+        if let Some(max) = max.filter(|v| v.is_finite()) {
+            next = next.min(max);
+        }
+    }
+    next
+}
+
+/// @emoji 🎛️ Applies a partial patch to a workflow parameter, enforcing type constraints. Ported
+/// verbatim from os-core's `patch_os_parameter`.
+pub fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &serde_json::Value) -> WorkflowParameter {
+    let name = patch.get("name").and_then(|v| v.as_str()).map(str::to_string).unwrap_or_else(|| workflow_parameter_name(parameter));
+    let patch_type = patch.get("type").and_then(|v| v.as_str());
+    let use_numeric = patch_type == Some("numeric") || (patch_type.is_none() && matches!(parameter, WorkflowParameter::Numeric { .. }));
+    if use_numeric {
+        let current = match parameter {
+            WorkflowParameter::Numeric { .. } => parameter.clone(),
+            _ => create_default_workflow_parameter(&WorkflowParameterType::Numeric, &name, Some(workflow_parameter_id(parameter))),
+        };
+        if let WorkflowParameter::Numeric { id, min: current_min, max: current_max, step: current_step, value: current_value, .. } = current {
+            let min = patch.get("min").and_then(|v| v.as_f64()).or(current_min);
+            let max = patch.get("max").and_then(|v| v.as_f64()).or(current_max);
+            let step = patch.get("step").and_then(|v| v.as_f64()).or(current_step);
+            let raw_value = patch.get("value").and_then(|v| v.as_f64()).unwrap_or(current_value);
+            return WorkflowParameter::Numeric { id, name, min, max, step, value: clamp_workflow_numeric_value(raw_value, min, max, step) };
+        }
+    }
+    let use_categorical = patch_type == Some("categorical") || (patch_type.is_none() && matches!(parameter, WorkflowParameter::Categorical { .. }));
+    if use_categorical {
+        let current = match parameter {
+            WorkflowParameter::Categorical { .. } => parameter.clone(),
+            _ => create_default_workflow_parameter(&WorkflowParameterType::Categorical, &name, Some(workflow_parameter_id(parameter))),
+        };
+        if let WorkflowParameter::Categorical { id, value: current_value, options: current_options, .. } = current {
+            let options = patch.get("options").and_then(|v| v.as_array()).map(|entries| entries.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect::<Vec<_>>()).unwrap_or(current_options);
+            let unique_options = if options.is_empty() { vec!["Option A".into()] } else { options };
+            let value = patch
+                .get("value")
+                .and_then(|v| v.as_str())
+                .filter(|v| unique_options.iter().any(|option| option == *v))
+                .map(str::to_string)
+                .or_else(|| unique_options.iter().find(|option| **option == current_value).cloned())
+                .unwrap_or_else(|| unique_options[0].clone());
+            return WorkflowParameter::Categorical { id, name, options: unique_options, value };
+        }
+    }
+    if patch_type == Some("toggle") || (patch_type.is_none() && matches!(parameter, WorkflowParameter::Toggle { .. })) {
+        let current = match parameter {
+            WorkflowParameter::Toggle { .. } => parameter.clone(),
+            _ => create_default_workflow_parameter(&WorkflowParameterType::Toggle, &name, Some(workflow_parameter_id(parameter))),
+        };
+        if let WorkflowParameter::Toggle { id, value: current_value, .. } = current {
+            let value = patch.get("value").and_then(|v| v.as_bool()).unwrap_or(current_value);
+            return WorkflowParameter::Toggle { id, name, value };
+        }
+    }
+    let current = match parameter {
+        WorkflowParameter::Text { .. } => parameter.clone(),
+        _ => create_default_workflow_parameter(&WorkflowParameterType::Text, &name, Some(workflow_parameter_id(parameter))),
+    };
+    if let WorkflowParameter::Text { id, value: current_value, .. } = current {
+        let value = patch.get("value").and_then(|v| v.as_str()).map(str::to_string).unwrap_or(current_value);
+        return WorkflowParameter::Text { id, name, value };
+    }
+    parameter.clone()
+}
+
+/// @emoji ✅️ Type-checks one binding's `field_path` against the target app's declared `ConfigSpec` —
+/// `config_spec` is caller-resolved (os-core looks it up via `os_app_registration`), so this function
+/// itself needs no registry. Ported verbatim from os-core's `validate_parameter_config_binding`.
+pub fn validate_workflow_parameter_config_binding(binding: &WorkflowParameterBinding, parameter_type: &WorkflowParameterType, config_spec: &semio_framework_core::ConfigSpec) -> Result<(), store::SpaceConflict> {
+    let uri = format!("{}#{}", binding.node_id, binding.field_path);
+    let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
+        return Err(store::SpaceConflict { kind: "workflow/parameter-binding-invalid".into(), uri, message: format!("binding targets config field '{}', which the app's ConfigSpec does not declare", binding.field_path) });
+    };
+    let compatible = matches!(
+        (parameter_type, &field.shape),
+        (WorkflowParameterType::Numeric, semio_framework_core::ConfigFieldShape::Number { .. })
+            | (WorkflowParameterType::Categorical, semio_framework_core::ConfigFieldShape::Select { .. })
+            | (WorkflowParameterType::Toggle, semio_framework_core::ConfigFieldShape::Toggle)
+            | (WorkflowParameterType::Text, semio_framework_core::ConfigFieldShape::Text)
+    );
+    if compatible {
+        Ok(())
+    } else {
+        Err(store::SpaceConflict { kind: "workflow/parameter-binding-invalid".into(), uri, message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.shape) })
+    }
+}
+
+/// @emoji 🎛️ Resolves bound parameter values for a workflow node as a field-path map.
+pub fn resolve_workflow_parameter_values(bindings: &[WorkflowParameterBinding], parameters: &[WorkflowParameter], node_id: &str) -> HashMap<String, serde_json::Value> {
+    let mut values = HashMap::new();
+    for binding in bindings.iter().filter(|entry| entry.node_id == node_id) {
+        let Some(parameter) = parameters.iter().find(|entry| workflow_parameter_id(entry) == binding.parameter_id) else {
+            continue;
+        };
+        values.insert(binding.field_path.clone(), workflow_parameter_value(parameter));
+    }
+    values
+}
+
+pub fn workflow_parameter_port_id(node_id: &str, parameter_id: &str) -> String {
+    media_port_id_for_spec(node_id, &format!("{WORKFLOW_PARAMETER_PORT_PREFIX}{parameter_id}"), "in")
+}
+
+pub fn is_workflow_parameter_port_id(port_id: &str) -> bool {
+    media_port_spec_id(port_id).map(|spec_id| spec_id.starts_with(WORKFLOW_PARAMETER_PORT_PREFIX)).unwrap_or(false)
+}
+
+pub fn workflow_parameter_id_from_port_id(port_id: &str) -> Option<String> {
+    let spec_id = media_port_spec_id(port_id)?;
+    spec_id.strip_prefix(WORKFLOW_PARAMETER_PORT_PREFIX).map(str::to_string)
+}
+
+pub fn media_port_id_for_spec(instance_id: &str, spec_id: &str, direction: &str) -> String {
+    format!("{instance_id}:{spec_id}:{direction}")
+}
+
+pub fn media_port_spec_id(port_id: &str) -> Option<String> {
+    let parts: Vec<_> = port_id.split(':').collect();
+    if parts.len() < 3 {
+        return None;
+    }
+    Some(parts[1..parts.len() - 1].join(":"))
+}
+
+/// 🎛️ Resyncs one node's parameter-bound input ports from `bindings` — every non-parameter port is
+/// kept as-is, every parameter port is rebuilt from scratch (idempotent: bind/unbind/patch all funnel
+/// through this). Ported verbatim from os-core's `sync_workflow_node_parameter_ports`.
+fn sync_workflow_node_parameter_ports(node: &WorkflowNode, bindings: &[WorkflowParameterBinding]) -> WorkflowNode {
+    let node_bindings: Vec<_> = bindings.iter().filter(|binding| binding.node_id == node.id).collect();
+    let base_inputs: Vec<_> = node.inputs.iter().filter(|port| !is_workflow_parameter_port_id(&port.id)).cloned().collect();
+    let parameter_inputs: Vec<_> = node_bindings
+        .iter()
+        .map(|binding| WorkflowMediaPort {
+            id: workflow_parameter_port_id(&node.id, &binding.parameter_id),
+            spec: MediaPortSpec {
+                id: format!("{WORKFLOW_PARAMETER_PORT_PREFIX}{}", binding.parameter_id),
+                label: "Parameter".into(),
+                direction: MediaPortDirection::In,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                kind_id: Some("parameter.value".into()),
+                required: false,
+                multiplicity: PortMultiplicity::One,
+            },
+        })
+        .collect();
+    let inputs: Vec<_> = base_inputs.into_iter().chain(parameter_inputs).collect();
+    let port_count = inputs.len().max(node.outputs.len()).max(1);
+    WorkflowNode { inputs, height: 56.0 + port_count as f64 * 18.0, ..node.clone() }
+}
+
+pub fn sync_workflow_parameter_ports(graph: &Workflow, bindings: &[WorkflowParameterBinding]) -> Workflow {
+    Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: graph.nodes.iter().map(|node| sync_workflow_node_parameter_ports(node, bindings)).collect(), edges: graph.edges.clone() }
+}
+//#endregion 🔖️WorkflowParameters
+
+//#region 🔖️WorkflowDocument
+/// 🔌️ One declared collection-level input slot a workflow's nodes can bind an in-port to — `selector`
+/// is a glob matched against collection entry paths at run time (W5's `SpaceRunner` job); this crate
+/// only carries the declaration + validates bindings resolve (`validate_workflow_document`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct WorkflowInput {
+    pub id: String,
+    pub kind_id: String,
+    pub selector: String,
+    pub required: bool,
+    pub multiplicity: PortMultiplicity,
+}
+
+fn workflow_input_spec() -> dsl::RecordSpec {
+    dsl::RecordSpec::new(
+        None,
+        dsl::RecordLayout::Inline,
+        vec![
+            dsl::FieldSpec::new(0, "id", dsl::Shape::Text),
+            dsl::FieldSpec::new(1, "kind_id", dsl::Shape::Text),
+            dsl::FieldSpec::new(2, "selector", dsl::Shape::Text),
+            dsl::FieldSpec::new(3, "required", dsl::Shape::Bool),
+            dsl::FieldSpec::new(4, "multiplicity", dsl::Shape::Enum(port_multiplicity_variants())),
+        ],
+    )
+}
+
+/// 🧬️ Hand-crafted `dsl::DslField` (not `#[derive(dsl::DslRecord)]`) — `multiplicity: PortMultiplicity`
+/// is a foreign type this crate can't derive `DslField` for under the orphan rule, same reasoning as
+/// `WorkflowMediaPort`/`MediaContract` above; reuses their `port_multiplicity_ordinal`/`_from_ordinal`/
+/// `_variants` helpers directly.
+impl dsl::DslField for WorkflowInput {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Record(workflow_input_spec)
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        let mut record = dsl::RecordValue::default();
+        record.fields.insert(0, dsl::FieldValue::Text(self.id.clone()));
+        record.fields.insert(1, dsl::FieldValue::Text(self.kind_id.clone()));
+        record.fields.insert(2, dsl::FieldValue::Text(self.selector.clone()));
+        record.fields.insert(3, dsl::FieldValue::Bool(self.required));
+        record.fields.insert(4, dsl::FieldValue::Enum(port_multiplicity_ordinal(self.multiplicity)));
+        dsl::FieldValue::Record(record)
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let dsl::FieldValue::Record(record) = value else { return Err(format!("expected Record, found {value:?}")) };
+        let id = match record.get(0) {
+            Some(dsl::FieldValue::Text(s)) => s.clone(),
+            other => return Err(format!("expected id, found {other:?}")),
+        };
+        let kind_id = match record.get(1) {
+            Some(dsl::FieldValue::Text(s)) => s.clone(),
+            other => return Err(format!("expected kind_id, found {other:?}")),
+        };
+        let selector = match record.get(2) {
+            Some(dsl::FieldValue::Text(s)) => s.clone(),
+            other => return Err(format!("expected selector, found {other:?}")),
+        };
+        let required = match record.get(3) {
+            Some(dsl::FieldValue::Bool(b)) => *b,
+            other => return Err(format!("expected required, found {other:?}")),
+        };
+        let multiplicity = match record.get(4) {
+            Some(dsl::FieldValue::Enum(ordinal)) => port_multiplicity_from_ordinal(*ordinal)?,
+            other => return Err(format!("expected multiplicity, found {other:?}")),
+        };
+        Ok(WorkflowInput { id, kind_id, selector, required, multiplicity })
+    }
+}
+
+/// 🔗️ Binds a declared [`WorkflowInput`] slot onto one node's in-port.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct WorkflowInputBinding {
+    pub input_id: String,
+    pub node_id: String,
+    pub port_id: String,
+}
+
+/// 📤️ Names where a node's out-port materializes in the output collection — `path_template` like
+/// `"renders/{node}/{input.stem}.{ext}"` (resolved at run time by W5's `SpaceRunner`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct WorkflowOutputBinding {
+    pub node_id: String,
+    pub port_id: String,
+    pub path_template: String,
+}
+
+/// 🕸️ The `s.workflow` persisted artifact — a non-destructive pipeline of connected apps (`graph`),
+/// its parameters/bindings, and its declared collection-level inputs/outputs. Absorbs os-core's
+/// dissolved `OsProjection` (`programs` moved to `space::SpaceProjection`, `active_plugin_id`/
+/// `active_alternative_id` become space-app session state — see `## The inversion` in the plan).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[dsl(extension = "workflow-document")]
+pub struct WorkflowDocument {
+    pub schema: String,
+    #[dsl(block)]
+    pub graph: Workflow,
+    #[dsl(statements)]
+    pub parameters: Vec<WorkflowParameter>,
+    #[dsl(table)]
+    pub parameter_bindings: Vec<WorkflowParameterBinding>,
+    // 🧮️ NOT `#[dsl(table)]`: `WorkflowInput` hand-crafts `dsl::DslField` (its `multiplicity:
+    // PortMultiplicity` field is foreign, orphan-rule-blocked from `#[derive(dsl::DslRecord)]` — same
+    // reasoning as `CollectionEntry.body` in the `space` crate), so it has no `__dsl_spec` for the
+    // compact Structure-of-Arrays table macro; the plain (unattributed) `Vec<DslField>` shape below
+    // renders it as the expanded Array-of-Structs `Shape::List(Record)` form instead.
+    pub inputs: Vec<WorkflowInput>,
+    #[dsl(table)]
+    pub input_bindings: Vec<WorkflowInputBinding>,
+    #[dsl(table)]
+    pub output_bindings: Vec<WorkflowOutputBinding>,
+}
+
+pub fn empty_workflow_document() -> WorkflowDocument {
+    WorkflowDocument { schema: S_WORKFLOW_SCHEMA.into(), graph: empty_workflow(), parameters: Vec::new(), parameter_bindings: Vec::new(), inputs: Vec::new(), input_bindings: Vec::new(), output_bindings: Vec::new() }
+}
+
+fn workflow_parameter_entity_id(parameter: &WorkflowParameter) -> &str {
+    workflow_parameter_id(parameter)
+}
+
+//#region 🔖️WorkflowOperation
+/// ⚡️ One settled `WorkflowDocument` mutation — lifted from os-core's dissolved `OsOperation` (graph/
+/// parameter arms renamed `*WorkflowNode`/`*WorkflowEdge` -> `*Node`/`*Edge` for brevity now that
+/// there's no sibling `Os*` type to disambiguate from) plus new `DeclareInput`/`RemoveInput`/
+/// `BindInput`/`UnbindInput`/`BindOutput`/`UnbindOutput` variants for the new fields. `SetActiveProgram`/
+/// `SetActiveAlternative` are NOT here — see `## The inversion`: those became space-app session state.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum WorkflowOperation {
+    AddNode { node: WorkflowNode },
+    RemoveNode { node_id: String },
+    ConnectPorts { edge: WorkflowEdge },
+    DisconnectEdge { edge_id: String },
+    MoveNode { node_id: String, x: f64, y: f64 },
+    PatchNode { node_id: String, label: String },
+    AddParameter { parameter: WorkflowParameter },
+    RemoveParameter { parameter_id: String },
+    PatchParameter { parameter_id: String, parameter: WorkflowParameter },
+    BindParameterField { binding: WorkflowParameterBinding },
+    UnbindParameterField { node_id: String, field_path: String },
+    SyncNodePorts,
+    DeclareInput { input: WorkflowInput },
+    RemoveInput { input_id: String },
+    BindInput { binding: WorkflowInputBinding },
+    UnbindInput { input_id: String },
+    BindOutput { binding: WorkflowOutputBinding },
+    UnbindOutput { node_id: String, port_id: String },
+}
+
+pub fn apply_workflow_operation(document: &WorkflowDocument, operation: &WorkflowOperation) -> WorkflowDocument {
+    let mut next = document.clone();
+    match operation {
+        WorkflowOperation::AddNode { node } => {
+            let node = sync_workflow_node_parameter_ports(node, &next.parameter_bindings);
+            next.graph.nodes.push(node);
+        }
+        WorkflowOperation::RemoveNode { node_id } => {
+            next.parameter_bindings.retain(|binding| binding.node_id != *node_id);
+            next.input_bindings.retain(|binding| binding.node_id != *node_id);
+            next.output_bindings.retain(|binding| binding.node_id != *node_id);
+            next.graph.nodes.retain(|node| node.id != *node_id);
+            next.graph.edges.retain(|edge| edge.source_node_id != *node_id && edge.target_node_id != *node_id);
+        }
+        WorkflowOperation::ConnectPorts { edge } => next.graph.edges.push(edge.clone()),
+        WorkflowOperation::DisconnectEdge { edge_id } => next.graph.edges.retain(|edge| edge.id != *edge_id),
+        WorkflowOperation::MoveNode { node_id, x, y } => {
+            for node in &mut next.graph.nodes {
+                if node.id == *node_id {
+                    node.x = *x;
+                    node.y = *y;
+                }
+            }
+        }
+        WorkflowOperation::PatchNode { node_id, label } => {
+            for node in &mut next.graph.nodes {
+                if node.id == *node_id {
+                    node.label = label.clone();
+                }
+            }
+        }
+        WorkflowOperation::AddParameter { parameter } => next.parameters.push(parameter.clone()),
+        WorkflowOperation::RemoveParameter { parameter_id } => {
+            next.parameters.retain(|parameter| workflow_parameter_entity_id(parameter) != *parameter_id);
+            next.parameter_bindings.retain(|binding| binding.parameter_id != *parameter_id);
+            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
+        }
+        WorkflowOperation::PatchParameter { parameter_id, parameter } => {
+            for entry in &mut next.parameters {
+                if workflow_parameter_entity_id(entry) == *parameter_id {
+                    *entry = parameter.clone();
+                }
+            }
+        }
+        WorkflowOperation::BindParameterField { binding } => {
+            next.parameter_bindings.retain(|entry| !(entry.node_id == binding.node_id && entry.field_path == binding.field_path));
+            next.parameter_bindings.push(binding.clone());
+            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
+        }
+        WorkflowOperation::UnbindParameterField { node_id, field_path } => {
+            next.parameter_bindings.retain(|binding| !(binding.node_id == *node_id && binding.field_path == *field_path));
+            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
+        }
+        WorkflowOperation::SyncNodePorts => {
+            next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
+        }
+        WorkflowOperation::DeclareInput { input } => next.inputs.push(input.clone()),
+        WorkflowOperation::RemoveInput { input_id } => {
+            next.inputs.retain(|input| input.id != *input_id);
+            next.input_bindings.retain(|binding| binding.input_id != *input_id);
+        }
+        WorkflowOperation::BindInput { binding } => {
+            next.input_bindings.retain(|entry| entry.input_id != binding.input_id);
+            next.input_bindings.push(binding.clone());
+        }
+        WorkflowOperation::UnbindInput { input_id } => {
+            next.input_bindings.retain(|binding| binding.input_id != *input_id);
+        }
+        WorkflowOperation::BindOutput { binding } => {
+            next.output_bindings.retain(|entry| !(entry.node_id == binding.node_id && entry.port_id == binding.port_id));
+            next.output_bindings.push(binding.clone());
+        }
+        WorkflowOperation::UnbindOutput { node_id, port_id } => {
+            next.output_bindings.retain(|binding| !(binding.node_id == *node_id && binding.port_id == *port_id));
+        }
+    }
+    next
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum WorkflowDiff {
+    #[default]
+    Empty,
+    AddNode { node: WorkflowNode },
+    RemoveNode { node_id: String },
+    ConnectPorts { edge: WorkflowEdge },
+    DisconnectEdge { edge_id: String },
+    MoveNode { node_id: String, x: f64, y: f64 },
+    PatchNode { node_id: String, label: String },
+    AddParameter { parameter: WorkflowParameter },
+    RemoveParameter { parameter_id: String },
+    PatchParameter { parameter_id: String, parameter: WorkflowParameter },
+    BindParameterField { binding: WorkflowParameterBinding },
+    UnbindParameterField { node_id: String, field_path: String },
+    SyncNodePorts,
+    DeclareInput { input: WorkflowInput },
+    RemoveInput { input_id: String },
+    BindInput { binding: WorkflowInputBinding },
+    UnbindInput { input_id: String },
+    BindOutput { binding: WorkflowOutputBinding },
+    UnbindOutput { node_id: String, port_id: String },
+}
+
+impl protocol::OperationDiff<WorkflowDocument> for WorkflowDiff {
+    fn apply(&self, document: &WorkflowDocument) -> WorkflowDocument {
+        let operation = match self {
+            WorkflowDiff::Empty => return document.clone(),
+            WorkflowDiff::AddNode { node } => WorkflowOperation::AddNode { node: node.clone() },
+            WorkflowDiff::RemoveNode { node_id } => WorkflowOperation::RemoveNode { node_id: node_id.clone() },
+            WorkflowDiff::ConnectPorts { edge } => WorkflowOperation::ConnectPorts { edge: edge.clone() },
+            WorkflowDiff::DisconnectEdge { edge_id } => WorkflowOperation::DisconnectEdge { edge_id: edge_id.clone() },
+            WorkflowDiff::MoveNode { node_id, x, y } => WorkflowOperation::MoveNode { node_id: node_id.clone(), x: *x, y: *y },
+            WorkflowDiff::PatchNode { node_id, label } => WorkflowOperation::PatchNode { node_id: node_id.clone(), label: label.clone() },
+            WorkflowDiff::AddParameter { parameter } => WorkflowOperation::AddParameter { parameter: parameter.clone() },
+            WorkflowDiff::RemoveParameter { parameter_id } => WorkflowOperation::RemoveParameter { parameter_id: parameter_id.clone() },
+            WorkflowDiff::PatchParameter { parameter_id, parameter } => WorkflowOperation::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() },
+            WorkflowDiff::BindParameterField { binding } => WorkflowOperation::BindParameterField { binding: binding.clone() },
+            WorkflowDiff::UnbindParameterField { node_id, field_path } => WorkflowOperation::UnbindParameterField { node_id: node_id.clone(), field_path: field_path.clone() },
+            WorkflowDiff::SyncNodePorts => WorkflowOperation::SyncNodePorts,
+            WorkflowDiff::DeclareInput { input } => WorkflowOperation::DeclareInput { input: input.clone() },
+            WorkflowDiff::RemoveInput { input_id } => WorkflowOperation::RemoveInput { input_id: input_id.clone() },
+            WorkflowDiff::BindInput { binding } => WorkflowOperation::BindInput { binding: binding.clone() },
+            WorkflowDiff::UnbindInput { input_id } => WorkflowOperation::UnbindInput { input_id: input_id.clone() },
+            WorkflowDiff::BindOutput { binding } => WorkflowOperation::BindOutput { binding: binding.clone() },
+            WorkflowDiff::UnbindOutput { node_id, port_id } => WorkflowOperation::UnbindOutput { node_id: node_id.clone(), port_id: port_id.clone() },
+        };
+        apply_workflow_operation(document, &operation)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if !matches!(other, WorkflowDiff::Empty) {
+            *self = other;
+        }
+    }
+}
+
+impl protocol::Operation<WorkflowDocument> for WorkflowOperation {
+    type Diff = WorkflowDiff;
+
+    fn diff(&self, _document: &WorkflowDocument) -> WorkflowDiff {
+        match self {
+            WorkflowOperation::AddNode { node } => WorkflowDiff::AddNode { node: node.clone() },
+            WorkflowOperation::RemoveNode { node_id } => WorkflowDiff::RemoveNode { node_id: node_id.clone() },
+            WorkflowOperation::ConnectPorts { edge } => WorkflowDiff::ConnectPorts { edge: edge.clone() },
+            WorkflowOperation::DisconnectEdge { edge_id } => WorkflowDiff::DisconnectEdge { edge_id: edge_id.clone() },
+            WorkflowOperation::MoveNode { node_id, x, y } => WorkflowDiff::MoveNode { node_id: node_id.clone(), x: *x, y: *y },
+            WorkflowOperation::PatchNode { node_id, label } => WorkflowDiff::PatchNode { node_id: node_id.clone(), label: label.clone() },
+            WorkflowOperation::AddParameter { parameter } => WorkflowDiff::AddParameter { parameter: parameter.clone() },
+            WorkflowOperation::RemoveParameter { parameter_id } => WorkflowDiff::RemoveParameter { parameter_id: parameter_id.clone() },
+            WorkflowOperation::PatchParameter { parameter_id, parameter } => WorkflowDiff::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() },
+            WorkflowOperation::BindParameterField { binding } => WorkflowDiff::BindParameterField { binding: binding.clone() },
+            WorkflowOperation::UnbindParameterField { node_id, field_path } => WorkflowDiff::UnbindParameterField { node_id: node_id.clone(), field_path: field_path.clone() },
+            WorkflowOperation::SyncNodePorts => WorkflowDiff::SyncNodePorts,
+            WorkflowOperation::DeclareInput { input } => WorkflowDiff::DeclareInput { input: input.clone() },
+            WorkflowOperation::RemoveInput { input_id } => WorkflowDiff::RemoveInput { input_id: input_id.clone() },
+            WorkflowOperation::BindInput { binding } => WorkflowDiff::BindInput { binding: binding.clone() },
+            WorkflowOperation::UnbindInput { input_id } => WorkflowDiff::UnbindInput { input_id: input_id.clone() },
+            WorkflowOperation::BindOutput { binding } => WorkflowDiff::BindOutput { binding: binding.clone() },
+            WorkflowOperation::UnbindOutput { node_id, port_id } => WorkflowDiff::UnbindOutput { node_id: node_id.clone(), port_id: port_id.clone() },
+        }
+    }
+
+    fn backwards(&self, document: &WorkflowDocument) -> Vec<Self> {
+        match self {
+            WorkflowOperation::AddNode { node } => vec![WorkflowOperation::RemoveNode { node_id: node.id.clone() }],
+            WorkflowOperation::RemoveNode { node_id } => document.graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![WorkflowOperation::AddNode { node: node.clone() }]).unwrap_or_default(),
+            WorkflowOperation::ConnectPorts { edge } => vec![WorkflowOperation::DisconnectEdge { edge_id: edge.id.clone() }],
+            WorkflowOperation::DisconnectEdge { edge_id } => document.graph.edges.iter().find(|edge| edge.id == *edge_id).map(|edge| vec![WorkflowOperation::ConnectPorts { edge: edge.clone() }]).unwrap_or_default(),
+            WorkflowOperation::MoveNode { node_id, .. } => document.graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![WorkflowOperation::MoveNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
+            WorkflowOperation::PatchNode { node_id, .. } => document.graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![WorkflowOperation::PatchNode { node_id: node_id.clone(), label: node.label.clone() }]).unwrap_or_default(),
+            WorkflowOperation::AddParameter { parameter } => vec![WorkflowOperation::RemoveParameter { parameter_id: workflow_parameter_entity_id(parameter).into() }],
+            WorkflowOperation::RemoveParameter { parameter_id } => {
+                document.parameters.iter().find(|parameter| workflow_parameter_entity_id(parameter) == *parameter_id).map(|parameter| vec![WorkflowOperation::AddParameter { parameter: parameter.clone() }]).unwrap_or_default()
+            }
+            WorkflowOperation::PatchParameter { parameter_id, parameter } => document
+                .parameters
+                .iter()
+                .find(|entry| workflow_parameter_entity_id(entry) == *parameter_id)
+                .map(|current| vec![WorkflowOperation::PatchParameter { parameter_id: parameter_id.clone(), parameter: current.clone() }])
+                .unwrap_or_else(|| vec![WorkflowOperation::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() }]),
+            WorkflowOperation::BindParameterField { binding } => vec![WorkflowOperation::UnbindParameterField { node_id: binding.node_id.clone(), field_path: binding.field_path.clone() }],
+            WorkflowOperation::UnbindParameterField { node_id, field_path } => document
+                .parameter_bindings
+                .iter()
+                .find(|binding| binding.node_id == *node_id && binding.field_path == *field_path)
+                .map(|binding| vec![WorkflowOperation::BindParameterField { binding: binding.clone() }])
+                .unwrap_or_default(),
+            WorkflowOperation::SyncNodePorts => Vec::new(),
+            WorkflowOperation::DeclareInput { input } => vec![WorkflowOperation::RemoveInput { input_id: input.id.clone() }],
+            WorkflowOperation::RemoveInput { input_id } => document.inputs.iter().find(|input| input.id == *input_id).map(|input| vec![WorkflowOperation::DeclareInput { input: input.clone() }]).unwrap_or_default(),
+            WorkflowOperation::BindInput { binding } => vec![WorkflowOperation::UnbindInput { input_id: binding.input_id.clone() }],
+            WorkflowOperation::UnbindInput { input_id } => {
+                document.input_bindings.iter().find(|binding| binding.input_id == *input_id).map(|binding| vec![WorkflowOperation::BindInput { binding: binding.clone() }]).unwrap_or_default()
+            }
+            WorkflowOperation::BindOutput { binding } => vec![WorkflowOperation::UnbindOutput { node_id: binding.node_id.clone(), port_id: binding.port_id.clone() }],
+            WorkflowOperation::UnbindOutput { node_id, port_id } => {
+                document.output_bindings.iter().find(|binding| binding.node_id == *node_id && binding.port_id == *port_id).map(|binding| vec![WorkflowOperation::BindOutput { binding: binding.clone() }]).unwrap_or_default()
+            }
+        }
+    }
+
+    // 🚧️ No `reconcile` override here (inherits the trait's no-op default): the two rules that used to
+    // run alongside the pure structural ones in os-core's `reconcile_os_workflow` — contract
+    // renegotiation and parameter-binding-vs-ConfigSpec validation — both need the os-core plugin/
+    // artifact registry, which doesn't exist at this layer (same reasoning `validate_workflow`'s own
+    // doc already gives for staying registry-free here). Rather than split the four-rule pipeline
+    // across two layers (risking a different rule ordering than the one the existing tests pin), the
+    // WHOLE graph-reconcile pass — structural rules included — stays a single ordered pipeline at the
+    // os-core layer (`reconcile_workflow_document`, invoked explicitly by `OsWorkflowStore`, not
+    // through this trait hook). See os-core's `🔖️GraphReconcile` region.
+}
+//#endregion 🔖️WorkflowOperation
+
+//#region 🔖️WorkflowOperationOpText
+/// 🧬️ Local structural twin of [`WorkflowOperation`] for the `dsl::DslOps` derive — mirrors os-core's
+/// deleted `OsOperationDsl` bridge exactly (see its doc for why `AddParameter`/`PatchParameter` box
+/// their `parameter` field: `WorkflowParameter` derives `dsl::DslEnum`, giving it `DslVariants` but not
+/// `DslField`, and the engine's `#[dsl(statements)]` only recognizes `Vec`/`Option`/`Box` wrappers).
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+enum WorkflowOperationDsl {
+    AddNode {
+        node: WorkflowNode,
+    },
+    RemoveNode {
+        #[dsl(key = "id")]
+        node_id: String,
+    },
+    ConnectPorts {
+        edge: WorkflowEdge,
+    },
+    DisconnectEdge {
+        #[dsl(key = "id")]
+        edge_id: String,
+    },
+    MoveNode {
+        #[dsl(key = "id")]
+        node_id: String,
+        x: f64,
+        y: f64,
+    },
+    PatchNode {
+        #[dsl(key = "id")]
+        node_id: String,
+        label: String,
+    },
+    AddParameter {
+        #[dsl(statements)]
+        parameter: Box<WorkflowParameter>,
+    },
+    RemoveParameter {
+        #[dsl(key = "id")]
+        parameter_id: String,
+    },
+    PatchParameter {
+        #[dsl(key = "target")]
+        parameter_id: String,
+        #[dsl(statements)]
+        parameter: Box<WorkflowParameter>,
+    },
+    BindParameterField {
+        binding: WorkflowParameterBinding,
+    },
+    UnbindParameterField {
+        node_id: String,
+        field_path: String,
+    },
+    SyncNodePorts,
+    DeclareInput {
+        input: WorkflowInput,
+    },
+    RemoveInput {
+        #[dsl(key = "id")]
+        input_id: String,
+    },
+    BindInput {
+        binding: WorkflowInputBinding,
+    },
+    UnbindInput {
+        #[dsl(key = "id")]
+        input_id: String,
+    },
+    BindOutput {
+        binding: WorkflowOutputBinding,
+    },
+    UnbindOutput {
+        node_id: String,
+        port_id: String,
+    },
+}
+
+fn workflow_operation_to_dsl(operation: &WorkflowOperation) -> WorkflowOperationDsl {
+    match operation {
+        WorkflowOperation::AddNode { node } => WorkflowOperationDsl::AddNode { node: node.clone() },
+        WorkflowOperation::RemoveNode { node_id } => WorkflowOperationDsl::RemoveNode { node_id: node_id.clone() },
+        WorkflowOperation::ConnectPorts { edge } => WorkflowOperationDsl::ConnectPorts { edge: edge.clone() },
+        WorkflowOperation::DisconnectEdge { edge_id } => WorkflowOperationDsl::DisconnectEdge { edge_id: edge_id.clone() },
+        WorkflowOperation::MoveNode { node_id, x, y } => WorkflowOperationDsl::MoveNode { node_id: node_id.clone(), x: *x, y: *y },
+        WorkflowOperation::PatchNode { node_id, label } => WorkflowOperationDsl::PatchNode { node_id: node_id.clone(), label: label.clone() },
+        WorkflowOperation::AddParameter { parameter } => WorkflowOperationDsl::AddParameter { parameter: Box::new(parameter.clone()) },
+        WorkflowOperation::RemoveParameter { parameter_id } => WorkflowOperationDsl::RemoveParameter { parameter_id: parameter_id.clone() },
+        WorkflowOperation::PatchParameter { parameter_id, parameter } => WorkflowOperationDsl::PatchParameter { parameter_id: parameter_id.clone(), parameter: Box::new(parameter.clone()) },
+        WorkflowOperation::BindParameterField { binding } => WorkflowOperationDsl::BindParameterField { binding: binding.clone() },
+        WorkflowOperation::UnbindParameterField { node_id, field_path } => WorkflowOperationDsl::UnbindParameterField { node_id: node_id.clone(), field_path: field_path.clone() },
+        WorkflowOperation::SyncNodePorts => WorkflowOperationDsl::SyncNodePorts,
+        WorkflowOperation::DeclareInput { input } => WorkflowOperationDsl::DeclareInput { input: input.clone() },
+        WorkflowOperation::RemoveInput { input_id } => WorkflowOperationDsl::RemoveInput { input_id: input_id.clone() },
+        WorkflowOperation::BindInput { binding } => WorkflowOperationDsl::BindInput { binding: binding.clone() },
+        WorkflowOperation::UnbindInput { input_id } => WorkflowOperationDsl::UnbindInput { input_id: input_id.clone() },
+        WorkflowOperation::BindOutput { binding } => WorkflowOperationDsl::BindOutput { binding: binding.clone() },
+        WorkflowOperation::UnbindOutput { node_id, port_id } => WorkflowOperationDsl::UnbindOutput { node_id: node_id.clone(), port_id: port_id.clone() },
+    }
+}
+
+fn workflow_operation_from_dsl(operation: WorkflowOperationDsl) -> WorkflowOperation {
+    match operation {
+        WorkflowOperationDsl::AddNode { node } => WorkflowOperation::AddNode { node },
+        WorkflowOperationDsl::RemoveNode { node_id } => WorkflowOperation::RemoveNode { node_id },
+        WorkflowOperationDsl::ConnectPorts { edge } => WorkflowOperation::ConnectPorts { edge },
+        WorkflowOperationDsl::DisconnectEdge { edge_id } => WorkflowOperation::DisconnectEdge { edge_id },
+        WorkflowOperationDsl::MoveNode { node_id, x, y } => WorkflowOperation::MoveNode { node_id, x, y },
+        WorkflowOperationDsl::PatchNode { node_id, label } => WorkflowOperation::PatchNode { node_id, label },
+        WorkflowOperationDsl::AddParameter { parameter } => WorkflowOperation::AddParameter { parameter: *parameter },
+        WorkflowOperationDsl::RemoveParameter { parameter_id } => WorkflowOperation::RemoveParameter { parameter_id },
+        WorkflowOperationDsl::PatchParameter { parameter_id, parameter } => WorkflowOperation::PatchParameter { parameter_id, parameter: *parameter },
+        WorkflowOperationDsl::BindParameterField { binding } => WorkflowOperation::BindParameterField { binding },
+        WorkflowOperationDsl::UnbindParameterField { node_id, field_path } => WorkflowOperation::UnbindParameterField { node_id, field_path },
+        WorkflowOperationDsl::SyncNodePorts => WorkflowOperation::SyncNodePorts,
+        WorkflowOperationDsl::DeclareInput { input } => WorkflowOperation::DeclareInput { input },
+        WorkflowOperationDsl::RemoveInput { input_id } => WorkflowOperation::RemoveInput { input_id },
+        WorkflowOperationDsl::BindInput { binding } => WorkflowOperation::BindInput { binding },
+        WorkflowOperationDsl::UnbindInput { input_id } => WorkflowOperation::UnbindInput { input_id },
+        WorkflowOperationDsl::BindOutput { binding } => WorkflowOperation::BindOutput { binding },
+        WorkflowOperationDsl::UnbindOutput { node_id, port_id } => WorkflowOperation::UnbindOutput { node_id, port_id },
+    }
+}
+
+impl protocol::OpText for WorkflowOperation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        Ok(workflow_operation_from_dsl(<WorkflowOperationDsl as protocol::OpText>::parse_op(line)?))
+    }
+
+    fn print_op(&self) -> String {
+        <WorkflowOperationDsl as protocol::OpText>::print_op(&workflow_operation_to_dsl(self))
+    }
+}
+
+impl protocol::OpBinary for WorkflowOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        workflow_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(workflow_operation_from_dsl(WorkflowOperationDsl::decode_op(bytes)?))
+    }
+}
+//#endregion 🔖️WorkflowOperationOpText
+
+/// @emoji ✅️ Extends [`validate_workflow`] with the two `WorkflowDocument`-level checks that need the
+/// declared `inputs`/`input_bindings`/`output_bindings` (pure/registry-free, unlike os-core's own
+/// `validate_workflow` wrapper which layers on the contract-renegotiation check): (1) a required node
+/// in-port must have EITHER an incoming edge XOR a `WorkflowInputBinding` targeting it — never both,
+/// never neither; (2) every `input_bindings`/`output_bindings` entry must resolve to a real
+/// `WorkflowInput`/node+port.
+pub fn validate_workflow_document(document: &WorkflowDocument) -> WorkflowValidation {
+    let mut validation = validate_workflow(&document.graph);
+
+    let input_ids: HashSet<&str> = document.inputs.iter().map(|input| input.id.as_str()).collect();
+    for binding in &document.input_bindings {
+        if !input_ids.contains(binding.input_id.as_str()) {
+            validation.errors.push(format!("input binding targets unknown input '{}'", binding.input_id));
+        }
+    }
+
+    let node_by_id: HashMap<&str, &WorkflowNode> = document.graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+    for binding in &document.output_bindings {
+        let resolves = node_by_id.get(binding.node_id.as_str()).is_some_and(|node| node.outputs.iter().any(|port| port.id == binding.port_id));
+        if !resolves {
+            validation.errors.push(format!("output binding targets unknown node/port '{}:{}'", binding.node_id, binding.port_id));
+        }
+    }
+
+    for node in &document.graph.nodes {
+        for port in &node.inputs {
+            if !port.spec.required {
+                continue;
+            }
+            let has_edge = document.graph.edges.iter().any(|edge| edge.target_node_id == node.id && edge.target_port_id == port.id);
+            let has_binding = document.input_bindings.iter().any(|binding| binding.node_id == node.id && binding.port_id == port.id);
+            if has_edge && has_binding {
+                validation.errors.push(format!("required port {} on node {} has both a wire and an input binding", port.id, node.id));
+            } else if !has_edge && !has_binding {
+                validation.errors.push(format!("required port {} on node {} has neither a wire nor an input binding", port.id, node.id));
+            }
+        }
+    }
+
+    validation.ok = validation.errors.is_empty();
+    validation
+}
+//#endregion 🔖️WorkflowDocument
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -769,4 +1621,130 @@ mod tests {
         let deliveries = plan_workflow(&graph, &HashSet::new());
         assert!(deliveries.is_empty());
     }
+
+    //#region 🧪️WorkflowDocumentLaws
+    fn sample_workflow_document() -> WorkflowDocument {
+        let node_a = workflow_node("a", vec![WorkflowMediaPort { id: "a:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, Some("kind.a")) }], vec![]);
+        let node_b = workflow_node(
+            "b",
+            vec![],
+            vec![WorkflowMediaPort { id: "b:in:in".into(), spec: MediaPortSpec { required: true, ..media_port_spec("in", MediaPortDirection::In, Some("kind.a")) } }],
+        );
+        let graph = Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: vec![node_a, node_b], edges: vec![workflow_edge("e1", "a", "out", "b", "in")] };
+        WorkflowDocument {
+            schema: S_WORKFLOW_SCHEMA.into(),
+            graph,
+            parameters: vec![
+                WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) },
+                WorkflowParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] },
+                WorkflowParameter::Toggle { id: "p3".into(), name: "Flag".into(), value: true },
+                WorkflowParameter::Text { id: "p4".into(), name: "Label".into(), value: "hello".into() },
+            ],
+            parameter_bindings: vec![WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "a".into(), field_path: "/zoom".into() }],
+            inputs: vec![WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*.puzzle2d".into(), required: true, multiplicity: PortMultiplicity::One }],
+            input_bindings: Vec::new(),
+            output_bindings: vec![WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/{node}.out".into() }],
+        }
+    }
+
+    #[test]
+    fn empty_workflow_document_matches_schema() {
+        let document = empty_workflow_document();
+        assert_eq!(document.schema, S_WORKFLOW_SCHEMA);
+        assert!(document.graph.nodes.is_empty());
+        assert!(document.parameters.is_empty());
+        assert!(document.inputs.is_empty());
+    }
+
+    #[test]
+    fn workflow_document_dsl_pack_round_trips() {
+        store::test_support::assert_dsl_pack_equivalence(&sample_workflow_document());
+        store::test_support::assert_dsl_pack_equivalence(&empty_workflow_document());
+    }
+
+    #[test]
+    fn workflow_operation_op_text_round_trips_every_variant() {
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()) });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::RemoveNode { node_id: "n1".into() });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in") });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::DisconnectEdge { edge_id: "e1".into() });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::RemoveParameter { parameter_id: "p1".into() });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::SyncNodePorts);
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::RemoveInput { input_id: "in-1".into() });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::UnbindInput { input_id: "in-1".into() });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } });
+        store::test_support::assert_op_line_round_trip(&WorkflowOperation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() });
+    }
+
+    #[test]
+    fn workflow_operation_backwards_restores_pre_state() {
+        let document = sample_workflow_document();
+        store::test_support::assert_operation_round_trip(&document, WorkflowOperation::AddNode { node: workflow_node("c", Vec::new(), Vec::new()) });
+        store::test_support::assert_operation_round_trip(&document, WorkflowOperation::RemoveNode { node_id: "a".into() });
+        store::test_support::assert_operation_round_trip(&document, WorkflowOperation::MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 });
+        store::test_support::assert_operation_round_trip(&document, WorkflowOperation::AddParameter { parameter: WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true } });
+        store::test_support::assert_operation_round_trip(&document, WorkflowOperation::RemoveParameter { parameter_id: "p1".into() });
+        store::test_support::assert_operation_round_trip(
+            &document,
+            WorkflowOperation::DeclareInput { input: WorkflowInput { id: "in-2".into(), kind_id: "kind.b".into(), selector: "**/*".into(), required: false, multiplicity: PortMultiplicity::One } },
+        );
+        store::test_support::assert_operation_round_trip(&document, WorkflowOperation::RemoveInput { input_id: "in-1".into() });
+        store::test_support::assert_operation_round_trip(&document, WorkflowOperation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() } });
+        store::test_support::assert_operation_round_trip(&document, WorkflowOperation::BindOutput { binding: WorkflowOutputBinding { node_id: "a".into(), port_id: "a:out:out".into(), path_template: "renders/other.out".into() } });
+        store::test_support::assert_operation_round_trip(&document, WorkflowOperation::UnbindOutput { node_id: "a".into(), port_id: "a:out:out".into() });
+    }
+
+    #[test]
+    fn workflow_diff_print_parse_and_encode_decode_round_trip() {
+        let diffs = vec![
+            WorkflowDiff::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()) },
+            WorkflowDiff::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::One } },
+            WorkflowDiff::Empty,
+        ];
+        for diff in diffs {
+            let applied = diff.apply(&empty_workflow_document());
+            let _ = applied;
+        }
+    }
+
+    #[test]
+    fn validate_workflow_document_requires_edge_xor_input_binding_on_required_ports() {
+        let mut document = sample_workflow_document();
+        // 🎯️ Sample fixture wires `a -> b` over `b`'s sole required in-port with NO input binding — ok.
+        assert!(validate_workflow_document(&document).ok, "wired required port with no binding must validate");
+
+        document.input_bindings.push(WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() });
+        let both = validate_workflow_document(&document);
+        assert!(!both.ok);
+        assert!(both.errors.iter().any(|error| error.contains("has both a wire and an input binding")));
+
+        document.graph.edges.clear();
+        let neither = validate_workflow_document(&document);
+        assert!(!neither.ok);
+        assert!(neither.errors.iter().any(|error| error.contains("has neither a wire nor an input binding")), "{:?}", neither.errors);
+
+        document.input_bindings.clear();
+        document.input_bindings.push(WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() });
+        assert!(validate_workflow_document(&document).ok, "input binding alone must satisfy a required port");
+    }
+
+    #[test]
+    fn validate_workflow_document_flags_unresolved_bindings() {
+        let mut document = sample_workflow_document();
+        document.input_bindings.push(WorkflowInputBinding { input_id: "missing-input".into(), node_id: "b".into(), port_id: "b:in:in".into() });
+        document.output_bindings.push(WorkflowOutputBinding { node_id: "missing-node".into(), port_id: "x".into(), path_template: "out".into() });
+        let validation = validate_workflow_document(&document);
+        assert!(!validation.ok);
+        assert!(validation.errors.iter().any(|error| error.contains("unknown input 'missing-input'")));
+        assert!(validation.errors.iter().any(|error| error.contains("unknown node/port 'missing-node:x'")));
+    }
+    //#endregion 🧪️WorkflowDocumentLaws
 }

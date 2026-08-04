@@ -431,7 +431,7 @@ impl DocumentApp for WriterPlayApp {
         }
     }
 
-    fn handle(&self, command: &WriterCommand, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Emit<WriterOperation, WriterConfigOperation> {
+    fn handle(&self, command: &WriterCommand, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterOperation, WriterConfigOperation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
@@ -446,10 +446,10 @@ impl DocumentApp for WriterPlayApp {
                 // is its own undo step, so it must NOT share `TextEdit`'s coalescing key.
                 Emit::operations(vec![WriterOperation::SetText { text: text.clone() }])
             }
-            WriterCommand::SetDocument { document } => Emit::operations(vec![WriterOperation::SetDocument { document: document.clone() }]),
+            WriterCommand::SetDocument { document } => Ok(Emit::operations(vec![WriterOperation::SetDocument { document: document.clone() }]),
             WriterCommand::SetDocumentJson { json } | WriterCommand::SetFixtureJson { json } => match serde_json::from_str::<WriterProjection>(json) {
-                Ok(document) => Emit::operations(vec![WriterOperation::SetDocument { document }]),
-                Err(_) => Emit::default(),
+                Ok(document) => Ok(Emit::operations(vec![WriterOperation::SetDocument { document }]),
+                Err(_) => Ok(Emit::default(),
             },
             WriterCommand::SetActiveExample { example_id } => {
                 let document = match example_id.as_str() {
@@ -485,9 +485,9 @@ impl DocumentApp for WriterPlayApp {
                 Emit::default()
             }
             // 🎥️ View command: the editor viewport never touches the document — config-only.
-            WriterCommand::SetCamera { camera } => Emit::config(vec![WriterConfigOperation::SetCamera { camera: camera.clone() }]),
-            WriterCommand::RequestCompletions => Emit::config(vec![WriterConfigOperation::SetRevision { value: config.revision + 1 }]),
-            WriterCommand::LintDocument => Emit::config(vec![WriterConfigOperation::SetLintSignal { value: config.lint_signal + 1 }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]),
+            WriterCommand::SetCamera { camera } => Ok(Emit::config(vec![WriterConfigOperation::SetCamera { camera: camera.clone() }]),
+            WriterCommand::RequestCompletions => Ok(Emit::config(vec![WriterConfigOperation::SetRevision { value: config.revision + 1 }]),
+            WriterCommand::LintDocument => Ok(Emit::config(vec![WriterConfigOperation::SetLintSignal { value: config.lint_signal + 1 }, WriterConfigOperation::SetRevision { value: config.revision + 1 }]),
             WriterCommand::TextSelect { start, end } | WriterCommand::SetEditorSelection { start, end } => {
                 let mut ops = vec![WriterConfigOperation::SetEditorSelection { selection: Some(WriterEditorSelection { start: *start, end: *end }) }];
                 let ids = if document.language_id == "jack" {
@@ -571,7 +571,7 @@ impl DocumentApp for WriterPlayApp {
                 let outcome = apply_engagement(config, &document.text, &document.language_id, &value);
                 Emit { document_operations: outcome.text.map(|text| vec![WriterOperation::SetText { text }]).unwrap_or_default(), config_operations: outcome.config_operations, ..Default::default() }
             }
-            WriterCommand::SetLocale { value } => Emit::config(vec![WriterConfigOperation::SetLocale { value: value.clone() }]),
+            WriterCommand::SetLocale { value } => Ok(Emit::config(vec![WriterConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

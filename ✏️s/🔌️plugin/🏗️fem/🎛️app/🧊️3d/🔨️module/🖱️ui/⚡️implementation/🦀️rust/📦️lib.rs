@@ -558,7 +558,7 @@ impl DocumentApp for Fem3dPlayApp {
     /// 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
     /// `(command, document, config)` to an `Emit`. Every former `handle_action` match arm keeps working,
     /// just through this typed channel instead of the `{action, args}` JSON channel.
-    fn handle(&self, command: &Fem3dCommand, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Emit<Fem3dOperation, Fem3dConfigOperation> {
+    fn handle(&self, command: &Fem3dCommand, doc: &DocumentView<'_, Fem3dDocument>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dOperation, Fem3dConfigOperation>, Fault> {
         let projection = doc.projection;
         match command {
             Fem3dCommand::AddNode { x, y, z } => {
@@ -640,7 +640,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let index = projection.combinations.len();
                     Emit::operations(vec![Fem3dOperation::SetCombination { index, combination: fem3d::FemCombination { id, name: name.clone(), terms } }])
                 }
-                Err(_) => Emit::default(),
+                Err(_) => Ok(Emit::default(),
             },
             Fem3dCommand::SetSelfWeight { case_id, enabled } => match projection.load_cases.iter().position(|lc| &lc.id == case_id) {
                 Some(index) => {
@@ -648,7 +648,7 @@ impl DocumentApp for Fem3dPlayApp {
                     load_case.self_weight = *enabled;
                     Emit::operations(vec![Fem3dOperation::SetLoadCase { index, load_case }])
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             Fem3dCommand::SetAnalysisSettings { modal_count, buckling_count, deformation_scale } => {
                 let current = &projection.analysis;
@@ -691,9 +691,9 @@ impl DocumentApp for Fem3dPlayApp {
                 Emit { document_operations: vec![Fem3dOperation::SetDocument { document }], config_operations: vec![Fem3dConfigOperation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() }
             }
             // 🎥️ Config-only: the world-3d camera never touches the document.
-            Fem3dCommand::SetCamera { json } => Emit::config(vec![Fem3dConfigOperation::SetCamera { camera: FemCamera { json: json.clone() } }]),
+            Fem3dCommand::SetCamera { json } => Ok(Emit::config(vec![Fem3dConfigOperation::SetCamera { camera: FemCamera { json: json.clone() } }]),
             // 👁️ Config-only: which case/mode the results window shows never touches the document.
-            Fem3dCommand::SetResultDisplay { source_id, mode, mode_index } => Emit::config(vec![Fem3dConfigOperation::SetResultDisplay { source_id: source_id.clone(), mode: mode.clone(), mode_index: *mode_index }]),
+            Fem3dCommand::SetResultDisplay { source_id, mode, mode_index } => Ok(Emit::config(vec![Fem3dConfigOperation::SetResultDisplay { source_id: source_id.clone(), mode: mode.clone(), mode_index: *mode_index }]),
         }
     }
 

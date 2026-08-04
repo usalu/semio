@@ -98,6 +98,8 @@
   },
   "rust-analyzer.linkedProjects": ["Cargo.toml"],
   "rust-analyzer.testExplorer": true,
+  "vitest.enable": true,
+  "vitest.configSearchPattern": "**/🧪️vitest.config.ts",
   "terminal.integrated.defaultProfile.linux": "bash",
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {

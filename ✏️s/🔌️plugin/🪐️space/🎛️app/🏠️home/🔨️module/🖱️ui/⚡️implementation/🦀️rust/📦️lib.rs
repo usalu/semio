@@ -10,7 +10,7 @@ use semio_framework_os::{
     MemoryBackbonePort, OsBackbonePort, OsDocument, VcsError, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
 use semio_framework_plugin::{
-        app_labels, build_virtual_file_system_scene, create_tab_stack_layout, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, VirtualFileSystemScene,
+        app_labels, build_virtual_file_system_scene, create_tab_stack_layout, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, VirtualFileSystemScene,
 };
 use serde_json::{json, Value};
 use space_shared::{ensure_space_fixtures_registered, parse_demo_space_document};
@@ -303,7 +303,7 @@ impl DocumentApp for HomeApp {
     }
 
     /// 🎯️ Bridges shell `{action,args}` JSON onto typed `HomeCommand` until every call site speaks OpBinary.
-    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<HomeCommand, String> {
+    fn command_from_action(&self, action: &str, args: Option<&Value>) -> Result<HomeCommand, Fault> {
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "createStudio" => Ok(HomeCommand::CreateStudio {
@@ -335,11 +335,11 @@ impl DocumentApp for HomeApp {
             "setActivePanelTab" => Ok(HomeCommand::SetActivePanelTab {
                 tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default(),
             }),
-            other => Err(format!("home: unhandled action id {other}")),
+            other => Err(Fault::new(FaultOrigin::App, "s.home.unhandled-action", format!("home: unhandled action id {other}"))),
         }
     }
 
-    fn handle(&self, command: &HomeCommand, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Emit<SHomeOperation, HomeConfigOperation> {
+    fn handle(&self, command: &HomeCommand, doc: &DocumentView<'_, SHomeDocument>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeOperation, HomeConfigOperation>, Fault> {
         let generation = doc.projection.catalog_generation;
         let bump = |value: u64| Emit::operations(vec![SHomeOperation::SetCatalogGeneration { value }]);
         let port = catalog_port();
@@ -351,7 +351,7 @@ impl DocumentApp for HomeApp {
                         if let Some(folder_path) = folder_path {
                             if let Ok(entry) = create_folder_studio(name, folder_path) {
                                 eprintln!("[DEBUG] createStudio folder id={}", entry.id);
-                                return created_studio_emit(generation, &entry.id);
+                                return Ok(created_studio_emit(generation, &entry.id));
                             }
                         }
                     }
@@ -359,12 +359,12 @@ impl DocumentApp for HomeApp {
                     {
                         let _ = (name, folder_path);
                     }
-                    Emit::default()
+                    Ok(Emit::default())
                 }
                 _ => {
                     let space_id = create_and_register_ephemeral_studio(name);
                     eprintln!("[DEBUG] createStudio ephemeral id={space_id}");
-                    created_studio_emit(generation, &space_id)
+                    Ok(created_studio_emit(generation, &space_id))
                 }
             },
             HomeCommand::BindSpaceFile { space_id, file_path } => {
@@ -376,26 +376,26 @@ impl DocumentApp for HomeApp {
                 {
                     let _ = (space_id, file_path);
                 }
-                Emit::default()
+                Ok(Emit::default())
             }
             HomeCommand::ImportSpace { dsl } => match dsl {
                 Some(dsl) => {
                     if import_os_space_from_dsl(dsl, port.clone()).is_ok() {
-                        bump(generation + 1)
+                        Ok(bump(generation + 1))
                     } else {
-                        Emit::default()
+                        Ok(Emit::default())
                     }
                 }
-                None => Emit::effect(HostEffect::RequestFileOpen { accept: ".os".into(), read_as: None, import_action: "importSpace".into(), multiple: false }),
+                None => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".os".into(), read_as: None, import_action: "importSpace".into(), multiple: false })),
             },
             HomeCommand::OpenSpace { space_id } => {
                 eprintln!("[DEBUG] home openSpace id={space_id}");
-                Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") })
+                Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }))
             }
             HomeCommand::NavigateVirtualFileSystemNode { node_id } => {
                 let space_id = node_id.strip_prefix("studio:").unwrap_or(node_id);
                 eprintln!("[DEBUG] home navigateVirtualFileSystemNode id={space_id}");
-                Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") })
+                Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }))
             }
             HomeCommand::DeleteVirtualFileSystemNode { node_id } => match node_id.strip_prefix("studio:") {
                 Some(space_id) => {
@@ -403,12 +403,12 @@ impl DocumentApp for HomeApp {
                         guard.remove(space_id);
                     }
                     let _ = delete_os_space(space_id, port.clone());
-                    bump(generation + 1)
+                    Ok(bump(generation + 1))
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default()),
             },
-            HomeCommand::GoHome => Emit::effect(HostEffect::Navigate { uri: "/".into() }),
-            HomeCommand::SetActivePanelTab { tab_id } => Emit::config(vec![HomeConfigOperation::SetActivePanelTab { tab_id: tab_id.clone() }]),
+            HomeCommand::GoHome => Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() })),
+            HomeCommand::SetActivePanelTab { tab_id } => Ok(Emit::config(vec![HomeConfigOperation::SetActivePanelTab { tab_id: tab_id.clone() }])),
         }
     }
 

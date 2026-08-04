@@ -277,7 +277,7 @@ impl DocumentApp for ImperativePlayApp {
         }
     }
 
-    fn handle(&self, command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> Emit<ImperativeOperation, ImperativeConfigOperation> {
+    fn handle(&self, command: &ImperativeCommand, doc: &DocumentView<'_, ImperativeDocument>, cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeOperation, ImperativeConfigOperation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
@@ -353,14 +353,14 @@ impl DocumentApp for ImperativePlayApp {
                     Emit::default()
                 }
             }
-            ImperativeCommand::SetSelection { ids } => Emit::config(vec![ImperativeConfigOperation::SetSelectedSteps { ids: ids.clone() }]),
+            ImperativeCommand::SetSelection { ids } => Ok(Emit::config(vec![ImperativeConfigOperation::SetSelectedSteps { ids: ids.clone() }]),
             ImperativeCommand::Run => {
                 let host = ImperativeHost::from_document(document.clone());
                 let result = host.run();
                 let json = serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
                 Emit::config(vec![ImperativeConfigOperation::SetRunOutput { json }])
             }
-            ImperativeCommand::SetLocale { value } => Emit::config(vec![ImperativeConfigOperation::SetLocale { value: value.clone() }]),
+            ImperativeCommand::SetLocale { value } => Ok(Emit::config(vec![ImperativeConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

@@ -55,12 +55,43 @@ impl TextError {
     }
 }
 
+/// @emoji 🏷️ Stable dotted fault/diagnostic code (e.g. `module.pack.checksum-mismatch`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct FaultCode(pub String);
+
+impl FaultCode {
+    pub fn new(code: impl Into<String>) -> Self {
+        Self(code.into())
+    }
+}
+
+impl From<&'static str> for FaultCode {
+    fn from(value: &'static str) -> Self {
+        Self(value.to_string())
+    }
+}
+
 /// @emoji 🏷️ Stable, greppable diagnostic identifier, e.g. `"DSL0001"`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DiagnosticCode(pub &'static str);
 
+impl From<String> for FaultCode {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
+impl From<DiagnosticCode> for FaultCode {
+    fn from(value: DiagnosticCode) -> Self {
+        FaultCode::new(value.0)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum Severity {
+    Fatal,
     Error,
     Warning,
     Hint,
@@ -93,18 +124,22 @@ impl ExpectedSet {
 
 /// @emoji 🩺️ A structured diagnostic anchored to a span, with an optional `ExpectedSet` for
 /// completions/fixes. Lowers into `TextError` at API boundaries that predate diagnostics.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Diagnostic {
-    pub code: DiagnosticCode,
+    pub code: FaultCode,
     pub severity: Severity,
     pub span: TextSpan,
     pub message: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expected: Option<ExpectedSet>,
+    #[serde(default)]
+    pub scope: FaultScope,
 }
 
 impl Diagnostic {
     pub fn error(code: &'static str, span: TextSpan, message: impl Into<String>) -> Self {
-        Self { code: DiagnosticCode(code), severity: Severity::Error, span, message: message.into(), expected: None }
+        Self { code: FaultCode::new(code), severity: Severity::Error, span, message: message.into(), expected: None, scope: FaultScope::default() }
     }
 
     pub fn with_expected(mut self, expected: ExpectedSet) -> Self {
@@ -120,6 +155,205 @@ impl Diagnostic {
         }
     }
 }
+
+//#region 🔖️Fault
+/// @emoji 🧭️ Which layer of the os stack produced a {@link Fault}.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FaultOrigin {
+    Edge,
+    Renderer,
+    Os,
+    Module,
+    Plugin,
+    App,
+    Extension,
+}
+
+/// @emoji 🎯️ Optional ids locating a fault/diagnostic to a plugin app surface.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FaultScope {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub app_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instance_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub module: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub body_key: Option<String>,
+}
+
+/// @emoji 🔗️ One hop in a {@link Fault} cause chain.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FaultCause {
+    pub message: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub code: Option<FaultCode>,
+}
+
+/// @emoji 🧯️ Structured abort report crossing every os boundary.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Fault {
+    pub origin: FaultOrigin,
+    pub code: FaultCode,
+    pub severity: Severity,
+    pub message: String,
+    #[serde(default)]
+    pub scope: FaultScope,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub span: Option<TextSpan>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub causes: Vec<FaultCause>,
+    #[serde(default)]
+    pub retryable: bool,
+}
+
+impl From<&str> for Fault {
+    fn from(value: &str) -> Self {
+        Fault::new(FaultOrigin::App, FaultCode::new("app.message"), value)
+    }
+}
+
+impl From<String> for Fault {
+    fn from(value: String) -> Self {
+        Fault::new(FaultOrigin::App, FaultCode::new("app.message"), value)
+    }
+}
+
+impl Fault {
+    pub fn new(origin: FaultOrigin, code: impl Into<FaultCode>, message: impl Into<String>) -> Self {
+        Self {
+            origin,
+            code: code.into(),
+            severity: Severity::Error,
+            message: message.into(),
+            scope: FaultScope::default(),
+            span: None,
+            causes: Vec::new(),
+            retryable: false,
+        }
+    }
+
+    pub fn with_scope(mut self, scope: FaultScope) -> Self {
+        self.scope = scope;
+        self
+    }
+
+    pub fn with_retryable(mut self, retryable: bool) -> Self {
+        self.retryable = retryable;
+        self
+    }
+}
+
+/// @emoji 🔁️ Maps a domain error enum into a {@link Fault} at a boundary.
+pub trait FaultFrom {
+    fn fault_origin(&self) -> FaultOrigin;
+    fn fault_code(&self) -> FaultCode;
+    fn fault_severity(&self) -> Severity;
+    fn fault_message(&self) -> String;
+    fn fault_scope(&self) -> FaultScope {
+        FaultScope::default()
+    }
+    fn fault_span(&self) -> Option<TextSpan> {
+        None
+    }
+    fn fault_causes(&self) -> Vec<FaultCause> {
+        Vec::new()
+    }
+    fn fault_retryable(&self) -> bool {
+        false
+    }
+
+    fn into_fault(self) -> Fault
+    where
+        Self: Sized,
+    {
+        Fault {
+            origin: self.fault_origin(),
+            code: self.fault_code(),
+            severity: self.fault_severity(),
+            message: self.fault_message(),
+            scope: self.fault_scope(),
+            span: self.fault_span(),
+            causes: self.fault_causes(),
+            retryable: self.fault_retryable(),
+        }
+    }
+}
+
+impl FaultFrom for TextError {
+    fn fault_origin(&self) -> FaultOrigin {
+        FaultOrigin::Module
+    }
+
+    fn fault_code(&self) -> FaultCode {
+        FaultCode::new("module.dsl.text")
+    }
+
+    fn fault_severity(&self) -> Severity {
+        Severity::Error
+    }
+
+    fn fault_message(&self) -> String {
+        self.message.clone()
+    }
+
+    fn fault_span(&self) -> Option<TextSpan> {
+        Some(self.span)
+    }
+}
+
+/// @emoji 📦️ JSON wire encoding for {@link Fault} crossing host/WIT boundaries.
+pub fn encode_fault_bytes(fault: &Fault) -> Vec<u8> {
+    serde_json::to_vec(fault).unwrap_or_else(|_| fault.message.as_bytes().to_vec())
+}
+
+/// @emoji 🌐️ Decodes a {@link Fault} from JSON wire bytes; falls back to an os-level message fault.
+pub fn decode_fault_bytes(bytes: &[u8]) -> Fault {
+    serde_json::from_slice(bytes).unwrap_or_else(|_| Fault::new(FaultOrigin::Os, "os.fault.decode", String::from_utf8_lossy(bytes)))
+}
+
+/// @emoji 🔁️ Maps a `thiserror` enum into {@link Fault} with a stable dotted code namespace.
+#[macro_export]
+macro_rules! fault_from_thiserror {
+    ($ty:ty, $origin:expr, $prefix:literal) => {
+        impl $crate::FaultFrom for $ty {
+            fn fault_origin(&self) -> $crate::FaultOrigin {
+                $origin
+            }
+
+            fn fault_code(&self) -> $crate::FaultCode {
+                $crate::FaultCode::new($prefix)
+            }
+
+            fn fault_severity(&self) -> $crate::Severity {
+                $crate::Severity::Error
+            }
+
+            fn fault_message(&self) -> String {
+                self.to_string()
+            }
+        }
+    };
+}
+
+#[cfg(all(feature = "js", target_arch = "wasm32"))]
+/// @emoji 🌐️ Surfaces a structured {@link Fault} to JavaScript callers.
+pub fn fault_to_js(fault: Fault) -> wasm_bindgen::JsValue {
+    wasm_bindgen::JsValue::from_str(&serde_json::to_string(&fault).unwrap_or(fault.message))
+}
+
+#[cfg(all(feature = "js", target_arch = "wasm32"))]
+/// @emoji 🌐️ Maps `Result<T, Fault>` into `Result<T, JsValue>` for wasm exports.
+pub fn result_fault_to_js<T>(result: Result<T, Fault>) -> Result<T, wasm_bindgen::JsValue> {
+    result.map_err(fault_to_js)
+}
+//#endregion 🔖️Fault
 //#endregion 🔖️Errors
 
 //#region 🔖️Limits

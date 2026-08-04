@@ -284,12 +284,12 @@ impl DocumentApp for Gis3dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Gis3dCommand, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Emit<Gis3dTerrainOperation, Gis3dConfigOperation> {
+    fn handle(&self, command: &Gis3dCommand, _doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<Gis3dTerrainOperation, Gis3dConfigOperation>, Fault> {
         match command {
-            Gis3dCommand::SetCamera { camera_json } => Emit::config(vec![Gis3dConfigOperation::SetCamera { camera_json: camera_json.clone() }]),
-            Gis3dCommand::SetSelection { ids } | Gis3dCommand::WorldSelect { ids } => Emit::config(vec![Gis3dConfigOperation::SetSelection { ids: ids.clone() }]),
-            Gis3dCommand::SetExaggeration { exaggeration } => Emit::amend(vec![Gis3dTerrainOperation::SetExaggeration { exaggeration: *exaggeration }], "gis3d-exaggeration"),
-            Gis3dCommand::SetLocale { value } => Emit::config(vec![Gis3dConfigOperation::SetLocale { value: value.clone() }]),
+            Gis3dCommand::SetCamera { camera_json } => Ok(Emit::config(vec![Gis3dConfigOperation::SetCamera { camera_json: camera_json.clone() }]),
+            Gis3dCommand::SetSelection { ids } | Gis3dCommand::WorldSelect { ids } => Ok(Emit::config(vec![Gis3dConfigOperation::SetSelection { ids: ids.clone() }]),
+            Gis3dCommand::SetExaggeration { exaggeration } => Ok(Emit::amend(vec![Gis3dTerrainOperation::SetExaggeration { exaggeration: *exaggeration }], "gis3d-exaggeration"),
+            Gis3dCommand::SetLocale { value } => Ok(Emit::config(vec![Gis3dConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

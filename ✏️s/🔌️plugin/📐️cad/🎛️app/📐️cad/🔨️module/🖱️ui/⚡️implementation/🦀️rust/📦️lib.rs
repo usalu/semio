@@ -1798,7 +1798,7 @@ impl DocumentApp for CadPlayApp {
         }
     }
 
-    fn handle(&self, command: &CadCommand, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> Emit<CadOperation, CadConfigOperation> {
+    fn handle(&self, command: &CadCommand, doc: &DocumentView<'_, CadScene>, cfg: &ConfigView<'_, CadConfig>) -> Result<Emit<CadOperation, CadConfigOperation>, Fault> {
         let document = doc.projection;
         let base_config = cfg.projection;
         let mut runtime = cad_runtime_from_config(base_config);
@@ -2086,8 +2086,8 @@ impl DocumentApp for CadPlayApp {
                 runtime.selection_method = method.clone();
                 Emit::config(vec![snapshot_of(&runtime)])
             }
-            CadCommand::FocusModelDefinition { model_definition_id } => Emit::operations(vec![CadOperation::SetActiveModelDefinition { model_definition_id: model_definition_id.clone() }]),
-            CadCommand::ApplyTransformation { qid } => Emit::operations(apply_transformation_operations(document, qid)),
+            CadCommand::FocusModelDefinition { model_definition_id } => Ok(Emit::operations(vec![CadOperation::SetActiveModelDefinition { model_definition_id: model_definition_id.clone() }]),
+            CadCommand::ApplyTransformation { qid } => Ok(Emit::operations(apply_transformation_operations(document, qid)),
             CadCommand::SaveSelected => {
                 let view = CadPlayView { document: document.clone(), runtime: runtime.clone() };
                 Emit::effect(cad_spatial_export_effect(export_spatial_json(&view, "selected"), "cad.selected.spatial.dsl"))
@@ -2114,7 +2114,7 @@ impl DocumentApp for CadPlayApp {
                 };
                 Emit::effect(effect)
             }
-            CadCommand::LoadRawRequest => Emit::effect(HostEffect::RequestFileOpen {
+            CadCommand::LoadRawRequest => Ok(Emit::effect(HostEffect::RequestFileOpen {
                 accept: ".dsl,.spatial.dsl,.spk,.ops,.stp,.step,.obj,.stl,.glb,application/octet-stream,text/plain".into(),
                 read_as: Some("dataUrl".into()),
                 import_action: "importCadFile".into(),
@@ -2174,8 +2174,8 @@ impl DocumentApp for CadPlayApp {
                     }),
                 };
                 match patch {
-                    Some(patch) => Emit::operations(vec![CadOperation::PatchReference { model_definition_id: model_definition_id.clone(), reference_id: reference_id.clone(), patch }]),
-                    None => Emit::default(),
+                    Some(patch) => Ok(Emit::operations(vec![CadOperation::PatchReference { model_definition_id: model_definition_id.clone(), reference_id: reference_id.clone(), patch }]),
+                    None => Ok(Emit::default(),
                 }
             }
             CadCommand::EngagementInput { value, pane } => {

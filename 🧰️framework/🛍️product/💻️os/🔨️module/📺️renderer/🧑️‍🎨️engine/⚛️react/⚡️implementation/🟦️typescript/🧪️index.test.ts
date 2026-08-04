@@ -150,6 +150,8 @@ import {
   isFlowGraphScene,
   mergeRecordPreservingIdentity,
   parseSpaceShellPath,
+  parseShellRoute,
+  ShellFaultBoundary,
   preserveJsonIdentity,
   reconcileUtilityPath,
   studioPanelFocusingSpawned,
@@ -3712,6 +3714,27 @@ describe("s workflow flow routing", () => {
     expect(parseSpaceShellPath("/spaces/my-studio/instances/inst-1")).toEqual({ spaceId: "my-studio", instanceId: "inst-1" });
     expect(parseSpaceShellPath("/")).toBeNull();
     expect(parseSpaceShellPath("/spaces/my-studio/instances/inst-1/extra")).toBeNull();
+  });
+
+  it("classifies shell routes into landing, space, and notFound", () => {
+    expect(parseShellRoute("/")).toEqual({ kind: "landing" });
+    expect(parseShellRoute("/spaces/my-studio")).toEqual({ kind: "space", spaceId: "my-studio", instanceId: undefined });
+    expect(parseShellRoute("/spaces/my-studio/instances/inst-1")).toEqual({ kind: "space", spaceId: "my-studio", instanceId: "inst-1" });
+    expect(parseShellRoute("/unknown/path")).toEqual({ kind: "notFound", path: "/unknown/path" });
+  });
+
+  it("isolates render faults in ShellFaultBoundary", () => {
+    function FaultyChild(): ReactElement {
+      throw new Error("boom");
+    }
+    const { getByRole } = render(
+      createElement(
+        ShellFaultBoundary,
+        { boundaryId: "test", fallbackLabel: "Fault" as never },
+        createElement(FaultyChild),
+      ),
+    );
+    expect(getByRole("alert")).toHaveTextContent("boom");
   });
 
   it("folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId", async () => {

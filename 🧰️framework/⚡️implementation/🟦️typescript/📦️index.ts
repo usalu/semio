@@ -2579,8 +2579,54 @@ export type UndoGroup = {
 /** @emoji 📣️ An out-of-band app event surfaced to the shell (e.g. history changed). */
 export type AppEvent = { readonly kind: string; readonly payload: unknown };
 
+/** @emoji 🩺️ Canonical severity for faults and diagnostics. */
+export type Severity = "fatal" | "error" | "warning" | "hint";
+
+/** @emoji 🧭️ Layer that produced a fault. */
+export type FaultOrigin = "edge" | "renderer" | "os" | "module" | "plugin" | "app" | "extension";
+
+export type FaultScope = {
+  readonly pluginId?: string;
+  readonly appId?: string;
+  readonly instanceId?: string;
+  readonly module?: string;
+  readonly bodyKey?: string;
+};
+
+export type FaultCause = { readonly message: string; readonly code?: string };
+
+export type TextSpan = { readonly line: number; readonly column: number; readonly length: number };
+
+/** @emoji 🧯️ Structured abort report shared across Rust, WIT, and TypeScript. */
+export type Fault = {
+  readonly origin: FaultOrigin;
+  readonly code: string;
+  readonly severity: Severity;
+  readonly message: string;
+  readonly scope: FaultScope;
+  readonly span?: TextSpan;
+  readonly causes?: readonly FaultCause[];
+  readonly retryable: boolean;
+};
+
 /** @emoji 🩺️ A diagnostic emitted alongside an action result. */
-export type Diagnostic = { readonly level: string; readonly message: string };
+export type Diagnostic = {
+  readonly code: string;
+  readonly severity: Severity;
+  readonly message: string;
+  readonly scope?: FaultScope;
+  readonly span?: TextSpan;
+};
+
+/** @emoji 🧯️ Error subclass carrying a structured {@link Fault}. */
+export class SemioFaultError extends Error {
+  readonly fault: Fault;
+  constructor(fault: Fault) {
+    super(fault.message);
+    this.name = "SemioFaultError";
+    this.fault = fault;
+  }
+}
 
 /**
  * @emoji 🐚️ A typed side effect the shell performs on the app's behalf. Mirrors the Rust

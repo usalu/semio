@@ -1085,14 +1085,14 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn handle(&self, command: &LayoutCommand, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Emit<LayoutOperation, LayoutConfigOperation> {
+    fn handle(&self, command: &LayoutCommand, doc: &DocumentView<'_, LayoutDocument>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutOperation, LayoutConfigOperation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
             //#region 👁️View
-            LayoutCommand::SetSelection { ids } => Emit::config(vec![LayoutConfigOperation::SetSelection { ids: ids.clone() }]),
-            LayoutCommand::SetActivePage { page_id } => Emit::config(vec![LayoutConfigOperation::SetActivePage { page_id: page_id.clone() }]),
-            LayoutCommand::SetHover { id } => Emit::config(vec![LayoutConfigOperation::SetHover { id: id.clone() }]),
+            LayoutCommand::SetSelection { ids } => Ok(Emit::config(vec![LayoutConfigOperation::SetSelection { ids: ids.clone() }]),
+            LayoutCommand::SetActivePage { page_id } => Ok(Emit::config(vec![LayoutConfigOperation::SetActivePage { page_id: page_id.clone() }]),
+            LayoutCommand::SetHover { id } => Ok(Emit::config(vec![LayoutConfigOperation::SetHover { id: id.clone() }]),
             LayoutCommand::FocusPreflightIssue { object_id, page_id } => {
                 let mut config_operations = Vec::new();
                 if let Some(object_id) = object_id {
@@ -1103,7 +1103,7 @@ impl DocumentApp for LayoutPlayApp {
                 }
                 Emit::config(config_operations)
             }
-            LayoutCommand::EngagementInput { value } => Emit::config(vec![LayoutConfigOperation::SetEngagementInput { value: value.clone() }]),
+            LayoutCommand::EngagementInput { value } => Ok(Emit::config(vec![LayoutConfigOperation::SetEngagementInput { value: value.clone() }]),
             LayoutCommand::CanvasPointerDown { surface_id, button, extend, x, y, width, height } => {
                 let blueprint = surface_is_blueprint(surface_id.as_deref());
                 if !blueprint || *button != 0 {
@@ -1132,7 +1132,7 @@ impl DocumentApp for LayoutPlayApp {
                 }
                 Emit::config(vec![LayoutConfigOperation::SetHover { id: hit_test_at(document, config, *x, *y, *width, *height, blueprint) }])
             }
-            LayoutCommand::CanvasPointerUp => Emit::default(),
+            LayoutCommand::CanvasPointerUp => Ok(Emit::default(),
             LayoutCommand::CanvasDragOver { surface_id, kind, x, y, width, height } => {
                 let blueprint = surface_is_blueprint(surface_id.as_deref());
                 if !blueprint {
@@ -1141,7 +1141,7 @@ impl DocumentApp for LayoutPlayApp {
                 let (wx, wy) = screen_to_world_for_surface(config, blueprint, *x, *y, *width, *height);
                 Emit::config(vec![LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState { kind: kind.clone(), x: wx, y: wy } }])
             }
-            LayoutCommand::CanvasDragLeave => Emit::config(vec![LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState::default() }]),
+            LayoutCommand::CanvasDragLeave => Ok(Emit::config(vec![LayoutConfigOperation::SetDropPreview { preview: LayoutDropPreviewState::default() }]),
             LayoutCommand::SetCamera { surface_id, camera } => {
                 let blueprint = surface_is_blueprint(surface_id.as_deref());
                 if blueprint {
@@ -1150,7 +1150,7 @@ impl DocumentApp for LayoutPlayApp {
                     Emit::config(vec![LayoutConfigOperation::SetPreviewCamera { camera: camera.clone() }])
                 }
             }
-            LayoutCommand::SetLocale { value } => Emit::config(vec![LayoutConfigOperation::SetLocale { value: value.clone() }]),
+            LayoutCommand::SetLocale { value } => Ok(Emit::config(vec![LayoutConfigOperation::SetLocale { value: value.clone() }]),
             //#endregion 👁️View
             //#region 🔧️Operations
             LayoutCommand::AddFrame { kind, x, y } => {
@@ -1230,8 +1230,8 @@ impl DocumentApp for LayoutPlayApp {
             LayoutCommand::PatchPage { page_id, field, value } => {
                 let page_id = page_id.clone().unwrap_or_else(|| config.active_page_id.clone());
                 match page_patch_for_field(field, value) {
-                    Some(patch) if document.pages.iter().any(|page| page.id == page_id) => Emit::operations(vec![LayoutOperation::Pages(CollectionOperation::Patch { id: page_id, patch })]),
-                    _ => Emit::default(),
+                    Some(patch) if document.pages.iter().any(|page| page.id == page_id) => Ok(Emit::operations(vec![LayoutOperation::Pages(CollectionOperation::Patch { id: page_id, patch })]),
+                    _ => Ok(Emit::default(),
                 }
             }
             LayoutCommand::PatchFrame { frame_id, page_id, field, value } => {
@@ -1247,18 +1247,18 @@ impl DocumentApp for LayoutPlayApp {
                 };
                 match field.as_str() {
                     "x" | "y" | "width" | "w" | "height" | "h" => match value.parse::<f64>() {
-                        Ok(number) => Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch: frame_bounds_patch(field, number) }]),
-                        Err(_) => Emit::default(),
+                        Ok(number) => Ok(Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch: frame_bounds_patch(field, number) }]),
+                        Err(_) => Ok(Emit::default(),
                     },
                     "fill" | "stroke" => {
                         let rgba = text_to_rgba(value);
                         let patch = if field == "fill" { FramePatch { fill: Some(rgba), ..Default::default() } } else { FramePatch { stroke: Some(rgba), ..Default::default() } };
                         Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch }])
                     }
-                    "wrapMode" => Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch: FramePatch { wrap_mode: Some(value.clone()), ..Default::default() } }]),
+                    "wrapMode" => Ok(Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch: FramePatch { wrap_mode: Some(value.clone()), ..Default::default() } }]),
                     "columns" => match value.parse::<f64>() {
-                        Ok(count) => Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch: FramePatch { columns: Some(count.max(0.0) as u32), ..Default::default() } }]),
-                        Err(_) => Emit::default(),
+                        Ok(count) => Ok(Emit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id: frame_id.clone(), patch: FramePatch { columns: Some(count.max(0.0) as u32), ..Default::default() } }]),
+                        Err(_) => Ok(Emit::default(),
                     },
                     "storyContent" => {
                         let story_id = match frame {
@@ -1269,7 +1269,7 @@ impl DocumentApp for LayoutPlayApp {
                             Some(story_id) if document.stories.iter().any(|story| story.id == story_id) => {
                                 Emit::operations(vec![LayoutOperation::Stories(CollectionOperation::Patch { id: story_id, patch: TextStoryPatch { content: Some(value.clone()) } })])
                             }
-                            _ => Emit::default(),
+                            _ => Ok(Emit::default(),
                         }
                     }
                     "linkPath" => {
@@ -1278,11 +1278,11 @@ impl DocumentApp for LayoutPlayApp {
                             _ => None,
                         };
                         match link_id {
-                            Some(link_id) if document.links.iter().any(|link| link.id == link_id) => Emit::operations(vec![LayoutOperation::Links(CollectionOperation::Patch { id: link_id, patch: ImageLinkPatch { path: Some(value.clone()) } })]),
-                            _ => Emit::default(),
+                            Some(link_id) if document.links.iter().any(|link| link.id == link_id) => Ok(Emit::operations(vec![LayoutOperation::Links(CollectionOperation::Patch { id: link_id, patch: ImageLinkPatch { path: Some(value.clone()) } })]),
+                            _ => Ok(Emit::default(),
                         }
                     }
-                    _ => Emit::default(),
+                    _ => Ok(Emit::default(),
                 }
             }
             LayoutCommand::CanvasDrop { surface_id, kind, x, y, width, height } => {
@@ -1301,15 +1301,15 @@ impl DocumentApp for LayoutPlayApp {
             LayoutCommand::ExportPng { page_id } => {
                 let page_id = page_id.clone().unwrap_or_else(|| config.active_page_id.clone());
                 match export_document_png_cpu(document, &page_id) {
-                    Ok(bytes) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.png"), mime_type: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) }),
-                    Err(_) => Emit::default(),
+                    Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.png"), mime_type: "image/png".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) }),
+                    Err(_) => Ok(Emit::default(),
                 }
             }
             LayoutCommand::ExportSvg { page_id } => {
                 let page_id = page_id.clone().unwrap_or_else(|| config.active_page_id.clone());
                 match export_document_svg(document, &page_id) {
-                    Ok(svg) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None }),
-                    Err(_) => Emit::default(),
+                    Ok(svg) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None }),
+                    Err(_) => Ok(Emit::default(),
                 }
             }
             LayoutCommand::ExportPdf { page_id } => {
@@ -1318,20 +1318,20 @@ impl DocumentApp for LayoutPlayApp {
                     Ok(bytes) => {
                         Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.pdf"), mime_type: "application/pdf".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) })
                     }
-                    Err(_) => Emit::default(),
+                    Err(_) => Ok(Emit::default(),
                 }
             }
             LayoutCommand::ExportPackage => {
                 let preflight_json = serde_json::to_string(&run_layout_preflight(document, layout_labels(config))).unwrap_or_else(|_| "[]".into());
                 let doc_json = serde_json::to_string(document).unwrap_or_default();
                 match export_package_zip(&doc_json, &preflight_json) {
-                    Ok(bytes) => Emit::effect(HostEffect::DownloadMediaExport {
+                    Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport {
                         filename: format!("{}.layout-package.zip", document.name),
                         mime_type: "application/zip".into(),
                         data: base64::engine::general_purpose::STANDARD.encode(bytes),
                         encoding: Some("base64".into()),
                     }),
-                    Err(_) => Emit::default(),
+                    Err(_) => Ok(Emit::default(),
                 }
             }
             LayoutCommand::EngagementSubmit { value } => {
@@ -1349,7 +1349,7 @@ impl DocumentApp for LayoutPlayApp {
                 };
                 match export {
                     Some(export) => self.handle(&export, doc, cfg),
-                    None => Emit::default(),
+                    None => Ok(Emit::default(),
                 }
             } //#endregion 🐚️Shell
         }

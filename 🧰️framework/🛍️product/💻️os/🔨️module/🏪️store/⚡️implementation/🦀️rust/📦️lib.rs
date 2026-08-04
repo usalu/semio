@@ -15,7 +15,7 @@
 extern crate self as store;
 
 use dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
-use protocol::{Edit, OpText, Operation, OperationDiff, OperationMeta, ReconcileReport};
+use protocol::{Edit, OpBinary, OpText, Operation, OperationDiff, OperationMeta, ReconcileReport};
 use semio_framework_core::{ActorId, DocumentId, HybridLogicalTimestamp, OperationId, SchemaId, UndoPolicy};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -405,7 +405,7 @@ pub fn text_error_to_pack_error(error: TextError) -> PackError {
 //#endregion 🔖️Pack
 
 //#region 🔖️OpRt
-/// @emoji 🎯️ Facade re-export of the `protocol::OpBinary` runtime (`format u8 | variant ordinal
+/// @emoji 🎯️ Facade re-export of the `OpBinary` runtime (`format u8 | variant ordinal
 /// varint | record body`) — the op-level mirror of `pack_rt` behind `DocumentPack`. Hosted in
 /// `dsl` (the crate that owns the `DslVariants` bound) rather than here so `dsl`'s own test build
 /// binds the same trait instance; re-exported so apps keep the one-facade rule (`store::op_rt`).
@@ -454,12 +454,12 @@ impl DocumentCodec {
     pub fn of<P, Operation>(schema: impl Into<String>) -> Self
     where
         P: Clone + PartialEq + Serialize + DeserializeOwned + DocumentDsl + DocumentPack + Send + 'static,
-        Operation: crate::Operation<P> + PartialEq + Serialize + DeserializeOwned + OpText + protocol::OpBinary + Send + 'static,
+        Operation: crate::Operation<P> + PartialEq + Serialize + DeserializeOwned + OpText + OpBinary + Send + 'static,
     {
         fn compile_dsl_impl<P, Operation>(dsl: &str, ops: &str) -> Result<(DocumentPackFiles, String), VcsError>
         where
             P: Clone + DocumentDsl + DocumentPack,
-            Operation: OpText + protocol::OpBinary + crate::Operation<P>,
+            Operation: OpText + OpBinary + crate::Operation<P>,
         {
             let parsed: ParsedDocumentText<P, Operation> = parse_document_text(dsl, ops).map_err(|error| VcsError::Deserialize(error.to_string()))?;
             let pack_files = print_document_pack(&parsed.envelope)?;
@@ -470,7 +470,7 @@ impl DocumentCodec {
         fn print_mirror_impl<P, Operation>(pack: &[u8], spr: &[u8]) -> Result<DocumentTextFiles, VcsError>
         where
             P: Clone + DocumentDsl + DocumentPack,
-            Operation: OpText + protocol::OpBinary + crate::Operation<P>,
+            Operation: OpText + OpBinary + crate::Operation<P>,
         {
             let parsed: ParsedDocumentText<P, Operation> = parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
             print_document_text(&parsed.envelope)
@@ -478,7 +478,7 @@ impl DocumentCodec {
 
         fn edit_text_from_envelope_impl<P, Operation>(envelope: &protocol::OperationEnvelope) -> Result<String, VcsError>
         where
-            Operation: OpText + protocol::OpBinary,
+            Operation: OpText + OpBinary,
         {
             let edit = edit_from_operation_envelope::<Operation>(envelope)?;
             print_edit_lines(&edit)
@@ -983,11 +983,11 @@ fn operation_meta_from_history_op_meta(meta: protocol::HistoryOpMeta) -> Operati
 /// with `write_backwards_section: true`. Unlike the `.ops` text mirror (forwards-only, see
 /// `print_ops_log`'s doc), this is the AUTHORITATIVE persisted form: `parse_document_spr` recovers
 /// backwards/meta byte-for-byte instead of recomputing them via replay.
-fn history_op_payloads<Operation: protocol::OpBinary>(operations: &[Operation]) -> Result<Vec<protocol::OpPayload>, VcsError> {
+fn history_op_payloads<Operation: OpBinary>(operations: &[Operation]) -> Result<Vec<protocol::OpPayload>, VcsError> {
     operations.iter().map(|op| Ok(protocol::OpPayload { text: None, binary: Some(op.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?) })).collect()
 }
 
-fn history_edit_from_edit<Operation: protocol::OpBinary>(edit: &Edit<Operation>) -> Result<protocol::HistoryEdit, VcsError> {
+fn history_edit_from_edit<Operation: OpBinary>(edit: &Edit<Operation>) -> Result<protocol::HistoryEdit, VcsError> {
     Ok(protocol::HistoryEdit {
         id: edit.id.clone(),
         actor: edit.actor.clone(),
@@ -1039,7 +1039,7 @@ pub fn append_history_edits_to_spr(spr: &[u8], edits: &[protocol::HistoryEdit]) 
 
 pub fn print_document_spr<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> Result<Vec<u8>, VcsError>
 where
-    Operation: protocol::OpBinary,
+    Operation: OpBinary,
 {
     let mut edits = Vec::with_capacity(envelope.vcs.edits.len());
     for edit in &envelope.vcs.edits {
@@ -1079,7 +1079,7 @@ where
 pub fn parse_document_spr<P, Operation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Operation>, TextError>
 where
     P: Clone + DocumentPack,
-    Operation: OpText + protocol::OpBinary + crate::Operation<P>,
+    Operation: OpText + OpBinary + crate::Operation<P>,
 {
     let initial_projection = P::decode_pack(pack).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
     let log = protocol::decode_history(spr, &protocol::DecodeOptions::default()).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
@@ -1191,7 +1191,7 @@ where
 pub fn print_document_pack<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> Result<DocumentPackFiles, VcsError>
 where
     P: DocumentPack,
-    Operation: OpText + protocol::OpBinary,
+    Operation: OpText + OpBinary,
 {
     let pack = envelope.vcs.initial_projection.encode_pack();
     let spr = print_document_spr(envelope)?;
@@ -1360,7 +1360,7 @@ where
 pub fn parse_document_pack<P, Operation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Operation>, TextError>
 where
     P: Clone + DocumentPack,
-    Operation: OpText + protocol::OpBinary + crate::Operation<P>,
+    Operation: OpText + OpBinary + crate::Operation<P>,
 {
     parse_document_spr(pack, spr)
 }
@@ -1431,13 +1431,13 @@ fn undo_policy_ordinal(policy: UndoPolicy) -> u8 {
     }
 }
 
-fn undo_policy_from_ordinal(ordinal: u8) -> Result<UndoPolicy, VcsError> {
+fn undo_policy_from_ordinal(ordinal: u8) -> Result<UndoPolicy, protocol::ProtocolError> {
     match ordinal {
         0 => Ok(UndoPolicy::ExactBaseOnly),
         1 => Ok(UndoPolicy::TransformAgainstConcurrent),
         2 => Ok(UndoPolicy::SemanticUndo),
         3 => Ok(UndoPolicy::CompensatingAction),
-        other => Err(VcsError::Deserialize(format!("unknown undo policy ordinal {other}"))),
+        other => Err(protocol::ProtocolError::Malformed { what: "undo policy ordinal", offset: 0, detail: format!("unknown undo policy ordinal {other}") }),
     }
 }
 
@@ -1595,7 +1595,8 @@ pub fn parse_command<Op: OpText>(text: &str) -> Result<DocumentCommand<Op>, Text
     }
 }
 
-/// @emoji 🎯️ Format byte every encoded command starts with.
+/// @emoji 🎯️ Format byte every encoded command starts with — matches `dsl::op_rt::OP_BINARY_FORMAT`
+/// (B-R6 "one wire convention": `format u8 | ordinal varint | record body`).
 pub const COMMAND_BINARY_FORMAT: u8 = 1;
 
 fn write_command_str(out: &mut Vec<u8>, s: &str) {
@@ -1603,146 +1604,155 @@ fn write_command_str(out: &mut Vec<u8>, s: &str) {
     out.extend_from_slice(s.as_bytes());
 }
 
-fn read_command_str(reader: &mut pack::ByteReader<'_>) -> Result<String, VcsError> {
-    let len = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-    let bytes = reader.read_bytes(len as usize).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-    std::str::from_utf8(bytes).map(str::to_string).map_err(|error| VcsError::Deserialize(error.to_string()))
+fn read_command_str(reader: &mut pack::ByteReader<'_>) -> Result<String, protocol::ProtocolError> {
+    let len = reader.read_varint_u64()?;
+    let bytes = reader.read_bytes(len as usize)?;
+    std::str::from_utf8(bytes).map(str::to_string).map_err(|error| protocol::ProtocolError::Malformed { what: "command string", offset: 0, detail: error.to_string() })
 }
 
-fn write_command_ops<Op: protocol::OpBinary>(out: &mut Vec<u8>, operations: &[Op]) -> Result<(), VcsError> {
+fn write_command_ops<Op: OpBinary>(out: &mut Vec<u8>, operations: &[Op]) -> Result<(), protocol::ProtocolError> {
     pack::write_varint_u64(out, operations.len() as u64);
     for operation in operations {
-        let bytes = operation.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?;
+        let bytes = operation.encode_op()?;
         pack::write_varint_u64(out, bytes.len() as u64);
         out.extend_from_slice(&bytes);
     }
     Ok(())
 }
 
-fn read_command_ops<Op: protocol::OpBinary>(reader: &mut pack::ByteReader<'_>) -> Result<Vec<Op>, VcsError> {
-    let count = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+fn read_command_ops<Op: OpBinary>(reader: &mut pack::ByteReader<'_>) -> Result<Vec<Op>, protocol::ProtocolError> {
+    let count = reader.read_varint_u64()?;
     let mut operations = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let len = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        let bytes = reader.read_bytes(len as usize).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        operations.push(Op::decode_op(bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?);
+        let len = reader.read_varint_u64()?;
+        let bytes = reader.read_bytes(len as usize)?;
+        operations.push(Op::decode_op(bytes)?);
     }
     Ok(operations)
 }
 
-/// @emoji 🎯️ Encodes a `DocumentCommand` deterministically: `format u8 (=1) | command tag u8
-/// (DocumentCommand declaration order) | body`. The binary twin of `print_command`. LAW:
-/// `decode_command(&encode_command(c)?) == Ok(c)`.
-pub fn encode_command<Op: protocol::OpBinary>(command: &DocumentCommand<Op>) -> Result<Vec<u8>, VcsError> {
-    let mut out = vec![COMMAND_BINARY_FORMAT];
-    match command {
-        DocumentCommand::Apply { operations, description } => {
-            out.push(0);
-            out.push(if description.is_some() { 0b01 } else { 0 });
-            if let Some(text) = description {
-                write_command_str(&mut out, text);
+/// @emoji 🎯️ B-R6 "one documented generic impl": `DocumentCommand<Op>` cannot go through
+/// `#[derive(dsl::DslOps)]` like every concrete per-technology `Operation` enum does — it is generic
+/// over a FOREIGN `Op: OpBinary` from whichever technology is dispatching, and the derive
+/// only lowers a CONCRETE type's own fields to a `RecordSpec`; there is no way to describe "some
+/// other crate's already-`OpBinary` type" as a `dsl::DslField` shape. This hand-written impl is the
+/// one place `DocumentCommand`'s binary layout is still spelled out by hand — everywhere else in the
+/// workspace, encoding is derive-generated. Byte layout matches the convention exactly: `format u8
+/// (=1, see `COMMAND_BINARY_FORMAT`) | variant ordinal varint (`DocumentCommand` declaration order,
+/// numerically identical to the old hand-rolled tag byte for these 9 variants since LEB128 varints
+/// under 128 are single bytes) | body`. The binary twin of `print_command`/`parse_command`. LAW:
+/// `DocumentCommand::decode_op(&command.encode_op()?) == Ok(command)`.
+impl<Op: OpBinary> OpBinary for DocumentCommand<Op> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let mut out = vec![COMMAND_BINARY_FORMAT];
+        match self {
+            DocumentCommand::Apply { operations, description } => {
+                pack::write_varint_u64(&mut out, 0);
+                out.push(if description.is_some() { 0b01 } else { 0 });
+                if let Some(text) = description {
+                    write_command_str(&mut out, text);
+                }
+                write_command_ops(&mut out, operations)?;
             }
-            write_command_ops(&mut out, operations)?;
-        }
-        DocumentCommand::Undo => out.push(1),
-        DocumentCommand::Redo => out.push(2),
-        DocumentCommand::UndoWithPolicy { policy, semantic_command } => {
-            out.push(3);
-            out.push(undo_policy_ordinal(*policy));
-            out.push(if semantic_command.is_some() { 0b01 } else { 0 });
-            if let Some(nested) = semantic_command {
-                let nested_bytes = encode_command(nested)?;
-                pack::write_varint_u64(&mut out, nested_bytes.len() as u64);
-                out.extend_from_slice(&nested_bytes);
+            DocumentCommand::Undo => pack::write_varint_u64(&mut out, 1),
+            DocumentCommand::Redo => pack::write_varint_u64(&mut out, 2),
+            DocumentCommand::UndoWithPolicy { policy, semantic_command } => {
+                pack::write_varint_u64(&mut out, 3);
+                out.push(undo_policy_ordinal(*policy));
+                out.push(if semantic_command.is_some() { 0b01 } else { 0 });
+                if let Some(nested) = semantic_command {
+                    let nested_bytes = nested.encode_op()?;
+                    pack::write_varint_u64(&mut out, nested_bytes.len() as u64);
+                    out.extend_from_slice(&nested_bytes);
+                }
+            }
+            DocumentCommand::CommitCheckpoint { message, authors } => {
+                pack::write_varint_u64(&mut out, 4);
+                out.push(if message.is_some() { 0b01 } else { 0 });
+                if let Some(text) = message {
+                    write_command_str(&mut out, text);
+                }
+                pack::write_varint_u64(&mut out, authors.len() as u64);
+                for author in authors {
+                    write_command_str(&mut out, &author.id);
+                    write_command_str(&mut out, &author.name);
+                }
+            }
+            DocumentCommand::CreateAlternative { name } => {
+                pack::write_varint_u64(&mut out, 5);
+                write_command_str(&mut out, name);
+            }
+            DocumentCommand::SwitchAlternative { alternative_id } => {
+                pack::write_varint_u64(&mut out, 6);
+                write_command_str(&mut out, alternative_id);
+            }
+            DocumentCommand::CheckoutCheckpoint { checkpoint_id } => {
+                pack::write_varint_u64(&mut out, 7);
+                write_command_str(&mut out, checkpoint_id);
+            }
+            DocumentCommand::AmendLast { operations, coalesce_key } => {
+                pack::write_varint_u64(&mut out, 8);
+                out.push(if coalesce_key.is_some() { 0b01 } else { 0 });
+                if let Some(key) = coalesce_key {
+                    write_command_str(&mut out, key);
+                }
+                write_command_ops(&mut out, operations)?;
             }
         }
-        DocumentCommand::CommitCheckpoint { message, authors } => {
-            out.push(4);
-            out.push(if message.is_some() { 0b01 } else { 0 });
-            if let Some(text) = message {
-                write_command_str(&mut out, text);
-            }
-            pack::write_varint_u64(&mut out, authors.len() as u64);
-            for author in authors {
-                write_command_str(&mut out, &author.id);
-                write_command_str(&mut out, &author.name);
-            }
-        }
-        DocumentCommand::CreateAlternative { name } => {
-            out.push(5);
-            write_command_str(&mut out, name);
-        }
-        DocumentCommand::SwitchAlternative { alternative_id } => {
-            out.push(6);
-            write_command_str(&mut out, alternative_id);
-        }
-        DocumentCommand::CheckoutCheckpoint { checkpoint_id } => {
-            out.push(7);
-            write_command_str(&mut out, checkpoint_id);
-        }
-        DocumentCommand::AmendLast { operations, coalesce_key } => {
-            out.push(8);
-            out.push(if coalesce_key.is_some() { 0b01 } else { 0 });
-            if let Some(key) = coalesce_key {
-                write_command_str(&mut out, key);
-            }
-            write_command_ops(&mut out, operations)?;
-        }
+        Ok(out)
     }
-    Ok(out)
-}
 
-/// @emoji 🎯️ Inverse of [`encode_command`].
-pub fn decode_command<Op: protocol::OpBinary>(bytes: &[u8]) -> Result<DocumentCommand<Op>, VcsError> {
-    let mut reader = pack::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-    if format != COMMAND_BINARY_FORMAT {
-        return Err(VcsError::Deserialize(format!("unsupported command format {format}")));
-    }
-    let tag = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-    match tag {
-        0 => {
-            let presence = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
-            let operations = read_command_ops(&mut reader)?;
-            Ok(DocumentCommand::Apply { operations, description })
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = pack::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != COMMAND_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "command format", offset: 0, detail: format!("unsupported command format {format}") });
         }
-        1 => Ok(DocumentCommand::Undo),
-        2 => Ok(DocumentCommand::Redo),
-        3 => {
-            let policy = undo_policy_from_ordinal(reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?)?;
-            let presence = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            let semantic_command = if presence & 0b01 != 0 {
-                let len = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                let nested_bytes = reader.read_bytes(len as usize).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                Some(Box::new(decode_command::<Op>(nested_bytes)?))
-            } else {
-                None
-            };
-            Ok(DocumentCommand::UndoWithPolicy { policy, semantic_command })
-        }
-        4 => {
-            let presence = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            let message = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
-            let author_count = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            let mut authors = Vec::with_capacity(author_count as usize);
-            for _ in 0..author_count {
-                let id = read_command_str(&mut reader)?;
-                let name = read_command_str(&mut reader)?;
-                authors.push(Author { id, name, avatar: None });
+        let ordinal = reader.read_varint_u64()?;
+        match ordinal {
+            0 => {
+                let presence = reader.read_u8()?;
+                let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let operations = read_command_ops(&mut reader)?;
+                Ok(DocumentCommand::Apply { operations, description })
             }
-            Ok(DocumentCommand::CommitCheckpoint { message, authors })
+            1 => Ok(DocumentCommand::Undo),
+            2 => Ok(DocumentCommand::Redo),
+            3 => {
+                let policy = undo_policy_from_ordinal(reader.read_u8()?)?;
+                let presence = reader.read_u8()?;
+                let semantic_command = if presence & 0b01 != 0 {
+                    let len = reader.read_varint_u64()?;
+                    let nested_bytes = reader.read_bytes(len as usize)?;
+                    Some(Box::new(DocumentCommand::<Op>::decode_op(nested_bytes)?))
+                } else {
+                    None
+                };
+                Ok(DocumentCommand::UndoWithPolicy { policy, semantic_command })
+            }
+            4 => {
+                let presence = reader.read_u8()?;
+                let message = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let author_count = reader.read_varint_u64()?;
+                let mut authors = Vec::with_capacity(author_count as usize);
+                for _ in 0..author_count {
+                    let id = read_command_str(&mut reader)?;
+                    let name = read_command_str(&mut reader)?;
+                    authors.push(Author { id, name, avatar: None });
+                }
+                Ok(DocumentCommand::CommitCheckpoint { message, authors })
+            }
+            5 => Ok(DocumentCommand::CreateAlternative { name: read_command_str(&mut reader)? }),
+            6 => Ok(DocumentCommand::SwitchAlternative { alternative_id: read_command_str(&mut reader)? }),
+            7 => Ok(DocumentCommand::CheckoutCheckpoint { checkpoint_id: read_command_str(&mut reader)? }),
+            8 => {
+                let presence = reader.read_u8()?;
+                let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+                let operations = read_command_ops(&mut reader)?;
+                Ok(DocumentCommand::AmendLast { operations, coalesce_key })
+            }
+            other => Err(protocol::ProtocolError::Malformed { what: "command variant", offset: 1, detail: format!("unknown command ordinal {other}") }),
         }
-        5 => Ok(DocumentCommand::CreateAlternative { name: read_command_str(&mut reader)? }),
-        6 => Ok(DocumentCommand::SwitchAlternative { alternative_id: read_command_str(&mut reader)? }),
-        7 => Ok(DocumentCommand::CheckoutCheckpoint { checkpoint_id: read_command_str(&mut reader)? }),
-        8 => {
-            let presence = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
-            let operations = read_command_ops(&mut reader)?;
-            Ok(DocumentCommand::AmendLast { operations, coalesce_key })
-        }
-        other => Err(VcsError::Deserialize(format!("unknown command tag {other}"))),
     }
 }
 //#endregion 🔖️CommandFormat
@@ -1906,7 +1916,7 @@ fn edit_actor_from_meta(operation_meta: &[OperationMeta]) -> Option<String> {
 impl<P, Operation> DocumentStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned + DocumentPack,
-    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + protocol::OpBinary + OpText,
+    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + OpBinary + OpText,
 {
     /// @emoji 🚫️ A store is always constructed with no backbone attached — the envelope's
     /// `backbone` field is a descriptor of the last attachment, never an instruction to
@@ -2315,9 +2325,9 @@ where
     /// entry point used for both communication (backbone/semio_hub) and storage (`.spr`).
     pub fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<(), VcsError>
     where
-        Operation: protocol::OpBinary,
+        Operation: OpBinary,
     {
-        let command = decode_command(command_bytes)?;
+        let command = <DocumentCommand<Operation> as OpBinary>::decode_op(command_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         self.dispatch(command)
     }
 
@@ -2503,6 +2513,7 @@ where
             match message {
                 BackboneMessage::Snapshot { pack, spr } => self.merge_remote_snapshot(&pack, &spr)?,
                 BackboneMessage::Operations { envelopes } => {
+                    let envelopes = protocol::decode_envelopes(&envelopes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                     let op_ids: Vec<String> = envelopes.iter().map(|envelope| envelope.operation_id.0.clone()).collect();
                     for envelope in envelopes {
                         self.ingest_remote(envelope)?;
@@ -2549,7 +2560,7 @@ where
                             for op_envelope in &op_envelopes {
                                 self.dag.seed_applied(op_envelope.operation_id.clone());
                             }
-                            backbone.send(BackboneMessage::Operations { envelopes: op_envelopes })
+                            backbone.send(BackboneMessage::Operations { envelopes: protocol::encode_envelopes(&op_envelopes) })
                         }
                         Err(error) => Err(VcsError::Serialize(error.to_string())),
                     }
@@ -2606,7 +2617,7 @@ fn merge_by_id<T: Clone>(local: &mut Vec<T>, remote: Vec<T>, id_of: impl Fn(&T) 
 /// OperationEnvelope` carries no undo_policy at all (only the local `Edit`/`OperationMeta` shape
 /// does), and a remote edit is always foreign, so this field is never consulted for it anyway
 /// (`edit_is_local` gates undo eligibility on authorship, not `undo_policy`).
-pub fn edit_from_operation_envelope<Operation: protocol::OpBinary>(envelope: &protocol::OperationEnvelope) -> Result<Edit<Operation>, VcsError> {
+pub fn edit_from_operation_envelope<Operation: OpBinary>(envelope: &protocol::OperationEnvelope) -> Result<Edit<Operation>, VcsError> {
     let forward = Operation::decode_op(&envelope.diff.payload).map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let backwards = if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![Operation::decode_op(&envelope.inverse.payload).map_err(|error| VcsError::Deserialize(error.to_string()))?] };
     Ok(Edit {
@@ -2660,108 +2671,34 @@ impl From<ReconcileReport> for SpaceConflict {
     }
 }
 
-/// @emoji 📨️ Wire message exchanged over an attached backbone channel.
-#[derive(Clone, Debug, PartialEq)]
+/// @emoji 📨️ Wire message exchanged over an attached backbone channel. B-R6 "kill hand-rolled binary
+/// codecs": `#[derive(dsl::DslOps)]` generates `OpBinary::encode_op`/`decode_op` (`format u8 (=1) |
+/// variant ordinal varint | record body`, `dsl::op_rt`) — this is the one real binary encoding for
+/// every caller, including the wasm-sandbox `BackboneChannelPort` seam (see that trait's doc) — the
+/// WIT `backbone-send`/`backbone-poll` host functions carry these exact bytes as `list<u8>`.
+/// `Operations.envelopes` carries `protocol::encode_envelopes`/`decode_envelopes` bytes rather than a
+/// real `Vec<protocol::OperationEnvelope>` field: `OperationEnvelope` lives in `protocol_causal`,
+/// which sits BELOW `dsl` in the dependency graph (`dsl` → `protocol` → `protocol_causal`), so it
+/// cannot implement `dsl::DslField` without a dependency cycle — the derive can only lower fields
+/// shaped from types it can see. `#[dsl(base64)]` marks each `Vec<u8>` field `Shape::Bytes64`
+/// (otherwise a bare `Vec<u8>` lowers to a `List<UInt>`, one DSL list element per byte).
+#[derive(Clone, Debug, PartialEq, DslOps)]
 pub enum BackboneMessage {
     Snapshot {
+        #[dsl(base64)]
         pack: Vec<u8>,
+        #[dsl(base64)]
         spr: Vec<u8>,
     },
     Operations {
-        envelopes: Vec<protocol::OperationEnvelope>,
+        #[dsl(base64)]
+        envelopes: Vec<u8>,
     },
     /// @emoji ✅️ Acknowledges inbound operations the store has ingested (store→actor). Lets a future actor
     /// implement at-least-once redelivery with id-based dedupe — safe across store crashes/reloads.
     Ack {
         op_ids: Vec<String>,
     },
-}
-
-/// @emoji 🎯️ `tag u8 (variant decl order) | body` — Snapshot: `pack bytes | spr bytes`;
-/// Operations: `count varint | protocol::encode_envelope each`; Ack: `count varint | str each`.
-/// This is the one real binary encoding for every caller, including the wasm-sandbox
-/// `BackboneChannelPort` seam (see that trait's doc) — the WIT `backbone-send`/`backbone-poll`
-/// host functions carry these exact bytes as `list<u8>`.
-fn write_backbone_bytes(out: &mut Vec<u8>, b: &[u8]) {
-    pack::write_varint_u64(out, b.len() as u64);
-    out.extend_from_slice(b);
-}
-
-fn read_backbone_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, protocol::ProtocolError> {
-    let offset = *pos as u64;
-    let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "backbone message", offset, detail };
-    let len = pack::read_varint_u64(bytes, pos).map_err(|error| malformed(error.to_string()))? as usize;
-    let end = *pos + len;
-    let slice = bytes.get(*pos..end).ok_or_else(|| malformed("truncated".to_string()))?.to_vec();
-    *pos = end;
-    Ok(slice)
-}
-
-fn write_backbone_str(out: &mut Vec<u8>, s: &str) {
-    write_backbone_bytes(out, s.as_bytes());
-}
-
-fn read_backbone_str(bytes: &[u8], pos: &mut usize) -> Result<String, protocol::ProtocolError> {
-    let offset = *pos as u64;
-    let raw = read_backbone_bytes(bytes, pos)?;
-    String::from_utf8(raw).map_err(|error| protocol::ProtocolError::Malformed { what: "backbone message", offset, detail: error.to_string() })
-}
-
-pub fn encode_backbone_message(message: &BackboneMessage) -> Vec<u8> {
-    let mut out = Vec::new();
-    match message {
-        BackboneMessage::Snapshot { pack, spr } => {
-            out.push(0);
-            write_backbone_bytes(&mut out, pack);
-            write_backbone_bytes(&mut out, spr);
-        }
-        BackboneMessage::Operations { envelopes } => {
-            out.push(1);
-            pack::write_varint_u64(&mut out, envelopes.len() as u64);
-            for envelope in envelopes {
-                protocol::encode_envelope(envelope, &mut out);
-            }
-        }
-        BackboneMessage::Ack { op_ids } => {
-            out.push(2);
-            pack::write_varint_u64(&mut out, op_ids.len() as u64);
-            for op_id in op_ids {
-                write_backbone_str(&mut out, op_id);
-            }
-        }
-    }
-    out
-}
-
-/// @emoji 🎯️ Inverse of [`encode_backbone_message`].
-pub fn decode_backbone_message(bytes: &[u8]) -> Result<BackboneMessage, protocol::ProtocolError> {
-    let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "backbone message", offset: 0, detail };
-    let tag = *bytes.first().ok_or_else(|| malformed("empty".to_string()))?;
-    let mut pos = 1usize;
-    match tag {
-        0 => {
-            let pack = read_backbone_bytes(bytes, &mut pos)?;
-            let spr = read_backbone_bytes(bytes, &mut pos)?;
-            Ok(BackboneMessage::Snapshot { pack, spr })
-        }
-        1 => {
-            let count = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-            let mut envelopes = Vec::with_capacity(count as usize);
-            for _ in 0..count {
-                envelopes.push(protocol::decode_envelope(bytes, &mut pos)?);
-            }
-            Ok(BackboneMessage::Operations { envelopes })
-        }
-        2 => {
-            let count = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-            let mut op_ids = Vec::with_capacity(count as usize);
-            for _ in 0..count {
-                op_ids.push(read_backbone_str(bytes, &mut pos)?);
-            }
-            Ok(BackboneMessage::Ack { op_ids })
-        }
-        other => Err(malformed(format!("unknown tag {other}"))),
-    }
 }
 
 /// @emoji 🧵️ Non-blocking, IO-free in-memory queue contract between a `DocumentStore` and its
@@ -2879,7 +2816,7 @@ impl BackbonePort for LocalStorageBackbonePort {
 }
 
 /// @emoji 🕸️ Injectable duplex transport across the wasm sandbox boundary (program ↔ host process).
-/// `message`/the `poll` result are `encode_backbone_message`/`decode_backbone_message` bytes.
+/// `message`/the `poll` result are `BackboneMessage::encode_op`/`decode_op` (`protocol::OpBinary`) bytes.
 pub trait BackboneChannelPort: Send + Sync {
     fn send(&self, uri: &str, message: &[u8]) -> Result<(), VcsError>;
     fn poll(&self, uri: &str) -> Result<Vec<Vec<u8>>, VcsError>;
@@ -2917,12 +2854,13 @@ impl Backbone for PortBackbone {
 
     fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
         let channel = host_backbone_channel().ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
-        channel.send(&self.uri, &encode_backbone_message(&message))
+        let bytes = message.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?;
+        channel.send(&self.uri, &bytes)
     }
 
     fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
         let channel = host_backbone_channel().ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
-        channel.poll(&self.uri)?.into_iter().map(|bytes| decode_backbone_message(&bytes).map_err(|e| VcsError::Deserialize(e.to_string()))).collect()
+        channel.poll(&self.uri)?.into_iter().map(|bytes| BackboneMessage::decode_op(&bytes).map_err(|e| VcsError::Deserialize(e.to_string()))).collect()
     }
 }
 
@@ -3088,7 +3026,7 @@ pub trait SpaceMember {
 impl<P, Operation> SpaceMember for DocumentStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned + DocumentPack + 'static,
-    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + protocol::OpBinary + OpText + 'static,
+    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + OpBinary + OpText + 'static,
 {
     fn document_id(&self) -> &str {
         self.envelope().id.as_str()
@@ -3350,7 +3288,7 @@ impl OpText for SpaceHistoryOperation {
         serde_json::from_str(line).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
 }
-impl protocol::OpBinary for SpaceHistoryOperation {
+impl OpBinary for SpaceHistoryOperation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let value = to_dsl_value(self).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error })?;
         Ok(pack_rt::encode_pack_value(&value))
@@ -3548,7 +3486,7 @@ pub mod test_support {
     pub fn assert_store_roundtrip<P, Operation>(initial: P, operation: Operation)
     where
         P: Clone + Serialize + DeserializeOwned + DocumentPack + PartialEq + std::fmt::Debug,
-        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + protocol::OpBinary + OpText,
+        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + OpBinary + OpText,
     {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
         let mut store = DocumentStore::new(envelope);
@@ -3664,7 +3602,7 @@ pub mod test_support {
     /// impl — the op-level mirror of {@link assert_dsl_pack_equivalence}.
     pub fn assert_op_text_binary_equivalence<Op>(operation: &Op)
     where
-        Op: OpText + protocol::OpBinary + PartialEq + std::fmt::Debug,
+        Op: OpText + OpBinary + PartialEq + std::fmt::Debug,
     {
         assert_op_line_round_trip(operation);
         let encoded = operation.encode_op().unwrap_or_else(|error| panic!("op encode failed: {error}"));
@@ -3675,20 +3613,21 @@ pub mod test_support {
     }
 
     /// @emoji ⚖️ Asserts command text and command binary are two projections of the SAME command:
-    /// `decode_command(encode_command(c)) == parse_command(print_command(c)) == c`, and the binary
-    /// encoding is deterministic. The compile-time validation ground truth for `DocumentCommand`'s
-    /// text/binary pair — the command-level mirror of `assert_op_text_binary_equivalence`.
+    /// `DocumentCommand::decode_op(&c.encode_op()) == parse_command(print_command(c)) == c`, and the
+    /// binary encoding is deterministic. The compile-time validation ground truth for
+    /// `DocumentCommand`'s text/binary pair — the command-level mirror of
+    /// `assert_op_text_binary_equivalence`.
     pub fn assert_command_text_binary_equivalence<Op>(command: &DocumentCommand<Op>)
     where
-        Op: OpText + protocol::OpBinary + Clone + PartialEq + std::fmt::Debug,
+        Op: OpText + OpBinary + Clone + PartialEq + std::fmt::Debug,
     {
         let printed = print_command(command).unwrap_or_else(|error| panic!("command print failed: {error}"));
         let parsed: DocumentCommand<Op> = parse_command(&printed).unwrap_or_else(|error| panic!("command parse failed: {error}"));
         assert_eq!(&parsed, command, "command text round trip diverged; printed:\n{printed}");
-        let encoded = encode_command(command).unwrap_or_else(|error| panic!("command encode failed: {error}"));
-        let encoded_again = encode_command(command).unwrap_or_else(|error| panic!("command re-encode failed: {error}"));
+        let encoded = command.encode_op().unwrap_or_else(|error| panic!("command encode failed: {error}"));
+        let encoded_again = command.encode_op().unwrap_or_else(|error| panic!("command re-encode failed: {error}"));
         assert_eq!(encoded, encoded_again, "command binary encoding is not deterministic");
-        let decoded: DocumentCommand<Op> = decode_command(&encoded).unwrap_or_else(|error| panic!("command decode failed: {error}"));
+        let decoded: DocumentCommand<Op> = DocumentCommand::<Op>::decode_op(&encoded).unwrap_or_else(|error| panic!("command decode failed: {error}"));
         assert_eq!(&decoded, command, "command binary round trip diverged from source command");
     }
 
@@ -3698,7 +3637,7 @@ pub mod test_support {
     pub fn assert_document_text_round_trip<P, Operation>(store: &DocumentStore<P, Operation>)
     where
         P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Operation: Clone + OpText + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned + protocol::OpBinary,
+        Operation: Clone + OpText + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned + OpBinary,
     {
         let live = store.projection().expect("store projection");
         let files = print_document_text(store.envelope()).expect("print document text");
@@ -3713,7 +3652,7 @@ pub mod test_support {
     pub fn assert_document_pack_round_trip<P, Operation>(store: &DocumentStore<P, Operation>)
     where
         P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Operation: Clone + OpText + protocol::OpBinary + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned,
+        Operation: Clone + OpText + OpBinary + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned,
     {
         let live = store.projection().expect("store projection");
         let pack_files = print_document_pack(store.envelope()).expect("print document pack");
@@ -3751,7 +3690,7 @@ pub mod test_support {
     pub fn assert_command_envelope_round_trip<P, Operation>(edit: &Edit<Operation>, document_id: &DocumentId, schema: &SchemaId)
     where
         P: Clone + PartialEq + std::fmt::Debug,
-        Operation: crate::Operation<P> + PartialEq + std::fmt::Debug + protocol::OpBinary,
+        Operation: crate::Operation<P> + PartialEq + std::fmt::Debug + OpBinary,
     {
         let envelopes = protocol::operation_envelope_from_edit::<P, Operation>(edit, document_id, schema).unwrap_or_else(|error| panic!("operation_envelope_from_edit must succeed for a well-formed edit: {error}"));
         assert_eq!(envelopes.len(), edit.forwards.len(), "one envelope must be produced per forward operation");
@@ -3787,7 +3726,7 @@ pub mod test_support {
     pub fn assert_live_equals_replay<P, Operation>(store: &DocumentStore<P, Operation>)
     where
         P: Clone + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + protocol::OpBinary + OpText,
+        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + OpBinary + OpText,
     {
         let live = store.projection().expect("store projection");
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
@@ -4016,17 +3955,17 @@ mod tests {
     #[test]
     fn backbone_message_binary_round_trips_every_variant() {
         let snapshot = BackboneMessage::Snapshot { pack: vec![1, 2, 3], spr: Vec::new() };
-        assert_eq!(decode_backbone_message(&encode_backbone_message(&snapshot)).unwrap(), snapshot);
+        assert_eq!(BackboneMessage::decode_op(&snapshot.encode_op().unwrap()).unwrap(), snapshot);
 
         let envelope = sample_envelope_for_backbone_test();
-        let operations = BackboneMessage::Operations { envelopes: vec![envelope.clone(), envelope] };
-        assert_eq!(decode_backbone_message(&encode_backbone_message(&operations)).unwrap(), operations);
+        let operations = BackboneMessage::Operations { envelopes: protocol::encode_envelopes(&[envelope.clone(), envelope]) };
+        assert_eq!(BackboneMessage::decode_op(&operations.encode_op().unwrap()).unwrap(), operations);
 
         let ack = BackboneMessage::Ack { op_ids: vec!["op-1".to_string(), "op-2".to_string()] };
-        assert_eq!(decode_backbone_message(&encode_backbone_message(&ack)).unwrap(), ack);
+        assert_eq!(BackboneMessage::decode_op(&ack.encode_op().unwrap()).unwrap(), ack);
 
         let empty_ack = BackboneMessage::Ack { op_ids: Vec::new() };
-        assert_eq!(decode_backbone_message(&encode_backbone_message(&empty_ack)).unwrap(), empty_ack);
+        assert_eq!(BackboneMessage::decode_op(&empty_ack.encode_op().unwrap()).unwrap(), empty_ack);
     }
 
     fn sample_envelope_for_backbone_test() -> protocol::OperationEnvelope {
@@ -4169,7 +4108,7 @@ mod tests {
         let outbound = remote.drain().expect("drain apply");
         assert!(outbound.iter().any(|message| matches!(message, BackboneMessage::Operations { .. })), "a local apply is sent outbound as operations: {outbound:?}");
 
-        remote.push(BackboneMessage::Operations { envelopes: vec![foreign_operation_envelope("peer", DemoOperation::SetN { n: 8 })] }).expect("push inbound operations");
+        remote.push(BackboneMessage::Operations { envelopes: protocol::encode_envelopes(&[foreign_operation_envelope("peer", DemoOperation::SetN { n: 8 })]) }).expect("push inbound operations");
         store.tick().expect("tick");
         assert_eq!(store.projection().expect("projection").n, 8, "store ingests the actor's inbound operations");
     }
@@ -4184,7 +4123,7 @@ mod tests {
 
         let inbound = foreign_operation_envelope("peer", DemoOperation::SetN { n: 7 });
         let operation_id = inbound.operation_id.0.clone();
-        remote.push(BackboneMessage::Operations { envelopes: vec![inbound] }).expect("push inbound operations");
+        remote.push(BackboneMessage::Operations { envelopes: protocol::encode_envelopes(&[inbound]) }).expect("push inbound operations");
         store.tick().expect("tick");
         assert_eq!(store.projection().expect("projection").n, 7, "ingested the inbound operation");
 
@@ -4390,7 +4329,7 @@ mod tests {
             }
         }
 
-        impl protocol::OpBinary for LossyOperation {
+        impl OpBinary for LossyOperation {
             fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
                 Ok(self.n.to_le_bytes().to_vec())
             }
@@ -4944,7 +4883,7 @@ mod tests {
     fn dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format() {
         let envelope: DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
-        let command_bytes = encode_command(&DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 7 }], description: None }).expect("encode command");
+        let command_bytes = DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 7 }], description: None }.encode_op().expect("encode command");
         store.dispatch_binary(&command_bytes).expect("dispatch binary");
         assert_eq!(store.projection_json().expect("projection json"), serde_json::to_string(&DemoProjection { n: 7 }).unwrap());
 

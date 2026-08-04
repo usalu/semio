@@ -114,6 +114,7 @@ members = [
     "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧪️testkit/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust",
+    "🧰️framework/🛍️product/💻️os/🔨️module/🪐️space/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/📖️playbook/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/⚡️implementation/🦀️rust",

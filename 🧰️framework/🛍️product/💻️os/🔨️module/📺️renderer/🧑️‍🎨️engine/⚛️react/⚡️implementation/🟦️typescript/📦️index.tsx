@@ -470,6 +470,8 @@ import {
   type TutorialVideoCue,
   type TutorialChapter,
   type TutorialAssetSrc,
+  SemioFaultError,
+  type Fault,
 } from "@semio-tech/framework-core";
 import { createRoot } from "react-dom/client";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
@@ -503,6 +505,8 @@ import {
   operationEnvelopeFromWire,
   operationEnvelopeToWire,
   type PersistenceBinding,
+  decodeFaultFromWire,
+  faultDisplayMessage,
 } from "@semio-tech/framework-os-core";
 import {
   BufferAttribute,
@@ -627,7 +631,11 @@ function renderComponentSceneHost(
   requestContextMenu?: UiInterpreterContext["requestContextMenu"],
 ): ReactNode {
   if (node.componentKind === "virtualFileSystem") {
-    return <VirtualFileSystemHost node={node} onAction={onAction} requestContextMenu={requestContextMenu} />;
+    return (
+      <ShellFaultBoundary boundaryId="surface-virtualFileSystem" fallbackLabel={shellLabel("ui.common.renderError")}>
+        <VirtualFileSystemHost node={node} onAction={onAction} requestContextMenu={requestContextMenu} />
+      </ShellFaultBoundary>
+    );
   }
   const Host = COMPONENT_SCENE_HOSTS[node.componentKind as ComponentKind];
   if (!Host) {
@@ -639,7 +647,9 @@ function renderComponentSceneHost(
   }
   return (
     <Suspense fallback={<ComponentSceneFallback />}>
-      <Host node={node} onAction={onAction} requestContextMenu={requestContextMenu} />
+      <ShellFaultBoundary boundaryId={`surface-${node.componentKind}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+        <Host node={node} onAction={onAction} requestContextMenu={requestContextMenu} />
+      </ShellFaultBoundary>
     </Suspense>
   );
 }
@@ -1307,9 +1317,11 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext, pat
       return renderComponentSceneHost(node, context.onAction, context.requestContextMenu);
     case "externalSlot":
       return (
-        <p className="text-muted-foreground text-xs" data-ui-path={path}>
-          Extension unavailable: {node.pluginId}
-        </p>
+        <ShellFaultBoundary boundaryId={`extension-${node.pluginId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+          <p className="text-muted-foreground text-xs" data-ui-path={path}>
+            Extension unavailable: {node.pluginId}
+          </p>
+        </ShellFaultBoundary>
       );
   }
 }
@@ -1373,6 +1385,8 @@ type LoadedProgramState = {
  * `loadedPlugins` membership alone — a `"reloading"` entry is still present in `loadedPlugins` (the old
  * handle keeps serving until the swap completes). */
 export type PluginPanelStatus = "available" | "installing" | "loaded" | "failed" | "reloading";
+
+export type PluginSupervisorState = "loaded" | "running" | "restarting" | "crashed" | "quarantined";
 
 type ActiveSession = {
   readonly pluginId: string;
@@ -1562,6 +1576,7 @@ type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: 
 type PluginRuntimeState = {
   readonly loadedPlugins: readonly LoadedProgramState[];
   readonly pluginStatusById: Readonly<Record<string, PluginPanelStatus>>;
+  readonly pluginSupervisorById: Readonly<Record<string, PluginSupervisorState>>;
   readonly session: ActiveSession | null;
   readonly error: string | null;
 };
@@ -1726,6 +1741,7 @@ export type ShellAction =
   | { readonly type: "UPSERT_LOADED_PLUGIN"; readonly value: LoadedProgramState }
   | { readonly type: "REMOVE_LOADED_PLUGIN"; readonly pluginId: string }
   | { readonly type: "SET_PLUGIN_STATUS"; readonly pluginId: string; readonly value: PluginPanelStatus }
+  | { readonly type: "SET_PLUGIN_SUPERVISOR"; readonly pluginId: string; readonly value: PluginSupervisorState }
   | { readonly type: "SET_SESSION"; readonly value: Updatable<ActiveSession | null> }
   | { readonly type: "SET_ERROR"; readonly value: Updatable<string | null> }
   | { readonly type: "SET_WINDOW_UI_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
@@ -1803,6 +1819,8 @@ function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): P
       return { ...state, loadedPlugins: state.loadedPlugins.filter((entry) => entry.handle.pluginId !== action.pluginId) };
     case "SET_PLUGIN_STATUS":
       return { ...state, pluginStatusById: { ...state.pluginStatusById, [action.pluginId]: action.value } };
+    case "SET_PLUGIN_SUPERVISOR":
+      return { ...state, pluginSupervisorById: { ...state.pluginSupervisorById, [action.pluginId]: action.value } };
     case "SET_SESSION":
       return { ...state, session: resolveUpdatable(action.value, state.session) };
     case "SET_ERROR":
@@ -2108,7 +2126,7 @@ export function initialShellState(_props: {
   const defaults = _props.defaults ?? {};
   const storage = _props.storage;
   return {
-    pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, session: null, error: null },
+    pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, pluginSupervisorById: {}, session: null, error: null },
     windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
     spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {}, activeToolId: null },
@@ -2887,11 +2905,22 @@ export interface SpaceShellPath {
   readonly instanceId?: string;
 }
 
-/** @emoji 🧭️ Parses `/spaces/:id` and `/spaces/:id/instances/:iid` shell paths; null for any other route (e.g. home). */
+export type ShellRoute = { readonly kind: "landing" } | { readonly kind: "space"; readonly spaceId: string; readonly instanceId?: string } | { readonly kind: "notFound"; readonly path: string };
+
+/** @emoji 🧭️ Classifies shell history paths into landing, studio space, or unknown routes. */
+export function parseShellRoute(path: string): ShellRoute {
+  const normalized = (path.split("?")[0] ?? "/").trim() || "/";
+  if (normalized === "/") return { kind: "landing" };
+  const match = /^\/spaces\/([^/]+)(?:\/instances\/([^/]+))?$/.exec(normalized);
+  if (match) return { kind: "space", spaceId: match[1]!, instanceId: match[2] };
+  return { kind: "notFound", path: normalized };
+}
+
+/** @deprecated Use {@link parseShellRoute} instead. */
 export function parseSpaceShellPath(path: string): SpaceShellPath | null {
-  const match = /^\/spaces\/([^/]+)(?:\/instances\/([^/]+))?$/.exec(path);
-  if (!match) return null;
-  return { spaceId: match[1]!, instanceId: match[2] };
+  const route = parseShellRoute(path);
+  if (route.kind !== "space") return null;
+  return { spaceId: route.spaceId, instanceId: route.instanceId };
 }
 
 function buildSpacePrograms(loaded: readonly LoadedProgramState[]): readonly SpaceProgramEntry[] {
@@ -3646,7 +3675,11 @@ function declarativeUiChildToTreeItems(node: UiNode, fallbackId: string, onActio
         {
           id: fallbackId,
           label: node.type,
-          control: <ChromeAwareWindowScrollSurface className="min-h-0 flex-1">{interpretUiNode(node, { onAction })}</ChromeAwareWindowScrollSurface>,
+          control: (
+            <ShellFaultBoundary boundaryId={`panel-${fallbackId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+              <ChromeAwareWindowScrollSurface className="min-h-0 flex-1">{interpretUiNode(node, { onAction })}</ChromeAwareWindowScrollSurface>
+            </ShellFaultBoundary>
+          ),
         },
       ];
   }
@@ -5492,22 +5525,47 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
 //#endregion Boot
 
 //#region ErrorBoundary
-class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode }, { readonly hasError: boolean; readonly message: string }> {
-  constructor(props: { readonly children: ReactNode }) {
+type ShellFaultBoundaryProps = {
+  readonly boundaryId: string;
+  readonly fallbackLabel: UiLabel;
+  readonly children: ReactNode;
+  readonly onFault?: (fault: Fault | null, error: Error, boundaryId: string) => void;
+  readonly retry?: () => void;
+};
+
+type ShellFaultBoundaryState = { readonly hasFault: boolean; readonly message: string; readonly fault: Fault | null };
+
+/** @emoji 🧯️ Scoped React fault boundary — logs `[DEBUG] shell fault` and renders a localized fallback with optional retry. */
+export class ShellFaultBoundary extends Component<ShellFaultBoundaryProps, ShellFaultBoundaryState> {
+  constructor(props: ShellFaultBoundaryProps) {
     super(props);
-    this.state = { hasError: false, message: "" };
+    this.state = { hasFault: false, message: "", fault: null };
   }
 
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, message: error.message };
+  static getDerivedStateFromError(error: Error): ShellFaultBoundaryState {
+    const fault = error instanceof SemioFaultError ? error.fault : null;
+    return { hasFault: true, message: fault?.message ?? error.message, fault };
   }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("[DEBUG] shell fault", this.props.boundaryId, error, info.componentStack);
+    this.props.onFault?.(error instanceof SemioFaultError ? error.fault : null, error, this.props.boundaryId);
+  }
+
+  private readonly retry = () => {
+    this.setState({ hasFault: false, message: "", fault: null });
+    this.props.retry?.();
+  };
 
   render() {
-    if (this.state.hasError) {
+    if (this.state.hasFault) {
       return (
-        <p className="p-double text-sm text-destructive" role="alert">
-          {shellLabel("ui.common.renderError")}: {this.state.message}
-        </p>
+        <div className="p-double" role="alert" data-shell-fault-boundary={this.props.boundaryId}>
+          <p className="text-sm text-destructive">
+            {this.props.fallbackLabel}: {this.state.message}
+          </p>
+          {this.props.retry ? <Button className="mt-single" size="sm" text={shellLabel("ui.common.retry")} onClick={this.retry} /> : null}
+        </div>
       );
     }
     return this.props.children;
@@ -5800,7 +5858,7 @@ function FrameworkOsShellInner({
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
   const ephemeral = isEphemeralShellBrand(brand);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
-  const { loadedPlugins, pluginStatusById, session, error } = shellState.pluginRuntime;
+  const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error } = shellState.pluginRuntime;
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
   const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
   const landingApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.landingAppId) ?? hostPlugin?.manifest.apps[0], [hostPlugin, hostConfig]);
@@ -5937,6 +5995,7 @@ function FrameworkOsShellInner({
   // 🐚️ Only a page-owning studio shell syncs to the real browser URL bar/history — an embedded shell
   // sharing the page with others must not fight them over `window.history`.
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode && scope.ownsPage);
+  const shellRoute = useMemo(() => parseShellRoute(shellUri.split("?")[0] ?? "/"), [shellUri]);
 
   // 🐚️ `scope.storage` (not a separately-resolved ephemeral/browser port here) — two shells sharing a
   // page must not clobber each other's panel layout/dock state through an unnamespaced localStorage key.
@@ -6027,14 +6086,17 @@ function FrameworkOsShellInner({
         const handle = await loadPluginModuleResilient(pluginId, moduleUrl);
         if (!handle) {
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "failed" });
+          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
           return;
         }
         pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "loaded" });
         if (pluginId === primaryPluginId && !sessionRef.current) {
           try {
             await establishPrimarySession(handle);
+            dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "running" });
           } catch (bootError) {
             console.error("[DEBUG] framework os boot failed", bootError);
             dispatch({ type: "SET_ERROR", value: bootError instanceof Error ? bootError.message : String(bootError) });
@@ -6063,6 +6125,7 @@ function FrameworkOsShellInner({
       const oldModuleUrl = pluginModuleUrlByIdRef.current.get(pluginId);
       pluginOpInFlightRef.current.add(pluginId);
       dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "reloading" });
+      dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "restarting" });
       let newHandle: PluginWasmHandle | null = null;
       try {
         const moduleUrl = pluginSource.moduleUrl(pluginId, rebuiltAt);
@@ -6121,6 +6184,7 @@ function FrameworkOsShellInner({
         pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle: newHandle, manifest: newHandle.manifest } });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: ownsSession ? "running" : "loaded" });
 
         if (ownsSession) await establishPrimarySession(newHandle);
 
@@ -6130,6 +6194,7 @@ function FrameworkOsShellInner({
         console.warn(`[DEBUG] hot-swap rolled back for ${pluginId}`, error);
         newHandle?.dispose();
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
+        dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
       } finally {
         pluginOpInFlightRef.current.delete(pluginId);
       }
@@ -7131,16 +7196,21 @@ function FrameworkOsShellInner({
       const currentSession = sessionRef.current;
       if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
       const path = uri.split("?")[0] ?? "/";
-      const studioPath = parseSpaceShellPath(path);
+      const route = parseShellRoute(path);
       const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
       if (!sPlugin) return;
-      if (!studioPath) {
+      if (route.kind === "landing") {
         openSpaceIdRef.current = null;
         openInstanceIdRef.current = null;
         if (currentSession.app.id !== hostConfig.landingAppId) await switchToManagedApp(hostConfig.landingAppId, preservedViewState);
         return;
       }
-      const { spaceId, instanceId } = studioPath;
+      if (route.kind === "notFound") {
+        openSpaceIdRef.current = null;
+        openInstanceIdRef.current = null;
+        return;
+      }
+      const { spaceId, instanceId } = route;
       // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
       // race-navigate to `/spaces/demo` while `switchToManagedApp` is still awaiting.
       const studioChanged = openSpaceIdRef.current !== spaceId;
@@ -7295,6 +7365,26 @@ function FrameworkOsShellInner({
 
   const onAction = useCallback(
     (action: ActionDescriptor) => {
+      if (action.controllerId === "recovery") {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { pluginId?: string }) : {};
+        const pluginId = args.pluginId ?? primaryPluginId;
+        if (!pluginId) return;
+        if (action.action === "recovery.restartApp") {
+          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "restarting" });
+          void reloadPlugin(pluginId);
+          return;
+        }
+        if (action.action === "recovery.disablePlugin") {
+          dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "quarantined" });
+          if (pluginId !== primaryPluginId) void uninstallPlugin(pluginId);
+          return;
+        }
+        if (action.action === "recovery.showDiagnostics") {
+          console.log("[DEBUG] recovery diagnostics", { pluginId, supervisor: pluginSupervisorById[pluginId] });
+          return;
+        }
+      }
+
       if (!session) return;
 
       // 🎓️ First-run walkthrough (mirrors setActiveUtility below): fully shell-intercepted, resets
@@ -7548,6 +7638,10 @@ function FrameworkOsShellInner({
       landingControllerId,
       hostCatalogueTabId,
       completeIntroductionInteraction,
+      primaryPluginId,
+      reloadPlugin,
+      uninstallPlugin,
+      pluginSupervisorById,
     ],
   );
 
@@ -9459,7 +9553,9 @@ function FrameworkOsShellInner({
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
             children: (
               <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}>
-                <InterpretedUiNode node={spawnedWindowUi} onAction={onActionStable} />
+                <ShellFaultBoundary boundaryId={`window-${spawned.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+                  <InterpretedUiNode node={spawnedWindowUi} onAction={onActionStable} />
+                </ShellFaultBoundary>
               </ChromeAwareWindowScrollSurface>
             ),
           },
@@ -9489,7 +9585,9 @@ function FrameworkOsShellInner({
         children: (
           <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)}>
             <WindowInstanceIdContext.Provider value={kind.id}>
-              <InterpretedUiNode node={windowUiByWindowId[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+              <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+                <InterpretedUiNode node={windowUiByWindowId[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+              </ShellFaultBoundary>
             </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
         ),
@@ -9530,7 +9628,9 @@ function FrameworkOsShellInner({
               style={cursorFor(session.app, instance.id)}
             >
               <WindowInstanceIdContext.Provider value={instance.id}>
-                <InterpretedUiNode node={windowUiByWindowId[instance.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${instance.id}` }} onAction={onActionStable} />
+                <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+                  <InterpretedUiNode node={windowUiByWindowId[instance.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${instance.id}` }} onAction={onActionStable} />
+                </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
             </ChromeAwareWindowScrollSurface>
           ),
@@ -9615,6 +9715,27 @@ function FrameworkOsShellInner({
   );
 
   const canvas = useMemo(() => {
+    if (studioMode && shellRoute.kind === "notFound") {
+      return <ShellRouteNotFoundPage path={shellRoute.path} onHome={() => navigateHistory("/")} />;
+    }
+    const supervisorPluginId = primaryPluginId;
+    const supervisorState = supervisorPluginId ? pluginSupervisorById[supervisorPluginId] : undefined;
+    if (supervisorState === "crashed" || supervisorState === "quarantined") {
+      return (
+        <PluginRecoveryPanel
+          pluginId={supervisorPluginId!}
+          quarantined={supervisorState === "quarantined"}
+          onRestart={() => {
+            dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId: supervisorPluginId!, value: "restarting" });
+            void reloadPlugin(supervisorPluginId!);
+          }}
+          onDisable={() => {
+            dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId: supervisorPluginId!, value: "quarantined" });
+            if (supervisorPluginId !== primaryPluginId) void uninstallPlugin(supervisorPluginId!);
+          }}
+        />
+      );
+    }
     if (!session) return <p className="p-double text-sm text-muted-foreground">{shellLabel("ui.common.loadingPlugins")}</p>;
     if (error)
       return (
@@ -9676,7 +9797,8 @@ function FrameworkOsShellInner({
           }}
         />
         <div className="min-h-0 flex-1">
-          <App
+          <ShellFaultBoundary boundaryId="session-canvas" fallbackLabel={shellLabel("ui.common.renderError")}>
+            <App
             modes={modes.map((mode) => ({ id: mode.id, label: resolveAppLabel(appLabelsOverlay, "mode", mode.id, resolveManifestLabel(mode.label, uiTerminology, uiLocale)), children: null }))}
             activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id}
             onActiveModeChange={applyModeChange}
@@ -9721,10 +9843,11 @@ function FrameworkOsShellInner({
               }}
             />
           </App>
+          </ShellFaultBoundary>
         </div>
       </div>
     );
-  }, [activeWindowId, effectiveModeLayout, error, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, noteShellCommand, onAction, panel, session, studioMode, uiLocale, uiTerminology, updateSpacePanel]);
+  }, [activeWindowId, effectiveModeLayout, error, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, reloadPlugin, session, shellRoute, studioMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
 
   const footerItems = useMemo((): NavbarItem[] => {
     // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".
@@ -9771,18 +9894,26 @@ function FrameworkOsShellInner({
   useEffect(() => {
     const root = document.documentElement;
     const beaconId = pluginFilter ?? "unknown";
-    if (error) {
+    const notFound = studioMode && shellRoute.kind === "notFound";
+    if (notFound) {
+      root.dataset.semioOsNotFound = beaconId;
+      delete root.dataset.semioOsReady;
+      delete root.dataset.semioOsError;
+    } else if (error) {
       root.dataset.semioOsError = beaconId;
       delete root.dataset.semioOsReady;
+      delete root.dataset.semioOsNotFound;
     } else if (session) {
       root.dataset.semioOsReady = beaconId;
       delete root.dataset.semioOsError;
+      delete root.dataset.semioOsNotFound;
     }
     return () => {
       delete root.dataset.semioOsReady;
       delete root.dataset.semioOsError;
+      delete root.dataset.semioOsNotFound;
     };
-  }, [session, error, pluginFilter]);
+  }, [session, error, pluginFilter, shellRoute.kind, studioMode]);
   // #endregion 🔖️ReadinessBeacon
 
   const keysByActionId = useMemo(() => buildKeysByActionId(session?.app.keybindings ?? []), [session?.app.keybindings]);
@@ -9873,6 +10004,7 @@ function FrameworkOsShellInner({
     <AppKeybindingsContext.Provider value={keysByActionId}>
     <PluginSurfaceActionsContext.Provider value={requestContextMenu}>
     <ShellContextMenuFallbackContext.Provider value={buildShellContextMenuItems}>
+    <ShellFaultBoundary boundaryId="shell-root" fallbackLabel={shellLabel("ui.common.renderError")}>
     <UIFindProvider>
       <LevelProvider level="base">
         <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base">
@@ -9907,7 +10039,11 @@ function FrameworkOsShellInner({
               }
               footer={<Footer items={footerItems} />}
               panels={Object.fromEntries(ANCHORS.map((anchor) => [anchor, buildPanelProps(anchor)])) as Record<Anchor, ReturnType<typeof buildPanelProps>>}
-              canvas={<ShellRenderErrorBoundary>{canvas}</ShellRenderErrorBoundary>}
+              canvas={
+                <ShellFaultBoundary boundaryId="route-canvas" fallbackLabel={shellLabel("ui.common.renderError")}>
+                  {canvas}
+                </ShellFaultBoundary>
+              }
             />
           </PanelDockProvider>
         </div>
@@ -9962,6 +10098,7 @@ function FrameworkOsShellInner({
           })()}
       </LevelProvider>
     </UIFindProvider>
+    </ShellFaultBoundary>
     </ShellContextMenuFallbackContext.Provider>
     </PluginSurfaceActionsContext.Provider>
     </AppKeybindingsContext.Provider>
@@ -10110,7 +10247,9 @@ async function performCommand(client: AppChannelClient, envelope: WireCommandEnv
     } else if ("Events" in frame) {
       events = frame.Events.events.map((bytes) => decodePackValue(new Uint8Array(bytes))) as InvocationResponse["events"];
     } else if ("Error" in frame) {
-      throw new Error(`[DEBUG] ${envelope.kind} '${envelope.name}' failed (${frame.Error.code}): ${frame.Error.message}`);
+      const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
+      if (fault) throw new SemioFaultError(fault);
+      throw new Error(`[DEBUG] ${envelope.kind} '${envelope.name}' failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
     }
   }
   return {
@@ -12154,6 +12293,41 @@ export function useNamedLayoutHost(options: {
 //#endregion SettingsPanel
 
 //#region PluginsPanel
+/** @emoji 🧭️ Canvas fallback when studio history resolves to an unknown route. */
+function ShellRouteNotFoundPage({ path, onHome }: { readonly path: string; readonly onHome: () => void }) {
+  return (
+    <div className="flex h-full min-h-0 flex-col items-center justify-center gap-double p-double" role="alert" data-shell-route-not-found={path}>
+      <p className="text-sm text-muted-foreground">{uiDataLabel(`Route not found: ${path}`)}</p>
+      <Button size="sm" text={shellLabel("ui.common.home")} onClick={onHome} />
+    </div>
+  );
+}
+
+/** @emoji 🩺️ Plugin crash/quarantine recovery affordances — mirrors `ui_wgpu::ui_recovery_panel`. */
+function PluginRecoveryPanel({
+  pluginId,
+  quarantined,
+  onRestart,
+  onDisable,
+}: {
+  readonly pluginId: string;
+  readonly quarantined: boolean;
+  readonly onRestart: () => void;
+  readonly onDisable: () => void;
+}) {
+  const message = quarantined ? uiDataLabel("This program was quarantined after repeated crashes.") : uiDataLabel("This program crashed.");
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-double p-double" data-plugin-recovery={pluginId}>
+      <p className="text-sm font-medium">{uiDataLabel("Plugin Recovery")}</p>
+      <p className="text-sm text-muted-foreground">{message}</p>
+      <div className="flex flex-wrap gap-single">
+        <Button size="sm" text={uiDataLabel("Restart App")} onClick={onRestart} />
+        <Button size="sm" text={uiDataLabel("Disable Plugin")} onClick={onDisable} />
+      </div>
+    </div>
+  );
+}
+
 /** 🔌️ One registry entry as the plugin panel wants to render it — `sourceId` and `canUninstall` come
  * straight from the shell's `PluginSource`/primary-plugin bookkeeping; `label`/`version` fall back to
  * the bare pluginId when a plugin hasn't loaded far enough to have a manifest yet (`"available"`). */

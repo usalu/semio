@@ -365,6 +365,68 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Every artifact must define diff, sqlite, 
+<artifact>
+  diff
+    implementation
+      rust
+      typescript
+      …
+  command
+    general.rs
+    general.ts
+    <command>
+      general.rs
+      general.ts
+
+  document
+    sqlite
+      implementation
+        rust
+        typescript
+        …
+    postgres
+      implementation
+        rust
+        typescript
+        …
+    neo4j
+      implementation
+        rust
+        typescript
+        …
+    json
+      implementation
+        rust
+        typescript
+        …
+---
+
+<plugin>
+  general.rs
+  general.ts
+  Cargo.toml
+  package.json
+  <app>
+    general.rs
+    general.ts
+
+instead of
+
+<plugin>
+  implementation
+    rust
+      lib.rs
+    typescript
+      index.ts
+    <app>
+      implementation
+        rust
+          lib.rs
+        typescript
+          index.ts
+---
+
 Make sure os/s follows this architecture:
 
 every plugin registers artifacts, apps

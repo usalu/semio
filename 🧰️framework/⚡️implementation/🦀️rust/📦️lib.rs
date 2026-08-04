@@ -6261,6 +6261,7 @@ pub mod kernel {
 //! 🧠️ Local-first action kernel contracts: actions, operations, capabilities, window I/O.
 
 use serde::{Deserialize, Serialize};
+pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity};
 use dsl::DslValue;
 use ui_wgpu::UiNode;
 use crate::mesh::MediaType;
@@ -6437,14 +6438,6 @@ pub struct CommandInvocation {
     pub actor: ActorId,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Diagnostic {
-    pub level: String,
-    pub message: String,
-}
-
-//#region 🔖️Clipboard
 /// 📋️ How a paste anchors the copied fragment relative to the paste point — the seven placement
 /// modes semio_compose_rs's `copyDesign`/`pasteDesign` supported, now an OS-owned concept.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -8416,6 +8409,7 @@ mod app_document_tests {
 
 pub use action_bus::{ActionBus, ActionHandler};
 pub use dsl::{from_dsl_value, to_dsl_value, DslValue};
+pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity, TextError, TextSpan};
 
 /// @emoji 🔀️ Bridges staged `serde_json::Value` action args into `ActionDescriptor.args`.
 pub fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue> {
@@ -8443,7 +8437,7 @@ pub use ui::*;
 pub use ui::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, CommandContext, CommandId, CommandInvocation,
-    ActionRequest, InvocationId, InvocationResult, Diagnostic, HostEffect, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
+    ActionRequest, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
     KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
     DocumentVersion, OperationId, PhysicalSize, PluginInstanceId, PresencePeer,
     PresencePoint, PresenceViewport, decode_presence_peer, encode_presence_peer,

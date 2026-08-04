@@ -2498,7 +2498,7 @@ impl DocumentApp for Puzzle5dPlayApp {
     /// @emoji 🧩️ B1: thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple the preserved pre-B1 `handle_action_impl` (see its doc comment, in the `impl
     /// Puzzle5dPlayApp` block right below) already expects, from the typed `Puzzle5dCommand`.
-    fn handle(&self, command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Emit<Puzzle5dOperation, Puzzle5dConfigOperation> {
+    fn handle(&self, command: &Puzzle5dCommand, doc: &DocumentView<'_, Puzzle5dPlayProjection>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> Result<Emit<Puzzle5dOperation, Puzzle5dConfigOperation>, Fault> {
         self.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, cfg.projection)
     }
 

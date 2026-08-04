@@ -991,7 +991,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn handle(&self, command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> Emit<RewriteRuleOperation, RewriteConfigOperation> {
+    fn handle(&self, command: &TrinityRewriteCommand, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> Result<Emit<RewriteRuleOperation, RewriteConfigOperation>, Fault> {
         let state = doc.projection;
         let config = cfg.projection;
         match command {
@@ -1047,7 +1047,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                             Emit::operations(vec![RewriteRuleOperation::SetState { state: next }])
                         }
                     }
-                    None => Emit::default(),
+                    None => Ok(Emit::default(),
                 }
             }
             TrinityRewriteCommand::AddRuleClause { kind } => {
@@ -1083,7 +1083,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                             Emit::operations(vec![RewriteRuleOperation::SetState { state: next }])
                         }
                     }
-                    None => Emit::default(),
+                    None => Ok(Emit::default(),
                 }
             }
             TrinityRewriteCommand::SetSelection { ids, surface_id } => {
@@ -1106,19 +1106,19 @@ impl DocumentApp for TrinityRewritePlayApp {
                     }
                     Emit::config(config_operations)
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             TrinityRewriteCommand::SetViewport { surface_id, viewport_json } => {
                 if surface_id.as_deref() == Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE) {
                     match serde_json::from_str::<Camera>(viewport_json) {
-                        Ok(camera) => Emit::config(vec![RewriteConfigOperation::SetBeforePaneCamera { camera }]),
-                        Err(_) => Emit::default(),
+                        Ok(camera) => Ok(Emit::config(vec![RewriteConfigOperation::SetBeforePaneCamera { camera }]),
+                        Err(_) => Ok(Emit::default(),
                     }
                 } else {
                     Emit::default()
                 }
             }
-            TrinityRewriteCommand::GraphPointerDown { node_id } => Emit::config(vec![RewriteConfigOperation::SetSelection { node_ids: node_id.clone().map(|id| vec![id]).unwrap_or_default() }]),
+            TrinityRewriteCommand::GraphPointerDown { node_id } => Ok(Emit::config(vec![RewriteConfigOperation::SetSelection { node_ids: node_id.clone().map(|id| vec![id]).unwrap_or_default() }]),
             TrinityRewriteCommand::TextSelect { var, start } => {
                 let mut config_operations = vec![RewriteConfigOperation::SetSelectEpoch { value: config.select_epoch + 1 }];
                 if let Some(var) = var {
@@ -1141,9 +1141,9 @@ impl DocumentApp for TrinityRewritePlayApp {
                 }
                 Emit::config(config_operations)
             }
-            TrinityRewriteCommand::Reorganize => Emit::config(vec![RewriteConfigOperation::SetReorganizeEpoch { value: config.reorganize_epoch + 1 }]),
-            TrinityRewriteCommand::SetLodMode { window_id, value } => Emit::config(vec![RewriteConfigOperation::SetLodMode { window_id: window_id.clone(), value: value.clone() }]),
-            TrinityRewriteCommand::SetLocale { value } => Emit::config(vec![RewriteConfigOperation::SetLocale { value: value.clone() }]),
+            TrinityRewriteCommand::Reorganize => Ok(Emit::config(vec![RewriteConfigOperation::SetReorganizeEpoch { value: config.reorganize_epoch + 1 }]),
+            TrinityRewriteCommand::SetLodMode { window_id, value } => Ok(Emit::config(vec![RewriteConfigOperation::SetLodMode { window_id: window_id.clone(), value: value.clone() }]),
+            TrinityRewriteCommand::SetLocale { value } => Ok(Emit::config(vec![RewriteConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

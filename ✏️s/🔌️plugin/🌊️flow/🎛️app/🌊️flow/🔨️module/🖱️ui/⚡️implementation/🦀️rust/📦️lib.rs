@@ -881,7 +881,7 @@ impl DocumentApp for FlowPlayApp {
         }
     }
 
-    fn handle(&self, command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Emit<FlowOperation, FlowConfigOperation> {
+    fn handle(&self, command: &FlowCommand, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>) -> Result<Emit<FlowOperation, FlowConfigOperation>, Fault> {
         let fixture = doc.projection;
         let config = cfg.projection;
         match command {
@@ -902,8 +902,8 @@ impl DocumentApp for FlowPlayApp {
                     Err(_) => false,
                 });
                 match new_id {
-                    Some(id) => Emit { document_operations: operations, config_operations: vec![FlowConfigOperation::SetSelection { node_ids: vec![id], edge_ids: Vec::new(), handle_ids: Vec::new() }], ..Default::default() },
-                    None => Emit::operations(operations),
+                    Some(id) => Ok(Emit { document_operations: operations, config_operations: vec![FlowConfigOperation::SetSelection { node_ids: vec![id], edge_ids: Vec::new(), handle_ids: Vec::new() }], ..Default::default() },
+                    None => Ok(Emit::operations(operations),
                 }
             }
             FlowCommand::RemoveWidget { widget_id: target_id } => {
@@ -936,7 +936,7 @@ impl DocumentApp for FlowPlayApp {
                     Emit { document_operations: operations, config_operations: vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() }], ..Default::default() }
                 }
             }
-            FlowCommand::Disconnect { synapse_id } => Emit::operations(host_operations(fixture, config, |host| host.disconnect(synapse_id).is_ok())),
+            FlowCommand::Disconnect { synapse_id } => Ok(Emit::operations(host_operations(fixture, config, |host| host.disconnect(synapse_id).is_ok())),
             FlowCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => {
                 Emit::operations(host_operations(fixture, config, |host| host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).is_ok()))
             }
@@ -951,7 +951,7 @@ impl DocumentApp for FlowPlayApp {
                     Emit::amend(operations, format!("move-{node_id}"))
                 }
             }
-            FlowCommand::Reorganize => Emit::operations(host_operations(fixture, config, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+            FlowCommand::Reorganize => Ok(Emit::operations(host_operations(fixture, config, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
             FlowCommand::PatchFlowWidgets { widget_ids, field, value } => {
                 let next = patched_widgets_fixture(fixture, widget_ids, field, value);
                 let operations = flow_fixture_operations(fixture, &next);
@@ -962,12 +962,12 @@ impl DocumentApp for FlowPlayApp {
                 }
             }
             FlowCommand::RenameFlowWidget { old_id, value } => match renamed_fixture(fixture, old_id, value) {
-                Some(next) => Emit {
+                Some(next) => Ok(Emit {
                     document_operations: flow_fixture_operations(fixture, &next),
                     config_operations: vec![FlowConfigOperation::SetSelection { node_ids: vec![value.trim().to_string()], edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }],
                     ..Default::default()
                 },
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             FlowCommand::NodeGraphEdit { operations } => node_graph_edit_result(fixture, config, operations),
             FlowCommand::SpotlightCommit { operations } => node_graph_edit_result(fixture, config, operations),
@@ -980,9 +980,9 @@ impl DocumentApp for FlowPlayApp {
                     return Emit::default();
                 }
                 match *effect {
-                    "reorganize" => Emit::operations(host_operations(fixture, config, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+                    "reorganize" => Ok(Emit::operations(host_operations(fixture, config, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
                     "evaluate" => evaluate_result(fixture, config),
-                    _ => Emit::default(),
+                    _ => Ok(Emit::default(),
                 }
             }
 
@@ -994,15 +994,15 @@ impl DocumentApp for FlowPlayApp {
                 Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: ids, edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }])
             }
             FlowCommand::FocusSelection => match focus_selection_camera(fixture, config) {
-                Some(camera) => Emit::config(vec![FlowConfigOperation::SetCamera { camera }]),
-                None => Emit::default(),
+                Some(camera) => Ok(Emit::config(vec![FlowConfigOperation::SetCamera { camera }]),
+                None => Ok(Emit::default(),
             },
-            FlowCommand::SetSelection { ids, edge_ids, handle_ids } => Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: ids.clone(), edge_ids: edge_ids.clone(), handle_ids: handle_ids.clone() }]),
-            FlowCommand::SelectNode { node_id } => Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: vec![node_id.clone()], edge_ids: Vec::new(), handle_ids: Vec::new() }]),
-            FlowCommand::NodeGraphSelect { node_ids } => Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: node_ids.clone(), edge_ids: Vec::new(), handle_ids: Vec::new() }]),
-            FlowCommand::NodeGraphHover => Emit::default(),
-            FlowCommand::GraphPointerDown => Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]),
-            FlowCommand::NodeGraphViewport { camera } => Emit::config(vec![FlowConfigOperation::SetCamera { camera: camera.clone() }]),
+            FlowCommand::SetSelection { ids, edge_ids, handle_ids } => Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: ids.clone(), edge_ids: edge_ids.clone(), handle_ids: handle_ids.clone() }]),
+            FlowCommand::SelectNode { node_id } => Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: vec![node_id.clone()], edge_ids: Vec::new(), handle_ids: Vec::new() }]),
+            FlowCommand::NodeGraphSelect { node_ids } => Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: node_ids.clone(), edge_ids: Vec::new(), handle_ids: Vec::new() }]),
+            FlowCommand::NodeGraphHover => Ok(Emit::default(),
+            FlowCommand::GraphPointerDown => Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: config.selected_edge_ids.clone(), handle_ids: config.selected_handle_ids.clone() }]),
+            FlowCommand::NodeGraphViewport { camera } => Ok(Emit::config(vec![FlowConfigOperation::SetCamera { camera: camera.clone() }]),
             FlowCommand::SetLodMode { value } => {
                 if value == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(value).is_some() {
                     Emit::config(vec![FlowConfigOperation::SetLodMode { value: value.clone() }])
@@ -1010,11 +1010,11 @@ impl DocumentApp for FlowPlayApp {
                     Emit::default()
                 }
             }
-            FlowCommand::SetProximityDistance { value } => Emit::config(vec![FlowConfigOperation::SetProximityDistance { value: value.max(0.0) }]),
-            FlowCommand::SetGridVisible { pressed } => Emit::config(vec![FlowConfigOperation::SetGridVisible { value: pressed.unwrap_or(!config.grid_visible) }]),
-            FlowCommand::SetGridSnapEnabled { pressed } => Emit::config(vec![FlowConfigOperation::SetGridSnapEnabled { value: pressed.unwrap_or(!config.grid_snap_enabled) }]),
-            FlowCommand::SetGridFactor { value } => Emit::config(vec![FlowConfigOperation::SetGridFactor { value: value.clamp(0.5, 50.0) }]),
-            FlowCommand::ClearSelection => Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() }]),
+            FlowCommand::SetProximityDistance { value } => Ok(Emit::config(vec![FlowConfigOperation::SetProximityDistance { value: value.max(0.0) }]),
+            FlowCommand::SetGridVisible { pressed } => Ok(Emit::config(vec![FlowConfigOperation::SetGridVisible { value: pressed.unwrap_or(!config.grid_visible) }]),
+            FlowCommand::SetGridSnapEnabled { pressed } => Ok(Emit::config(vec![FlowConfigOperation::SetGridSnapEnabled { value: pressed.unwrap_or(!config.grid_snap_enabled) }]),
+            FlowCommand::SetGridFactor { value } => Ok(Emit::config(vec![FlowConfigOperation::SetGridFactor { value: value.clamp(0.5, 50.0) }]),
+            FlowCommand::ClearSelection => Ok(Emit::config(vec![FlowConfigOperation::SetSelection { node_ids: Vec::new(), edge_ids: Vec::new(), handle_ids: Vec::new() }]),
             FlowCommand::ContextMenuAt { id } => {
                 if id.is_empty() {
                     Emit::default()
@@ -1035,9 +1035,9 @@ impl DocumentApp for FlowPlayApp {
                 }
                 Emit::config(vec![FlowConfigOperation::SetPreviewOff { node_ids: next }])
             }
-            FlowCommand::OpenSpotlight => Emit::default(),
-            FlowCommand::ReplaceImage { .. } => Emit::default(),
-            FlowCommand::SetCatalogueSections { sections_json } => Emit::config(vec![FlowConfigOperation::SetCatalogueSections { sections_json: sections_json.clone() }]),
+            FlowCommand::OpenSpotlight => Ok(Emit::default(),
+            FlowCommand::ReplaceImage { .. } => Ok(Emit::default(),
+            FlowCommand::SetCatalogueSections { sections_json } => Ok(Emit::config(vec![FlowConfigOperation::SetCatalogueSections { sections_json: sections_json.clone() }]),
             FlowCommand::ToggleExtension { id, enabled } => {
                 let mut map = config.extension_enabled();
                 map.insert(id.clone(), *enabled);
@@ -1051,7 +1051,7 @@ impl DocumentApp for FlowPlayApp {
                 let value_json: Value = dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null);
                 handle_generation("updateGenerationValues", Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })), fixture, config)
             }
-            FlowCommand::SetLocale { value } => Emit::config(vec![FlowConfigOperation::SetLocale { value: value.clone() }]),
+            FlowCommand::SetLocale { value } => Ok(Emit::config(vec![FlowConfigOperation::SetLocale { value: value.clone() }]),
 
             // 🧵️ One budgeted evaluation step (see `flow_core::FlowEvalDriver::tick`), off the main
             // thread. Chains itself via `HostEffect::DispatchAction` until the fixture's dirty set is

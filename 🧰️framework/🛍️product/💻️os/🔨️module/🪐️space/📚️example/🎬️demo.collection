@@ -1,0 +1,6 @@
+schema=s.collection name=Main entries=[ id=e1 folder-id=f1 name=sketch kind-id=puzzle.2d
+document schema=s.puzzle2d document-id=doc-e1 id=e2 name=reference.png kind-id=file.blob
+blob hash=blake3-deadbeef size=42 media-type=image/png ]
+folders [id:TEXT parent-id:TEXT name:TEXT] {
+  f1 _ Renders
+}

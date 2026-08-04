@@ -1,0 +1,8 @@
+{
+  "title": "Remove Test Configs From launch.json and Enable Test Explorer",
+  "emoji": "🧪",
+  "status": "closed",
+  "description": "Removed all 80 test configurations from launch.json and configured VSCode Test Explorer settings (vitest, rust-analyzer, pytest, etc.) in settings.json.",
+  "goal": "🎯ai-optimized-repo",
+  "sessions": []
+}

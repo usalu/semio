@@ -4456,6 +4456,8 @@ pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
 // because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖️History` region) dispatches through
 // them in every build.
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
+#[cfg(test)]
+use protocol::{DocumentId, Edit, SchemaId};
 use store::create_document_envelope;
 use store::DocumentCommand;
 use store::{DocumentEnvelope, DocumentStore};
@@ -5543,6 +5545,20 @@ mod flow_vcs_tests {
         let document = FlowFixture::default();
         let operation = FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 });
         store::test_support::assert_store_roundtrip(document, operation);
+    }
+
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): `FlowOperation`
+    /// already implements `protocol::OpBinary` (forwarded through the derived `FlowOperationDsl`
+    /// mirror, see `🔖️OpText` above), so this closes the missing coverage rather than adding any new
+    /// codec.
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        let envelope = create_document_envelope("test/v1", "test", FlowFixture::default(), None);
+        let mut store = DocumentStore::new(envelope);
+        let operation = FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 });
+        store.dispatch(DocumentCommand::Apply { operations: vec![operation], description: None }).expect("apply");
+        let edit: &Edit<FlowOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<FlowFixture, FlowOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
 
     /// 📜️ `flow/example/🌊️default.flow` is the handcrafted `.flow` DSL-text migration of what used to

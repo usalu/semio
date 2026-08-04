@@ -1405,7 +1405,7 @@ impl DrawPlayApp {
         }
         match commit_description {
             Some(description) => commit_with_utility_reset(operations, description),
-            None => Emit::default(),
+            None => Ok(Emit::default(),
         }
     }
 
@@ -1501,12 +1501,12 @@ impl DocumentApp for DrawPlayApp {
         }
     }
 
-    fn handle(&self, command: &DrawCommand, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>) -> Emit<DrawOperation, DrawConfigOperation> {
+    fn handle(&self, command: &DrawCommand, doc: &DocumentView<'_, DrawDocument>, cfg: &ConfigView<'_, DrawConfig>) -> Result<Emit<DrawOperation, DrawConfigOperation>, Fault> {
         let document = doc.projection;
         let mut config = cfg.projection.clone();
         match command {
             //#region 🔖️ContentOperations
-            DrawCommand::SetDocument { document: next } | DrawCommand::CommitDocument { document: next } => Emit::operations(vec![DrawOperation::SetDocument { document: next.clone() }]),
+            DrawCommand::SetDocument { document: next } | DrawCommand::CommitDocument { document: next } => Ok(Emit::operations(vec![DrawOperation::SetDocument { document: next.clone() }]),
             DrawCommand::SetFixtureJson { json } => {
                 if json.contains(DRAW_DOCUMENT_SCHEMA) {
                     if let Ok(document) = serde_json::from_str::<DrawDocument>(json) {
@@ -1524,8 +1524,8 @@ impl DocumentApp for DrawPlayApp {
                     None
                 };
                 match next {
-                    Some(document) => Emit { document_operations: vec![DrawOperation::SetDocument { document }], config_operations: vec![DrawConfigOperation::SetSelection { ids: Vec::new() }], ..Default::default() },
-                    None => Emit::default(),
+                    Some(document) => Ok(Emit { document_operations: vec![DrawOperation::SetDocument { document }], config_operations: vec![DrawConfigOperation::SetSelection { ids: Vec::new() }], ..Default::default() },
+                    None => Ok(Emit::default(),
                 }
             }
             DrawCommand::SetSelectedOpacity { value } => {
@@ -1580,7 +1580,7 @@ impl DocumentApp for DrawPlayApp {
                     let visible = !layer_base(layer).visible;
                     Emit::operations(vec![DrawOperation::SetLayerVisible { layer_id: target_id.clone(), visible }])
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             DrawCommand::CombineBoolean { operation, ids } => {
                 let ids: Vec<String> = if ids.is_empty() { config.selected_ids.clone() } else { ids.clone() };
@@ -1598,8 +1598,8 @@ impl DocumentApp for DrawPlayApp {
             DrawCommand::PatchLayer { layer_id: target_id, field, value } => {
                 let json_value = patch_value_json(value);
                 match draw_op_for_layer_field(document, target_id, field, &json_value) {
-                    Some(operation) => Emit::operations(vec![operation]),
-                    None => Emit::default(),
+                    Some(operation) => Ok(Emit::operations(vec![operation]),
+                    None => Ok(Emit::default(),
                 }
             }
             DrawCommand::PatchLayers { layer_ids, field, value } => {
@@ -1619,20 +1619,20 @@ impl DocumentApp for DrawPlayApp {
                 Emit::config(vec![DrawConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }])
             }
             // 📷️ Camera — session-only runtime pose, never a document operation.
-            DrawCommand::SetCamera { camera } => Emit::config(vec![DrawConfigOperation::SetCamera { camera: camera.clone() }]),
+            DrawCommand::SetCamera { camera } => Ok(Emit::config(vec![DrawConfigOperation::SetCamera { camera: camera.clone() }]),
             DrawCommand::SetCameraZoom { value } => {
                 let camera = draw::DrawCamera { zoom: *value, ..config.camera };
                 Emit::config(vec![DrawConfigOperation::SetCamera { camera }])
             }
-            DrawCommand::SetSelection { ids } => Emit::config(vec![DrawConfigOperation::SetSelection { ids: ids.clone() }]),
-            DrawCommand::SetHover { id } => Emit::config(vec![DrawConfigOperation::SetHovered { id: id.clone() }]),
+            DrawCommand::SetSelection { ids } => Ok(Emit::config(vec![DrawConfigOperation::SetSelection { ids: ids.clone() }]),
+            DrawCommand::SetHover { id } => Ok(Emit::config(vec![DrawConfigOperation::SetHovered { id: id.clone() }]),
             DrawCommand::SelectAll => {
                 let ids = flatten_draw_layers(&document.layers).into_iter().map(|layer| layer_id(layer).to_string()).collect();
                 Emit::config(vec![DrawConfigOperation::SetSelection { ids }])
             }
-            DrawCommand::ClearSelection => Emit::config(vec![DrawConfigOperation::SetSelection { ids: Vec::new() }]),
-            DrawCommand::EngagementInput { value } => Emit::config(vec![DrawConfigOperation::SetEngagementInput { value: value.clone() }]),
-            DrawCommand::SetLocale { value } => Emit::config(vec![DrawConfigOperation::SetLocale { value: value.clone() }]),
+            DrawCommand::ClearSelection => Ok(Emit::config(vec![DrawConfigOperation::SetSelection { ids: Vec::new() }]),
+            DrawCommand::EngagementInput { value } => Ok(Emit::config(vec![DrawConfigOperation::SetEngagementInput { value: value.clone() }]),
+            DrawCommand::SetLocale { value } => Ok(Emit::config(vec![DrawConfigOperation::SetLocale { value: value.clone() }]),
             //#endregion 🔖️ConfigOnly
             //#region 🔖️CanvasGestures
             DrawCommand::CanvasPointerDown { x, y, width, height, shift, ctrl, meta } => {

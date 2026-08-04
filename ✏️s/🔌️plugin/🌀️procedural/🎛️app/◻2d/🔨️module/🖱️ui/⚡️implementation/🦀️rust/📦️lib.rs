@@ -450,15 +450,15 @@ impl DocumentApp for Procedural2dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> Emit<Procedural2dOperation, Procedural2dConfigOperation> {
+    fn handle(&self, command: &Procedural2dCommand, doc: &DocumentView<'_, Procedural2dDocument>, cfg: &ConfigView<'_, Procedural2dConfig>) -> Result<Emit<Procedural2dOperation, Procedural2dConfigOperation>, Fault> {
         let fixture = &doc.projection.fixture;
         let config = cfg.projection;
         match command {
             // 👁️ Config-only — ephemeral selection/hover/show-mode/eval-scratch, never document operations.
-            Procedural2dCommand::SetSelection { ids } | Procedural2dCommand::SelectNode { ids } | Procedural2dCommand::NodeGraphSelect { ids } => Emit::config(vec![Procedural2dConfigOperation::SetSelection { ids: ids.clone() }]),
-            Procedural2dCommand::NodeGraphHover => Emit::default(),
-            Procedural2dCommand::SetShowMode { value } => Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: value.clone() }]),
-            Procedural2dCommand::Generate => Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: "generate".into() }]),
+            Procedural2dCommand::SetSelection { ids } | Procedural2dCommand::SelectNode { ids } | Procedural2dCommand::NodeGraphSelect { ids } => Ok(Emit::config(vec![Procedural2dConfigOperation::SetSelection { ids: ids.clone() }]),
+            Procedural2dCommand::NodeGraphHover => Ok(Emit::default(),
+            Procedural2dCommand::SetShowMode { value } => Ok(Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: value.clone() }]),
+            Procedural2dCommand::Generate => Ok(Emit::config(vec![Procedural2dConfigOperation::SetShowMode { value: "generate".into() }]),
             Procedural2dCommand::SetEvalOutputs { outputs_json } => {
                 let mut driver = config.eval_driver();
                 driver.set_eval_json(outputs_json.clone());
@@ -474,11 +474,11 @@ impl DocumentApp for Procedural2dPlayApp {
                     ..Default::default()
                 }
             }
-            Procedural2dCommand::CanvasPointerDown | Procedural2dCommand::CanvasPointerMove | Procedural2dCommand::CanvasPointerUp | Procedural2dCommand::CanvasWheel => Emit::default(),
+            Procedural2dCommand::CanvasPointerDown | Procedural2dCommand::CanvasPointerMove | Procedural2dCommand::CanvasPointerUp | Procedural2dCommand::CanvasWheel => Ok(Emit::default(),
             // 📷️ Graph camera — config-only (never a document operation), same model as flow-play.
             Procedural2dCommand::NodeGraphViewport { viewport_json } => match serde_json::from_str::<CameraJson>(viewport_json) {
-                Ok(camera) => Emit::config(vec![Procedural2dConfigOperation::SetCamera { camera }]),
-                Err(_) => Emit::default(),
+                Ok(camera) => Ok(Emit::config(vec![Procedural2dConfigOperation::SetCamera { camera }]),
+                Err(_) => Ok(Emit::default(),
             },
             // ✏️ Operations — compute the target fixture via the host, emit fixture operations.
             Procedural2dCommand::NodeGraphEdit { operations_json } => {
@@ -516,7 +516,7 @@ impl DocumentApp for Procedural2dPlayApp {
                 let config_operations = if cleared { vec![Procedural2dConfigOperation::SetSelection { ids: Vec::new() }] } else { Vec::new() };
                 Emit { document_operations: operations, config_operations, ..Default::default() }
             }
-            Procedural2dCommand::MoveMediaNode { node_id, x, y } => Emit::operations(self.ops_from_host_mutation(fixture, |host| {
+            Procedural2dCommand::MoveMediaNode { node_id, x, y } => Ok(Emit::operations(self.ops_from_host_mutation(fixture, |host| {
                 let _ = host.move_widget(node_id, *x, *y);
             })),
             Procedural2dCommand::AddWidget { kind, neuron_kind, x, y } => {
@@ -541,10 +541,10 @@ impl DocumentApp for Procedural2dPlayApp {
                 let remaining: Vec<String> = config.selected_ids.iter().filter(|id| *id != widget_id).cloned().collect();
                 Emit { document_operations: operations, config_operations: vec![Procedural2dConfigOperation::SetSelection { ids: remaining }], ..Default::default() }
             }
-            Procedural2dCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => Emit::operations(self.ops_from_host_mutation(fixture, |host| {
+            Procedural2dCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => Ok(Emit::operations(self.ops_from_host_mutation(fixture, |host| {
                 let _ = host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id);
             })),
-            Procedural2dCommand::Reorganize => Emit::operations(self.ops_from_host_mutation(fixture, |host| {
+            Procedural2dCommand::Reorganize => Ok(Emit::operations(self.ops_from_host_mutation(fixture, |host| {
                 let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
             })),
             Procedural2dCommand::AddGeneration => self.handle_generation("addGeneration", None, doc, cfg),
@@ -555,7 +555,7 @@ impl DocumentApp for Procedural2dPlayApp {
                 self.handle_generation("updateGenerationValues", Some(&json!({ "generationId": generation_id, "questionId": question_id, "value": value_json })), doc, cfg)
             }
             Procedural2dCommand::SelectGeneration { id } => self.handle_generation("selectGeneration", Some(&json!({ "id": id })), doc, cfg),
-            Procedural2dCommand::SetLocale { value } => Emit::config(vec![Procedural2dConfigOperation::SetLocale { value: value.clone() }]),
+            Procedural2dCommand::SetLocale { value } => Ok(Emit::config(vec![Procedural2dConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

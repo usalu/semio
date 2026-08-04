@@ -643,7 +643,7 @@ impl DocumentApp for Fem2dPlayApp {
     /// 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
     /// `(command, document, config)` to an `Emit`. Every former `handle_action` match arm keeps working,
     /// just through this typed channel instead of the `{action, args}` JSON channel.
-    fn handle(&self, command: &Fem2dCommand, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Emit<Fem2dOperation, Fem2dConfigOperation> {
+    fn handle(&self, command: &Fem2dCommand, doc: &DocumentView<'_, Fem2dDocument>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dOperation, Fem2dConfigOperation>, Fault> {
         let projection = doc.projection;
         match command {
             Fem2dCommand::AddNode { x, y } => {
@@ -719,7 +719,7 @@ impl DocumentApp for Fem2dPlayApp {
                     load_case.self_weight = *enabled;
                     Emit::operations(vec![Fem2dOperation::SetLoadCase { index, load_case }])
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             Fem2dCommand::SetAnalysisSettings { modal_count, buckling_count, deformation_scale } => {
                 let current = &projection.analysis;
@@ -762,10 +762,10 @@ impl DocumentApp for Fem2dPlayApp {
                 Emit { document_operations: vec![Fem2dOperation::SetDocument { document }], config_operations: vec![Fem2dConfigOperation::Snapshot { config: Fem2dConfig::default() }], ..Default::default() }
             }
             // 🎥️ Config-only: the canvas camera never touches the document.
-            Fem2dCommand::SetCamera { x, y, zoom } => Emit::config(vec![Fem2dConfigOperation::SetCamera { camera: FemCamera { x: *x, y: *y, zoom: *zoom } }]),
+            Fem2dCommand::SetCamera { x, y, zoom } => Ok(Emit::config(vec![Fem2dConfigOperation::SetCamera { camera: FemCamera { x: *x, y: *y, zoom: *zoom } }]),
             // 👁️ Config-only: which case/mode the results window shows never touches the document.
-            Fem2dCommand::SetResultDisplay { source_id, mode, mode_index } => Emit::config(vec![Fem2dConfigOperation::SetResultDisplay { source_id: source_id.clone(), mode: mode.clone(), mode_index: *mode_index }]),
-            Fem2dCommand::SetLocale { value } => Emit::config(vec![Fem2dConfigOperation::SetLocale { value: value.clone() }]),
+            Fem2dCommand::SetResultDisplay { source_id, mode, mode_index } => Ok(Emit::config(vec![Fem2dConfigOperation::SetResultDisplay { source_id: source_id.clone(), mode: mode.clone(), mode_index: *mode_index }]),
+            Fem2dCommand::SetLocale { value } => Ok(Emit::config(vec![Fem2dConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

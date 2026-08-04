@@ -1,0 +1,13 @@
+{
+  "title": "Fix Dead Allowlist Entries in Command Envelope Policy Check",
+  "emoji": "📜️",
+  "status": "closed",
+  "description": "Fixed dead allowlist entries in POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST by stripping leading './' from all entries to match policyAllRustFiles relPath format, and adding normalization in policyCommandEnvelopeCompletenessBreaches.",
+  "goal": "🎯r2603",
+  "files": [
+    "📜️script.ts"
+  ],
+  "sessions": [
+    "eecbe781-ea4f-4363-959d-9e4055b79d66"
+  ]
+}

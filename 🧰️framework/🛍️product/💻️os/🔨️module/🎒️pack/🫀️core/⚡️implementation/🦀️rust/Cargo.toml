@@ -14,3 +14,4 @@ path = "../../../🫀️core/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
 thiserror = "2.0.12"
+dsl_core = { path = "../../../../🗣️dsl/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }

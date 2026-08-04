@@ -1,0 +1,7 @@
+schema=s.space name="Atelier Demo" kind=atelier visibility=private programs=[ ]
+users [id:TEXT name:TEXT avatar:TEXT role:ENUM] {
+  u1 "User u1" _ author
+}
+collections [id:TEXT name:TEXT document-id:TEXT] {
+  c1 Main doc-c1
+}

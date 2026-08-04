@@ -414,17 +414,17 @@ impl DocumentApp for DagPlayApp {
         }
     }
 
-    fn handle(&self, command: &DagCommand, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Emit<DagOperation, DagConfigOperation> {
+    fn handle(&self, command: &DagCommand, doc: &DocumentView<'_, DagDocument>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagOperation, DagConfigOperation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
-            DagCommand::SetSelection { ids } => Emit::config(vec![DagConfigOperation::SetSelection { node_ids: ids.clone() }]),
-            DagCommand::SelectNode { node_id } => Emit::config(vec![DagConfigOperation::SetSelection { node_ids: vec![node_id.clone()] }]),
-            DagCommand::NodeGraphSelect { node_ids } => Emit::config(vec![DagConfigOperation::SetSelection { node_ids: node_ids.clone() }]),
-            DagCommand::NodeGraphHover => Emit::default(),
-            DagCommand::GraphPointerDown => Emit::config(vec![DagConfigOperation::SetSelection { node_ids: Vec::new() }]),
-            DagCommand::NodeGraphViewport { x, y, zoom } => Emit::config(vec![DagConfigOperation::SetCamera { x: *x, y: *y, zoom: *zoom }]),
-            DagCommand::SetLocale { value } => Emit::config(vec![DagConfigOperation::SetLocale { value: value.clone() }]),
+            DagCommand::SetSelection { ids } => Ok(Emit::config(vec![DagConfigOperation::SetSelection { node_ids: ids.clone() }]),
+            DagCommand::SelectNode { node_id } => Ok(Emit::config(vec![DagConfigOperation::SetSelection { node_ids: vec![node_id.clone()] }]),
+            DagCommand::NodeGraphSelect { node_ids } => Ok(Emit::config(vec![DagConfigOperation::SetSelection { node_ids: node_ids.clone() }]),
+            DagCommand::NodeGraphHover => Ok(Emit::default(),
+            DagCommand::GraphPointerDown => Ok(Emit::config(vec![DagConfigOperation::SetSelection { node_ids: Vec::new() }]),
+            DagCommand::NodeGraphViewport { x, y, zoom } => Ok(Emit::config(vec![DagConfigOperation::SetCamera { x: *x, y: *y, zoom: *zoom }]),
+            DagCommand::SetLocale { value } => Ok(Emit::config(vec![DagConfigOperation::SetLocale { value: value.clone() }]),
             DagCommand::NodeGraphEdit { operations } => {
                 let mut document_operations: Vec<DagOperation> = Vec::new();
                 let mut config_operations: Vec<DagConfigOperation> = Vec::new();
@@ -452,8 +452,8 @@ impl DocumentApp for DagPlayApp {
                 Emit { document_operations, config_operations, ..Default::default() }
             }
             DagCommand::DeleteSelection => match delete_selection_result(document, &config.selected_node_ids) {
-                Some((removes, clear_selection)) => Emit { document_operations: removes, config_operations: vec![clear_selection], ..Default::default() },
-                None => Emit::default(),
+                Some((removes, clear_selection)) => Ok(Emit { document_operations: removes, config_operations: vec![clear_selection], ..Default::default() },
+                None => Ok(Emit::default(),
             },
             DagCommand::RenameDagNode { old_id, value } => {
                 let trimmed = value.trim();
@@ -499,8 +499,8 @@ impl DocumentApp for DagPlayApp {
                 }
             }
             DagCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => match connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
-                Ok(edge) => Emit::operations(vec![DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge })]),
-                Err(_) => Emit::default(),
+                Ok(edge) => Ok(Emit::operations(vec![DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge })]),
+                Err(_) => Ok(Emit::default(),
             },
             DagCommand::AddNode { kind, x, y } => {
                 let id = next_node_id(document);

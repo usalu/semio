@@ -17,7 +17,7 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 3;
+pub const CHANNEL_VERSION: u32 = 4;
 //#endregion 🔖️Version
 
 //#region 🔖️SectionProbe
@@ -133,7 +133,7 @@ pub enum AppFrame {
     ContextMenu { in_reply_to: u64, items: Vec<u8> },
     Media { in_reply_to: u64, port: String, descriptor: Vec<u8>, data: Vec<u8> },
     MediaFingerprint { in_reply_to: u64, port: String, fingerprint: Vec<u8> },
-    Error { in_reply_to: Option<u64>, code: String, message: String },
+    Error { in_reply_to: Option<u64>, fault: Vec<u8> },
 }
 //#endregion 🔖️AppFrame
 
@@ -441,11 +441,10 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             protocol_core::write_str(&mut out, port);
             protocol_core::write_bytes(&mut out, fingerprint);
         }
-        AppFrame::Error { in_reply_to, code, message } => {
+        AppFrame::Error { in_reply_to, fault } => {
             out.push(13);
             write_opt_u64(&mut out, in_reply_to);
-            protocol_core::write_str(&mut out, code);
-            protocol_core::write_str(&mut out, message);
+            protocol_core::write_bytes(&mut out, fault);
         }
     }
     out
@@ -479,7 +478,7 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, protocol_core::Protoco
             AppFrame::Media { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)?, descriptor: protocol_core::read_bytes(bytes, &mut pos)?, data: protocol_core::read_bytes(bytes, &mut pos)? }
         }
         12 => AppFrame::MediaFingerprint { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)?, fingerprint: protocol_core::read_bytes(bytes, &mut pos)? },
-        13 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, code: protocol_core::read_str(bytes, &mut pos)?, message: protocol_core::read_str(bytes, &mut pos)? },
+        13 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, fault: protocol_core::read_bytes(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -690,8 +689,8 @@ mod tests {
 
     #[test]
     fn app_frame_error_round_trips() {
-        assert_frame_round_trips(&AppFrame::Error { in_reply_to: Some(9), code: "rejected".to_string(), message: "bad command".to_string() });
-        assert_frame_round_trips(&AppFrame::Error { in_reply_to: None, code: "rejected".to_string(), message: "bad command".to_string() });
+        assert_frame_round_trips(&AppFrame::Error { in_reply_to: Some(9), fault: b"rejected:bad command".to_vec() });
+        assert_frame_round_trips(&AppFrame::Error { in_reply_to: None, fault: b"rejected:bad command".to_vec() });
     }
     //#endregion 🔖️AppFrame
 
@@ -714,7 +713,7 @@ mod tests {
         let command = AppCommand::RefreshUi { seq: 1, sections: vec![SectionProbe { kind: 1, key: "a".to_string(), hash: Some(1) }], view_state: vec![] };
         assert_eq!(encode_app_command(&command), encode_app_command(&command));
 
-        let frame = AppFrame::Error { in_reply_to: Some(1), code: "e".to_string(), message: "m".to_string() };
+        let frame = AppFrame::Error { in_reply_to: Some(1), fault: b"e:m".to_vec() };
         assert_eq!(encode_app_frame(&frame), encode_app_frame(&frame));
     }
 
@@ -751,7 +750,7 @@ mod tests {
 
     #[test]
     fn decode_app_frame_rejects_truncated_field() {
-        let bytes = encode_app_frame(&AppFrame::Error { in_reply_to: Some(1), code: "e".to_string(), message: "message".to_string() });
+        let bytes = encode_app_frame(&AppFrame::Error { in_reply_to: Some(1), fault: b"e:message".to_vec() });
         let truncated = &bytes[..bytes.len() - 2];
         assert!(decode_app_frame(truncated).is_err());
     }
@@ -820,7 +819,7 @@ mod tests {
             ("ContextMenu", AppFrame::ContextMenu { in_reply_to: 1, items: vec![1] }),
             ("Media", AppFrame::Media { in_reply_to: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
             ("MediaFingerprint", AppFrame::MediaFingerprint { in_reply_to: 1, port: "p".to_string(), fingerprint: vec![1] }),
-            ("Error", AppFrame::Error { in_reply_to: None, code: "c".to_string(), message: "m".to_string() }),
+            ("Error", AppFrame::Error { in_reply_to: None, fault: vec![99] }),
         ]
     }
 
@@ -869,7 +868,7 @@ mod tests {
             "ContextMenu" => "0a010101",
             "Media" => "0b01017001010102",
             "MediaFingerprint" => "0c0101700101",
-            "Error" => "0d000163016d",
+            "Error" => "0d000163",
             other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }

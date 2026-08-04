@@ -207,7 +207,7 @@ impl DocumentApp for Block2dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Block2dCommand, doc: &DocumentView<'_, Block2dDefinition>, _cfg: &ConfigView<'_, Block2dConfig>) -> Emit<Block2dOperation, Block2dConfigOperation> {
+    fn handle(&self, command: &Block2dCommand, doc: &DocumentView<'_, Block2dDefinition>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dOperation, Block2dConfigOperation>, Fault> {
         match command {
             Block2dCommand::PatchNodeKind { field, value } => {
                 let mut node_kind = doc.projection.node_kind.clone();
@@ -225,14 +225,14 @@ impl DocumentApp for Block2dPlayApp {
                 let handle_kind = Block2dHandleKind { id: id.clone(), name: id.clone(), label: id, color: "#888888".into(), default_wire_kind: "cable.link".into() };
                 Emit::operations(vec![Block2dOperation::SetHandleKind { index: doc.projection.handle_kinds.len(), handle_kind }])
             }
-            Block2dCommand::RemoveHandleKind { id } => Emit::operations(vec![Block2dOperation::RemoveHandleKind { id: id.clone() }]),
+            Block2dCommand::RemoveHandleKind { id } => Ok(Emit::operations(vec![Block2dOperation::RemoveHandleKind { id: id.clone() }]),
             Block2dCommand::AddHandle => {
                 let Some(handle_kind_id) = doc.projection.handle_kinds.first().map(|kind| kind.id.clone()) else { return Emit::default() };
                 let id = block_2d_engine::next_id(doc.projection.handles.iter().map(|handle| handle.id.as_str()), "handle-");
                 let handle = Block2dHandleTemplate { id, handle_kind: handle_kind_id, angle: 0.0, radius: 0.36 };
                 Emit::operations(vec![Block2dOperation::SetHandle { index: doc.projection.handles.len(), handle }])
             }
-            Block2dCommand::RemoveHandle { id } => Emit::operations(vec![Block2dOperation::RemoveHandle { id: id.clone() }]),
+            Block2dCommand::RemoveHandle { id } => Ok(Emit::operations(vec![Block2dOperation::RemoveHandle { id: id.clone() }]),
             Block2dCommand::AddCompatibilityRule { source, target } => {
                 if source.is_empty() || target.is_empty() {
                     return Emit::default();
@@ -241,7 +241,7 @@ impl DocumentApp for Block2dPlayApp {
                 let rule = BlockCompatibilityRule { id, source: source.clone(), target: target.clone(), bidirectional: true };
                 Emit::operations(vec![Block2dOperation::SetCompatibilityRule { index: doc.projection.compatibility.len(), rule }])
             }
-            Block2dCommand::RemoveCompatibilityRule { id } => Emit::operations(vec![Block2dOperation::RemoveCompatibilityRule { id: id.clone() }]),
+            Block2dCommand::RemoveCompatibilityRule { id } => Ok(Emit::operations(vec![Block2dOperation::RemoveCompatibilityRule { id: id.clone() }]),
             Block2dCommand::SetActiveExample { id } => {
                 let example = match id.as_str() {
                     BLOCK2D_EXAMPLE_LEFT => block_2d_dsl::parse_dsl(block_2d_dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
@@ -249,15 +249,15 @@ impl DocumentApp for Block2dPlayApp {
                     _ => None,
                 };
                 match example {
-                    Some(document) => Emit::operations(vec![Block2dOperation::SetDocument { document }]),
-                    None => Emit::default(),
+                    Some(document) => Ok(Emit::operations(vec![Block2dOperation::SetDocument { document }]),
+                    None => Ok(Emit::default(),
                 }
             }
             Block2dCommand::Edit { text } => match serde_json::from_str::<Block2dDefinition>(text) {
-                Ok(document) if &document != doc.projection => Emit::operations(vec![Block2dOperation::SetDocument { document }]),
-                _ => Emit::default(),
+                Ok(document) if &document != doc.projection => Ok(Emit::operations(vec![Block2dOperation::SetDocument { document }]),
+                _ => Ok(Emit::default(),
             },
-            Block2dCommand::SetSelection { ids } => Emit::config(vec![Block2dConfigOperation::SetSelection { ids: ids.clone() }]),
+            Block2dCommand::SetSelection { ids } => Ok(Emit::config(vec![Block2dConfigOperation::SetSelection { ids: ids.clone() }]),
         }
     }
 

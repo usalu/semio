@@ -102,6 +102,8 @@ pub enum VcsError {
     #[error("backbone error: {0}")]
     Backbone(String),
 }
+
+dsl_core::fault_from_thiserror!(VcsError, dsl_core::FaultOrigin::Module, "module.vcs");
 //#endregion 🔖️Errors
 //#region 🔖️CollectionDiff
 /// @emoji 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).

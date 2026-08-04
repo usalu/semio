@@ -1235,12 +1235,12 @@ impl DocumentApp for FormsPlayApp {
         }
     }
 
-    fn handle(&self, command: &FormsCommand, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Emit<FormOperation, FormsConfigOperation> {
+    fn handle(&self, command: &FormsCommand, doc: &DocumentView<'_, FormSpec>, cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormOperation, FormsConfigOperation>, Fault> {
         let spec = doc.projection;
         let config = cfg.projection;
         match command {
             //#region 👁️View
-            FormsCommand::SetSelection { ids } => Emit::config(vec![FormsConfigOperation::SetSelection { ids: ids.clone() }]),
+            FormsCommand::SetSelection { ids } => Ok(Emit::config(vec![FormsConfigOperation::SetSelection { ids: ids.clone() }]),
             FormsCommand::SetTryValue { key, value_json, option_value, vector_index, param_key } => {
                 let mut values = try_values_map(config);
                 if let Some(option_value) = option_value {
@@ -1276,8 +1276,8 @@ impl DocumentApp for FormsPlayApp {
                 }
                 Emit::config(vec![FormsConfigOperation::SetTryValues { json: try_values_json_text(&values) }])
             }
-            FormsCommand::ResetTry => Emit::config(reset_try_config_operations()),
-            FormsCommand::PreviousStep => Emit::config(vec![FormsConfigOperation::SetStepIndex { index: config.current_step_index.saturating_sub(1) }]),
+            FormsCommand::ResetTry => Ok(Emit::config(reset_try_config_operations()),
+            FormsCommand::PreviousStep => Ok(Emit::config(vec![FormsConfigOperation::SetStepIndex { index: config.current_step_index.saturating_sub(1) }]),
             FormsCommand::NextStep => {
                 let index = config.current_step_index as usize;
                 if index + 1 < spec.steps.len() {
@@ -1289,9 +1289,9 @@ impl DocumentApp for FormsPlayApp {
                 }
                 Emit::default()
             }
-            FormsCommand::Submit => Emit::default(),
-            FormsCommand::SetLocale { value } => Emit::config(vec![FormsConfigOperation::SetLocale { value: value.clone() }]),
-            FormsCommand::SetContributions { json } => Emit::config(vec![FormsConfigOperation::SetContributions { json: json.clone() }]),
+            FormsCommand::Submit => Ok(Emit::default(),
+            FormsCommand::SetLocale { value } => Ok(Emit::config(vec![FormsConfigOperation::SetLocale { value: value.clone() }]),
+            FormsCommand::SetContributions { json } => Ok(Emit::config(vec![FormsConfigOperation::SetContributions { json: json.clone() }]),
             //#endregion 👁️View
             //#region 🔧️Operations
             FormsCommand::AddStep => {
@@ -1324,7 +1324,7 @@ impl DocumentApp for FormsPlayApp {
                 }
                 Emit { document_operations: vec![FormOperation::MoveStep { step_id: step_id.clone(), index: *index as usize }], config_operations: reset_try_config_operations(), ..Default::default() }
             }
-            FormsCommand::UpdateForm { title } => Emit { document_operations: vec![FormOperation::UpdatePlaybook { title: Some(title.clone()).filter(|title| !title.is_empty()) }], coalesce_key: Some("update-playbook".into()), ..Default::default() },
+            FormsCommand::UpdateForm { title } => Ok(Emit { document_operations: vec![FormOperation::UpdatePlaybook { title: Some(title.clone()).filter(|title| !title.is_empty()) }], coalesce_key: Some("update-playbook".into()), ..Default::default() },
             FormsCommand::AddQuestion { kind, step_id } => {
                 let Some(step_id) = step_id.clone().or_else(|| spec.steps.first().map(|step| step.id.clone())) else {
                     return Emit::default();
@@ -1364,27 +1364,27 @@ impl DocumentApp for FormsPlayApp {
                 Emit::amend(operations, format!("patch-option:{option_value}:{field}"))
             }
             FormsCommand::AddQuestionOption { question_id, label } => match add_question_option(spec, question_id, label) {
-                Some(operation) => Emit::operations(vec![operation]),
-                None => Emit::default(),
+                Some(operation) => Ok(Emit::operations(vec![operation]),
+                None => Ok(Emit::default(),
             },
             FormsCommand::RemoveQuestionOption { question_id, option_value } => match remove_question_option(spec, question_id, option_value) {
-                Some(operation) => Emit::operations(vec![operation]),
-                None => Emit::default(),
+                Some(operation) => Ok(Emit::operations(vec![operation]),
+                None => Ok(Emit::default(),
             },
             FormsCommand::PatchVectorField { question_id, field_key, field, value_json } => {
                 let raw_value = parse_value_json(value_json);
                 match patch_vector_field(spec, question_id, field_key, field, &raw_value) {
-                    Some(operation) => Emit::amend(vec![operation], format!("patch-vector:{question_id}:{field_key}:{field}")),
-                    None => Emit::default(),
+                    Some(operation) => Ok(Emit::amend(vec![operation], format!("patch-vector:{question_id}:{field_key}:{field}")),
+                    None => Ok(Emit::default(),
                 }
             }
             FormsCommand::AddVectorField { question_id, field_key } => match add_vector_field(spec, question_id, field_key) {
-                Some(operation) => Emit::operations(vec![operation]),
-                None => Emit::default(),
+                Some(operation) => Ok(Emit::operations(vec![operation]),
+                None => Ok(Emit::default(),
             },
             FormsCommand::RemoveVectorField { question_id, field_key } => match remove_vector_field(spec, question_id, field_key) {
-                Some(operation) => Emit::operations(vec![operation]),
-                None => Emit::default(),
+                Some(operation) => Ok(Emit::operations(vec![operation]),
+                None => Ok(Emit::default(),
             },
             FormsCommand::MoveQuestion { question_id, to_step_id, target_id, position, index } => {
                 let Some(source) = find_question_location(spec, question_id) else {

@@ -1104,7 +1104,7 @@ impl DocumentApp for SpaceApp {
         }
     }
 
-    fn handle(&self, command: &SpaceCommand, doc: &DocumentView<'_, OsProjection>, cfg: &ConfigView<'_, SpaceConfig>) -> Emit<OsOperation, SpaceConfigOperation> {
+    fn handle(&self, command: &SpaceCommand, doc: &DocumentView<'_, OsProjection>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<OsOperation, SpaceConfigOperation>, Fault> {
         let projection = doc.projection;
         let config = cfg.projection;
         match command {
@@ -1138,8 +1138,8 @@ impl DocumentApp for SpaceApp {
                     Some(json!({ field: value_json }))
                 };
                 match patch.and_then(|patch| patch_parameter_operation(projection, parameter_id, &patch)) {
-                    Some(operation) => Emit::operations(vec![operation]),
-                    None => Emit::default(),
+                    Some(operation) => Ok(Emit::operations(vec![operation])),
+                    None => Ok(Emit::default()),
                 }
             }
             SpaceCommand::AddParameter { name, kind } => {
@@ -1151,17 +1151,17 @@ impl DocumentApp for SpaceApp {
                 };
                 Emit::operations(vec![add_parameter_operation(&parameter_type, name)])
             }
-            SpaceCommand::RemoveParameter { parameter_id } => Emit::operations(vec![OsOperation::RemoveParameter { parameter_id: parameter_id.clone() }]),
+            SpaceCommand::RemoveParameter { parameter_id } => Ok(Emit::operations(vec![OsOperation::RemoveParameter { parameter_id: parameter_id.clone() }])),
             SpaceCommand::SpawnApp { plugin_id, app_id, x, y } => match add_workflow_node_operation(plugin_id, app_id, None, *x, *y) {
-                Some((operation, node_id)) => Emit { document_operations: vec![operation], config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() },
-                None => Emit::default(),
+                Some((operation, node_id)) => Ok(Emit { document_operations: vec![operation], config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() },
+                None => Ok(Emit::default()),
             },
-            SpaceCommand::MoveMediaNode { node_id, x, y } => Emit::amend(vec![OsOperation::MoveWorkflowNode { node_id: node_id.clone(), x: *x, y: *y }], format!("moveMediaNode:{node_id}")),
+            SpaceCommand::MoveMediaNode { node_id, x, y } => Ok(Emit::amend(vec![OsOperation::MoveWorkflowNode { node_id: node_id.clone(), x: *x, y: *y }], format!("moveMediaNode:{node_id}")),
             SpaceCommand::ConnectMediaPorts { source_node_id, source_port_id, target_node_id, target_port_id } => match negotiate_connect_or_notify(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
-                Ok(contract) => Emit::operations(vec![connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract)]),
-                Err(effect) => Emit::effect(effect),
+                Ok(contract) => Ok(Emit::operations(vec![connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract)])),
+                Err(effect) => Ok(Emit::effect(effect)),
             },
-            SpaceCommand::DisconnectMediaEdge { edge_id } => Emit::operations(vec![OsOperation::DisconnectWorkflowEdge { edge_id: edge_id.clone() }]),
+            SpaceCommand::DisconnectMediaEdge { edge_id } => Ok(Emit::operations(vec![OsOperation::DisconnectWorkflowEdge { edge_id: edge_id.clone() }])),
             SpaceCommand::RemoveAppInstance { node_id } => match node_id.clone().or_else(|| primary_selected_node_id(config)) {
                 Some(node_id) => {
                     let mut config_operations = Vec::new();
@@ -1173,7 +1173,7 @@ impl DocumentApp for SpaceApp {
                     }
                     Emit { document_operations: vec![OsOperation::RemoveWorkflowNode { node_id }], config_operations, ..Default::default() }
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default()),
             },
             SpaceCommand::DeleteSelection => {
                 let document_operations = config.selected_node_ids.iter().cloned().map(|node_id| OsOperation::RemoveWorkflowNode { node_id }).collect();
@@ -1183,7 +1183,7 @@ impl DocumentApp for SpaceApp {
                     ..Default::default()
                 }
             }
-            SpaceCommand::CopyAppInstance => Emit::config(vec![SpaceConfigOperation::SetClipboard { node_ids: config.selected_node_ids.clone() }]),
+            SpaceCommand::CopyAppInstance => Ok(Emit::config(vec![SpaceConfigOperation::SetClipboard { node_ids: config.selected_node_ids.clone() }])),
             SpaceCommand::DuplicateAppInstance | SpaceCommand::PasteAppInstance => {
                 let source_ids = if matches!(command, SpaceCommand::PasteAppInstance) { config.clipboard_node_ids.clone() } else { config.selected_node_ids.clone() };
                 let mut document_operations = Vec::new();
@@ -1203,11 +1203,11 @@ impl DocumentApp for SpaceApp {
                 Some(node_id) => {
                     let next_label = label.clone().or_else(|| projection.workflow.nodes.iter().find(|row| row.id == node_id).map(|node| format!("{} (renamed)", node.label)));
                     match next_label {
-                        Some(next_label) => Emit::operations(vec![OsOperation::PatchWorkflowNode { node_id, label: next_label }]),
-                        None => Emit::default(),
+                        Some(next_label) => Ok(Emit::operations(vec![OsOperation::PatchWorkflowNode { node_id, label: next_label }])),
+                        None => Ok(Emit::default()),
                     }
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default()),
             },
             SpaceCommand::PatchMediaNodes { node_ids, field, axis, value } => {
                 let numeric = value.parse::<f64>().ok();
@@ -1241,7 +1241,7 @@ impl DocumentApp for SpaceApp {
                     Emit::operations(vec![OsOperation::BindParameterField { binding: OsParameterFieldBinding { parameter_id: parameter_id.clone(), node_id: node_id.clone(), field_path: field_path.clone() } }])
                 }
             }
-            SpaceCommand::UnbindParameterField { node_id, field_path } => Emit::operations(vec![OsOperation::UnbindParameterField { node_id: node_id.clone(), field_path: field_path.clone() }]),
+            SpaceCommand::UnbindParameterField { node_id, field_path } => Ok(Emit::operations(vec![OsOperation::UnbindParameterField { node_id: node_id.clone(), field_path: field_path.clone() }])),
             SpaceCommand::ReorganizeWorkflow => {
                 let node_ids: Vec<String> = if config.selected_node_ids.is_empty() { projection.workflow.nodes.iter().map(|node| node.id.clone()).collect() } else { config.selected_node_ids.clone() };
                 let document_operations = node_ids
@@ -1260,13 +1260,13 @@ impl DocumentApp for SpaceApp {
                 let mut parts = raw.split_whitespace();
                 match (parts.next(), parts.next()) {
                     (Some(plugin_id), Some(app_id)) => match add_workflow_node_operation(plugin_id, app_id, None, 80.0, 80.0) {
-                        Some((operation, node_id)) => Emit { document_operations: vec![operation], config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() },
-                        None => Emit::default(),
+                        Some((operation, node_id)) => Ok(Emit { document_operations: vec![operation], config_operations: vec![SpaceConfigOperation::SetActiveNode { node_id: Some(node_id) }], ..Default::default() },
+                        None => Ok(Emit::default()),
                     },
-                    _ => Emit::default(),
+                    _ => Ok(Emit::default()),
                 }
             }
-            SpaceCommand::CompiledDagEngagementSubmit => Emit::default(),
+            SpaceCommand::CompiledDagEngagementSubmit => Ok(Emit::default()),
             SpaceCommand::NodeGraphEdit { operations_json } => {
                 let edit_operations = serde_json::from_str::<Value>(operations_json).ok().and_then(|value| value.get("operations").and_then(Value::as_array).cloned()).unwrap_or_default();
                 let mut document_operations = Vec::new();
@@ -1307,7 +1307,7 @@ impl DocumentApp for SpaceApp {
                 }
                 Emit { document_operations, config_operations, effects, ..Default::default() }
             }
-            SpaceCommand::SetActivePanelTab { tab_id } => Emit::config(vec![SpaceConfigOperation::SetActivePanelTab { tab_id: tab_id.clone() }]),
+            SpaceCommand::SetActivePanelTab { tab_id } => Ok(Emit::config(vec![SpaceConfigOperation::SetActivePanelTab { tab_id: tab_id.clone() }])),
             SpaceCommand::SelectInstance { node_id } => {
                 let node_ids = node_id.iter().cloned().collect();
                 Emit::config(vec![SpaceConfigOperation::SetActiveNode { node_id: node_id.clone() }, SpaceConfigOperation::SetSelection { node_ids }])
@@ -1336,8 +1336,8 @@ impl DocumentApp for SpaceApp {
                 Emit::config(vec![SpaceConfigOperation::SetHover { node_id }])
             }
             SpaceCommand::NodeGraphViewport { viewport_json } => match serde_json::from_str::<OsWorkflowCamera>(viewport_json) {
-                Ok(camera) => Emit::config(vec![SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }]),
-                Err(_) => Emit::default(),
+                Ok(camera) => Ok(Emit::config(vec![SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() }])),
+                Err(_) => Ok(Emit::default()),
             },
             SpaceCommand::PresenceHeartbeat { client_id, name } => {
                 let config_operations = vec![SpaceConfigOperation::SetClient { client_id: Some(client_id.clone()), client_name: Some(name.clone()) }];
@@ -1345,8 +1345,8 @@ impl DocumentApp for SpaceApp {
                 publish_presence(&next_config);
                 Emit { config_operations, ui_scope: semio_framework_core::kernel::UiDirtyScope::None, ..Default::default() }
             }
-            SpaceCommand::WorkflowEngagementInput { value } => Emit::config(vec![SpaceConfigOperation::SetWorkflowEngagementInput { value: value.clone() }]),
-            SpaceCommand::CompiledDagEngagementInput { value } => Emit::config(vec![SpaceConfigOperation::SetCompiledDagEngagementInput { value: value.clone() }]),
+            SpaceCommand::WorkflowEngagementInput { value } => Ok(Emit::config(vec![SpaceConfigOperation::SetWorkflowEngagementInput { value: value.clone() }])),
+            SpaceCommand::CompiledDagEngagementInput { value } => Ok(Emit::config(vec![SpaceConfigOperation::SetCompiledDagEngagementInput { value: value.clone() }])),
             SpaceCommand::SetActiveExample { example_id } => {
                 if example_id.is_empty() {
                     Emit::default()
@@ -1362,13 +1362,13 @@ impl DocumentApp for SpaceApp {
                     let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
                     let export_format = semio_framework_os::OsMediaFormat::parse(format).unwrap_or(semio_framework_os::OsMediaFormat::Svg);
                     match semio_framework_os::export_os_app_instance_media(node, &document_value, export_format) {
-                        Ok(result) => Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding }),
-                        Err(_) => Emit::default(),
+                        Ok(result) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding })),
+                        Err(_) => Ok(Emit::default()),
                     }
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default()),
             },
-            SpaceCommand::ImportMedia { node_id, format } => Emit {
+            SpaceCommand::ImportMedia { node_id, format } => Ok(Emit {
                 config_operations: vec![SpaceConfigOperation::SetPendingImport { node_id: Some(node_id.clone()), format: Some(format.clone()) }],
                 effects: vec![HostEffect::RequestFileOpen { accept: format!(".{format}"), read_as: Some("dataUrl".into()), import_action: "importMediaPayload".into(), multiple: false }],
                 ..Default::default()
@@ -1412,22 +1412,22 @@ impl DocumentApp for SpaceApp {
                                 ..Default::default()
                             }
                         }
-                        Err(_) => Emit::default(),
+                        Err(_) => Ok(Emit::default()),
                     },
-                    None => Emit::default(),
+                    None => Ok(Emit::default()),
                 }
             }
             SpaceCommand::ExportStudioDsl => {
                 let space_id = config_space_id(config);
                 match home_ui::resolve_studio_document(&space_id) {
                     Some(document) => match export_os_space_dsl(&document) {
-                        Ok(text_files) => Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{space_id}.os"), mime_type: "text/plain".into(), data: text_files.dsl, encoding: None }),
-                        Err(_) => Emit::default(),
+                        Ok(text_files) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{space_id}.os"), mime_type: "text/plain".into(), data: text_files.dsl, encoding: None })),
+                        Err(_) => Ok(Emit::default()),
                     },
-                    None => Emit::default(),
+                    None => Ok(Emit::default()),
                 }
             }
-            SpaceCommand::ImportSpacePack => Emit::effect(HostEffect::RequestFileOpen { accept: ".pack".into(), read_as: Some("dataUrl".into()), import_action: "importSpacePackPayload".into(), multiple: false }),
+            SpaceCommand::ImportSpacePack => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".pack".into(), read_as: Some("dataUrl".into()), import_action: "importSpacePackPayload".into(), multiple: false })),
             SpaceCommand::ImportSpacePackPayload { payload } => {
                 use base64::Engine;
                 let base64_part = payload.split_once(',').map(|(_, data)| data).unwrap_or(payload);
@@ -1442,7 +1442,11 @@ impl DocumentApp for SpaceApp {
                 Emit::default()
             }
             SpaceCommand::OpenSpace { space_id } => {
-                let document = home_ui::resolve_studio_document(space_id).or_else(|| if space_id == "demo" { Some(parse_demo_space_document()) } else { None }).unwrap_or_else(|| create_empty_os_document(space_id, "Untitled Studio"));
+                let document = home_ui::resolve_studio_document(space_id)
+                    .or_else(|| if space_id == "demo" { Some(parse_demo_space_document()) } else { None });
+                let Some(document) = document else {
+                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.not-found"), format!("studio `{space_id}` not found")));
+                };
                 let mut config_operations = vec![
                     SpaceConfigOperation::SetSpaceId { space_id: Some(space_id.clone()) },
                     SpaceConfigOperation::SetFocusedNode { node_id: None },
@@ -1454,18 +1458,18 @@ impl DocumentApp for SpaceApp {
                         let active_node_id = materialize_os_projection(&document, &[]).ok().and_then(|projection| projection.workflow.nodes.first().map(|node| node.id.clone()));
                         config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: active_node_id });
                         eprintln!("[DEBUG] openSpace id={} nodes={} backbone={:?}", space_id, document.vcs.initial_projection.workflow.nodes.len(), document.backbone.as_ref().map(|row| row.uri.clone()));
-                        Emit { config_operations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() }
+                        Ok(Emit { config_operations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
                     }
                     None => {
                         eprintln!("[DEBUG] openSpace missing envelope id={space_id}");
                         config_operations.push(SpaceConfigOperation::SetActiveNode { node_id: None });
-                        Emit::config(config_operations)
+                        Ok(Emit::config(config_operations))
                     }
                 }
             }
             SpaceCommand::OpenInstance { node_id } => match node_id.clone().or_else(|| primary_selected_node_id(config)) {
                 Some(node_id) => match projection.workflow.nodes.iter().find(|row| row.id == node_id) {
-                    Some(node) => Emit {
+                    Some(node) => Ok(Emit {
                         config_operations: vec![
                             SpaceConfigOperation::SetFocusedNode { node_id: Some(node_id.clone()) },
                             SpaceConfigOperation::SetActiveNode { node_id: Some(node_id.clone()) },
@@ -1474,13 +1478,13 @@ impl DocumentApp for SpaceApp {
                         effects: vec![HostEffect::OpenPluginInstance { plugin_id: node.plugin_id.clone(), app_id: node.app_id.clone(), os_instance_id: Some(node.id.clone()) }],
                         ..Default::default()
                     },
-                    None => Emit::default(),
+                    None => Ok(Emit::default()),
                 },
-                None => Emit::default(),
+                None => Ok(Emit::default()),
             },
-            SpaceCommand::CloseFocusedInstance => Emit::config(vec![SpaceConfigOperation::SetFocusedNode { node_id: None }]),
-            SpaceCommand::GoHome => Emit::effect(HostEffect::Navigate { uri: "/".into() }),
-            SpaceCommand::NavigateVirtualFileSystemNode { space_id } => Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") }),
+            SpaceCommand::CloseFocusedInstance => Ok(Emit::config(vec![SpaceConfigOperation::SetFocusedNode { node_id: None }])),
+            SpaceCommand::GoHome => Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() })),
+            SpaceCommand::NavigateVirtualFileSystemNode { space_id } => Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{space_id}") })),
         }
     }
 
@@ -1735,7 +1739,7 @@ mod tests {
     }
 
     /// 🎛️ Drives the typed `SpaceApp::handle` against a projection/config snapshot, returning its emit.
-    fn studio_emit(projection: &OsProjection, config: &SpaceConfig, command: SpaceCommand) -> Emit<OsOperation, SpaceConfigOperation> {
+    fn studio_emit(projection: &OsProjection, config: &SpaceConfig, command: SpaceCommand) -> Result<Emit<OsOperation, SpaceConfigOperation>, Fault> {
         let history = empty_history();
         let doc = DocumentView { projection, history: &history };
         let cfg = ConfigView { projection: config };
@@ -1868,7 +1872,7 @@ mod tests {
         home_ui::register_studio_port_for_test(&entry.id, port);
         let empty = default_os_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: entry.id.clone() });
+        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: entry.id.clone() }).expect("handle");
         assert!(emit.config_operations.contains(&SpaceConfigOperation::SetSpaceId { space_id: Some(entry.id.clone()) }));
         assert!(emit.config_operations.contains(&SpaceConfigOperation::SetActiveNode { node_id: None }));
         assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })));
@@ -1890,21 +1894,18 @@ mod tests {
     }
 
     #[test]
-    fn open_studio_unknown_id_loads_empty_not_demo() {
+    fn open_studio_unknown_id_returns_not_found() {
         let empty = default_os_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: "unknown-studio-id".into() });
-        let (projection, id) = load_document_projection(&emit);
-        assert_eq!(id, "unknown-studio-id");
-        assert!(projection.workflow.nodes.is_empty());
-        assert_ne!(id, "demo");
+        let err = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: "unknown-studio-id".into() }).expect_err("not found");
+        assert_eq!(err.code.0, "s.space.not-found");
     }
 
     #[test]
     fn open_studio_demo_explicit_loads_demo_fixture() {
         let empty = default_os_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: "demo".into() });
+        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: "demo".into() }).expect("handle");
         let (projection, id) = load_document_projection(&emit);
         assert!(id.contains("demo-studio"));
         assert!(!projection.workflow.nodes.is_empty());
@@ -1929,7 +1930,7 @@ mod tests {
             .expect("navigate");
         let empty = default_os_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: space_id.clone() });
+        let emit = studio_emit(&empty, &config, SpaceCommand::OpenSpace { space_id: space_id.clone() }).expect("handle");
         let (projection, id) = load_document_projection(&emit);
         assert_eq!(id, space_id);
         assert!(projection.workflow.nodes.is_empty());
@@ -1996,7 +1997,7 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let node_id = projection.workflow.nodes.first().expect("node").id.clone();
-        let emit = studio_emit(&projection, &config, SpaceCommand::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 });
+        let emit = studio_emit(&projection, &config, SpaceCommand::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 }).expect("handle");
         assert_eq!(emit.coalesce_key.as_deref(), Some(format!("moveMediaNode:{node_id}").as_str()));
         let node = apply_operations(&projection, &emit.document_operations).workflow.nodes.into_iter().find(|row| row.id == node_id).expect("node");
         assert!((node.x - 120.0).abs() < 0.01);
@@ -2103,7 +2104,7 @@ mod tests {
         seed_draw_plugin();
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 });
+        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }).expect("handle");
         assert!(!emit.document_operations.is_empty());
         let next = apply_operations(&projection, &emit.document_operations);
         assert_eq!(next.workflow.nodes.len(), projection.workflow.nodes.len() + 1);
@@ -2117,7 +2118,7 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let existing: HashSet<String> = projection.workflow.nodes.iter().map(|node| node.id.clone()).collect();
-        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 321.0, y: 654.0 });
+        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 321.0, y: 654.0 }).expect("handle");
         let next = apply_operations(&projection, &emit.document_operations);
         let node = next.workflow.nodes.iter().find(|node| node.plugin_id == "draw" && !existing.contains(&node.id)).expect("newly spawned draw node");
         assert!((node.x - 321.0).abs() < 0.01);
@@ -2130,7 +2131,7 @@ mod tests {
         let projection = demo_space_projection();
         let node = projection.workflow.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::OpenInstance { node_id: Some(node.id.clone()) });
+        let emit = studio_emit(&projection, &config, SpaceCommand::OpenInstance { node_id: Some(node.id.clone()) }).expect("handle");
         assert!(emit.document_operations.is_empty(), "opening an instance is a host effect, not a document operation");
         let opened = emit
             .effects
@@ -2160,7 +2161,7 @@ mod tests {
         let node = projection.workflow.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
         let config = SpaceConfig::default();
 
-        let export = studio_emit(&projection, &config, SpaceCommand::ExportMedia { node_id: node.id.clone(), format: "dwg".into() });
+        let export = studio_emit(&projection, &config, SpaceCommand::ExportMedia { node_id: node.id.clone(), format: "dwg".into() }).expect("handle");
         let (data, encoding) = export
             .effects
             .iter()
@@ -2172,14 +2173,14 @@ mod tests {
         assert!(!data.is_empty());
         assert_eq!(encoding.as_deref(), Some("base64"));
 
-        let import = studio_emit(&projection, &config, SpaceCommand::ImportMedia { node_id: node.id.clone(), format: "dwg".into() });
+        let import = studio_emit(&projection, &config, SpaceCommand::ImportMedia { node_id: node.id.clone(), format: "dwg".into() }).expect("handle");
         assert!(import.effects.iter().any(|effect| matches!(effect, HostEffect::RequestFileOpen { import_action, .. } if import_action == "importMediaPayload")));
         assert_eq!(import.config_operations, vec![SpaceConfigOperation::SetPendingImport { node_id: Some(node.id.clone()), format: Some("dwg".into()) }]);
 
         // Decoding is exercised here; the decoded content is applied to the node's own document-ref
         // document by the host, so this arm emits no studio document operation.
         let pending_config = apply_config(&config, &import.config_operations);
-        let payload = studio_emit(&projection, &pending_config, SpaceCommand::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") });
+        let payload = studio_emit(&projection, &pending_config, SpaceCommand::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") }).expect("handle");
         assert!(payload.document_operations.is_empty());
     }
 
@@ -2195,7 +2196,7 @@ mod tests {
     fn patch_parameter_action_updates_value() {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::PatchParameter { parameter_id: "param-brush-size".into(), field: "value".into(), value: "48".into() });
+        let emit = studio_emit(&projection, &config, SpaceCommand::PatchParameter { parameter_id: "param-brush-size".into(), field: "value".into(), value: "48".into() }).expect("handle");
         assert_eq!(emit.document_operations.len(), 1);
         let next = apply_operations(&projection, &emit.document_operations);
         match next.parameters.iter().find(|entry| entry.id() == "param-brush-size").expect("parameter") {
@@ -2230,7 +2231,7 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let ids: Vec<String> = projection.workflow.nodes.iter().take(2).map(|node| node.id.clone()).collect();
-        let emit = studio_emit(&projection, &config, SpaceCommand::PatchAppInstances { node_ids: ids.clone(), field: "label".into(), value: "Batch Label".into() });
+        let emit = studio_emit(&projection, &config, SpaceCommand::PatchAppInstances { node_ids: ids.clone(), field: "label".into(), value: "Batch Label".into() }).expect("handle");
         let next = apply_operations(&projection, &emit.document_operations);
         let labels: Vec<String> = next.workflow.nodes.iter().filter(|node| ids.contains(&node.id)).map(|node| node.label.clone()).collect();
         assert!(labels.iter().all(|label| label == "Batch Label"));
@@ -2241,11 +2242,11 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let node_id = projection.workflow.nodes.first().expect("node").id.clone();
-        let open_emit = studio_emit(&projection, &config, SpaceCommand::OpenInstance { node_id: Some(node_id.clone()) });
+        let open_emit = studio_emit(&projection, &config, SpaceCommand::OpenInstance { node_id: Some(node_id.clone()) }).expect("handle");
         assert!(open_emit.config_operations.contains(&SpaceConfigOperation::SetFocusedNode { node_id: Some(node_id.clone()) }));
         let config_after_open = apply_config(&config, &open_emit.config_operations);
         assert_eq!(config_after_open.focused_node_id.as_deref(), Some(node_id.as_str()));
-        let close_emit = studio_emit(&projection, &config_after_open, SpaceCommand::CloseFocusedInstance);
+        let close_emit = studio_emit(&projection, &config_after_open, SpaceCommand::CloseFocusedInstance).expect("handle");
         assert_eq!(close_emit.config_operations, vec![SpaceConfigOperation::SetFocusedNode { node_id: None }]);
     }
 
@@ -2272,9 +2273,9 @@ mod tests {
         seed_multi_port_plugins();
         let mut projection = demo_space_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "puzzle.5d".into(), app_id: "puzzle5d".into(), x: 200.0, y: 100.0 });
+        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "puzzle.5d".into(), app_id: "puzzle5d".into(), x: 200.0, y: 100.0 }).expect("handle");
         projection = apply_operations(&projection, &emit.document_operations);
-        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "shooting".into(), app_id: "shooting".into(), x: 300.0, y: 100.0 });
+        let emit = studio_emit(&projection, &config, SpaceCommand::SpawnApp { plugin_id: "shooting".into(), app_id: "shooting".into(), x: 300.0, y: 100.0 }).expect("handle");
         projection = apply_operations(&projection, &emit.document_operations);
         let puzzle_node = projection.workflow.nodes.iter().find(|node| node.plugin_id == "puzzle.5d").expect("puzzle node");
         let shooting_node = projection.workflow.nodes.iter().find(|node| node.plugin_id == "shooting").expect("shooting node");
@@ -2290,10 +2291,10 @@ mod tests {
         let config = SpaceConfig::default();
         let node = projection.workflow.nodes.first().expect("node").clone();
         let parameter_id = parameter_entity_id(projection.parameters.first().expect("parameter")).to_string();
-        let emit = studio_emit(&projection, &config, SpaceCommand::BindParameterField { node_id: node.id.clone(), field_path: "label".into(), parameter_id: parameter_id.clone() });
+        let emit = studio_emit(&projection, &config, SpaceCommand::BindParameterField { node_id: node.id.clone(), field_path: "label".into(), parameter_id: parameter_id.clone() }).expect("handle");
         projection = apply_operations(&projection, &emit.document_operations);
         assert!(projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));
-        let emit = studio_emit(&projection, &config, SpaceCommand::UnbindParameterField { node_id: node.id.clone(), field_path: "label".into() });
+        let emit = studio_emit(&projection, &config, SpaceCommand::UnbindParameterField { node_id: node.id.clone(), field_path: "label".into() }).expect("handle");
         projection = apply_operations(&projection, &emit.document_operations);
         assert!(!projection.parameter_bindings.iter().any(|row| row.node_id == node.id && row.field_path == "label"));
     }
@@ -2366,7 +2367,7 @@ mod tests {
         let mut fixture = os_workflow_to_flow_fixture(&projection.workflow, &camera);
         fixture["layout"][&node.id] = json!({ "x": 500.0 + node.width / 2.0, "y": 300.0 + node.height / 2.0 });
         let operations_json = json!({ "operations": [{ "operation": "setFixture", "fixtureJson": fixture.to_string() }] }).to_string();
-        let emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphEdit { operations_json });
+        let emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphEdit { operations_json }).expect("handle");
         let moved = apply_operations(&projection, &emit.document_operations).workflow.nodes.into_iter().find(|row| row.id == node.id).expect("node");
         assert!((moved.x - 500.0).abs() < 0.01);
         assert!((moved.y - 300.0).abs() < 0.01);
@@ -2377,7 +2378,7 @@ mod tests {
     fn node_graph_viewport_persists_camera() {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphViewport { viewport_json: r#"{"x":7.0,"y":9.0,"zoom":0.5}"#.into() });
+        let emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphViewport { viewport_json: r#"{"x":7.0,"y":9.0,"zoom":0.5}"#.into() }).expect("handle");
         assert_eq!(emit.config_operations, vec![SpaceConfigOperation::SetCamera { window_id: S_PLAY_WINDOW_WORKFLOW.into(), camera: OsWorkflowCamera { x: 7.0, y: 9.0, zoom: 0.5 }.into() }]);
     }
 
@@ -2386,9 +2387,9 @@ mod tests {
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let first_node_id = projection.workflow.nodes[0].id.clone();
-        let select_emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphSelect { node_ids: vec![first_node_id], select_all: false });
+        let select_emit = studio_emit(&projection, &config, SpaceCommand::NodeGraphSelect { node_ids: vec![first_node_id], select_all: false }).expect("handle");
         let config_after_select = apply_config(&config, &select_emit.config_operations);
-        let _ = studio_emit(&projection, &config_after_select, SpaceCommand::PresenceHeartbeat { client_id: "client-test-a".into(), name: "Ada".into() });
+        let _ = studio_emit(&projection, &config_after_select, SpaceCommand::PresenceHeartbeat { client_id: "client-test-a".into(), name: "Ada".into() }).expect("handle");
         let other_config = SpaceConfig { client_id: Some("client-test-b".into()), space_id: config_after_select.space_id.clone(), ..SpaceConfig::default() };
         let peers = presence_peers_json(&other_config);
         assert!(peers.contains("client-test-a"));
@@ -2406,7 +2407,7 @@ mod tests {
         use semio_framework_core::kernel::UiDirtyScope;
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
-        let emit = studio_emit(&projection, &config, SpaceCommand::PresenceHeartbeat { client_id: "client-test-c".into(), name: "Cass".into() });
+        let emit = studio_emit(&projection, &config, SpaceCommand::PresenceHeartbeat { client_id: "client-test-c".into(), name: "Cass".into() }).expect("handle");
         assert!(matches!(emit.ui_scope, UiDirtyScope::None), "presenceHeartbeat must declare None, got {:?}", emit.ui_scope);
     }
 

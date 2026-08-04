@@ -22,6 +22,7 @@ pub struct BackboneWorkerHost {
 impl BackboneWorkerHost {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
+        console_error_panic_hook::set_once();
         Self { host: DocumentHost::new(), documents: std::collections::HashMap::new() }
     }
 

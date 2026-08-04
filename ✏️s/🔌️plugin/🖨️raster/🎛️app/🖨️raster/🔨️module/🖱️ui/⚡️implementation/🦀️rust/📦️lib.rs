@@ -401,34 +401,34 @@ impl DocumentApp for RasterPlayApp {
         }
     }
 
-    fn handle(&self, command: &RasterCommand, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> Emit<RasterOperation, RasterConfigOperation> {
+    fn handle(&self, command: &RasterCommand, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterOperation, RasterConfigOperation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
             // 👁️ Config-only.
-            RasterCommand::SetBrushSize { value } => Emit::config(vec![RasterConfigOperation::SetBrushSize { value: *value }]),
-            RasterCommand::SetBrushOpacity { value } => Emit::config(vec![RasterConfigOperation::SetBrushOpacity { value: *value }]),
-            RasterCommand::SetActiveUtility { utility_id } => Emit::config(vec![RasterConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }]),
-            RasterCommand::SetSelection { ids } => Emit::config(vec![RasterConfigOperation::SetSelection { ids: ids.clone() }]),
-            RasterCommand::SetHover { id } => Emit::config(vec![RasterConfigOperation::SetHovered { id: id.clone() }]),
-            RasterCommand::SetCompositeViewport { width, height } => Emit::config(vec![RasterConfigOperation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: *width, height: *height }) }]),
+            RasterCommand::SetBrushSize { value } => Ok(Emit::config(vec![RasterConfigOperation::SetBrushSize { value: *value }]),
+            RasterCommand::SetBrushOpacity { value } => Ok(Emit::config(vec![RasterConfigOperation::SetBrushOpacity { value: *value }]),
+            RasterCommand::SetActiveUtility { utility_id } => Ok(Emit::config(vec![RasterConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }]),
+            RasterCommand::SetSelection { ids } => Ok(Emit::config(vec![RasterConfigOperation::SetSelection { ids: ids.clone() }]),
+            RasterCommand::SetHover { id } => Ok(Emit::config(vec![RasterConfigOperation::SetHovered { id: id.clone() }]),
+            RasterCommand::SetCompositeViewport { width, height } => Ok(Emit::config(vec![RasterConfigOperation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: *width, height: *height }) }]),
             RasterCommand::SelectAll => {
                 let ids = flatten_raster_layers(&document.layers).into_iter().map(|layer| layer_node_id(layer).to_string()).collect();
                 Emit::config(vec![RasterConfigOperation::SetSelection { ids }])
             }
             // 📷️ Camera — session-only runtime pose, never a document operation.
-            RasterCommand::SetCamera { camera } => Emit::config(vec![RasterConfigOperation::SetCamera { camera: camera.clone() }]),
+            RasterCommand::SetCamera { camera } => Ok(Emit::config(vec![RasterConfigOperation::SetCamera { camera: camera.clone() }]),
             RasterCommand::SetCameraZoom { zoom } => {
                 let camera = RasterCamera { zoom: *zoom, ..config.camera.clone() };
                 Emit::config(vec![RasterConfigOperation::SetCamera { camera }])
             }
-            RasterCommand::SetLocale { value } => Emit::config(vec![RasterConfigOperation::SetLocale { value: value.clone() }]),
+            RasterCommand::SetLocale { value } => Ok(Emit::config(vec![RasterConfigOperation::SetLocale { value: value.clone() }]),
             // ✏️ Operations — dispatched as VCS operations with a true inverse.
             RasterCommand::SetActiveExample { example_id } => {
                 let replacement = if example_id == "semio" { semio_example_document() } else { empty_raster_document() };
                 Emit { document_operations: vec![RasterOperation::ReplaceDocument { document: replacement }], config_operations: vec![RasterConfigOperation::SetSelection { ids: Vec::new() }], ..Default::default() }
             }
-            RasterCommand::SetDocument { document } => Emit::operations(vec![RasterOperation::ReplaceDocument { document: document.clone() }]),
+            RasterCommand::SetDocument { document } => Ok(Emit::operations(vec![RasterOperation::ReplaceDocument { document: document.clone() }]),
             RasterCommand::SetLayerVisible { layer_id: target_id, visible } => {
                 let Some(layer) = find_layer(&document.layers, target_id) else { return Emit::default() };
                 let resolved = visible.unwrap_or_else(|| !layer_visible(layer));
@@ -474,7 +474,7 @@ impl DocumentApp for RasterPlayApp {
                         ..Default::default()
                     }
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             RasterCommand::PatchLayer { layer_id: target_id, field, value } => {
                 let json_value = patch_value_json(value);

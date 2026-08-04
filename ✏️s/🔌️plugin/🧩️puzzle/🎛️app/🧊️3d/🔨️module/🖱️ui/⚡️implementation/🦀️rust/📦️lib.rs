@@ -4039,7 +4039,7 @@ impl DocumentApp for Puzzle3dPlayApp {
     /// @emoji 🧩️ B1: thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple the preserved pre-B1 `handle_action_impl` (see its doc comment, in the `impl
     /// Puzzle3dPlayApp` block right below) already expects, from the typed `Puzzle3dCommand`.
-    fn handle(&self, command: &Puzzle3dCommand, doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> Emit<Puzzle3dOperation, Puzzle3dConfigOperation> {
+    fn handle(&self, command: &Puzzle3dCommand, doc: &DocumentView<'_, Puzzle3dPlayProjection>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> Result<Emit<Puzzle3dOperation, Puzzle3dConfigOperation>, Fault> {
         self.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, cfg.projection)
     }
 

@@ -1447,7 +1447,7 @@ impl DocumentApp for LowpolyPlayApp {
         }
     }
 
-    fn handle(&self, command: &LowpolyCommand, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> Emit<LowpolyOperation, LowpolyConfigOperation> {
+    fn handle(&self, command: &LowpolyCommand, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> Result<Emit<LowpolyOperation, LowpolyConfigOperation>, Fault> {
         let projection = doc.projection;
         let config = cfg.projection;
         match command {
@@ -1504,7 +1504,7 @@ impl DocumentApp for LowpolyPlayApp {
                     LowpolyConfigOperation::SetSelectionKeys { keys },
                 ])
             }
-            LowpolyCommand::SetActivePaintLayer { layer_index } => Emit::config(vec![LowpolyConfigOperation::SetActivePaintLayer { value: *layer_index }]),
+            LowpolyCommand::SetActivePaintLayer { layer_index } => Ok(Emit::config(vec![LowpolyConfigOperation::SetActivePaintLayer { value: *layer_index }]),
             LowpolyCommand::SetUtilityParam { key, value_json } => {
                 let mut params = utility_params_value(config);
                 let value: Value = serde_json::from_str(value_json).unwrap_or(Value::Null);
@@ -1517,13 +1517,13 @@ impl DocumentApp for LowpolyPlayApp {
                 }
                 Emit::config(vec![LowpolyConfigOperation::SetUtilityParams { json: params.to_string() }])
             }
-            LowpolyCommand::EngagementInput { value } => Emit::config(vec![LowpolyConfigOperation::SetEngagementInput { value: value.clone() }]),
-            LowpolyCommand::ToggleShowEdges => Emit::config(vec![LowpolyConfigOperation::SetShowEdges { value: !config.show_edges }]),
-            LowpolyCommand::ToggleSun => Emit::config(vec![apply_sun_command(config, "toggleSun", None)]),
-            LowpolyCommand::SetSunAzimuth { value } => Emit::config(vec![apply_sun_command(config, "setSunAzimuth", Some(*value))]),
-            LowpolyCommand::SetSunElevation { value } => Emit::config(vec![apply_sun_command(config, "setSunElevation", Some(*value))]),
-            LowpolyCommand::SetSunIntensity { value } => Emit::config(vec![apply_sun_command(config, "setSunIntensity", Some(*value))]),
-            LowpolyCommand::SetSelectionMethod { value } => Emit::config(vec![LowpolyConfigOperation::SetSelectionMethod { value: value.clone() }]),
+            LowpolyCommand::EngagementInput { value } => Ok(Emit::config(vec![LowpolyConfigOperation::SetEngagementInput { value: value.clone() }]),
+            LowpolyCommand::ToggleShowEdges => Ok(Emit::config(vec![LowpolyConfigOperation::SetShowEdges { value: !config.show_edges }]),
+            LowpolyCommand::ToggleSun => Ok(Emit::config(vec![apply_sun_command(config, "toggleSun", None)]),
+            LowpolyCommand::SetSunAzimuth { value } => Ok(Emit::config(vec![apply_sun_command(config, "setSunAzimuth", Some(*value))]),
+            LowpolyCommand::SetSunElevation { value } => Ok(Emit::config(vec![apply_sun_command(config, "setSunElevation", Some(*value))]),
+            LowpolyCommand::SetSunIntensity { value } => Ok(Emit::config(vec![apply_sun_command(config, "setSunIntensity", Some(*value))]),
+            LowpolyCommand::SetSelectionMethod { value } => Ok(Emit::config(vec![LowpolyConfigOperation::SetSelectionMethod { value: value.clone() }]),
             LowpolyCommand::SetSelectionModeDefault { value } => {
                 let next = match value.as_str() {
                     "additive" | "subtractive" | "invertive" | "default" => value.clone(),
@@ -1531,7 +1531,7 @@ impl DocumentApp for LowpolyPlayApp {
                 };
                 Emit::config(vec![LowpolyConfigOperation::SetSelectionModeDefault { value: next }])
             }
-            LowpolyCommand::SetCamera { position, target, fov } => Emit::config(vec![LowpolyConfigOperation::SetWorldCamera { position: *position, target: *target, fov: *fov }]),
+            LowpolyCommand::SetCamera { position, target, fov } => Ok(Emit::config(vec![LowpolyConfigOperation::SetWorldCamera { position: *position, target: *target, fov: *fov }]),
             LowpolyCommand::WorldSelect { ids, merge } => {
                 let current = SelectionSet::from_ids(config.selected_object_ids.clone());
                 let merged = merge_world_selection_ids(&current, ids, merge).to_vec();
@@ -1818,8 +1818,8 @@ impl DocumentApp for LowpolyPlayApp {
                 self.transform_selection(projection, config, &mode, ids, Transform::Scale(Vec3::new(*sx, *sy, *sz)), "Scale selection")
             }
             LowpolyCommand::SetProjectionJson { json } | LowpolyCommand::SetFixtureJson { json } => match serde_json::from_str::<LowpolyProjection>(json) {
-                Ok(parsed) => Emit::operations(vec![LowpolyOperation::SetProjection { projection: parsed }]),
-                Err(_) => Emit::default(),
+                Ok(parsed) => Ok(Emit::operations(vec![LowpolyOperation::SetProjection { projection: parsed }]),
+                Err(_) => Ok(Emit::default(),
             },
             LowpolyCommand::EngagementSubmit { value } => {
                 const ENGAGEMENT_COMMANDS: &[&str] = &["extrude", "inset", "bevel", "loopCut", "subdivide", "triangulate", "mirror", "decimate", "flipFaces", "merge", "dissolve", "snap"];

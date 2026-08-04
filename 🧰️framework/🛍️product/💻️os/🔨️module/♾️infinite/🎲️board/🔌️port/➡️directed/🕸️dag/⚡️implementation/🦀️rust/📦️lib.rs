@@ -7088,7 +7088,7 @@ mod tests {
 
     #[test]
     fn preview_tree_toggle_expands_and_resizes() {
-        let json = serde_json::json!({ "alpha": { "beta": 1 }, "gamma": "x" });
+        let json = dsl::to_dsl_value(&serde_json::json!({ "alpha": { "beta": 1 }, "gamma": "x" })).unwrap();
         let mut host = DagHost::from_fixture(DagFixture {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -7101,14 +7101,14 @@ mod tests {
                 y: 0.0,
                 width: 80.0,
                 height: 80.0,
-                kind: DagNodeKind::Preview { content: DagPreviewContent::Tree { json }, expanded: BTreeSet::new(), input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
+                kind: DagNodeKind::Preview { content: DagPreviewContent::Tree { json: json.clone() }, expanded: BTreeSet::new(), input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
                 ..Default::default()
             }],
             edges: vec![],
         });
         host.set_viewport(800, 600, 1.0);
         let collapsed_h = host.fixture.nodes[0].height;
-        let layouts = preview_tree_row_layouts(&host.fixture.nodes[0], &serde_json::json!({ "alpha": { "beta": 1 }, "gamma": "x" }), &BTreeSet::new());
+        let layouts = preview_tree_row_layouts(&host.fixture.nodes[0], &json, &BTreeSet::new());
         let row = layouts.iter().find(|entry| entry.path == "alpha").expect("alpha row");
         let (x0, y0, x1, y1) = row.row_rect;
         let world_x = x0 + (x1 - x0) * 0.75;
@@ -7162,6 +7162,8 @@ mod tests {
 
 // #region 🔖️DocumentVcs
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, OpText, Operation, OperationDiff, Patchable};
+#[cfg(test)]
+use protocol::{DocumentId, Edit, SchemaId};
 #[cfg(any(test, target_arch = "wasm32"))]
 use store::create_document_envelope;
 #[cfg(test)]
@@ -8028,6 +8030,18 @@ mod dag_vcs_tests {
         store.dispatch(DocumentCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "extra".into(), item: sample_node("extra"), at: 0 })], description: None }).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
+    }
+
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): `DagOperation`
+    /// already implements `protocol::OpBinary` (forwarded through the derived `DagOperationDsl`
+    /// mirror, see `🔖️OpTextMirror` above), so this closes the missing coverage rather than adding
+    /// any new codec.
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "extra".into(), item: sample_node("extra"), at: 0 })], description: None }).expect("apply");
+        let edit: &Edit<DagOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<DagDocument, DagOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }
     //#endregion 🔖️DslTests
 }

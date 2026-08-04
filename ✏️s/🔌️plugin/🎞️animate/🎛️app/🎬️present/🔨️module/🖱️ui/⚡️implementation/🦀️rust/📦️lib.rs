@@ -490,7 +490,7 @@ impl DocumentApp for AnimatePresentPlayApp {
         }
     }
 
-    fn handle(&self, command: &PresentCommand, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> Emit<PresentOperation, present_op::PresentConfigOperation> {
+    fn handle(&self, command: &PresentCommand, doc: &DocumentView<'_, PresentDeck>, cfg: &ConfigView<'_, PresentConfig>) -> Result<Emit<PresentOperation, present_op::PresentConfigOperation>, Fault> {
         use present_op::PresentConfigOperation;
         let deck = doc.projection;
         let config = cfg.projection;
@@ -590,7 +590,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                     Emit::default()
                 }
             }
-            PresentCommand::ClearTiles => Emit { document_operations: vec![PresentOperation::SetTiles { tiles: Vec::new() }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }], ..Default::default() },
+            PresentCommand::ClearTiles => Ok(Emit { document_operations: vec![PresentOperation::SetTiles { tiles: Vec::new() }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }], ..Default::default() },
             PresentCommand::EngagementSubmit { value } => {
                 let trimmed = value.trim();
                 if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
@@ -612,13 +612,13 @@ impl DocumentApp for AnimatePresentPlayApp {
                             ..Default::default()
                         }
                     }
-                    "clear" => Emit {
+                    "clear" => Ok(Emit {
                         document_operations: vec![PresentOperation::SetTiles { tiles: Vec::new() }],
                         config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }, PresentConfigOperation::SetEngagementInput { value: String::new() }],
                         ..Default::default()
                     },
-                    "copy" | "copy prompt" => Emit { config_operations: vec![PresentConfigOperation::SetEngagementInput { value: String::new() }], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() },
-                    _ => Emit::default(),
+                    "copy" | "copy prompt" => Ok(Emit { config_operations: vec![PresentConfigOperation::SetEngagementInput { value: String::new() }], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() },
+                    _ => Ok(Emit::default(),
                 }
             }
             PresentCommand::ResetGrid => {
@@ -626,22 +626,22 @@ impl DocumentApp for AnimatePresentPlayApp {
                 let selected = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
                 Emit { document_operations: vec![PresentOperation::SetTiles { tiles }], config_operations: vec![PresentConfigOperation::SetSelectedIds { ids: selected }], ..Default::default() }
             }
-            PresentCommand::SetSelectedIds { ids } => Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: valid_tile_ids(deck, ids.clone()) }]),
-            PresentCommand::EngagementInput { value } => Emit::config(vec![PresentConfigOperation::SetEngagementInput { value: value.clone() }]),
+            PresentCommand::SetSelectedIds { ids } => Ok(Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: valid_tile_ids(deck, ids.clone()) }]),
+            PresentCommand::EngagementInput { value } => Ok(Emit::config(vec![PresentConfigOperation::SetEngagementInput { value: value.clone() }]),
             PresentCommand::CanvasPointerDown { layer_id } => match layer_id {
-                Some(id) if deck.tiles.iter().any(|tile| &tile.id == id) => Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: vec![id.clone()] }]),
-                _ => Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }]),
+                Some(id) if deck.tiles.iter().any(|tile| &tile.id == id) => Ok(Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: vec![id.clone()] }]),
+                _ => Ok(Emit::config(vec![PresentConfigOperation::SetSelectedIds { ids: Vec::new() }]),
             },
-            PresentCommand::SetLocale { value } => Emit::config(vec![PresentConfigOperation::SetLocale { value: value.clone() }]),
-            PresentCommand::NoOperation => Emit::default(),
-            PresentCommand::CopyPrompt => Emit::effect(tile_morph_prompt_effect(deck)),
+            PresentCommand::SetLocale { value } => Ok(Emit::config(vec![PresentConfigOperation::SetLocale { value: value.clone() }]),
+            PresentCommand::NoOperation => Ok(Emit::default(),
+            PresentCommand::CopyPrompt => Ok(Emit::effect(tile_morph_prompt_effect(deck)),
             PresentCommand::ExportVideoFromDeck { output_dir, scene_json } => {
                 let scene = serde_json::from_str::<PresentScene>(scene_json).unwrap_or_else(|_| PresentScene::empty("Deck export"));
                 match export_video_from_deck(&scene, output_dir) {
                     Ok(bundles) => {
                         Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()), encoding: None })
                     }
-                    Err(error) => Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export-error.txt".into(), mime_type: "text/plain".into(), data: error.to_string(), encoding: None }),
+                    Err(error) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export-error.txt".into(), mime_type: "text/plain".into(), data: error.to_string(), encoding: None }),
                 }
             }
         }

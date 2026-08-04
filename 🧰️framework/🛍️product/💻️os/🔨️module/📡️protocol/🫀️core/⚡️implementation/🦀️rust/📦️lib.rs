@@ -34,6 +34,8 @@ pub enum ProtocolError {
     #[error("io error: {0}")]
     Io(String),
 }
+
+dsl_core::fault_from_thiserror!(ProtocolError, dsl_core::FaultOrigin::Module, "module.protocol");
 //#endregion 🔖️Errors
 
 //#region 🔖️Limits

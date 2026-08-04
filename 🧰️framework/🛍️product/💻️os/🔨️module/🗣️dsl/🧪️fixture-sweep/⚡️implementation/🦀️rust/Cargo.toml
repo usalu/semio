@@ -67,3 +67,4 @@ block_3d = { path = "../../../../../../../../✏️s/🔌️plugin/🧱️block/
 home = { path = "../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/⚡️implementation/🦀️rust", package = "semio-s-app-space-home" }
 semio_framework_os = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }
 sourcing = { path = "../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate" }
+space = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🪐️space/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-space" }

@@ -356,18 +356,18 @@ impl DocumentApp for ReasoningWiresPlayApp {
         }
     }
 
-    fn handle(&self, command: &WiresCommand, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> Emit<MindmapWiresOperation, WiresConfigOperation> {
+    fn handle(&self, command: &WiresCommand, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<MindmapWiresOperation, WiresConfigOperation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
             // 👁️ Config-only — mutate ephemeral selection/drag state, emit no document operations.
-            WiresCommand::SetSelection { ids } | WiresCommand::DocumentSelect { ids } => Emit::config(vec![WiresConfigOperation::SetSelection { ids: ids.clone() }]),
+            WiresCommand::SetSelection { ids } | WiresCommand::DocumentSelect { ids } => Ok(Emit::config(vec![WiresConfigOperation::SetSelection { ids: ids.clone() }]),
             WiresCommand::CanvasPointerDown { id, x, y } => match id.as_deref().filter(|id| find_board_node(document, id).is_some()) {
-                Some(id) => Emit::config(vec![WiresConfigOperation::SetSelection { ids: vec![id.to_string()] }, WiresConfigOperation::SetDrag { node_id: Some(id.to_string()), last_x: *x, last_y: *y }]),
-                None => Emit::default(),
+                Some(id) => Ok(Emit::config(vec![WiresConfigOperation::SetSelection { ids: vec![id.to_string()] }, WiresConfigOperation::SetDrag { node_id: Some(id.to_string()), last_x: *x, last_y: *y }]),
+                None => Ok(Emit::default(),
             },
-            WiresCommand::CanvasPointerUp => Emit::config(vec![WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }]),
-            WiresCommand::SetLocale { value } => Emit::config(vec![WiresConfigOperation::SetLocale { value: value.clone() }]),
+            WiresCommand::CanvasPointerUp => Ok(Emit::config(vec![WiresConfigOperation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }]),
+            WiresCommand::SetLocale { value } => Ok(Emit::config(vec![WiresConfigOperation::SetLocale { value: value.clone() }]),
             // ✏️ Operations — dispatched as VCS operations with a true inverse.
             WiresCommand::SetActiveExample { example_id } => {
                 let next = if example_id.as_str() == WIRES_PLAY_EXAMPLE_METABOLISM_ID { metabolism_wires_example_document() } else { empty_mindmap_wires_document() };

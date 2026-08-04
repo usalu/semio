@@ -96,6 +96,8 @@ pub enum PackError {
     #[error("io error: {0}")]
     Io(String),
 }
+
+dsl_core::fault_from_thiserror!(PackError, dsl_core::FaultOrigin::Module, "module.pack");
 //#endregion 🔖️Errors
 
 //#region 🔖️Limits

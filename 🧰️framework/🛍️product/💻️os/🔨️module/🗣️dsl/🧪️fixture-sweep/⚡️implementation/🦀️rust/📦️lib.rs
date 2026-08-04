@@ -77,6 +77,7 @@ mod tests {
     use sequence::SequenceFixture;
     use shooting::ShootingFixture;
     use sourcing::CurateDocument;
+    use space::{CollectionProjection, SpaceProjection};
     use trinity_ram::GraphFixture;
     use vcs_app::VcsDemoProjection;
     use vdi3805::Document as Vdi3805Document;
@@ -147,6 +148,8 @@ mod tests {
             // registered here under the file's real suffix too since `parse_dsl`/`print_dsl` only
             // care about the grammar's field shape, never the extension string.
             ("forms", "forms", store::test_support::check_dsl_fixture_text_laws::<FormSpec>),
+            ("space", <SpaceProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<SpaceProjection>),
+            ("space", <CollectionProjection as store::DocumentDsl>::EXTENSION, store::test_support::check_dsl_fixture_text_laws::<CollectionProjection>),
         ]
     }
     //#endregion 🔖️Registry

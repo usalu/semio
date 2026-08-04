@@ -1882,7 +1882,7 @@ impl DocumentApp for Puzzle2dPlayApp {
     /// @emoji 🧩️ B1: thin typed-command adapter — reconstructs the exact `(action, args, window_id)`
     /// triple the preserved pre-B1 `handle_action_impl` (see its doc comment, in the `impl
     /// Puzzle2dPlayApp` block below) already expects, from the typed `Puzzle2dCommand`.
-    fn handle(&self, command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> Emit<Puzzle2dOperation, Puzzle2dConfigOperation> {
+    fn handle(&self, command: &Puzzle2dCommand, doc: &DocumentView<'_, Puzzle2dPlayProjection>, cfg: &ConfigView<'_, Puzzle2dConfig>) -> Result<Emit<Puzzle2dOperation, Puzzle2dConfigOperation>, Fault> {
         self.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, cfg.projection)
     }
 

@@ -428,13 +428,13 @@ impl DocumentApp for VcsPlayApp {
     /// "undo"/"redo"/"commitCheckpoint"/"createAlternative"/"switchAlternative"/"checkoutCheckpoint"
     /// never reach here — `VcsDocumentApp` intercepts those six history actions before dispatching a
     /// typed command, straight to `DocumentCommand`.
-    fn handle(&self, command: &VcsDemoCommand, doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Emit<VcsDemoOperation, VcsDemoConfigOperation> {
+    fn handle(&self, command: &VcsDemoCommand, doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &ConfigView<'_, VcsDemoConfig>) -> Result<Emit<VcsDemoOperation, VcsDemoConfigOperation>, Fault> {
         let projection = doc.projection;
         match command {
-            VcsDemoCommand::IncrementCounter => Emit::operations(vec![VcsDemoOperation::SetCounter { counter: projection.counter + 1 }]),
+            VcsDemoCommand::IncrementCounter => Ok(Emit::operations(vec![VcsDemoOperation::SetCounter { counter: projection.counter + 1 }]),
             VcsDemoCommand::PatchProjection { field, value } => match vcs_patch_operation_for_field(field, value) {
-                Some(operation) => Emit::operations(vec![operation]),
-                None => Emit::default(),
+                Some(operation) => Ok(Emit::operations(vec![operation]),
+                None => Ok(Emit::default(),
             },
             VcsDemoCommand::TextEdit { text } | VcsDemoCommand::Edit { text } => match serde_json::from_str::<VcsDemoProjection>(text) {
                 Ok(next_projection) => {
@@ -445,11 +445,11 @@ impl DocumentApp for VcsPlayApp {
                         Emit::operations(operations)
                     }
                 }
-                Err(_) => Emit::default(),
+                Err(_) => Ok(Emit::default(),
             },
-            VcsDemoCommand::SetSelection { ids } => Emit::config(vec![VcsDemoConfigOperation::SetSelection { checkpoint_ids: ids.clone() }]),
-            VcsDemoCommand::SetLocale { value } => Emit::config(vec![VcsDemoConfigOperation::SetLocale { value: value.clone() }]),
-            VcsDemoCommand::NoOperation | VcsDemoCommand::CanvasPointerDown | VcsDemoCommand::CanvasPointerMove | VcsDemoCommand::CanvasPointerUp | VcsDemoCommand::CanvasWheel => Emit::default(),
+            VcsDemoCommand::SetSelection { ids } => Ok(Emit::config(vec![VcsDemoConfigOperation::SetSelection { checkpoint_ids: ids.clone() }]),
+            VcsDemoCommand::SetLocale { value } => Ok(Emit::config(vec![VcsDemoConfigOperation::SetLocale { value: value.clone() }]),
+            VcsDemoCommand::NoOperation | VcsDemoCommand::CanvasPointerDown | VcsDemoCommand::CanvasPointerMove | VcsDemoCommand::CanvasPointerUp | VcsDemoCommand::CanvasWheel => Ok(Emit::default(),
         }
     }
 

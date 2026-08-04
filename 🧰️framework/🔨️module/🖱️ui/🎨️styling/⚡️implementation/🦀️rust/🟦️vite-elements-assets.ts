@@ -668,10 +668,36 @@ function staticDeployMarkerVitePlugins(cnameHost: string | undefined): Plugin[] 
   ];
 }
 
+/** @emoji 🧭️ Rewrites Vite's SPA fallback target `/index.html` onto the constitutional emoji entry path. */
+export function rewriteSpaFallbackToEmojiEntry(url: string, entryPath: string): string {
+  const [pathOnly, ...rest] = url.split(/(?=[?#])/);
+  const base = pathOnly ?? url;
+  if (base !== "/index.html") return url;
+  return `${entryPath}${rest.join("")}`;
+}
+
+function semioEmojiIndexHtmlRootRewrite(entry: string): Connect.NextHandleFunction {
+  return (req, _res, next) => {
+    const url = req.url ?? "";
+    if (url === "/" || url.startsWith("/?")) req.url = `${entry}${url.slice(1)}`;
+    next();
+  };
+}
+
+function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): Connect.NextHandleFunction {
+  return (req, _res, next) => {
+    const url = req.url ?? "";
+    const nextUrl = rewriteSpaFallbackToEmojiEntry(url, entry);
+    if (nextUrl !== url) req.url = nextUrl;
+    next();
+  };
+}
+
 /** @emoji 🌐️ Vite: treat hand-authored `🌐️index.html` as the app index (`/` + build input). Vite's default
  * `index.html` name does not match the constitutional emoji entry filename. */
 export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐️index.html"): Plugin {
   const entry = `/${fileName}`;
+  let outDir = "";
   return {
     name: "semio-emoji-index-html",
     enforce: "pre",
@@ -684,23 +710,27 @@ export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐�
         },
       };
     },
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      const built = resolve(outDir, fileName);
+      if (!existsSync(built)) return;
+      const html = readFileSync(built, "utf8");
+      writeFileSync(resolve(outDir, "index.html"), html);
+      writeFileSync(resolve(outDir, "404.html"), html);
+    },
     configureServer(server) {
-      server.middlewares.use((req, _res, next) => {
-        const url = req.url ?? "";
-        if (url === "/" || url.startsWith("/?")) {
-          req.url = `${entry}${url.slice(1)}`;
-        }
-        next();
-      });
+      server.middlewares.use(semioEmojiIndexHtmlRootRewrite(entry));
+      return () => {
+        server.middlewares.use(semioEmojiIndexHtmlSpaFallbackRewrite(entry));
+      };
     },
     configurePreviewServer(server) {
-      server.middlewares.use((req, _res, next) => {
-        const url = req.url ?? "";
-        if (url === "/" || url.startsWith("/?")) {
-          req.url = `${entry}${url.slice(1)}`;
-        }
-        next();
-      });
+      server.middlewares.use(semioEmojiIndexHtmlRootRewrite(entry));
+      return () => {
+        server.middlewares.use(semioEmojiIndexHtmlSpaFallbackRewrite(entry));
+      };
     },
   };
 }
@@ -1828,6 +1858,19 @@ if (import.meta.vitest) {
       const kinds = tags.map((tag) => (tag.children === PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT ? "appearance" : tag.children === PLAYGROUND_PLAY_BOOT_THEME_SCRIPT ? "theme" : tag.attrs && "href" in tag.attrs ? "stylesheet" : "other"));
       expect(kinds.indexOf("appearance")).toBeLessThan(kinds.indexOf("theme"));
       expect(kinds.indexOf("theme")).toBeLessThan(kinds.indexOf("stylesheet"));
+    });
+  });
+
+  describe("rewriteSpaFallbackToEmojiEntry", () => {
+    const entry = "/🌐️index.html";
+    it("rewrites /index.html to the emoji entry", () => {
+      expect(rewriteSpaFallbackToEmojiEntry("/index.html", entry)).toBe(entry);
+    });
+    it("preserves query and hash on /index.html", () => {
+      expect(rewriteSpaFallbackToEmojiEntry("/index.html?x=1#frag", entry)).toBe(`${entry}?x=1#frag`);
+    });
+    it("leaves asset paths unchanged", () => {
+      expect(rewriteSpaFallbackToEmojiEntry("/spaces/space-1", entry)).toBe("/spaces/space-1");
     });
   });
 

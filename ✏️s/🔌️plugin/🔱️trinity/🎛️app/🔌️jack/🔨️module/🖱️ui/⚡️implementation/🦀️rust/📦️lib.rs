@@ -551,13 +551,13 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn handle(&self, command: &TrinityJackCommand, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> Emit<TrinityGraphOperation, JackConfigOperation> {
+    fn handle(&self, command: &TrinityJackCommand, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> Result<Emit<TrinityGraphOperation, JackConfigOperation>, Fault> {
         let fixture = doc.projection;
         let config = cfg.projection;
         match command {
             TrinityJackCommand::SetFixtureJson { json } => match GraphFixture::from_json(json) {
-                Ok(next) => Emit::operations(vec![TrinityGraphOperation::SetFixture { fixture: next }]),
-                Err(_) => Emit::default(),
+                Ok(next) => Ok(Emit::operations(vec![TrinityGraphOperation::SetFixture { fixture: next }]),
+                Err(_) => Ok(Emit::default(),
             },
             TrinityJackCommand::DeleteSelection => {
                 let deletes: Vec<TrinityGraphOperation> = config.selected_node_ids.iter().filter(|id| fixture.nodes.iter().any(|node| &node.id == *id)).map(|id| TrinityGraphOperation::DeleteNode { id: id.clone() }).collect();
@@ -578,8 +578,8 @@ impl DocumentApp for TrinityJackPlayApp {
             TrinityJackCommand::Reorganize => {
                 let config_operations = vec![JackConfigOperation::SetReorganizeEpoch { value: config.reorganize_epoch + 1 }];
                 match force_layout_fixture(fixture) {
-                    Some(after) => Emit { document_operations: reposition_operations(fixture, &after), config_operations, ..Default::default() },
-                    None => Emit::config(config_operations),
+                    Some(after) => Ok(Emit { document_operations: reposition_operations(fixture, &after), config_operations, ..Default::default() },
+                    None => Ok(Emit::config(config_operations),
                 }
             }
             TrinityJackCommand::RunQuery { query } => {
@@ -610,26 +610,26 @@ impl DocumentApp for TrinityJackPlayApp {
                         ..Default::default()
                     }
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             TrinityJackCommand::SetViewport { viewport_json } => match serde_json::from_str::<Camera>(viewport_json) {
-                Ok(camera) => Emit::config(vec![JackConfigOperation::SetCamera { camera }]),
-                Err(_) => Emit::default(),
+                Ok(camera) => Ok(Emit::config(vec![JackConfigOperation::SetCamera { camera }]),
+                Err(_) => Ok(Emit::default(),
             },
-            TrinityJackCommand::TextEdit { text } => Emit::config(vec![JackConfigOperation::SetQuery { value: text.clone() }]),
-            TrinityJackCommand::TextSelect { start, end } => Emit::config(vec![JackConfigOperation::SetEditorSelection { selection: Some(JackEditorSelection { start: *start, end: *end }) }]),
-            TrinityJackCommand::RequestCompletions => Emit::config(vec![JackConfigOperation::SetRevision { value: config.revision + 1 }]),
+            TrinityJackCommand::TextEdit { text } => Ok(Emit::config(vec![JackConfigOperation::SetQuery { value: text.clone() }]),
+            TrinityJackCommand::TextSelect { start, end } => Ok(Emit::config(vec![JackConfigOperation::SetEditorSelection { selection: Some(JackEditorSelection { start: *start, end: *end }) }]),
+            TrinityJackCommand::RequestCompletions => Ok(Emit::config(vec![JackConfigOperation::SetRevision { value: config.revision + 1 }]),
             TrinityJackCommand::FormatDocument => match jack_format(&config.jack_query) {
-                Ok(formatted) => Emit::config(vec![JackConfigOperation::SetQuery { value: formatted }]),
-                Err(_) => Emit::default(),
+                Ok(formatted) => Ok(Emit::config(vec![JackConfigOperation::SetQuery { value: formatted }]),
+                Err(_) => Ok(Emit::default(),
             },
-            TrinityJackCommand::SetLodMode { window_id, value } => Emit::config(vec![JackConfigOperation::SetLodMode { window_id: window_id.clone(), value: value.clone() }]),
-            TrinityJackCommand::EditorEngagementInput { value } => Emit::config(vec![JackConfigOperation::SetEditorEngagementInput { value: value.clone() }]),
-            TrinityJackCommand::GraphEngagementInput { value } => Emit::config(vec![JackConfigOperation::SetGraphEngagementInput { value: value.clone() }]),
-            TrinityJackCommand::ResultsEngagementInput { value } => Emit::config(vec![JackConfigOperation::SetResultsEngagementInput { value: value.clone() }]),
-            TrinityJackCommand::GraphPointerDown { node_id } => Emit::config(vec![JackConfigOperation::SetSelection { node_ids: node_id.clone().map(|id| vec![id]).unwrap_or_default() }]),
-            TrinityJackCommand::SetSelection { ids } => Emit::config(vec![JackConfigOperation::SetSelection { node_ids: ids.clone() }]),
-            TrinityJackCommand::SetLocale { value } => Emit::config(vec![JackConfigOperation::SetLocale { value: value.clone() }]),
+            TrinityJackCommand::SetLodMode { window_id, value } => Ok(Emit::config(vec![JackConfigOperation::SetLodMode { window_id: window_id.clone(), value: value.clone() }]),
+            TrinityJackCommand::EditorEngagementInput { value } => Ok(Emit::config(vec![JackConfigOperation::SetEditorEngagementInput { value: value.clone() }]),
+            TrinityJackCommand::GraphEngagementInput { value } => Ok(Emit::config(vec![JackConfigOperation::SetGraphEngagementInput { value: value.clone() }]),
+            TrinityJackCommand::ResultsEngagementInput { value } => Ok(Emit::config(vec![JackConfigOperation::SetResultsEngagementInput { value: value.clone() }]),
+            TrinityJackCommand::GraphPointerDown { node_id } => Ok(Emit::config(vec![JackConfigOperation::SetSelection { node_ids: node_id.clone().map(|id| vec![id]).unwrap_or_default() }]),
+            TrinityJackCommand::SetSelection { ids } => Ok(Emit::config(vec![JackConfigOperation::SetSelection { node_ids: ids.clone() }]),
+            TrinityJackCommand::SetLocale { value } => Ok(Emit::config(vec![JackConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

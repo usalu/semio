@@ -13,7 +13,7 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-use protocol::{decode_server_frame, encode_client_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, OperationEnvelope, ServerFrame};
+use protocol::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, OperationEnvelope, ServerFrame};
 use semio_framework_core::{ActorId, OperationId, PresencePeer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -947,6 +947,7 @@ mod native_actor {
             for message in messages {
                 match message {
                     BackboneMessage::Operations { envelopes } => {
+                        let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
                         self.persist_operations(&envelopes);
                         self.relay_operations_to_hub(&envelopes).await;
                     }
@@ -1235,7 +1236,7 @@ mod native_actor {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Operations { envelopes: envelopes.clone() });
+            let _ = self.remote.push(BackboneMessage::Operations { envelopes: encode_envelopes(&envelopes) });
             self.emit(DocumentEvent::RemoteOperations { envelopes });
         }
 
@@ -1444,6 +1445,7 @@ mod wasm_actor {
             for message in messages {
                 match message {
                     BackboneMessage::Operations { envelopes } => {
+                        let envelopes = decode_envelopes(&envelopes).unwrap_or_default();
                         self.relay_operations(&envelopes);
                     }
                     BackboneMessage::Snapshot { .. } => {
@@ -1544,7 +1546,7 @@ mod wasm_actor {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Operations { envelopes: envelopes.clone() });
+            let _ = self.remote.push(BackboneMessage::Operations { envelopes: encode_envelopes(&envelopes) });
             let _ = self.events.send(DocumentEvent::RemoteOperations { envelopes });
         }
     }

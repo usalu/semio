@@ -1688,43 +1688,41 @@ const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
  * once that file adds the command-envelope-round-trip call.
  */
 const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
-  "./✏️s/🔌️plugin/🏛️architect/🔨️module/🦴️spine/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🏛️architect/🔨️module/🦴️spine/⚡️implementation/🦀️rust/📦️lib.rs",
   "compose/client/lib/rs/lib.rs",
-  "./🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/⚡️implementation/🦀️rust/🎲️board/🔌️port/➡️directed/🕸️dag/📦️lib.rs",
-  "./🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/💠️lowpoly/🎛️app/💠️lowpoly/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/📖️playbook/🧩️extension/🌀️procedural/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🫀️core/📦️lib.rs",
-  "./🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🌍️gis/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/➗️mathematical/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🗒️note/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🖨️raster/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/💡️reasoning/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🪐️space/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
-  "./✏️s/🔌️plugin/🌿️vcs/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/💠️lowpoly/🎛️app/💠️lowpoly/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/📖️playbook/🧩️extension/🌀️procedural/⚡️implementation/🦀️rust/📦️lib.rs",
+  "🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌍️gis/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/➗️mathematical/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🗒️note/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🖨️raster/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/💡️reasoning/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🪐️space/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs",
+  "✏️s/🔌️plugin/🌿️vcs/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs",
 ]);
 
 /**
@@ -2527,7 +2525,8 @@ function policyPackCompletenessBreaches(repoRoot: string): BreachRecord[] {
 function policyCommandEnvelopeCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
-    if (POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST.has(relPath)) continue;
+    const normalizedRelPath = relPath.startsWith("./") ? relPath.slice(2) : relPath;
+    if (POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST.has(relPath) || POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST.has(normalizedRelPath) || POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST.has(`./${normalizedRelPath}`)) continue;
     const content = readFileSync(join(repoRoot, relPath), "utf8");
     const hasPackCheck = content.includes("assert_dsl_pack_equivalence(") || content.includes("assert_document_pack_round_trip(");
     if (!hasPackCheck) continue;

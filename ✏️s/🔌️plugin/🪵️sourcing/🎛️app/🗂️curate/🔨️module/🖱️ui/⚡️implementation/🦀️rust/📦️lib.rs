@@ -375,12 +375,12 @@ impl DocumentApp for SourcingCurateApp {
         }
     }
 
-    fn handle(&self, command: &SourcingCurateCommand, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Emit<SourcingOperation, SourcingCurateConfigOperation> {
+    fn handle(&self, command: &SourcingCurateCommand, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> Result<Emit<SourcingOperation, SourcingCurateConfigOperation>, Fault> {
         let config = cfg.projection;
         match command {
             SourcingCurateCommand::SetDocumentJson { json } => match serde_json::from_str::<CurateDocument>(json) {
-                Ok(document) => Emit::operations(vec![SourcingOperation::SetDocument { document }]),
-                Err(_) => Emit::default(),
+                Ok(document) => Ok(Emit::operations(vec![SourcingOperation::SetDocument { document }]),
+                Err(_) => Ok(Emit::default(),
             },
             SourcingCurateCommand::SetActiveExample { example_id } => {
                 let next = if example_id.is_empty() || example_id == EMPTY_EXAMPLE_ID { sourcing_engine::empty_document() } else { sourcing_engine::default_document() };
@@ -422,7 +422,7 @@ impl DocumentApp for SourcingCurateApp {
                 sourcing_engine::curate_delta(&mut document, object_id, 1);
                 Emit::operations(vec![SourcingOperation::SetDocument { document }])
             }
-            SourcingCurateCommand::SetFilterQuery { value } => Emit::config(vec![SourcingCurateConfigOperation::SetFilterQuery { value: value.clone() }]),
+            SourcingCurateCommand::SetFilterQuery { value } => Ok(Emit::config(vec![SourcingCurateConfigOperation::SetFilterQuery { value: value.clone() }]),
             SourcingCurateCommand::SetFilterModule { module_id, enabled } => {
                 let mut module_ids = config.filters.module_ids.clone();
                 if *enabled {
@@ -447,12 +447,12 @@ impl DocumentApp for SourcingCurateApp {
                 let sort = TableSort { column_id: column_id.clone(), direction: if direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } };
                 Emit::config(vec![SourcingCurateConfigOperation::SetSort { sort: Some(sort) }])
             }
-            SourcingCurateCommand::SelectRow { object_id } => Emit::config(vec![SourcingCurateConfigOperation::SetSelectedObject { object_id: object_id.clone() }]),
+            SourcingCurateCommand::SelectRow { object_id } => Ok(Emit::config(vec![SourcingCurateConfigOperation::SetSelectedObject { object_id: object_id.clone() }]),
             SourcingCurateCommand::WorldSelect { ids } => match ids.last() {
-                Some(id) => Emit::config(vec![SourcingCurateConfigOperation::SetSelectedObject { object_id: Some(id.clone()) }]),
-                None => Emit::default(),
+                Some(id) => Ok(Emit::config(vec![SourcingCurateConfigOperation::SetSelectedObject { object_id: Some(id.clone()) }]),
+                None => Ok(Emit::default(),
             },
-            SourcingCurateCommand::SetLocale { value } => Emit::config(vec![SourcingCurateConfigOperation::SetLocale { value: value.clone() }]),
+            SourcingCurateCommand::SetLocale { value } => Ok(Emit::config(vec![SourcingCurateConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

@@ -798,7 +798,7 @@ impl DocumentApp for Gis2dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Gis2dCommand, doc: &DocumentView<'_, gis2d::GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Emit<GisMapOperation, Gis2dConfigOperation> {
+    fn handle(&self, command: &Gis2dCommand, doc: &DocumentView<'_, gis2d::GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapOperation, Gis2dConfigOperation>, Fault> {
         let document = doc.projection;
         let config = cfg.projection;
         match command {
@@ -823,7 +823,7 @@ impl DocumentApp for Gis2dPlayApp {
             Gis2dCommand::PatchRoutes { route_ids, field, value } => patch_routes_operations(document, route_ids, field, value),
             Gis2dCommand::PatchRoute { route_id, field, value } => patch_routes_operations(document, std::slice::from_ref(route_id), field, value),
             // 👁️ View/config actions — mutate the config, emit no document operations.
-            Gis2dCommand::SetSelection { ids } => Emit::config(vec![Gis2dConfigOperation::SetSelection { ids: ids.clone() }]),
+            Gis2dCommand::SetSelection { ids } => Ok(Emit::config(vec![Gis2dConfigOperation::SetSelection { ids: ids.clone() }]),
             Gis2dCommand::ToggleLayerVisibility { layer_id } => {
                 let visible = !layer_visible(config, layer_id);
                 Emit::config(vec![Gis2dConfigOperation::SetLayerVisibility { layer_id: layer_id.clone(), visible }])
@@ -833,10 +833,10 @@ impl DocumentApp for Gis2dPlayApp {
                 host.fit_world_camera();
                 Emit::config(vec![Gis2dConfigOperation::SetCamera { camera_json: host.camera_json() }])
             }
-            Gis2dCommand::SetCamera { camera_json } => Emit::config(vec![Gis2dConfigOperation::SetCamera { camera_json: camera_json.clone() }]),
-            Gis2dCommand::SetRenderMode { value } => Emit::config(vec![Gis2dConfigOperation::SetRenderMode { value: value.clone() }]),
-            Gis2dCommand::SetVectorStyle { value } => Emit::config(vec![Gis2dConfigOperation::SetVectorStyle { value: value.clone() }]),
-            Gis2dCommand::SetLodMode { value } => Emit::config(vec![Gis2dConfigOperation::SetLodMode { value: value.clone() }]),
+            Gis2dCommand::SetCamera { camera_json } => Ok(Emit::config(vec![Gis2dConfigOperation::SetCamera { camera_json: camera_json.clone() }]),
+            Gis2dCommand::SetRenderMode { value } => Ok(Emit::config(vec![Gis2dConfigOperation::SetRenderMode { value: value.clone() }]),
+            Gis2dCommand::SetVectorStyle { value } => Ok(Emit::config(vec![Gis2dConfigOperation::SetVectorStyle { value: value.clone() }]),
+            Gis2dCommand::SetLodMode { value } => Ok(Emit::config(vec![Gis2dConfigOperation::SetLodMode { value: value.clone() }]),
             Gis2dCommand::SetFeatureSelection { positions, routes, mode } => {
                 let selection = merge_feature_selection(&config.feature_selection_json, positions.clone(), routes.clone(), mode);
                 let mut host = map_host_from(document, config);
@@ -846,10 +846,10 @@ impl DocumentApp for Gis2dPlayApp {
                     Emit::default()
                 }
             }
-            Gis2dCommand::SetHover { hover_json } => Emit::config(vec![Gis2dConfigOperation::SetHover { value_json: hover_json.clone() }]),
-            Gis2dCommand::SetSelectionMethod { value } => Emit::config(vec![Gis2dConfigOperation::SetSelectionMethod { value: value.clone() }]),
-            Gis2dCommand::SetSelectionMode { value } => Emit::config(vec![Gis2dConfigOperation::SetSelectionMode { value: value.clone() }]),
-            Gis2dCommand::ClearSelection => Emit::config(vec![Gis2dConfigOperation::SetFeatureSelection { value_json: Gis2dConfig::default().feature_selection_json }]),
+            Gis2dCommand::SetHover { hover_json } => Ok(Emit::config(vec![Gis2dConfigOperation::SetHover { value_json: hover_json.clone() }]),
+            Gis2dCommand::SetSelectionMethod { value } => Ok(Emit::config(vec![Gis2dConfigOperation::SetSelectionMethod { value: value.clone() }]),
+            Gis2dCommand::SetSelectionMode { value } => Ok(Emit::config(vec![Gis2dConfigOperation::SetSelectionMode { value: value.clone() }]),
+            Gis2dCommand::ClearSelection => Ok(Emit::config(vec![Gis2dConfigOperation::SetFeatureSelection { value_json: Gis2dConfig::default().feature_selection_json }]),
             Gis2dCommand::SelectAll => {
                 let host = map_host_from(document, config);
                 let selection = json!({
@@ -874,14 +874,14 @@ impl DocumentApp for Gis2dPlayApp {
                     Emit::default()
                 }
             }
-            Gis2dCommand::SetLayerStrokeScale { layer_id, value } => Emit::config(vec![Gis2dConfigOperation::SetLayerStrokeScale { layer_id: layer_id.clone(), value: clamp_map_layer_weight(*value) }]),
-            Gis2dCommand::SetLocale { value } => Emit::config(vec![Gis2dConfigOperation::SetLocale { value: value.clone() }]),
+            Gis2dCommand::SetLayerStrokeScale { layer_id, value } => Ok(Emit::config(vec![Gis2dConfigOperation::SetLayerStrokeScale { layer_id: layer_id.clone(), value: clamp_map_layer_weight(*value) }]),
+            Gis2dCommand::SetLocale { value } => Ok(Emit::config(vec![Gis2dConfigOperation::SetLocale { value: value.clone() }]),
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
             Gis2dCommand::OpenSource { feature_id } => {
                 let host = map_host_from(document, config);
                 match host.positions.get(feature_id).and_then(|row| row.source_url.clone()) {
-                    Some(url) => Emit::effect(HostEffect::OpenExternalUrl { url }),
-                    None => Emit::default(),
+                    Some(url) => Ok(Emit::effect(HostEffect::OpenExternalUrl { url }),
+                    None => Ok(Emit::default(),
                 }
             }
         }

@@ -362,7 +362,7 @@ impl DocumentApp for SequencePlayApp {
         }
     }
 
-    fn handle(&self, command: &SequenceCommand, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> Emit<SequenceOperation, SequenceConfigOperation> {
+    fn handle(&self, command: &SequenceCommand, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceOperation, SequenceConfigOperation>, Fault> {
         let fixture = doc.projection;
         let config = cfg.projection;
         match command {
@@ -418,13 +418,13 @@ impl DocumentApp for SequencePlayApp {
                     let _ = host.replace_fixture(next);
                 }))
             }
-            SequenceCommand::ConnectSteps { source_node_id, target_node_id } => Emit::operations(ops_from_host_mutation(fixture, |host| {
+            SequenceCommand::ConnectSteps { source_node_id, target_node_id } => Ok(Emit::operations(ops_from_host_mutation(fixture, |host| {
                 let _ = host.connect_steps(source_node_id, target_node_id);
             })),
-            SequenceCommand::DisconnectSteps { from_id, to_id } => Emit::operations(ops_from_host_mutation(fixture, |host| {
+            SequenceCommand::DisconnectSteps { from_id, to_id } => Ok(Emit::operations(ops_from_host_mutation(fixture, |host| {
                 host.disconnect_steps(from_id, to_id);
             })),
-            SequenceCommand::SetStepParams { id, params_json } => Emit::operations(ops_from_host_mutation(fixture, |host| {
+            SequenceCommand::SetStepParams { id, params_json } => Ok(Emit::operations(ops_from_host_mutation(fixture, |host| {
                 let _ = host.set_step_params_json(id, params_json);
             })),
             SequenceCommand::SetStepCollapsed { id } => {
@@ -476,16 +476,16 @@ impl DocumentApp for SequencePlayApp {
                     Emit::operations(ops)
                 }
             }
-            SequenceCommand::SetSelection { step_ids } => Emit::config(vec![SequenceConfigOperation::SetSelection { step_ids: step_ids.clone() }]),
-            SequenceCommand::SetOrientation { value } => Emit::config(vec![SequenceConfigOperation::SetOrientation { value: value.clone() }]),
+            SequenceCommand::SetSelection { step_ids } => Ok(Emit::config(vec![SequenceConfigOperation::SetSelection { step_ids: step_ids.clone() }]),
+            SequenceCommand::SetOrientation { value } => Ok(Emit::config(vec![SequenceConfigOperation::SetOrientation { value: value.clone() }]),
             SequenceCommand::Run => {
                 let result = host_from_fixture(fixture).run();
                 let json = serde_json::to_string(&result).unwrap_or_default();
                 Emit::config(vec![SequenceConfigOperation::SetLastRun { json }])
             }
-            SequenceCommand::Stop => Emit::config(vec![SequenceConfigOperation::SetLastRun { json: String::new() }]),
-            SequenceCommand::SetViewport { camera } => Emit::config(vec![SequenceConfigOperation::SetCamera { camera: camera.clone() }]),
-            SequenceCommand::SetLocale { value } => Emit::config(vec![SequenceConfigOperation::SetLocale { value: value.clone() }]),
+            SequenceCommand::Stop => Ok(Emit::config(vec![SequenceConfigOperation::SetLastRun { json: String::new() }]),
+            SequenceCommand::SetViewport { camera } => Ok(Emit::config(vec![SequenceConfigOperation::SetCamera { camera: camera.clone() }]),
+            SequenceCommand::SetLocale { value } => Ok(Emit::config(vec![SequenceConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

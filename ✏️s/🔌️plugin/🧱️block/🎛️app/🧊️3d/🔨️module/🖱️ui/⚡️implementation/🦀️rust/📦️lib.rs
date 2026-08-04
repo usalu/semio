@@ -249,7 +249,7 @@ impl DocumentApp for Block3dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Block3dCommand, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Emit<Block3dOperation, Block3dConfigOperation> {
+    fn handle(&self, command: &Block3dCommand, doc: &DocumentView<'_, Block3dDefinition>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dOperation, Block3dConfigOperation>, Fault> {
         match command {
             Block3dCommand::PatchObjectKind { field, value } => {
                 let mut object_kind = doc.projection.object_kind.clone();
@@ -267,20 +267,20 @@ impl DocumentApp for Block3dPlayApp {
                 let representation = BlockRepresentation { id: id.clone(), name: id, mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
                 Emit::operations(vec![Block3dOperation::SetRepresentation { index: doc.projection.representations.len(), representation }])
             }
-            Block3dCommand::RemoveRepresentation { id } => Emit::operations(vec![Block3dOperation::RemoveRepresentation { id: id.clone() }]),
+            Block3dCommand::RemoveRepresentation { id } => Ok(Emit::operations(vec![Block3dOperation::RemoveRepresentation { id: id.clone() }]),
             Block3dCommand::AddVortexKind => {
                 let id = block_3d_engine::next_id(doc.projection.vortex_kinds.iter().map(|kind| kind.id.as_str()), "vortex-kind-");
                 let vortex_kind = Block3dVortexKind { id: id.clone(), name: id.clone(), label: id, color: "#888888".into(), default_cable_kind: "cable.link".into() };
                 Emit::operations(vec![Block3dOperation::SetVortexKind { index: doc.projection.vortex_kinds.len(), vortex_kind }])
             }
-            Block3dCommand::RemoveVortexKind { id } => Emit::operations(vec![Block3dOperation::RemoveVortexKind { id: id.clone() }]),
+            Block3dCommand::RemoveVortexKind { id } => Ok(Emit::operations(vec![Block3dOperation::RemoveVortexKind { id: id.clone() }]),
             Block3dCommand::AddVortex => {
                 let Some(vortex_kind_id) = doc.projection.vortex_kinds.first().map(|kind| kind.id.clone()) else { return Emit::default() };
                 let id = block_3d_engine::next_id(doc.projection.vortices.iter().map(|vortex| vortex.id.as_str()), "vortex-");
                 let vortex = Block3dVortexTemplate { id, vortex_kind: vortex_kind_id, position: [0.0, 0.0, 0.0], direction: [0.0, 0.0, 1.0], radius: 0.3, label: None };
                 Emit::operations(vec![Block3dOperation::SetVortex { index: doc.projection.vortices.len(), vortex }])
             }
-            Block3dCommand::RemoveVortex { id } => Emit::operations(vec![Block3dOperation::RemoveVortex { id: id.clone() }]),
+            Block3dCommand::RemoveVortex { id } => Ok(Emit::operations(vec![Block3dOperation::RemoveVortex { id: id.clone() }]),
             Block3dCommand::SetActiveExample { id } => {
                 let example = match id.as_str() {
                     BLOCK3D_EXAMPLE_CAPSULE => block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
@@ -288,16 +288,16 @@ impl DocumentApp for Block3dPlayApp {
                     _ => None,
                 };
                 match example {
-                    Some(document) => Emit::operations(vec![Block3dOperation::SetDocument { document }]),
-                    None => Emit::default(),
+                    Some(document) => Ok(Emit::operations(vec![Block3dOperation::SetDocument { document }]),
+                    None => Ok(Emit::default(),
                 }
             }
             Block3dCommand::Edit { text } => match serde_json::from_str::<Block3dDefinition>(text) {
-                Ok(document) if &document != doc.projection => Emit::operations(vec![Block3dOperation::SetDocument { document }]),
-                _ => Emit::default(),
+                Ok(document) if &document != doc.projection => Ok(Emit::operations(vec![Block3dOperation::SetDocument { document }]),
+                _ => Ok(Emit::default(),
             },
-            Block3dCommand::SetSelection { ids } => Emit::config(vec![Block3dConfigOperation::SetSelection { ids: ids.clone() }]),
-            Block3dCommand::SetActiveRepresentation { representation_id } => Emit::config(vec![Block3dConfigOperation::SetActiveRepresentation { representation_id: representation_id.clone() }]),
+            Block3dCommand::SetSelection { ids } => Ok(Emit::config(vec![Block3dConfigOperation::SetSelection { ids: ids.clone() }]),
+            Block3dCommand::SetActiveRepresentation { representation_id } => Ok(Emit::config(vec![Block3dConfigOperation::SetActiveRepresentation { representation_id: representation_id.clone() }]),
         }
     }
 

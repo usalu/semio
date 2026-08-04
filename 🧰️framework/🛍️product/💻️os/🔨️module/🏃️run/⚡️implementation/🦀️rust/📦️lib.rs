@@ -50,6 +50,8 @@ pub enum RunError {
     #[error("(de)serialization error: {0}")]
     Serde(#[from] serde_json::Error),
 }
+
+dsl_core::fault_from_thiserror!(RunError, dsl_core::FaultOrigin::Os, "os.run");
 //#endregion 🔖️Types
 
 //#region 🔖️AppChannelHost

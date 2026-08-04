@@ -203,7 +203,7 @@ impl DocumentApp for Block5dPlayApp {
         }
     }
 
-    fn handle(&self, command: &Block5dCommand, doc: &DocumentView<'_, Block5dDefinition>, _cfg: &ConfigView<'_, Block5dConfig>) -> Emit<Block5dOperation, Block5dConfigOperation> {
+    fn handle(&self, command: &Block5dCommand, doc: &DocumentView<'_, Block5dDefinition>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dOperation, Block5dConfigOperation>, Fault> {
         match command {
             Block5dCommand::PatchPartKind { field, value } => {
                 let mut part_kind = doc.projection.part_kind.clone();
@@ -221,14 +221,14 @@ impl DocumentApp for Block5dPlayApp {
                 let grip_kind = Block5dGripKind { id: id.clone(), name: id.clone(), label: id, color: "#888888".into(), default_rope_kind: "rope.link".into() };
                 Emit::operations(vec![Block5dOperation::SetGripKind { index: doc.projection.grip_kinds.len(), grip_kind }])
             }
-            Block5dCommand::RemoveGripKind { id } => Emit::operations(vec![Block5dOperation::RemoveGripKind { id: id.clone() }]),
+            Block5dCommand::RemoveGripKind { id } => Ok(Emit::operations(vec![Block5dOperation::RemoveGripKind { id: id.clone() }]),
             Block5dCommand::AddGrip => {
                 let Some(grip_kind_id) = doc.projection.grip_kinds.first().map(|kind| kind.id.clone()) else { return Emit::default() };
                 let id = block_5d_engine::next_id(doc.projection.grips.iter().map(|grip| grip.id.as_str()), "grip-");
                 let grip = Block5dGripTemplate { id, grip_kind: grip_kind_id, angle: 0.0, radius_2d: 0.36, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.36 };
                 Emit::operations(vec![Block5dOperation::SetGrip { index: doc.projection.grips.len(), grip }])
             }
-            Block5dCommand::RemoveGrip { id } => Emit::operations(vec![Block5dOperation::RemoveGrip { id: id.clone() }]),
+            Block5dCommand::RemoveGrip { id } => Ok(Emit::operations(vec![Block5dOperation::RemoveGrip { id: id.clone() }]),
             Block5dCommand::SetActiveExample { id } => {
                 let example = match id.as_str() {
                     BLOCK5D_EXAMPLE_FOREST_LEFT => block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
@@ -236,15 +236,15 @@ impl DocumentApp for Block5dPlayApp {
                     _ => None,
                 };
                 match example {
-                    Some(document) => Emit::operations(vec![Block5dOperation::SetDocument { document }]),
-                    None => Emit::default(),
+                    Some(document) => Ok(Emit::operations(vec![Block5dOperation::SetDocument { document }]),
+                    None => Ok(Emit::default(),
                 }
             }
             Block5dCommand::Edit { text } => match serde_json::from_str::<Block5dDefinition>(text) {
-                Ok(document) if &document != doc.projection => Emit::operations(vec![Block5dOperation::SetDocument { document }]),
-                _ => Emit::default(),
+                Ok(document) if &document != doc.projection => Ok(Emit::operations(vec![Block5dOperation::SetDocument { document }]),
+                _ => Ok(Emit::default(),
             },
-            Block5dCommand::SetSelection { ids } => Emit::config(vec![Block5dConfigOperation::SetSelection { ids: ids.clone() }]),
+            Block5dCommand::SetSelection { ids } => Ok(Emit::config(vec![Block5dConfigOperation::SetSelection { ids: ids.clone() }]),
         }
     }
 

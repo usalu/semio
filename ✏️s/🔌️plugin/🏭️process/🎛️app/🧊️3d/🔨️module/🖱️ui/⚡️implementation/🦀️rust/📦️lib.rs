@@ -980,7 +980,7 @@ impl DocumentApp for Process3dPlayApp {
     }
 
     //#region 🔖️Handle
-    fn handle(&self, command: &Process3dCommand, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Emit<Process3dOperation, Process3dConfigOperation> {
+    fn handle(&self, command: &Process3dCommand, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> Result<Emit<Process3dOperation, Process3dConfigOperation>, Fault> {
         let fixture = doc.projection;
         let config = cfg.projection;
         match command {
@@ -1024,9 +1024,9 @@ impl DocumentApp for Process3dPlayApp {
                         let selected = format!("machine:{machine_id}");
                         Emit { document_operations: vec![operation], config_operations: vec![Process3dConfigOperation::SetSelectedId { value: Some(selected) }], ..Default::default() }
                     }
-                    None => Emit::default(),
+                    None => Ok(Emit::default(),
                 },
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             Process3dCommand::RemoveWorkshopMachine { id } => match remove_workshop_machine_operation(fixture, id) {
                 Some(operation) => {
@@ -1036,7 +1036,7 @@ impl DocumentApp for Process3dPlayApp {
                     }
                     Emit { document_operations: vec![operation], config_operations, ..Default::default() }
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             Process3dCommand::UpdateWorkshopMachine { machine } => {
                 if fixture.workshop.machines.iter().any(|existing| existing.id == machine.id) {
@@ -1054,14 +1054,14 @@ impl DocumentApp for Process3dPlayApp {
                     }
                     Emit { document_operations: operations, config_operations, ..Default::default() }
                 }
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             Process3dCommand::RemoveSelectedStep => match config.selected_id.clone() {
                 Some(id) => match remove_step_operations(fixture, &id) {
-                    Some(operations) => Emit { document_operations: operations, config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() },
-                    None => Emit::default(),
+                    Some(operations) => Ok(Emit { document_operations: operations, config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() },
+                    None => Ok(Emit::default(),
                 },
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
             Process3dCommand::MoveStep { id, index } => {
                 if fixture.steps.iter().any(|step| &step.id == id) {
@@ -1099,8 +1099,8 @@ impl DocumentApp for Process3dPlayApp {
             Process3dCommand::PatchInspector { target, field, number, text } => {
                 let value = number.map(|n| json!(n)).or_else(|| text.clone().map(Value::String));
                 match process3d_inspector_patch_operation(fixture, target, field, value.as_ref()) {
-                    Some(operation) => Emit::operations(vec![operation]),
-                    None => Emit::default(),
+                    Some(operation) => Ok(Emit::operations(vec![operation]),
+                    None => Ok(Emit::default(),
                 }
             }
             Process3dCommand::SetCursor { value } => {
@@ -1122,22 +1122,22 @@ impl DocumentApp for Process3dPlayApp {
                 let current = fixture.resolved_up_to.unwrap_or(len) as i64;
                 Emit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + 1).clamp(0, len as i64) as usize) }])
             }
-            Process3dCommand::SetActiveUtility { utility_id } => Emit::config(vec![Process3dConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, Process3dConfigOperation::SetSelectedFaceId { value: None }]),
-            Process3dCommand::EngagementInput { value } => Emit::config(vec![Process3dConfigOperation::SetEngagementInput { value: value.clone() }]),
-            Process3dCommand::EngagementAbort => Emit { config_operations: vec![Process3dConfigOperation::SetEngagementInput { value: String::new() }], effects: vec![set_active_utility_effect("select")], ..Default::default() },
+            Process3dCommand::SetActiveUtility { utility_id } => Ok(Emit::config(vec![Process3dConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }, Process3dConfigOperation::SetSelectedFaceId { value: None }]),
+            Process3dCommand::EngagementInput { value } => Ok(Emit::config(vec![Process3dConfigOperation::SetEngagementInput { value: value.clone() }]),
+            Process3dCommand::EngagementAbort => Ok(Emit { config_operations: vec![Process3dConfigOperation::SetEngagementInput { value: String::new() }], effects: vec![set_active_utility_effect("select")], ..Default::default() },
             Process3dCommand::EngagementSubmit => {
                 let command_word = config.engagement_input.trim().to_lowercase();
                 let len = fixture.steps.len();
                 let current = fixture.resolved_up_to.unwrap_or(len);
                 let clear_input = Process3dConfigOperation::SetEngagementInput { value: String::new() };
                 match command_word.split_whitespace().next() {
-                    Some("cut") => Emit { config_operations: vec![clear_input], effects: vec![set_active_utility_effect("cut")], ..Default::default() },
-                    Some("drill") => Emit { config_operations: vec![clear_input], effects: vec![set_active_utility_effect("drill")], ..Default::default() },
-                    Some("attach") => Emit { config_operations: vec![clear_input], effects: vec![set_active_utility_effect("attach")], ..Default::default() },
-                    Some("back") => Emit { document_operations: vec![Process3dOperation::SetCursor { resolved_up_to: Some(current.saturating_sub(1)) }], config_operations: vec![clear_input], ..Default::default() },
-                    Some("forward") => Emit { document_operations: vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + 1).min(len)) }], config_operations: vec![clear_input], ..Default::default() },
-                    Some("all") => Emit { document_operations: vec![Process3dOperation::SetCursor { resolved_up_to: None }], config_operations: vec![clear_input], ..Default::default() },
-                    _ => Emit::config(vec![clear_input]),
+                    Some("cut") => Ok(Emit { config_operations: vec![clear_input], effects: vec![set_active_utility_effect("cut")], ..Default::default() },
+                    Some("drill") => Ok(Emit { config_operations: vec![clear_input], effects: vec![set_active_utility_effect("drill")], ..Default::default() },
+                    Some("attach") => Ok(Emit { config_operations: vec![clear_input], effects: vec![set_active_utility_effect("attach")], ..Default::default() },
+                    Some("back") => Ok(Emit { document_operations: vec![Process3dOperation::SetCursor { resolved_up_to: Some(current.saturating_sub(1)) }], config_operations: vec![clear_input], ..Default::default() },
+                    Some("forward") => Ok(Emit { document_operations: vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + 1).min(len)) }], config_operations: vec![clear_input], ..Default::default() },
+                    Some("all") => Ok(Emit { document_operations: vec![Process3dOperation::SetCursor { resolved_up_to: None }], config_operations: vec![clear_input], ..Default::default() },
+                    _ => Ok(Emit::config(vec![clear_input]),
                 }
             }
             Process3dCommand::WorldPointerDown { position } => {
@@ -1176,11 +1176,11 @@ impl DocumentApp for Process3dPlayApp {
                             ..Default::default()
                         }
                     }
-                    None => Emit::default(),
+                    None => Ok(Emit::default(),
                 }
             }
             Process3dCommand::ExportModel { format } => match export_process3d_model(fixture, format) {
-                Some(export) => Emit::effect(HostEffect::DownloadMediaExport {
+                Some(export) => Ok(Emit::effect(HostEffect::DownloadMediaExport {
                     filename: export.filename,
                     mime_type: export.mime_type,
                     data: match export.data {
@@ -1189,12 +1189,12 @@ impl DocumentApp for Process3dPlayApp {
                     },
                     encoding: export.encoding,
                 }),
-                None => Emit::default(),
+                None => Ok(Emit::default(),
             },
-            Process3dCommand::LoadModelRequest => Emit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }),
+            Process3dCommand::LoadModelRequest => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }),
             Process3dCommand::ImportModelFile { name, payload } => match import_process3d_model(&name.to_ascii_lowercase(), payload) {
-                Some(document) => Emit { document_operations: vec![Process3dOperation::SetDocument { document }], config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() },
-                None => Emit::default(),
+                Some(document) => Ok(Emit { document_operations: vec![Process3dOperation::SetDocument { document }], config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() },
+                None => Ok(Emit::default(),
             },
             Process3dCommand::ToggleSun => {
                 Emit::config(vec![Process3dConfigOperation::SetSun { enabled: !config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() }])
@@ -1208,10 +1208,10 @@ impl DocumentApp for Process3dPlayApp {
             Process3dCommand::SetSunIntensity { value } => {
                 Emit::config(vec![Process3dConfigOperation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: *value, color: config.sun_color.clone() }])
             }
-            Process3dCommand::SetSelection { id } => Emit::config(vec![Process3dConfigOperation::SetSelectedId { value: id.clone() }]),
-            Process3dCommand::SetHover { id } => Emit::config(vec![Process3dConfigOperation::SetHoveredId { value: id.clone() }]),
-            Process3dCommand::SetCamera { position, target, fov } => Emit::config(vec![Process3dConfigOperation::SetCamera { position: *position, target: *target, fov: *fov }]),
-            Process3dCommand::SetLocale { value } => Emit::config(vec![Process3dConfigOperation::SetLocale { value: value.clone() }]),
+            Process3dCommand::SetSelection { id } => Ok(Emit::config(vec![Process3dConfigOperation::SetSelectedId { value: id.clone() }]),
+            Process3dCommand::SetHover { id } => Ok(Emit::config(vec![Process3dConfigOperation::SetHoveredId { value: id.clone() }]),
+            Process3dCommand::SetCamera { position, target, fov } => Ok(Emit::config(vec![Process3dConfigOperation::SetCamera { position: *position, target: *target, fov: *fov }]),
+            Process3dCommand::SetLocale { value } => Ok(Emit::config(vec![Process3dConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
     //#endregion 🔖️Handle

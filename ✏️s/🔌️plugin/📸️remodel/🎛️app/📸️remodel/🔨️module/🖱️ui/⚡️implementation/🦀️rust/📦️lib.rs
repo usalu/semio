@@ -977,7 +977,7 @@ impl DocumentApp for RemodelPlayApp {
         }
     }
 
-    fn handle(&self, command: &RemodelCommand, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Emit<RemodelOperation, RemodelConfigOperation> {
+    fn handle(&self, command: &RemodelCommand, doc: &DocumentView<'_, RemodelScene>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelOperation, RemodelConfigOperation>, Fault> {
         let scene = doc.projection;
         match command {
             //#region 🔖️StagedReconstruction
@@ -1073,7 +1073,7 @@ impl DocumentApp for RemodelPlayApp {
             RemodelCommand::SetIngestParams { frame_sample_stride, max_frames, downscale_long_edge_px, min_sharpness } => {
                 Emit::operations(vec![RemodelOperation::SetIngestParams { params: IngestParams { frame_sample_stride: *frame_sample_stride, max_frames: *max_frames, downscale_long_edge_px: *downscale_long_edge_px, min_sharpness: *min_sharpness } }])
             }
-            RemodelCommand::SetFeatureParams { detector, target_count, octaves, edge_threshold } => Emit::operations(vec![RemodelOperation::SetFeatureParams {
+            RemodelCommand::SetFeatureParams { detector, target_count, octaves, edge_threshold } => Ok(Emit::operations(vec![RemodelOperation::SetFeatureParams {
                 params: FeatureParams {
                     detector: match detector.as_str() {
                         "akaze" => FeatureDetector::Akaze,
@@ -1085,7 +1085,7 @@ impl DocumentApp for RemodelPlayApp {
                     edge_threshold: *edge_threshold,
                 },
             }]),
-            RemodelCommand::SetMatchParams { matcher, ratio_test, cross_check, sequential_window, max_pairs_per_frame, loop_closure } => Emit::operations(vec![RemodelOperation::SetMatchParams {
+            RemodelCommand::SetMatchParams { matcher, ratio_test, cross_check, sequential_window, max_pairs_per_frame, loop_closure } => Ok(Emit::operations(vec![RemodelOperation::SetMatchParams {
                 params: MatchParams {
                     matcher: if matcher == "kd-tree" { MatcherKind::KdTree } else { MatcherKind::BruteForce },
                     ratio_test: *ratio_test,
@@ -1095,7 +1095,7 @@ impl DocumentApp for RemodelPlayApp {
                     loop_closure: *loop_closure,
                 },
             }]),
-            RemodelCommand::SetSfmParams { ransac_iterations, ransac_threshold_px, min_track_length, ba_max_iterations, robust_loss, huber_delta_px } => Emit::operations(vec![RemodelOperation::SetSfmParams {
+            RemodelCommand::SetSfmParams { ransac_iterations, ransac_threshold_px, min_track_length, ba_max_iterations, robust_loss, huber_delta_px } => Ok(Emit::operations(vec![RemodelOperation::SetSfmParams {
                 params: SfmParams {
                     ransac_iterations: *ransac_iterations,
                     ransac_threshold_px: *ransac_threshold_px,
@@ -1109,7 +1109,7 @@ impl DocumentApp for RemodelPlayApp {
                     huber_delta_px: *huber_delta_px,
                 },
             }]),
-            RemodelCommand::SetDenseParams { resolution, window_radius_px, min_view_consistency, confidence_threshold, max_points } => Emit::operations(vec![RemodelOperation::SetDenseParams {
+            RemodelCommand::SetDenseParams { resolution, window_radius_px, min_view_consistency, confidence_threshold, max_points } => Ok(Emit::operations(vec![RemodelOperation::SetDenseParams {
                 params: DenseParams {
                     resolution: match resolution.as_str() {
                         "low" => DenseResolution::Low,
@@ -1137,22 +1137,22 @@ impl DocumentApp for RemodelPlayApp {
                     },
                 }])
             }
-            RemodelCommand::SetMotionParams { enabled, max_tracks, track_window_px, min_track_quality, min_track_length_frames } => Emit::operations(vec![RemodelOperation::SetMotionParams {
+            RemodelCommand::SetMotionParams { enabled, max_tracks, track_window_px, min_track_quality, min_track_length_frames } => Ok(Emit::operations(vec![RemodelOperation::SetMotionParams {
                 params: MotionParams { enabled: *enabled, max_tracks: *max_tracks, track_window_px: *track_window_px, min_track_quality: *min_track_quality, min_track_length_frames: *min_track_length_frames },
             }]),
-            RemodelCommand::SetGeoParams { enabled, origin_lon, origin_lat, origin_alt, gsd_m, dsm_cell_m, dtm_filter_radius_m, ortho_max_px } => Emit::operations(vec![RemodelOperation::SetGeoParams {
+            RemodelCommand::SetGeoParams { enabled, origin_lon, origin_lat, origin_alt, gsd_m, dsm_cell_m, dtm_filter_radius_m, ortho_max_px } => Ok(Emit::operations(vec![RemodelOperation::SetGeoParams {
                 params: GeoParams { enabled: *enabled, origin_lon: *origin_lon, origin_lat: *origin_lat, origin_alt: *origin_alt, gsd_m: *gsd_m, dsm_cell_m: *dsm_cell_m, dtm_filter_radius_m: *dtm_filter_radius_m, ortho_max_px: *ortho_max_px },
             }]),
             //#endregion 🔖️ParamSetters
 
             //#region 🔖️ClearReset
-            RemodelCommand::ResetPlaceholderMesh => Emit::operations(vec![RemodelOperation::SetMeshResult { mesh: Box::new(placeholder_result()) }]),
-            RemodelCommand::ClearSparse => Emit::operations(vec![RemodelOperation::SetSparse { sparse: None }]),
-            RemodelCommand::ClearDense => Emit::operations(vec![RemodelOperation::SetDense { dense: None }]),
-            RemodelCommand::ClearMeshResult => Emit::operations(vec![RemodelOperation::SetMeshResult { mesh: Box::new(empty_result()) }]),
-            RemodelCommand::ClearTracks => Emit::operations(vec![RemodelOperation::SetTracks { tracks: Vec::new() }]),
-            RemodelCommand::ClearGeoProducts => Emit::operations(vec![RemodelOperation::SetGeoProducts { geo: None }]),
-            RemodelCommand::ClearResult => Emit::operations(vec![
+            RemodelCommand::ResetPlaceholderMesh => Ok(Emit::operations(vec![RemodelOperation::SetMeshResult { mesh: Box::new(placeholder_result()) }]),
+            RemodelCommand::ClearSparse => Ok(Emit::operations(vec![RemodelOperation::SetSparse { sparse: None }]),
+            RemodelCommand::ClearDense => Ok(Emit::operations(vec![RemodelOperation::SetDense { dense: None }]),
+            RemodelCommand::ClearMeshResult => Ok(Emit::operations(vec![RemodelOperation::SetMeshResult { mesh: Box::new(empty_result()) }]),
+            RemodelCommand::ClearTracks => Ok(Emit::operations(vec![RemodelOperation::SetTracks { tracks: Vec::new() }]),
+            RemodelCommand::ClearGeoProducts => Ok(Emit::operations(vec![RemodelOperation::SetGeoProducts { geo: None }]),
+            RemodelCommand::ClearResult => Ok(Emit::operations(vec![
                 RemodelOperation::SetMeshResult { mesh: Box::new(empty_result()) },
                 RemodelOperation::SetSparse { sparse: None },
                 RemodelOperation::SetDense { dense: None },
@@ -1164,17 +1164,17 @@ impl DocumentApp for RemodelPlayApp {
             //#endregion 🔖️ClearReset
 
             //#region 🔖️ViewActions
-            RemodelCommand::SetSelection { mode, ids } => Emit::config(vec![RemodelConfigOperation::SetSelection { mode: mode.clone(), ids: ids.clone() }]),
-            RemodelCommand::SetCamera { camera } => Emit::config(vec![RemodelConfigOperation::SetCamera { camera: camera.clone() }]),
-            RemodelCommand::SetLayerVisibility { layer, visible } => Emit::config(vec![RemodelConfigOperation::SetLayerVisibility { layer: layer.clone(), visible: *visible }]),
-            RemodelCommand::SetFrameCursor { stream_id, frame_index } => Emit::config(vec![RemodelConfigOperation::SetFrameCursor { stream_id: stream_id.clone(), frame_index: *frame_index }]),
-            RemodelCommand::SetReportTable { table } => Emit::config(vec![RemodelConfigOperation::SetReportTable { table: table.clone() }]),
-            RemodelCommand::SetActiveUtility { utility_id } => Emit::config(vec![RemodelConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }]),
-            RemodelCommand::SetLocale { value } => Emit::config(vec![RemodelConfigOperation::SetLocale { value: value.clone() }]),
+            RemodelCommand::SetSelection { mode, ids } => Ok(Emit::config(vec![RemodelConfigOperation::SetSelection { mode: mode.clone(), ids: ids.clone() }]),
+            RemodelCommand::SetCamera { camera } => Ok(Emit::config(vec![RemodelConfigOperation::SetCamera { camera: camera.clone() }]),
+            RemodelCommand::SetLayerVisibility { layer, visible } => Ok(Emit::config(vec![RemodelConfigOperation::SetLayerVisibility { layer: layer.clone(), visible: *visible }]),
+            RemodelCommand::SetFrameCursor { stream_id, frame_index } => Ok(Emit::config(vec![RemodelConfigOperation::SetFrameCursor { stream_id: stream_id.clone(), frame_index: *frame_index }]),
+            RemodelCommand::SetReportTable { table } => Ok(Emit::config(vec![RemodelConfigOperation::SetReportTable { table: table.clone() }]),
+            RemodelCommand::SetActiveUtility { utility_id } => Ok(Emit::config(vec![RemodelConfigOperation::SetActiveUtility { utility_id: utility_id.clone() }]),
+            RemodelCommand::SetLocale { value } => Ok(Emit::config(vec![RemodelConfigOperation::SetLocale { value: value.clone() }]),
             //#endregion 🔖️ViewActions
 
             //#region 🔖️Export
-            RemodelCommand::ImportFrames => Emit::effect(HostEffect::RequestFileOpen { accept: REMODEL_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true }),
+            RemodelCommand::ImportFrames => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: REMODEL_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true }),
             RemodelCommand::ImportVideo => {
                 let ingest = &scene.params.ingest;
                 Emit::effect(HostEffect::RequestMediaFrames {
@@ -1191,8 +1191,8 @@ impl DocumentApp for RemodelPlayApp {
                 })
             }
             RemodelCommand::ExportQcReport => match &scene.results.qc {
-                Some(qc) => Emit::effect(HostEffect::DownloadMediaExport { filename: "remodel-qc-report.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(qc).unwrap_or_default(), encoding: None }),
-                None => Emit::default(),
+                Some(qc) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: "remodel-qc-report.ops".into(), mime_type: "text/plain".into(), data: serde_json::to_string_pretty(qc).unwrap_or_default(), encoding: None }),
+                None => Ok(Emit::default(),
             },
             //#endregion 🔖️Export
         }

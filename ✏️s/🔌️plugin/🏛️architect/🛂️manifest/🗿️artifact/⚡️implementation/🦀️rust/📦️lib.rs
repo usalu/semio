@@ -1658,7 +1658,7 @@ impl DocumentApp for ArchitectApp {
     /// Every former `RefCell<ArchitectPlayRuntime>` mutation now clones `cfg.projection`, edits the
     /// clone, and emits it as a single whole-snapshot `ArchitectConfigOperation::Snapshot` alongside
     /// any document operations (mirrors `cad`'s `snapshot_of` helper pattern).
-    fn handle(&self, command: &ArchitectCommand, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Emit<ProgramOperation, ArchitectConfigOperation> {
+    fn handle(&self, command: &ArchitectCommand, doc: &DocumentView<'_, Program>, cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramOperation, ArchitectConfigOperation>, Fault> {
         let program = doc.projection;
         let base_config = cfg.projection;
         let snapshot = |next: ArchitectConfig| vec![ArchitectConfigOperation::Snapshot { config: next }];
@@ -1710,8 +1710,8 @@ impl DocumentApp for ArchitectApp {
                     return Emit::default();
                 };
                 match patch_register_item_operation(register_id, EntityId(entity_id.clone()), patch) {
-                    Some(operation) => Emit::operations(vec![operation]),
-                    None => Emit::default(),
+                    Some(operation) => Ok(Emit::operations(vec![operation]),
+                    None => Ok(Emit::default(),
                 }
             }
             ArchitectCommand::SetAdjacencyField { entity_id, field, value_json } => {
@@ -1721,8 +1721,8 @@ impl DocumentApp for ArchitectApp {
                 let mut patch = serde_json::Map::new();
                 patch.insert(field.clone(), value);
                 match patch_register_item_operation("adjacencies", EntityId(entity_id.clone()), Value::Object(patch)) {
-                    Some(operation) => Emit::operations(vec![operation]),
-                    None => Emit::default(),
+                    Some(operation) => Ok(Emit::operations(vec![operation]),
+                    None => Ok(Emit::default(),
                 }
             }
             ArchitectCommand::ApplyTemplate { template_id } => {

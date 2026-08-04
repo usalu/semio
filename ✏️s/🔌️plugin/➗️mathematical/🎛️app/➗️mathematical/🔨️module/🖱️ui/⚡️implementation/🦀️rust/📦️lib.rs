@@ -112,7 +112,7 @@ impl DocumentApp for MathematicalPlayApp {
         }
     }
 
-    fn handle(&self, command: &MathCommand, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Emit<MathOperation, MathConfigOperation> {
+    fn handle(&self, command: &MathCommand, doc: &DocumentView<'_, MathProjection>, _cfg: &ConfigView<'_, MathConfig>) -> Result<Emit<MathOperation, MathConfigOperation>, Fault> {
         let projection = doc.projection;
         match command {
             MathCommand::SetDocument { graph, geometry } => {
@@ -191,9 +191,9 @@ impl DocumentApp for MathematicalPlayApp {
             }
             // 👁️ Config-only: the node-graph viewport never touches the document — it's written into
             // `cfg`, session-only, no VCS edit, no undo entry on the document store.
-            MathCommand::NodeGraphViewport { camera } => Emit::config(vec![MathConfigOperation::SetCamera { camera: camera.clone() }]),
-            MathCommand::SetPoints { geometry } => Emit::operations(vec![MathOperation::SetGeometry { geometry: geometry.clone() }]),
-            MathCommand::SetLocale { value } => Emit::config(vec![MathConfigOperation::SetLocale { value: value.clone() }]),
+            MathCommand::NodeGraphViewport { camera } => Ok(Emit::config(vec![MathConfigOperation::SetCamera { camera: camera.clone() }]),
+            MathCommand::SetPoints { geometry } => Ok(Emit::operations(vec![MathOperation::SetGeometry { geometry: geometry.clone() }]),
+            MathCommand::SetLocale { value } => Ok(Emit::config(vec![MathConfigOperation::SetLocale { value: value.clone() }]),
         }
     }
 

@@ -14,7 +14,7 @@
  */
 // #endregion Header
 
-import type { PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework-core";
+import type { Fault, PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework-core";
 
 export type OsPluginArtifactMap = Readonly<Record<string, { readonly kind: string; readonly id: string; readonly label: string }>>;
 
@@ -1647,7 +1647,7 @@ export type AppFrameValue =
   | { readonly ContextMenu: { readonly in_reply_to: number; readonly items: readonly number[] } }
   | { readonly Media: { readonly in_reply_to: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
   | { readonly MediaFingerprint: { readonly in_reply_to: number; readonly port: string; readonly fingerprint: readonly number[] } }
-  | { readonly Error: { readonly in_reply_to: number | null; readonly code: string; readonly message: string } };
+  | { readonly Error: { readonly in_reply_to: number | null; readonly fault: readonly number[] } };
 //#endregion 🔖️Types
 
 //#region 🔖️Combinators
@@ -1933,8 +1933,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
   } else if ("Error" in frame) {
     out.push(APP_FRAME_TAGS.Error);
     writeOptU64(out, frame.Error.in_reply_to);
-    writeStr(out, frame.Error.code);
-    writeStr(out, frame.Error.message);
+    writeBytes(out, frame.Error.fault);
   } else {
     throw new Error("encodeAppFrame: unrecognized frame variant");
   }
@@ -2014,9 +2013,8 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
     }
     case APP_FRAME_TAGS.Error: {
       const in_reply_to = readOptU64(bytes, pos);
-      const code = readStr(bytes, pos);
-      const message = readStr(bytes, pos);
-      return { Error: { in_reply_to, code, message } };
+      const fault = readBytes(bytes, pos);
+      return { Error: { in_reply_to, fault } };
     }
     default:
       throw new Error(`decodeAppFrame: unknown tag ${bytes[0]}`);
@@ -2030,7 +2028,25 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
  * 📡️ TS twin of `protocol_channel::CHANNEL_VERSION` (`🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust/📦️lib.rs`)
  * — bump both sides together on a wire-incompatible frame change.
  */
-const APP_CHANNEL_VERSION = 3;
+/** @emoji 📥️ Decodes a pack-encoded {@link Fault} from an app-channel error frame. */
+export function decodeFaultFromWire(faultBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): Fault | null {
+  try {
+    const raw = decodePackValue(new Uint8Array(faultBytes));
+    if (!raw || typeof raw !== "object" || !("message" in raw)) return null;
+    return raw as Fault;
+  } catch {
+    return null;
+  }
+}
+
+export function faultDisplayMessage(faultBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): string {
+  const fault = decodeFaultFromWire(faultBytes, decodePackValue);
+  if (!fault) return "unknown fault";
+  const code = typeof fault.code === "string" ? fault.code : String(fault.code);
+  return `${code}: ${fault.message}`;
+}
+
+const APP_CHANNEL_VERSION = 4;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any `exchange`-shaped object (a real handle, a test
@@ -2130,7 +2146,7 @@ export class AppChannelClient {
     });
     const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
     if (errorFrame) {
-      throw new Error(`AppChannelClient.contextMenu(${this.appId}): ${errorFrame.Error.code}: ${errorFrame.Error.message}`);
+      throw new Error(`AppChannelClient.contextMenu(${this.appId}): ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     }
     const menuFrame = frames.find(
       (frame): frame is Extract<AppFrameValue, { readonly ContextMenu: { readonly in_reply_to: number; readonly items: readonly number[] } }> =>
@@ -2415,8 +2431,8 @@ if (import.meta.vitest) {
       { ContextMenu: { in_reply_to: 7, items: [1, 2, 3] } },
       { Media: { in_reply_to: 8, port: "out-1", descriptor: [1], data: [2] } },
       { MediaFingerprint: { in_reply_to: 9, port: "fp-1", fingerprint: [1, 2, 3, 4] } },
-      { Error: { in_reply_to: 10, code: "E_BAD", message: "boom" } },
-      { Error: { in_reply_to: null, code: "E_BAD", message: "boom" } },
+      { Error: { in_reply_to: 10, fault: [1, 2, 3] } },
+      { Error: { in_reply_to: null, fault: [4, 5] } },
     ];
 
     it.each(sampleCommands.map((cmd) => [cmd] as const))("round-trips AppCommand %j", (cmd) => {
@@ -2435,7 +2451,7 @@ if (import.meta.vitest) {
 
     it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... Error=13)", () => {
       expect(encodeAppFrame({ Welcome: { channel_version: 0, instance: 0, manifest: [] } })[0]).toBe(0);
-      expect(encodeAppFrame({ Error: { in_reply_to: null, code: "", message: "" } })[0]).toBe(13);
+      expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [] } })[0]).toBe(13);
     });
 
     /**
@@ -2503,7 +2519,7 @@ if (import.meta.vitest) {
         ["ContextMenu", { ContextMenu: { in_reply_to: 1, items: [1] } }],
         ["Media", { Media: { in_reply_to: 1, port: "p", descriptor: [1], data: [2] } }],
         ["MediaFingerprint", { MediaFingerprint: { in_reply_to: 1, port: "p", fingerprint: [1] } }],
-        ["Error", { Error: { in_reply_to: null, code: "c", message: "m" } }],
+        ["Error", { Error: { in_reply_to: null, fault: [99] } }],
       ];
             const frameGoldenHex: Readonly<Record<string, string>> = {
         Welcome: "0003010101",
@@ -2519,7 +2535,7 @@ if (import.meta.vitest) {
         ContextMenu: "0a010101",
         Media: "0b01017001010102",
         MediaFingerprint: "0c0101700101",
-        Error: "0d000163016d",
+        Error: "0d000163",
       };
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
       for (const [label, value] of commandFixtures) expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandGoldenHex[label]);
