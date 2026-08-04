@@ -1,0 +1,24 @@
+== print/dist/report.pdf
+tocline anchors in .aux: 8
+chip -> tocline link annotations: 8
+toc lines with no chip pointing at them: []
+== print/dist/forschungsbericht.pdf
+tocline anchors in .aux: 11
+chip -> tocline link annotations: 10
+toc lines with no chip pointing at them: ['semio-tocline-0']
+== print/dist/zwischenbericht.pdf
+tocline anchors in .aux: 7
+chip -> tocline link annotations: 7
+toc lines with no chip pointing at them: []
+== print/dist/report-dark.pdf
+tocline anchors in .aux: 8
+chip -> tocline link annotations: 8
+toc lines with no chip pointing at them: []
+== mit-bestand/bericht/zwischenbericht/dist/zwischenbericht.pdf
+tocline anchors in .aux: 245
+chip -> tocline link annotations: 245
+toc lines with no chip pointing at them: []
+== mit-bestand/bericht/zwischenbericht/dist/zwischenbericht-dark.pdf
+tocline anchors in .aux: 245
+chip -> tocline link annotations: 245
+toc lines with no chip pointing at them: []

@@ -101,9 +101,12 @@
   \fi
 }
 
+% 🔗 The number cell also carries this line's own anchor (\semio@tocline@anchor,
+% semio-core.sty), so the hierarchy key chip printed next to the heading itself
+% can jump back here. Placed after \cellcolor, which colortbl requires first.
 \newcommand{\SemioTableTocRow}[3]{%
   \SemioTableRow{%
-    \cellcolor{semio-chrome-canvas}\semio@toc@link{#3}{\mbox{\semio@toc@number{#1}}} &
+    \cellcolor{semio-chrome-canvas}\semio@tocline@anchor{#1}\semio@toc@link{#3}{\mbox{\semio@toc@number{#1}}} &
     \cellcolor{semio-chrome-canvas}\semio@toc@link{#3}{\textcolor{semio-chrome-text-normal}{#2}} &
     \cellcolor{semio-chrome-canvas}\semio@toc@page@link{#3}
   }%
@@ -1065,6 +1068,18 @@
   \semio@project@render{#1}{\semio@project@firsthead}{#2}%
 }
 
+% 🔗 The card's key chip is the project's hierarchy key, and
+% \SemioProjectHeadingSilent has just registered a TOC line for it — so it links
+% back there like every other hierarchy key chip. This number reaches the title
+% chrome raw rather than through \semio_kind_chip_number:nn, so both the link and
+% the colour are attached here: the explicit \textcolor restates the muted tone
+% \semio@heading@cap@muted@core applies anyway, which hyperref's colorlinks would
+% otherwise override. Robust, because the key is carried to the chrome row
+% through a \protected@edef and a further \edef before it is ever typeset.
+\NewDocumentCommand \semio@project@key@chip { m } {%
+  \semio@tocline@link{#1}{\textcolor{semio-chrome-text-normal}{#1}}%
+}
+
 % \SemioProject[bildrechte]{name}{label}{image}{ort & land & jahr & typ & status & quelle}{rows}
 % Optional #1 = image credit / rights, shown as the "Bildrechte" metadata row.
 % Defaults to — so every card carries the row as a placeholder until the credit
@@ -1072,7 +1087,7 @@
 \newcommand{\SemioProject}[6][—]{%
   \SemioCardKeep
   \SemioProjectHeadingSilent{#2}{#3}%
-  \protected@edef\semio@project@key{\thesubsection}%
+  \protected@edef\semio@project@key{\semio@project@key@chip{\thesubsection}}%
   \gdef\semio@window@header@title{#2}%
   \global\let\semio@window@header@number\semio@project@key
   \def\semio@project@bildrechte{#1}%

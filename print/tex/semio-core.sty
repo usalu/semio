@@ -468,6 +468,39 @@
   \fi
 }
 
+%region TocLineLinks
+% 🔗 Back-link from a hierarchy key chip to its own line in the
+% Inhaltsverzeichnis — the mirror image of \semio@toc@link (semio-table.sty),
+% which links a TOC line forward to its section anchor.
+%
+% The two halves are keyed by the hierarchy number itself ("1.2.3", "BB.M") and
+% nothing else: a heading chip is typeset long before (or long after) the TOC
+% body exists, so it cannot know the TOC's own \label names — but it always
+% knows its number. \semio@tocline@anchor drops the destination on the TOC row;
+% \semio@tocline@link resolves it from the .aux on the next pass. Both spell the
+% `semio-tocline-` prefix literally, exactly like the `semio-toc-` /
+% `semio-register-` label prefixes elsewhere.
+\newcommand{\semio@tocline@anchor}[1]{%
+  \ifcsname semio@tocline@seen@#1\endcsname\else
+    \expandafter\gdef\csname semio@tocline@seen@#1\endcsname{}%
+    \phantomsection\label{semio-tocline-#1}%
+  \fi
+}
+% 🔗 Wraps chip content #2 in a jump to the TOC line for number #1 when that
+% line exists. Numbers with no TOC row at all (window slots like "1.2.a", and
+% every number on the first compile pass) fall through to plain content, so the
+% chip never emits a dangling destination. Robust on purpose: project cards
+% stash their key chip in a macro through \protected@edef and hand it on
+% through a further \edef before it is ever typeset.
+\NewDocumentCommand \semio@tocline@link { m m } {%
+  \ifcsname r@semio-tocline-#1\endcsname
+    \hyperref[semio-tocline-#1]{#2}%
+  \else
+    #2%
+  \fi
+}
+%endregion TocLineLinks
+
 \ExplSyntaxOn
 \cs_new_protected:Npn \semio_kind_label_resolved:n #1 {
   \tl_if_eq:NnTF \l_semio_language_tl { de }
@@ -498,12 +531,19 @@
   \seq_pop_right:NN \l_tmpb_seq \l_tmpb_tl
   \int_set:Nn \l_tmpa_int { \tl_count:N \l_tmpa_tl - \tl_count:N \l_tmpb_tl }
 }
+% 🔗 Single choke point for every hierarchy key chip (heading pairs, window and
+% table headers, nested paragraphs), hence the single place that turns the key
+% into a jump to its Inhaltsverzeichnis line — see the TocLineLinks region.
+% #1 always arrives fully expanded (\exp_args:Ne at both call sites), so the
+% number doubles as the anchor key.
 \cs_new_protected:Npn \semio_hierarchy_chip_number:n #1 {
-  \semio_identifier_split_point:n {#1}
-  \int_compare:nNnF \l_tmpa_int = \c_zero_int {
-    \textcolor { semio-chrome-text-normal } { \tl_range:Nnn \l_tmpa_tl { 1 } { \l_tmpa_int } }
+  \semio@tocline@link {#1} {
+    \semio_identifier_split_point:n {#1}
+    \int_compare:nNnF \l_tmpa_int = \c_zero_int {
+      \textcolor { semio-chrome-text-normal } { \tl_range:Nnn \l_tmpa_tl { 1 } { \l_tmpa_int } }
+    }
+    \textcolor { semio-chrome-foreground } { \tl_range:Nnn \l_tmpa_tl { \l_tmpa_int + 1 } { -1 } }
   }
-  \textcolor { semio-chrome-foreground } { \tl_range:Nnn \l_tmpa_tl { \l_tmpa_int + 1 } { -1 } }
 }
 \cs_new_protected:Npn \semio_toc_number:n #1 {
   \semio_identifier_split_point:n {#1}
