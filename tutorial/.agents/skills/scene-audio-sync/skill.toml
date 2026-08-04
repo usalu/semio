@@ -1,0 +1,65 @@
+# scene-audio-sync — portable install manifest
+#
+# Copy the whole `scene-audio-sync/` folder into another repo at:
+#   tutorial/.agents/skills/scene-audio-sync/
+# Then install deps from inside that folder.
+
+[project]
+name = "scene-audio-sync"
+version = "1.0.0"
+description = "Agent-authored scene narration, TTS synthesis, and ffmpeg A/V sync for animation jobs"
+requires-python = ">=3.10"
+
+dependencies = [
+  "edge-tts>=6.1.0",
+]
+
+[project.optional-dependencies]
+tts = [
+  "edge-tts>=6.1.0",
+  "httpx>=0.27.0",
+]
+openrouter = [
+  "httpx>=0.27.0",
+]
+
+# ---------------------------------------------------------------------------
+# System binaries (required)
+# ---------------------------------------------------------------------------
+# ffmpeg   — mux, freeze-frame, concat
+# ffprobe  — duration measurement
+#
+# Install examples:
+#   macOS:          brew install ffmpeg
+#   Debian/Ubuntu:  sudo apt-get install -y ffmpeg
+#   Windows:        winget install ffmpeg   (or choco install ffmpeg)
+#
+# Python install:
+#   python3 -m pip install 'edge-tts>=6.1.0' 'httpx>=0.27.0'
+#   bash scripts/install_check.sh
+#
+# Optional (modern pip / setuptools):
+#   cd tutorial/.agents/skills/scene-audio-sync && python3 -m pip install .
+
+[tool.scene-audio-sync]
+default_engine = "edge"
+default_voice = "en-US-JennyNeural"
+default_rate = "-20%"
+default_pitch = "+0Hz"
+beat_gap_seconds = 0.18
+sync_tolerance_seconds = 1.2
+prefer_freeze_frame_over_speedup = true
+
+[tool.scene-audio-sync.voices]
+en = "en-US-JennyNeural"
+en_male = "en-US-GuyNeural"
+fa = "fa-IR-DilaraNeural"
+de = "de-DE-KatjaNeural"
+es = "es-ES-ElviraNeural"
+fr = "fr-FR-DeniseNeural"
+
+[tool.scene-audio-sync.env]
+# Only needed for optional --engine openrouter
+# TTS_API_KEY / OPENROUTER_API_KEY
+# TTS_BASE_URL = https://openrouter.ai/api/v1
+# TTS_MODEL = google/gemini-3.1-flash-tts-preview

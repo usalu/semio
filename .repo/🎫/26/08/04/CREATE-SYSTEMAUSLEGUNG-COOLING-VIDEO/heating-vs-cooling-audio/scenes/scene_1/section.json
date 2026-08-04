@@ -1,0 +1,25 @@
+{
+  "id": "scene_1",
+  "title": "Heizlast vs. Kühllast",
+  "visual_description": "Hausquerschnitt: Wintergewinne, Sommerüberhitzung mit Thermometer, dann mechanische Abluft.",
+  "camera_notes": "Statischer Querschnitt mit Sonnen- und Abluftanimation.",
+  "visual_device": "before_after",
+  "duration_seconds": 21.8,
+  "beats": [
+    {
+      "index": 0,
+      "visual_action": "Winter: Sonne und interne Gewinne erscheinen als hilfreiche Wärme",
+      "narration": ""
+    },
+    {
+      "index": 1,
+      "visual_action": "Sommer: Sonne und Gewinne werden rot, Wärme staut sich, Thermometer steigt",
+      "narration": ""
+    },
+    {
+      "index": 2,
+      "visual_action": "Mechanische Lüftung führt Wärme ab, Temperatur sinkt wieder",
+      "narration": ""
+    }
+  ]
+}

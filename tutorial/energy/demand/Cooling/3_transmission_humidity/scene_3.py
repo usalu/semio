@@ -233,8 +233,8 @@ class Beat1_TransmissionOpaque(Scene):
         )
         self.play(FadeOut(dt_highlight), run_time=0.5)
 
-        # Final hold
-        self.wait(0.5)
+        # Hold with VO: ΔT_eq / opaque transmission
+        self.wait(4.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -397,7 +397,8 @@ class Beat2_TimeLag(Scene):
 
         # Final hold
         self.play(FadeOut(dt_highlight), run_time=0.4)
-        self.wait(0.5)
+        # Hold with VO: thermal mass / evening peak load
+        self.wait(1.6)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -742,7 +743,7 @@ class Beat4_SensibleVsLatent(Scene):
         )
         self.play(FadeOut(dx_pulse), run_time=0.4)
 
-        # Extra hold for the expanded audio narration
+        # Extra hold for formula VO (sensible vs latent)
         self.wait(5.0)
 
         # Final hold
@@ -750,4 +751,4 @@ class Beat4_SensibleVsLatent(Scene):
             FadeOut(squeeze_l), FadeOut(squeeze_r),
             run_time=0.4,
         )
-        self.wait(1.0)
+        self.wait(1.4)

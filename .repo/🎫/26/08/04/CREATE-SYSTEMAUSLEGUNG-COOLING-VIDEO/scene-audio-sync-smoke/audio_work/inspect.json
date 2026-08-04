@@ -1,0 +1,49 @@
+{
+  "job_dir": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/scene-audio-sync-smoke",
+  "job_id": "scene-audio-sync-smoke",
+  "title": "scene-audio-sync-smoke",
+  "concept_summary": "",
+  "style_notes": "",
+  "visual_identity": "",
+  "language": "en",
+  "scene_count": 1,
+  "scenes": [
+    {
+      "id": "scene_1",
+      "title": "Volume Flow Equation",
+      "visual_description": "A cooled room on the left and the airflow equation with value cards on the right.",
+      "camera_notes": "Static framing with clear left-right separation.",
+      "visual_device": "equation_reveal",
+      "style_tags": [],
+      "duration_seconds_plan": null,
+      "existing_narration": "",
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Cool supply air enters the room",
+          "narration": ""
+        },
+        {
+          "index": 1,
+          "visual_action": "The temperature difference is highlighted",
+          "narration": ""
+        },
+        {
+          "index": 2,
+          "visual_action": "The volume-flow term is emphasized",
+          "narration": ""
+        }
+      ],
+      "animation_beats": [],
+      "code_cues": [],
+      "video_path": "scenes/scene_1/scene.mp4",
+      "video_duration_seconds": 20.732682,
+      "scene_dir": "scenes/scene_1"
+    }
+  ],
+  "notes": [
+    "Agent must author transcript.json — do not call external LLMs for narration.",
+    "Prefer video_duration_seconds as speaking budget; freeze-frame on mux if audio longer.",
+    "Voice should be slow, continuous, and understandable across the whole job."
+  ]
+}

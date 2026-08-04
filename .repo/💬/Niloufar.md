@@ -353,3 +353,81 @@ Scene Breakdown: Part 4 - Pumping the Heat Out (Systemauslegung)
 ---
 
 Expand Systemauslegung scene: more understandable, better airflow graphics, longer thorough beats.
+
+---
+
+In the first scene, remove the circles in the room. We can explain the situation just by changing the color of the room and secondly the texes of zuluft and abluft and the text bellow of them be compelitly out of the room boundry
+
+---
+
+no dont delete the airfllow, add a undrestandble grafic to explain the movment of the air through zuluft and abluft
+
+---
+
+revise Scene 2: the text elements are messy and conflict with each other, and the bracket used for Delta T (temperature) is confusing. improve the overall video grafic
+
+---
+
+revise scene 3, the texes are in conflict with eachother in formula
+
+---
+
+when you want to interduce the phi-S.tr, use more undrestandble and related animation and shift the frmula a littel down
+
+---
+
+The formulas are overlapping badly , I don't want any formula to collide with another object
+
+---
+
+also add my prompting into this direction@.repo/💬/Niloufar.md
+
+---
+
+yes i want you for testing the the audio skill, do it for @tutorial/energy/demand/Cooling/1_heating_vs_cooling scenes, make sure the audio is sync with the audio, and also the audio muss be in smoth German
+
+---
+
+@tutorial/energy/demand/Cooling/2_internal_gains also following to the last video, make audio for this part, use the skill and be sure to using  the same persons audio you have used in the last video, and follow the instruction you have already done for last video
+
+
+## 2026-08-04 12:49
+
+This voice sounds very robotic, not like a real human. I want the tone and speech to flow smoothly and continuously, sounding more like an engaging human teacher. You can change the durations or pauses in the Manim code to better sync the audio and animation.
+
+
+## 2026-08-04 13:05
+
+this time everything works really good, now do it for @tutorial/energy/demand/Cooling/3_transmission_humidity continuous Seraphina speech at a natural pace, with Manim holds tuned to match
+
+
+
+
+## 2026-08-04 13:22
+
+undo this last task i have give you
+
+
+## 2026-08-04 13:26
+
+@tutorial/energy/demand/Cooling/4_solar_radiation continuous Seraphina speech at a natural pace, with Manim holds tuned to match
+
+
+## 2026-08-04 13:47
+
+@tutorial/energy/demand/Cooling/4_solar_radiation in last scene of this videos, ther is a representive orange circle, make a better animation instead of that stupid orange circles
+
+
+## 2026-08-04 13:50
+
+@tutorial/energy/demand/Cooling/5_systemauslegung continuous Seraphina speech at a natural pace, with Manim holds tuned to match
+
+## 2026-08-04 14:10
+
+add my prompting in niloufar.md
+
+
+
+
+
+

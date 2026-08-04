@@ -477,8 +477,8 @@ class Scene2(Scene):
             run_time=2.3
         )
 
-        # Final hold (contract requirement)
-        self.wait(0.5)
+        # Hold with VO: ~100 W human heat callout
+        self.wait(2.0)
 
 
 # --- scene_3 (code_final.py) ---
@@ -881,8 +881,9 @@ class EquipmentAndPlugLoads(Scene):
         caption = Text("Geräte wandeln elektrische Leistung in Wärmelasten um", font_size=24, color=P_WHITE)
         caption.to_edge(DOWN, buff=0.4)
         self.play(FadeIn(caption), run_time=1.0)
-        self.wait(1.2)
-        self.wait(0.5)
+        # Hold with VO: plug-load heat explanation
+        self.wait(2.2)
+        self.wait(1.8)
 
 
 # --- scene_5 (code_final.py) ---
@@ -1340,7 +1341,8 @@ class InternalGainEquation(Scene):
         self.play(qi_hl.animate.set_color(P_WHITE), rate_func=there_and_back, run_time=0.7)
         self.play(FadeOut(qi_hl), FadeIn(caption), run_time=0.55)
 
-        self.wait(0.5)
+        # Hold with VO: internal-gain balance equation
+        self.wait(1.8)
 
 
 # --- scene_7 (code_final.py) ---

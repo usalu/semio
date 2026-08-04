@@ -1,0 +1,101 @@
+{
+  "job_id": "solar-radiation-audio",
+  "title": "Solare Strahlung & Verglasung",
+  "language": "de",
+  "voice": "de-DE-SeraphinaMultilingualNeural",
+  "rate": "-5%",
+  "pitch": "+0Hz",
+  "scenes": [
+    {
+      "id": "scene_01",
+      "title": "Direkte Sonnenstrahlung",
+      "video_path": "scenes/scene_01/scene.mp4",
+      "video_duration_seconds": 21.5,
+      "target_duration_seconds": 21.5,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 18.9
+        }
+      ],
+      "full_narration": "Jetzt kommt die größte Sommerlast: die direkte Sonnenstrahlung. Alles beginnt mit der maximalen Bestrahlungsstärke I-S-max in Watt pro Quadratmeter. Wie das Diagramm zeigt, ändert sich dieser Höchstwert stark mit der Tageszeit und der Ausrichtung — horizontal, Nord, Süd, Ost oder West.",
+      "audio_duration_seconds": 21.48,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/solar-radiation-audio/audio_work/scenes/scene_01/audio.wav"
+    },
+    {
+      "id": "scene_02",
+      "title": "Fensterfläche und Rahmenfaktor",
+      "video_path": "scenes/scene_02/scene.mp4",
+      "video_duration_seconds": 15.7,
+      "target_duration_seconds": 15.7,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 13.2
+        }
+      ],
+      "full_narration": "Für die Kühllast starten wir mit der Rohbauöffnung A des Fensters. Glas füllt diese Öffnung aber nicht vollständig. Deshalb multiplizieren wir mit dem Rahmenfaktor F-F — er filtert die transparente Restfläche heraus.",
+      "audio_duration_seconds": 15.744,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/solar-radiation-audio/audio_work/scenes/scene_02/audio.wav"
+    },
+    {
+      "id": "scene_03",
+      "title": "Verschattungsfaktor",
+      "video_path": "scenes/scene_03/scene.mp4",
+      "video_duration_seconds": 21.6,
+      "target_duration_seconds": 21.6,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 19.1
+        }
+      ],
+      "full_narration": "Als Nächstes kommt der Sonnenschutz. Ohne Schutz trifft die volle Strahlung auf die Scheibe — Verschattungsfaktor F-V gleich eins. Mit außenliegendem Raffstore wird die Wärme schon vor der Fassade reflektiert. Nur ein Restanteil gelangt durch, und F-V sinkt auf etwa null Komma eins fünf.",
+      "audio_duration_seconds": 21.576,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/solar-radiation-audio/audio_work/scenes/scene_03/audio.wav"
+    },
+    {
+      "id": "scene_04",
+      "title": "Gesamtenergiedurchlassgrad",
+      "video_path": "scenes/scene_04/scene.mp4",
+      "video_duration_seconds": 16.4,
+      "target_duration_seconds": 16.4,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 13.7
+        }
+      ],
+      "full_narration": "Der Rest trifft die Verglasung. Wir multiplizieren mit g-tot, dem Gesamtenergiedurchlassgrad. Er fasst direkte Transmission und sekundäre Wärmeabgabe nach innen zusammen — also den Anteil, der wirklich in den Raum gelangt.",
+      "audio_duration_seconds": 16.44,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/solar-radiation-audio/audio_work/scenes/scene_04/audio.wav"
+    },
+    {
+      "id": "scene_05",
+      "title": "Solare Kühllast",
+      "video_path": "scenes/scene_05/scene.mp4",
+      "video_duration_seconds": 13.9,
+      "target_duration_seconds": 13.9,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 12.6
+        }
+      ],
+      "full_narration": "Bestrahlungsstärke mal Fläche, gefiltert durch Rahmenfaktor, Verschattung und g-tot: das ergibt Q-Punkt-S-tr, die solare Transmissionskühllast — die Watt, die die Anlage aktiv abführen muss.",
+      "audio_duration_seconds": 13.848,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/solar-radiation-audio/audio_work/scenes/scene_05/audio.wav"
+    }
+  ],
+  "engine": "edge"
+}

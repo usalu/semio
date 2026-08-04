@@ -272,7 +272,8 @@ class Beat1_MechanicalVentilation(Scene):
             run_time=1.8,
         )
         self.play(FadeOut(step3), FadeIn(step4), run_time=0.8)
-        self.wait(1.0)
+        # Hold with VO: required volume flow question
+        self.wait(3.7)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -400,7 +401,8 @@ class Beat2_VolumeFlowEquation(Scene):
         self.play(FadeOut(step2), FadeIn(step3), run_time=0.7)
         self.play(FadeIn(cards[3]), items["qvr"].animate.scale(1.25).set_color(P_YELLOW), run_time=1.4)
         self.play(items["qvr"].animate.scale(1 / 1.25), eq_box.animate.set_stroke(width=4), run_time=0.8)
-        self.wait(1.0)
+        # Hold with VO: q_v,R design variable
+        self.wait(3.1)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -516,7 +518,7 @@ class Beat3_IsolateAirflow(Scene):
             run_time=2.2,
         )
         self.play(FadeIn(eq_mark), run_time=0.8)
-        self.wait(0.7)
+        self.wait(0.25)
 
         self.play(FadeOut(step1), FadeIn(step2), run_time=0.7)
         self.play(FadeIn(start_eq), run_time=1.3)
@@ -533,7 +535,7 @@ class Beat3_IsolateAirflow(Scene):
             run_time=1.5,
         )
         self.play(FadeOut(load_token), FadeOut(load_path), FadeOut(load_hint), run_time=0.5)
-        self.wait(0.5)
+        self.wait(0.2)
 
         self.play(FadeOut(step2), FadeIn(step3), run_time=0.7)
         self.play(
@@ -564,7 +566,8 @@ class Beat3_IsolateAirflow(Scene):
             run_time=1.0,
         )
         self.play(final_box.animate.set_stroke(width=3), run_time=0.5)
-        self.wait(1.0)
+        # Hold with VO: isolated q_v,R
+        self.wait(0.15)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -703,7 +706,8 @@ class Beat4_DuctCrossSection(Scene):
             FadeOut(tip_slow),
             run_time=1.2,
         )
-        self.wait(0.9)
+        # Hold with VO: duct area from continuity
+        self.wait(2.45)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -793,7 +797,7 @@ class Beat5_CalculateRadius(Scene):
             FadeIn(r_lbl),
             run_time=1.5,
         )
-        self.wait(0.5)
+        self.wait(0.15)
 
         self.play(FadeOut(step1), FadeIn(step2), run_time=0.7)
         self.play(FadeIn(area_eq), run_time=1.3)
@@ -801,7 +805,7 @@ class Beat5_CalculateRadius(Scene):
         self.play(area_items["A"].animate.scale(1 / 1.2), run_time=0.4)
         self.play(area_items["r2"].animate.scale(1.25).set_color(P_YELLOW), run_time=1.0)
         self.play(area_items["r2"].animate.scale(1 / 1.25), run_time=0.45)
-        self.wait(0.4)
+        self.wait(0.1)
 
         self.play(FadeOut(step2), FadeIn(step3), run_time=0.7)
         self.play(ReplacementTransform(area_eq, master), run_time=1.8)
@@ -819,4 +823,5 @@ class Beat5_CalculateRadius(Scene):
         )
         self.play(master_box.animate.set_stroke(width=5), run_time=0.7)
         self.play(master_box.animate.set_stroke(width=3), run_time=0.55)
-        self.wait(1.0)
+        # Hold with VO: radius from area
+        self.wait(0.05)

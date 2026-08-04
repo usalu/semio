@@ -1,0 +1,191 @@
+{
+  "job_id": "internal-gains-audio",
+  "title": "Die versteckte Last: Interne Wärmegewinne",
+  "language": "de",
+  "voice": "de-DE-SeraphinaMultilingualNeural",
+  "rate": "-5%",
+  "pitch": "+0Hz",
+  "scenes": [
+    {
+      "id": "scene_01",
+      "title": "Die umschlossene Umgebung",
+      "video_path": "scenes/scene_01/scene.mp4",
+      "video_duration_seconds": 19.3,
+      "target_duration_seconds": 19.3,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 19.3
+        }
+      ],
+      "full_narration": "Noch bevor die Sonne den Raum stark belastet, entsteht Wärme bereits im Inneren — und genau dort beginnt unsere Kühllastgeschichte. Die isolierte Gebäudehülle hält diese interne Last fest. Im gewerblichen Arbeitsbereich staut sich die Wärme innerhalb der Bürohülle und bleibt dort gefangen.",
+      "audio_duration_seconds": 19.272,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_01/audio.wav"
+    },
+    {
+      "id": "scene_02",
+      "title": "Menschliche Stoffwechselwärme",
+      "video_path": "scenes/scene_02/scene.mp4",
+      "video_duration_seconds": 20.6,
+      "target_duration_seconds": 20.6,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 17.7
+        }
+      ],
+      "full_narration": "Schauen wir zuerst auf den Menschen: er wirkt wie eine biologische Heizung. Über Strahlung, Konvektion und Atmung gibt er Wärme an den Raum ab — sichtbar und unsichtbar. Ein ruhender Erwachsener liefert etwa hundert Watt, dauerhaft und zuverlässig, Minute für Minute direkt in die Raumluft.",
+      "audio_duration_seconds": 20.52,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_02/audio.wav"
+    },
+    {
+      "id": "scene_03",
+      "title": "Skalierung der Belegungsdichte",
+      "video_path": "scenes/scene_03/scene.mp4",
+      "video_duration_seconds": 19.9,
+      "target_duration_seconds": 19.9,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 19.9
+        }
+      ],
+      "full_narration": "Und mit mehr Personen steigt diese Last sehr schnell. Viele Menschen in einem Hörsaal erzeugen gemeinsam mehrere Kilowatt Wärme. Diese Belegungslast läuft praktisch ständig mit und prägt die gesamte Kühllast oft stärker, als man zunächst erwartet — besonders in dicht genutzten Räumen mit langer Aufenthaltsdauer.",
+      "audio_duration_seconds": 20.208,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_03/audio.wav"
+    },
+    {
+      "id": "scene_04",
+      "title": "Geräte und Steckerlasten",
+      "video_path": "scenes/scene_04/scene.mp4",
+      "video_duration_seconds": 21.7,
+      "target_duration_seconds": 21.7,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 20.86569
+        }
+      ],
+      "full_narration": "Doch es bleibt nicht bei den Menschen. Auch Geräte erzeugen Wärme im Raum. Laptops, Monitore und andere Steckerlasten wandeln elektrische Leistung direkt in Wärmelast um. Der Nutzungsfaktor zeigt, wie viele Geräte gleichzeitig laufen und Wärme an den Raum abgeben — oft den ganzen Arbeitstag über.",
+      "audio_duration_seconds": 21.672,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_04/audio.wav"
+    },
+    {
+      "id": "scene_05",
+      "title": "Wärmebeitrag durch künstliche Beleuchtung",
+      "video_path": "scenes/scene_05/scene.mp4",
+      "video_duration_seconds": 17.799023,
+      "target_duration_seconds": 17.799023,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 17.799023
+        }
+      ],
+      "full_narration": "Dazu kommt die künstliche Beleuchtung. Ein Teil der Lampenwärme geht in den Deckenhohlraum, ein anderer Teil gelangt direkt in den konditionierten Raum. Beides erhöht dort die innere Kühllast — oft unbemerkt im Alltag, aber in der energetischen Bilanz klar spürbar.",
+      "audio_duration_seconds": 17.976,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_05/audio.wav"
+    },
+    {
+      "id": "scene_06",
+      "title": "Die Gleichung für interne Gewinne",
+      "video_path": "scenes/scene_06/scene.mp4",
+      "video_duration_seconds": 18.9,
+      "target_duration_seconds": 18.9,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 16.933008
+        }
+      ],
+      "full_narration": "Jetzt führen wir die Quellen zusammen. Personen, Geräte und Licht addieren sich zu einer klaren Bilanz: der internen Kühllast. Diese Gleichung fasst die innere Wärmebelastung in einem einzigen, nachvollziehbaren Wert zusammen — und macht den Kühlbedarf greifbar.",
+      "audio_duration_seconds": 18.24,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_06/audio.wav"
+    },
+    {
+      "id": "scene_07",
+      "title": "Sensible versus latente Wärme",
+      "video_path": "scenes/scene_07/scene.mp4",
+      "video_duration_seconds": 19.0,
+      "target_duration_seconds": 19.0,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 19.0
+        }
+      ],
+      "full_narration": "Wichtig ist dabei der Unterschied: sensible Wärme hebt die Temperatur im Raum, latente Feuchtigkeit verändert den Feuchtegehalt der Luft. Beide Lastanteile verlangen Kühlleistung vom technischen System — und beide müssen wir in der Planung ernst nehmen, wenn das Raumklima stabil bleiben soll.",
+      "audio_duration_seconds": 19.272,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_07/audio.wav"
+    },
+    {
+      "id": "scene_08",
+      "title": "Die isolierte Wärmefalle",
+      "video_path": "scenes/scene_08/scene.mp4",
+      "video_duration_seconds": 15.533008,
+      "target_duration_seconds": 15.533008,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 15.533008
+        }
+      ],
+      "full_narration": "In gut gedämmten Räumen bleibt diese Wärme gefangen. Die Isolierung hält die interne Last innen, sodass die Temperatur steigt — auch ohne starke Sonneneinstrahlung von außen. Die Wärmefalle entsteht also von innen heraus.",
+      "audio_duration_seconds": 15.504,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_08/audio.wav"
+    },
+    {
+      "id": "scene_09",
+      "title": "HLK-Kühlbedarf",
+      "video_path": "scenes/scene_09/scene.mp4",
+      "video_duration_seconds": 31.8,
+      "target_duration_seconds": 31.8,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 31.8
+        }
+      ],
+      "full_narration": "Deshalb brauchen wir mechanische Kühlung und Lüftung. Die interne Wärme ist bereits im Raum gefangen und muss aktiv entfernt werden. Kühle Zuluft verdrängt die warme Raumluft Schritt für Schritt, während die Abluft die Last nach außen führt. Gleichzeitig entsteht ein klarer Luftwechsel: Frische kommt rein, Wärme geht raus. So sinkt die Temperatur allmählich, und das Raumklima wird wieder beherrschbar und angenehm — genau das, was die Technik leisten soll.",
+      "audio_duration_seconds": 31.488,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_09/audio.wav"
+    },
+    {
+      "id": "scene_10",
+      "title": "Minderung & intelligentes Design",
+      "video_path": "scenes/scene_10/scene.mp4",
+      "video_duration_seconds": 11.999023,
+      "target_duration_seconds": 11.999023,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 11.999023
+        }
+      ],
+      "full_narration": "Noch besser ist es, Lasten früh zu mindern. Intelligentes Design senkt Beleuchtung und Geräte und reduziert damit den Kühlbedarf spürbar — bevor die Technik überhaupt eingreifen muss.",
+      "audio_duration_seconds": 12.504,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/internal-gains-audio/audio_work/scenes/scene_10/audio.wav"
+    }
+  ],
+  "engine": "edge"
+}

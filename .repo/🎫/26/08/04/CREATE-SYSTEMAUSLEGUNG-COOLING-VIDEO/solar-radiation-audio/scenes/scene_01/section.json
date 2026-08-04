@@ -1,0 +1,6 @@
+{
+  "id": "scene_01",
+  "title": "Direkte Sonnenstrahlung",
+  "scene_class": "Beat1_SolarIrradiance",
+  "language": "de"
+}

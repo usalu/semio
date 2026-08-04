@@ -1,0 +1,44 @@
+{
+  "job_id": "scene-audio-sync-smoke",
+  "title": "Volume Flow Equation",
+  "language": "en",
+  "voice": "en-US-JennyNeural",
+  "rate": "-20%",
+  "pitch": "+0Hz",
+  "scenes": [
+    {
+      "id": "scene_1",
+      "title": "Volume Flow Equation",
+      "video_path": "scenes/scene_1/scene.mp4",
+      "video_duration_seconds": 20.732682,
+      "target_duration_seconds": 20.732682,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Cool supply air enters the room",
+          "narration": "Cool supply air enters the room and begins to carry heat away.",
+          "approx_seconds": 6.4,
+          "audio_duration_seconds": 5.436
+        },
+        {
+          "index": 1,
+          "visual_action": "The temperature difference is highlighted",
+          "narration": "The temperature gap between room air and supply air sets the cooling effect of each cubic meter.",
+          "approx_seconds": 7.0,
+          "audio_duration_seconds": 7.596
+        },
+        {
+          "index": 2,
+          "visual_action": "The volume-flow term is emphasized",
+          "narration": "Then the required volume flow shows how much air must move each second to remove the load.",
+          "approx_seconds": 6.6,
+          "audio_duration_seconds": 6.912
+        }
+      ],
+      "full_narration": "Cool supply air enters the room and begins to carry heat away. The temperature gap between room air and supply air sets the cooling effect of each cubic meter. Then the required volume flow shows how much air must move each second to remove the load.",
+      "audio_duration_seconds": 19.944,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/scene-audio-sync-smoke/audio_work/scenes/scene_1/audio.wav"
+    }
+  ],
+  "engine": "edge"
+}

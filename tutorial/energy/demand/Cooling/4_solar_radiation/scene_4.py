@@ -270,7 +270,8 @@ class Beat1_SolarIrradiance(Scene):
             )
 
         self.play(eq_items["i"].animate.scale(1.15), rate_func=there_and_back, run_time=0.9)
-        self.wait(0.5)
+        # Hold with VO: irradiance chart / I_S,max
+        self.wait(3.1)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -377,7 +378,8 @@ class Beat2_FrameFactor(Scene):
             run_time=1.4,
         )
         self.play(FadeOut(ff_highlight), run_time=0.4)
-        self.wait(0.5)
+        # Hold with VO: frame factor / A_eff
+        self.wait(3.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -592,7 +594,8 @@ class Beat3_ShadingFactor(Scene):
             run_time=1.2,
         )
         self.play(FadeOut(fv_highlight), run_time=0.4)
-        self.wait(0.5)
+        # Hold with VO: shading factor / Raffstore
+        self.wait(3.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -693,7 +696,8 @@ class Beat4_GlassTransmittance(Scene):
             run_time=1.6,
         )
         self.play(FadeOut(merge_glow), run_time=0.6)
-        self.wait(0.5)
+        # Hold with VO: g_tot transmittance
+        self.wait(3.2)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -731,12 +735,40 @@ class Beat5_SolarCoolingLoad(Scene):
             color=P_YELLOW, stroke_width=0, fill_color=P_YELLOW, fill_opacity=0.0,
         )
 
-        heat_cloud = VGroup(*[
-            Ellipse(width=w_, height=h_, color=P_RED, stroke_width=0, fill_color=P_RED, fill_opacity=op)
-            .move_to(np.array([-1.75, floor_y + h_ / 2 - 0.1, 0.0]))
-            for w_, h_, op in ((4.4, 1.9, 0.10), (3.3, 1.35, 0.16), (2.2, 0.85, 0.24))
-        ])
-        heat_cloud.scale(0.05, about_point=np.array([-1.75, floor_y, 0.0]))
+        # Soft floor heat wash where the beam lands (no blob circles)
+        pool_center = np.array([-1.75, floor_y + 0.08, 0.0])
+        heat_wash = Polygon(
+            np.array([-3.05, floor_y + 0.02, 0.0]),
+            np.array([-0.45, floor_y + 0.02, 0.0]),
+            np.array([-0.85, floor_y + 0.55, 0.0]),
+            np.array([-2.65, floor_y + 0.55, 0.0]),
+            color=P_ORANGE, stroke_width=0, fill_color=P_ORANGE, fill_opacity=0.0,
+        )
+
+        def _rising_heat_waves(origin, n=4, color=P_ORANGE, height=1.55, x_spread=0.38, stroke_width=2.2):
+            ox, oy = float(origin[0]), float(origin[1])
+            waves = VGroup()
+            for i in range(n):
+                x0 = ox + (i - (n - 1) / 2) * x_spread
+                phase = i * 0.55
+                pts = [
+                    np.array([
+                        x0 + 0.11 * np.sin(phase + t * 3.2),
+                        oy + t * height,
+                        0.0,
+                    ])
+                    for t in np.linspace(0.0, 1.0, 18)
+                ]
+                wave = VMobject(color=color, stroke_width=stroke_width, stroke_opacity=0.0)
+                wave.set_points_smoothly(pts)
+                waves.add(wave)
+            return waves
+
+        heat_waves = _rising_heat_waves(pool_center, n=5, color=P_ORANGE, height=1.7, x_spread=0.42)
+        heat_waves_hot = _rising_heat_waves(
+            pool_center + UP * 0.15, n=4, color=P_RED, height=1.35, x_spread=0.34, stroke_width=1.8
+        )
+        heat_load = VGroup(heat_wash, heat_waves, heat_waves_hot)
 
         # ── Master equation ──
         eq_row, eq_items = _equation_row(
@@ -772,10 +804,20 @@ class Beat5_SolarCoolingLoad(Scene):
         self.play(Create(room), run_time=1.8)
         self.play(beam.animate.set_fill(opacity=0.22), run_time=1.2)
 
-        self.add(heat_cloud)
+        self.add(heat_load)
         self.play(
-            heat_cloud.animate.scale(20.0, about_point=np.array([-1.75, floor_y, 0.0])),
-            run_time=2.0,
+            heat_wash.animate.set_fill(opacity=0.30),
+            LaggedStart(*[Create(w) for w in heat_waves], lag_ratio=0.1),
+            LaggedStart(*[Create(w) for w in heat_waves_hot], lag_ratio=0.08),
+            run_time=1.1,
+        )
+        self.play(
+            *[w.animate.set_stroke(opacity=0.85) for w in heat_waves],
+            *[w.animate.set_stroke(opacity=0.7) for w in heat_waves_hot],
+            heat_waves.animate.shift(UP * 0.4),
+            heat_waves_hot.animate.shift(UP * 0.28),
+            heat_wash.animate.set_fill(opacity=0.40),
+            run_time=0.9,
         )
 
         self.play(FadeIn(head, shift=DOWN * 0.2), run_time=0.9)
@@ -795,13 +837,18 @@ class Beat5_SolarCoolingLoad(Scene):
 
         self.play(
             eq_box.animate.set_stroke(width=6),
-            heat_cloud.animate.set_opacity(0.55),
+            heat_wash.animate.set_fill(opacity=0.48),
+            heat_waves.animate.shift(UP * 0.2).set_stroke(opacity=1.0),
+            heat_waves_hot.animate.shift(UP * 0.15).set_stroke(opacity=0.9),
             FadeIn(caption),
             run_time=1.2,
         )
         self.play(
             eq_box.animate.set_stroke(width=3),
-            heat_cloud.animate.set_opacity(0.4),
+            heat_wash.animate.set_fill(opacity=0.32),
+            heat_waves.animate.set_stroke(opacity=0.7),
+            heat_waves_hot.animate.set_stroke(opacity=0.55),
             run_time=0.8,
         )
-        self.wait(0.5)
+        # Hold with VO: Q̇_S,tr cooling load
+        self.wait(1.8)

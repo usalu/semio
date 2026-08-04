@@ -1,0 +1,29 @@
+{
+  "job_id": "heating-vs-cooling-audio",
+  "title": "Heizlast vs. Kühllast",
+  "language": "de",
+  "voice": "de-DE-SeraphinaMultilingualNeural",
+  "rate": "-5%",
+  "pitch": "+0Hz",
+  "scenes": [
+    {
+      "id": "scene_1",
+      "title": "Heizlast vs. Kühllast",
+      "video_path": "scenes/scene_1/scene.mp4",
+      "video_duration_seconds": 20.6,
+      "target_duration_seconds": 20.6,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 21.8
+        }
+      ],
+      "full_narration": "Im Winter helfen Sonne und interne Gewinne — sie liefern willkommene Wärme und entlasten die Heizung. Im Sommer staut sich dieselbe Wärme im Haus, und die Raumtemperatur steigt spürbar an. Deshalb braucht es mechanische Lüftung: sie führt die Wärme aktiv ab und kühlt den Raum wieder auf ein angenehmes Niveau.",
+      "audio_duration_seconds": 20.616,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/heating-vs-cooling-audio/audio_work/scenes/scene_1/audio.wav"
+    }
+  ],
+  "engine": "edge"
+}

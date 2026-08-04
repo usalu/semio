@@ -1,0 +1,57 @@
+[project]
+name = "scene-audio-sync"
+version = "1.0.0"
+description = "Agent-authored scene narration, TTS synthesis, and ffmpeg A/V sync for animation jobs"
+requires-python = ">=3.10"
+readme = "SKILL.md"
+
+dependencies = [
+  "edge-tts>=6.1.0",
+]
+
+[project.optional-dependencies]
+tts = [
+  "edge-tts>=6.1.0",
+  "httpx>=0.27.0",
+]
+openrouter = [
+  "httpx>=0.27.0",
+]
+dev = [
+  "pytest>=8.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+# This skill is script-based (not an importable package).
+# Install deps with:
+#   python3 -m pip install -e ".[tts]"
+# or:
+#   python3 -m pip install 'edge-tts>=6.1.0' 'httpx>=0.27.0'
+#
+# System requirements (not via pip):
+#   ffmpeg + ffprobe on PATH
+#   macOS: brew install ffmpeg
+#   Debian/Ubuntu: sudo apt-get install -y ffmpeg
+
+[tool.setuptools]
+packages = []
+
+[tool.scene-audio-sync]
+default_engine = "edge"
+default_voice = "en-US-JennyNeural"
+default_rate = "-20%"
+default_pitch = "+0Hz"
+beat_gap_seconds = 0.18
+sync_tolerance_seconds = 1.2
+prefer_freeze_frame_over_speedup = true
+
+[tool.scene-audio-sync.voices]
+en = "en-US-JennyNeural"
+en_male = "en-US-GuyNeural"
+fa = "fa-IR-DilaraNeural"
+de = "de-DE-KatjaNeural"
+es = "es-ES-ElviraNeural"
+fr = "fr-FR-DeniseNeural"

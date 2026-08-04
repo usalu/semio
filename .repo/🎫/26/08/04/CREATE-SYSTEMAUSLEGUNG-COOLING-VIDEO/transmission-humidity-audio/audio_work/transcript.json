@@ -1,0 +1,83 @@
+{
+  "job_id": "transmission-humidity-audio",
+  "title": "Transmission & Feuchtigkeit",
+  "language": "de",
+  "voice": "de-DE-SeraphinaMultilingualNeural",
+  "rate": "-5%",
+  "pitch": "+0Hz",
+  "scenes": [
+    {
+      "id": "scene_01",
+      "title": "Transmissionswärme: Opake Bauteile",
+      "video_path": "scenes/scene_01/scene.mp4",
+      "video_duration_seconds": 17.4,
+      "target_duration_seconds": 17.4,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 0
+        }
+      ],
+      "full_narration": "Als Nächstes schauen wir nach außen: Wärme wandert auch im Sommer durch Wände und Dach. Die Transmissionslast berechnen wir mit U-Wert und Fläche. Für stark besonnte Oberflächen nutzen wir die äquivalente Temperaturdifferenz Delta-T-eq.",
+      "audio_duration_seconds": 17.352,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/transmission-humidity-audio/audio_work/scenes/scene_01/audio.wav"
+    },
+    {
+      "id": "scene_02",
+      "title": "Phasenverschiebung (Time Lag)",
+      "video_path": "scenes/scene_02/scene.mp4",
+      "video_duration_seconds": 11.3,
+      "target_duration_seconds": 11.3,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 0
+        }
+      ],
+      "full_narration": "Beton und Ziegel speichern diese Wärme und geben sie erst Stunden später ab. Deshalb kann die Spitzenkühllast oft erst am späten Abend kommen — lange nach Sonnenuntergang.",
+      "audio_duration_seconds": 11.304,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/transmission-humidity-audio/audio_work/scenes/scene_02/audio.wav"
+    },
+    {
+      "id": "scene_03",
+      "title": "Lüftungswärme & Feuchtigkeit",
+      "video_path": "scenes/scene_03/scene.mp4",
+      "video_duration_seconds": 15.8,
+      "target_duration_seconds": 15.8,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 0
+        }
+      ],
+      "full_narration": "Bei der Lüftung entweicht kühle Raumluft, während warme, feuchte Außenluft einströmt. Die Lüftungslast muss beides tragen: fühlbare Wärme und latente Feuchte — Q-Punkt-L als Summe aus Q-Punkt-sens und Q-Punkt-lat.",
+      "audio_duration_seconds": 15.816,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/transmission-humidity-audio/audio_work/scenes/scene_03/audio.wav"
+    },
+    {
+      "id": "scene_04",
+      "title": "Sensible vs. Latente Kühlung",
+      "video_path": "scenes/scene_04/scene.mp4",
+      "video_duration_seconds": 24.2,
+      "target_duration_seconds": 24.2,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 0
+        }
+      ],
+      "full_narration": "Links die sensible Kühllast: Energie zum Senken der Lufttemperatur — mit Dichte, Wärmekapazität, Temperaturdifferenz und Volumenstrom. Rechts die latente Kühllast: Energie zum Entfeuchten — mit Verdampfungswärme r und Feuchtedifferenz Delta-x. Sommerfeuchtigkeit ist oft der energieintensivste Teil der Klimatisierung.",
+      "audio_duration_seconds": 24.24,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/transmission-humidity-audio/audio_work/scenes/scene_04/audio.wav"
+    }
+  ],
+  "engine": "edge"
+}

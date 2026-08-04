@@ -1,0 +1,27 @@
+{
+  "title": "Create Ngs Intro Scene Template",
+  "emoji": "\ud83c\udfdb\ufe0f",
+  "status": "closed",
+  "description": "Create a reusable Manim intro scene template under tutorial/intro that shows NGS/IEK/LUH branding and a configurable video topic, matching the Cooling tutorial palette and graphics style.",
+  "goal": "\ud83c\udfafr2602\ud83c\udfafupdateddocs\ud83c\udfafupdateduserdocs\ud83c\udfafupdatedtutorials",
+  "dates": {
+    "due": "2026-08-04",
+    "started": "2026-08-04",
+    "completed": "2026-08-04"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4-5",
+  "summary": "Added reusable Manim NGS intro template under tutorial/intro with official LUH logo, line-art house mark matching Cooling graphics, institute hierarchy, configurable topic fields, demo scenes for Cooling parts, manim.cfg, and optional TTS stub.",
+  "files": {
+    "created": [
+      "tutorial/intro/intro_scene.py",
+      "tutorial/intro/manim.cfg",
+      "tutorial/intro/generate_audio.py",
+      "tutorial/intro/assets/luh_logo.svg",
+      "tutorial/intro/assets/luh_logo.png"
+    ],
+    "updated": [
+      "tutorial/.agents/skills/generate-manim-tutorial/reference.md"
+    ]
+  }
+}

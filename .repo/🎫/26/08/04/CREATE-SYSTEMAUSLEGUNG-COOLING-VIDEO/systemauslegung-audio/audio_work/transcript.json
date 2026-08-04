@@ -1,0 +1,101 @@
+{
+  "job_id": "systemauslegung-audio",
+  "title": "Systemauslegung",
+  "language": "de",
+  "voice": "de-DE-SeraphinaMultilingualNeural",
+  "rate": "-5%",
+  "pitch": "+0Hz",
+  "scenes": [
+    {
+      "id": "scene_01",
+      "title": "Zu-/Abluftsystem",
+      "video_path": "scenes/scene_01/scene.mp4",
+      "video_duration_seconds": 20.0,
+      "target_duration_seconds": 20.0,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 17.332682
+        }
+      ],
+      "full_narration": "Der Raum ist bereits mit Wärme gesättigt. Um diese Kühllast aktiv abzuführen, brauchen wir ein mechanisches Zu- und Abluftsystem. Kühle Zuluft kommt herein, warme Abluft geht hinaus. Welche Volumenstromrate brauchen wir, um die Wärmelast zu neutralisieren?",
+      "audio_duration_seconds": 20.04,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/systemauslegung-audio/audio_work/scenes/scene_01/audio.wav"
+    },
+    {
+      "id": "scene_02",
+      "title": "Konvektive Kühlleistung",
+      "video_path": "scenes/scene_02/scene.mp4",
+      "video_duration_seconds": 22.55,
+      "target_duration_seconds": 22.55,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 20.732682
+        }
+      ],
+      "full_narration": "Die konvektive Kühlleistung der Zuluft ist ein thermodynamisches Produkt: Q-Punkt-V gleich Luftdichte mal spezieller Wärmekapazität mal Temperaturdifferenz mal Volumenstrom q-v-R. Dichte und Wärmekapazität sind Stoffeigenschaften. Delta-Theta ist der geplante Temperaturhub — und q-v-R ist die gesuchte Entwurfsgröße.",
+      "audio_duration_seconds": 22.848,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/systemauslegung-audio/audio_work/scenes/scene_02/audio.wav"
+    },
+    {
+      "id": "scene_03",
+      "title": "Volumenstrom isolieren",
+      "video_path": "scenes/scene_03/scene.mp4",
+      "video_duration_seconds": 22.5,
+      "target_duration_seconds": 22.5,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 24.398047
+        }
+      ],
+      "full_narration": "Im Gleichgewicht muss die Kühlleistung der Kühllast entsprechen. Wir setzen Q-Punkt-V gleich Q-Punkt-S-tr und lösen nach q-v-R auf. Mit Standardwerten für Luft und unserem Temperaturhub ergibt sich der erforderliche Volumenstrom — das klare Bemessungsziel für die Lüftungsanlage, damit das Raumklima stabil bleibt.",
+      "audio_duration_seconds": 22.752,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/systemauslegung-audio/audio_work/scenes/scene_03/audio.wav"
+    },
+    {
+      "id": "scene_04",
+      "title": "Kanalquerschnitt",
+      "video_path": "scenes/scene_04/scene.mp4",
+      "video_duration_seconds": 24.7,
+      "target_duration_seconds": 24.7,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 23.399023
+        }
+      ],
+      "full_narration": "Mit dem Volumenstrom dimensionieren wir den Kanal über die Kontinuität: Volumenstrom gleich mittlere Geschwindigkeit mal Querschnittsfläche. Derselbe Strom braucht bei hoher Geschwindigkeit wenig Fläche — und bei niedriger Geschwindigkeit mehr. Für lärmarmen Betrieb begrenzen wir oft auf etwa zwei Komma fünf Meter pro Sekunde; daraus folgt direkt die Fläche A.",
+      "audio_duration_seconds": 24.936,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/systemauslegung-audio/audio_work/scenes/scene_04/audio.wav"
+    },
+    {
+      "id": "scene_05",
+      "title": "Kanalradius",
+      "video_path": "scenes/scene_05/scene.mp4",
+      "video_duration_seconds": 19.95,
+      "target_duration_seconds": 19.95,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 21.932357
+        }
+      ],
+      "full_narration": "Runde Kanäle haben den Querschnitt A gleich Pi r-Quadrat. Umgestellt ergibt sich der Radius als Wurzel aus A durch Pi. So wird aus Wärmelast, Volumenstrom und Fläche ein greifbarer Kanaldurchmesser — von der Last bis zum Radius ist die Anlage vollständig ausgelegt.",
+      "audio_duration_seconds": 20.16,
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/systemauslegung-audio/audio_work/scenes/scene_05/audio.wav"
+    }
+  ],
+  "engine": "edge"
+}

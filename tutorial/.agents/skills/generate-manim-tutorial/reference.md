@@ -11,7 +11,7 @@ Companion to [SKILL.md](SKILL.md). Load only when generating or extending scenes
 | `tutorial/energy/demand/Cooling/2_transmission_humidity/scene_3.py` | Best beat-split example |
 | `tutorial/energy/demand/Cooling/2_transmission_humidity/generate_audio.py` | `NARRATIONS` + TTS loop |
 | `tutorial/energy/demand/Cooling/2_transmission_humidity/build_full_video.py` | Render → mux → compose |
-| `tutorial/energy/demand/Cooling/1_heating_vs_cooling/heating_vs_cooling.py` | Compact single-scene beats |
+| `tutorial/intro/intro_scene.py` | Reusable NGS/IEK/LUH intro card (`NGSIntro`) |
 | `tutorial/energy/demand/Heating/introduction/merged_scenes.py` | Legacy `SceneN` + `Full*Video` |
 | `tutorial/pyproject.toml` | `manim`, `gtts`, `openai` |
 

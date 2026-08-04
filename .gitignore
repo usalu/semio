@@ -576,3 +576,14 @@ tutorial/**/*.mp3
 tutorial/**/*.svg
 tutorial/**/*.wav
 tutorial/**/partial_movie_files/
+# Ticket work folders: keep text/json, never commit rendered media/audio
+.repo/🎫/**/*.mp4
+.repo/🎫/**/*.mp3
+.repo/🎫/**/*.wav
+.repo/🎫/**/*.m4a
+.repo/🎫/**/*.aac
+.repo/🎫/**/*.ogg
+.repo/🎫/**/*.flac
+.repo/🎫/**/*.webm
+.repo/🎫/**/*.mov
+.repo/🎫/**/partial_movie_files/

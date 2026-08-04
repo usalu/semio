@@ -325,4 +325,5 @@ class HeatingVsCooling(Scene):
             temp_text.animate.set_color(P_CYAN),
             run_time=3.5
         )
-        self.wait(3.0)
+        # Hold with VO: mechanical ventilation cool-down
+        self.wait(1.8)

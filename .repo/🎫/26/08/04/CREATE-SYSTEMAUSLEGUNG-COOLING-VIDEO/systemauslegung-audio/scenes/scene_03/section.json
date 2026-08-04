@@ -1,0 +1,6 @@
+{
+  "id": "scene_03",
+  "title": "Volumenstrom isolieren",
+  "scene_class": "Beat3_IsolateAirflow",
+  "language": "de"
+}

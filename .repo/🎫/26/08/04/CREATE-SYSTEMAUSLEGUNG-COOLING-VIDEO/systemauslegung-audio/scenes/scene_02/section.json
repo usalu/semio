@@ -1,0 +1,6 @@
+{
+  "id": "scene_02",
+  "title": "Konvektive Kühlleistung",
+  "scene_class": "Beat2_VolumeFlowEquation",
+  "language": "de"
+}

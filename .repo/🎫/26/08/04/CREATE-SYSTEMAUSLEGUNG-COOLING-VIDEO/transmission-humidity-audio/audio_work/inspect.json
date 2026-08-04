@@ -1,0 +1,81 @@
+{
+  "job_dir": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/transmission-humidity-audio",
+  "job_id": "transmission-humidity-audio",
+  "title": "transmission-humidity-audio",
+  "concept_summary": "",
+  "style_notes": "",
+  "visual_identity": "",
+  "language": "en",
+  "scene_count": 4,
+  "scenes": [
+    {
+      "id": "scene_01",
+      "title": "Transmissionswärme: Opake Bauteile",
+      "visual_description": "",
+      "camera_notes": "",
+      "visual_device": "",
+      "style_tags": [],
+      "duration_seconds_plan": null,
+      "existing_narration": "",
+      "beats": [],
+      "animation_beats": [],
+      "code_cues": [],
+      "video_path": "scenes/scene_01/scene.mp4",
+      "video_duration_seconds": 13.9,
+      "scene_dir": "scenes/scene_01"
+    },
+    {
+      "id": "scene_02",
+      "title": "Phasenverschiebung (Time Lag)",
+      "visual_description": "",
+      "camera_notes": "",
+      "visual_device": "",
+      "style_tags": [],
+      "duration_seconds_plan": null,
+      "existing_narration": "",
+      "beats": [],
+      "animation_beats": [],
+      "code_cues": [],
+      "video_path": "scenes/scene_02/scene.mp4",
+      "video_duration_seconds": 10.2,
+      "scene_dir": "scenes/scene_02"
+    },
+    {
+      "id": "scene_03",
+      "title": "Lüftungswärme & Feuchtigkeit",
+      "visual_description": "",
+      "camera_notes": "",
+      "visual_device": "",
+      "style_tags": [],
+      "duration_seconds_plan": null,
+      "existing_narration": "",
+      "beats": [],
+      "animation_beats": [],
+      "code_cues": [],
+      "video_path": "scenes/scene_03/scene.mp4",
+      "video_duration_seconds": 15.8,
+      "scene_dir": "scenes/scene_03"
+    },
+    {
+      "id": "scene_04",
+      "title": "Sensible vs. Latente Kühlung",
+      "visual_description": "",
+      "camera_notes": "",
+      "visual_device": "",
+      "style_tags": [],
+      "duration_seconds_plan": null,
+      "existing_narration": "",
+      "beats": [],
+      "animation_beats": [],
+      "code_cues": [],
+      "video_path": "scenes/scene_04/scene.mp4",
+      "video_duration_seconds": 23.8,
+      "scene_dir": "scenes/scene_04"
+    }
+  ],
+  "notes": [
+    "Agent must author transcript.json — do not call external LLMs for narration.",
+    "Prefer video_duration_seconds as speaking budget; freeze-frame on mux if audio longer.",
+    "Voice should be slow, continuous, and understandable across the whole job."
+  ]
+}

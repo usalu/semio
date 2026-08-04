@@ -1,0 +1,24 @@
+{
+  "id": "scene_1",
+  "title": "Volume Flow Equation",
+  "visual_description": "A cooled room on the left and the airflow equation with value cards on the right.",
+  "camera_notes": "Static framing with clear left-right separation.",
+  "visual_device": "equation_reveal",
+  "beats": [
+    {
+      "index": 0,
+      "visual_action": "Cool supply air enters the room",
+      "narration": ""
+    },
+    {
+      "index": 1,
+      "visual_action": "The temperature difference is highlighted",
+      "narration": ""
+    },
+    {
+      "index": 2,
+      "visual_action": "The volume-flow term is emphasized",
+      "narration": ""
+    }
+  ]
+}
