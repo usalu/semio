@@ -86,7 +86,7 @@ Heating legacy may still use `merged_scenes.py` + `Full*Video` + `add_sound`. **
 2. Plain `Scene` only — no `MovingCameraScene` / `ThreeDScene`.
 3. **Always `Text(...)`** for titles, labels, equations — never `MathTex` / `Tex` / `TexText`.
 4. Shared module palette (`P_DEEP_DARK`, …) — see [reference.md](reference.md).
-5. Every Scene: `self.camera.background_color = P_DEEP_DARK` and `Text.set_default(font="Serif")`.
+5. Every Scene: `self.camera.background_color = P_DEEP_DARK` and `apply_body_font()` from `tutorial/manim_fonts.py` (never CSS generic `"Serif"`).
 6. Title: `Text(...).to_edge(UP, buff=0.4)` + `FadeIn`. Side labels: `next_to` / `move_to` — do not `to_edge(UP)` then `shift(LEFT/RIGHT)`.
 7. Layout: build near `ORIGIN` with `arrange`/`next_to`, then place the group. No overlapping text/arrows. At most one dense formula box visible at a time.
 8. Prefer real motion (`Create`, `GrowArrow`, `LaggedStart`, `Transform`, `ValueTracker`) over FadeIn-and-wait posters.
@@ -134,7 +134,7 @@ Before finishing:
 
 - [ ] Every beat is its own `Beat*_…(Scene)` class
 - [ ] German titles; English `NARRATIONS` (unless asked otherwise)
-- [ ] Palette + Serif + dark background
+- [ ] Palette + resolved body font (`apply_body_font`) + dark background
 - [ ] `Text` only (no TeX)
 - [ ] `generate_audio.py` + `build_full_video.py` updated
 - [ ] Class names in build script match scene file

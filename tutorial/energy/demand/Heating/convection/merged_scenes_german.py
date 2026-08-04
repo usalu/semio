@@ -3,12 +3,24 @@ import numpy as np
 import math
 from manim import *
 
+from pathlib import Path as _Path
+import sys as _sys
+
+_TUTORIAL_ROOT = next(
+    p for p in _Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+from manim_fonts import apply_body_font
+
+
 
 class Scene1(Scene):
     def construct(self):
         # Set dark architectural background
         self.camera.background_color = "#0f1115"
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # --- TITLE ---
         title = Text("Das Gebäude & Konvektion", font_size=32, color=WHITE)
@@ -151,7 +163,7 @@ class InteriorBuildingVolume(Scene):
     def construct(self):
         # Set dark architectural background
         self.camera.background_color = "#0f1115"
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # House vertices defining the interior space
         v_bottom_left = np.array([-2.5, -2.0, 0])
@@ -272,7 +284,7 @@ class Scene3(Scene):
     def construct(self):
         # Set scene background
         self.camera.background_color = "#0f1115"
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # Color palette definition
         COLOR_V = ORANGE
@@ -399,7 +411,7 @@ class Scene4(Scene):
     def construct(self):
         # Set background color
         self.camera.background_color = "#0f1115"
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # Top Equation Initial State: V * n
         eq_v = Text("V", color=ORANGE, font_size=40)
@@ -575,7 +587,7 @@ class Scene5(Scene):
     def construct(self):
         # Set dark background theme
         self.camera.background_color = "#0f1115"
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # --- Scene Title ---
         title = Text("Lüftungswärmeverlust (DIN EN 12831-1)", font_size=32, color=WHITE)
@@ -777,7 +789,7 @@ class Scene5(Scene):
 class Scene6_HeatRecoveryIntro(Scene):
     def construct(self):
         self.camera.background_color = "#0f1115"
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # --- TITLE ---
         title = Text(
@@ -951,7 +963,7 @@ class Scene6_HeatRecoveryIntro(Scene):
 class Scene7_VentilationSystemsComparison(Scene):
     def construct(self):
         self.camera.background_color = "#0f1115"
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # --- TITLE ---
         title = Text(

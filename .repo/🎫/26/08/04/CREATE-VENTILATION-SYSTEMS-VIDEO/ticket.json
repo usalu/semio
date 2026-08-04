@@ -1,0 +1,27 @@
+{
+  "title": "Create Ventilation Systems Cooling Video",
+  "emoji": "🌀",
+  "status": "closed",
+  "description": "Audit the existing Cooling tutorial videos for uncovered curriculum material and add the missing ventilation-systems content: free vs. mechanical ventilation, the three mechanical base types, heat/cold recovery, air distribution strategies, and RLT unit functions.",
+  "goal": "🎯r2602🎯updateddocs🎯updateduserdocs🎯updatedtutorials",
+  "dates": {
+    "due": "2026-08-04",
+    "started": "2026-08-04",
+    "completed": "2026-08-04"
+  },
+  "client": "claude-code",
+  "llm": "opus-5",
+  "summary": "Added Cooling part 6 (Lüftungssysteme) as a six-beat Manim video covering the ventilation taxonomy, free ventilation with the stack-effect and night-purge mechanisms, the three mechanical base types with their pressure regimes, plate heat exchanger recovery with the temperature ratio, mixing vs. displacement air distribution, and the four RLT functions plus the air change rate. Registered narration, render/compose pipeline, launch entries and a matching intro card.",
+  "files": {
+    "created": [
+      "tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py",
+      "tutorial/energy/demand/Cooling/6_lueftungssysteme/generate_audio.py",
+      "tutorial/energy/demand/Cooling/6_lueftungssysteme/build_full_video.py",
+      "tutorial/energy/demand/Cooling/6_lueftungssysteme/manim.cfg"
+    ],
+    "updated": [
+      "tutorial/intro/intro_scene.py",
+      ".vscode/launch.json"
+    ]
+  }
+}

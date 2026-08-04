@@ -8,6 +8,7 @@ Companion to [SKILL.md](SKILL.md). Load only when generating or extending scenes
 
 | Path | Role |
 |------|------|
+| `tutorial/manim_fonts.py` | Cross-platform body font (`BODY_FONT` / `apply_body_font`) |
 | `tutorial/energy/demand/Cooling/2_transmission_humidity/scene_3.py` | Best beat-split example |
 | `tutorial/energy/demand/Cooling/2_transmission_humidity/generate_audio.py` | `NARRATIONS` + TTS loop |
 | `tutorial/energy/demand/Cooling/2_transmission_humidity/build_full_video.py` | Render → mux → compose |
@@ -51,6 +52,17 @@ Semantic hints: cyan accents / windows; yellow sun; red heat / transmission; blu
 import numpy as np
 from manim import *
 
+from pathlib import Path as _Path
+import sys as _sys
+
+_TUTORIAL_ROOT = next(
+    p for p in _Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+from manim_fonts import apply_body_font
+
 P_DEEP_DARK = "#0B0C10"
 P_WHITE = "#E0E6ED"
 P_CYAN = "#66FCF1"
@@ -70,7 +82,7 @@ def _build_house(center=ORIGIN):
 class Beat1_TopicName(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = Text("Deutscher Titel", font_size=30, color=P_WHITE)
         title.to_edge(UP, buff=0.4)

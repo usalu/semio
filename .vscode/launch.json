@@ -906,6 +906,17 @@
         "order": 204
       }
     },
+    {
+      "name": "🛠️dev🎬manim scene_6",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql tutorial/energy/demand/Cooling/6_lueftungssysteme/scene_6.py Beat1_Systemuebersicht",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 205
+      }
+    },
     // #endregion
 
     // #region 📦 Build
@@ -1105,6 +1116,28 @@
       "presentation": {
         "group": "4_build",
         "order": 133
+      }
+    },
+    {
+      "name": "📦build📽️lueftungssysteme🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/6_lueftungssysteme/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 134
+      }
+    },
+    {
+      "name": "📦build📽️lueftungssysteme🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/6_lueftungssysteme/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 135
       }
     },
     // #endregion

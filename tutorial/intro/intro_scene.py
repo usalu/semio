@@ -11,10 +11,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import sys as _sys
+
 import numpy as np
 from manim import *
 from manim.utils.rate_functions import ease_in_out_sine, ease_out_cubic, smootherstep
 from PIL import Image
+
+_TUTORIAL_ROOT = next(
+    p for p in Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+from manim_fonts import apply_body_font
 
 # region Palette
 P_DEEP_DARK = "#0B0C10"
@@ -138,7 +148,7 @@ class NGSIntro(Scene):
 
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # region Chrome
         frame = _screen_frame()
@@ -315,4 +325,12 @@ class Intro_Systemauslegung(NGSIntro):
     topic_de = "Systemauslegung"
     topic_explain_de = "Von der Kühllast zum Luftvolumenstrom und Kanalquerschnitt."
     series_de = "Kühllast · Teil 5"
+
+
+class Intro_Lueftungssysteme(NGSIntro):
+    """🌀 Intro for Cooling part 6 — Lüftungssysteme."""
+
+    topic_de = "Lüftungssysteme"
+    topic_explain_de = "Freie und mechanische Lüftung, Rückgewinnung und Luftführung."
+    series_de = "Kühllast · Teil 6"
 # endregion

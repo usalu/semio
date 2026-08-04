@@ -7,6 +7,17 @@ import random
 import numpy as np
 from manim import *
 
+from pathlib import Path as _Path
+import sys as _sys
+
+_TUTORIAL_ROOT = next(
+    p for p in _Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+from manim_fonts import apply_body_font, play_scene_title, scene_title
+
 # ─── Shared Scene 3 Palette ────────────────────────────────────────────────
 P_DEEP_DARK = "#0B0C10"
 P_WHITE     = "#E0E6ED"
@@ -25,7 +36,10 @@ _ManimParagraph = Paragraph
 _Manim_to_edge = Mobject.to_edge
 
 _TEXT_KERNING_MIN = 48.0
-_TEXT_FONT_FALLBACKS = ('Serif', 'CMU Serif', 'Computer Modern')
+_TEXT_FONT_FALLBACKS = (
+    'Georgia', 'PT Serif', 'Times New Roman',
+    'Liberation Serif', 'DejaVu Serif', 'STIX Two Text',
+)
 
 def _nig_pick_font():
     try:
@@ -118,7 +132,10 @@ Mobject.to_edge = _safe_to_edge
 # Durable Text path: Noto Sans + Pango kerning scale (≥48px then .scale).
 
 _TEXT_KERNING_MIN = 48.0
-_TEXT_FONT_FALLBACKS = ('Serif', 'CMU Serif', 'Computer Modern')
+_TEXT_FONT_FALLBACKS = (
+    'Georgia', 'PT Serif', 'Times New Roman',
+    'Liberation Serif', 'DejaVu Serif', 'STIX Two Text',
+)
 
 def _nig_pick_font():
     try:
@@ -215,15 +232,18 @@ def _nig_safe_to_edge(self, edge=LEFT, buff=DEFAULT_MOBJECT_TO_EDGE_BUFFER, *arg
         pass
     return result
 Mobject.to_edge = _nig_safe_to_edge
-_ManimText.set_default(font="Serif")
+_ManimText.set_default(font=_TEXT_RESOLVED_FONT)
 # _NOWIGETIT_TEXT_LAYOUT_FIX_V7_END
 
 
 
 #region Scene Title Typing
-def play_typed_title(scene, title, run_time=1.4):
-    """✍️ 3Blue1Brown-style Write intro for a scene header Text."""
-    scene.play(Write(title), run_time=run_time)
+def play_typed_title(scene, title, run_time=None):
+    """✍️ Chapter-header intro — delegates to the shared tutorial definition."""
+    if run_time is None:
+        play_scene_title(scene, title)
+    else:
+        play_scene_title(scene, title, run_time)
 #endregion
 
 
@@ -239,8 +259,7 @@ class Scene1(Scene):
         self.camera.background_color = P_DEEP_DARK
 
         # Title top
-        title = Text("Die umschlossene Umgebung", font_size=30, color=P_WHITE)
-        title.to_edge(UP, buff=0.4)
+        title = scene_title("Die umschlossene Umgebung")
 
         # ---------------------------------------------------------------------
         # BEAT 1: Building facade scaling/focusing into interior (~4.6s total)
@@ -373,7 +392,7 @@ class Scene2(Scene):
         # -----------------------------------------------------------------
         # Title & Blueprint Environment Setup
         # -----------------------------------------------------------------
-        title = Text("Menschliche Stoffwechselwärme", font_size=30, color=P_WHITE).to_edge(UP, buff=0.4)
+        title = scene_title("Menschliche Stoffwechselwärme")
 
         # Architectural blueprint room boundaries
         ceiling_line = Line(LEFT * 5.5 + UP * 2.5, RIGHT * 5.5 + UP * 2.5, color="#2C3545", stroke_width=2)
@@ -509,9 +528,7 @@ class Scene3(Scene):
             shoulders.next_to(head, DOWN, buff=0.02 * scale)
             return VGroup(head, shoulders)
 
-        title = Text(
-            "Skalierung der Belegungsdichte", font_size=30, color=P_WHITE
-        ).to_edge(UP, buff=0.4)
+        title = scene_title("Skalierung der Belegungsdichte")
 
         single_occupant = create_occupant_icon(
             color=P_CYAN, scale=1.8
@@ -715,8 +732,7 @@ class EquipmentAndPlugLoads(Scene):
             wave.set_points_smoothly(pts)
             return wave
 
-        title = Text("Geräte und Steckerlasten", font_size=30, color=P_WHITE)
-        title.to_edge(UP, buff=0.4)
+        title = scene_title("Geräte und Steckerlasten")
         play_typed_title(self, title)
 
         floor = Line(LEFT * 6.5 + DOWN * 2.5, RIGHT * 6.5 + DOWN * 2.5, color=GREY_LINE, stroke_width=2)
@@ -913,8 +929,7 @@ class ArtificialLightingScene(Scene):
             return waves
 
         # ── Title ──
-        title = Text("Wärmebeitrag durch künstliche Beleuchtung", font_size=28, color=P_ORANGE)
-        title.to_edge(UP, buff=0.35)
+        title = scene_title("Wärmebeitrag durch künstliche Beleuchtung")
 
         # ── Room section (Cooling line-art) ──
         room_w, room_h = 8.4, 4.2
@@ -1186,8 +1201,7 @@ class InternalGainEquation(Scene):
             return VGroup(frame, title, icon, term_t), frame, term_t
 
         # ── Title ──
-        title = Text("Die Gleichung für interne Gewinne", font_size=28, color=P_ORANGE)
-        title.to_edge(UP, buff=0.32)
+        title = scene_title("Die Gleichung für interne Gewinne")
         subtitle = Text("Summe der drei Wärmequellen aus den vorherigen Szenen", font_size=15, color=P_TEAL)
         subtitle.next_to(title, DOWN, buff=0.14)
 
@@ -1351,8 +1365,7 @@ class SensibleVsLatentHeat(Scene):
         self.camera.background_color = P_DEEP_DARK
 
         # --- Beat 1: Title & Screen Division (4.0s) ---
-        title = Text("Sensible versus latente Wärme", font_size=30, color=P_WHITE)
-        title.to_edge(UP, buff=0.4)
+        title = scene_title("Sensible versus latente Wärme")
 
         divider = Line(UP * 2.2, DOWN * 2.4, color="#475569", stroke_width=2)
 
@@ -1488,8 +1501,7 @@ class Scene8(Scene):
         C_HOT = "#FF6B35"
         C_VERY_HOT = "#FF4500"
 
-        title = Text("Die isolierte Wärmefalle", font_size=28, color=P_ORANGE)
-        title.to_edge(UP, buff=0.35)
+        title = scene_title("Die isolierte Wärmefalle")
         subtitle = Text("Interne Gewinne bleiben im gut gedämmten Raum", font_size=16, color=P_TEAL)
         subtitle.next_to(title, DOWN, buff=0.15)
 
@@ -1702,8 +1714,7 @@ class Scene9(Scene):
         C_COOL_DIM = P_TEAL
         C_WALL = P_WHITE
 
-        title = Text("HLK-Kühlbedarf", font_size=30, color=P_WHITE)
-        title.to_edge(UP, buff=0.32)
+        title = scene_title("HLK-Kühlbedarf")
         subtitle = Text(
             "Kühlluft verdrängt die interne Wärmelast",
             font_size=16,
@@ -1970,8 +1981,7 @@ class Scene10(Scene):
         C_YELLOW = P_YELLOW
         C_WALL = "#1A1E28"
 
-        title = Text("Minderung & intelligentes Design", font_size=28, color=P_WHITE)
-        title.to_edge(UP, buff=0.28)
+        title = scene_title("Minderung & intelligentes Design")
         subtitle = Text(
             "Lasten senken → weniger interne Wärme → weniger Kühlbedarf",
             font_size=15,

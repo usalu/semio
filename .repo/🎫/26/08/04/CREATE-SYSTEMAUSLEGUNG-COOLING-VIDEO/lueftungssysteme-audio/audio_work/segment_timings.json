@@ -1,0 +1,221 @@
+{
+  "scene_01": {
+    "segments": [
+      {
+        "key": "intro",
+        "seconds": 9.0,
+        "start": 0.0,
+        "end": 9.0,
+        "text": "Bisher haben wir einen Volumenstrom ausgelegt. Doch Lüftung ist keine einzelne Maschine — sondern eine Familie von Systemen."
+      },
+      {
+        "key": "branches",
+        "seconds": 9.216,
+        "start": 9.0,
+        "end": 18.216,
+        "text": "Oben stehen nur zwei Wege: freie Lüftung, angetrieben von Wind und Thermik, und ventilatorgestützte Lüftung mit Motor."
+      },
+      {
+        "key": "leaves",
+        "seconds": 3.384,
+        "start": 18.216,
+        "end": 21.6,
+        "text": "Alles Weitere hängt an diesen beiden Ästen."
+      },
+      {
+        "key": "focus",
+        "seconds": 7.464,
+        "start": 21.6,
+        "end": 29.064,
+        "text": "Für eine berechnete Kühllast brauchen wir den mechanischen Ast — denn nur dort ist der Volumenstrom wirklich vorgebbar."
+      }
+    ],
+    "sum": 29.064
+  },
+  "scene_02": {
+    "segments": [
+      {
+        "key": "intro",
+        "seconds": 2.736,
+        "start": 0.0,
+        "end": 2.736,
+        "text": "Beginnen wir mit der freien Lüftung."
+      },
+      {
+        "key": "fenster",
+        "seconds": 12.24,
+        "start": 2.736,
+        "end": 14.976,
+        "text": "Ein einzelnes Fenster tauscht Luft nur über eine Öffnung: warm oben hinaus, kühler unten herein. Der Antrieb ist schwach — der Luftwechsel bleibt gering und unkontrolliert."
+      },
+      {
+        "key": "quer",
+        "seconds": 11.808,
+        "start": 14.976,
+        "end": 26.784,
+        "text": "Öffnen wir gegenüberliegende Fassaden, entsteht Querlüftung. Der Wind treibt die Luft quer durchs Gebäude, und der Luftwechsel steigt stark — aber er hängt ganz vom Wind ab."
+      },
+      {
+        "key": "auftrieb",
+        "seconds": 13.584,
+        "start": 26.784,
+        "end": 40.368,
+        "text": "Der dritte Mechanismus ist der Auftrieb: warme Innenluft steigt im Schacht, weil sie leichter ist als die Außenluft. Die treibende Druckdifferenz wächst mit Schachthöhe und Temperaturdifferenz."
+      },
+      {
+        "key": "nacht",
+        "seconds": 10.392,
+        "start": 40.368,
+        "end": 50.76,
+        "text": "Nachts nutzen wir das gezielt: kühle Nachtluft spült die Speichermasse und trägt gespeicherte Wärme hinaus, damit der Bau am nächsten Morgen kühler startet."
+      },
+      {
+        "key": "grenzen",
+        "seconds": 13.44,
+        "start": 50.76,
+        "end": 64.2,
+        "text": "Die Grenzen bleiben klar: keine Filterung, keine Entfeuchtung, keine Wärmerückgewinnung — und der Volumenstrom ist nicht regelbar. Für die Kühllastauslegung reicht freie Lüftung deshalb nicht."
+      }
+    ],
+    "sum": 64.2
+  },
+  "scene_03": {
+    "segments": [
+      {
+        "key": "intro",
+        "seconds": 3.36,
+        "start": 0.0,
+        "end": 3.36,
+        "text": "Deshalb die drei mechanischen Grundtypen."
+      },
+      {
+        "key": "abluft",
+        "seconds": 11.256,
+        "start": 3.36,
+        "end": 14.616,
+        "text": "Die Abluftanlage saugt mit einem Ventilator Luft ab. Im Raum entsteht Unterdruck, und Ersatzluft kommt passiv über Außenluftdurchlässe — ungefiltert."
+      },
+      {
+        "key": "zuluft",
+        "seconds": 9.744,
+        "start": 14.616,
+        "end": 24.36,
+        "text": "Die Zuluftanlage macht das Gegenteil: gefilterte Luft wird hereingedrückt, der Raum geht auf Überdruck, und die Abluft entweicht über Fugen."
+      },
+      {
+        "key": "zuabluft",
+        "seconds": 6.312,
+        "start": 24.36,
+        "end": 30.672,
+        "text": "Die Zu- und Abluftanlage führt beide Ströme mit Ventilatoren und hält den Druck neutral."
+      },
+      {
+        "key": "verdict",
+        "seconds": 7.776,
+        "start": 30.672,
+        "end": 38.448,
+        "text": "Erst wenn beide Ströme geführt sind, werden Filterung, Wärmerückgewinnung und Feuchteregelung überhaupt möglich."
+      }
+    ],
+    "sum": 38.448
+  },
+  "scene_04": {
+    "segments": [
+      {
+        "key": "intro",
+        "seconds": 4.536,
+        "start": 0.0,
+        "end": 4.536,
+        "text": "Mit beiden geführten Strömen wird die Wärmerückgewinnung möglich."
+      },
+      {
+        "key": "exchanger",
+        "seconds": 8.976,
+        "start": 4.536,
+        "end": 13.512,
+        "text": "Im Plattenwärmeübertrager laufen Zu- und Abluft in getrennten Kanälen aneinander vorbei — sie mischen sich nicht, tauschen aber Wärme."
+      },
+      {
+        "key": "summer",
+        "seconds": 12.144,
+        "start": 13.512,
+        "end": 25.656,
+        "text": "Im Sommer wird daraus Kälterückgewinnung: Außenluft mit zweiunddreißig Grad trifft auf Abluft mit sechsundzwanzig Grad und wird auf etwa siebenundzwanzig Grad vorgekühlt — ohne Kältemaschine."
+      },
+      {
+        "key": "phi",
+        "seconds": 15.552,
+        "start": 25.656,
+        "end": 41.208,
+        "text": "Die Güte misst das Temperaturverhältnis Phi: erreichter Temperaturhub geteilt durch den maximal möglichen. Moderne Geräte liegen bei etwa null Komma acht — also rund achtzig Prozent der Lüftungskühllast werden kostenlos abgefangen."
+      }
+    ],
+    "sum": 41.208
+  },
+  "scene_05": {
+    "segments": [
+      {
+        "key": "intro",
+        "seconds": 4.512,
+        "start": 0.0,
+        "end": 4.512,
+        "text": "Wie die Luft im Raum geführt wird, zählt genauso wie die Menge."
+      },
+      {
+        "key": "misch",
+        "seconds": 13.032,
+        "start": 4.512,
+        "end": 17.544,
+        "text": "Bei der Mischlüftung kommt ein schneller Strahl vom Deckendiffusor. Er reißt Raumluft mit und vermischt alles zu einer gleichmäßigen Temperatur — hohe Kühlleistung, aber Schadstoffe werden mitverteilt."
+      },
+      {
+        "key": "quell",
+        "seconds": 15.384,
+        "start": 17.544,
+        "end": 32.928,
+        "text": "Die Quelllüftung macht das Gegenteil: kühle Luft tritt impulsarm am Boden ein und bildet einen flachen See. Wärmequellen erzeugen Auftriebsfahnen, die Last und Schadstoffe nach oben tragen, wo sie an der Decke abgesaugt werden."
+      },
+      {
+        "key": "trade",
+        "seconds": 9.696,
+        "start": 32.928,
+        "end": 42.624,
+        "text": "So entsteht Temperaturschichtung und bessere Luftqualität in der Aufenthaltszone — bei begrenzter Kühlleistung von etwa vierzig Watt pro Quadratmeter."
+      }
+    ],
+    "sum": 42.624
+  },
+  "scene_06": {
+    "segments": [
+      {
+        "key": "intro",
+        "seconds": 3.336,
+        "start": 0.0,
+        "end": 3.336,
+        "text": "Was geschieht in der RLT-Anlage?"
+      },
+      {
+        "key": "stages",
+        "seconds": 6.456,
+        "start": 3.336,
+        "end": 9.792,
+        "text": "Die Außenluft läuft durch Filtern, Heizen, Kühlen, Befeuchten und Entfeuchten."
+      },
+      {
+        "key": "classes",
+        "seconds": 15.36,
+        "start": 9.792,
+        "end": 25.152,
+        "text": "Die vier thermodynamischen Funktionen entscheiden die Klassifikation: nur Fördern und Filtern ist eine Lüftungsanlage; fehlen Funktionen, spricht man von Teilklima; alle vier in jeder Jahreszeit machen die Vollklimaanlage."
+      },
+      {
+        "key": "n",
+        "seconds": 13.536,
+        "start": 25.152,
+        "end": 38.688,
+        "text": "Und eine Kennzahl verbindet die ganze Reihe: die Luftwechselrate n — Volumenstrom geteilt durch Raumvolumen, in Wechseln pro Stunde. Sie knüpft die berechnete Kühllast an das gewählte System."
+      }
+    ],
+    "sum": 38.688
+  }
+}

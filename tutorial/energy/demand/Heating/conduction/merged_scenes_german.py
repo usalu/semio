@@ -3,12 +3,24 @@ import numpy as np
 import math
 from manim import *
 
+from pathlib import Path as _Path
+import sys as _sys
+
+_TUTORIAL_ROOT = next(
+    p for p in _Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+from manim_fonts import apply_body_font
+
+
 
 class Scene1(Scene):
     def construct(self):
         # Background setup
         self.camera.background_color = "#0B0C10"
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # --- TITLE & SUBTITLE ---
         title = Text("Makroskopische und Mikroskopische Wärmeleitung", font_size=28, color=WHITE)

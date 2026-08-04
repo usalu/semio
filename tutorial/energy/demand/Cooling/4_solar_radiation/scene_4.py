@@ -1,6 +1,18 @@
 import numpy as np
 from manim import *
 
+from pathlib import Path as _Path
+import sys as _sys
+
+_TUTORIAL_ROOT = next(
+    p for p in _Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+from manim_fonts import apply_body_font, play_scene_title, scene_title
+
+
 
 # ─── Shared Constants ────────────────────────────────────────────────
 P_DEEP_DARK = "#0B0C10"
@@ -18,7 +30,7 @@ MAIN_TITLE = "Kühllast mit Sonnenschutz"
 
 def _main_title():
     """☀️ Persistent chapter header shared by every beat of this topic."""
-    return Text(MAIN_TITLE, font_size=30, color=P_CYAN).to_edge(UP, buff=0.35)
+    return scene_title(MAIN_TITLE)
 
 
 def _sun(pos, radius=0.4):
@@ -151,7 +163,7 @@ def _bell(x, x0, x1, amp):
 class Beat1_SolarIrradiance(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         subtitle = Text("Direkte Sonnenstrahlung", font_size=20, color=P_YELLOW)
@@ -234,7 +246,7 @@ class Beat1_SolarIrradiance(Scene):
         eq_group.to_corner(DL, buff=0.4)
 
         # ── ANIMATION ──
-        self.play(FadeIn(title, shift=DOWN * 0.2), run_time=0.8)
+        play_scene_title(self, title)
         self.play(FadeIn(subtitle, shift=DOWN * 0.15), run_time=0.5)
         self.play(Create(building), run_time=1.6)
         self.play(FadeIn(sun, scale=0.7), run_time=1.0)
@@ -280,7 +292,7 @@ class Beat1_SolarIrradiance(Scene):
 class Beat2_FrameFactor(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         subtitle = Text("Fensterfläche und Rahmenfaktor", font_size=20, color=P_WHITE)
@@ -391,7 +403,7 @@ class Beat3_ShadingFactor(Scene):
 
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         subtitle = Text("Verschattungsfaktor", font_size=20, color=P_TEAL)
@@ -604,7 +616,7 @@ class Beat3_ShadingFactor(Scene):
 class Beat4_GlassTransmittance(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         subtitle = Text("Gesamtenergiedurchlassgrad", font_size=20, color=P_RED)
@@ -706,7 +718,7 @@ class Beat4_GlassTransmittance(Scene):
 class Beat5_SolarCoolingLoad(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         subtitle = Text("Solare Kühllast", font_size=20, color=P_YELLOW)

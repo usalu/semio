@@ -1,6 +1,18 @@
 import numpy as np
 from manim import *
 
+from pathlib import Path as _Path
+import sys as _sys
+
+_TUTORIAL_ROOT = next(
+    p for p in _Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+from manim_fonts import apply_body_font, play_scene_title, scene_title
+
+
 
 # ─── Shared Constants ────────────────────────────────────────────────
 P_DEEP_DARK = "#0B0C10"
@@ -18,7 +30,7 @@ MAIN_TITLE = "Mechanische Wohnungslüftung: Auslegung"
 
 def _main_title():
     """🌬️ Persistent chapter header shared by every beat of this topic."""
-    return Text(MAIN_TITLE, font_size=26, color=P_CYAN).to_edge(UP, buff=0.28)
+    return scene_title(MAIN_TITLE)
 
 
 def _equation_row(parts, font_size=24, buff=0.14):
@@ -147,7 +159,7 @@ def _step_label(text, color=P_WHITE):
 class Beat1_MechanicalVentilation(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         built = _build_room()
@@ -237,7 +249,7 @@ class Beat1_MechanicalVentilation(Scene):
         )
 
         self.add(warm_wash)
-        self.play(Write(title), run_time=1.6)
+        play_scene_title(self, title)
         self.play(Create(room), Create(floor), run_time=1.6)
         self.play(
             FadeIn(step1),
@@ -282,7 +294,7 @@ class Beat1_MechanicalVentilation(Scene):
 class Beat2_VolumeFlowEquation(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         subtitle = Text("Konvektive Kühlleistung der Zuluft", font_size=18, color=P_TEAL)
@@ -374,7 +386,7 @@ class Beat2_VolumeFlowEquation(Scene):
         step2 = _step_label("2  Stoffwerte und Temperaturhub bestimmen die Kühlleistung", P_GREEN)
         step3 = _step_label("3  q_v,R bestimmt, wie viel Luft wir brauchen", P_YELLOW)
 
-        self.play(Write(title), run_time=1.5)
+        play_scene_title(self, title)
         self.play(FadeIn(subtitle), run_time=0.6)
         self.play(Create(room), Create(floor), FadeIn(supply), run_time=1.5)
         self.play(FadeIn(step1), FadeIn(t_supply), FadeIn(t_room), run_time=1.2)
@@ -411,7 +423,7 @@ class Beat2_VolumeFlowEquation(Scene):
 class Beat3_IsolateAirflow(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         subtitle = Text("Gleichgewicht: Kühlleistung = Kühllast", font_size=18, color=P_CYAN)
@@ -508,7 +520,7 @@ class Beat3_IsolateAirflow(Scene):
         step2 = _step_label("2  Ersetze Q̇_V durch Q̇_S,tr", P_YELLOW)
         step3 = _step_label("3  Isoliere q_v,R — das ist der Auslegungswert", P_CYAN)
 
-        self.play(Write(title), run_time=1.5)
+        play_scene_title(self, title)
         self.play(FadeIn(subtitle), run_time=0.6)
         self.play(FadeIn(step1), run_time=0.7)
         self.play(
@@ -576,7 +588,7 @@ class Beat3_IsolateAirflow(Scene):
 class Beat4_DuctCrossSection(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         subtitle = Text("Vom Volumenstrom zum Kanalquerschnitt", font_size=18, color=P_TEAL)
@@ -652,7 +664,7 @@ class Beat4_DuctCrossSection(Scene):
         step2 = _step_label("2  Kontinuität: q_v,R = v_m · A", P_WHITE)
         step3 = _step_label("3  Bei begrenzter Geschwindigkeit folgt die nötige Fläche A", P_BLUE)
 
-        self.play(Write(title), run_time=1.5)
+        play_scene_title(self, title)
         self.play(FadeIn(subtitle), run_time=0.55)
         self.play(FadeIn(step1), run_time=0.6)
         self.play(Create(outer), FadeIn(wall), Create(pipe), run_time=2.0)
@@ -716,7 +728,7 @@ class Beat4_DuctCrossSection(Scene):
 class Beat5_CalculateRadius(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         title = _main_title()
         subtitle = Text("Runder Kanal: von der Fläche zum Radius", font_size=18, color=P_YELLOW)
@@ -786,7 +798,7 @@ class Beat5_CalculateRadius(Scene):
         step2 = _step_label("2  A = π · r²  — Geometrie des Rohrs", P_WHITE)
         step3 = _step_label("3  Auflösen nach r liefert die Kanaldimension", P_YELLOW)
 
-        self.play(Write(title), run_time=1.5)
+        play_scene_title(self, title)
         self.play(FadeIn(subtitle), run_time=0.55)
         self.play(FadeIn(step1), run_time=0.6)
         self.play(Create(circle), FadeIn(fill), run_time=1.8)

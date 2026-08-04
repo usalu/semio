@@ -1,6 +1,18 @@
 import numpy as np
 from manim import *
 
+from pathlib import Path as _Path
+import sys as _sys
+
+_TUTORIAL_ROOT = next(
+    p for p in _Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+from manim_fonts import apply_body_font, play_scene_title, scene_title
+
+
 class HeatingVsCooling(Scene):
     def construct(self):
         # Color Palette
@@ -18,9 +30,8 @@ class HeatingVsCooling(Scene):
         # ----------------------------------------------------
         # BEAT 1: The Winter Recap (The Helpful Gains)
         # ----------------------------------------------------
-        Text.set_default(font="Serif")
-        title = Text("Heizlast vs. Kühllast", font_size=36, color=P_WHITE)
-        title.to_edge(UP, buff=0.4)
+        apply_body_font()
+        title = scene_title("Heizlast vs. Kühllast")
 
         subtitle = Text("Im Winter: Erwünschte kostenlose Wärme", font_size=20, color=P_GREEN)
         subtitle.next_to(title, DOWN, buff=0.2)
@@ -152,7 +163,8 @@ class HeatingVsCooling(Scene):
         internal_label.next_to(device, UP, buff=0.4)
 
         # Animate Beat 1
-        self.play(Write(title), Write(subtitle), run_time=1.0)
+        play_scene_title(self, title)
+        self.play(Write(subtitle), run_time=0.8)
         self.play(
             Create(floor_line),
             Create(walls),
@@ -290,8 +302,7 @@ class HeatingVsCooling(Scene):
         # ----------------------------------------------------
         # BEAT 4: The Cooling Goal & System Activation
         # ----------------------------------------------------
-        title_beat4 = Text("Kühllast & Systemauslegung", font_size=32, color=P_CYAN)
-        title_beat4.to_edge(UP, buff=0.4)
+        title_beat4 = scene_title("Kühllast & Systemauslegung")
 
         subtitle_beat4 = Text("Wärme aktiv abführen (Mechanische Lüftung)", font_size=20, color=P_CYAN)
         subtitle_beat4.next_to(title_beat4, DOWN, buff=0.2)

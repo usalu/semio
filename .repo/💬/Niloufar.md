@@ -431,3 +431,25 @@ add my prompting in niloufar.md
 
 
 
+
+
+## 2026-08-04 14:54
+
+@tutorial/energy/demand/Cooling/1_heating_vs_cooling continuous Seraphina speech at a natural pace, with Manim holds tuned to match
+
+
+## 2026-08-04 15:00
+
+for rendering videos, there is issue with font, fix that in order all texes render well
+
+---
+
+@tutorial/energy/demand/Cooling/6_lueftungssysteme continuous Seraphina speech at a natural pace, with Manim holds tuned to match,
+
+---
+
+based on the audio, change the duration of the Animation with audi, some parts animate sooner as audio, i want them all sync@tutorial/energy/demand/Cooling/6_lueftungssysteme
+
+---
+
+in cooling add a folder and render all section videos with highest quality, without voices and add the voices in seprate folder

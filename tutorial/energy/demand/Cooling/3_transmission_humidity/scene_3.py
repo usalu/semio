@@ -1,6 +1,18 @@
 import numpy as np
 from manim import *
 
+from pathlib import Path as _Path
+import sys as _sys
+
+_TUTORIAL_ROOT = next(
+    p for p in _Path(__file__).resolve().parents
+    if (p / "manim_fonts.py").is_file()
+)
+if str(_TUTORIAL_ROOT) not in _sys.path:
+    _sys.path.insert(0, str(_TUTORIAL_ROOT))
+from manim_fonts import apply_body_font, play_scene_title, scene_title
+
+
 
 # ─── Shared Constants ────────────────────────────────────────────────
 P_DEEP_DARK = "#0B0C10"
@@ -115,11 +127,10 @@ def _build_house_section(center=ORIGIN):
 class Beat1_TransmissionOpaque(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # ── Title ──
-        title = Text("Transmissionswärme: Opake Bauteile", font_size=30, color=P_WHITE)
-        title.to_edge(UP, buff=0.4)
+        title = scene_title("Transmissionswärme: Opake Bauteile")
 
         # ── House ──
         hc = LEFT * 0.5 + DOWN * 0.7
@@ -186,7 +197,7 @@ class Beat1_TransmissionOpaque(Scene):
 
         # ── ANIMATION ──
         # Beat 1a: Title + house draw
-        self.play(FadeIn(title, shift=DOWN * 0.2), run_time=0.8)
+        play_scene_title(self, title)
         self.play(Create(h["house"]), run_time=1.5)
 
         # Beat 1b: Sun appears
@@ -243,11 +254,10 @@ class Beat1_TransmissionOpaque(Scene):
 class Beat2_TimeLag(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # ── Title ──
-        title = Text("Transmissionswärme: Opake Bauteile", font_size=30, color=P_WHITE)
-        title.to_edge(UP, buff=0.4)
+        title = scene_title("Transmissionswärme: Opake Bauteile")
 
         # ── House (walls/roof already red from Beat 1) ──
         hc = LEFT * 0.5 + DOWN * 0.7
@@ -410,11 +420,10 @@ class Beat2_TimeLag(Scene):
 class Beat3_VentilationHeat(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # ── Title ──
-        title = Text("Lüftungswärme & Feuchtigkeit", font_size=30, color=P_CYAN)
-        title.to_edge(UP, buff=0.4)
+        title = scene_title("Lüftungswärme & Feuchtigkeit")
 
         # ── House (Section View) ──
         hc = LEFT * 0.5 + DOWN * 0.7
@@ -513,7 +522,7 @@ class Beat3_VentilationHeat(Scene):
 
         # Beat 3a: Title + Sun returns
         self.play(
-            FadeIn(title, shift=DOWN * 0.2),
+            Write(title),
             FadeIn(sun_group, scale=0.7),
             run_time=1.2,
         )
@@ -581,11 +590,10 @@ class Beat3_VentilationHeat(Scene):
 class Beat4_SensibleVsLatent(Scene):
     def construct(self):
         self.camera.background_color = P_DEEP_DARK
-        Text.set_default(font="Serif")
+        apply_body_font()
 
         # ── Title ──
-        title = Text("Sensible vs. Latente Kühlung", font_size=30, color=P_WHITE)
-        title.to_edge(UP, buff=0.4)
+        title = scene_title("Sensible vs. Latente Kühlung")
 
         # ── Dividing Line ──
         divider = DashedLine(UP * 2.2, DOWN * 2.5, color=P_WHITE, stroke_width=1.5, dash_length=0.15)
@@ -668,7 +676,7 @@ class Beat4_SensibleVsLatent(Scene):
 
         # ── ANIMATION ──
         # Beat 4a: Title + divider
-        self.play(FadeIn(title, shift=DOWN * 0.2), run_time=0.8)
+        play_scene_title(self, title)
         self.play(Create(divider), run_time=0.6)
 
         # Beat 4b: Both subtitles

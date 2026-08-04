@@ -1,0 +1,119 @@
+{
+  "job_id": "lueftungssysteme-audio",
+  "title": "Lüftungssysteme: Arten und Wirkprinzipien",
+  "language": "de",
+  "voice": "de-DE-SeraphinaMultilingualNeural",
+  "rate": "-5%",
+  "pitch": "+0Hz",
+  "scenes": [
+    {
+      "id": "scene_01",
+      "title": "Systemübersicht",
+      "video_path": "scenes/scene_01/scene.mp4",
+      "video_duration_seconds": 28.9,
+      "target_duration_seconds": 28.9,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 14.8
+        }
+      ],
+      "full_narration": "Bisher haben wir einen Volumenstrom ausgelegt. Doch Lüftung ist keine einzelne Maschine — sondern eine Familie von Systemen. Oben stehen nur zwei Wege: freie Lüftung, angetrieben von Wind und Thermik, und ventilatorgestützte Lüftung mit Motor. Alles Weitere hängt an diesen beiden Ästen. Für eine berechnete Kühllast brauchen wir den mechanischen Ast — denn nur dort ist der Volumenstrom wirklich vorgebbar.",
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/lueftungssysteme-audio/audio_work/scenes/scene_01/audio.wav",
+      "audio_duration_seconds": 28.944
+    },
+    {
+      "id": "scene_02",
+      "title": "Freie Lüftung",
+      "video_path": "scenes/scene_02/scene.mp4",
+      "video_duration_seconds": 63.6,
+      "target_duration_seconds": 63.6,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 38.7
+        }
+      ],
+      "full_narration": "Beginnen wir mit der freien Lüftung. Ein einzelnes Fenster tauscht Luft nur über eine Öffnung: warm oben hinaus, kühler unten herein. Der Antrieb ist schwach — der Luftwechsel bleibt gering und unkontrolliert. Öffnen wir gegenüberliegende Fassaden, entsteht Querlüftung. Der Wind treibt die Luft quer durchs Gebäude, und der Luftwechsel steigt stark — aber er hängt ganz vom Wind ab. Der dritte Mechanismus ist der Auftrieb: warme Innenluft steigt im Schacht, weil sie leichter ist als die Außenluft. Die treibende Druckdifferenz wächst mit Schachthöhe und Temperaturdifferenz. Nachts nutzen wir das gezielt: kühle Nachtluft spült die Speichermasse und trägt gespeicherte Wärme hinaus, damit der Bau am nächsten Morgen kühler startet. Die Grenzen bleiben klar: keine Filterung, keine Entfeuchtung, keine Wärmerückgewinnung — und der Volumenstrom ist nicht regelbar. Für die Kühllastauslegung reicht freie Lüftung deshalb nicht.",
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/lueftungssysteme-audio/audio_work/scenes/scene_02/audio.wav",
+      "audio_duration_seconds": 63.648
+    },
+    {
+      "id": "scene_03",
+      "title": "Mechanische Grundtypen",
+      "video_path": "scenes/scene_03/scene.mp4",
+      "video_duration_seconds": 37.8,
+      "target_duration_seconds": 37.8,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 27.9
+        }
+      ],
+      "full_narration": "Deshalb die drei mechanischen Grundtypen. Die Abluftanlage saugt mit einem Ventilator Luft ab. Im Raum entsteht Unterdruck, und Ersatzluft kommt passiv über Außenluftdurchlässe — ungefiltert. Die Zuluftanlage macht das Gegenteil: gefilterte Luft wird hereingedrückt, der Raum geht auf Überdruck, und die Abluft entweicht über Fugen. Die Zu- und Abluftanlage führt beide Ströme mit Ventilatoren und hält den Druck neutral. Erst wenn beide Ströme geführt sind, werden Filterung, Wärmerückgewinnung und Feuchteregelung überhaupt möglich.",
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/lueftungssysteme-audio/audio_work/scenes/scene_03/audio.wav",
+      "audio_duration_seconds": 37.824
+    },
+    {
+      "id": "scene_04",
+      "title": "Wärmerückgewinnung",
+      "video_path": "scenes/scene_04/scene.mp4",
+      "video_duration_seconds": 40.967,
+      "target_duration_seconds": 40.967,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 23.3
+        }
+      ],
+      "full_narration": "Mit beiden geführten Strömen wird die Wärmerückgewinnung möglich. Im Plattenwärmeübertrager laufen Zu- und Abluft in getrennten Kanälen aneinander vorbei — sie mischen sich nicht, tauschen aber Wärme. Im Sommer wird daraus Kälterückgewinnung: Außenluft mit zweiunddreißig Grad trifft auf Abluft mit sechsundzwanzig Grad und wird auf etwa siebenundzwanzig Grad vorgekühlt — ohne Kältemaschine. Die Güte misst das Temperaturverhältnis Phi: erreichter Temperaturhub geteilt durch den maximal möglichen. Moderne Geräte liegen bei etwa null Komma acht — also rund achtzig Prozent der Lüftungskühllast werden kostenlos abgefangen.",
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/lueftungssysteme-audio/audio_work/scenes/scene_04/audio.wav",
+      "audio_duration_seconds": 40.944
+    },
+    {
+      "id": "scene_05",
+      "title": "Luftführung",
+      "video_path": "scenes/scene_05/scene.mp4",
+      "video_duration_seconds": 42.717,
+      "target_duration_seconds": 42.717,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 23.0
+        }
+      ],
+      "full_narration": "Wie die Luft im Raum geführt wird, zählt genauso wie die Menge. Bei der Mischlüftung kommt ein schneller Strahl vom Deckendiffusor. Er reißt Raumluft mit und vermischt alles zu einer gleichmäßigen Temperatur — hohe Kühlleistung, aber Schadstoffe werden mitverteilt. Die Quelllüftung macht das Gegenteil: kühle Luft tritt impulsarm am Boden ein und bildet einen flachen See. Wärmequellen erzeugen Auftriebsfahnen, die Last und Schadstoffe nach oben tragen, wo sie an der Decke abgesaugt werden. So entsteht Temperaturschichtung und bessere Luftqualität in der Aufenthaltszone — bei begrenzter Kühlleistung von etwa vierzig Watt pro Quadratmeter.",
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/lueftungssysteme-audio/audio_work/scenes/scene_05/audio.wav",
+      "audio_duration_seconds": 42.744
+    },
+    {
+      "id": "scene_06",
+      "title": "RLT-Funktionen",
+      "video_path": "scenes/scene_06/scene.mp4",
+      "video_duration_seconds": 38.483,
+      "target_duration_seconds": 38.483,
+      "beats": [
+        {
+          "index": 0,
+          "visual_action": "Full clip",
+          "narration": "",
+          "approx_seconds": 13.7
+        }
+      ],
+      "full_narration": "Was geschieht in der RLT-Anlage? Die Außenluft läuft durch Filtern, Heizen, Kühlen, Befeuchten und Entfeuchten. Die vier thermodynamischen Funktionen entscheiden die Klassifikation: nur Fördern und Filtern ist eine Lüftungsanlage; fehlen Funktionen, spricht man von Teilklima; alle vier in jeder Jahreszeit machen die Vollklimaanlage. Und eine Kennzahl verbindet die ganze Reihe: die Luftwechselrate n — Volumenstrom geteilt durch Raumvolumen, in Wechseln pro Stunde. Sie knüpft die berechnete Kühllast an das gewählte System.",
+      "audio_path": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.repo/🎫/26/08/04/CREATE-SYSTEMAUSLEGUNG-COOLING-VIDEO/lueftungssysteme-audio/audio_work/scenes/scene_06/audio.wav",
+      "audio_duration_seconds": 38.52
+    }
+  ],
+  "engine": "edge"
+}
