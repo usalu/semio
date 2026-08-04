@@ -895,6 +895,17 @@
         "order": 203
       }
     },
+    {
+      "name": "🛠️dev🎬manim scene_5",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql tutorial/energy/demand/Cooling/5_systemauslegung/scene_5.py Beat1_MechanicalVentilation",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 204
+      }
+    },
     // #endregion
 
     // #region 📦 Build
@@ -1072,6 +1083,28 @@
       "presentation": {
         "group": "4_build",
         "order": 131
+      }
+    },
+    {
+      "name": "📦build📽️systemauslegung🔊audio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/5_systemauslegung/generate_audio.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 132
+      }
+    },
+    {
+      "name": "📦build📽️systemauslegung🎬video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run python tutorial/energy/demand/Cooling/5_systemauslegung/build_full_video.py",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 133
       }
     },
     // #endregion

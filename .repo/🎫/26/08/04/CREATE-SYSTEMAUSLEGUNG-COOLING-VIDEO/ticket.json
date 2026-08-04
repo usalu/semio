@@ -1,0 +1,13 @@
+{
+  "title": "Create Systemauslegung Cooling Video",
+  "emoji": "🌬️",
+  "status": "open",
+  "description": "Build Cooling Part 4 (Pumping the Heat Out / Systemauslegung) as beat-based Manim scenes with German on-screen text, English TTS narrations and compose scripts: Zu-/Abluftsystem, Q̇_V thermodynamics, isolate q_v,R, duct continuity A = q_v,R / v_m, cylindrical radius.",
+  "goal": "🎯r2602🎯updateddocs🎯updateduserdocs🎯updatedtutorials",
+  "dates": {
+    "due": "2026-08-04",
+    "started": "2026-08-04"
+  },
+  "client": "cursor-chat",
+  "llm": "gpt-5-5"
+}
