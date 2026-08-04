@@ -9,7 +9,7 @@ class WasmScript extends BundleScript {
       skipEnvVar: "FRAMEWORK_SURFACE_PAINT_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/surface/paint/rs",
       wasmBaseName: "framework_surface_paint",
-      profile: "wasm-release",
+      shipProfile: "wasm-release",
       pkg: {
         name: "@semio-tech/framework-surface-paint-rs",
         files: ["framework_surface_paint_bg.wasm", "framework_surface_paint.js", "framework_surface_paint.d.ts", "framework_surface_paint_bg.wasm.d.ts"],

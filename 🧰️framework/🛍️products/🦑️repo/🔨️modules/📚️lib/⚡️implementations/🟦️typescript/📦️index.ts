@@ -2331,6 +2331,26 @@ function wasmPackInputsStale(rsDir: string, wasmPath: string): boolean {
   return false;
 }
 
+//#region 🔖️SemioBuildMode
+/** @emoji 🚦️ Whether child builds should use fast dev artifacts or ship optimization. */
+export type SemioBuildMode = "dev" | "ship";
+
+/** @emoji 🚦️ `ship` only when `SEMIO_BUILD_MODE=ship`; default is dev for local/agent loops. */
+export function semioBuildMode(): SemioBuildMode {
+  return process.env.SEMIO_BUILD_MODE === "ship" ? "ship" : "dev";
+}
+
+/** @emoji 🚀️ Env for nx/build orchestrators so spawned crate `wasm` scripts inherit ship mode. */
+export function semioShipEnv(): NodeJS.ProcessEnv {
+  return { ...process.env, SEMIO_BUILD_MODE: "ship" };
+}
+
+/** @emoji 📂 Cargo output directory name for a profile (`dev` → `debug`). */
+export function cargoProfileDir(profile: string): string {
+  return profile === "dev" ? "debug" : profile;
+}
+//#endregion 🔖️SemioBuildMode
+
 /** 📦️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
 export function runWasmPackWebBuild(opts: {
   rsDir: string;
@@ -2344,18 +2364,18 @@ export function runWasmPackWebBuild(opts: {
   cargoFeatures?: readonly string[];
   /** 🎲️ When true, pass `--no-default-features` so crates that default to wasip2 guest features can still build a standalone wasm-bindgen web package. */
   noDefaultFeatures?: boolean;
-  /** 🔿️ Cargo/wasm-pack profile. `release`/`dev` map to `--release`/`--dev`; any other name
-   * (e.g. `wasm-release`) passes `--profile <name>`. wasm-pack maps custom profile names onto
-   * `[package.metadata.wasm-pack.profile.custom]` (bulk-memory / trunc_sat enable flags). */
-  profile?: string;
+  /** 🔿️ Ship-mode Cargo/wasm-pack profile. `release`/`dev` map to `--release`/`--dev`; any other name
+   * (e.g. `wasm-release`) passes `--profile <name>`. Dev mode always uses `--dev` regardless. */
+  shipProfile?: string;
 
 }): void {
-  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, threads = false, cargoFeatures = [], noDefaultFeatures = false, profile = "release" } = opts;
+  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release" } = opts;
+  const profile = semioBuildMode() === "ship" ? shipProfile : "dev";
   const pkgDir = join(rsDir, "pkg");
   const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
   const packProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
   const cargoProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
-  const cargoProfileDir = profile === "dev" ? "debug" : profile;
+  const profileOutDir = cargoProfileDir(profile);
   if (process.env[skipEnvVar] === "1") {
     console.log(`[${logPrefix}] ${skipEnvVar}=1 → skipping wasm-pack build`);
     return;
@@ -2386,7 +2406,7 @@ export function runWasmPackWebBuild(opts: {
       console.error(`[${logPrefix}] missing package name in Cargo.toml`);
       process.exit(1);
     }
-    const cargoWasm = join(repoRoot, `target/wasm32-unknown-unknown/${cargoProfileDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
+    const cargoWasm = join(repoRoot, `target/wasm32-unknown-unknown/${profileOutDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
     const threadedCargoArgs = ["build", ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...featureArgs];
     status = runCmdStatus("cargo", threadedCargoArgs, { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
     if (status !== 0) {

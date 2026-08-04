@@ -13,6 +13,7 @@ path = "../../../../../../../../../✏️s/🔌️plugins/🧱️block/🎛️ap
 [dependencies]
 block_3d = { path = "../../../../../../../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-block-3d" }
 block_3d_op = { path = "../../../../../../../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-block-3d-op" }
+block_shared = { path = "../../../../../../../../../✏️s/🔌️plugins/🧱️block/🔨️modules/🤝️shared/⚡️implementations/🦀️rust", package = "semio-s-plugin-block-shared" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }

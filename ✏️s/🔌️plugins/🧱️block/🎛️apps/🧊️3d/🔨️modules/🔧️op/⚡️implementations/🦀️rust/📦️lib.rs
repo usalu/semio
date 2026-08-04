@@ -305,6 +305,28 @@ pub enum Block3dConfigOperation {
     SetWantedTags { tags: Vec<String> },
     #[dsl(key = "locale")]
     SetLocale { value: String },
+    #[dsl(key = "window-representations")]
+    SetWindowRepresentations { window_id: String, representation_ids: Vec<String> },
+    #[dsl(key = "toggle-window-representation")]
+    ToggleWindowRepresentation { window_id: String, representation_id: String, visible: bool },
+    #[dsl(key = "window-arrangement")]
+    SetWindowArrangement { window_id: String, arrangement: String },
+    #[dsl(key = "window-spacing")]
+    SetWindowSpacing { window_id: String, spacing: f64 },
+    #[dsl(key = "active-utility")]
+    SetActiveUtility { window_id: String, utility_id: String },
+    #[dsl(key = "brush-vortex-kind")]
+    SetBrushVortexKind { vortex_kind_id: Option<String> },
+    #[dsl(key = "brush-radius")]
+    SetBrushRadius { radius: f64 },
+    #[dsl(key = "brush-flip")]
+    SetBrushFlip { flip: bool },
+    #[dsl(key = "brush-preview")]
+    SetBrushPreview { preview: Option<block_3d_engine::Block3dBrushPreview> },
+    #[dsl(key = "camera")]
+    SetCamera { camera: block_shared::BlockCamera3d },
+    #[dsl(key = "hovered-vortex")]
+    SetHoveredVortexFullId { full_id: Option<String> },
 }
 
 impl Operation<block_3d_engine::Block3dConfig> for Block3dConfigOperation {
@@ -318,6 +340,39 @@ impl Operation<block_3d_engine::Block3dConfig> for Block3dConfigOperation {
             Block3dConfigOperation::SetActiveRepresentation { representation_id } => next.active_representation_id = representation_id.clone(),
             Block3dConfigOperation::SetWantedTags { tags } => next.wanted_tags = tags.clone(),
             Block3dConfigOperation::SetLocale { value } => next.locale = value.clone(),
+            Block3dConfigOperation::SetWindowRepresentations { window_id, representation_ids } => {
+                let index = block_3d_engine::upsert_window_view_index(&mut next.windows, window_id);
+                next.windows[index].representation_ids = representation_ids.clone();
+            }
+            Block3dConfigOperation::ToggleWindowRepresentation { window_id, representation_id, visible } => {
+                let index = block_3d_engine::upsert_window_view_index(&mut next.windows, window_id);
+                let row = &mut next.windows[index];
+                if *visible {
+                    if !row.representation_ids.contains(representation_id) {
+                        row.representation_ids.push(representation_id.clone());
+                    }
+                } else {
+                    row.representation_ids.retain(|id| id != representation_id);
+                }
+            }
+            Block3dConfigOperation::SetWindowArrangement { window_id, arrangement } => {
+                let index = block_3d_engine::upsert_window_view_index(&mut next.windows, window_id);
+                next.windows[index].arrangement = arrangement.clone();
+            }
+            Block3dConfigOperation::SetWindowSpacing { window_id, spacing } => {
+                let index = block_3d_engine::upsert_window_view_index(&mut next.windows, window_id);
+                next.windows[index].spacing = *spacing;
+            }
+            Block3dConfigOperation::SetActiveUtility { window_id, utility_id } => {
+                let index = block_3d_engine::upsert_window_view_index(&mut next.windows, window_id);
+                next.windows[index].active_utility = utility_id.clone();
+            }
+            Block3dConfigOperation::SetBrushVortexKind { vortex_kind_id } => next.brush_vortex_kind_id = vortex_kind_id.clone(),
+            Block3dConfigOperation::SetBrushRadius { radius } => next.brush_radius = *radius,
+            Block3dConfigOperation::SetBrushFlip { flip } => next.brush_flip = *flip,
+            Block3dConfigOperation::SetBrushPreview { preview } => next.brush_preview = preview.clone(),
+            Block3dConfigOperation::SetCamera { camera } => next.camera = Some(camera.clone()),
+            Block3dConfigOperation::SetHoveredVortexFullId { full_id } => next.hovered_vortex_full_id = full_id.clone(),
         }
         next
     }

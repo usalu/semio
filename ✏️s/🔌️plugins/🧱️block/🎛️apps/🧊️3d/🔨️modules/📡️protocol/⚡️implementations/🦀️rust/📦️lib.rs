@@ -43,6 +43,36 @@ pub enum Block3dCommand {
     SetSelection { ids: Vec<String> },
     #[dsl(key = "setActiveRepresentation")]
     SetActiveRepresentation { representation_id: Option<String> },
+    #[dsl(key = "setWindowRepresentations")]
+    SetWindowRepresentations { window_id: String, representation_ids: Vec<String> },
+    #[dsl(key = "toggleWindowRepresentation")]
+    ToggleWindowRepresentation { window_id: String, representation_id: String, visible: bool },
+    #[dsl(key = "setWindowArrangement")]
+    SetWindowArrangement { window_id: String, arrangement: String },
+    #[dsl(key = "setWindowSpacing")]
+    SetWindowSpacing { window_id: String, spacing: f64 },
+    #[dsl(key = "setActiveUtility")]
+    SetActiveUtility { window_id: String, utility_id: String },
+    #[dsl(key = "setBrushVortexKind")]
+    SetBrushVortexKind { vortex_kind_id: Option<String> },
+    #[dsl(key = "setBrushRadius")]
+    SetBrushRadius { radius: f64 },
+    #[dsl(key = "setBrushFlip")]
+    SetBrushFlip { flip: bool },
+    #[dsl(key = "hoverSurface")]
+    HoverSurface { window_id: String, object_id: String, position: [f64; 3], normal: [f64; 3] },
+    #[dsl(key = "leaveSurface")]
+    LeaveSurface,
+    #[dsl(key = "placeVortex")]
+    PlaceVortex { window_id: String, object_id: String, position: [f64; 3], normal: [f64; 3] },
+    #[dsl(key = "setCamera")]
+    SetCamera { camera: block_shared::BlockCamera3d },
+    #[dsl(key = "selectVortex")]
+    SelectVortex { full_id: String, merge: bool },
+    #[dsl(key = "hoverVortex")]
+    HoverVortex { full_id: Option<String> },
+    #[dsl(key = "patchRepresentation")]
+    PatchRepresentation { id: String, field: String, value: String },
 }
 //#endregion 🔖️Block3dCommand
 

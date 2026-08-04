@@ -9,7 +9,7 @@ class WasmScript extends BundleScript {
       skipEnvVar: "FRAMEWORK_EDITOR_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/editor/rs",
       wasmBaseName: "framework_editor",
-      profile: "wasm-release",
+      shipProfile: "wasm-release",
       pkg: {
         name: "@semio-tech/framework-editor-rs",
         files: ["framework_editor_bg.wasm", "framework_editor.js", "framework_editor.d.ts", "framework_editor_bg.wasm.d.ts"],

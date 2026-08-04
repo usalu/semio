@@ -7,6 +7,10 @@ description = "Puzzle board (2d) rendering surface — WebGPU canvas session ove
 
 [lints]
 workspace = true
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 

@@ -7,6 +7,10 @@ description = "Animate present app — binary command protocol surface + laws (c
 
 [lints]
 workspace = true
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 

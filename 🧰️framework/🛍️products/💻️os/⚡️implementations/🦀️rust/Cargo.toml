@@ -8,6 +8,10 @@ description = "Plugin-based OS kernel: hot-swappable WASM plugins, workflow, doc
 
 [lints]
 workspace = true
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 

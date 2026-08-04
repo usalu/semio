@@ -1,0 +1,7 @@
+[verify] node-graph wasm (default dev): wasm-pack build --dev, Finished dev profile [unoptimized], no wasm-opt line
+[verify] node-graph wasm (SEMIO_BUILD_MODE=ship): wasm-pack build --profile wasm-release (pkg cache skip when up to date)
+[verify] cargo check -p semio-framework-os-run: OK with PLUGIN_WASM_TARGET_DIR / PLUGIN_WASM_PROFILE_DIRS
+[verify] plugin artifact resolution: debug dir preferred over wasm-release (semio_s_plugin_animate.wasm)
+[verify] os run --dry: requires studio bundle with space.space.pack (none in workspace); preflight uses same profile dirs as bin.rs
+[note] full plugin build via os-dev needs @bytecodealliance/preview2-shim (bun install)
+[note] ship wasm-opt may fail on emoji paths in this workspace (pre-existing wasm-pack/binaryen path issue)

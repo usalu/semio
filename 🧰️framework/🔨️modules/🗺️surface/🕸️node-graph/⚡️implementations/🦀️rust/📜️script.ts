@@ -9,7 +9,7 @@ class WasmScript extends BundleScript {
       skipEnvVar: "FRAMEWORK_SURFACE_NODE_GRAPH_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/surface/node-graph/rs",
       wasmBaseName: "framework_surface_node_graph",
-      profile: "wasm-release",
+      shipProfile: "wasm-release",
       pkg: {
         name: "@semio-tech/framework-surface-node-graph-rs",
         files: ["framework_surface_node_graph_bg.wasm", "framework_surface_node_graph.js", "framework_surface_node_graph.d.ts", "framework_surface_node_graph_bg.wasm.d.ts"],

@@ -1,0 +1,9 @@
+{
+  "title": "Fix Demonstrator Sourcing Pane",
+  "emoji": "🪵",
+  "status": "closed",
+  "description": "Aussuchen pane on the demonstrator overview shows Keine Plugins geladen while other five panes preview correctly. Root cause: boot effect false positive from stale loadedPluginsRef after installPlugin.",
+  "summary": "Fixed a false \"Keine Plugins geladen\" on the demonstrator Aussuchen pane when six co-mounted shells share one demonstrator plugin worker. installPlugin now returns an explicit outcome; the boot effect only sets noPluginsLoaded on outcome failed (not on stale loadedPluginsRef). establishPrimarySession clears shell error on success. Canvas render checks error before the loading placeholder. Verified with probe-six-panes.mts: all six panes boot on :6029, aussuchen shows sourcing-curate chrome without Keine Plugins geladen.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": []
+}

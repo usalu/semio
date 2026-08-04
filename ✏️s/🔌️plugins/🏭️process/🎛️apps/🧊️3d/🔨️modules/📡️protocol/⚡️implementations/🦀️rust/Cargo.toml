@@ -7,6 +7,10 @@ description = "Process 3d app - binary command protocol surface + laws (constitu
 
 [lints]
 workspace = true
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 

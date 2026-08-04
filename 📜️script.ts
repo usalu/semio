@@ -33,6 +33,7 @@ import {
   runTestBudgeted,
   spawnDaemon,
   summarizeCoverage,
+  semioShipEnv,
   installMicroCommitGitHooks,
   runCommit,
   runMicroCommit,
@@ -899,8 +900,8 @@ export class BuildScript extends Script {
 
     // nx orchestrators: exempt — leaves individually budgeted.
     if (!slice) {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
-      runCmd("bun", ["nx", "run", "workspace:build-storybook"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run-many", "-t", "build", "--all", "--exclude", "workspace"], { cwd: this.root, env: semioShipEnv(), ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run", "workspace:build-storybook"], { cwd: this.root, env: semioShipEnv(), ...orchestratorBudgetOpts() });
       return;
     }
     if (slice === "storybook") {
@@ -908,7 +909,7 @@ export class BuildScript extends Script {
       return;
     }
     if (slice === "sites") {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-sketchpad-play", "@semio-tech/compose-sketchpad-docs"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-sketchpad-play", "@semio-tech/compose-sketchpad-docs"], { cwd: this.root, env: semioShipEnv(), ...orchestratorBudgetOpts() });
       return;
     }
     const target = single[slice];
@@ -1161,22 +1162,25 @@ export class CommitScript extends Script {
 type OsPluginArtifact = { pluginId: string; wasmOut: string };
 
 /**
- * 🔍️Plugin ids from the generated plugin registry whose `.wasm` isn't built yet under cargo's own
- * `target/wasm32-wasip2/wasm-release/` output — the exact path `semio-framework-os-run`'s own
- * `resolve_plugin_paths` reads (see `framework/os/run/rs/bin.rs`). `os run`'s cargo runner panics with
- * an obscure "file not found" when a program is unregistered, so this runs first and names the gap.
- * Checks every registry entry rather than just the target `.studio` bundle's own app instances — that
- * would need re-decoding the bundle's binary `store` document pack (the root `space.space.pack`/`.spr`
- * VCS envelope — renamed from `space.os.pack`/`.spr` by W4's canonical on-disk layout rewrite, see
- * `SpaceBundle`'s own doc comment in `framework/os/run/rs/lib.rs`) in TypeScript, disproportionate for
- * a preflight check.
+ * 🔍️Plugin ids from the generated plugin registry with no built `.wasm` under
+ * `target/wasm32-wasip2/{debug,wasm-release}/` — same resolution order as `resolve_plugin_paths` in
+ * `semio-framework-os-run`.
  */
+const PLUGIN_WASM_TARGET_DIR = "target/wasm32-wasip2";
+const PLUGIN_WASM_PROFILE_DIRS = ["debug", "wasm-release"] as const;
+
+function pluginWasmArtifactExists(repoRoot: string, wasmOut: string): boolean {
+  for (const profileDir of PLUGIN_WASM_PROFILE_DIRS) {
+    if (existsSync(join(repoRoot, PLUGIN_WASM_TARGET_DIR, profileDir, wasmOut))) return true;
+  }
+  return false;
+}
+
 function missingPluginWasmArtifacts(repoRoot: string): string[] {
   const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🔣️plugins.json");
   if (!existsSync(registryPath)) return [];
-  const pluginWasmProfileRoot = join(repoRoot, "target/wasm32-wasip2/wasm-release");
   const entries = JSON.parse(readFileSync(registryPath, "utf8")) as OsPluginArtifact[];
-  return entries.filter((entry) => !existsSync(join(pluginWasmProfileRoot, entry.wasmOut))).map((entry) => entry.pluginId);
+  return entries.filter((entry) => !pluginWasmArtifactExists(repoRoot, entry.wasmOut)).map((entry) => entry.pluginId);
 }
 
 /** 🕸️Headless OS studio commands — computes a workflow without a UI (`os run <bundle>.studio`). */

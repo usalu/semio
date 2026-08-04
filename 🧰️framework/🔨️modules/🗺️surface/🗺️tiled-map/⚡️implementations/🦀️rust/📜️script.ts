@@ -9,7 +9,7 @@ class WasmScript extends BundleScript {
       skipEnvVar: "FRAMEWORK_SURFACE_TILED_MAP_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/surface/tiled-map/rs",
       wasmBaseName: "framework_surface_tiled_map",
-      profile: "wasm-release",
+      shipProfile: "wasm-release",
       pkg: {
         name: "@semio-tech/framework-surface-tiled-map-rs",
         files: ["framework_surface_tiled_map_bg.wasm", "framework_surface_tiled_map.js", "framework_surface_tiled_map.d.ts", "framework_surface_tiled_map_bg.wasm.d.ts"],

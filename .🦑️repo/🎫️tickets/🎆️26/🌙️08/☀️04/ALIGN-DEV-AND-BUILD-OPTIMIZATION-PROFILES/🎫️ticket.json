@@ -3,9 +3,10 @@
   "emoji": "🎫️",
   "status": "closed",
   "description": "Split dev (fast compile, console-only) vs build (release LTO, vite minify/drop). Implement plan dev_build_opt_profiles.",
-  "summary": "Split dev (fast compile, no debuginfo) from ship builds: [profile.release] uses thin LTO, CGU 1, strip; dev entrypoints (os run, wgpu native, repo CLI run) use profile.dev. Added semioViteProductionBuild() for production Vite bundles; Go build -trimpath -s -w; CMake linux/macos Release presets.",
+  "summary": "Dev wasm fast path: semioBuildMode drives wasm-pack --dev and cargo dev (no wasm-opt); ship sets SEMIO_BUILD_MODE=ship for wasm-release and binaryen. Plugin artifacts resolve debug then wasm-release in os run and root preflight. Continues prior dev vs release profile split (LTO, Vite, Go, CMake).",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
-    "⚪357094739489443687f07b37ebe3fe01"
+    "⚪357094739489443687f07b37ebe3fe01",
+    "⚪b1fb3ef1b20741ed85b867100bfc49fc"
   ]
 }

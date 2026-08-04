@@ -1,6 +1,8 @@
 //! 🏙️ Block 3D app — headless compute (constitutional: engine).
 
 use block_3d::{Block3dDefinition, BLOCK_3D_SCHEMA};
+use block_shared::{BlockCamera3d, BlockRepresentation};
+use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -62,6 +64,54 @@ pub fn puzzle3d_catalog_fragment(definition: &Block3dDefinition, wanted_tags: &[
 //#endregion 🔖️PuzzleCatalogFragment
 
 //#region 🔖️Config
+/// 🪟️ Per-window-instance view state (representation subset, layout, active utility).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Block3dWindowView {
+    pub window_id: String,
+    #[serde(default)]
+    pub representation_ids: Vec<String>,
+    #[serde(default = "default_arrangement")]
+    pub arrangement: String,
+    #[serde(default = "default_spacing")]
+    pub spacing: f64,
+    #[serde(default = "default_active_utility")]
+    pub active_utility: String,
+}
+
+fn default_arrangement() -> String {
+    "overlap".into()
+}
+
+fn default_spacing() -> f64 {
+    8.0
+}
+
+fn default_active_utility() -> String {
+    BLOCK3D_UTILITY_SELECT.into()
+}
+
+impl Block3dWindowView {
+    pub fn for_window(window_id: impl Into<String>) -> Self {
+        Self { window_id: window_id.into(), representation_ids: Vec::new(), arrangement: default_arrangement(), spacing: default_spacing(), active_utility: default_active_utility() }
+    }
+}
+
+/// 🖌️ Transient brush hover pose in world space (config-only).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Block3dBrushPreview {
+    #[dsl(coord)]
+    pub position: [f64; 3],
+    #[dsl(dir)]
+    pub direction: [f64; 3],
+}
+
+pub const BLOCK3D_UTILITY_SELECT: &str = "select";
+pub const BLOCK3D_UTILITY_SURFACE_BRUSH: &str = "surfaceBrush";
+pub const BLOCK3D_DEFAULT_WINDOW_ID: &str = "block3d-world";
+pub const BLOCK3D_WORLD_OBJECT_ID: &str = "block3d-object";
+
 /// 🧮️ `Block3dPlayApp`'s real `DocumentApp::Config` — B1 pure-trait conversion. Absorbs the former
 /// `Block3dPlayApp` `RefCell` runtime fields (`selected_ids`/`active_representation_id`) plus the
 /// locale this app now resolves itself (mirrors `shooting_engine::ShootingConfig::locale`). `wanted_tags`
@@ -86,11 +136,42 @@ pub struct Block3dConfig {
     pub wanted_tags: Vec<String>,
     /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewState.locale`.
     pub locale: String,
+    #[serde(default)]
+    #[dsl(table)]
+    pub windows: Vec<Block3dWindowView>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub brush_vortex_kind_id: Option<String>,
+    #[serde(default = "default_brush_radius")]
+    pub brush_radius: f64,
+    #[serde(default)]
+    pub brush_flip: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub brush_preview: Option<Block3dBrushPreview>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub camera: Option<BlockCamera3d>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hovered_vortex_full_id: Option<String>,
+}
+
+fn default_brush_radius() -> f64 {
+    0.3
 }
 
 impl Default for Block3dConfig {
     fn default() -> Self {
-        Self { selected_ids: Vec::new(), active_representation_id: None, wanted_tags: Vec::new(), locale: "en-US".into() }
+        Self {
+            selected_ids: Vec::new(),
+            active_representation_id: None,
+            wanted_tags: Vec::new(),
+            locale: "en-US".into(),
+            windows: Vec::new(),
+            brush_vortex_kind_id: None,
+            brush_radius: default_brush_radius(),
+            brush_flip: false,
+            brush_preview: None,
+            camera: None,
+            hovered_vortex_full_id: None,
+        }
     }
 }
 
@@ -120,6 +201,172 @@ pub fn block3d_io() -> semio_framework_plugin::AppIo {
     }])
 }
 //#endregion 🔖️Io
+
+//#region 🔖️World
+pub fn block3d_window_view<'a>(config: &'a Block3dConfig, window_id: &str) -> Block3dWindowView {
+    config.windows.iter().find(|row| row.window_id == window_id).cloned().unwrap_or_else(|| Block3dWindowView::for_window(window_id))
+}
+
+pub fn block3d_active_utility(config: &Block3dConfig, window_id: &str) -> String {
+    block3d_window_view(config, window_id).active_utility
+}
+
+pub fn visible_representations<'a>(definition: &'a Block3dDefinition, view: &Block3dWindowView) -> Vec<&'a BlockRepresentation> {
+    if view.representation_ids.is_empty() {
+        return definition.representations.iter().collect();
+    }
+    view.representation_ids.iter().filter_map(|id| definition.representations.iter().find(|representation| representation.id == *id)).collect()
+}
+
+pub fn arrangement_offset(arrangement: &str, index: usize, spacing: f64) -> [f64; 3] {
+    let step = index as f64 * spacing;
+    match arrangement {
+        "x" => [step, 0.0, 0.0],
+        "y" => [0.0, step, 0.0],
+        "z" => [0.0, 0.0, step],
+        _ => [0.0, 0.0, 0.0],
+    }
+}
+
+pub fn effective_camera<'a>(definition: &'a Block3dDefinition, config: &'a Block3dConfig) -> &'a BlockCamera3d {
+    config.camera.as_ref().unwrap_or(&definition.camera3d)
+}
+
+pub fn world_meshes_json(_definition: &Block3dDefinition, visible: &[&BlockRepresentation]) -> String {
+    let meshes: Vec<serde_json::Value> = visible
+        .iter()
+        .filter_map(|representation| {
+            let url = representation.mesh_url.as_deref()?;
+            Some(json!({ "id": representation_mesh_id(representation), "url": url }))
+        })
+        .collect();
+    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+}
+
+pub fn representation_mesh_id(representation: &BlockRepresentation) -> String {
+    representation
+        .mesh_url
+        .as_deref()
+        .map(world3d_mesh_id_from_url)
+        .unwrap_or_else(|| format!("block3d-rep-{}", representation.id))
+}
+
+pub fn world_instances_json(definition: &Block3dDefinition, visible: &[&BlockRepresentation], view: &Block3dWindowView) -> String {
+    let label = if definition.object_kind.label.is_empty() { definition.object_kind.name.clone() } else { definition.object_kind.label.clone() };
+    let instances: Vec<serde_json::Value> = visible
+        .iter()
+        .enumerate()
+        .map(|(index, representation)| {
+            let offset = arrangement_offset(&view.arrangement, index, view.spacing);
+            let mesh_id = representation_mesh_id(representation);
+            json!({
+                "id": representation.id,
+                "meshId": mesh_id,
+                "position": offset,
+                "rotation": [0.0, 0.0, 0.0, 1.0],
+                "scale": [1.0, 1.0, 1.0],
+                "label": format!("{} — {}", label, representation.name),
+                "objectKind": definition.object_kind.id,
+            })
+        })
+        .collect();
+    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+fn vortex_kind_color(definition: &Block3dDefinition, vortex_kind_id: &str) -> String {
+    definition.vortex_kinds.iter().find(|kind| kind.id == vortex_kind_id).map(|kind| kind.color.clone()).unwrap_or_else(|| "#888888".into())
+}
+
+pub fn block3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
+    format!("{object_id}:{vortex_id}")
+}
+
+pub fn world_vortices_json(definition: &Block3dDefinition, config: &Block3dConfig, visible: &[&BlockRepresentation], view: &Block3dWindowView) -> String {
+    let mut records = Vec::new();
+    for (index, representation) in visible.iter().enumerate() {
+        let offset = arrangement_offset(&view.arrangement, index, view.spacing);
+        for vortex in &definition.vortices {
+            let position = [vortex.position[0] + offset[0], vortex.position[1] + offset[1], vortex.position[2] + offset[2]];
+            records.push(json!({
+                "fullId": block3d_vortex_full_id(&representation.id, &vortex.id),
+                "objectId": representation.id,
+                "vortexKind": vortex.vortex_kind,
+                "position": position,
+                "direction": vortex.direction,
+                "radius": vortex.radius,
+                "color": vortex_kind_color(definition, &vortex.vortex_kind),
+            }));
+        }
+    }
+    if let Some(preview) = &config.brush_preview {
+        let direction = if config.brush_flip { [-preview.direction[0], -preview.direction[1], -preview.direction[2]] } else { preview.direction };
+        records.push(json!({
+            "fullId": "__brush_preview__",
+            "objectId": visible.first().map(|r| r.id.as_str()).unwrap_or(BLOCK3D_WORLD_OBJECT_ID),
+            "vortexKind": config.brush_vortex_kind_id.clone().unwrap_or_else(|| "brush".into()),
+            "position": preview.position,
+            "direction": direction,
+            "radius": config.brush_radius,
+            "color": "#60a5fa88",
+        }));
+    }
+    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+}
+
+pub fn world_camera_json(definition: &Block3dDefinition, config: &Block3dConfig) -> String {
+    let camera = effective_camera(definition, config);
+    world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &WorldProjectionConfig::default())
+}
+
+pub fn world_selection_json(config: &Block3dConfig) -> String {
+    let vortex_ids: Vec<String> = config.selected_ids.iter().filter(|id| id.starts_with("vortex:")).map(|id| id.strip_prefix("vortex:").unwrap_or(id).to_string()).collect();
+    let mut value: serde_json::Value = serde_json::from_str(&world3d_selection_json("replace", &[], None)).unwrap_or_else(|_| json!({}));
+    if let Some(object) = value.as_object_mut() {
+        object.insert("granularity".into(), json!("mesh"));
+        object.insert("selectionMode".into(), json!("mesh"));
+        object.insert("vortexIds".into(), json!(vortex_ids));
+        if let Some(hover) = config.hovered_vortex_full_id.as_deref() {
+            object.insert("hoveredVortexFullId".into(), json!(hover));
+        }
+    }
+    value.to_string()
+}
+
+pub fn world_interaction_json(config: &Block3dConfig, window_id: &str) -> String {
+    json!({ "activeUtility": block3d_active_utility(config, window_id) }).to_string()
+}
+
+pub fn world_hit_to_local_vortex(position: [f64; 3], normal: [f64; 3], instance_offset: [f64; 3], brush_flip: bool) -> (Block3dBrushPreview, [f64; 3]) {
+    let local_position = [position[0] - instance_offset[0], position[1] - instance_offset[1], position[2] - instance_offset[2]];
+    let direction = if brush_flip { [-normal[0], -normal[1], -normal[2]] } else { normal };
+    (Block3dBrushPreview { position: local_position, direction }, local_position)
+}
+
+pub fn instance_offset_for_representation(definition: &Block3dDefinition, view: &Block3dWindowView, representation_id: &str) -> [f64; 3] {
+    let visible = visible_representations(definition, view);
+    visible.iter().position(|representation| representation.id == representation_id).map(|index| arrangement_offset(&view.arrangement, index, view.spacing)).unwrap_or([0.0, 0.0, 0.0])
+}
+
+pub fn default_vortex_kind() -> block_3d::Block3dVortexKind {
+    block_3d::Block3dVortexKind { id: "vortex-kind-0".into(), name: "connector".into(), label: "Connector".into(), color: "#60a5fa".into(), default_cable_kind: "cable.link".into() }
+}
+
+pub fn resolve_brush_vortex_kind_id(definition: &Block3dDefinition, config: &Block3dConfig) -> String {
+    config
+        .brush_vortex_kind_id
+        .clone()
+        .or_else(|| definition.vortex_kinds.first().map(|kind| kind.id.clone()))
+        .unwrap_or_else(|| "vortex-kind-0".into())
+}
+
+pub fn upsert_window_view_index(windows: &mut Vec<Block3dWindowView>, window_id: &str) -> usize {
+    if let Some(index) = windows.iter().position(|row| row.window_id == window_id) {
+        return index;
+    }
+    windows.push(Block3dWindowView::for_window(window_id));
+    windows.len() - 1
+}
+//#endregion 🔖️World
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -158,6 +405,26 @@ mod tests {
         assert!(config.active_representation_id.is_none());
         assert!(config.wanted_tags.is_empty());
         assert_eq!(config.locale, "en-US");
+        assert!(config.windows.is_empty());
+        assert_eq!(config.brush_radius, 0.3);
+    }
+
+    #[test]
+    fn arrangement_offset_spaces_along_x() {
+        assert_eq!(arrangement_offset("x", 2, 4.0), [8.0, 0.0, 0.0]);
+        assert_eq!(arrangement_offset("overlap", 2, 4.0), [0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn visible_representations_empty_filter_means_all() {
+        let mut definition = empty_block3d_definition();
+        definition.representations.push(BlockRepresentation { id: "a".into(), name: "a".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() });
+        definition.representations.push(BlockRepresentation { id: "b".into(), name: "b".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() });
+        let view = Block3dWindowView::for_window("w");
+        assert_eq!(visible_representations(&definition, &view).len(), 2);
+        let mut filtered = view;
+        filtered.representation_ids = vec!["b".into()];
+        assert_eq!(visible_representations(&definition, &filtered).len(), 1);
     }
 
     #[test]

@@ -2298,6 +2298,9 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
     let ctrl = modifiers.ctrl;
     if down {
         if button == 0 {
+            if state.active_utility == "surfaceBrush" {
+                return None;
+            }
             if state.interaction_mode == "paint" {
                 state.paint_stroke_active = true;
                 return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeBegin".into(), args: action_args(json!({ "surfaceId": state.surface_id })) });
@@ -2345,6 +2348,22 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
             state.press_object_id = None;
             state.drag_object_id = None;
             state.drag_last_position = None;
+            if state.active_utility == "surfaceBrush" {
+                if let Some((object_id, position, normal)) = pick_surface_at(state, x, y, inner) {
+                    return Some(ActionDescriptor {
+                        controller_id: state.controller_id.clone(),
+                        action: "worldSurfacePlace".into(),
+                        args: action_args(json!({
+                            "surfaceId": state.surface_id,
+                            "pane": state.surface_id,
+                            "objectId": object_id,
+                            "position": position,
+                            "normal": normal,
+                        })),
+                    });
+                }
+                return None;
+            }
             if state.gumball_handle.is_none() {
                 return pick_select_action(state, x, y, inner, shift, ctrl);
             }
@@ -2359,6 +2378,22 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
         return actions.first().cloned();
     }
     if button == 0 {
+        if state.active_utility == "surfaceBrush" {
+            if let Some((object_id, position, normal)) = pick_surface_at(state, x, y, inner) {
+                return Some(ActionDescriptor {
+                    controller_id: state.controller_id.clone(),
+                    action: "worldSurfacePlace".into(),
+                    args: action_args(json!({
+                        "surfaceId": state.surface_id,
+                        "pane": state.surface_id,
+                        "objectId": object_id,
+                        "position": position,
+                        "normal": normal,
+                    })),
+                });
+            }
+            return None;
+        }
         if let Some(action) = gumball_commit_action(state) {
             state.gumball_handle = None;
             reset_gumball_preview(state);
@@ -2584,6 +2619,26 @@ pub fn ingest_glb_mesh(state: &mut World3dState, url: &str, mesh: MeshData, mesh
 }
 
 fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> Option<ActionDescriptor> {
+    if state.active_utility == "surfaceBrush" {
+        if let Some((object_id, position, normal)) = pick_surface_at(state, x, y, inner) {
+            return Some(ActionDescriptor {
+                controller_id: state.controller_id.clone(),
+                action: "worldSurfaceHover".into(),
+                args: action_args(json!({
+                    "surfaceId": state.surface_id,
+                    "pane": state.surface_id,
+                    "objectId": object_id,
+                    "position": position,
+                    "normal": normal,
+                })),
+            });
+        }
+        return Some(ActionDescriptor {
+            controller_id: state.controller_id.clone(),
+            action: "worldSurfaceLeave".into(),
+            args: action_args(json!({ "surfaceId": state.surface_id, "pane": state.surface_id })),
+        });
+    }
     if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
         let hit = pick_vortex_at(state, x, y, inner);
         if state.hovered_vortex_id == hit {
@@ -3023,6 +3078,28 @@ fn pick_instance_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Optio
         }
     }
     best.map(|(_, id)| id)
+}
+
+fn pick_surface_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<(String, [f64; 3], [f64; 3])> {
+    let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
+    let camera = state.orbit.to_camera();
+    let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
+    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+    let mut best: Option<(f32, String, Vec3, Vec3)> = None;
+    for draw in &state.draws {
+        let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
+            continue;
+        };
+        for instance in &draw.instances {
+            let Some(hit) = ray_pick_mesh_detail(origin, dir, mesh, instance) else {
+                continue;
+            };
+            if best.as_ref().is_none_or(|(best_distance, _, _, _)| hit.distance < *best_distance) {
+                best = Some((hit.distance, instance.id.clone(), hit.point, hit.normal));
+            }
+        }
+    }
+    best.map(|(_, id, point, normal)| (id, [point.x as f64, point.y as f64, point.z as f64], [normal.x as f64, normal.y as f64, normal.z as f64]))
 }
 
 //#region VortexArrow

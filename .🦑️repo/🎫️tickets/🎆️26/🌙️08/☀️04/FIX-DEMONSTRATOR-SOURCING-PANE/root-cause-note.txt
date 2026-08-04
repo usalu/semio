@@ -1,0 +1,5 @@
+Root cause (code): FrameworkOsShell boot effect dispatched noPluginsLoaded when loadedPluginsRef was still empty immediately after await installPlugin(), before React committed UPSERT_LOADED_PLUGIN.
+
+Post-fix probe (probe-six-panes.mts, port 6029): all six panes booted; aussuchen hasError=false, shows semio · sourcing · curate / Beispielbestand. No "Keine Plugins geladen" in any pane.
+
+Standalone sourcing playground (6081) was not running during verify; demonstrator aussuchen pane uses the same sourcing-curate app via the shared demonstrator plugin.

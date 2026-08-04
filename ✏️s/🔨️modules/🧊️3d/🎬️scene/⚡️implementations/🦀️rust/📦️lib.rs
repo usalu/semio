@@ -293,6 +293,8 @@ pub struct RayMeshHit {
     pub triangle_index: usize,
     pub bary_u: f32,
     pub bary_v: f32,
+    pub point: Vec3,
+    pub normal: Vec3,
 }
 
 pub fn ray_pick_mesh_detail(origin: Vec3, dir: Vec3, mesh: &Mesh3d, instance: &Instance3d) -> Option<RayMeshHit> {
@@ -305,7 +307,14 @@ pub fn ray_pick_mesh_detail(origin: Vec3, dir: Vec3, mesh: &Mesh3d, instance: &I
         let c = instance.model.transform_point(vertex(mesh, tri[2]));
         if let Some((t, u, v)) = ray_triangle_barycentric(origin, dir, a, b, c) {
             if best.as_ref().is_none_or(|hit| t < hit.distance) {
-                best = Some(RayMeshHit { distance: t, triangle_index, bary_u: u, bary_v: v });
+                let point = origin.add(dir.scale(t));
+                let edge1 = b.sub(a);
+                let edge2 = c.sub(a);
+                let mut normal = edge1.cross(edge2);
+                if normal.length() > 1e-6 {
+                    normal = normal.normalize();
+                }
+                best = Some(RayMeshHit { distance: t, triangle_index, bary_u: u, bary_v: v, point, normal });
             }
         }
     }

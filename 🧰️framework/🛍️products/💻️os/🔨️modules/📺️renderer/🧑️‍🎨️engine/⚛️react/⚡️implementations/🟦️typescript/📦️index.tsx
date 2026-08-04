@@ -3327,6 +3327,10 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
 
 const PLUGIN_LOAD_TIMEOUT_MS = 30_000;
 
+/** @emoji 🔌️ Result of {@link installPlugin} — the boot effect must not infer success from
+ * `loadedPluginsRef`, which only updates after the next React commit. */
+type PluginInstallOutcome = "loaded" | "already-loaded" | "in-flight" | "missing-registry" | "failed";
+
 async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
   try {
     return await Promise.race([
@@ -5987,6 +5991,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
         dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
         dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+        dispatch({ type: "SET_ERROR", value: null });
         return;
       }
       const primaryApp = appId
@@ -6011,6 +6016,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+      dispatch({ type: "SET_ERROR", value: null });
     },
     [hostConfig, appId, pluginFilter, uiTerminology, uiLocale],
   );
@@ -6020,11 +6026,11 @@ function FrameworkOsShellInner({
    * and no session exists yet — establishes the session. Shared by the boot effect (primary plugin
    * only) and the `PluginSource` subscription effect (every other plugin, as its build lands). */
   const installPlugin = useCallback(
-    async (pluginId: string, rebuiltAt?: number) => {
-      if (pluginOpInFlightRef.current.has(pluginId)) return;
-      if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === pluginId)) return;
+    async (pluginId: string, rebuiltAt?: number): Promise<PluginInstallOutcome> => {
+      if (pluginOpInFlightRef.current.has(pluginId)) return "in-flight";
+      if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === pluginId)) return "already-loaded";
       const entry = registry.find((candidate) => candidate.pluginId === pluginId);
-      if (!entry) return;
+      if (!entry) return "missing-registry";
       pluginOpInFlightRef.current.add(pluginId);
       dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "installing" });
       try {
@@ -6033,7 +6039,7 @@ function FrameworkOsShellInner({
         if (!handle) {
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "failed" });
           dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
-          return;
+          return "failed";
         }
         pluginModuleUrlByIdRef.current.set(pluginId, moduleUrl);
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
@@ -6046,8 +6052,10 @@ function FrameworkOsShellInner({
           } catch (bootError) {
             console.error("[DEBUG] framework os boot failed", bootError);
             dispatch({ type: "SET_ERROR", value: bootError instanceof Error ? bootError.message : String(bootError) });
+            return "failed";
           }
         }
+        return "loaded";
       } finally {
         pluginOpInFlightRef.current.delete(pluginId);
       }
@@ -6486,8 +6494,8 @@ function FrameworkOsShellInner({
     if (!primaryPluginId) return;
     if (loadedPluginsRef.current.some((entry) => entry.handle.pluginId === primaryPluginId)) return;
     void (async () => {
-      await installPlugin(primaryPluginId);
-      if (!loadedPluginsRef.current.some((entry) => entry.handle.pluginId === primaryPluginId)) {
+      const outcome = await installPlugin(primaryPluginId);
+      if (outcome === "failed") {
         dispatch({ type: "SET_ERROR", value: shellLabel("ui.common.noPluginsLoaded") });
       }
     })();
@@ -9732,13 +9740,13 @@ function FrameworkOsShellInner({
         />
       );
     }
-    if (!session) return <p className="p-double text-sm text-muted-foreground">{shellLabel("ui.common.loadingPlugins")}</p>;
     if (error)
       return (
-        <p className="p-double text-sm text-destructive" role="alert">
+        <p className="p-double text-sm text-destructive" role="alert" data-semio-os-shell-error="">
           {error}
         </p>
       );
+    if (!session) return <p className="p-double text-sm text-muted-foreground">{shellLabel("ui.common.loadingPlugins")}</p>;
     const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) }];
     const studioHomeBar =
       studioMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
@@ -14558,7 +14566,7 @@ export function resolveWorldContextMenuTarget(interaction: WorldInteractionRecor
 
 /** @emoji 🚫️ Instance-mesh picking must be disabled for fill/brush engagements — otherwise a click meant for a vortex marker or a fill/voxel gesture falls through and selects/gumballs the underlying object instead. */
 export function worldInstancePickBlocked(activeUtility: string | undefined): boolean {
-  return activeUtility === "fill" || activeUtility === "brush" || activeUtility === "volumeBrush";
+  return activeUtility === "fill" || activeUtility === "brush" || activeUtility === "volumeBrush" || activeUtility === "surfaceBrush";
 }
 
 /** @emoji 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex selects immediately; otherwise a click selects and a drag starts connect. */

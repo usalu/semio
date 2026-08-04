@@ -8,6 +8,10 @@ description = "Local-first, non-blocking, client-side, in-memory document store 
 
 [lints]
 workspace = true
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 

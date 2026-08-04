@@ -14,6 +14,10 @@ workspace = true
 # get the GuestSlim-slim `infinite_canvas` path. See `infinite_canvas`'s `render` feature doc.
 default = ["render"]
 render = ["infinite_canvas/render"]
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 

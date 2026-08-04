@@ -31,6 +31,9 @@ import {
   frameworkOsLockedPrefsEnv,
   resolveTestLevel,
   withViteConfigLoader,
+  cargoProfileDir,
+  semioBuildMode,
+  semioShipEnv,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os-core";
 import type { PluginSourceEvent } from "@semio-tech/framework-core";
@@ -43,11 +46,11 @@ const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️
 const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🤖️generated/🟦️session.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
-/** @emoji 🪶️ Cargo profile plugin crates build under (see root `Cargo.toml`'s `[profile.wasm-release]`).
- * `SEMIO_PLUGIN_PROFILE=release` applies native ship settings on wasm (slow, large vs `wasm-release`) —
- * not a fast-iteration escape hatch. `emitRustArtifacts` hardwires `wasm-release`'s output dir; rebuild with
- * the default profile before `os run` if this override was used. */
-const PLUGIN_WASM_PROFILE = process.env.SEMIO_PLUGIN_PROFILE ?? "wasm-release";
+
+/** @emoji 🪶️ Cargo profile for wasip2 plugin components — `dev` in agent loops, `wasm-release` when `SEMIO_BUILD_MODE=ship`. */
+function pluginWasmProfile(): string {
+  return process.env.SEMIO_PLUGIN_PROFILE ?? (semioBuildMode() === "ship" ? "wasm-release" : "dev");
+}
 
 //#region 🔖️PlaygroundVariantResolution
 /** @emoji 📚️ Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🟦️playgrounds.ts`). */
@@ -802,7 +805,9 @@ function preview2ShimVendorDir(): string {
 }
 
 function ensurePreview2ShimVendor(): void {
-  const sourceDir = join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/lib/browser");
+  const distDir = join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser");
+  const libDir = join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/lib/browser");
+  const sourceDir = existsSync(distDir) ? distDir : libDir;
   const targetDir = preview2ShimVendorDir();
   if (!existsSync(sourceDir)) throw new Error("missing @bytecodealliance/preview2-shim browser shims; run bun install");
   mkdirSync(targetDir, { recursive: true });
@@ -879,9 +884,11 @@ const WASM_OPT_ARGS: readonly string[] = [
  * is exactly what upstream `jco opt` does under the hood. `binaryen` ships an Emscripten JS+wasm build
  * of `wasm-opt` (already a transitive dep of `@bytecodealliance/jco`; pinned as an explicit
  * devDependency here so a future jco upgrade can't silently drop it), so this runs under `bun` with no
- * native binary and no per-platform setup. `SEMIO_WASM_OPT=0` skips the pass entirely;
- * `SEMIO_WASM_OPT_BIN` points at a native `wasm-opt` binary instead, for iteration speed. */
+ * native binary and no per-platform setup. Skipped entirely in dev (`semioBuildMode() !== "ship"`).
+ * `SEMIO_WASM_OPT=0` skips the pass in ship mode; `SEMIO_WASM_OPT_BIN` points at a native `wasm-opt`
+ * binary instead, for iteration speed. */
 function optimizePluginCoreModules(outDir: string, componentBase: string): void {
+  if (semioBuildMode() !== "ship") return;
   if (process.env.SEMIO_WASM_OPT === "0") return;
   const wasmOptBin = process.env.SEMIO_WASM_OPT_BIN ?? join(repoRoot, "node_modules/binaryen/bin/wasm-opt");
   for (const file of readdirSync(outDir)) {
@@ -1049,10 +1056,11 @@ async function readPackageName(cratePath: string): Promise<string> {
 
 async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   const packageName = await readPackageName(target.cratePath);
-  if (runCmdStatus("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", PLUGIN_WASM_PROFILE], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+  const profile = pluginWasmProfile();
+  if (runCmdStatus("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
     throw new Error(`plugin build failed: ${target.pluginId}`);
   }
-  const artifact = join(repoRoot, "target", PLUGIN_WASM_TARGET, PLUGIN_WASM_PROFILE, `${packageName.replace(/-/g, "_")}.wasm`);
+  const artifact = join(repoRoot, "target", PLUGIN_WASM_TARGET, cargoProfileDir(profile), `${packageName.replace(/-/g, "_")}.wasm`);
   const outDir = join(pluginOutRoot, target.pluginId);
   mkdirSync(outDir, { recursive: true });
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
@@ -1069,7 +1077,7 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   writeFileSync(join(outDir, "🟨️plugin-worker.js"), pluginWorkerSource());
   const hotSwapMarker = join(pluginOutRoot, ".hot-swap");
   writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
-  console.log(`[DEBUG] built program ${target.pluginId} (${PLUGIN_WASM_TARGET}, ${PLUGIN_WASM_PROFILE}) -> ${outDir}`);
+  console.log(`[DEBUG] built program ${target.pluginId} (${PLUGIN_WASM_TARGET}, ${profile}) -> ${outDir}`);
 }
 
 export async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
@@ -1585,6 +1593,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    process.env.SEMIO_BUILD_MODE = "ship";
     const variantSegment = segments[0] && !segments[0].startsWith("-") ? segments[0] : undefined;
     const viteSegments = variantSegment ? segments.slice(1) : segments;
     const plugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
@@ -1600,7 +1609,7 @@ class BuildScript extends BundleScript {
     runCmdStatus("bun", withViteConfigLoader(["run", "vite", "build", "--config", "⚙️vite.config.ts", ...viteSegments]), {
       cwd: this.root,
       env: {
-        ...process.env,
+        ...semioShipEnv(),
         SEMIO_PLUGIN: plugin,
         SEMIO_RENDERER: renderer,
         VITE_SEMIO_RENDERER: renderer,

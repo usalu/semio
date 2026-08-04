@@ -46,6 +46,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    process.env.SEMIO_BUILD_MODE = "ship";
     await buildDemonstratorPlugins();
     if (runCmdStatus("bun", withViteConfigLoader(["run", "vite", "build", "--config", "⚙️vite.config.ts", ...segments]), { cwd: this.root, env: process.env }) !== 0) {
       throw new Error("demonstrator landing build failed");

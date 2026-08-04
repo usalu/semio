@@ -13,6 +13,10 @@ package = "semio:flow-extension-bim"
 [package.metadata.semio]
 contributes = ["flow.extension"]
 
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 
