@@ -76,7 +76,7 @@ pub fn catalogue_json(registry: &Registry) -> String {
                 "abbreviation": info.abbreviation,
                 "icon": info.icon,
                 "summary": info.summary,
-                "module": info.module,
+                "module": info.extension,
                 "inputs": info.inputs.iter().map(|channel| serde_json::json!({
                     "name": channel.name,
                     "code": channel.code,

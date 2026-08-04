@@ -1339,7 +1339,16 @@ export function daemonBudgetOpts(): RunCmdOpts {
 /** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. */
 function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
   const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
-  const result = spawnSync(cmd, args, {
+  const formattedArgs = [...args];
+  if (cmd === "bun" || cmd === process.execPath) {
+    if (formattedArgs[0] && !formattedArgs[0].startsWith("-") && !formattedArgs[0].includes("/") && !formattedArgs[0].includes("\\")) {
+      const resolved = resolveWorkspaceBin(formattedArgs[0], opts.cwd ?? process.cwd());
+      if (resolved) {
+        formattedArgs[0] = resolved;
+      }
+    }
+  }
+  const result = spawnSync(cmd, formattedArgs, {
     stdio: "inherit",
     cwd: opts.cwd,
     env: opts.env ?? process.env,
@@ -1675,6 +1684,7 @@ export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
   env.NX_TUI ??= "false";
   // 🧩️ Nx plugin-worker IPC corrupts non-BMP emoji path segments (🔨️→U+FFFD); keep plugins in-process.
   env.NX_ISOLATE_PLUGINS ??= "false";
+  env.RUSTC_WRAPPER ??= "";
   return env;
 }
 
@@ -1701,24 +1711,80 @@ function bunArgsForVite(args: readonly string[]): string[] {
 }
 //#endregion ⚙️ViteConfigLoader
 
+/** 🔍️ Resolves a CLI executable in `cwd` or workspace root's `node_modules/.bin` to avoid `bun x` cwd resolution bugs on emoji/ZWJ paths. */
+export function resolveWorkspaceBin(binName: string, cwd: string = process.cwd()): string | null {
+  const shortName = binName.includes("/") ? binName.split("/").pop()! : binName;
+  const localBin = join(cwd, "node_modules", ".bin", shortName);
+  if (existsSync(localBin)) return localBin;
+  const rootBin = join(getWorkspaceRoot(), "node_modules", ".bin", shortName);
+  if (existsSync(rootBin)) return rootBin;
+  return null;
+}
+
+function bunxCmdArgs(args: readonly string[], cwd: string): string[] {
+  const formatted = bunArgsForVite(args);
+  const viteIdx = formatted.indexOf("vite");
+  if (viteIdx >= 0) {
+    const resolved = resolveWorkspaceBin("vite", cwd);
+    if (resolved) {
+      const copy = [...formatted];
+      copy[viteIdx] = resolved;
+      return copy;
+    }
+  }
+  const binName = formatted[0];
+  if (binName && binName !== "x") {
+    const resolved = resolveWorkspaceBin(binName, cwd);
+    if (resolved) {
+      return [resolved, ...formatted.slice(1)];
+    }
+  }
+  return ["x", ...formatted];
+}
+
 /** 🥖️Runs `bun` with inherited stdio in `cwd`. */
 export function runBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
   runCmd(process.execPath, bunArgsForVite(args), { cwd, env });
 }
 
-/** 🥖️Runs `bunx` synchronously in `cwd`. */
-export function runBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
-  const result = spawnSync(process.execPath, ["x", ...bunArgsForVite(args)], { cwd, env, shell: false, stdio: "inherit" });
+/** 🟢️Runs a CLI tool using `node` synchronously in `cwd`, returning status code. */
+export function runNodeBinStatus(args: string[], cwd: string = process.cwd(), env: NodeJS.ProcessEnv = process.env): number {
+  const binName = args[0]!;
+  const resolved = resolveWorkspaceBin(binName, cwd);
+  const executable = resolved ?? binName;
+  const result = spawnSync("node", [executable, ...args.slice(1)], { cwd, env, shell: false, stdio: "inherit" });
   if (result.error) {
     console.error(result.error);
-    process.exit(1);
+    return 1;
   }
-  if (result.status !== 0) process.exit(result.status ?? 1);
+  return result.status ?? 1;
+}
+
+/** 🟢️Runs a CLI tool using `node` synchronously in `cwd`. */
+export function runNodeBin(args: string[], cwd: string = process.cwd(), env: NodeJS.ProcessEnv = process.env): void {
+  const status = runNodeBinStatus(args, cwd, env);
+  if (status !== 0) process.exit(status);
+}
+
+/** 🥖️Runs `bunx` synchronously in `cwd`, returning status code. */
+export function runBunxStatus(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): number {
+  const result = spawnSync(process.execPath, bunxCmdArgs(args, cwd), { cwd, env, shell: false, stdio: "inherit" });
+  if (result.error) {
+    console.error(result.error);
+    return 1;
+  }
+  return result.status ?? 1;
+}
+
+/** 🥖️Runs `bunx` synchronously in `cwd`. */
+export function runBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
+  const status = runBunxStatus(args, cwd, env);
+  if (status !== 0) process.exit(status);
 }
 
 /** 🥖️Spawns `bunx` asynchronously; exits with child code. */
 export function spawnBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
-  const child = spawn(process.execPath, ["x", ...bunArgsForVite(args)], { cwd, env, shell: false, stdio: "inherit" });
+  const child = spawn(process.execPath, bunxCmdArgs(args, cwd), { cwd, env, shell: false, stdio: "inherit" });
   child.on("exit", (code) => process.exit(code ?? 0));
   child.on("error", (error) => {
     console.error(error);
@@ -2330,8 +2396,13 @@ export function runWasmPackWebBuild(opts: {
     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
     status = runCmdStatus(resolveWasmBindgenBin(), [cargoWasm, "--out-dir", "pkg", "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
   } else {
-    const wasmPackArgs = ["x", "wasm-pack", "build", ...packProfileArgs, "--target", "web", "--out-dir", "pkg", "--out-name", wasmBaseName, "--no-pack", ...(featureArgs.length > 0 ? ["--", ...featureArgs] : [])];
-    status = runCmdStatus(process.execPath, wasmPackArgs, { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
+    const localWasmPack = resolveWorkspaceBin("wasm-pack", rsDir);
+    const buildArgs = ["build", ...packProfileArgs, "--target", "web", "--out-dir", "pkg", "--out-name", wasmBaseName, "--no-pack", ...(featureArgs.length > 0 ? ["--", ...featureArgs] : [])];
+    if (localWasmPack) {
+      status = runCmdStatus(process.execPath, [localWasmPack, ...buildArgs], { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
+    } else {
+      status = runCmdStatus("wasm-pack", buildArgs, { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
+    }
   }
   if (status !== 0) {
     console.error(`[${logPrefix}] wasm build failed`);

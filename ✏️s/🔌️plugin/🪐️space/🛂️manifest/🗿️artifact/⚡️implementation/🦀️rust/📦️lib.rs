@@ -12,6 +12,9 @@
 /// so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
 /// these documents without depending on this crate's concrete `Projection`/`Operation` types.
 fn register_s_exports() {
+    // 🪶️ GUESTSLIM: wires infinite_canvas's host-fetched typst font path (this crate builds with
+    // `render` off) to the component `read-asset` import.
+    infinite_canvas::host_asset::register_asset_reader(semio_framework_plugin::host_read_asset);
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<home_ui::HomeApp>("s.home");
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<space_ui::SpaceApp>(semio_framework_os::OS_SPACE_SCHEMA);
 }

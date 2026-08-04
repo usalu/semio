@@ -1,6 +1,9 @@
 //! 🧩️ Puzzle plugin — 2D, 3D, and 5D play apps in one hot-swappable WASM plugin.
 
 fn register_puzzle_exports() {
+    // 🫁️ GUESTSLIM: wires infinite_canvas's host-fetched typst font path (this crate builds
+    // with `render` off) to the component `read-asset` import.
+    infinite_canvas::host_asset::register_asset_reader(semio_framework_plugin::host_read_asset);
     puzzle_2d_ui::register_puzzle2d_exports();
     puzzle_3d_ui::register_puzzle3d_exports();
     puzzle_5d_ui::register_puzzle5d_exports();

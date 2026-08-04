@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "../../../🕸️node-graph/⚡️implementation/🦀️rust/pkg/framework_surface_node_graph.js",
-    "./pkg/framework_surface_node_graph.js": "../../../🕸️node-graph/⚡️implementation/🦀️rust/pkg/framework_surface_node_graph.js"
+    ".": "./pkg/framework_surface_node_graph.js",
+    "./pkg/framework_surface_node_graph.js": "./pkg/framework_surface_node_graph.js"
   },
   "bundleKind": "library"
 }

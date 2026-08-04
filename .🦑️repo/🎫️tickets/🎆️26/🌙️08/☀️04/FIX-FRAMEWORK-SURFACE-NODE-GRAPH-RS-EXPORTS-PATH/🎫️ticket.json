@@ -1,0 +1,8 @@
+{
+  "title": "Fix Framework Surface Engine WASM Crate Exports Path and Surface Session Imports",
+  "emoji": "🛠️",
+  "status": "closed",
+  "description": "Fix invalid export paths in @semio-tech/framework-surface-node-graph-rs and @semio-tech/framework-surface-board-2d-rs package.json pointing to ../../../ relative paths instead of ./pkg/*.js, and update board-2d session importer specifier.",
+  "summary": "Fixed invalid relative exports paths ('../../../...') in @semio-tech/framework-surface-node-graph-rs and @semio-tech/framework-surface-board-2d-rs package.json to point directly to their './pkg/*.js' outputs. Updated index.tsx's board-2d importer to point at '@semio-tech/framework-surface-board-2d-rs' matching the relocated surface crates pattern and updated vitest.config.ts / package.json accordingly. Verified: Vite transform resolves all 5 framework surface imports without errors.",
+  "goal": "🎯r2602🎯runningsketchpad"
+}

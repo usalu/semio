@@ -18,7 +18,7 @@ gis2d_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🌍
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
-framework_surface_tiled_map = { path = "../../../../../../../../../🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-surface-tiled-map" }
+framework_surface_tiled_map = { path = "../../../../../../../../../🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-surface-tiled-map", default-features = false }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

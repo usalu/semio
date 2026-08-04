@@ -109,6 +109,9 @@ semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️
 semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }
 semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 kernel_3d_brepkit = { path = "../../../../../../🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
+# 🪶️ GUESTSLIM: direct dep only to wire `infinite_canvas::host_asset::register_asset_reader` to
+# `semio_framework_plugin::host_read_asset` at plugin init — see `infinite_canvas`'s `render` feature doc.
+infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
 serde_json = "1.0.140"
 
 procedural_3d = { path = "../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-3d" }

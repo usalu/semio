@@ -27974,17 +27974,19 @@ function splitRootWithStack(layout: WindowLayoutNode, stack: WindowLayoutStackNo
 }
 
 /** @emoji 🪟️ Writes resizable panel percentages back onto axis children. */
-function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPath, sizes: Record<string, number>): WindowLayoutNode {
+function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPath, sizes: Record<string, number> | readonly number[]): WindowLayoutNode {
   return updateLayoutAtPath(layout, axisPath, (node) => {
     if (node.kind !== "row" && node.kind !== "column") return node;
+    const sizesRecord = sizes as Record<string | number, number>;
     const children = node.children.map((child, index) => {
       const panelKey = modeJoinPath(axisPath, index);
-      const size = sizes[panelKey] ?? sizes[String(index)] ?? child.size;
+      const size = sizesRecord[panelKey] ?? sizesRecord[index] ?? sizesRecord[String(index)] ?? child.size;
       return { ...child, size };
     });
     return { ...node, children };
   });
 }
+
 
 /** @emoji ↔ True when a child axis runs perpendicular to its parent axis. */
 export function modeAxisIsPerpendicularChild(parentKind: "row" | "column", child: WindowLayoutNode): boolean {
@@ -28757,6 +28759,22 @@ function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, 
     return <ModeDockStack key={path || "root-stack"} stackPath={path} node={node} windowsById={ctx.windowsById} activeWindowId={ctx.activeWindowId} />;
   }
   const orientation = node.kind === "row" ? "horizontal" : "vertical";
+  const childCount = node.children.length;
+  const rawSizes = node.children.map((child) => child.size);
+  const hasAllDefinedSizes = rawSizes.every((s) => typeof s === "number" && s > 0);
+  let defaultLayout: number[];
+  if (hasAllDefinedSizes) {
+    const sum = (rawSizes as number[]).reduce((a, b) => a + b, 0);
+    if (Math.abs(sum - 100) < 0.01 && sum > 0) {
+      defaultLayout = rawSizes as number[];
+    } else if (sum > 0) {
+      defaultLayout = (rawSizes as number[]).map((s) => (s / sum) * 100);
+    } else {
+      defaultLayout = node.children.map(() => 100 / childCount);
+    }
+  } else {
+    defaultLayout = node.children.map(() => 100 / childCount);
+  }
   const panels: React.ReactNode[] = [];
   node.children.forEach((child, index) => {
     const childPath = modeJoinPath(path, index);
@@ -28766,18 +28784,19 @@ function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, 
       panels.push(<ResizableHandle key={`sep-${childPath}`} joinCorners={joinCorners} onJoinCornerResize={ctx.onJoinCornerResize} orientation={orientation} />);
     }
     panels.push(
-      <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border min-h-0 min-w-0 overflow-visible">
+      <ResizablePanel key={childPath} id={childPath} defaultSize={defaultLayout[index] ?? 100 / childCount} minSize={8} className="box-border min-h-0 min-w-0 overflow-visible">
         {renderModeDockNode(child, childPath, ctx, { path, kind: node.kind, panelIndex: index })}
       </ResizablePanel>,
     );
   });
   return (
     <ResizablePanelGroup
-      key={path || "root-axis"}
+      key={`${path || "root-axis"}-${childCount}`}
       id={`mode-axis-${path || "root"}`}
       elementRef={(element) => ctx.registerAxisElement(path, element)}
       groupRef={(group) => ctx.registerAxisGroup(path, group)}
       orientation={orientation}
+      defaultLayout={defaultLayout}
       onLayoutChanged={(sizes) => ctx.onAxisLayoutChanged(path, sizes)}
       className="h-full min-h-0 w-full min-w-0"
     >

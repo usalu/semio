@@ -21,4 +21,4 @@ serde_json = "1.0.140"
 
 [dev-dependencies]
 procedural_2d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-2d-engine" }
-flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
+flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core", default-features = false }

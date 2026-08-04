@@ -16,7 +16,7 @@ wasm-opt = false
 # (WASM_OPT_ARGS) minus `--low-memory-unused`: this module's stack-first memory layout means the
 # "low 1KB is unused" assumption binaryen makes for that flag is unverified here.
 [package.metadata.wasm-pack.profile.custom]
-wasm-opt = ["-Oz", "--strip-debug", "--strip-producers", "--enable-bulk-memory", "--enable-bulk-memory-opt", "--enable-call-indirect-overlong", "--enable-extended-const", "--enable-multivalue", "--enable-mutable-globals", "--enable-nontrapping-float-to-int", "--enable-reference-types", "--enable-sign-ext"]
+wasm-opt = false
 
 [lib]
 crate-type = ["rlib", "cdylib"]

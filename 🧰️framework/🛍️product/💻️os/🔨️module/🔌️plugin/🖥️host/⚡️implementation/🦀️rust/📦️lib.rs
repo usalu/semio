@@ -14,6 +14,25 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 
 const PLUGIN_FUEL_BUDGET: u64 = 50_000_000;
 
+//#region 🪶️GuestSlimAsset
+/// @emoji 📦️ `read-asset` handle for the typst default font set — mirrors
+/// `infinite_canvas::host_asset::TYPST_DEFAULT_FONTS_ASSET_HANDLE`.
+const GUESTSLIM_TYPST_DEFAULT_FONTS_ASSET_HANDLE: u64 = 1;
+
+/// @emoji ✂️ Packs multiple font byte slices into the `[u32le count][u32le len, bytes]*` wire
+/// format `infinite_canvas::host_asset::split_blobs` decodes guest-side.
+fn pack_asset_blobs<'a>(blobs: impl Iterator<Item = &'a [u8]>) -> Vec<u8> {
+    let items: Vec<&[u8]> = blobs.collect();
+    let mut out = Vec::new();
+    out.extend_from_slice(&(items.len() as u32).to_le_bytes());
+    for item in items {
+        out.extend_from_slice(&(item.len() as u32).to_le_bytes());
+        out.extend_from_slice(item);
+    }
+    out
+}
+//#endregion 🪶️GuestSlimAsset
+
 bindgen!({
     world: "plugin-world",
     path: "../../../⚡️implementation/🦀️rust/📜️wit",
@@ -104,8 +123,11 @@ impl semio::framework::host::Host for HostState {
         Err("invoke-action not implemented".into())
     }
 
-    fn read_asset(&mut self, _handle: u64) -> Result<Vec<u8>, String> {
-        Err("read-asset not implemented".into())
+    fn read_asset(&mut self, handle: u64) -> Result<Vec<u8>, String> {
+        match handle {
+            GUESTSLIM_TYPST_DEFAULT_FONTS_ASSET_HANDLE => Ok(pack_asset_blobs(typst_assets::fonts())),
+            _ => Err(format!("read-asset: unknown handle {handle}")),
+        }
     }
 
     fn network_fetch(&mut self, _origin: String, _path: String) -> Result<Vec<u8>, String> {

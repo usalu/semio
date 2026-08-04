@@ -11,7 +11,7 @@ workspace = true
 path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
+flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core", default-features = false }
 ui_wgpu = { path = "../../../../../../../../../🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust", package = "semio-framework-ui-wgpu" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }

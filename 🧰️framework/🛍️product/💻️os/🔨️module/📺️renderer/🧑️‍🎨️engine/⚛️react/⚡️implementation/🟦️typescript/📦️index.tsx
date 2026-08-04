@@ -3525,10 +3525,11 @@ function isTreeNode(node: UiNode): node is UiTreeNode {
 }
 
 export function uiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
+  const treeHasDrag = node.type === "tree" && node.sections.some((s) => s.items.some((i) => i.draggable || i.dragData));
   if (isTreeNode(node)) {
     return {
       ...uiTreeNodeToTreePanelConfig(node, onAction),
-      dragAndDropController: node.dropAction ? declarativeTreeDragController(node, onAction) : undefined,
+      dragAndDropController: node.dropAction || treeHasDrag ? declarativeTreeDragController(node, onAction) : undefined,
     };
   }
   return declarativeUiNodeToTreePanelConfig(node, onAction);
@@ -6594,7 +6595,12 @@ function FrameworkOsShellInner({
         // variant without this call site needing to know about it.
         if (pluginEntry) {
           try {
-            await pluginEntry.handle.handleAction(nextSession.instanceId, encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setContributions", args: { json: contributionsJson } }), nextSession.viewState);
+            const wire = encodeActionWire({ controllerId: nextSession.app.controllerId, action: "setContributions", args: { json: contributionsJson } });
+            if (pluginEntry.handle.handleCommand) {
+              await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, nextSession.viewState);
+            } else {
+              await pluginEntry.handle.handleAction(nextSession.instanceId, wire, nextSession.viewState);
+            }
           } catch (error) {
             console.warn("[DEBUG] setContributions push skipped", error instanceof Error ? error.message : String(error));
           }
@@ -8621,6 +8627,27 @@ function FrameworkOsShellInner({
       }));
   }, [activePluginManifest, session?.app.id, appLabelsOverlay, uiTerminology, uiLocale]);
 
+  const dispatchActiveExample = useCallback(
+    (exampleId: string) => {
+      if (!session) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      if (!plugin) return;
+      const dispatchViewState = injectActiveUtility(session.viewState);
+      const commandWire = encodeActionWire({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
+      if (plugin.handleCommand) {
+        void plugin
+          .handleCommand(session.instanceId, commandWire, dispatchViewState)
+          .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
+          .catch((commandError) => {
+            console.error("[DEBUG] setActiveExample command failed", commandError);
+          });
+      } else {
+        onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
+      }
+    },
+    [applyHostEffects, injectActiveUtility, loadedPlugins, onAction, session],
+  );
+
   /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
   const exampleSelectElement = useMemo(() => {
     if (!session || exampleOptions.length === 0 || locks.exampleId || (studioMode && session.app.id === landingAppId)) return null;
@@ -8632,11 +8659,11 @@ function FrameworkOsShellInner({
         options={exampleOptions}
         onValueChange={(exampleId) => {
           dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
-          onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
+          dispatchActiveExample(exampleId || "");
         }}
       />
     );
-  }, [session, exampleOptions, locks.exampleId, studioMode, landingAppId, activeExampleId, onAction]);
+  }, [session, exampleOptions, locks.exampleId, studioMode, landingAppId, activeExampleId, dispatchActiveExample]);
 
   /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
   const modeSwitcherElement = useMemo(() => {
@@ -9159,8 +9186,8 @@ function FrameworkOsShellInner({
     if (exampleId !== activeExampleId) {
       dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
     }
-    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
-  }, [activeExampleId, defaults.exampleId, exampleOptions, onAction, session, studioMode]);
+    dispatchActiveExample(exampleId);
+  }, [activeExampleId, defaults.exampleId, dispatchActiveExample, exampleOptions, session, studioMode]);
 
   //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
   // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
@@ -10172,7 +10199,15 @@ async function performRefreshUi(client: AppChannelClient, request: PluginUiRefre
     else if (target.kind === "tools") tools = response;
     else labels = response;
   });
-  return { windows, panels, engagements, measures, tools, labels, requestedEffects };
+  return {
+    ...(windows.length > 0 ? { windows } : {}),
+    ...(panels.length > 0 ? { panels } : {}),
+    ...(engagements ? { engagements } : {}),
+    ...(measures ? { measures } : {}),
+    ...(tools ? { tools } : {}),
+    ...(labels ? { labels } : {}),
+    ...(requestedEffects.length > 0 ? { requestedEffects } : {}),
+  };
 }
 
 async function performContextMenu(client: AppChannelClient, request: PluginContextMenuRequest): Promise<readonly ContextMenuItemSpec[]> {
@@ -10262,7 +10297,7 @@ const ENGINE_SESSION_IMPORTERS: Record<string, () => Promise<EngineSessionWasmMo
   "paint-2d": () => import("@semio-tech/framework-surface-paint-rs"),
   "tiled-map": () => import("@semio-tech/framework-surface-tiled-map-rs"),
   terrain: () => import("@semio-tech/framework-surface-terrain-rs"),
-  "board-2d": () => import("@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js"),
+  "board-2d": () => import("@semio-tech/framework-surface-board-2d-rs"),
 };
 
 const engineSessionModulePromises = new Map<string, Promise<EngineSessionWasmModule>>();

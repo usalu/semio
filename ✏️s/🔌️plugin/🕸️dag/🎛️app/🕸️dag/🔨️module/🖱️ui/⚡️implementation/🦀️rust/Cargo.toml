@@ -15,7 +15,7 @@ dag = { path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛
 dag_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-dag-engine" }
 dag_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-dag-op" }
 dag_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-dag-protocol" }
-infinite_board_port_directed_dag = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
+infinite_board_port_directed_dag = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag", default-features = false }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }

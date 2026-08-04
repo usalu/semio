@@ -12,7 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/
 
 [dependencies]
 flow = { path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/⚡️implementation/🦀️rust", package = "semio-s-app-flow" }
-flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
+flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core", default-features = false }
 flow_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-flow-engine" }
 flow_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-flow-op" }
 flow_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-flow-protocol" }

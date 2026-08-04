@@ -17,7 +17,7 @@ variant = "puzzle2d"
 app = "puzzle2d-play"
 aliases = ["2d"]
 ports = { react = 6012, wgpu = 6112 }
-engines = ["✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust"]
+engines = ["🧰️framework/🔨️module/🗺️surface/🎲️board-2d/⚡️implementation/🦀️rust"]
 
 [[package.metadata.semio.playground]]
 variant = "puzzle3d"
@@ -56,6 +56,7 @@ crate-type = ["cdylib", "rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
+infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 puzzle_2d_ui = { path = "../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-2d-ui" }
 puzzle_3d_ui = { path = "../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-3d-ui" }

@@ -1,0 +1,11 @@
+{
+  "title": "Fix OperatorInfo.module Field Regression In Imperative-Text",
+  "emoji": "🛠️",
+  "status": "closed",
+  "description": "Fix compile failure in semio-s-plugin-imperative-text where OperatorInfo.module was accessed despite OperatorInfo using extension field.",
+  "summary": "Fixed regression in ✏️s/🔌️plugin/📜️imperative/🧩️extension/📝️text/⚡️implementation/🦀️rust/📦️lib.rs where info.module was referenced on OperatorInfo instead of info.extension. Updated line 79 to use info.extension. Verified cargo check --target wasm32-wasip2 -p semio-s-plugin-sequence and cargo test -p semio-s-plugin-imperative-text compile and pass clean.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "adfd7d57-6592-4d7e-8aae-d0bc54c9f472"
+  ]
+}

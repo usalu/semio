@@ -23,6 +23,7 @@ crate-type = ["cdylib", "rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/🪐️space/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
+infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }
 home_ui = { path = "../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/🖱️ui/⚡️implementation/🦀️rust", package = "semio-s-app-space-home-ui" }

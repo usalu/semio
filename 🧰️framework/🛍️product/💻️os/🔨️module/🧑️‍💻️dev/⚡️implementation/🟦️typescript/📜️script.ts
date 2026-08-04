@@ -20,6 +20,8 @@ import {
   runBundleScriptMain,
   runCmd,
   runCmdStatus,
+  runBunxStatus,
+  runNodeBinStatus,
   runProbe,
   runVitest,
   spawnDaemon,
@@ -680,6 +682,11 @@ self.addEventListener("message", async (event) => {
   if (!requestId || !type) return;
   try {
     if (type === "init") {
+      // 🪶️ GUESTSLIM: bytes forwarded from the main thread's \`acquirePluginModule\` fetch (a worker
+      // never owns fetch itself); \`readAsset\` in \`🟨️host-shim.js\` reads from this global.
+      if (msg.guestSlimAssets) {
+        globalThis.__semioGuestSlimAssets = new Map(msg.guestSlimAssets.map(([handle, buffer]) => [handle, new Uint8Array(buffer)]));
+      }
       await loadPlugin(msg.moduleUrl);
       reply(requestId, "init", { ok: true });
       return;
@@ -805,6 +812,26 @@ function ensurePreview2ShimVendor(): void {
   }
 }
 
+/** @emoji 🪶️ GUESTSLIM: builds (once, cached) the packed typst default font set into
+ * `🔌️plugin-modules/_vendor/` — the same directory every plugin's static-served alongside its own
+ * output (see `pluginModuleDirNames`'s `_vendor` entry in the demonstrator/os-dev vite configs) —
+ * so `acquirePluginModule`'s browser-side worker bootstrap can fetch and forward it through the
+ * `read-asset` component import. Regenerating is cheap-but-not-free (a `render`-featured cargo run
+ * pulling in vello/typst), so this only re-runs when the output file is missing; the blob's content
+ * is fully determined by the pinned `typst-assets` crate version, never by anything in this repo. */
+function ensureGuestSlimTypstFontsAsset(): void {
+  const vendorDir = join(pluginOutRoot, "_vendor");
+  const outPath = join(vendorDir, "guestslim-typst-fonts.bin");
+  if (existsSync(outPath)) return;
+  mkdirSync(vendorDir, { recursive: true });
+  const canvasCrateDir = join(repoRoot, "🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust");
+  if (
+    runCmdStatus("cargo", ["run", "--quiet", "--bin", "dump-guestslim-typst-fonts", "--features", "render", "--", outPath], { cwd: canvasCrateDir, budgetMs: buildBudgetMs() }) !== 0
+  ) {
+    throw new Error("failed to build the GuestSlim typst default fonts asset");
+  }
+}
+
 function rewritePreview2ShimImports(componentJsPath: string): void {
   const outDir = dirname(componentJsPath);
   const rel = relative(outDir, preview2ShimVendorDir()).replace(/\\/g, "/");
@@ -869,7 +896,7 @@ function optimizePluginCoreModules(outDir: string, componentBase: string): void 
 }
 
 function transpilePluginComponent(artifact: string, outDir: string, componentBase: string): void {
-  if (runCmdStatus("bunx", ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./🟨️host-shim.js"], { cwd: repoRoot }) !== 0) {
+  if (runNodeBinStatus(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./🟨️host-shim.js"], repoRoot) !== 0) {
     throw new Error(`jco transpile failed for ${artifact}`);
   }
   optimizePluginCoreModules(outDir, componentBase);
@@ -932,7 +959,13 @@ export function invokeAction(target, invocationJson) {
 }
 
 export function readAsset(handle) {
-  throw \`read-asset unsupported: \${handle}\`;
+  // 🪶️ GUESTSLIM: bytes are pushed into \`globalThis.__semioGuestSlimAssets\` by the worker
+  // bootstrap's "init" handler (see \`🟨️plugin-worker.js\`), forwarded from the main thread's
+  // \`acquirePluginModule\` fetch — a WASI-P2 program worker never owns fetch itself (see this
+  // module's own doc comment above), so there is nothing to fetch synchronously here.
+  const bytes = globalThis.__semioGuestSlimAssets?.get(handle);
+  if (!bytes) throw \`read-asset unsupported: \${handle}\`;
+  return bytes;
 }
 
 export function networkFetch(origin, path) {
@@ -1076,6 +1109,7 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
   const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
   mkdirSync(pluginOutRoot, { recursive: true });
   ensurePreview2ShimVendor();
+  ensureGuestSlimTypstFontsAsset();
   rewriteExistingPluginShimImports();
   const stalePublicPlugins = join(repoRoot, "🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/public/plugin-modules");
   if (existsSync(stalePublicPlugins)) {
@@ -1422,6 +1456,8 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
   if (runCmdStatus("bun", [graphScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-node-graph wasm build failed");
   const editorScript = join(repoRoot, "./🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust/📜️script.ts");
   if (runCmdStatus("bun", [editorScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-editor wasm build failed");
+  const boardScript = join(repoRoot, "./🧰️framework/🔨️module/🗺️surface/🎲️board-2d/⚡️implementation/🦀️rust/📜️script.ts");
+  if (runCmdStatus("bun", [boardScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-board-2d wasm build failed");
   // React renderer always `import("@semio-tech/flow-core")` for `createFlowSession`, so the
   // pkg must exist even when the active playground's `engines = []` (e.g. Aggregator / puzzle).
   const flowCoreScript = join(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/📜️script.ts");
@@ -1865,9 +1901,9 @@ class VerifyScript extends BundleScript {
     }
     for (const target of generatePluginRegistry(repoRoot)) {
       const packageName = await readPackageName(target.cratePath);
-      if (runCmdStatus("cargo", ["test", "-p", packageName], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${packageName} tests failed`);
+      if (runCmdStatus("cargo", ["test", "--lib", "-p", packageName], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${packageName} tests failed`);
     }
-    if (runCmdStatus("bunx", ["vitest", "run"], { cwd: join(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript") }) !== 0) throw new Error("framework-renderer-react tests failed");
+    if (runBunxStatus(["vitest", "run"], join(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript")) !== 0) throw new Error("framework-renderer-react tests failed");
     await runStudioE2eVerify(studioUrl, timeoutMs);
     await new PluginCapabilityLintScript(this.root).run([]);
     console.log(`[DEBUG] s studio verify passed (${studioUrl})`);

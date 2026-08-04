@@ -22,6 +22,7 @@ crate-type = ["cdylib", "rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/💡️reasoning/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
+infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 reasoning_wires = { path = "../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/⚡️implementation/🦀️rust", package = "semio-s-app-reasoning-wires" }
 reasoning_wires_ui = { path = "../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/🔨️module/🖱️ui/⚡️implementation/🦀️rust", package = "semio-s-app-reasoning-wires-ui" }

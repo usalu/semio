@@ -16,7 +16,6 @@ path = "../../../../../✏️s/🔨️module/💭️mindmap/⚡️implementation
 
 [dependencies]
 infinite_board_normal_directed = { path = "../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-directed" }
-infinite_canvas = { path = "../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
-
+infinite_canvas = { path = "../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

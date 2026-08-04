@@ -95,6 +95,10 @@ fn register_sourcing_exports() {
 
 //#region 🔖️Manifest
 fn register_demonstrator_exports() {
+    // 🪶️ GUESTSLIM: wires infinite_canvas's host-fetched typst font path (this crate builds with
+    // `render` off, transitively via procedural_3d_engine → flow_core) to the component `read-asset`
+    // import — see `infinite_canvas`'s `render` feature doc.
+    infinite_canvas::host_asset::register_asset_reader(semio_framework_plugin::host_read_asset);
     register_procedural_exports();
     register_cad_exports();
     puzzle_3d_ui::register_puzzle3d_exports();

@@ -1,6 +1,9 @@
 //! 🔧️ Procedural plugin — 2D and 3D flow apps in one hot-swappable WASM plugin.
 
 fn register_procedural_exports() {
+    // 🫁️ GUESTSLIM: wires infinite_canvas's host-fetched typst font path (this crate builds
+    // with `render` off) to the component `read-asset` import.
+    infinite_canvas::host_asset::register_asset_reader(semio_framework_plugin::host_read_asset);
     semio_framework_os::register_2d_export_handlers("2d.procedural", "procedural2d", procedural_2d_engine::procedural2d_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.procedural", procedural_2d_engine::procedural2d_document_from_dwg);
     // 📦️ Registers `Procedural2dDocument`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`

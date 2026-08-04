@@ -19,9 +19,9 @@ rewrite = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trin
 trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-ram" }
 trinity_jack = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-jack" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
-infinite_board_port_directed = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed" }
-infinite_board_port_directed_normal = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }
-infinite_canvas = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_board_port_directed = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed", default-features = false }
+infinite_board_port_directed_normal = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-normal", default-features = false }
+infinite_canvas = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }

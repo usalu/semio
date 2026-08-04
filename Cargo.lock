@@ -8345,6 +8345,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-surface-board-2d"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "semio-framework-os-kernel-math-geometry",
+ "semio-framework-os-kernel-store",
+ "semio-s-app-puzzle-2d",
+ "semio-s-app-puzzle-2d-engine",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-surface-node-graph"
 version = "0.1.0"
 dependencies = [
@@ -8523,6 +8539,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "typst-assets",
  "wasmtime",
  "wasmtime-wasi",
 ]
@@ -13273,6 +13290,7 @@ dependencies = [
 name = "semio-s-plugin-dag"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-dag",
  "semio-s-app-dag-ui",
@@ -13285,6 +13303,7 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-os-kernel-3d-brep",
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-cad",
  "semio-s-app-cad-engine",
@@ -13381,6 +13400,7 @@ dependencies = [
 name = "semio-s-plugin-flow"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-flow",
  "semio-s-app-flow-ui",
@@ -13475,6 +13495,7 @@ name = "semio-s-plugin-layout"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-layout",
  "semio-s-app-layout-engine",
@@ -13608,6 +13629,7 @@ name = "semio-s-plugin-procedural"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-procedural-2d",
  "semio-s-app-procedural-2d-engine",
@@ -13665,6 +13687,7 @@ dependencies = [
 name = "semio-s-plugin-puzzle"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-puzzle-2d-ui",
  "semio-s-app-puzzle-3d-ui",
@@ -13689,6 +13712,7 @@ dependencies = [
 name = "semio-s-plugin-reasoning-mindmap"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-reasoning-wires",
  "semio-s-app-reasoning-wires-ui",
@@ -13902,6 +13926,7 @@ name = "semio-s-plugin-space"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-space-home-ui",
  "semio-s-app-space-space-ui",
@@ -13920,6 +13945,7 @@ name = "semio-s-plugin-trinity"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os",
+ "semio-framework-os-kernel-infinite-canvas",
  "semio-framework-plugin",
  "semio-s-app-trinity-jack-ui",
  "semio-s-app-trinity-rewrite",

@@ -22,7 +22,7 @@ export default defineConfig({
       { find: "@semio-tech/framework-surface-paint-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/framework-surface-tiled-map-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/framework-surface-terrain-rs", replacement: wasmEngineStub },
-      { find: "@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js", replacement: wasmEngineStub },
+      { find: "@semio-tech/framework-surface-board-2d-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/framework-editor-rs", replacement: wasmEngineStub },
       { find: "@semio-tech/flow-core", replacement: wasmEngineStub },
     ],

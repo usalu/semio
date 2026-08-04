@@ -13,7 +13,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/
 [dependencies]
 flow = { path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/⚡️implementation/🦀️rust", package = "semio-s-app-flow" }
 flow_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-flow-op" }
-flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
+flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core", default-features = false }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }

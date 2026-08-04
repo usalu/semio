@@ -16,7 +16,7 @@ puzzle_5d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/�
 puzzle_5d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-5d-op" }
 puzzle_5d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-5d-dsl" }
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
-infinite_board_port_directed_normal = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }
+infinite_board_port_directed_normal = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-normal", default-features = false }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }

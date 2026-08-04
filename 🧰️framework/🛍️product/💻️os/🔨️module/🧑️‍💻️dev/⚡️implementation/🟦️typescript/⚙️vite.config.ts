@@ -25,7 +25,7 @@ const brand = resolveShellBrandById(brandId);
  * plugin (the node-graph/editor host engines back shared studio chrome, not any one app) — kept as a
  * literal baseline rather than per-plugin metadata, mirroring the equally-unconditional pre-registry
  * build in `os/dev/script.ts`'s `buildEngineWasm`. */
-const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-editor-rs", "@semio-tech/flow-core"];
+const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-surface-board-2d-rs", "@semio-tech/framework-editor-rs", "@semio-tech/flow-core"];
 
 /** @emoji 📦️ Maps a registry `engines` crate path (e.g. `framework/module/surface/tiled-map/rs`) to its wasm-pack
  * npm package name — read from the crate's own sibling `package.json`, not derived from its path, so a

@@ -62,6 +62,10 @@ pub mod component {
     pub fn host_now_ms() -> i64 {
         semio::framework::host::now_ms()
     }
+
+    pub fn host_read_asset(handle: u64) -> Result<Vec<u8>, String> {
+        semio::framework::host::read_asset(handle)
+    }
 }
 
 #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
@@ -7267,6 +7271,17 @@ pub mod host_port {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as f64).unwrap_or(0.0)
     }
 
+    /** @emoji 📦️ Fetches a host-registered static asset by handle (e.g. `infinite_canvas`'s GuestSlim
+    typst font blob); errs when no host is linked or the handle is unknown. */
+    pub fn host_read_asset(handle: u64) -> Result<Vec<u8>, String> {
+        #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
+        {
+            return crate::component::host_read_asset(handle);
+        }
+        #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
+        Err(format!("host asset unavailable: {handle}"))
+    }
+
     /** @emoji 🔌️ vcs backbone channel backed by the component host's duplex capability. */
     pub struct HostBackboneChannel;
 
@@ -7378,7 +7393,7 @@ pub use app::{
 };
 pub use app::{resolve_labels, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
-pub use host_port::{host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms, register_host_backbone_channel, HostBackboneChannel};
+pub use host_port::{host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms, host_read_asset, register_host_backbone_channel, HostBackboneChannel};
 pub use plugin_runtime::{install_plugin_bundle, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack};
 pub use semio_framework_core::*;
 pub use semio_framework_core::{MediaForm, MediaPortDirection, MediaPortSpec};

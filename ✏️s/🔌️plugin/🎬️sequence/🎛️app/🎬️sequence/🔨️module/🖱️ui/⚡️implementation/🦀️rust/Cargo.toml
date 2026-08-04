@@ -15,7 +15,7 @@ sequence = { path = "../../../../../../../../../✏️s/🔌️plugin/🎬️seq
 sequence_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-sequence-engine" }
 sequence_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-sequence-op" }
 sequence_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-sequence-protocol" }
-infinite_board_port_directed_dag = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
+infinite_board_port_directed_dag = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag", default-features = false }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -235,6 +235,7 @@ members = [
     "✏️s/🔨️module/💭️mindmap/⚡️implementation/🦀️rust",
     "🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust",
     "🧰️framework/🔨️module/🗺️surface/🏔️terrain/⚡️implementation/🦀️rust",
+    "🧰️framework/🔨️module/🗺️surface/🎲️board-2d/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/🌍️gis/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust",

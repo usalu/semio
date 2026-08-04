@@ -187,6 +187,7 @@ import {
   buildNoteShellCommandAction,
   TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS,
   mergeShellLockSources,
+  parseSpacePanelState,
   resolveBootExampleId,
   resolveShellDefaults,
   resolveShellLocks,
@@ -3713,7 +3714,7 @@ describe("s workflow flow routing", () => {
     expect(parseSpaceShellPath("/spaces/my-studio/instances/inst-1/extra")).toBeNull();
   });
 
-  it("folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId", () => {
+  it("folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId", async () => {
     const panel = {
       activePanelTab: "s-play-catalogue",
       programs: [{ pluginId: "draw", workflowStepId: "draw", appId: "draw", label: "Draw", document: ["draw"], yields: "2d.drawing" }],
@@ -3727,7 +3728,8 @@ describe("s workflow flow routing", () => {
     // viewState (the bug was committing the pre-spawn viewState and wiping activeSpawnedId).
     const baseViewState = { panelJson: JSON.stringify(panel) };
     const nextViewState = viewStateWithSpacePanel(baseViewState, focused);
-    expect(JSON.parse(nextViewState.panelJson!).activeSpawnedId).toBe("app-draw-1");
+    const { packValueFromBase64 } = await import("@semio-tech/framework-os-core");
+    expect((packValueFromBase64(nextViewState.panelJson!) as { activeSpawnedId?: string }).activeSpawnedId).toBe("app-draw-1");
     const refocused = studioPanelFocusingSpawned(focused, { ...spawned, label: "Renamed" });
     expect(refocused.spawnedApps).toHaveLength(1);
     expect(refocused.spawnedApps[0]?.label).toBe("Renamed");

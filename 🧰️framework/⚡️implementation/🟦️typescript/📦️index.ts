@@ -2794,6 +2794,33 @@ const PLUGIN_WORKER_UNRESPONSIVE_MS = 10000;
  * `#hash` on `moduleUrl` (from `PluginSource.moduleUrl`'s hot-reload cache-busting) is stripped first —
  * otherwise the trailing `.js` no longer sits at the string's end and the replace silently no-ops,
  * pointing the worker at the plugin's own module instead of its bootstrap script. */
+/** @emoji 🪶️ GUESTSLIM: the typst default font set (see `infinite_canvas`'s `render` feature doc),
+ * static-served alongside every plugin's own output at `_vendor/guestslim-typst-fonts.bin`
+ * (`📇️registry/📜️script.ts`'s `ensureGuestSlimTypstFontsAsset`). Fetched once and reused across every
+ * plugin worker this tab spins up — the file itself never changes at runtime (pinned crate version). */
+const GUESTSLIM_TYPST_DEFAULT_FONTS_ASSET_HANDLE = 1;
+let guestSlimTypstFontsPromise: Promise<ArrayBuffer> | null = null;
+
+/** @emoji 🛡️ Best-effort: most plugins never call `read-asset` at all, and the guest-side Rust already
+ * degrades gracefully (empty font list → typst compile yields no glyphs → `BoardResolvedIcon::None`)
+ * when no reader is registered — so a fetch hiccup here must never block a plugin worker from booting. */
+async function guestSlimAssetsForModule(moduleUrl: string): Promise<ReadonlyArray<readonly [number, ArrayBuffer]>> {
+  guestSlimTypstFontsPromise ??= (async () => {
+    const vendorUrl = moduleUrl.split(/[?#]/)[0]!.replace(/\/[^/]+\/[^/]+\.js$/, "/_vendor/guestslim-typst-fonts.bin");
+    const response = await fetch(vendorUrl);
+    if (!response.ok) throw new Error(`GuestSlim typst fonts asset fetch failed: ${response.status} ${vendorUrl}`);
+    return response.arrayBuffer();
+  })();
+  try {
+    const buffer = await guestSlimTypstFontsPromise;
+    return [[GUESTSLIM_TYPST_DEFAULT_FONTS_ASSET_HANDLE, buffer]];
+  } catch (error) {
+    console.warn("[DEBUG] GuestSlim typst fonts asset unavailable; affected plugins fall back to blank typst/emoji/text icons", error);
+    guestSlimTypstFontsPromise = null;
+    return [];
+  }
+}
+
 export function pluginWorkerUrl(moduleUrl: string): string {
   const bare = moduleUrl.split(/[?#]/)[0]!;
   return bare.replace(/\/[^/]+\.js$/, "/🟨️plugin-worker.js");
@@ -2858,7 +2885,11 @@ class PluginWorkerClient {
     const worker = new Worker(pluginWorkerUrl(this.moduleUrl), { type: "module" });
     this.attachWorker(worker);
     this.worker = worker;
-    await this.request("init", { moduleUrl: this.moduleUrl });
+    // 🪶️ GUESTSLIM: structured-clone copy, not a transfer — `guestSlimAssetsForModule` caches and
+    // reuses the same master `ArrayBuffer` across every plugin worker this tab starts; transferring
+    // it would detach (neuter) it after the first worker, breaking every subsequent one.
+    const guestSlimAssets = await guestSlimAssetsForModule(this.moduleUrl);
+    await this.request("init", { moduleUrl: this.moduleUrl, guestSlimAssets });
   }
 
   private request(type: PluginWorkerMessageType, payload: Record<string, unknown>): Promise<Record<string, unknown>> {

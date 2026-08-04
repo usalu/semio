@@ -352,6 +352,57 @@ pub mod theme {
     // #endregion theme
 }
 
+// #region 🪶️GuestSlimHostAsset
+#[cfg(not(feature = "render"))]
+pub mod host_asset {
+    //! 🪶️ GUESTSLIM: registration point for fetching host-embedded static assets (currently just the
+    //! typst default font set) from a wasm32-wasip2 guest, when this crate is built with `render`
+    //! off. Callers wire this to the component `read-asset` WIT import (see
+    //! `semio_framework_plugin::host_read_asset`) once at plugin init, mirroring `store`'s
+    //! `set_host_backbone_channel` registration idiom.
+    use std::sync::OnceLock;
+
+    /// @emoji 📦️ Asset id for the typst default font set (see `Cargo.toml`'s `render` feature doc).
+    pub const TYPST_DEFAULT_FONTS_ASSET_HANDLE: u64 = 1;
+
+    pub type AssetReader = fn(u64) -> Result<Vec<u8>, String>;
+
+    static READER: OnceLock<AssetReader> = OnceLock::new();
+
+    /// @emoji 🔌️ Installs the host asset reader; call once at plugin init before any icon/font resolution.
+    pub fn register_asset_reader(reader: AssetReader) {
+        let _ = READER.set(reader);
+    }
+
+    pub(crate) fn read(handle: u64) -> Result<Vec<u8>, String> {
+        READER.get().ok_or_else(|| "infinite_canvas: no host asset reader registered (call host_asset::register_asset_reader)".to_string())?(handle)
+    }
+
+    /// @emoji ✂️ Splits a `[u32le count][u32le len, bytes]*` multi-blob asset (the wire format the host
+    /// packs multiple font files into for one `read-asset` handle) into its component byte buffers.
+    pub(crate) fn split_blobs(bytes: &[u8]) -> Vec<Vec<u8>> {
+        let mut out = Vec::new();
+        let Some(count) = bytes.get(0..4).map(|s| u32::from_le_bytes(s.try_into().expect("4-byte slice"))) else {
+            return out;
+        };
+        let mut i = 4usize;
+        for _ in 0..count {
+            let Some(len) = bytes.get(i..i + 4).map(|s| u32::from_le_bytes(s.try_into().expect("4-byte slice"))) else {
+                break;
+            };
+            i += 4;
+            let len = len as usize;
+            let Some(chunk) = bytes.get(i..i + len) else {
+                break;
+            };
+            out.push(chunk.to_vec());
+            i += len;
+        }
+        out
+    }
+}
+// #endregion 🪶️GuestSlimHostAsset
+
 // #region 🏷️IconAssets
 
 pub mod icon_assets {
@@ -1473,10 +1524,32 @@ pub mod icon_codec {
         Some(RgbaImage { data: Arc::from(rgba.into_raw().into_boxed_slice()), w, h })
     }
 
+    #[cfg(feature = "render")]
     fn typst_asset_font_list() -> Vec<Font> {
         let mut out = Vec::new();
         for bytes in typst_assets::fonts() {
             let blob = Bytes::new(bytes);
+            let mut idx = 0u32;
+            while let Some(f) = Font::new(blob.clone(), idx) {
+                out.push(f);
+                idx = idx.saturating_add(1);
+            }
+        }
+        out
+    }
+
+    /// @emoji 🪶️ GUESTSLIM: fetches the same font set through the host `read-asset` import instead of
+    /// embedding `typst-assets`' font bytes in the guest binary; returns an empty list (typst
+    /// compilation then yields no glyphs, `board_typst_compile_markup_to_svg` returns `None`) if no
+    /// host asset reader is registered, so callers degrade to `BoardResolvedIcon::None` rather than panic.
+    #[cfg(not(feature = "render"))]
+    fn typst_asset_font_list() -> Vec<Font> {
+        let mut out = Vec::new();
+        let Ok(bytes) = super::host_asset::read(super::host_asset::TYPST_DEFAULT_FONTS_ASSET_HANDLE) else {
+            return out;
+        };
+        for font_bytes in super::host_asset::split_blobs(&bytes) {
+            let blob = Bytes::new(font_bytes);
             let mut idx = 0u32;
             while let Some(f) = Font::new(blob.clone(), idx) {
                 out.push(f);

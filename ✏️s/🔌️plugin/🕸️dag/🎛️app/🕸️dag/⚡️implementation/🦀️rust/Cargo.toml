@@ -11,4 +11,4 @@ workspace = true
 path = "../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-infinite_board_port_directed_dag = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
+infinite_board_port_directed_dag = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag", default-features = false }

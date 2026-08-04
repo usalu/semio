@@ -1,0 +1,18 @@
+{
+  "title": "Fix Demonstrator Panel Layout And Set Active Example Errors",
+  "emoji": "🛠️",
+  "status": "closed",
+  "description": "Fix invalid 3 panel layout size percentage error in react-resizable-panels and migrate active example/contributions action dispatching to typed command channel in demonstrator.",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "sessions": [],
+  "summary": "Fixed demonstrator panel layout error and setActiveExample / setContributions warnings. Root Cause 1: ResizablePanelGroup in renderModeDockNode lacked an explicit defaultLayout array and dynamic key containing child count, causing react-resizable-panels to validate stale 2-panel layout state against 3 child panels. Fixed by supplying a normalized defaultLayout array summing to 100% and dynamic group keys. Root Cause 2: setActiveExample and setContributions were dispatched via onAction / handleAction ({ kind: 'action' }) which Rust VcsDocumentApp::dispatch_action rejected as non-reserved framework actions. Fixed by migrating setActiveExample and setContributions dispatches to handleCommand ({ kind: 'command' }). Verified via 300 passing unit tests in framework-renderer-react.",
+  "files": {
+    "created": [],
+    "updated": [
+      "🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx",
+      "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx",
+      "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/🧪️index.test.ts"
+    ],
+    "deleted": []
+  }
+}

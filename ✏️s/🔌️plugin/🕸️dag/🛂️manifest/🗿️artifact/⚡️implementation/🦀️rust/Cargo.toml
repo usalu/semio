@@ -21,6 +21,7 @@ crate-type = ["cdylib", "rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/🕸️dag/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
+infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
 dag = { path = "../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/⚡️implementation/🦀️rust", package = "semio-s-app-dag" }
 dag_ui = { path = "../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/🔨️module/🖱️ui/⚡️implementation/🦀️rust", package = "semio-s-app-dag-ui" }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }

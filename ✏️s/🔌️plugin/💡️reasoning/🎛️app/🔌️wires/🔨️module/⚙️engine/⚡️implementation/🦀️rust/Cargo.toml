@@ -14,8 +14,8 @@ path = "../../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛�
 reasoning_wires = { path = "../../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/⚡️implementation/🦀️rust", package = "semio-s-app-reasoning-wires" }
 reasoning_wires_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-reasoning-wires-dsl" }
 reasoning_mindmap = { path = "../../../../../../../../../✏️s/🔨️module/💭️mindmap/⚡️implementation/🦀️rust", package = "semio-s-kernel-reasoning-mindmap" }
-infinite_board_normal_undirected = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-undirected" }
-infinite_canvas = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_board_normal_undirected = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-undirected", default-features = false }
+infinite_canvas = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }

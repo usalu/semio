@@ -17,6 +17,6 @@ store = { path = "../../../../../../../../../🧰️framework/🛍️product/�
 
 [dev-dependencies]
 procedural_3d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-3d-dsl" }
-flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
+flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core", default-features = false }
 playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-playbook" }
 serde_json = "1.0.140"
