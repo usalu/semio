@@ -1,0 +1,20 @@
+grammar math
+start formula
+
+formula = relation
+relation = expr {relop expr}*
+relop = EQUALS | NOTEQUALS | LESSEQUAL | GREATEREQUAL | LESS | GREATER | ARROW
+expr = run {addop run}*
+addop = PLUS | MINUS
+run = postfix {STAR postfix | SLASH postfix | postfix}*
+postfix = atom {script}*
+script = CARET atom | UNDERSCORE atom
+atom = number | TEXT | emoji | symbol-call | group | paren | bracket
+number = INT | FLOAT
+emoji = COLON IDENT COLON
+symbol-call = IDENT call-args?
+call-args = LPAREN row {SEMICOLON row}* RPAREN
+row = relation {COMMA relation}*
+group = LBRACE relation RBRACE
+paren = LPAREN relation RPAREN
+bracket = LBRACKET relation RBRACKET

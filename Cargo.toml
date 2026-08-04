@@ -26,6 +26,8 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/⚡️implementations/🦀️rust",
     "🧰️framework/⚡️implementations/🦀️rust",
     "🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/📚️compiler/⚡️implementations/🦀️rust",
+    "🧰️framework/🔨️modules/📚️compiler/📖️syntax/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust",

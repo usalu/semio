@@ -1,0 +1,16 @@
+[package]
+name = "semio-framework-compiler"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "The semio incremental document compiler — facade crate re-exporting the compiler's sub-slots (syntax, world, eval, layout, targets, …), replacing Typst"
+
+
+[lints]
+workspace = true
+[lib]
+name = "compiler"
+path = "../../../../../🧰️framework/🔨️modules/📚️compiler/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+compiler_syntax = { package = "semio-framework-compiler-syntax", path = "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/⚡️implementations/🦀️rust" }

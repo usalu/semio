@@ -6711,6 +6711,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-compiler"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-compiler-syntax",
+]
+
+[[package]]
+name = "semio-framework-compiler-syntax"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-dsl-core",
+ "semio-framework-os-kernel-dsl-grammar",
+]
+
+[[package]]
 name = "semio-framework-core"
 version = "0.1.0"
 dependencies = [
