@@ -37,7 +37,7 @@
 }
 \str_case:VnF \semio@type {
   { report } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
-  { paper } { \LoadClass[twoside=true]{scrartcl} }
+  { paper } { \LoadClass[twoside=true,open=any]{scrartcl} }
   { flyer } { \LoadClass{scrartcl} }
 } {
   \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt}

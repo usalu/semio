@@ -22,6 +22,8 @@
   }
 }
 
+\AddToHook { cmd / tableofcontents / after } { \semio_cover_geometry_restore: }
+
 \bool_new:N \l_semio_cover@meta@row_bool
 \bool_new:N \l_semio_cover@institution@row_bool
 \bool_new:N \l_semio_is_zwischenbericht_bool
@@ -81,14 +83,6 @@
     { \bool_gset_false:N \g_semio_open_any_bool }
 }
 
-\AddToHook { cmd / tableofcontents / before } {
-  \bool_if:NT \g_semio_open_any_bool {
-    \let\cleardoublepage\clearpage
-  }
-}
-
-\AddToHook { cmd / tableofcontents / after } { \semio_cover_geometry_restore: }
-
 \cs_new_protected:Npn \semio_clear_to_recto: {
   \clearpage
   \bool_if:NF \g_semio_open_any_bool {
@@ -99,7 +93,6 @@
 }
 
 \cs_new_protected:Npn \semio_mainmatter_begin: {
-  \semio_cover_geometry_restore:
   \semio_clear_to_recto:
   \setcounter{page}{1}
   \renewcommand{\thepage}{\arabic{page}}
@@ -315,6 +308,7 @@
         }
       \end{WindowColumn}
     \end{WindowArrangement}
+    \prevdepth\z@\nointerlineskip
 }
 
 \NewDocumentCommand{\maketableofcontents}{o}{%

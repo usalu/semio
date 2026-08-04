@@ -1,0 +1,904 @@
+[
+  {
+    "page": 3,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "Bauteilb\u00f6rse",
+      "Plattform",
+      "Inhaltsverzeichnis",
+      "Seite",
+      "Typologie"
+    ]
+  },
+  {
+    "page": 6,
+    "gaps": [
+      {
+        "y_frac": 0.35,
+        "gap_px": 16,
+        "gap_pt": 2.6666666666666665
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 3,
+        "gap_pt": 0.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 8,
+    "gaps": [
+      {
+        "y_frac": 0.35,
+        "gap_px": 7,
+        "gap_pt": 1.1666666666666667
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 21,
+        "gap_pt": 3.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 16,
+        "gap_pt": 2.6666666666666665
+      }
+    ],
+    "kinds": [
+      "Bauteilb\u00f6rse"
+    ]
+  },
+  {
+    "page": 10,
+    "gaps": [
+      {
+        "y_frac": 0.45,
+        "gap_px": 3,
+        "gap_pt": 0.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 13,
+        "gap_pt": 2.1666666666666665
+      }
+    ],
+    "kinds": [
+      "Typologie"
+    ]
+  },
+  {
+    "page": 12,
+    "gaps": [
+      {
+        "y_frac": 0.35,
+        "gap_px": 10,
+        "gap_pt": 1.6666666666666667
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 13,
+        "gap_pt": 2.1666666666666665
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 19,
+        "gap_pt": 3.1666666666666665
+      }
+    ],
+    "kinds": [
+      "Meilenstein"
+    ]
+  },
+  {
+    "page": 20,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 22,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 24,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 26,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 28,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 30,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 32,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 34,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 36,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 38,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 40,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 42,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 44,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 46,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "P.K.",
+      "Verfahren"
+    ]
+  },
+  {
+    "page": 48,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 52,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "Plattform",
+      "Angebotsform"
+    ]
+  },
+  {
+    "page": 54,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 58,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 60,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 62,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 64,
+    "gaps": [
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "Typologie"
+    ]
+  },
+  {
+    "page": 66,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 68,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "Typologie"
+    ]
+  },
+  {
+    "page": 72,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 17,
+        "gap_pt": 2.8333333333333335
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 7,
+        "gap_pt": 1.1666666666666667
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 23,
+        "gap_pt": 3.8333333333333335
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 74,
+    "gaps": [
+      {
+        "y_frac": 0.35,
+        "gap_px": 8,
+        "gap_pt": 1.3333333333333333
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 76,
+    "gaps": [
+      {
+        "y_frac": 0.45,
+        "gap_px": 6,
+        "gap_pt": 1.0
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 78,
+    "gaps": [
+      {
+        "y_frac": 0.55,
+        "gap_px": 6,
+        "gap_pt": 1.0
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 80,
+    "gaps": [
+      {
+        "y_frac": 0.45,
+        "gap_px": 15,
+        "gap_pt": 2.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 82,
+    "gaps": [
+      {
+        "y_frac": 0.35,
+        "gap_px": 3,
+        "gap_pt": 0.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 90,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": []
+  },
+  {
+    "page": 94,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "Bauteilb\u00f6rse"
+    ]
+  },
+  {
+    "page": 96,
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.35,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.45,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.55,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.65,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      },
+      {
+        "y_frac": 0.75,
+        "gap_px": 9,
+        "gap_pt": 1.5
+      }
+    ],
+    "kinds": [
+      "Verfahren",
+      "Bauteilb\u00f6rse",
+      "Plattform",
+      "Glossar",
+      "Seite",
+      "Typologie"
+    ]
+  }
+]

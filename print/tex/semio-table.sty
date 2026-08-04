@@ -31,7 +31,7 @@
   \semio_table_header_row:n {#1}
   \\
   \semio@table@row@sep
-  \global\semio@table@row@startedfalse
+  \noalign{\global\semio@table@row@startedfalse}
 }
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
   \int_zero:N \l_tmpa_int
@@ -214,32 +214,26 @@
   % tables) ? no separate \extrarowheight here, so long/short match exactly.
 }
 
-% ?? Continuous canvas fill for the register/glossary long tables. Their cells
-% carry \cellcolor{semio-chrome-canvas} (set in the row macros), but the inter-
-% column pads were plain \hspace, so the cream page colour bled through as
-% vertical seams between columns. Replace each pad with a canvas-coloured \vrule
-% of the SAME width it used to occupy ? so the fill runs unbroken across the
-% whole table with identical geometry. Same technique the project catalogue uses
-% (\semio@project@padcp et al.); factored here as generic \semio@table@pad* so
-% register and glossary share it. \color+\vrule, not \columncolor (which
-% misbehaves in this document's package stack).
-% Interior pad: one cellpad-wide canvas rule (two abut between columns ?
-% 2?cellpad, matching the two \hspace pads they replace).
-\newcommand{\semio@table@padcp}{{\color{semio-chrome-canvas}\vrule width \semio@table@long@cellpad}}
-% Edge fills: overlap one cellpad INTO the first/last cell (net advance still
-% chrome+cellpad, exactly the old \hspace{chrome}+\hspace{cellpad}) so the fill
-% reaches the outer border in one seamless stroke.
-\newcommand{\semio@table@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
-\newcommand{\semio@table@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}}
+% Continuous canvas fill at the outer chrome inset. Cell text inset lives inside
+% each cell (\hspace{\semio@table@long@cellpad} in the cellfill / strutbot), so
+% interior \semio@table@padcp is empty and adjacent \cellcolor regions abut.
+% The outer chrome slots MUST be canvas-coloured \vrule pads ? plain \hspace
+% leaves a page-coloured strip between the last cell's \cellcolor and the
+% border (measured ~1.5pt = \semio@chrome@padding on every table type). Row
+% separators are \noalign{\hrule width\linewidth}, so these edge vrules do not
+% cut them into stubs the way segmented \hhline did.
+\newcommand{\semio@table@padcp}{}
+\newcommand{\semio@table@padendL}{{\color{semio-chrome-canvas}\vrule width \semio@chrome@padding}}
+\newcommand{\semio@table@padendR}{{\color{semio-chrome-canvas}\vrule width \semio@chrome@padding}}
 % Outer table side rules as @{} inserts (not preamble | tokens). Array | rules
 % intersect \hhline and paint short horizontal ticks on every vertical at row
 % boundaries; border-colored \vrule inserts do not.
 \newcommand{\semio@table@border@L}{{\color{semio-chrome-border-normal}\vrule width \arrayrulewidth}}
 \newcommand{\semio@table@border@R}{{\color{semio-chrome-border-normal}\vrule width \arrayrulewidth}}
 
-\newcommand{\semio@table@colspec@register@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@register@lastclose}@{\semio@table@padendR}@{\semio@table@border@R}}
+\newcommand{\semio@table@colspec@register@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.12\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.78\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.10\semio@table@long@inner@w\relax}<{\semio@register@lastclose}@{\semio@table@padendR}@{\semio@table@border@R}}
 
-\newcommand{\semio@table@colspec@glossary@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}@{\semio@table@border@R}}
+\newcommand{\semio@table@colspec@glossary@long}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill}m{\dimexpr0.22\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr0.56\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfillR}m{\dimexpr0.22\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}@{\semio@table@border@R}}
 
 % ?? Symmetric vertical cell padding. Cells are vertically centred (m-columns);
 % every cell also carries an invisible strut pair that reserves \semio@table@vtop
@@ -272,7 +266,7 @@
 % so interline spacing in multi-line cells is untouched).
 \newcommand{\semio@cell@struttop}{\rule[\z@]{\z@}{\semio@table@vtop}}
 % Bottom strut: zero-width rule that only sets the last line's depth.
-\newcommand{\semio@cell@strutbot}{\rule[-\semio@table@vbot]{\z@}{\z@}}
+\newcommand{\semio@cell@strutbot}{\rule[-\semio@table@vbot]{\z@}{\z@}\hspace{\semio@table@long@cellpad}}
 % ?? Inset variant of the bottom strut for a right-aligned last column. The
 % register/glossary long tables close their right edge with the seam-filling
 % \semio@table@padendR, which backs up one cellpad INTO the cell and ? being
@@ -289,7 +283,7 @@
 % inlining \semio@cell@strutbotR) so a future register table could opt out without
 % editing the colspec. Only register@long uses it ? glossary/project/data tables,
 % which have their own colspecs, are untouched.
-\newcommand{\semio@register@lastclose}{\semio@cell@strutbotR}
+\newcommand{\semio@register@lastclose}{\semio@cell@strutbot}
 % Unified cell openers: alignment + top strut + no-indent glue. The matching
 % bottom strut goes in the column's <{} slot.
 % ?? Hyphenation: the \hspace{0pt} glue MUST come *after* \semio@cell@struttop,
@@ -304,15 +298,15 @@
 \newcommand{\semio@cell@pre}{\raggedright\arraybackslash\semio@cell@struttop\hspace{0pt}}
 \newcommand{\semio@table@long@cellfill}{%
   \cellcolor{semio-chrome-canvas}%
-  \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@struttop\hspace{0pt}%
+  \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\hspace{\semio@table@long@cellpad}\semio@cell@struttop\hspace{0pt}%
 }
 \newcommand{\semio@table@long@cellfill@first}{%
   \cellcolor{semio-chrome-canvas}%
-  \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\leftskip=\semio@table@long@cellpad\relax\semio@cell@struttop\hspace{0pt}%
+  \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\hspace{\semio@table@long@cellpad}\semio@cell@struttop\hspace{0pt}%
 }
 \newcommand{\semio@table@long@cellfillR}{%
   \cellcolor{semio-chrome-canvas}%
-  \raggedleft\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@struttop\hspace{0pt}%
+  \raggedleft\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\hspace{\semio@table@long@cellpad}\semio@cell@struttop\hspace{0pt}%
 }
 \newcolumntype{T}[1]{%
   >{\semio@table@long@cellfill}%
@@ -329,7 +323,10 @@
 \newcommand{\semio@table@short@hhline@current}{}
 \newif\ifsemio@table@window@rules
 \newcommand{\semio@table@rule}{%
-  \noalign{\hrule height\arrayrulewidth width\linewidth}%
+  \noalign{%
+    {\color{semio-chrome-border-normal}%
+     \hrule height\arrayrulewidth width\linewidth}%
+  }%
 }
 \newcommand{\semio@table@row@sep}{%
   \semio@table@rule
@@ -347,7 +344,7 @@
     % Structurally identical to a body col-1: canvas edge fill + width-2cellpad +
     % two canvas pads bridging to col-2, so the header title aligns with the body
     % cells AND the fill is continuous.
-    \multicolumn{1}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill@first}m{\dimexpr#1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}}{%
+    \multicolumn{1}{@{\semio@table@border@L}@{\semio@table@padendL}>{\semio@table@long@cellfill@first}m{\dimexpr#1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}}{%
       \semio@table@header@cell{#2}%
     }%
   \else
@@ -560,21 +557,21 @@
     \int_compare:nNnTF \l_tmpa_int = \c_zero_int {
       \int_compare:nNnTF \l_tmpb_int = \c_one_int {
         \tl_put_right:Nn \l_semio_table_long_colspec_tl {
-          >{\semio@table@long@cellfill@first}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbotR}
+          >{\semio@table@long@cellfill@first}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
         }
       } {
         \tl_put_right:Nn \l_semio_table_long_colspec_tl {
-          >{\semio@table@long@cellfill@first}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}
+          >{\semio@table@long@cellfill@first}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
         }
       }
     } {
       \int_compare:nNnTF \l_tmpa_int = { \int_eval:n { \l_tmpb_int - 1 } } {
         \tl_put_right:Nn \l_semio_table_long_colspec_tl {
-          @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbotR}
+          @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
         }
       } {
         \tl_put_right:Nn \l_semio_table_long_colspec_tl {
-          @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}
+          @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
         }
       }
     }
@@ -691,21 +688,21 @@
     \int_compare:nNnTF \l_tmpa_int = \c_zero_int {
       \int_compare:nNnTF \l_tmpb_int = \c_one_int {
         \tl_put_right:Nn \l_semio_table_window_colspec_tl {
-          >{\semio@table@long@cellfill@first}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbotR}
+          >{\semio@table@long@cellfill@first}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
         }
       } {
         \tl_put_right:Nn \l_semio_table_window_colspec_tl {
-          >{\semio@table@long@cellfill@first}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}
+          >{\semio@table@long@cellfill@first}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
         }
       }
     } {
       \int_compare:nNnTF \l_tmpa_int = { \int_eval:n { \l_tmpb_int - 1 } } {
         \tl_put_right:Nn \l_semio_table_window_colspec_tl {
-          @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbotR}
+          @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
         }
       } {
         \tl_put_right:Nn \l_semio_table_window_colspec_tl {
-          @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}
+          @{\semio@table@padcp}@{\semio@table@padcp}>{\semio@table@long@cellfill}m{\dimexpr##1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}
         }
       }
     }
@@ -909,69 +906,42 @@
 
 \newlength{\semio@project@bandheight}
 \setlength{\semio@project@bandheight}{26mm}
-% Photo cell inner width = cols 1+2 (0.28?inner) minus the outer chrome inset and
-% the photo?Spender boundary cell-pad, so the image's right edge lands exactly on
-% the Spender column's left edge ? alignment via the table grid, no coordinates.
-% Photo multicolumn spans "|chrome@padding | photo | cellpad" = cols 1+2
-% (chrome@padding + 0.28?inner), so photo width = 0.28?inner - cellpad and its
-% right edge lands on the col-2/col-3 boundary = the Spender column's left edge.
-% Metadata multicolumn spans "cellpad | meta | chrome@padding|" = cols 3?6, so
-% meta width = 0.72?inner - cellpad and its text starts at Spender's text edge.
-\newcommand{\semio@project@photow}{\dimexpr0.28\semio@table@long@inner@w-\semio@table@long@cellpad\relax}
+% Photo / meta widths match the shared padend geometry (net chrome+cellpad each
+% edge, same as \semio@table@padendL/R). Photo spans cols 1?2:
+%   padendL + (0.28?inner ? 2?cellpad) + padcp  =  chrome + 0.28?inner
+% Meta spans cols 3?8:
+%   (0.72?inner ? cellpad) + padendR  =  chrome + 0.72?inner
+% so band + body share one \linewidth card with no right-edge cream/page gap.
+\newcommand{\semio@project@photow}{\dimexpr0.28\semio@table@long@inner@w\relax}
 \newcommand{\semio@project@metaw}{\dimexpr0.72\semio@table@long@inner@w-\semio@table@long@cellpad\relax}
 
-% Continuous-fill colspec for the component section. Each cell gets a canvas
-% \cellcolor, and every inter-column pad (plus the outer chrome inset) is a
-% canvas-coloured \vrule of the SAME width as the pad it replaces ? so the fill
-% runs unbroken across the whole row with no cream stripes, and the geometry is
-% identical to the standard builder. (Uses \color+\vrule rather than
-% \columncolor, which misbehaves in this document's package stack.)
-% Pad fills: interior gaps get one cellpad-wide canvas rule from each side (they
-% abut ? 2?cellpad, matching the two \hspace pads they replace); the two outer
-% edges get one combined (chrome+cellpad)-wide rule so the fill reaches the
-% border in a single stroke (no seam between abutting rules).
-\newcommand{\semio@project@padcp}{{\color{semio-chrome-canvas}\vrule width \semio@table@long@cellpad}}
-% Edge fills: a (chrome+cellpad)-wide canvas rule with a -cellpad kern, so the
-% vrule starts one cellpad INSIDE the first/last cell (covering the cell?pad seam)
-% while the NET advance is only chrome@padding. padendL and padendR MUST stay
-% symmetric: a wider +2cellpad vrule on either edge pushes that outer border a
-% cellpad past \linewidth, so the border no longer lines up with the top rule and
-% the flush-right P.K.x title tab ? the tab then floats a cellpad inside the border
-% (the "shifted tab" / broken top-right corner). At net chrome each side the whole
-% card is exactly \linewidth wide and border, rule and tab all coincide.
-\newcommand{\semio@project@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
-% Net advance chrome (not chrome+cellpad): the wider +2cellpad vrule pushed the
-% right border one cellpad PAST where the horizontal rules end, so the top rule,
-% the band?component divider and every row separator stopped a cellpad short of
-% the right border (an open top-right corner). At +cellpad the vrule still starts
-% one cellpad inside the last cell (the \hspace{-cellpad}) so the fill reaches the
-% border seamlessly, but the border now lands exactly where the rules end.
-\newcommand{\semio@project@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+\semio@table@long@cellpad\relax}}
+% Continuous-fill colspec for the component section. Same pad primitives as every
+% other canvas-filled long table (\semio@table@padcp / padendL / padendR): interior
+% gaps get one cellpad-wide canvas rule from each side; outer edges net
+% chrome+cellpad so the fill reaches the border and the card is exactly
+% \linewidth (matching \semio@table@rule and the P.K.x title tab). The older
+% project-only "net chrome" edge pads left a page-coloured strip inside the right
+% border because body width was 2?cellpad short of \linewidth while the band
+% multicolumns were full width.
+\newcommand{\semio@project@padcp}{\semio@table@padcp}
+\newcommand{\semio@project@padendL}{\semio@table@padendL}
+\newcommand{\semio@project@padendR}{\semio@table@padendR}
 % Data cells are vertically centred (m) with the same symmetric strut padding as
 % every other table; the top strut rides in the cell-fill prefix, the bottom
 % strut in each column's <{} slot.
-\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@struttop\hspace{0pt}}
-% First-column variant: the outer edge pad (\semio@project@padendL) may only net
-% \semio@chrome@padding (0.2em) or the border/tab alignment breaks (see above), so
-% column 1's text would otherwise sit just 0.2em off the frame ? far tighter than
-% the ~0.75em (chrome+cellpad) inset every interior column and every other table
-% has, which reads as a broken-looking left margin. Restore parity by adding one
-% cellpad of \leftskip INSIDE col 1's cell: the paragraph insets on every line
-% (not just line 1), the canvas \cellcolor still fills the full box so no cream
-% shows, and the column SLOT is unchanged ? the box keeps its width, so the border,
-% top rule and P.K.x tab stay exactly where they are. Cost: Bauteil text loses one
-% cellpad of wrap width (handled by the re-pack). \leftskip is set after
-% \raggedright (which leaves \leftskip=0) and before the paragraph body.
-\newcommand{\semio@project@cellfill@first}{\cellcolor{semio-chrome-canvas}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\leftskip\semio@table@long@cellpad\relax\semio@cell@struttop\hspace{0pt}}
+\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\hspace{\semio@table@long@cellpad}\semio@cell@struttop\hspace{0pt}}
+% First-column variant: padendL overlaps one cellpad into the cell, so \leftskip
+% keeps Bauteil text clear of that overlap (same inset as \semio@table@long@cellfill@first).
+\newcommand{\semio@project@cellfill@first}{\cellcolor{semio-chrome-canvas}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\hspace{\semio@table@long@cellpad}\semio@cell@struttop\hspace{0pt}}
 \newcommand{\semio@project@colspec}{%
-@{\semio@table@border@L}@{\semio@project@padendL}>{\semio@project@cellfill@first}m{\dimexpr0.15\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.09\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.11\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.14\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padendR}@{\semio@table@border@R}%
+@{\semio@table@border@L}@{\semio@project@padendL}>{\semio@project@cellfill@first}m{\dimexpr0.15\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.09\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.11\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.14\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.12\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{\semio@project@padendR}@{\semio@table@border@R}%
 }
 
 % Cover-crop a project photo into an exact width?height box (no frame), reusing
@@ -1045,22 +1015,19 @@
 }
 
 % Overview band row: photo multicolumn (cols 1?2) + metadata multicolumn (cols
-% 3?6). The two multicolumns re-supply the outer border and mirror the base
-% colspec's edge padding, so the shared boundary falls on the Spender edge.
-% Canvas-coloured column separators for the band's outer inset and the photo?meta
-% gap, drop-in replacements for the former cream \hspace pads of the SAME width ?
-% so the band's fill runs edge-to-edge with no cream slivers at the border or
-% between photo and metadata, exactly like the component section's padcp fills.
-\newcommand{\semio@project@bandpadchrome}{{\color{semio-chrome-canvas}\vrule width \semio@chrome@padding}}
+% 3?8). Same padendL / padcp / padendR primitives as the component colspec, so the
+% band is exactly \linewidth and the right-edge fill meets the border with no
+% page-coloured strip (the old chrome-only bandpad left that gap when body pads
+% moved to net chrome+cellpad).
 \newcommand{\semio@project@overview@band}[7]{%
-  \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@bandpadchrome}p{\semio@project@photow}@{\semio@project@padcp}}{%
+  \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@padendL}p{\semio@project@photow}@{\semio@project@padcp}}{%
     \cellcolor{semio-chrome-canvas}%
     \begin{minipage}[t]{\linewidth}\vspace{0pt}%
       \SemioProjectPhoto{#1}{\linewidth}{\semio@project@bandheight}%
     \end{minipage}%
   }%
   &
-  \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\dimexpr\semio@project@metaw+\semio@table@long@cellpad\relax}@{\semio@project@bandpadchrome}@{\semio@table@border@R}}{%
+  \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\semio@project@padendR}@{\semio@table@border@R}}{%
     \cellcolor{semio-chrome-canvas}%
     \begin{minipage}[t]{\linewidth}\vspace{0pt}%
       \semio@project@meta{#2}{#3}{#4}{#5}{#6}{#7}%
