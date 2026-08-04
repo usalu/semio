@@ -72,6 +72,24 @@ mod tests {
     }
     //#endregion 🔖️DslTests
 
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `Procedural2dOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use procedural_2d_op::Procedural2dOperation;
+        use protocol::{DocumentId, Edit, SchemaId};
+        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+
+        let mut store: DocumentStore<Procedural2dDocument, Procedural2dOperation> = DocumentStore::new(create_document_envelope(procedural_2d::PROCEDURAL_2D_SCHEMA, "procedural2d", Procedural2dDocument::default(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![Procedural2dOperation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        let edit: &Edit<Procedural2dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        test_support::assert_command_envelope_round_trip::<Procedural2dDocument, Procedural2dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
+
     //#region 🔖️DslErrorTests
     /// 📜️ The derive-engine grammar (see `procedural_2d`'s `🔖️DslMirror`) has no leading
     /// `document`/`widget`/`synapse` keyword and no document-level "trailing content is rejected"

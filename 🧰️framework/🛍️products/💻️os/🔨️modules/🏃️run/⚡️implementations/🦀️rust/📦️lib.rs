@@ -3,12 +3,29 @@
 //! solely by `WorkflowNode::id`) in topological order, drives each node's app through
 //! `AppChannelHost` — the exact `protocol::AppCommand`/`AppFrame` binary channel a live UI speaks, so
 //! a headless run never needs a UI-mock API — moves `Media` along edges, and skips any node whose
-//! inputs, document, and config are all unchanged since the last run. Every node's frame script is
-//! `Hello → LoadConfig → LoadDocument → MediaIn* → (MediaOut+MediaFingerprint)* → ReadDocument →
-//! ReadConfig` (see `SpaceRunner::compute_node`); documents/configs are addressed by their node's own
-//! `document_ref`/`config_ref` string, never by a separate instance id.
-//! Importing media is emitting operations: a headless run is an ordinary editing session (actor `runner`)
-//! recorded in each app document's own VCS envelope, so a later UI open sees it as normal history.
+//! inputs, document, and config are all unchanged since the last (sealed) run. Every node's frame
+//! script is `Hello → LoadConfig → LoadDocument → MediaIn* → (MediaOut+MediaFingerprint)* →
+//! ReadDocument → ReadConfig` (see `SpaceRunner::compute_node`); documents/configs are addressed by
+//! their node's own `document_ref`/`config_ref` string, never by a separate instance id.
+//!
+//! 🔒️ W5 Lane A ("non-destructive `SpaceRunner` rework"): a run is READONLY over its source. The
+//! `documents`/`configs` maps `SpaceRunner::run` reads are NEVER written back — `ReadDocument`/
+//! `ReadConfig`'s mutated bytes (whatever `MediaIn` importing changed) land in a `RunSink` instead
+//! (`🔖️RunContext` below), keyed by node id, a deliberately different key space than the source
+//! `document_ref`/`config_ref` maps so a caller cannot accidentally alias a run-owned path onto a
+//! source artifact path the way the old destructive path did (pre-rework: `bin.rs` wrote a node's
+//! mutated document/config bytes straight back over `artifacts/<document_ref>`/`artifacts/<config_ref>`
+//! — the very same paths `SpaceRunner::run` had just read them from). "Pinned" source access for this
+//! wave means simply "whatever the source currently is, read-only, at the moment `run` reads it" — a
+//! real checkpoint-id-pinned snapshot is later-wave `space::DraftCatalog`/collection-artifact
+//! integration work (see `SpaceBundle`'s own doc on `workflow_node_for_app`'s still-path-stem
+//! `document_ref`/`config_ref`).
+//!
+//! 🗄️ Memoization is now keyed off the PRIOR SEALED run's own `workflow::RunDocument.node_records`
+//! (`prior_node_records`, read-only), not a side-channel `run/state.json` file — that file and its
+//! `RunState`/`NodeRunRecord` types are deleted (there were two parallel memoization mechanisms before
+//! this rework; now there is exactly one). A first run (no prior sealed `RunDocument`) computes every
+//! node fresh.
 
 //#region 🔖️Types
 use dsl::{from_dsl_value, to_dsl_value};
@@ -17,10 +34,10 @@ use dsl::{from_dsl_value, to_dsl_value};
 pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
 use semio_framework_core::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PortMultiplicity};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
 use store::BlobStore;
-use workflow::{MediaContract, Workflow, WorkflowEdge, WorkflowNode};
+use workflow::{MediaContract, PortFingerprint, RunNodeRecord, RunNodeStatus, RunOperation, RunOutputArtifact, RunParameterValue, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
 
 /// 🚧️ A failure computing a studio's workflow headlessly.
 #[derive(Debug, thiserror::Error)]
@@ -49,6 +66,8 @@ pub enum RunError {
     Io { path: PathBuf, source: std::io::Error },
     #[error("(de)serialization error: {0}")]
     Serde(#[from] serde_json::Error),
+    #[error("run document rejected an operation: {0}")]
+    Sealed(String),
 }
 
 //#endregion 🔖️Types
@@ -91,9 +110,10 @@ impl MediaCache for InMemoryMediaCache {
     }
 }
 
-/// 💾️ Disk-backed `MediaCache` under `<studio>/run/media/<fingerprint>.json` — the persistent
-/// counterpart to `InMemoryMediaCache`, so a cold-started runner still skips re-exporting a clean
-/// node's output when a prior run already cached it.
+/// 💾️ Disk-backed `MediaCache` under `<space>/cache/media/<fingerprint>.json` (renamed from
+/// `<studio>/run/media/` by W4's canonical on-disk layout rewrite — see `SpaceBundle`'s own doc
+/// comment) — the persistent counterpart to `InMemoryMediaCache`, so a cold-started runner still
+/// skips re-exporting a clean node's output when a prior run already cached it.
 pub struct FileMediaCache {
     root: PathBuf,
 }
@@ -351,67 +371,123 @@ pub fn convert_media(contract: &MediaContract, media: Media) -> Result<Media, Ru
 }
 //#endregion 🔖️MediaConverters
 
-//#region 🔖️RunState
-/// 📇️ Everything the runner remembers about one workflow node between runs: the document
-/// fingerprint that produced its current outputs, the fingerprints of its inputs and outputs at that
-/// time, and the fingerprint of the config it last ran with. A node is dirty iff any of these four no
-/// longer match reality.
+//#region 🔖️RunContext
+/// ✍️ Write-only sink for everything one `SpaceRunner::run` call produces — the ONLY thing allowed to
+/// persist bytes for a node's post-import document/config state or accumulate the run's own
+/// `workflow::RunDocument`. Never reads the source `documents`/`configs` maps `run()` takes, and
+/// `run()` never writes through anything OTHER than this — the structural half of "non-destructive":
+/// `node_documents`/`node_configs` are keyed by node id, a distinct key space from the source
+/// `document_ref`/`config_ref` strings, so a caller (e.g. `bin.rs`) cannot alias a run-owned write
+/// path onto a source artifact path by construction.
 ///
-/// 🧮️ `document_fingerprint`/`config_fingerprint` are `framework_hash::hash_bytes` of the artifact's
-/// `.spr` (op-log) bytes ALONE, not the full pack+spr — the intent (see this crate's
-/// `WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE` ticket, task 4) was to hash the
-/// artifact's head edit id instead of any content hash at all, but `store`'s `parse_document_pack`
-/// needs the document's own concrete `Operation` type to decode far enough to reach the cursor/edit
-/// list, and this crate is generic over arbitrary apps' documents — it never has that type. The `.spr`
-/// bytes are the next best thing: far smaller than the full pack, and (like a head edit id) they
-/// change if and only if the op-log actually changed.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NodeRunRecord {
-    pub document_fingerprint: String,
-    pub input_fingerprints: BTreeMap<String, String>,
-    pub output_fingerprints: BTreeMap<String, String>,
-    #[serde(default)]
-    pub config_fingerprint: String,
+/// 🔒️ `record` is the ONLY way this crate ever mutates a `workflow::RunDocument` — it always goes
+/// through `workflow::apply_run_operation_checked` (never the raw `workflow::apply_run_operation`),
+/// so an operation emitted after `Seal` is rejected here with `RunError::Sealed`, not silently
+/// applied. `SpaceRunner::run` calls `record` for every `NodeStarted`/`NodeFinished`; callers own
+/// `Start` (before `run`) and `Seal` (after), since those two carry run-identity/collection-ref fields
+/// `SpaceRunner` itself has no business knowing about.
+pub struct RunSink {
+    pub document: workflow::RunDocument,
+    /// 🧾️ Every operation `record` has successfully applied, in order — `bin.rs` replays this exact
+    /// sequence through a real `store::DocumentStore` to produce persistable pack+spr bytes for
+    /// `SpaceBundle::write_run_document` (the same "build an envelope, `Apply`, `snapshot_pack`"
+    /// pattern every other document in this codebase persists through).
+    pub operations: Vec<RunOperation>,
+    pub node_documents: BTreeMap<String, (Vec<u8>, Vec<u8>)>,
+    pub node_configs: BTreeMap<String, (Vec<u8>, Vec<u8>)>,
 }
 
-/// 🗄️ The runner's persisted incremental-recompute state for one studio bundle, keyed by workflow
-/// node id.
-#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RunState {
-    pub nodes: BTreeMap<String, NodeRunRecord>,
-}
-
-impl RunState {
-    pub fn load(path: &Path) -> Result<Self, RunError> {
-        match std::fs::read_to_string(path) {
-            Ok(text) => Ok(serde_json::from_str(&text)?),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Self::default()),
-            Err(source) => Err(RunError::Io { path: path.to_path_buf(), source }),
-        }
+impl RunSink {
+    pub fn new(document: workflow::RunDocument) -> Self {
+        Self { document, operations: Vec::new(), node_documents: BTreeMap::new(), node_configs: BTreeMap::new() }
     }
 
-    pub fn save(&self, path: &Path) -> Result<(), RunError> {
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).map_err(|source| RunError::Io { path: parent.to_path_buf(), source })?;
-        }
-        let text = serde_json::to_string_pretty(self)?;
-        std::fs::write(path, text).map_err(|source| RunError::Io { path: path.to_path_buf(), source })
+    pub fn record(&mut self, operation: RunOperation) -> Result<(), RunError> {
+        self.document = workflow::apply_run_operation_checked(&self.document, operation.clone()).map_err(RunError::Sealed)?;
+        self.operations.push(operation);
+        Ok(())
+    }
+
+    pub fn write_node_document(&mut self, node_id: &str, pack: Vec<u8>, spr: Vec<u8>) {
+        self.node_documents.insert(node_id.to_string(), (pack, spr));
+    }
+
+    pub fn write_node_config(&mut self, node_id: &str, pack: Vec<u8>, spr: Vec<u8>) {
+        self.node_configs.insert(node_id.to_string(), (pack, spr));
     }
 }
-//#endregion 🔖️RunState
+
+/// 🎛️ Deterministic bytes for one node's bound `RunParameterValue` overlay (sorted by `field_path`) —
+/// folded into that node's `config_fingerprint` so `--param` overrides correctly dirty/cache-key a
+/// node even though the underlying config pack+spr bytes sent to the app are untouched (this crate is
+/// generic over arbitrary apps' config schemas — it has no per-app `ConfigSpec` to safely patch an
+/// opaque config pack's fields by `field_path` itself; that requires `semio_framework_core::ConfigSpec`,
+/// which lives one layer up, at the plugin-manifest layer this crate doesn't depend on). Delivering an
+/// override into the actual bytes the app receives is deferred — see this wave's final report.
+fn node_parameter_overlay_bytes(node_id: &str, bindings: &[WorkflowParameterBinding], parameter_values: &[RunParameterValue]) -> Vec<u8> {
+    let mut pairs: Vec<(&str, &str)> = bindings.iter().filter(|binding| binding.node_id == node_id).filter_map(|binding| parameter_values.iter().find(|value| value.parameter_id == binding.parameter_id).map(|value| (binding.field_path.as_str(), value.value.as_str()))).collect();
+    pairs.sort_unstable();
+    let mut bytes = Vec::new();
+    for (field_path, value) in pairs {
+        bytes.extend_from_slice(field_path.as_bytes());
+        bytes.push(0);
+        bytes.extend_from_slice(value.as_bytes());
+        bytes.push(0);
+    }
+    bytes
+}
+
+/// 🔑️ `document`/`config` fingerprints for one node — `config_fingerprint` folds in the node's bound
+/// parameter overlay (see `node_parameter_overlay_bytes`) so a `--param` override changes the
+/// fingerprint even when the underlying config bytes don't.
+fn node_fingerprints(node_id: &str, document_spr: &[u8], config_spr: &[u8], bindings: &[WorkflowParameterBinding], parameter_values: &[RunParameterValue]) -> (String, String) {
+    let document_fingerprint = framework_hash::hash_bytes(document_spr);
+    let overlay = node_parameter_overlay_bytes(node_id, bindings, parameter_values);
+    let config_fingerprint = if overlay.is_empty() { framework_hash::hash_bytes(config_spr) } else { framework_hash::hash_bytes(&[config_spr, &overlay].concat()) };
+    (document_fingerprint, config_fingerprint)
+}
+//#endregion 🔖️RunContext
 
 //#region 🔖️SpaceBundle
-/// 📁️ The on-disk shape of a studio: `space.os.pack`+`space.os.spr` (the `OsDocument` VCS envelope's
-/// binary pack+dsl form — see `semio_framework_os::encode_os_space_payload`), one document artifact
-/// per workflow node at `<document_ref>.pack|.spr` and one config artifact per node at
-/// `<config_ref>.pack|.spr` (a node's `document_ref`/`config_ref` — e.g. `documents/<node id>` /
-/// `config/<node id>`, see `workflow::workflow_node_for_app` — IS the bundle-relative path stem; no
-/// extra directory is joined on top of it), content-addressed blobs under `blobs/` (backing a
-/// `MediaPayload::Binary` value's bytes — see `FileBlobStore`), and the runner's own `run/state.json`
-/// + `run/media/` cache. Ids only — no paths inside the space document itself — so the bundle is
-/// relocatable and syncs the same way over `file://` or a semio_hub backbone.
+/// 📁️ The canonical on-disk shape of a space (`## Design rulings` -> `On-disk space layout` in
+/// `.claude/plans/the-final-goal-for-jolly-spindle.md`, rewritten here for W4's storage-layout task —
+/// superseding the pre-W4 flat `space.os.pack`/`<document_ref>.pack` layout, whose filenames were
+/// stale leftovers from the dissolved `OsDocument`):
+/// - root: `space.space.pack`+`space.space.spr` — the space manifest slot (the `OsDocument` VCS
+///   envelope's binary pack+dsl form — see `semio_framework_os::encode_os_space_payload`; today this
+///   still carries a `workflow::WorkflowDocument`/`WorkflowOperation` pair per the os-core dissolve's
+///   `## The inversion`, not yet a real `space::SpaceProjection` manifest — wiring the ROOT slot's
+///   actual decoded type to `SpaceProjection` is later-wave work, this rewrite is the path/filename
+///   convention only, see `read_space_document`/`write_space_document`),
+/// - `collections/<collection id>.collection.pack|.spr` — one `space::CollectionProjection` per
+///   collection (`collection_pack_path`/`collection_spr_path`/`read_collection`/`write_collection` —
+///   not yet called by anything in this crate; collections aren't wired into `SpaceRunner` until a
+///   later wave, this is the reserved path convention those callers will use),
+/// - `artifacts/<artifact id>.pack|.spr` — one pair per document artifact, reusing the exact same
+///   "id IS the address" convention `space::artifact_backbone_uri(space_id, artifact_id)` uses one
+///   level up (a bundle has no separate `space_id` of its own — the bundle root already IS one space,
+///   so there is nothing to reuse `artifact_backbone_uri` itself for beyond this shared convention;
+///   see `artifact_pack_path`/`artifact_spr_path`). A workflow node's `document_ref`/`config_ref`
+///   (`workflow::workflow_node_for_app`, e.g. `"documents/<node id>"`/`"config/<node id>"`) is passed
+///   straight through as `artifact_id` — two distinct artifact ids per node, so they never collide
+///   under `artifacts/`, and nothing on the `workflow` crate side of this addressing scheme needs to
+///   change to fit it (`document_pack_path`/`config_pack_path` below are thin `artifact_pack_path`
+///   aliases kept for callers' existing names),
+/// - `blobs/` — content-addressed, space-level (backing a `MediaPayload::Binary` value's bytes — see
+///   `FileBlobStore`; unchanged from the pre-W4 layout, already canonical),
+/// - `cache/media/` — cross-run shared media-fingerprint cache (renamed from `run/media/`),
+/// - `runs/<run id>.run.pack|.spr` — the `workflow::RunDocument` VCS envelope itself (W5 Lane A);
+///   `runs/<run id>/nodes/<node id>.document.pack|.spr`/`.config.pack|.spr` — that run's OWN mirrored
+///   copy of each node's post-import document/config bytes (`run_node_document_pack_path`/
+///   `run_node_config_pack_path` below) — deliberately NOT under `artifacts/`: a run never writes
+///   through the same path a node's SOURCE document/config was read from (see this crate's module doc,
+///   "non-destructive rework" — this replaces the old `run/state.json`-backed `RunState`, deleted by
+///   this rework). This wave uses a single canonical `run id` (`"default"`, minted by `bin.rs`) — one
+///   active run slot per bundle; a real multi-run history/listing is later-wave `space::DraftCatalog`
+///   integration work.
+///
+/// Ids only — no paths inside the space document itself — so the bundle stays relocatable and syncs
+/// the same way over `file://` or a semio_hub backbone.
 pub struct SpaceBundle {
     root: PathBuf,
 }
@@ -422,37 +498,83 @@ impl SpaceBundle {
     }
 
     pub fn space_document_pack_path(&self) -> PathBuf {
-        self.root.join("space.os.pack")
+        self.root.join("space.space.pack")
     }
 
     pub fn space_document_spr_path(&self) -> PathBuf {
-        self.root.join("space.os.spr")
+        self.root.join("space.space.spr")
     }
 
+    /// 🗂️ Canonical collection path: `collections/<collection id>.collection.pack`.
+    pub fn collection_pack_path(&self, collection_id: &str) -> PathBuf {
+        self.root.join("collections").join(format!("{collection_id}.collection.pack"))
+    }
+
+    pub fn collection_spr_path(&self, collection_id: &str) -> PathBuf {
+        self.root.join("collections").join(format!("{collection_id}.collection.spr"))
+    }
+
+    /// 🗂️ Canonical artifact path: `artifacts/<artifact_id>.pack` — see this region's own doc comment
+    /// for why `artifact_id` is passed straight through unmodified (it may itself contain `/`, e.g. a
+    /// workflow node's `document_ref`/`config_ref`) rather than requiring a flat basename.
+    pub fn artifact_pack_path(&self, artifact_id: &str) -> PathBuf {
+        self.root.join("artifacts").join(format!("{artifact_id}.pack"))
+    }
+
+    pub fn artifact_spr_path(&self, artifact_id: &str) -> PathBuf {
+        self.root.join("artifacts").join(format!("{artifact_id}.spr"))
+    }
+
+    /// 🔖️ `document_ref` is itself already a valid `artifact_id` (see this region's doc comment) —
+    /// this is a thin, name-preserving alias so existing callers (`read_document`/`write_document`)
+    /// don't need to change.
     pub fn document_pack_path(&self, document_ref: &str) -> PathBuf {
-        self.root.join(format!("{document_ref}.pack"))
+        self.artifact_pack_path(document_ref)
     }
 
     pub fn document_spr_path(&self, document_ref: &str) -> PathBuf {
-        self.root.join(format!("{document_ref}.spr"))
+        self.artifact_spr_path(document_ref)
     }
 
-    /// 🔖️ Config counterpart of `document_pack_path` — same "the ref IS the relative path stem"
+    /// 🔖️ Config counterpart of `document_pack_path` — same alias-over-`artifact_pack_path`
     /// convention (a node's `config_ref` is already e.g. `config/<node id>`).
     pub fn config_pack_path(&self, config_ref: &str) -> PathBuf {
-        self.root.join(format!("{config_ref}.pack"))
+        self.artifact_pack_path(config_ref)
     }
 
     pub fn config_spr_path(&self, config_ref: &str) -> PathBuf {
-        self.root.join(format!("{config_ref}.spr"))
+        self.artifact_spr_path(config_ref)
     }
 
-    pub fn run_state_path(&self) -> PathBuf {
-        self.root.join("run").join("state.json")
+    /// 🗂️ Canonical run-document path: `runs/<run id>.run.pack`.
+    pub fn run_document_pack_path(&self, run_id: &str) -> PathBuf {
+        self.root.join("runs").join(format!("{run_id}.run.pack"))
+    }
+
+    pub fn run_document_spr_path(&self, run_id: &str) -> PathBuf {
+        self.root.join("runs").join(format!("{run_id}.run.spr"))
+    }
+
+    /// 🗂️ Canonical run-owned node-document path: `runs/<run id>/nodes/<node id>.document.pack` — see
+    /// this region's own doc comment for why this is a distinct tree from `artifacts/`.
+    pub fn run_node_document_pack_path(&self, run_id: &str, node_id: &str) -> PathBuf {
+        self.root.join("runs").join(run_id).join("nodes").join(format!("{node_id}.document.pack"))
+    }
+
+    pub fn run_node_document_spr_path(&self, run_id: &str, node_id: &str) -> PathBuf {
+        self.root.join("runs").join(run_id).join("nodes").join(format!("{node_id}.document.spr"))
+    }
+
+    pub fn run_node_config_pack_path(&self, run_id: &str, node_id: &str) -> PathBuf {
+        self.root.join("runs").join(run_id).join("nodes").join(format!("{node_id}.config.pack"))
+    }
+
+    pub fn run_node_config_spr_path(&self, run_id: &str, node_id: &str) -> PathBuf {
+        self.root.join("runs").join(run_id).join("nodes").join(format!("{node_id}.config.spr"))
     }
 
     pub fn media_cache_dir(&self) -> PathBuf {
-        self.root.join("run").join("media")
+        self.root.join("cache").join("media")
     }
 
     pub fn blobs_dir(&self) -> PathBuf {
@@ -537,12 +659,83 @@ impl SpaceBundle {
         std::fs::write(self.config_spr_path(config_ref), spr).map_err(|source| RunError::Io { path: self.config_spr_path(config_ref), source })
     }
 
-    pub fn load_run_state(&self) -> Result<RunState, RunError> {
-        RunState::load(&self.run_state_path())
+    /// @emoji 📦️ Reads one collection's pack+spr bytes — mirrors `read_document`'s "never persisted"
+    /// fallback exactly. 🚧️ Not yet called from this crate's own runner/CLI flow (collections aren't
+    /// wired into `SpaceRunner` until a later wave) — this is the reserved canonical path a future
+    /// caller writes/reads through, kept symmetric with `read_document`/`write_document` on purpose.
+    pub fn read_collection(&self, collection_id: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
+        let pack_path = self.collection_pack_path(collection_id);
+        let pack = match std::fs::read(&pack_path) {
+            Ok(bytes) => bytes,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok((Vec::new(), Vec::new())),
+            Err(source) => return Err(RunError::Io { path: pack_path, source }),
+        };
+        let spr_path = self.collection_spr_path(collection_id);
+        let spr = match std::fs::read(&spr_path) {
+            Ok(bytes) => bytes,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+            Err(source) => return Err(RunError::Io { path: spr_path, source }),
+        };
+        Ok((pack, spr))
     }
 
-    pub fn save_run_state(&self, state: &RunState) -> Result<(), RunError> {
-        state.save(&self.run_state_path())
+    pub fn write_collection(&self, collection_id: &str, pack: &[u8], spr: &[u8]) -> Result<(), RunError> {
+        let pack_path = self.collection_pack_path(collection_id);
+        if let Some(parent) = pack_path.parent() {
+            std::fs::create_dir_all(parent).map_err(|source| RunError::Io { path: parent.to_path_buf(), source })?;
+        }
+        std::fs::write(&pack_path, pack).map_err(|source| RunError::Io { path: pack_path, source })?;
+        std::fs::write(self.collection_spr_path(collection_id), spr).map_err(|source| RunError::Io { path: self.collection_spr_path(collection_id), source })
+    }
+
+    /// @emoji 📦️ Reads a run's own `workflow::RunDocument` pack+spr bytes, `(Vec::new(), Vec::new())`
+    /// if never persisted (no prior run of this id) — mirrors `read_document`'s fallback exactly.
+    pub fn read_run_document(&self, run_id: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
+        let pack_path = self.run_document_pack_path(run_id);
+        let pack = match std::fs::read(&pack_path) {
+            Ok(bytes) => bytes,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok((Vec::new(), Vec::new())),
+            Err(source) => return Err(RunError::Io { path: pack_path, source }),
+        };
+        let spr_path = self.run_document_spr_path(run_id);
+        let spr = match std::fs::read(&spr_path) {
+            Ok(bytes) => bytes,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+            Err(source) => return Err(RunError::Io { path: spr_path, source }),
+        };
+        Ok((pack, spr))
+    }
+
+    pub fn write_run_document(&self, run_id: &str, pack: &[u8], spr: &[u8]) -> Result<(), RunError> {
+        let pack_path = self.run_document_pack_path(run_id);
+        if let Some(parent) = pack_path.parent() {
+            std::fs::create_dir_all(parent).map_err(|source| RunError::Io { path: parent.to_path_buf(), source })?;
+        }
+        std::fs::write(&pack_path, pack).map_err(|source| RunError::Io { path: pack_path, source })?;
+        std::fs::write(self.run_document_spr_path(run_id), spr).map_err(|source| RunError::Io { path: self.run_document_spr_path(run_id), source })
+    }
+
+    /// @emoji 📦️ Persists every `RunSink::node_documents`/`node_configs` entry from one completed run
+    /// under `runs/<run id>/nodes/` — the only place this crate ever writes a node's post-import
+    /// document/config bytes to disk (never back over `artifacts/<document_ref>`/`artifacts/<config_ref>`).
+    pub fn write_run_nodes(&self, run_id: &str, sink: &RunSink) -> Result<(), RunError> {
+        for (node_id, (pack, spr)) in &sink.node_documents {
+            let pack_path = self.run_node_document_pack_path(run_id, node_id);
+            if let Some(parent) = pack_path.parent() {
+                std::fs::create_dir_all(parent).map_err(|source| RunError::Io { path: parent.to_path_buf(), source })?;
+            }
+            std::fs::write(&pack_path, pack).map_err(|source| RunError::Io { path: pack_path, source })?;
+            std::fs::write(self.run_node_document_spr_path(run_id, node_id), spr).map_err(|source| RunError::Io { path: self.run_node_document_spr_path(run_id, node_id), source })?;
+        }
+        for (node_id, (pack, spr)) in &sink.node_configs {
+            let pack_path = self.run_node_config_pack_path(run_id, node_id);
+            if let Some(parent) = pack_path.parent() {
+                std::fs::create_dir_all(parent).map_err(|source| RunError::Io { path: parent.to_path_buf(), source })?;
+            }
+            std::fs::write(&pack_path, pack).map_err(|source| RunError::Io { path: pack_path, source })?;
+            std::fs::write(self.run_node_config_spr_path(run_id, node_id), spr).map_err(|source| RunError::Io { path: self.run_node_config_spr_path(run_id, node_id), source })?;
+        }
+        Ok(())
     }
 
     pub fn media_cache(&self) -> FileMediaCache {
@@ -653,7 +846,16 @@ pub struct RunReport {
 /// — the `--dry` plan. Reuses exactly the dirty check `run` applies, so the plan can never drift from
 /// what an actual run would do. `documents`/`configs` map a node's `document_ref`/`config_ref` string
 /// to its current `(pack, spr)` artifact bytes — missing/absent means "never persisted".
-pub fn plan(graph: &Workflow, documents: &BTreeMap<String, (Vec<u8>, Vec<u8>)>, configs: &BTreeMap<String, (Vec<u8>, Vec<u8>)>, state: &RunState) -> Result<RunReport, RunError> {
+/// `prior_node_records` is the PRIOR SEALED `workflow::RunDocument.node_records`, keyed by node id
+/// (empty for a first-ever run — every node then plans as recomputed).
+pub fn plan(
+    graph: &Workflow,
+    documents: &BTreeMap<String, (Vec<u8>, Vec<u8>)>,
+    configs: &BTreeMap<String, (Vec<u8>, Vec<u8>)>,
+    parameter_values: &[RunParameterValue],
+    parameter_bindings: &[WorkflowParameterBinding],
+    prior_node_records: &BTreeMap<String, RunNodeRecord>,
+) -> Result<RunReport, RunError> {
     validate_edge_kinds(graph)?;
     let order = topological_order(graph)?;
     let node_by_id: HashMap<&str, &WorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
@@ -665,17 +867,19 @@ pub fn plan(graph: &Workflow, documents: &BTreeMap<String, (Vec<u8>, Vec<u8>)>, 
     for node_id in &order {
         let node = *node_by_id.get(node_id.as_str()).ok_or_else(|| RunError::UnknownNode(node_id.clone()))?;
         let document = documents.get(&node.document_ref).cloned().unwrap_or_default();
-        let document_fingerprint = framework_hash::hash_bytes(&document.1);
         let config = configs.get(&node.config_ref).cloned().unwrap_or_default();
-        let config_fingerprint = framework_hash::hash_bytes(&config.1);
+        let (document_fingerprint, config_fingerprint) = node_fingerprints(node_id, &document.1, &config.1, parameter_bindings, parameter_values);
         let mut input_fingerprints: BTreeMap<String, String> = BTreeMap::new();
         for edge in incoming.get(node_id.as_str()).into_iter().flatten() {
-            let fingerprint = state.nodes.get(&edge.source_node_id).and_then(|record| record.output_fingerprints.get(&edge.source_port_id)).cloned().unwrap_or_default();
+            let fingerprint = prior_node_records.get(&edge.source_node_id).and_then(|record| record.output_fingerprints.iter().find(|entry| entry.port_id == edge.source_port_id)).map(|entry| entry.fingerprint.clone()).unwrap_or_default();
             input_fingerprints.insert(edge.target_port_id.clone(), fingerprint);
         }
-        let dirty = match state.nodes.get(node_id.as_str()) {
+        let dirty = match prior_node_records.get(node_id.as_str()) {
             None => true,
-            Some(record) => record.document_fingerprint != document_fingerprint || record.input_fingerprints != input_fingerprints || record.config_fingerprint != config_fingerprint,
+            Some(record) => {
+                let previous_inputs: BTreeMap<String, String> = record.input_fingerprints.iter().map(|entry| (entry.port_id.clone(), entry.fingerprint.clone())).collect();
+                record.document_fingerprint != document_fingerprint || previous_inputs != input_fingerprints || record.config_fingerprint != config_fingerprint
+            }
         };
         if dirty {
             report.recomputed.push(node_id.clone());
@@ -687,10 +891,12 @@ pub fn plan(graph: &Workflow, documents: &BTreeMap<String, (Vec<u8>, Vec<u8>)>, 
 }
 
 /// 🕸️ Computes one studio's workflow against an `AppChannelHost`. Node dirtiness is decided purely
-/// from `NodeRunRecord`: the document's own fingerprint (did the app's document change since last
-/// run — e.g. a UI edit), its resolved input fingerprints (did anything upstream change), and its
-/// config's fingerprint. A clean node is never opened at all; its cached output fingerprints feed
-/// straight into its consumers.
+/// from the PRIOR SEALED run's `workflow::RunNodeRecord`: the document's own fingerprint (did the
+/// app's document change since last run — e.g. a UI edit), its resolved input fingerprints (did
+/// anything upstream change), and its config's fingerprint (folding in any bound `--param` overlay —
+/// see `node_parameter_overlay_bytes`). A clean node is never opened at all; its cached output
+/// fingerprints feed straight into its consumers. `run()` is READONLY over `documents`/`configs` — see
+/// this crate's module doc — every byte it produces lands in the caller-supplied `RunSink` instead.
 pub struct SpaceRunner<H: AppChannelHost> {
     host: H,
     blob_store: Arc<dyn BlobStore>,
@@ -823,18 +1029,22 @@ impl<H: AppChannelHost> SpaceRunner<H> {
     }
 
     /// 🕸️ Runs every dirty node in `graph`'s topological order, importing media across each edge
-    /// (applying `convert_media` per edge's negotiated `contract` first) and persisting mutated
-    /// documents/configs back into `documents`/`configs`. Both maps key a node's `document_ref`/
-    /// `config_ref` string to its current `(pack, spr)` artifact bytes; the returned maps have the
-    /// input maps' same keys, updated wherever a node actually ran.
+    /// (applying `convert_media` per edge's negotiated `contract` first). `documents`/`configs` stay
+    /// READONLY for the whole call — a mutated document/config's bytes go into `sink` (keyed by node
+    /// id), never back into these two source maps (see this crate's module doc, "non-destructive
+    /// rework"). `sink.record` is called for every `NodeStarted`/`NodeFinished`; the caller owns
+    /// emitting `Start` before and `Seal` after this call.
     pub fn run(
         &mut self,
         graph: &Workflow,
         documents: &BTreeMap<String, (Vec<u8>, Vec<u8>)>,
         configs: &BTreeMap<String, (Vec<u8>, Vec<u8>)>,
-        state: &mut RunState,
+        parameter_values: &[RunParameterValue],
+        parameter_bindings: &[WorkflowParameterBinding],
+        prior_node_records: &BTreeMap<String, RunNodeRecord>,
         cache: &mut dyn MediaCache,
-    ) -> Result<(BTreeMap<String, (Vec<u8>, Vec<u8>)>, BTreeMap<String, (Vec<u8>, Vec<u8>)>, RunReport), RunError> {
+        sink: &mut RunSink,
+    ) -> Result<RunReport, RunError> {
         validate_edge_kinds(graph)?;
         let order = topological_order(graph)?;
         let node_by_id: HashMap<&str, &WorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
@@ -843,36 +1053,50 @@ impl<H: AppChannelHost> SpaceRunner<H> {
             incoming.entry(edge.target_node_id.as_str()).or_default().push(edge);
         }
 
-        let mut documents_out = documents.clone();
-        let mut configs_out = configs.clone();
         let mut report = RunReport::default();
         let mut live: HashMap<String, u32> = HashMap::new();
+        // 🧷️ Progressively filled AS this run computes each node, in topological order — the within-run
+        // counterpart to `prior_node_records` (which stays fixed: the prior SEALED run's ground truth).
+        // A downstream node's input fingerprint must reflect what its upstream producer computed THIS
+        // run, not last time — mirrors the old `RunState.nodes`'s dual role (both "prior run" and "just
+        // computed this run"), split into two maps here on purpose so "prior sealed run" (read-only
+        // memoization ground truth) and "this run's own progress" (write-as-we-go) can never be confused.
+        let mut current_run_records: BTreeMap<String, RunNodeRecord> = BTreeMap::new();
 
         for node_id in &order {
             let node = *node_by_id.get(node_id.as_str()).ok_or_else(|| RunError::UnknownNode(node_id.clone()))?;
-            let document = documents_out.get(&node.document_ref).cloned().unwrap_or_default();
-            let document_fingerprint = framework_hash::hash_bytes(&document.1);
-            let config = configs_out.get(&node.config_ref).cloned().unwrap_or_default();
-            let config_fingerprint = framework_hash::hash_bytes(&config.1);
+            let document = documents.get(&node.document_ref).cloned().unwrap_or_default();
+            let config = configs.get(&node.config_ref).cloned().unwrap_or_default();
+            let (document_fingerprint, config_fingerprint) = node_fingerprints(node_id, &document.1, &config.1, parameter_bindings, parameter_values);
 
             let mut input_fingerprints: BTreeMap<String, String> = BTreeMap::new();
             for edge in incoming.get(node_id.as_str()).into_iter().flatten() {
-                let source_record = state.nodes.get(&edge.source_node_id);
-                let fingerprint = source_record.and_then(|record| record.output_fingerprints.get(&edge.source_port_id)).cloned().unwrap_or_default();
+                let fingerprint = current_run_records.get(&edge.source_node_id).and_then(|record| record.output_fingerprints.iter().find(|entry| entry.port_id == edge.source_port_id)).map(|entry| entry.fingerprint.clone()).unwrap_or_default();
                 input_fingerprints.insert(edge.target_port_id.clone(), fingerprint);
             }
 
-            let previous = state.nodes.get(node_id.as_str());
+            let previous = prior_node_records.get(node_id.as_str());
             let dirty = match previous {
                 None => true,
-                Some(record) => record.document_fingerprint != document_fingerprint || record.input_fingerprints != input_fingerprints || record.config_fingerprint != config_fingerprint,
+                Some(record) => {
+                    let previous_inputs: BTreeMap<String, String> = record.input_fingerprints.iter().map(|entry| (entry.port_id.clone(), entry.fingerprint.clone())).collect();
+                    record.document_fingerprint != document_fingerprint || previous_inputs != input_fingerprints || record.config_fingerprint != config_fingerprint
+                }
             };
 
             if !dirty {
                 report.clean.push(node_id.clone());
+                // ⚡️ Cache hit: reuse the prior sealed run's own record verbatim (fingerprints/outputs),
+                // just relabeled `CacheHit` — this node is never opened, never mutates anything, and its
+                // outputs stay exactly what they already were.
+                let previous_record = previous.expect("dirty=false implies a prior record exists").clone();
+                let node_record = RunNodeRecord { status: RunNodeStatus::CacheHit, ..previous_record };
+                current_run_records.insert(node_id.clone(), node_record.clone());
+                sink.record(RunOperation::NodeFinished { node_record })?;
                 continue;
             }
             report.recomputed.push(node_id.clone());
+            sink.record(RunOperation::NodeStarted { node_id: node_id.clone() })?;
 
             let mut input_media: BTreeMap<String, Media> = BTreeMap::new();
             for edge in incoming.get(node_id.as_str()).into_iter().flatten() {
@@ -885,10 +1109,13 @@ impl<H: AppChannelHost> SpaceRunner<H> {
                         // prior run; reaching here means it genuinely isn't (e.g. an evicted media
                         // cache dir) — recompute the source node directly, WITHOUT recursively
                         // resolving ITS OWN inputs (a clean node's inputs are, by definition, unchanged
-                        // since it was last fully computed).
+                        // since it was last fully computed). Still fully readonly over `documents`/
+                        // `configs`: this recompute's own mutated bytes are simply discarded (`_source_*`)
+                        // rather than written anywhere, matching "run never writes over source" even in
+                        // this fallback path.
                         let source_node = *node_by_id.get(edge.source_node_id.as_str()).ok_or_else(|| RunError::UnknownNode(edge.source_node_id.clone()))?;
-                        let source_document = documents_out.get(&source_node.document_ref).cloned().unwrap_or_default();
-                        let source_config = configs_out.get(&source_node.config_ref).cloned().unwrap_or_default();
+                        let source_document = documents.get(&source_node.document_ref).cloned().unwrap_or_default();
+                        let source_config = configs.get(&source_node.config_ref).cloned().unwrap_or_default();
                         let (_source_document, _source_config, source_outputs) = self.compute_node(&mut live, source_node, &source_document, &source_config, &BTreeMap::new())?;
                         let (media, _fresh_fingerprint) = source_outputs.get(&edge.source_port_id).cloned().ok_or_else(|| RunError::Host(format!("upstream node `{}` produced no output on port `{}`", edge.source_node_id, edge.source_port_id)))?;
                         cache.put(&fingerprint, &media);
@@ -899,19 +1126,41 @@ impl<H: AppChannelHost> SpaceRunner<H> {
                 input_media.insert(edge.target_port_id.clone(), converted);
             }
 
+            let started_at = std::time::Instant::now();
             let (mutated_document, mutated_config, outputs) = self.compute_node(&mut live, node, &document, &config, &input_media)?;
-            documents_out.insert(node.document_ref.clone(), mutated_document);
-            configs_out.insert(node.config_ref.clone(), mutated_config);
+            let duration_ms = started_at.elapsed().as_secs_f64() * 1000.0;
 
-            let mut output_fingerprints = BTreeMap::new();
+            // 🔒️ THE non-destructive rework's write side: mutated document/config bytes go into `sink`'s
+            // run-owned area (keyed by node id), never back into `documents`/`configs` — those stay
+            // read-only source maps for the whole call.
+            sink.write_node_document(node_id, mutated_document.0, mutated_document.1);
+            sink.write_node_config(node_id, mutated_config.0, mutated_config.1);
+
+            let mut output_fingerprints = Vec::new();
+            let mut run_outputs = Vec::new();
             for (port_id, (media, fingerprint)) in &outputs {
-                output_fingerprints.insert(port_id.clone(), fingerprint.clone());
+                output_fingerprints.push(PortFingerprint { port_id: port_id.clone(), fingerprint: fingerprint.clone() });
                 cache.put(&MediaFingerprint(fingerprint.clone()), media);
+                // 📤️ The media cache is the one place this crate already persists exported output bytes
+                // durably (`FileMediaCache`, `<space>/cache/media/<fingerprint>.json`) — `RunOutputArtifact`
+                // points at that real, existing location rather than inventing a second one this wave.
+                run_outputs.push(RunOutputArtifact { port_id: port_id.clone(), artifact_id: format!("cache/media/{fingerprint}"), path: format!("cache/media/{fingerprint}.json") });
             }
-            state.nodes.insert(node_id.clone(), NodeRunRecord { document_fingerprint, input_fingerprints, output_fingerprints, config_fingerprint });
+            let node_record = RunNodeRecord {
+                node_id: node_id.clone(),
+                status: RunNodeStatus::Computed,
+                document_fingerprint,
+                config_fingerprint,
+                input_fingerprints: input_fingerprints.iter().map(|(port_id, fingerprint)| PortFingerprint { port_id: port_id.clone(), fingerprint: fingerprint.clone() }).collect(),
+                output_fingerprints,
+                outputs: run_outputs,
+                duration_ms,
+            };
+            current_run_records.insert(node_id.clone(), node_record.clone());
+            sink.record(RunOperation::NodeFinished { node_record })?;
         }
 
-        Ok((documents_out, configs_out, report))
+        Ok(report)
     }
 }
 //#endregion 🔖️SpaceRunner
@@ -1119,6 +1368,30 @@ mod tests {
         graph.nodes.iter().map(|node| (node.config_ref.clone(), (Vec::new(), Vec::new()))).collect()
     }
 
+    /// 🧪️ A fresh, unsealed `RunSink` with `Start` already recorded — every test below emits
+    /// `NodeStarted`/`NodeFinished` through `SpaceRunner::run` on top of this, then (where memoization
+    /// across two runs matters) seals it and extracts `prior_node_records_from` for the second `run()`.
+    fn fresh_sink() -> RunSink {
+        let mut sink = RunSink::new(workflow::empty_run_document());
+        sink.record(RunOperation::Start {
+            workflow_ref: "test.workflow".into(),
+            workflow_checkpoint_id: String::new(),
+            input_collection_ref: String::new(),
+            input_snapshot_id: String::new(),
+            parameter_values: Vec::new(),
+            output_collection_ref: String::new(),
+            trigger: workflow::RunTrigger::Manual { actor: "test".into() },
+        })
+        .expect("Start on a fresh sink always applies");
+        sink
+    }
+
+    /// 🧪️ `workflow::RunDocument.node_records`, keyed by node id — the shape `SpaceRunner::run`'s
+    /// `prior_node_records` parameter takes, built from a (test-)sealed prior run's document.
+    fn prior_node_records_from(document: &workflow::RunDocument) -> BTreeMap<String, RunNodeRecord> {
+        document.node_records.iter().map(|record| (record.node_id.clone(), record.clone())).collect()
+    }
+
     #[test]
     fn topological_order_respects_edges() {
         let graph = two_node_graph();
@@ -1139,18 +1412,27 @@ mod tests {
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
-        let mut state = RunState::default();
         let mut cache = InMemoryMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
 
-        let (documents_1, configs_1, report_1) = runner.run(&graph, &documents, &configs, &mut state, &mut cache).expect("first run");
+        let mut sink_1 = fresh_sink();
+        let report_1 = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
         assert_eq!(report_1.recomputed, vec!["node-a".to_string(), "node-b".to_string()]);
         assert!(report_1.clean.is_empty());
+        sink_1.record(RunOperation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
 
-        let (_, _, report_2) = runner.run(&graph, &documents_1, &configs_1, &mut state, &mut cache).expect("second run");
+        // 🔒️ Non-destructive: the SOURCE `documents`/`configs` maps `run()` read are byte-identical to
+        // what was passed in — nothing was written back into them (the load-bearing proof for this wave).
+        assert_eq!(documents, empty_documents(&graph), "run() must never mutate its source documents map");
+        assert_eq!(configs, empty_configs(&graph), "run() must never mutate its source configs map");
+
+        let prior = prior_node_records_from(&sink_1.document);
+        let mut sink_2 = fresh_sink();
+        let report_2 = runner.run(&graph, &documents, &configs, &[], &[], &prior, &mut cache, &mut sink_2).expect("second run");
         assert!(report_2.recomputed.is_empty(), "unchanged documents must not re-trigger recompute: {:?}", report_2.recomputed);
         assert_eq!(report_2.clean, vec!["node-a".to_string(), "node-b".to_string()]);
+        assert!(sink_2.document.node_records.iter().all(|record| record.status == RunNodeStatus::CacheHit), "every node on the second run must be a CacheHit: {:?}", sink_2.document.node_records);
     }
 
     #[test]
@@ -1159,17 +1441,22 @@ mod tests {
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
-        let mut state = RunState::default();
         let mut cache = InMemoryMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
-        let (documents_1, _, _) = runner.run(&graph, &documents, &configs, &mut state, &mut cache).expect("first run");
+        let mut sink_1 = fresh_sink();
+        runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
+        sink_1.record(RunOperation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
 
-        let mut documents_2 = documents_1;
-        // 🧮️ Fingerprints are now `.spr`-bytes hashes (see `NodeRunRecord`'s doc) — editing the op log
-        // (`spr`), not the pack, is what must dirty the node.
+        let mut documents_2 = documents.clone();
+        // 🧮️ Fingerprints are still `.spr`-bytes hashes (see `node_fingerprints`) — editing the op log
+        // (`spr`), not the pack, is what must dirty the node. `documents` (the first run's SOURCE map)
+        // is untouched by `run()` itself — this test edits its OWN local copy to simulate a live UI edit
+        // landing on the source between runs.
         documents_2.insert("documents/node-a".to_string(), (Vec::new(), b"edited".to_vec()));
-        let (_, _, report_2) = runner.run(&graph, &documents_2, &configs, &mut state, &mut cache).expect("second run");
+        let prior = prior_node_records_from(&sink_1.document);
+        let mut sink_2 = fresh_sink();
+        let report_2 = runner.run(&graph, &documents_2, &configs, &[], &[], &prior, &mut cache, &mut sink_2).expect("second run");
         assert_eq!(report_2.recomputed, vec!["node-a".to_string()], "node-a's own document changed, so node-a must recompute");
         assert_eq!(report_2.clean, vec!["node-b".to_string()], "node-a's FakeHost output is fixed, so its output fingerprint is unchanged — node-b must stay clean (the early-cutoff this whole design exists for)");
     }
@@ -1184,23 +1471,59 @@ mod tests {
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
-        let mut state = RunState::default();
         let mut cache = InMemoryMediaCache::default();
         let documents = empty_documents(&graph);
         let configs_1 = empty_configs(&graph);
-        runner.run(&graph, &documents, &configs_1, &mut state, &mut cache).expect("first run");
+        let mut sink_1 = fresh_sink();
+        runner.run(&graph, &documents, &configs_1, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
+        sink_1.record(RunOperation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
+        let prior = prior_node_records_from(&sink_1.document);
 
-        let plan_unchanged = plan(&graph, &documents, &configs_1, &state).expect("plan with unchanged config");
+        let plan_unchanged = plan(&graph, &documents, &configs_1, &[], &[], &prior).expect("plan with unchanged config");
         assert!(plan_unchanged.recomputed.is_empty(), "nothing changed, plan must report every node clean: {:?}", plan_unchanged.recomputed);
 
         let mut configs_2 = configs_1.clone();
         configs_2.insert("config/node-a".to_string(), (Vec::new(), b"threshold=2".to_vec()));
-        let plan_changed = plan(&graph, &documents, &configs_2, &state).expect("plan with changed config");
+        let plan_changed = plan(&graph, &documents, &configs_2, &[], &[], &prior).expect("plan with changed config");
         assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "only node-a's own config changed, so only node-a should be recomputed by the plan");
 
-        let (_, _, report_2) = runner.run(&graph, &documents, &configs_2, &mut state, &mut cache).expect("second run with changed config");
+        let mut sink_2 = fresh_sink();
+        let report_2 = runner.run(&graph, &documents, &configs_2, &[], &[], &prior, &mut cache, &mut sink_2).expect("second run with changed config");
         assert_eq!(report_2.recomputed, vec!["node-a".to_string()], "node-a's config changed, so node-a must recompute even though its document and inputs did not");
         assert_eq!(report_2.clean, vec!["node-b".to_string()], "node-a's FakeHost output is fixed regardless of config, so node-b must stay clean");
+    }
+
+    /// 🧪️ A `--param` override bound onto a node's config field must dirty that node purely through the
+    /// fingerprint overlay (`node_parameter_overlay_bytes`) even though the raw config `.spr` bytes this
+    /// crate sends the app are byte-identical — see this crate's module doc on why the override isn't
+    /// patched into the opaque config bytes directly.
+    #[test]
+    fn parameter_overlay_alone_dirties_its_bound_node_without_changing_raw_config_bytes() {
+        let graph = two_node_graph();
+        let mut host = FakeHost::default();
+        host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
+        let mut cache = InMemoryMediaCache::default();
+        let documents = empty_documents(&graph);
+        let configs = empty_configs(&graph);
+        let bindings = vec![WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "node-a".into(), field_path: "/threshold".into() }];
+
+        let mut sink_1 = fresh_sink();
+        runner.run(&graph, &documents, &configs, &[], &bindings, &BTreeMap::new(), &mut cache, &mut sink_1).expect("first run");
+        sink_1.record(RunOperation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
+        let prior = prior_node_records_from(&sink_1.document);
+
+        let plan_unchanged = plan(&graph, &documents, &configs, &[], &bindings, &prior).expect("plan with no parameter values yet");
+        assert!(plan_unchanged.recomputed.is_empty(), "no bound parameter value yet — nothing should be dirty: {:?}", plan_unchanged.recomputed);
+
+        let parameter_values = vec![RunParameterValue { parameter_id: "p1".into(), value: "42".into() }];
+        let plan_changed = plan(&graph, &documents, &configs, &parameter_values, &bindings, &prior).expect("plan with a parameter value bound");
+        assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "the bound node's fingerprint must change purely from the parameter overlay: {:?}", plan_changed);
+
+        let mut sink_2 = fresh_sink();
+        let report_2 = runner.run(&graph, &documents, &configs, &parameter_values, &bindings, &prior, &mut cache, &mut sink_2).expect("second run with a param override");
+        assert_eq!(report_2.recomputed, vec!["node-a".to_string()]);
+        assert_eq!(sink_2.node_configs.get("node-a"), Some(&configs["config/node-a"]), "raw config bytes sent to the app are untouched by the overlay — only the fingerprint changes");
     }
 
     #[test]
@@ -1209,11 +1532,11 @@ mod tests {
         graph.nodes[1].inputs[0].spec.media_type = MediaType { class: MediaClass::Text, form: MediaForm::Document };
         let host = FakeHost::default();
         let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
-        let mut state = RunState::default();
         let mut cache = InMemoryMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
-        let result = runner.run(&graph, &documents, &configs, &mut state, &mut cache);
+        let mut sink = fresh_sink();
+        let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink);
         assert!(matches!(result, Err(RunError::Incompatible { .. })));
     }
 

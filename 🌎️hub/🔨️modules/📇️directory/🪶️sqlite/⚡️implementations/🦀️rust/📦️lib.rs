@@ -23,13 +23,6 @@ use uuid::Uuid;
 
 //#region 🔖️Schema
 const SCHEMA: &str = "\
-CREATE TABLE IF NOT EXISTS node (
-    id TEXT PRIMARY KEY,
-    space_id TEXT NOT NULL,
-    parent_id TEXT REFERENCES node(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    kind TEXT NOT NULL
-);
 CREATE TABLE IF NOT EXISTS share_token (
     token TEXT PRIMARY KEY,
     document_id TEXT NOT NULL,
@@ -48,12 +41,14 @@ CREATE TABLE IF NOT EXISTS hub_space (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     owner_user_id TEXT NOT NULL REFERENCES hub_user(id),
-    created_at INTEGER NOT NULL
+    created_at INTEGER NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('atelier', 'studio', 'archive')),
+    visibility TEXT NOT NULL CHECK (visibility IN ('private', 'public'))
 );
 CREATE TABLE IF NOT EXISTS hub_space_membership (
     space_id TEXT NOT NULL REFERENCES hub_space(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES hub_user(id) ON DELETE CASCADE,
-    role TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('author', 'spectator')),
     created_at INTEGER NOT NULL,
     PRIMARY KEY (space_id, user_id)
 );
@@ -74,7 +69,6 @@ CREATE TABLE IF NOT EXISTS hub_sync_session (
     disconnected_at INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_space_membership (user_id);
-CREATE INDEX IF NOT EXISTS idx_node_space_parent ON node (space_id, parent_id);
 CREATE INDEX IF NOT EXISTS idx_sync_session_document ON hub_sync_session (document_id, disconnected_at);
 ";
 //#endregion 🔖️Schema
@@ -107,10 +101,10 @@ impl SqliteDirectory {
         self.conn.lock().map_err(|_| DirectoryError::Backend("sqlite connection lock poisoned".into()))
     }
 
-    /// @emoji 🌱️ Seeds a placeholder `seed` system user, a default space it owns, and a
-    /// `Documents/default` node. The system user satisfies `hub_space.owner_user_id`'s foreign
-    /// key until a real bootstrap admin claims ownership through `/admin` (HP-6). Document
-    /// existence itself is `db::Database`'s concern (see `os-semio_hub`'s `bin.rs`), not seeded here.
+    /// @emoji 🌱️ Seeds a placeholder `seed` system user and a default `studio`/`private` space it
+    /// owns. The system user satisfies `hub_space.owner_user_id`'s foreign key until a real
+    /// bootstrap admin claims ownership through `/admin` (HP-6). Document existence itself is
+    /// `db::Database`'s concern (see `os-semio_hub`'s `bin.rs`), not seeded here.
     pub async fn seed(&self) -> DirectoryResult<()> {
         let user_exists: i64 = self.lock()?.query_row("SELECT COUNT(*) FROM hub_user WHERE id = 'seed'", [], |row| row.get(0)).map_err(backend)?;
         if user_exists == 0 {
@@ -118,12 +112,8 @@ impl SqliteDirectory {
         }
         let studio_exists: i64 = self.lock()?.query_row("SELECT COUNT(*) FROM hub_space WHERE id = 'default'", [], |row| row.get(0)).map_err(backend)?;
         if studio_exists == 0 {
-            self.lock()?.execute("INSERT INTO hub_space (id, name, owner_user_id, created_at) VALUES ('default', 'Space', 'seed', ?1)", rusqlite::params![now_ms()]).map_err(backend)?;
-        }
-        let node_count: i64 = self.lock()?.query_row("SELECT COUNT(*) FROM node", [], |row| row.get(0)).map_err(backend)?;
-        if node_count == 0 {
-            let folder = self.create_node("default", None, "Documents", "folder").await?;
-            self.create_node("default", Some(&folder.id), "default", "document").await?;
+            self.lock()?.execute("INSERT INTO hub_space (id, name, owner_user_id, created_at, kind, visibility) VALUES ('default', 'Space', 'seed', ?1, 'studio', 'private')", rusqlite::params![now_ms()]).map_err(backend)?;
+            self.upsert_membership("default", "seed", SpaceRole::Author).await?;
         }
         Ok(())
     }
@@ -131,34 +121,6 @@ impl SqliteDirectory {
 
 #[async_trait]
 impl HubDirectory for SqliteDirectory {
-    //#region Vfs
-    async fn list_nodes(&self, space_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>> {
-        let conn = self.lock()?;
-        let row_mapper = |row: &rusqlite::Row| -> rusqlite::Result<NodeRecord> { Ok(NodeRecord { id: row.get(0)?, space_id: space_id.to_string(), parent_id: row.get(1)?, name: row.get(2)?, kind: row.get(3)? }) };
-        let rows = match parent {
-            Some(parent) => {
-                let mut stmt = conn.prepare("SELECT id, parent_id, name, kind FROM node WHERE space_id = ?1 AND parent_id = ?2 ORDER BY name").map_err(backend)?;
-                let mapped = stmt.query_map(rusqlite::params![space_id, parent], row_mapper).map_err(backend)?;
-                let collected: Vec<_> = mapped.filter_map(|row| row.ok()).collect();
-                collected
-            }
-            None => {
-                let mut stmt = conn.prepare("SELECT id, parent_id, name, kind FROM node WHERE space_id = ?1 AND parent_id IS NULL ORDER BY name").map_err(backend)?;
-                let mapped = stmt.query_map([space_id], row_mapper).map_err(backend)?;
-                let collected: Vec<_> = mapped.filter_map(|row| row.ok()).collect();
-                collected
-            }
-        };
-        Ok(rows)
-    }
-
-    async fn create_node(&self, space_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord> {
-        let id = Uuid::now_v7().to_string();
-        self.lock()?.execute("INSERT INTO node (id, space_id, parent_id, name, kind) VALUES (?1, ?2, ?3, ?4, ?5)", rusqlite::params![id, space_id, parent_id, name, kind]).map_err(backend)?;
-        Ok(NodeRecord { id, space_id: space_id.to_string(), parent_id: parent_id.map(str::to_string), name: name.to_string(), kind: kind.to_string() })
-    }
-    //#endregion
-
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {
         let token = Uuid::now_v7().to_string();
@@ -223,34 +185,75 @@ impl HubDirectory for SqliteDirectory {
     //#endregion
 
     //#region Spaces
-    async fn create_space(&self, name: &str, owner_user_id: &str) -> DirectoryResult<SpaceRecord> {
+    async fn create_space(&self, name: &str, owner_user_id: &str, kind: &str, visibility: &str) -> DirectoryResult<SpaceRecord> {
         let id = Uuid::now_v7().to_string();
         let created_at = now_ms();
-        self.lock()?.execute("INSERT INTO hub_space (id, name, owner_user_id, created_at) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![id, name, owner_user_id, created_at]).map_err(backend)?;
-        self.upsert_membership(&id, owner_user_id, SpaceRole::Owner).await?;
-        Ok(SpaceRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at })
+        self.lock()?
+            .execute("INSERT INTO hub_space (id, name, owner_user_id, created_at, kind, visibility) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", rusqlite::params![id, name, owner_user_id, created_at, kind, visibility])
+            .map_err(backend)?;
+        // 🎯️ An archive is frozen — even its owner is a spectator, never an author (matches
+        // `upsert_membership`'s own archive-rejects-author law below).
+        let owner_role = if kind == "archive" { SpaceRole::Spectator } else { SpaceRole::Author };
+        self.upsert_membership(&id, owner_user_id, owner_role).await?;
+        Ok(SpaceRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at, kind: kind.to_string(), visibility: visibility.to_string() })
+    }
+
+    async fn get_space(&self, space_id: &str) -> DirectoryResult<Option<SpaceRecord>> {
+        self.lock()?
+            .query_row("SELECT id, name, owner_user_id, created_at, kind, visibility FROM hub_space WHERE id = ?1", [space_id], |row| {
+                Ok(SpaceRecord { id: row.get(0)?, name: row.get(1)?, owner_user_id: row.get(2)?, created_at: row.get(3)?, kind: row.get(4)?, visibility: row.get(5)? })
+            })
+            .optional()
+            .map_err(backend)
     }
 
     async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>> {
         let conn = self.lock()?;
         let mut stmt = conn
             .prepare(
-                "SELECT s.id, s.name, s.owner_user_id, s.created_at, m.role FROM hub_space s
+                "SELECT s.id, s.name, s.owner_user_id, s.created_at, s.kind, s.visibility, m.role FROM hub_space s
                  JOIN hub_space_membership m ON m.space_id = s.id WHERE m.user_id = ?1 ORDER BY s.created_at",
             )
             .map_err(backend)?;
-        let rows = stmt.query_map([user_id], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, i64>(3)?, row.get::<_, String>(4)?))).map_err(backend)?;
-        Ok(rows.filter_map(|row| row.ok()).filter_map(|(id, name, owner_user_id, created_at, role)| SpaceRole::parse(&role).map(|role| (SpaceRecord { id, name, owner_user_id, created_at }, role))).collect())
+        let rows = stmt
+            .query_map([user_id], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, i64>(3)?, row.get::<_, String>(4)?, row.get::<_, String>(5)?, row.get::<_, String>(6)?))
+            })
+            .map_err(backend)?;
+        Ok(rows
+            .filter_map(|row| row.ok())
+            .filter_map(|(id, name, owner_user_id, created_at, kind, visibility, role)| SpaceRole::parse(&role).map(|role| (SpaceRecord { id, name, owner_user_id, created_at, kind, visibility }, role)))
+            .collect())
     }
 
     async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>> {
         let conn = self.lock()?;
-        let mut stmt = conn.prepare("SELECT id, name, owner_user_id, created_at FROM hub_space ORDER BY created_at LIMIT ?1 OFFSET ?2").map_err(backend)?;
-        let rows = stmt.query_map(rusqlite::params![limit, offset], |row| Ok(SpaceRecord { id: row.get(0)?, name: row.get(1)?, owner_user_id: row.get(2)?, created_at: row.get(3)? })).map_err(backend)?;
+        let mut stmt = conn.prepare("SELECT id, name, owner_user_id, created_at, kind, visibility FROM hub_space ORDER BY created_at LIMIT ?1 OFFSET ?2").map_err(backend)?;
+        let rows = stmt
+            .query_map(rusqlite::params![limit, offset], |row| {
+                Ok(SpaceRecord { id: row.get(0)?, name: row.get(1)?, owner_user_id: row.get(2)?, created_at: row.get(3)?, kind: row.get(4)?, visibility: row.get(5)? })
+            })
+            .map_err(backend)?;
         Ok(rows.filter_map(|row| row.ok()).collect())
     }
 
     async fn upsert_membership(&self, space_id: &str, user_id: &str, role: SpaceRole) -> DirectoryResult<()> {
+        if role == SpaceRole::Author {
+            if let Some(space) = self.get_space(space_id).await? {
+                if space.kind == "archive" {
+                    return Err(DirectoryError::Conflict(format!("space '{space_id}' is an archive; no author memberships are allowed")));
+                }
+                if space.kind == "atelier" {
+                    let other_authors: i64 = self
+                        .lock()?
+                        .query_row("SELECT COUNT(*) FROM hub_space_membership WHERE space_id = ?1 AND role = 'author' AND user_id != ?2", rusqlite::params![space_id, user_id], |row| row.get(0))
+                        .map_err(backend)?;
+                    if other_authors > 0 {
+                        return Err(DirectoryError::Conflict(format!("space '{space_id}' is an atelier; it already has a distinct author")));
+                    }
+                }
+            }
+        }
         self.lock()?
             .execute(
                 "INSERT INTO hub_space_membership (space_id, user_id, role, created_at) VALUES (?1, ?2, ?3, ?4)
@@ -353,15 +356,38 @@ mod tests {
     async fn user_space_membership_round_trip() {
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
         let user = directory.create_user("a@example.com", "Ada", None, None, None).await.expect("create user");
-        let studio = directory.create_space("Space A", &user.id).await.expect("create space");
-        assert_eq!(directory.get_role(&studio.id, &user.id).await.unwrap(), Some(SpaceRole::Owner));
+        let studio = directory.create_space("Space A", &user.id, "studio", "private").await.expect("create space");
+        assert_eq!(directory.get_role(&studio.id, &user.id).await.unwrap(), Some(SpaceRole::Author));
         let member = directory.create_user("b@example.com", "Bob", None, None, None).await.expect("create user 2");
-        directory.upsert_membership(&studio.id, &member.id, SpaceRole::Viewer).await.expect("add member");
-        assert_eq!(directory.get_role(&studio.id, &member.id).await.unwrap(), Some(SpaceRole::Viewer));
+        directory.upsert_membership(&studio.id, &member.id, SpaceRole::Spectator).await.expect("add member");
+        assert_eq!(directory.get_role(&studio.id, &member.id).await.unwrap(), Some(SpaceRole::Spectator));
         let studios = directory.list_spaces_for_user(&member.id).await.unwrap();
         assert_eq!(studios.len(), 1);
         directory.remove_membership(&studio.id, &member.id).await.expect("remove");
         assert_eq!(directory.get_role(&studio.id, &member.id).await.unwrap(), None);
+    }
+
+    // 🔬️ Archive spaces reject any author membership; atelier spaces reject a second, distinct
+    // author (re-upserting the sole existing author is not a conflict); studio allows many.
+    #[tokio::test]
+    async fn space_kind_membership_laws_are_enforced() {
+        let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
+        let owner = directory.create_user("owner@example.com", "Owner", None, None, None).await.expect("create user");
+        let other = directory.create_user("other@example.com", "Other", None, None, None).await.expect("create user 2");
+
+        let archive = directory.create_space("Archive", &owner.id, "archive", "private").await.expect("create archive");
+        let err = directory.upsert_membership(&archive.id, &owner.id, SpaceRole::Author).await.unwrap_err();
+        assert!(matches!(err, DirectoryError::Conflict(_)));
+        directory.upsert_membership(&archive.id, &other.id, SpaceRole::Spectator).await.expect("spectator allowed in archive");
+
+        let atelier = directory.create_space("Atelier", &owner.id, "atelier", "private").await.expect("create atelier");
+        // Re-upserting the sole existing author is not a conflict.
+        directory.upsert_membership(&atelier.id, &owner.id, SpaceRole::Author).await.expect("re-upsert sole author");
+        let err = directory.upsert_membership(&atelier.id, &other.id, SpaceRole::Author).await.unwrap_err();
+        assert!(matches!(err, DirectoryError::Conflict(_)));
+
+        let studio = directory.create_space("Studio", &owner.id, "studio", "private").await.expect("create studio");
+        directory.upsert_membership(&studio.id, &other.id, SpaceRole::Author).await.expect("studio allows many authors");
     }
 
     // 🔬️ SyncSession open/close is durable and listable.
@@ -388,17 +414,5 @@ mod tests {
         assert!(directory.authorized_by_token("default", Some(&token)).await.unwrap());
     }
 
-    // 🔬️ VFS nodes are durable and creatable, seeded with a Documents/default tree.
-    #[tokio::test]
-    async fn nodes_seeded_and_creatable() {
-        let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
-        directory.seed().await.expect("seed");
-        let roots = directory.list_nodes("default", None).await.unwrap();
-        assert_eq!(roots.len(), 1);
-        assert_eq!(roots[0].name, "Documents");
-        let children = directory.list_nodes("default", Some(&roots[0].id)).await.unwrap();
-        assert_eq!(children.len(), 1);
-        assert_eq!(children[0].name, "default");
-    }
 }
 //#endregion 🔖️Tests

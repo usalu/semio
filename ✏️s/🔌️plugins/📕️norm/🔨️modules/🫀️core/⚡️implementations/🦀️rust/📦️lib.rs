@@ -758,4 +758,23 @@ mod tests {
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `SetDocumentOperation<DemoDocument>`'s `Edit` round-trips through
+    /// `protocol::OperationEnvelope`s beside this file's existing pack round-trip law (same pattern
+    /// as `dag`'s own `command_envelope_round_trip_holds_for_an_applied_operation`) — proves the law
+    /// once for the shared generic `SetDocumentOperation<D>` bridge (`POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`'s
+    /// `"SetDocumentOperation"` entry), covering every norm family that reuses it.
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+
+        let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
+        let mut store = store::DocumentStore::new(envelope);
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![SetDocumentOperation::SetDocument { document: DemoDocument { value: 3.0 } }], description: None }).expect("apply");
+        let edit: &Edit<SetDocumentOperation<DemoDocument>> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<DemoDocument, SetDocumentOperation<DemoDocument>>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
 }

@@ -73,5 +73,24 @@ mod tests {
         store::test_support::assert_dsl_round_trip(&projection);
         store::test_support::assert_dsl_pack_equivalence(&projection);
     }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `Puzzle3dOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+        use puzzle_3d_op::{Puzzle3dOperation, Puzzle3dStore};
+        use store::{create_document_envelope, DocumentCommand};
+
+        let mut store = Puzzle3dStore::new(create_document_envelope(puzzle_3d::PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dProjection::default(), None));
+        let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
+        store.dispatch(DocumentCommand::Apply { operations: vec![Puzzle3dOperation::SetObject { index: 0, object }], description: None }).expect("apply");
+        let edit: &Edit<Puzzle3dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<Puzzle3dProjection, Puzzle3dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
 }
 //#endregion 🧪️Tests

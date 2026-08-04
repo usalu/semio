@@ -9,8 +9,11 @@ mod header {
     // operations) and content-addressed blobs are no longer this crate's concern — `db::Database`
     // (server-side document authority) and `db`'s own `PayloadStorage` own that now (see
     // `os-semio_hub`'s `bin.rs`). This crate keeps exactly the identity/tenancy surface that has no `db`
-    // counterpart: users, spaces, memberships, auth sessions, share tokens, VFS nodes, and
-    // realtime sync sessions.
+    // counterpart: users, spaces, memberships, auth sessions, share tokens, and realtime sync
+    // sessions. The former VFS tree (`NodeRecord`/`list_nodes`/`create_node`) was deleted in the
+    // space/collection/artifact unification wave — the collection document now replaces the
+    // hub-side tree (see `.claude/plans/the-final-goal-for-jolly-spindle.md`'s "Roles/kinds/
+    // visibility" design ruling).
 }
 
 //#region 🔖️Error
@@ -37,17 +40,6 @@ pub mod error {
 pub mod model {
     use serde::{Deserialize, Serialize};
 
-    /// @emoji 🗂️ VFS tree entry, scoped to a space.
-    #[derive(Clone, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct NodeRecord {
-        pub id: String,
-        pub space_id: String,
-        pub parent_id: Option<String>,
-        pub name: String,
-        pub kind: String,
-    }
-
     /// @emoji 🔗️ An anonymous per-document bearer token (existing auth-lite scheme, kept as-is).
     /// `document_id` is opaque here — the directory has no FK relationship to a `db::Database`
     /// document; it never persists document content itself.
@@ -68,36 +60,42 @@ pub mod model {
         pub created_at: i64,
     }
 
-    /// @emoji 🏛️ A space: the tenant/workspace unit that owns documents, nodes, and memberships.
+    /// @emoji 🏛️ A space: the tenant/workspace unit that owns documents and memberships. `kind`
+    /// (`"atelier"|"studio"|"archive"`) and `visibility` (`"private"|"public"`) mirror the
+    /// wasm-facing `space` crate's `SpaceKind`/`SpaceVisibility` string-identically — this crate
+    /// cannot depend on that crate (server-side binary vs wasm-facing kernel), so the two are kept
+    /// in lockstep by hand, same as `SpaceRole` below.
     pub struct SpaceRecord {
         pub id: String,
         pub name: String,
         pub owner_user_id: String,
         pub created_at: i64,
+        pub kind: String,
+        pub visibility: String,
     }
 
+    /// @emoji 🧑️‍🤝️‍🧑️ A space member's permission level, string-identical to the `space` crate's
+    /// `SpaceRole { Author, Spectator }` (`"author"`/`"spectator"`) — see `SpaceRecord`'s doc for
+    /// why this crate re-declares rather than depends.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "lowercase")]
     pub enum SpaceRole {
-        Owner,
-        Member,
-        Viewer,
+        Author,
+        Spectator,
     }
 
     impl SpaceRole {
         pub fn as_str(&self) -> &'static str {
             match self {
-                SpaceRole::Owner => "owner",
-                SpaceRole::Member => "member",
-                SpaceRole::Viewer => "viewer",
+                SpaceRole::Author => "author",
+                SpaceRole::Spectator => "spectator",
             }
         }
 
         pub fn parse(value: &str) -> Option<Self> {
             match value {
-                "owner" => Some(SpaceRole::Owner),
-                "member" => Some(SpaceRole::Member),
-                "viewer" => Some(SpaceRole::Viewer),
+                "author" => Some(SpaceRole::Author),
+                "spectator" => Some(SpaceRole::Spectator),
                 _ => None,
             }
         }
@@ -143,11 +141,6 @@ use model::*;
 /// backend choice (see `os-semio_hub`'s `bin.rs`, `OS_HUB_DIRECTORY_BACKEND` vs `OS_HUB_STORAGE_BACKEND`).
 #[async_trait::async_trait]
 pub trait HubDirectory: Send + Sync + 'static {
-    //#region Vfs
-    async fn list_nodes(&self, space_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>>;
-    async fn create_node(&self, space_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord>;
-    //#endregion
-
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String>;
     async fn authorized_by_token(&self, document_id: &str, token: Option<&str>) -> DirectoryResult<bool>;
@@ -161,9 +154,20 @@ pub trait HubDirectory: Send + Sync + 'static {
     //#endregion
 
     //#region Spaces
-    async fn create_space(&self, name: &str, owner_user_id: &str) -> DirectoryResult<SpaceRecord>;
+    /// @emoji 🆕️ `kind` (`"atelier"|"studio"|"archive"`) and `visibility` (`"private"|"public"`)
+    /// are persisted verbatim (validated by each backend's own `CHECK`/constraint, not by this
+    /// trait). The owner is granted `SpaceRole::Author` membership as part of creation.
+    async fn create_space(&self, name: &str, owner_user_id: &str, kind: &str, visibility: &str) -> DirectoryResult<SpaceRecord>;
+    /// @emoji 🔎️ Single-space lookup by id — used by the hub handler to read `kind`/`visibility`
+    /// (grant compilation, public-visibility fallback) without listing every space.
+    async fn get_space(&self, space_id: &str) -> DirectoryResult<Option<SpaceRecord>>;
     async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>>;
     async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>>;
+    /// @emoji ⚖️ Enforces the space-kind membership laws before writing: an `archive` space
+    /// (frozen, nobody writes) rejects any `Author` membership with `DirectoryError::Conflict`; an
+    /// `atelier` space (single-writer personal) rejects a SECOND distinct `Author` membership with
+    /// `DirectoryError::Conflict` (re-upserting the existing sole author is not a conflict); a
+    /// `studio` space allows any number of authors.
     async fn upsert_membership(&self, space_id: &str, user_id: &str, role: SpaceRole) -> DirectoryResult<()>;
     async fn remove_membership(&self, space_id: &str, user_id: &str) -> DirectoryResult<()>;
     async fn get_role(&self, space_id: &str, user_id: &str) -> DirectoryResult<Option<SpaceRole>>;

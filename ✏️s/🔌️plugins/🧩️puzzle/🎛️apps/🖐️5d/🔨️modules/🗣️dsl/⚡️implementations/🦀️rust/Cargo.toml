@@ -13,3 +13,7 @@ path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️a
 [dependencies]
 puzzle_5d = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-5d" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+puzzle_5d_op = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-5d-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

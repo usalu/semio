@@ -17,3 +17,5 @@ store = { path = "../../../../../../../../../🧰️framework/🛍️products/�
 
 [dev-dependencies]
 trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🐏️ram/⚡️implementations/🦀️rust", package = "semio-s-plugin-trinity-ram" }
+rewrite_op = { path = "../../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-trinity-rewrite-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

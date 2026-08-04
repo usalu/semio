@@ -1,0 +1,11 @@
+{
+  "title": "Align Dev And Build Optimization Profiles",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Split dev (fast compile, console-only) vs build (release LTO, vite minify/drop). Implement plan dev_build_opt_profiles.",
+  "summary": "Split dev (fast compile, no debuginfo) from ship builds: [profile.release] uses thin LTO, CGU 1, strip; dev entrypoints (os run, wgpu native, repo CLI run) use profile.dev. Added semioViteProductionBuild() for production Vite bundles; Go build -trimpath -s -w; CMake linux/macos Release presets.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪357094739489443687f07b37ebe3fe01"
+  ]
+}

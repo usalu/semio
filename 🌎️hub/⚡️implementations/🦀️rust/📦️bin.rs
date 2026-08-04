@@ -20,7 +20,7 @@ mod header {
 
 use axum::body::Bytes;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-use axum::extract::{Path, Query, State};
+use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
@@ -28,7 +28,7 @@ use axum::{Json, Router};
 use dashmap::DashMap;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use os_hub_directory::model::{NodeRecord, SpaceRole};
+use os_hub_directory::model::SpaceRole;
 use os_hub_directory::HubDirectory;
 use os_hub_directory_sqlite::SqliteDirectory;
 use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ClientFrame, DocumentId as ProtocolDocumentId, Lane, OperationEnvelope, RuntimeFrontierSummary, ServerFrame};
@@ -166,16 +166,25 @@ fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
 
 //#region 🔖️Auth
 /// @emoji 🔎️ What a bearer token resolved to: an authenticated space member, an anonymous
-/// share-token viewer, or nothing.
+/// share-token viewer, an anonymous spectator admitted only because the space is `visibility ==
+/// "public"`, or nothing.
 enum AuthOutcome {
     Session { user_id: String, role: SpaceRole },
     ShareToken,
+    /// @emoji 👁️ Public-visibility fallback — an implicit anonymous `SpaceRole::Spectator`, never
+    /// persisted as a membership row. Granted only when no session/share-token access resolved AND
+    /// the space's own `visibility` is `"public"` (design ruling: "an implicit anonymous spectator
+    /// role granted to unauthenticated requests" — deliberately a HANDLER-level fallback, not a
+    /// policy-engine concept, since `db_security`'s `RoleBasedPolicy` stays purely mechanical).
+    Public,
     Denied,
 }
 
 /// @emoji 🔐️ Tries the bearer as an `AuthSessionRecord` (session id -> user -> space role) first;
-/// falls back to the existing anonymous share-token scheme when session resolution fails. Tokenless
-/// documents stay open (dev default) until any share token is issued for them.
+/// falls back to the existing anonymous share-token scheme when session resolution fails; and
+/// finally falls back to `AuthOutcome::Public` when the space itself is `visibility == "public"`.
+/// Tokenless documents in a non-public space stay open (dev default) until any share token is
+/// issued for them, same as before this wave.
 async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token: Option<&str>) -> AuthOutcome {
     if let Some(session_id) = token {
         if let Ok(Some(session)) = state.directory.get_auth_session(session_id).await {
@@ -186,8 +195,11 @@ async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token
             }
         }
     }
-    match state.directory.authorized_by_token(document_id, token).await {
-        Ok(true) => AuthOutcome::ShareToken,
+    if let Ok(true) = state.directory.authorized_by_token(document_id, token).await {
+        return AuthOutcome::ShareToken;
+    }
+    match state.directory.get_space(space_id).await {
+        Ok(Some(space)) if space.visibility == "public" => AuthOutcome::Public,
         _ => AuthOutcome::Denied,
     }
 }
@@ -216,19 +228,6 @@ struct DocumentStatusResponse {
     epoch: u64,
 }
 
-#[derive(Deserialize)]
-struct NodesQuery {
-    parent: Option<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct CreateNodeRequest {
-    parent_id: Option<String>,
-    name: String,
-    kind: String,
-}
-
 #[derive(Serialize)]
 struct ShareResponse {
     token: String,
@@ -250,14 +249,6 @@ struct BlobRecord {
     hash: String,
     media_type: String,
     size: i64,
-}
-
-async fn list_nodes(Path(space_id): Path<String>, Query(query): Query<NodesQuery>, State(state): State<HubState>) -> Result<Json<Vec<NodeRecord>>, StatusCode> {
-    state.directory.list_nodes(&space_id, query.parent.as_deref()).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
-}
-
-async fn create_node(Path(space_id): Path<String>, State(state): State<HubState>, Json(body): Json<CreateNodeRequest>) -> Result<Json<NodeRecord>, StatusCode> {
-    state.directory.create_node(&space_id, body.parent_id.as_deref(), &body.name, &body.kind).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 /// @emoji 🧭️ A document's current frontier — the REST surface's only document-shaped route now
@@ -396,12 +387,41 @@ async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id:
     }
 }
 
+/// @emoji 🚪️ Runs `envelopes` through `gate.admit_command` one at a time (tenant isolation, then
+/// `Action::Write` authz on `AuthzScope::CommandKind`, DoS budget, replay dedupe — see
+/// `SecurityGate::admit_command`'s own doc) before any of them reach `db::DocumentHandle::submit`.
+/// Returns the first rejection reason, or `None` once every envelope is admitted. `kind` is a
+/// constant ("write") rather than a per-envelope command-kind string: this crate sits above
+/// `db_document`'s pipeline and never interprets an operation's schema/diff semantics (matches
+/// `db_security`'s own module doc — payload interpretation stays out of this layer), so command-kind
+/// granularity inside one document is not this wave's concern.
+fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolDocumentId, envelopes: &[OperationEnvelope], physical_ms: u64) -> Option<String> {
+    envelopes.iter().find_map(|envelope| gate.admit_command(principal, tenant, document, "write", &envelope.actor, &envelope.operation_id, physical_ms).err().map(|error| error.to_string()))
+}
+
 /// @emoji 📨️ Handles one decoded `ClientFrame` for an already-authenticated, already-`Hello`'d
 /// session. Returns `false` when the session should close (`Bye`, or a send failure).
 #[allow(clippy::too_many_arguments)]
-async fn handle_client_frame(state: &HubState, handle: &db::DocumentHandle, db_id: &ProtocolDocumentId, key: &str, fanout: &broadcast::Sender<ServerFrame>, actor: &ActorId, frame: ClientFrame, sender: &mut SplitSink<WebSocket, Message>) -> bool {
+async fn handle_client_frame(
+    state: &HubState,
+    handle: &db::DocumentHandle,
+    db_id: &ProtocolDocumentId,
+    key: &str,
+    fanout: &broadcast::Sender<ServerFrame>,
+    actor: &ActorId,
+    gate: &db::security::SecurityGate,
+    principal: &db::security::Principal,
+    tenant: &db::security::TenantId,
+    frame: ClientFrame,
+    sender: &mut SplitSink<WebSocket, Message>,
+) -> bool {
     match frame {
         ClientFrame::Commands { batch_id, envelopes } => {
+            if let Some(reason) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64) {
+                let frontier = best_effort_frontier(handle);
+                let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason }) }], frontier };
+                return sender.send(encode(&ack)).await.is_ok();
+            }
             let (ack, relay) = submit_commands(handle, actor, batch_id, envelopes).await;
             if let Some(commands_frame) = relay {
                 let _ = fanout.send(commands_frame);
@@ -460,11 +480,39 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sta
     let (user_id, role) = match &auth {
         AuthOutcome::Session { user_id, role } => (Some(user_id.clone()), Some(*role)),
         AuthOutcome::ShareToken => (None, None),
+        // 👁️ Public-visibility fallback: an implicit anonymous spectator, never a persisted
+        // membership row (see `AuthOutcome::Public`'s doc).
+        AuthOutcome::Public => (None, Some(SpaceRole::Spectator)),
         AuthOutcome::Denied => {
             let _ = sender.send(error_frame("unauthorized", "unauthorized")).await;
             return;
         }
     };
+
+    // 🔒️ Per-connection `SecurityGate`: `space_grants` compiles this space's `kind` into
+    // author=rw/spectator=ro grants (archive additionally deny-overrides author writes), a fresh
+    // `RoleBasedPolicy` from them, and a `Principal` carrying the caller's resolved role. A share-
+    // token/public-visibility caller (no session role) is admitted as `"spectator"` — read-only,
+    // the least-privilege default for a connection this crate cannot attribute to a real member.
+    // `TenantId` reuses the space id: this crate has no separate tenant concept yet, and every
+    // scope this gate ever evaluates already belongs to exactly this one space/document connection.
+    let space_kind = state.directory.get_space(&space_id).await.ok().flatten().map(|space| space.kind).unwrap_or_else(|| "studio".to_string());
+    let policy = db::security::space_grants(&space_id, &space_kind).into_iter().fold(db::security::RoleBasedPolicy::new(), db::security::RoleBasedPolicy::with_grant);
+    let gate = db::security::SecurityGate::new(policy, db::security::ReplayGuard::new(60_000, 256), db::security::BudgetRegistry::new(240, 60), Arc::new(db::core::NullEmit));
+    let tenant = db::security::TenantId::from(space_id.clone());
+    // 🎯️ Role mapping: a resolved membership uses its own `SpaceRole`; `AuthOutcome::Public` (the
+    // NEW implicit-anonymous-spectator fallback for `visibility == "public"`, per the design
+    // ruling) is deliberately read-only. `AuthOutcome::ShareToken` predates the role system
+    // entirely — it already granted unconditional (read+write) per-document access before this
+    // wave — so it maps to `"author"` here to preserve that existing contract rather than silently
+    // regressing every share-token holder to read-only.
+    let role_str = match &auth {
+        AuthOutcome::Session { role, .. } => role.as_str().to_string(),
+        AuthOutcome::ShareToken => "author".to_string(),
+        AuthOutcome::Public => "spectator".to_string(),
+        AuthOutcome::Denied => unreachable!("Denied already returned above"),
+    };
+    let principal = db::security::Principal::new(actor.clone(), tenant.clone(), vec![role_str]);
 
     let db_id = db_document_id(&space_id, &document_id);
     let handle = match state.ensure_document(&db_id) {
@@ -507,7 +555,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sta
                 match incoming {
                     Some(Ok(Message::Binary(bytes))) => {
                         if let Ok((_lane, frame)) = decode_client_frame(&bytes) {
-                            if !handle_client_frame(&state, &handle, &db_id, &key, &fanout, &actor, frame, &mut sender).await {
+                            if !handle_client_frame(&state, &handle, &db_id, &key, &fanout, &actor, &gate, &principal, &tenant, frame, &mut sender).await {
                                 break;
                             }
                         }
@@ -548,7 +596,6 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sta
 fn router(state: HubState) -> Router {
     Router::new()
         .route("/auth/sessions", post(create_auth_session))
-        .route("/spaces/{space_id}/nodes", get(list_nodes).post(create_node))
         .route("/spaces/{space_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
         .route("/spaces/{space_id}/documents/{id}", get(get_document_status))
         .route("/spaces/{space_id}/documents/{id}/share", post(create_share))
@@ -832,6 +879,49 @@ mod tests {
         assert!(matches!(next_server_frame(&mut allowed).await, ServerFrame::Welcome { .. }));
     }
 
+    // 🔬️ `SecurityGate` wiring: a `Spectator` session may `Hello` into a document (reads are
+    // unaffected) but a `Commands` submission is rejected — `admit_writes` catches it via
+    // `space_grants`'s role-scoped `RoleBasedPolicy` before `db::DocumentHandle::submit` ever
+    // runs — while an `Author` session on the same space succeeds, proving the gate is wired into
+    // the real write path rather than merely unit-tested in isolation.
+    #[tokio::test]
+    async fn security_gate_rejects_spectator_writes_and_allows_author_writes() {
+        let state = test_state().await;
+        let space = state.directory.create_space("Gated Space", "seed", "studio", "private").await.expect("create space").id;
+
+        let spectator_session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "spectator@example.com".into() })).await.expect("mint spectator session");
+        state.directory.upsert_membership(&space, &spectator_session.0.user_id, SpaceRole::Spectator).await.expect("grant spectator");
+
+        let author_session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "author@example.com".into() })).await.expect("mint author session");
+        state.directory.upsert_membership(&space, &author_session.0.user_id, SpaceRole::Author).await.expect("grant author");
+
+        let addr = spawn_server(state).await;
+        let url = format!("ws://{addr}/spaces/{space}/documents/gated-doc/ws");
+        let document = WireDocumentId(format!("{space}:gated-doc"));
+        let hello_with_token = |actor: &str, token: String| ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId(actor.to_string()), token: Some(token), resume_token: None, frontier: None };
+
+        let (mut spectator, _) = connect_async(&url).await.unwrap();
+        spectator.send(client_binary(&hello_with_token("spectator", spectator_session.0.token), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut spectator).await, ServerFrame::Welcome { .. }));
+        spectator.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-spectator", &document)] }, Lane::Command)).await.unwrap();
+        match next_server_frame(&mut spectator).await {
+            ServerFrame::Ack { stages, .. } => {
+                assert_eq!(stages.len(), 1);
+                match &stages[0] {
+                    AckStage::Applied { outcome } => assert!(matches!(outcome.as_ref(), ApplyOutcome::Rejected { .. }), "a spectator's write must be rejected by the security gate"),
+                    _ => panic!("expected a single Applied stage"),
+                }
+            }
+            _ => panic!("expected an ack frame"),
+        }
+
+        let (mut author, _) = connect_async(&url).await.unwrap();
+        author.send(client_binary(&hello_with_token("author", author_session.0.token), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Welcome { .. }));
+        author.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-author", &document)] }, Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Ack { batch_id: 1, .. }));
+    }
+
     // 🔬️ Blob round-trip: PUT then GET returns identical bytes and HEAD reports found, through
     // `db::Database`'s own content-addressed payload store; a hash that was never PUT is reported
     // missing by both GET and HEAD.
@@ -867,15 +957,20 @@ mod tests {
         assert_eq!(result.err(), Some(StatusCode::BAD_REQUEST));
     }
 
-    // 🔬️ VFS nodes are durable and creatable through the directory-backed REST routes.
+    // 🔬️ A `visibility == "public"` space grants an anonymous caller an implicit
+    // `AuthOutcome::Public` — the hub-handler-level fallback, never a policy-engine concept (see
+    // `AuthOutcome::Public`'s doc) — once the tokenless-open-by-default share-token scheme no
+    // longer resolves the request itself (a share token has been issued for the document, closing
+    // it); a private space with the same shape stays denied.
     #[tokio::test]
-    async fn nodes_create_and_list() {
+    async fn public_visibility_grants_anonymous_spectator_fallback() {
         let state = test_state().await;
-        let created = create_node(Path(STUDIO.to_string()), State(state.clone()), Json(CreateNodeRequest { parent_id: None, name: "Projects".into(), kind: "folder".into() })).await.expect("create");
-        let child = create_node(Path(STUDIO.to_string()), State(state.clone()), Json(CreateNodeRequest { parent_id: Some(created.0.id.clone()), name: "sketch".into(), kind: "document".into() })).await.expect("create child");
-        let children = list_nodes(Path(STUDIO.to_string()), Query(NodesQuery { parent: Some(created.0.id.clone()) }), State(state)).await.expect("list");
-        assert_eq!(children.0.len(), 1);
-        assert_eq!(children.0[0].id, child.0.id);
+        let public_space = state.directory.create_space("Public Space", "seed", "studio", "public").await.expect("create public space").id;
+        let private_space = state.directory.create_space("Private Space", "seed", "studio", "private").await.expect("create private space").id;
+        state.directory.create_share_token("guarded-doc").await.expect("close document with a share token");
+
+        assert!(matches!(resolve_auth(&state, &public_space, "guarded-doc", None).await, AuthOutcome::Public));
+        assert!(matches!(resolve_auth(&state, &private_space, "guarded-doc", None).await, AuthOutcome::Denied));
     }
 
     // 🔬️ Auth sessions: POST /auth/sessions mints a session that resolves the caller's space role
@@ -885,13 +980,13 @@ mod tests {
         let state = test_state().await;
         // `hub_space_membership.space_id` is FK-bound to `hub_space(id)` — a real studio, not a
         // bare string, matching how `create_auth_session`'s minted user must also be a real row.
-        let studio = state.directory.create_space("Space X", "seed").await.expect("create space").id;
+        let studio = state.directory.create_space("Space X", "seed", "studio", "private").await.expect("create space").id;
         let document = "closed-doc";
         state.directory.create_share_token(document).await.expect("close with share token");
         assert!(!state.directory.authorized_by_token(document, None).await.unwrap());
 
         let minted = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "dev@example.com".into() })).await.expect("mint session");
-        state.directory.upsert_membership(&studio, &minted.0.user_id, SpaceRole::Member).await.expect("grant membership");
+        state.directory.upsert_membership(&studio, &minted.0.user_id, SpaceRole::Spectator).await.expect("grant membership");
 
         assert!(!authorized(&state, &studio, document, None).await, "tokenless request still denied");
         assert!(authorized(&state, &studio, document, Some(&minted.0.token)).await, "session token authorized despite no share token");
@@ -899,7 +994,7 @@ mod tests {
         match resolve_auth(&state, &studio, document, Some(&minted.0.token)).await {
             AuthOutcome::Session { user_id, role } => {
                 assert_eq!(user_id, minted.0.user_id);
-                assert_eq!(role, SpaceRole::Member);
+                assert_eq!(role, SpaceRole::Spectator);
             }
             _ => panic!("expected a resolved session"),
         }

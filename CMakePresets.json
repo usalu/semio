@@ -36,6 +36,15 @@
       }
     },
     {
+      "name": "ninja-release-base",
+      "hidden": true,
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
       "name": "linux",
       "displayName": "Linux C++23",
       "inherits": "ninja-base",
@@ -49,6 +58,26 @@
       "name": "macos",
       "displayName": "macOS C++23",
       "inherits": "ninja-base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux C++23 Release",
+      "inherits": "ninja-release-base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "macos-release",
+      "displayName": "macOS C++23 Release",
+      "inherits": "ninja-release-base",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -86,6 +115,14 @@
       "configurePreset": "macos"
     },
     {
+      "name": "linux-release",
+      "configurePreset": "linux-release"
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release"
+    },
+    {
       "name": "windows",
       "configurePreset": "windows",
       "configuration": "Release"
@@ -107,6 +144,20 @@
     {
       "name": "macos",
       "configurePreset": "macos",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release",
       "output": {
         "outputOnFailure": true
       }

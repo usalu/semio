@@ -1,0 +1,4 @@
+[verify] cargo build -p semio-framework-os-run -> Finished dev profile [unoptimized]
+[verify] cargo build -p semio-framework-os-run --release -> Finished release profile [optimized] (~9m thin LTO)
+[verify] repo vscode vite build -> out/extension.js minified, no .map files
+[verify] mit-bestand demonstrator vite build -> pre-existing worker path failure (unrelated to profile changes)

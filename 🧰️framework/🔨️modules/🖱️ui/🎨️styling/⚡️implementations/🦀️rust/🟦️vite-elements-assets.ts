@@ -56,6 +56,23 @@ export function playgroundStaticSiteBuildOptions(overrides?: UserConfig["build"]
   };
 }
 
+/** @emoji 🚀️ Production Vite `build` defaults: minify, strip console/debugger, no sourcemaps. */
+export function semioViteProductionBuild(overrides?: UserConfig["build"]): NonNullable<UserConfig["build"]> {
+  return {
+    target: "es2022",
+    sourcemap: false,
+    minify: "esbuild",
+    cssMinify: true,
+    reportCompressedSize: false,
+    ...overrides,
+    esbuild: {
+      drop: ["console", "debugger"],
+      legalComments: "none",
+      ...(overrides?.esbuild ?? {}),
+    },
+  };
+}
+
 /** @emoji 🔗️ True when a request targets Vite prebundled `node_modules/.vite/deps` chunks. */
 export function isPlaygroundOptimizedDepUrl(url: string): boolean {
   return url.includes("/node_modules/.vite/deps/");

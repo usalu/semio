@@ -8309,6 +8309,7 @@ dependencies = [
 name = "semio-framework-os-kernel-space"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
@@ -9186,8 +9187,10 @@ name = "semio-s-app-cad-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-cad",
+ "semio-s-app-cad-op",
  "serde_json",
 ]
 
@@ -9273,9 +9276,11 @@ name = "semio-s-app-dag-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-dag",
  "semio-s-app-dag-dsl",
+ "semio-s-app-dag-op",
 ]
 
 [[package]]
@@ -9360,10 +9365,12 @@ name = "semio-s-app-draw-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-draw",
  "semio-s-app-draw-dsl",
  "semio-s-app-draw-engine",
+ "semio-s-app-draw-op",
 ]
 
 [[package]]
@@ -9707,9 +9714,11 @@ name = "semio-s-app-forms-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-forms",
  "semio-s-app-forms-dsl",
+ "semio-s-app-forms-op",
 ]
 
 [[package]]
@@ -10180,9 +10189,12 @@ name = "semio-s-app-lowpoly-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-lowpoly",
  "semio-s-app-lowpoly-dsl",
+ "semio-s-app-lowpoly-engine",
+ "semio-s-app-lowpoly-op",
 ]
 
 [[package]]
@@ -10267,8 +10279,10 @@ name = "semio-s-app-mathematical-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-mathematical",
+ "semio-s-app-mathematical-op",
 ]
 
 [[package]]
@@ -11314,9 +11328,11 @@ name = "semio-s-app-note-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-note",
  "semio-s-app-note-dsl",
+ "semio-s-app-note-op",
 ]
 
 [[package]]
@@ -11393,8 +11409,10 @@ name = "semio-s-app-playbook-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-playbook",
+ "semio-s-app-playbook-op",
  "serde_json",
 ]
 
@@ -11440,8 +11458,10 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-procedural-2d",
+ "semio-s-app-procedural-2d-op",
  "serde_json",
 ]
 
@@ -11488,9 +11508,11 @@ dependencies = [
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-procedural-2d",
  "semio-s-app-procedural-2d-dsl",
+ "semio-s-app-procedural-2d-op",
  "serde_json",
 ]
 
@@ -11548,8 +11570,10 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-procedural-3d",
+ "semio-s-app-procedural-3d-op",
  "serde_json",
 ]
 
@@ -11596,9 +11620,11 @@ dependencies = [
  "semio-framework-os-kernel-flow-core",
  "semio-framework-os-kernel-pack",
  "semio-framework-os-kernel-playbook",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-procedural-3d",
  "semio-s-app-procedural-3d-dsl",
+ "semio-s-app-procedural-3d-op",
  "serde_json",
 ]
 
@@ -11748,8 +11774,10 @@ dependencies = [
 name = "semio-s-app-puzzle-2d-dsl"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-puzzle-2d",
+ "semio-s-app-puzzle-2d-op",
 ]
 
 [[package]]
@@ -11783,9 +11811,11 @@ name = "semio-s-app-puzzle-2d-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-puzzle-2d",
  "semio-s-app-puzzle-2d-dsl",
+ "semio-s-app-puzzle-2d-op",
 ]
 
 [[package]]
@@ -11832,8 +11862,10 @@ dependencies = [
 name = "semio-s-app-puzzle-3d-dsl"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-puzzle-3d",
+ "semio-s-app-puzzle-3d-op",
 ]
 
 [[package]]
@@ -11870,9 +11902,11 @@ name = "semio-s-app-puzzle-3d-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-puzzle-3d",
  "semio-s-app-puzzle-3d-dsl",
+ "semio-s-app-puzzle-3d-op",
 ]
 
 [[package]]
@@ -11922,8 +11956,10 @@ dependencies = [
 name = "semio-s-app-puzzle-5d-dsl"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-puzzle-5d",
+ "semio-s-app-puzzle-5d-op",
 ]
 
 [[package]]
@@ -11959,8 +11995,10 @@ name = "semio-s-app-puzzle-5d-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-puzzle-5d",
+ "semio-s-app-puzzle-5d-op",
 ]
 
 [[package]]
@@ -12049,9 +12087,12 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-raster",
  "semio-s-app-raster-dsl",
+ "semio-s-app-raster-engine",
+ "semio-s-app-raster-op",
  "serde_json",
 ]
 
@@ -12135,10 +12176,15 @@ dependencies = [
 name = "semio-s-app-reasoning-wires-pack"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-reasoning-wires",
  "semio-s-app-reasoning-wires-dsl",
+ "semio-s-app-reasoning-wires-engine",
+ "semio-s-app-reasoning-wires-op",
+ "serde_json",
 ]
 
 [[package]]
@@ -12328,9 +12374,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-sequence",
  "semio-s-app-sequence-dsl",
+ "semio-s-app-sequence-op",
 ]
 
 [[package]]
@@ -12414,9 +12462,11 @@ name = "semio-s-app-shooting-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-shooting",
  "semio-s-app-shooting-dsl",
+ "semio-s-app-shooting-op",
  "serde_json",
 ]
 
@@ -12813,8 +12863,10 @@ dependencies = [
 name = "semio-s-app-trinity-rewrite-dsl"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-trinity-rewrite",
+ "semio-s-app-trinity-rewrite-op",
  "semio-s-plugin-trinity-ram",
 ]
 
@@ -12859,8 +12911,10 @@ name = "semio-s-app-trinity-rewrite-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-trinity-rewrite",
+ "semio-s-app-trinity-rewrite-op",
  "semio-s-plugin-trinity-ram",
 ]
 
@@ -12942,9 +12996,11 @@ name = "semio-s-app-vcs-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-vcs",
  "semio-s-app-vcs-engine",
+ "semio-s-app-vcs-op",
 ]
 
 [[package]]
@@ -13025,9 +13081,11 @@ name = "semio-s-app-writer-pack"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-pack",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-writer",
  "semio-s-app-writer-engine",
+ "semio-s-app-writer-op",
 ]
 
 [[package]]

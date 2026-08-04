@@ -23,9 +23,9 @@ class TestScript extends BundleScript {
  */
 class RunScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli", "--release"], { cwd: this.repoRoot, env: devToolingEnv() });
+    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli"], { cwd: this.repoRoot, env: devToolingEnv() });
     const binName = process.platform === "win32" ? "semio.exe" : "semio";
-    const bin = join(this.repoRoot, "target", "release", binName);
+    const bin = join(this.repoRoot, "target", "debug", binName);
     const status = runCmdStatus(bin, segments, { cwd: this.repoRoot, env: devToolingEnv() });
     process.exit(status);
   }

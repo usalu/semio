@@ -867,6 +867,27 @@ mod tests {
     fn module_payload_operation_op_text_round_trips() {
         store::test_support::assert_op_line_round_trip(&ModulePayloadOperation::SetPayload { payload: default_payload() });
     }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `ModulePayloadOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside
+    /// this file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`). Dispatches through a standalone
+    /// `store::DocumentStore` directly (this app has no separate dsl/pack/protocol crate split, so
+    /// there is no existing whole-store test to extend).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+
+        let mut store: DocumentStore<ModuleRenderPayload, ModulePayloadOperation> = DocumentStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None));
+        let mut payload = default_payload();
+        payload.interactive = false;
+        store.dispatch(DocumentCommand::Apply { operations: vec![ModulePayloadOperation::SetPayload { payload }], description: None }).expect("apply");
+        let edit: &Edit<ModulePayloadOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
     //#endregion 🔖️DslAndOpText
 }
 //#endregion 🧪️Tests

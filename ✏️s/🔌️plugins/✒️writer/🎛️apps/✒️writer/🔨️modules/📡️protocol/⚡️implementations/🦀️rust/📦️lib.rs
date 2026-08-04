@@ -113,6 +113,22 @@ mod tests {
         store::test_support::assert_document_pack_round_trip(&store);
     }
 
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `WriterOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this file's
+    /// existing pack round-trip law (same pattern as `mathematical`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+
+        let mut store = DocumentStore::<WriterProjection, WriterOperation>::new(create_document_envelope("writer.document", "writer", writer_engine::empty_writer_projection(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetDocument { document: jack_projection() }], description: None }).expect("apply");
+        let edit: &Edit<WriterOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<WriterProjection, WriterOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
+
     //#region 🔖️CommandTests
     #[test]
     fn writer_command_binary_matches_text_for_every_shape() {

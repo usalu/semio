@@ -47,7 +47,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(): void {
-    runCmd("go", ["build", "-o", join(this.repoRoot, REPO_CLIENT_DIR, process.platform === "win32" ? "client.exe" : "client"), `./${REPO_MCP_GO}`], {
+    runCmd("go", ["build", "-trimpath", "-ldflags=-s -w", "-o", join(this.repoRoot, REPO_CLIENT_DIR, process.platform === "win32" ? "client.exe" : "client"), `./${REPO_MCP_GO}`], {
       cwd: this.repoRoot,
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
       budgetMs: buildBudgetMs(),

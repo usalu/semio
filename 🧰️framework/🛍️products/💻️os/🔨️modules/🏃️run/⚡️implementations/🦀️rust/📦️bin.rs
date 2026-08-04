@@ -1,8 +1,11 @@
-//! 🕸️ CLI: `bun ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry]` shells out to
-//! `cargo run -p semio-framework-os-run --release -- <same args>`. This binary owns argv parsing and
-//! studio-bundle plumbing only — all the actual dirty/clean and execution logic lives in the library.
+//! 🕸️ CLI: `bun ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param k=v]*`
+//! shells out to `cargo run -p semio-framework-os-run --release -- <same args>`. This binary owns argv
+//! parsing and studio-bundle plumbing only — all the actual dirty/clean and execution logic lives in
+//! the library. Non-destructive (W5 Lane A): every invocation produces/updates a `RunDocument` under
+//! `runs/<RUN_ID>.run.pack|.spr` (sealed on success, sealed `Failed` if the run itself errored) — it
+//! never mutates a node's source `artifacts/<document_ref>`/`artifacts/<config_ref>` bytes.
 
-use semio_framework_os_run::{plan, register_builtin_converters, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
+use semio_framework_os_run::{plan, register_builtin_converters, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -63,11 +66,21 @@ fn resolve_plugin_paths(repo_root: &Path, plugin_ids: impl Iterator<Item = Strin
 }
 //#endregion 🔖️PluginArtifacts
 
+/// 🆔️ Single canonical run slot per bundle for this wave — see `SpaceBundle`'s own doc comment on
+/// `runs/<run id>.run.pack`. A real multi-run history/listing is later-wave `space::DraftCatalog`
+/// integration work; every invocation of this CLI updates/overwrites the SAME `RunDocument`.
+const RUN_ID: &str = "default";
+
 struct Args {
     bundle: PathBuf,
     dry: bool,
     watch: bool,
     only_node: Option<String>,
+    /// 🎛️ `--param <parameter_id>=<value>` (repeatable) — resolved into `workflow::RunParameterValue`s
+    /// applied as a config-fingerprint overlay on bound node configs before dirty-checking (see
+    /// `semio_framework_os_run::node_parameter_overlay_bytes`'s doc for why this affects the
+    /// fingerprint rather than the raw config bytes this crate sends to the app).
+    params: Vec<(String, String)>,
 }
 
 fn parse_args() -> Result<Args, String> {
@@ -75,18 +88,24 @@ fn parse_args() -> Result<Args, String> {
     let mut dry = false;
     let mut watch = false;
     let mut only_node: Option<String> = None;
+    let mut params: Vec<(String, String)> = Vec::new();
     let mut argv = std::env::args().skip(1);
     while let Some(arg) = argv.next() {
         match arg.as_str() {
             "--dry" => dry = true,
             "--watch" => watch = true,
             "--node" => only_node = Some(argv.next().ok_or("--node requires a value")?),
+            "--param" => {
+                let raw = argv.next().ok_or("--param requires a value of the form <parameter_id>=<value>")?;
+                let (parameter_id, value) = raw.split_once('=').ok_or_else(|| format!("--param `{raw}` must be of the form <parameter_id>=<value>"))?;
+                params.push((parameter_id.to_string(), value.to_string()));
+            }
             other if !other.starts_with("--") => bundle = Some(PathBuf::from(other)),
             other => return Err(format!("unknown flag {other}")),
         }
     }
-    let bundle = bundle.ok_or_else(|| "usage: os run <bundle>.studio [--node <id>] [--watch] [--dry]".to_string())?;
-    Ok(Args { bundle, dry, watch, only_node })
+    let bundle = bundle.ok_or_else(|| "usage: os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param <parameter_id>=<value>]*".to_string())?;
+    Ok(Args { bundle, dry, watch, only_node, params })
 }
 
 fn main() {
@@ -107,6 +126,22 @@ fn main() {
     }
 }
 
+/// 🔒️ Replays `sink.operations` through a fresh `store::DocumentStore` (the same "build an envelope,
+/// `Apply`, `snapshot_pack`" pattern every other document in this codebase persists through) and
+/// writes the resulting pack+spr to `runs/<RUN_ID>.run.pack|.spr`, plus every node document/config
+/// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
+fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
+    let envelope = store::create_document_envelope::<workflow::RunDocument, workflow::RunOperation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
+    let mut document_store = store::DocumentStore::new(envelope);
+    if !sink.operations.is_empty() {
+        document_store.dispatch(store::DocumentCommand::Apply { operations: sink.operations.clone(), description: None }).map_err(|error| error.to_string())?;
+    }
+    let snapshot = document_store.snapshot_pack().map_err(|error| error.to_string())?;
+    bundle.write_run_document(RUN_ID, &snapshot.pack, &snapshot.spr)?;
+    bundle.write_run_nodes(RUN_ID, sink)?;
+    Ok(())
+}
+
 fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     // 🔌️ One-time registration of every framework-builtin `MediaConvertFn` this crate ships a real
     // body for (Vector→Raster today) — mirrors `register_artifact_descriptors`'s "call at
@@ -116,10 +151,11 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let bundle = SpaceBundle::open(&args.bundle);
     let (space_pack, space_spr) = bundle.read_space_document()?;
     // 🧬️ `OsProjection`/`OsOperation` are dissolved (os-core dissolve, `## The inversion`) — the
-    // studio bundle's `space.os.pack`/`.spr` files now carry a `workflow::WorkflowDocument`/
-    // `WorkflowOperation` pair (the `s.workflow` artifact document) instead. `SpaceBundle`'s own
-    // `space_document_pack_path`/`space_document_spr_path` filenames are unchanged here (a bundle
-    // on-disk layout migration is out of scope for this wave) — only the typed decode target moved.
+    // studio bundle's root `space.space.pack`/`.spr` files (renamed from `space.os.pack`/`.spr` by
+    // W4's canonical on-disk layout rewrite, see `SpaceBundle`'s own doc comment) carry a
+    // `workflow::WorkflowDocument`/`WorkflowOperation` pair (the `s.workflow` artifact document)
+    // instead — only the typed decode target moved, wiring the root slot to a real
+    // `space::SpaceProjection` manifest is later-wave work.
     let parsed: store::ParsedDocumentText<semio_framework_os::WorkflowDocument, semio_framework_os::WorkflowOperation> = store::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
     let projection = parsed.projection;
 
@@ -129,6 +165,8 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         graph.edges.retain(|edge| &edge.source_node_id == node_id || &edge.target_node_id == node_id);
     }
 
+    // 🔒️ READONLY source maps for the whole run — `SpaceRunner::run` never writes back into these (see
+    // `semio_framework_os_run`'s module doc, "non-destructive rework").
     let mut documents: BTreeMap<String, (Vec<u8>, Vec<u8>)> = BTreeMap::new();
     let mut configs: BTreeMap<String, (Vec<u8>, Vec<u8>)> = BTreeMap::new();
     for node in &graph.nodes {
@@ -136,10 +174,23 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         configs.insert(node.config_ref.clone(), bundle.read_config(&node.config_ref)?);
     }
 
-    let mut state = bundle.load_run_state()?;
+    let parameter_values: Vec<workflow::RunParameterValue> = args.params.iter().map(|(parameter_id, value)| workflow::RunParameterValue { parameter_id: parameter_id.clone(), value: value.clone() }).collect();
+
+    // 🗄️ Memoization ground truth: the PRIOR SEALED run's own `node_records`, keyed by node id — empty
+    // (first run ever, or the prior run never sealed) means every node computes fresh. Replaces the
+    // deleted `run/state.json`-backed `RunState`.
+    let prior_node_records: BTreeMap<String, workflow::RunNodeRecord> = {
+        let (run_pack, run_spr) = bundle.read_run_document(RUN_ID)?;
+        if run_pack.is_empty() {
+            BTreeMap::new()
+        } else {
+            let parsed: store::ParsedDocumentText<workflow::RunDocument, workflow::RunOperation> = store::parse_document_pack(&run_pack, &run_spr).map_err(|error| error.to_string())?;
+            parsed.projection.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
+        }
+    };
 
     if args.dry {
-        let report = plan(&graph, &documents, &configs, &state)?;
+        let report = plan(&graph, &documents, &configs, &parameter_values, &projection.parameter_bindings, &prior_node_records)?;
         println!("recompute: {:?}", report.recomputed);
         println!("clean:     {:?}", report.clean);
         return Ok(());
@@ -154,20 +205,33 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let mut runner = SpaceRunner::new(host, blob_store);
     let mut cache = bundle.media_cache();
 
-    let (documents_out, configs_out, report) = runner.run(&graph, &documents, &configs, &mut state, &mut cache)?;
-    println!("recomputed: {:?}", report.recomputed);
-    println!("clean:      {:?}", report.clean);
+    let mut sink = RunSink::new(workflow::empty_run_document());
+    sink.record(workflow::RunOperation::Start {
+        workflow_ref: args.bundle.display().to_string(),
+        workflow_checkpoint_id: String::new(),
+        input_collection_ref: String::new(),
+        input_snapshot_id: String::new(),
+        parameter_values: parameter_values.clone(),
+        output_collection_ref: String::new(),
+        trigger: workflow::RunTrigger::Manual { actor: "cli".into() },
+    })
+    .map_err(|error| error.to_string())?;
 
-    for (document_ref, artifact) in &documents_out {
-        if documents.get(document_ref) != Some(artifact) {
-            bundle.write_document(document_ref, &artifact.0, &artifact.1)?;
+    match runner.run(&graph, &documents, &configs, &parameter_values, &projection.parameter_bindings, &prior_node_records, &mut cache, &mut sink) {
+        Ok(report) => {
+            println!("recomputed: {:?}", report.recomputed);
+            println!("clean:      {:?}", report.clean);
+            sink.record(workflow::RunOperation::Seal { status: workflow::RunStatus::Succeeded }).map_err(|error| error.to_string())?;
+            persist_run(&bundle, &sink)?;
+            Ok(())
+        }
+        Err(error) => {
+            // 🧾️ A failed run still gets a real, sealed audit trail — readonly-over-source holds even
+            // on failure, and a later invocation can see WHY the last run failed.
+            let _ = sink.record(workflow::RunOperation::Log { node_id: String::new(), level: "error".into(), message: error.to_string(), at: store::now_iso() });
+            let _ = sink.record(workflow::RunOperation::Seal { status: workflow::RunStatus::Failed });
+            persist_run(&bundle, &sink)?;
+            Err(error.into())
         }
     }
-    for (config_ref, artifact) in &configs_out {
-        if configs.get(config_ref) != Some(artifact) {
-            bundle.write_config(config_ref, &artifact.0, &artifact.1)?;
-        }
-    }
-    bundle.save_run_state(&state)?;
-    Ok(())
 }

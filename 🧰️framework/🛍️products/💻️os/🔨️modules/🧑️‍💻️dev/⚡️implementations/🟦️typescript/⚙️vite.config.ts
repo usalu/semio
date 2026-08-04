@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import { isStudioPluginFilter } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts";
 import { resolveShellBrandById } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🏷️brand/📦️index.ts";
@@ -66,7 +66,10 @@ export default defineConfig({
   assetsInclude: ["**/*.wasm"],
   // 🏷️ A brand's own `distDir` (e.g. the Aggregator's `♻️/aggregator/dist`) keeps its build output
   // self-contained alongside its brand config/assets instead of the shared playground `dist/`.
-  build: brand?.distDir ? { outDir: path.join(repoRoot, brand.distDir) } : undefined,
+  build: {
+    ...semioViteProductionBuild(),
+    ...(brand?.distDir ? { outDir: path.join(repoRoot, brand.distDir) } : {}),
+  },
   resolve: {
     alias: [
       ...playgroundSceneHostResolveAliases(repoRoot),

@@ -89,5 +89,24 @@ mod tests {
         scene.structure_classic_geometry = Some(sample_geometry());
         store::test_support::assert_dsl_pack_equivalence(&scene);
     }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `CadOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this file's
+    /// existing dsl/pack round-trip laws (same pattern as `mathematical_pack`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use cad_document::{CadPaneId, CAD_DOCUMENT_SCHEMA};
+        use cad_document_op::CadOperation;
+        use protocol::{DocumentId, Edit, SchemaId};
+        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+
+        let mut store: DocumentStore<CadScene, CadOperation> = DocumentStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad-demo", empty_cad_projection(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::AddObject { pane: CadPaneId::Shape, object: sample_object("object-1") }], description: None }).expect("apply");
+        let edit: &Edit<CadOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<CadScene, CadOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
 }
 //#endregion 🧪️Tests

@@ -3743,6 +3743,30 @@ mod tests {
         store::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
     }
 
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `Puzzle5dOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing dsl/pack round-trip law (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`). Deliberately dispatches through
+    /// a standalone typed `puzzle_5d_op::Puzzle5dStore` — NOT through `Puzzle5dPlayApp`/
+    /// `Puzzle5dPlayProjection` (the `🔖️ValueBridge` `serde_json::Value` wrapper this crate's real
+    /// `DocumentApp` still uses) — since `Puzzle5dOperation`'s canonical `Operation<Puzzle5dProjection>`
+    /// impl (not its `Operation<Value>` bridge impl) is what the CW7 law is about.
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+        use puzzle_5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
+        use puzzle_5d_op::{Puzzle5dOperation, Puzzle5dStore};
+        use store::create_document_envelope;
+
+        let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dProjection::default(), None));
+        let part = Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![Puzzle5dOperation::SetPart { index: 0, part }], description: None }).expect("apply");
+        let edit: &Edit<Puzzle5dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<Puzzle5dProjection, Puzzle5dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
+
     #[test]
     fn set_active_example_swaps_the_document_and_undo_restores_it() {
         let mut app = testkit::new_app::<Puzzle5dPlayApp>();

@@ -78,5 +78,25 @@ mod tests {
         };
         store::test_support::assert_dsl_pack_equivalence(&document);
     }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `NoteOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this file's
+    /// existing pack round-trip laws (same pattern as `mathematical_pack`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use note_op::NoteOperation;
+        use protocol::{DocumentId, Edit, SchemaId};
+        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+
+        let initial = note_dsl::parse_dsl(note_dsl::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
+        let envelope = create_document_envelope::<NoteDocument, NoteOperation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);
+        let mut store = DocumentStore::new(envelope);
+        store.dispatch(DocumentCommand::Apply { operations: vec![NoteOperation::SetGridVisible { visible: Some(false) }], description: None }).expect("apply");
+        let edit: &Edit<NoteOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<NoteDocument, NoteOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
 }
 //#endregion 🧪️Tests

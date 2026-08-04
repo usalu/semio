@@ -26,7 +26,6 @@ const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (s:Space) REQUIRE s.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (t:ShareToken) REQUIRE t.token IS UNIQUE",
-    "CREATE CONSTRAINT IF NOT EXISTS FOR (n:Node) REQUIRE n.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthSession) REQUIRE a.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (s:SyncSession) REQUIRE s.id IS UNIQUE",
 ];
@@ -46,17 +45,18 @@ impl Neo4jDirectory {
         Ok(Self { graph })
     }
 
-    /// @emoji 🌱️ Seeds a default space and a `Documents/default` node.
+    /// @emoji 🌱️ Seeds a default `studio`/`private` space authored by a `seed` system user node.
     pub async fn seed(&self) -> DirectoryResult<()> {
         let mut existing = self.graph.execute(query("MATCH (s:Space {id: 'default'}) RETURN s.id AS id")).await.map_err(backend)?;
         if existing.next().await.map_err(backend)?.is_none() {
-            self.graph.run(query("CREATE (s:Space {id: 'default', name: 'Space', createdAt: $created_at})").param("created_at", now_ms())).await.map_err(backend)?;
-        }
-        let mut node_count = self.graph.execute(query("MATCH (n:Node) RETURN count(n) AS c")).await.map_err(backend)?;
-        let count: i64 = node_count.next().await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
-        if count == 0 {
-            let folder = self.create_node("default", None, "Documents", "folder").await?;
-            self.create_node("default", Some(&folder.id), "default", "document").await?;
+            self.graph
+                .run(query("CREATE (s:Space {id: 'default', name: 'Space', ownerUserId: 'seed', kind: 'studio', visibility: 'private', createdAt: $created_at})").param("created_at", now_ms()))
+                .await
+                .map_err(backend)?;
+            let mut seed_user = self.graph.execute(query("MATCH (u:User {id: 'seed'}) RETURN u.id AS id")).await.map_err(backend)?;
+            if seed_user.next().await.map_err(backend)?.is_some() {
+                self.upsert_membership("default", "seed", SpaceRole::Author).await?;
+            }
         }
         Ok(())
     }
@@ -64,64 +64,6 @@ impl Neo4jDirectory {
 
 #[async_trait]
 impl HubDirectory for Neo4jDirectory {
-    //#region Vfs
-    async fn list_nodes(&self, space_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>> {
-        let cypher = match parent {
-            Some(_) => "MATCH (n:Node {spaceId: $space_id})-[:PARENT]->(p:Node {id: $parent_id}) RETURN n.id AS id, p.id AS parentId, n.name AS name, n.kind AS kind ORDER BY n.name",
-            None => "MATCH (n:Node {spaceId: $space_id}) WHERE NOT (n)-[:PARENT]->(:Node) RETURN n.id AS id, null AS parentId, n.name AS name, n.kind AS kind ORDER BY n.name",
-        };
-        let mut q = query(cypher).param("space_id", space_id);
-        if let Some(parent) = parent {
-            q = q.param("parent_id", parent);
-        }
-        let mut result = self.graph.execute(q).await.map_err(backend)?;
-        let mut rows = Vec::new();
-        while let Some(row) = result.next().await.map_err(backend)? {
-            rows.push(NodeRecord { id: row.get("id").map_err(backend)?, space_id: space_id.to_string(), parent_id: row.get::<String>("parentId").ok(), name: row.get("name").map_err(backend)?, kind: row.get("kind").map_err(backend)? });
-        }
-        Ok(rows)
-    }
-
-    async fn create_node(&self, space_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord> {
-        let id = Uuid::now_v7().to_string();
-        match parent_id {
-            Some(parent_id) => {
-                self.graph
-                    .run(
-                        query(
-                            "MATCH (s:Space {id: $space_id}), (p:Node {id: $parent_id})
-                             CREATE (n:Node {id: $id, spaceId: $space_id, name: $name, kind: $kind})-[:IN_STUDIO]->(s)
-                             CREATE (n)-[:PARENT]->(p)",
-                        )
-                        .param("space_id", space_id)
-                        .param("parent_id", parent_id)
-                        .param("id", id.clone())
-                        .param("name", name)
-                        .param("kind", kind),
-                    )
-                    .await
-                    .map_err(backend)?;
-            }
-            None => {
-                self.graph
-                    .run(
-                        query(
-                            "MATCH (s:Space {id: $space_id})
-                             CREATE (n:Node {id: $id, spaceId: $space_id, name: $name, kind: $kind})-[:IN_STUDIO]->(s)",
-                        )
-                        .param("space_id", space_id)
-                        .param("id", id.clone())
-                        .param("name", name)
-                        .param("kind", kind),
-                    )
-                    .await
-                    .map_err(backend)?;
-            }
-        }
-        Ok(NodeRecord { id, space_id: space_id.to_string(), parent_id: parent_id.map(str::to_string), name: name.to_string(), kind: kind.to_string() })
-    }
-    //#endregion
-
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {
         let token = Uuid::now_v7().to_string();
@@ -204,24 +146,38 @@ impl HubDirectory for Neo4jDirectory {
     //#endregion
 
     //#region Spaces
-    async fn create_space(&self, name: &str, owner_user_id: &str) -> DirectoryResult<SpaceRecord> {
+    async fn create_space(&self, name: &str, owner_user_id: &str, kind: &str, visibility: &str) -> DirectoryResult<SpaceRecord> {
         let id = Uuid::now_v7().to_string();
         let created_at = now_ms();
+        // 🎯️ An archive is frozen — even its owner is a spectator, never an author (matches
+        // `upsert_membership`'s own archive-rejects-author law below).
+        let owner_role = if kind == "archive" { "spectator" } else { "author" };
         self.graph
             .run(
                 query(
                     "MATCH (u:User {id: $owner_user_id})
-                     CREATE (s:Space {id: $id, name: $name, ownerUserId: $owner_user_id, createdAt: $created_at})
-                     CREATE (u)-[:MEMBER_OF {role: 'owner', createdAt: $created_at}]->(s)",
+                     CREATE (s:Space {id: $id, name: $name, ownerUserId: $owner_user_id, kind: $kind, visibility: $visibility, createdAt: $created_at})
+                     CREATE (u)-[:MEMBER_OF {role: $owner_role, createdAt: $created_at}]->(s)",
                 )
                 .param("id", id.clone())
                 .param("name", name)
                 .param("owner_user_id", owner_user_id)
+                .param("kind", kind)
+                .param("visibility", visibility)
+                .param("owner_role", owner_role)
                 .param("created_at", created_at),
             )
             .await
             .map_err(backend)?;
-        Ok(SpaceRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at })
+        Ok(SpaceRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at, kind: kind.to_string(), visibility: visibility.to_string() })
+    }
+
+    async fn get_space(&self, space_id: &str) -> DirectoryResult<Option<SpaceRecord>> {
+        let mut result = self.graph.execute(query("MATCH (s:Space {id: $space_id}) RETURN s AS s").param("space_id", space_id)).await.map_err(backend)?;
+        match result.next().await.map_err(backend)? {
+            Some(row) => Ok(Some(space_from_node(&row)?)),
+            None => Ok(None),
+        }
     }
 
     async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>> {
@@ -247,6 +203,28 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn upsert_membership(&self, space_id: &str, user_id: &str, role: SpaceRole) -> DirectoryResult<()> {
+        if role == SpaceRole::Author {
+            if let Some(space) = self.get_space(space_id).await? {
+                if space.kind == "archive" {
+                    return Err(DirectoryError::Conflict(format!("space '{space_id}' is an archive; no author memberships are allowed")));
+                }
+                if space.kind == "atelier" {
+                    let mut count_result = self
+                        .graph
+                        .execute(
+                            query("MATCH (u:User)-[m:MEMBER_OF {role: 'author'}]->(:Space {id: $space_id}) WHERE u.id <> $user_id RETURN count(m) AS c")
+                                .param("space_id", space_id)
+                                .param("user_id", user_id),
+                        )
+                        .await
+                        .map_err(backend)?;
+                    let other_authors: i64 = count_result.next().await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
+                    if other_authors > 0 {
+                        return Err(DirectoryError::Conflict(format!("space '{space_id}' is an atelier; it already has a distinct author")));
+                    }
+                }
+            }
+        }
         self.graph
             .run(
                 query(
@@ -422,7 +400,14 @@ fn user_from_node(row: &neo4rs::Row) -> DirectoryResult<UserRecord> {
 
 fn space_from_node(row: &neo4rs::Row) -> DirectoryResult<SpaceRecord> {
     let node: neo4rs::Node = row.get("s").map_err(backend)?;
-    Ok(SpaceRecord { id: node.get("id").map_err(backend)?, name: node.get("name").map_err(backend)?, owner_user_id: node.get("ownerUserId").map_err(backend)?, created_at: node.get("createdAt").map_err(backend)? })
+    Ok(SpaceRecord {
+        id: node.get("id").map_err(backend)?,
+        name: node.get("name").map_err(backend)?,
+        owner_user_id: node.get("ownerUserId").map_err(backend)?,
+        created_at: node.get("createdAt").map_err(backend)?,
+        kind: node.get("kind").map_err(backend)?,
+        visibility: node.get("visibility").map_err(backend)?,
+    })
 }
 
 //#region 🔖️Tests

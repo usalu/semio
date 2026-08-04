@@ -1,0 +1,13 @@
+{
+  "title": "Fix Reasoning Wires Replace Document Op Text Ordering Bug",
+  "emoji": "🧠️",
+  "status": "closed",
+  "description": "Fix op-text round-trip ordering divergence in reasoning_wires MindmapWiresOperation::ReplaceDocument by implementing typed OpText and OpBinary boundaries",
+  "goal": "R26-03",
+  "files": [
+    "✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs"
+  ],
+  "sessions": [
+    "08107453-285c-424a-bec7-9bae336d7d0e"
+  ]
+}

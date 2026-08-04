@@ -17,3 +17,5 @@ store = { path = "../../../../../../../../../🧰️framework/🛍️products/�
 
 [dev-dependencies]
 writer_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-writer-engine" }
+writer_op = { path = "../../../../../../../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-writer-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

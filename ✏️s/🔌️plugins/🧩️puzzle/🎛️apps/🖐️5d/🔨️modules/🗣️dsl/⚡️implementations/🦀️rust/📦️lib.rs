@@ -83,5 +83,26 @@ mod tests {
             // (this fixture's `parts` rows have the identical shape).
         }
     }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `Puzzle5dOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`). Uses a single `#[dsl(block)]`
+    /// `SetPart` operation (not a `#[dsl(table)]` collection), so this is unaffected by the
+    /// known table-column pack bug noted above.
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+        use puzzle_5d_op::{Puzzle5dOperation, Puzzle5dStore};
+        use store::{create_document_envelope, DocumentCommand};
+
+        let mut store = Puzzle5dStore::new(create_document_envelope(puzzle_5d::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dProjection::default(), None));
+        let part = Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
+        store.dispatch(DocumentCommand::Apply { operations: vec![Puzzle5dOperation::SetPart { index: 0, part }], description: None }).expect("apply");
+        let edit: &Edit<Puzzle5dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<Puzzle5dProjection, Puzzle5dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
 }
 //#endregion 🧪️Tests

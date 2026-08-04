@@ -23,6 +23,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
+import { semioViteProductionBuild } from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 // #endregion 🔌️Adapters
@@ -85,9 +86,7 @@ export default defineConfig(async ({ mode }) => {
         rollupOptions: {
           input: path.resolve(__dirname, "webview.html"),
         },
-        target: "esnext",
-        sourcemap: false,
-        minify: false,
+        ...semioViteProductionBuild({ target: "esnext" }),
       },
       resolve: {
         alias: {
@@ -118,9 +117,7 @@ export default defineConfig(async ({ mode }) => {
       },
       outDir: "out",
       emptyOutDir: true,
-      minify: false,
-      sourcemap: false,
-      target: "node18",
+      ...semioViteProductionBuild({ target: "node18" }),
       ssr: true,
     },
     ssr: {

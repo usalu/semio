@@ -5532,6 +5532,30 @@ mod tests {
         store::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
     }
 
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `Puzzle3dOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing dsl/pack round-trip law (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`). Deliberately dispatches through
+    /// a standalone typed `puzzle_3d_op::Puzzle3dStore` — NOT through `Puzzle3dPlayApp`/
+    /// `Puzzle3dPlayProjection` (the `🔖️ValueBridge` `serde_json::Value` wrapper this crate's real
+    /// `DocumentApp` still uses) — since `Puzzle3dOperation`'s canonical `Operation<Puzzle3dProjection>`
+    /// impl (not its `Operation<Value>` bridge impl) is what the CW7 law is about.
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+        use puzzle_3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
+        use puzzle_3d_op::{Puzzle3dOperation, Puzzle3dStore};
+        use store::create_document_envelope;
+
+        let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dProjection::default(), None));
+        let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![Puzzle3dOperation::SetObject { index: 0, object }], description: None }).expect("apply");
+        let edit: &Edit<Puzzle3dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<Puzzle3dProjection, Puzzle3dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
+
     #[test]
     fn open_add_object_dialog_emits_the_open_dialog_effect_with_no_document_change() {
         let mut app = testkit::new_app::<Puzzle3dPlayApp>();

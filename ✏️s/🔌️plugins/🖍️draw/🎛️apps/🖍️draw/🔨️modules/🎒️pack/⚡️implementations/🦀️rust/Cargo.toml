@@ -18,3 +18,5 @@ store = { path = "../../../../../../../../../🧰️framework/🛍️products/�
 [dev-dependencies]
 draw_dsl = { path = "../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-s-app-draw-dsl" }
 draw_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-draw-engine" }
+draw_op = { path = "../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-draw-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

@@ -1648,6 +1648,22 @@ mod tests {
         assert_document_text_round_trip(&store);
         assert_document_pack_round_trip(&store);
     }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `TrinityGraphOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing pack round-trip law (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::Rename { id: "root".into(), name: "renamed".into() }]).expect("apply");
+        let edit: &Edit<TrinityGraphOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<GraphFixture, TrinityGraphOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
     //#endregion 🔖️DslTests
 
     //#region 🔖️SchemaAndManifestTests

@@ -14,13 +14,14 @@
 
 // #region 🔌️Adapters
 import { defineConfig } from "vite";
+import { semioViteProductionBuild } from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
 import { builtinModules } from "module";
 import path from "path";
 // #endregion 🔌️Adapters
 
 // Vite build configuration for the preload script with CJS output.
 // Export MUST externalize electron and all Node.js builtins.
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   server: {
     watch: {
       usePolling: true,
@@ -38,8 +39,9 @@ export default defineConfig({
       external: ["electron", ...builtinModules],
     },
     emptyOutDir: false,
-    sourcemap: "inline",
+    sourcemap: false,
+    ...(mode === "production" ? semioViteProductionBuild() : {}),
   },
-});
+}));
 
 // #endregion 🗄️Configuration

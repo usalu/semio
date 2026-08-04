@@ -103,6 +103,24 @@ mod tests {
         assert_document_pack_round_trip(&store);
     }
 
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `RewriteRuleOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing pack round-trip law (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+
+        let mut store = RewriteRuleStore::new(create_rewrite_rule_envelope("test", sample_rule_state()));
+        let mut next = sample_rule_state();
+        next.lhs_json = "{}".into();
+        dispatch_rewrite_rule_state(&mut store, next).unwrap();
+        let edit: &Edit<RewriteRuleOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<RewriteRuleState, RewriteRuleOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
+
     #[test]
     fn op_text_parse_op_errors_on_unknown_keyword() {
         let err = RewriteRuleOperation::parse_op("bogus xyz").unwrap_err();

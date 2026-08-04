@@ -24,7 +24,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
-import { createWorkspaceViteResolveConfig, meshCollectionVitePlugin, playgroundIframeEmbedHeadersPlugin, semioFaviconVitePlugin, type PlaygroundAssetSpec } from "../../../../../../framework/module/ui/styling/🟦️vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig, meshCollectionVitePlugin, playgroundIframeEmbedHeadersPlugin, semioFaviconVitePlugin, semioViteProductionBuild, type PlaygroundAssetSpec } from "../../../../../../framework/module/ui/styling/🟦️vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/📜️script.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
@@ -104,7 +104,7 @@ function monorepoPlaywrightDevStubPlugin(): Plugin {
 
 // Vite configuration with plugins, resolve aliases, and asset serving.
 // Export MUST call defineConfig with the complete build configuration.
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
   // 📥️normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
@@ -198,7 +198,7 @@ export default defineConfig(async () => {
       noExternal: ["golden-layout"],
     },
     build: {
-      target: "es2022",
+      ...(mode === "production" ? semioViteProductionBuild() : { target: "es2022" }),
       rollupOptions: {
         external: ["@playwright/test"],
       },

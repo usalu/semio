@@ -1,0 +1,147 @@
+W4 Lane A (storage/zip) — progress notes
+=========================================
+
+Scope (per the-final-goal-for-jolly-spindle.md, W4 Lane A):
+1. store: rename s.space.history schema id
+2. store: SpaceHost::register_space_documents helper
+3. run: SpaceBundle canonical on-disk layout
+4. space: real (non-mock) zip export/import wiring + e2e test
+
+Do NOT close/reopen the ticket. Do NOT chase unrelated compile errors elsewhere
+(LocalizedLabel i18n migration noted as known blocker in framework-plugins/os).
+
+--- 1. store schema rename ---
+File: 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs
+- Added `pub const S_SPACE_HISTORY_SCHEMA: &str = "s.space.history";` (near SpaceHistoryProjection,
+  ~line 3140). EXTENSION stays "space-history" (unchanged, per plan's schema lattice table).
+- Updated 2 doc comments referencing the old "os.space.history" string.
+- Updated all 5 test call sites (`create_document_envelope("os.space.history/v1", ...)`) to
+  `create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), ...)`.
+- grep confirmed "os.space.history" had zero usages outside this file repo-wide before the change.
+
+--- 2. SpaceHost::register_space_documents ---
+Same file. Added to `impl SpaceHost` block (~line 3345, right after register_member):
+  pub fn register_space_documents(&mut self, manifest: Box<dyn SpaceMember>,
+      collections: Vec<Box<dyn SpaceMember>>, artifacts: Vec<Box<dyn SpaceMember>>)
+Pure additive sugar — calls register_member() 1 + N + M times in order. No SpaceHost restructuring.
+Added test `register_space_documents_registers_manifest_collections_and_artifacts_together`
+(~line 4531) — registers 1 manifest + 2 collections + 1 artifact (all DemoProjection/DemoOperation
+test fixtures, each given one uncommitted edit so commit_space_checkpoint can auto-commit them —
+a fresh zero-edit zero-checkpoint member has no current_checkpoint_id and would error NoCheckpoint,
+same constraint the existing space_checkpoint_commits_dirty_members_and_pins_their_checkpoints test
+works around), then commits one space checkpoint and asserts all 4 document ids got pinned together.
+
+--- 3. run crate SpaceBundle canonical layout ---
+Files: 🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust/📦️lib.rs (+bin.rs doc comment)
+Rewrote the 🔖️SpaceBundle region (~line 405-620 after edit):
+- root: space.space.pack / space.space.spr (renamed from space.os.pack/.spr)
+- NEW: collections/<id>.collection.pack|.spr + collection_pack_path/collection_spr_path/
+  read_collection/write_collection (mirrors read_document/write_document exactly). Not called by
+  anything yet in this crate — collections aren't wired into SpaceRunner until a later wave (W5+);
+  this is the reserved canonical path convention, documented 🚧️-style.
+- NEW: artifact_pack_path(artifact_id)/artifact_spr_path(artifact_id) -> artifacts/<id>.pack|.spr.
+  document_pack_path/document_spr_path/config_pack_path/config_spr_path are now thin aliases over
+  these (so bin.rs's read_document/write_document/read_config/write_config callers needed ZERO
+  changes — only the underlying directory moved from flat root-relative <ref>.pack to
+  artifacts/<ref>.pack). A workflow node's document_ref ("documents/<node id>") and config_ref
+  ("config/<node id>") are passed straight through as artifact_id, so they never collide under
+  artifacts/ even though both nest one level.
+- media_cache_dir(): run/media -> cache/media (rename only — FileMediaCache doc comment updated too).
+  Actual cross-run memoization wiring is out of scope (W5 SpaceRunner rework) per the ticket brief.
+- blobs_dir() unchanged (blobs/ was already canonical).
+- run_state_path() unchanged (run/state.json) — its eventual deletion in favor of
+  RunDocument.node_records is W5 SpaceRunner-rework territory, not a path/layout naming change.
+- Updated stale bin.rs comment (was: "space_document_pack_path/spr filenames are unchanged here").
+- Updated 📜️script.ts doc comment mentioning the old "space.os.pack" string (comment only, no
+  functional change — script.ts has no code that constructs these paths itself).
+
+space::artifact_backbone_uri reuse: run crate does NOT (and structurally should not) depend on the
+space crate — Cargo.toml confirmed no such dependency, and adding one just for a doc-string constant
+would be a bigger, unrequested architectural change. Instead artifact_pack_path/artifact_spr_path
+document that they reuse the SAME "id IS the address, passed through opaque" convention
+space::artifact_backbone_uri(space_id, artifact_id) uses one level up, without a parallel/incompatible
+scheme. Confirmed workflow::workflow_node_for_app's document_ref/config_ref
+(🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust/📦️lib.rs:495-496) are
+STILL plain path-stem strings ("documents/{node_id}" / "config/{node_id}"), not literal opaque
+artifact ids in the space::CollectionEntry.id sense — did NOT change workflow crate (out of this
+lane's file scope; flagged in final report as a real, still-open mismatch for whichever later wave
+actually wires WorkflowNode documents into a real CollectionProjection).
+
+--- 4. space crate: real zip store wiring ---
+File: 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust/📦️lib.rs
+Dependency direction confirmed via Cargo.toml: space depends on store (not the reverse) — so the
+bridge lives in space, calling store types directly; putting it in store would need store -> space,
+a cycle.
+Added new region 🔖️ZipStoreBridge (nested inside 🔖️Zip, right before its #endregion):
+- real_artifact_reader(&HashMap<String, store::DocumentPackFiles>) -> closure matching
+  export_collection_zip's read_artifact signature.
+- real_blob_reader(&dyn store::BlobStore) -> closure matching read_blob's signature.
+- import_document_artifact::<P, Operation>(pack_bytes, spr_bytes) -> reconstructs a real
+  store::DocumentStore<P, Operation> via store::parse_document_pack (generic — this crate never
+  knows a document artifact's concrete schema type, only the schema string, so callers supply P/
+  Operation at the call site, same genericity store::parse_document_pack itself already has).
+- import_blob(&dyn store::BlobStore, &store::BlobRef, bytes) -> puts bytes, verifies the freshly
+  computed hash matches the recorded BlobRef (tamper/corruption check).
+Added test zip_export_import_round_trips_real_store_documents_and_blob (🧪️ZipStoreBridgeLaws region):
+builds a REAL store::DocumentStore<SpaceProjection, SpaceOperation> nested-space document artifact
+(applies an edit + commits a checkpoint), a real blob via a small in-crate TestBlobStore test double
+(store::BlobStore impl, non-cryptographic hash — this crate has no framework_hash dependency and
+doesn't need one for a test double), exports via real_artifact_reader/real_blob_reader, imports back,
+and asserts:
+  - collection structure round-trips exactly (imported.collection == original)
+  - artifact pack+spr bytes are byte-IDENTICAL to the original snapshot_pack() output
+  - reconstructing a DocumentStore from the imported bytes yields an equal projection to the original
+  - blob bytes round-trip byte-for-byte, re-import into a fresh blob store recovers them
+  - export -> import -> export stays byte-stable with this REAL data (not just the pre-existing
+    fixture-string test's mock bytes) — the same law zip_export_import_export_is_byte_stable already
+    proved with format!()-based mock bytes now holds end-to-end.
+
+--- Verification (real output, all commands run from repo root) ---
+cargo check -p semio-framework-os-kernel-store          -> clean, 0 warnings
+cargo check -p semio-framework-os-kernel-space           -> clean, 0 warnings
+cargo check -p semio-framework-os-run --bins             -> clean (1 PRE-EXISTING unrelated dead_code
+                                                             warning on run_fault_bytes, not touched
+                                                             by this lane, not introduced by it)
+cargo test  -p semio-framework-os-kernel-store --lib     -> 81 passed; 0 failed
+cargo test  -p semio-framework-os-kernel-space --lib     -> 29 passed; 0 failed
+cargo test  -p semio-framework-os-run --lib              -> 14 passed; 0 failed
+
+Did NOT run `cargo check --workspace` (shared repo, other sessions' unrelated churn — per the
+orchestrator's explicit instruction not to chase it).
+
+--- Files changed (all edits, no new files except this progress note) ---
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/⚡️implementations/🦀️rust/📦️lib.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust/📦️lib.rs
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust/📦️bin.rs
+- 📜️script.ts (doc comment only)
+
+--- Deferred / flagged for other waves or lanes ---
+- Root space.space.pack/.spr slot still decodes a WorkflowDocument, not a real SpaceProjection
+  manifest (pre-existing from W3, only the filename moved — actually wiring the manifest is later
+  work, matches the ticket brief's own scoping: "don't try to wire actual run-memoization here, just
+  the path/layout naming").
+- collections/<id>.collection.pack|.spr path + read_collection/write_collection exist but nothing
+  calls them yet (SpaceRunner doesn't touch collections) — reserved for W5+.
+- cache/media/ is a renamed-only path; no real cross-run memoization behavior added (explicitly
+  out of scope per the ticket brief, W5 SpaceRunner rework territory).
+- workflow::workflow_node_for_app's document_ref/config_ref are NOT yet real space::CollectionEntry-
+  style opaque artifact ids (still "documents/<node id>"/"config/<node id>" path-stem strings) — did
+  not touch the workflow crate (out of this lane's scope; flagging for whoever wires WorkflowNode
+  documents into a real collection later).
+- DraftCatalog::promote_draft still doesn't touch real envelope bytes (W2's own stub note) — that's
+  W5 Lane B's job per the master wave plan, not this lane's.
+- Did not touch 🏃️run/📦️bin.rs's actual run() control flow, WasmtimeNodeHost, or SpaceRunner — only
+  SpaceBundle's path layer and its own doc comments.
+
+--- Overlap-risk check for parallel W4/W5 lanes ---
+- Did NOT touch 🏃️run/bin.rs's argument parsing, plugin resolution, or SpaceRunner.run() call —
+  only the SpaceBundle path-helper region and one doc comment block. A parallel W5 Lane A
+  (SpaceRunner rework) agent touching bin.rs's run() body or SpaceRunner itself should have no
+  file-level conflict with this change, though it WILL need to know the renamed path methods
+  (space_document_pack_path -> space.space.pack, media_cache_dir -> cache/media) since those
+  method names/paths changed under it.
+- Did NOT touch the workflow crate (🔁️workflow) at all, despite the brief asking me to "check"
+  workflow_node_for_app — confirmed the mismatch noted above but made no edit there, to stay
+  file-disjoint from any other lane that might own that crate.
+- Did NOT touch os-core (🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust/📦️lib.rs) at all.

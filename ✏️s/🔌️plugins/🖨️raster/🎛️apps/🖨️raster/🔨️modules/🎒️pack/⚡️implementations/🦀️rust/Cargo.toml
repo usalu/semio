@@ -21,3 +21,7 @@ raster_dsl = { path = "../../../../../../../../../✏️s/🔌️plugins/🖨️
 # 🌱️ `RasterLayerNode::Adjustment.params: BTreeMap<String, dsl::DslValue>`'s test fixture builder
 # needs `dsl::to_dsl_value` to turn `serde_json::json!(...)` literals into real `DslValue`s.
 dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+# 🎫️ CW7 command-envelope law test fixture — RasterOperation + an applied-edit store.
+raster_op = { path = "../../../../../../../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-raster-op" }
+raster_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-raster-engine" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

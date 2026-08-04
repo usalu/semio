@@ -1509,6 +1509,534 @@ pub fn validate_workflow_document(document: &WorkflowDocument) -> WorkflowValida
 }
 //#endregion 🔖️WorkflowDocument
 
+//#region 🔖️RunDocument
+//#region 🔖️RunScalars
+/// 🚦️ Lifecycle state of a whole run. `sealed` (on `RunDocument`) is a distinct bool, not folded into
+/// this enum — "sealed" and "final status" are orthogonal (a `Failed` run is sealed with `status:
+/// Failed`, not a `Sealed` variant). Hand-crafted `dsl::DslField` (ordinal `Shape::Enum`), not
+/// `#[derive(dsl::DslEnum)]`: this is a plain field-less scalar, not a tagged-variant-with-data sum
+/// type (`DslEnum`/`DslVariants` target the latter — see `WorkflowParameter`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum RunStatus {
+    Pending,
+    Running,
+    Succeeded,
+    Failed,
+    Canceled,
+}
+
+fn run_status_ordinal(status: RunStatus) -> u32 {
+    match status {
+        RunStatus::Pending => 0,
+        RunStatus::Running => 1,
+        RunStatus::Succeeded => 2,
+        RunStatus::Failed => 3,
+        RunStatus::Canceled => 4,
+    }
+}
+
+fn run_status_from_ordinal(ordinal: u32) -> Result<RunStatus, String> {
+    Ok(match ordinal {
+        0 => RunStatus::Pending,
+        1 => RunStatus::Running,
+        2 => RunStatus::Succeeded,
+        3 => RunStatus::Failed,
+        4 => RunStatus::Canceled,
+        other => return Err(format!("unknown run status ordinal {other}")),
+    })
+}
+
+fn run_status_variants() -> Vec<(String, u32)> {
+    vec![("pending".to_string(), 0), ("running".to_string(), 1), ("succeeded".to_string(), 2), ("failed".to_string(), 3), ("canceled".to_string(), 4)]
+}
+
+impl dsl::DslField for RunStatus {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Enum(run_status_variants())
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Enum(run_status_ordinal(*self))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Enum(ordinal) => run_status_from_ordinal(*ordinal),
+            other => Err(format!("expected Enum, found {other:?}")),
+        }
+    }
+}
+
+/// 🚦️ Per-node outcome of one run — `Computed` (ran fresh), `CacheHit` (memoized against the prior
+/// sealed run's `RunNodeRecord`), `Failed` (the node's `AppChannelHost` exchange errored).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum RunNodeStatus {
+    Computed,
+    CacheHit,
+    Failed,
+}
+
+fn run_node_status_ordinal(status: RunNodeStatus) -> u32 {
+    match status {
+        RunNodeStatus::Computed => 0,
+        RunNodeStatus::CacheHit => 1,
+        RunNodeStatus::Failed => 2,
+    }
+}
+
+fn run_node_status_from_ordinal(ordinal: u32) -> Result<RunNodeStatus, String> {
+    Ok(match ordinal {
+        0 => RunNodeStatus::Computed,
+        1 => RunNodeStatus::CacheHit,
+        2 => RunNodeStatus::Failed,
+        other => return Err(format!("unknown run node status ordinal {other}")),
+    })
+}
+
+fn run_node_status_variants() -> Vec<(String, u32)> {
+    vec![("computed".to_string(), 0), ("cacheHit".to_string(), 1), ("failed".to_string(), 2)]
+}
+
+impl dsl::DslField for RunNodeStatus {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Enum(run_node_status_variants())
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Enum(run_node_status_ordinal(*self))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Enum(ordinal) => run_node_status_from_ordinal(*ordinal),
+            other => Err(format!("expected Enum, found {other:?}")),
+        }
+    }
+}
+
+/// 🎬️ Who/what started a run — `Manual` (a dev/CLI invocation; `actor` mirrors `AppCommand::Hello`'s
+/// own actor string) or `Automation` (W6's dispatcher, referencing the triggering `s.automation`
+/// artifact + the event fingerprint that fired it — not built this wave, field carried for forward
+/// compat only). Hand-crafted `dsl::DslField` (`Shape::Record`) mirroring `MediaContract`'s own
+/// tag-plus-optional-fields encoding above — a real Rust sum type stays the API surface; the wire
+/// encoding is just a `kind` discriminator text field plus each variant's own optional columns.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum RunTrigger {
+    Manual { actor: String },
+    Automation { automation_ref: String, event_fingerprint: String },
+}
+
+fn run_trigger_spec() -> dsl::RecordSpec {
+    dsl::RecordSpec::new(
+        None,
+        dsl::RecordLayout::Inline,
+        vec![
+            dsl::FieldSpec::new(0, "kind", dsl::Shape::Text),
+            dsl::FieldSpec::new(1, "actor", dsl::Shape::Text).optional(),
+            dsl::FieldSpec::new(2, "automation_ref", dsl::Shape::Text).optional(),
+            dsl::FieldSpec::new(3, "event_fingerprint", dsl::Shape::Text).optional(),
+        ],
+    )
+}
+
+fn run_trigger_to_record(trigger: &RunTrigger) -> dsl::RecordValue {
+    let mut record = dsl::RecordValue::default();
+    match trigger {
+        RunTrigger::Manual { actor } => {
+            record.fields.insert(0, dsl::FieldValue::Text("manual".to_string()));
+            record.fields.insert(1, dsl::FieldValue::Text(actor.clone()));
+            record.fields.insert(2, dsl::FieldValue::Absent);
+            record.fields.insert(3, dsl::FieldValue::Absent);
+        }
+        RunTrigger::Automation { automation_ref, event_fingerprint } => {
+            record.fields.insert(0, dsl::FieldValue::Text("automation".to_string()));
+            record.fields.insert(1, dsl::FieldValue::Absent);
+            record.fields.insert(2, dsl::FieldValue::Text(automation_ref.clone()));
+            record.fields.insert(3, dsl::FieldValue::Text(event_fingerprint.clone()));
+        }
+    }
+    record
+}
+
+fn run_trigger_from_record(record: &dsl::RecordValue) -> Result<RunTrigger, store::TextError> {
+    let kind = match record.get(0) {
+        Some(dsl::FieldValue::Text(s)) => s.clone(),
+        other => return Err(dsl::__rt::field_error(format!("expected kind, found {other:?}"))),
+    };
+    match kind.as_str() {
+        "manual" => {
+            let actor = match record.get(1) {
+                Some(dsl::FieldValue::Text(s)) => s.clone(),
+                other => return Err(dsl::__rt::field_error(format!("expected actor, found {other:?}"))),
+            };
+            Ok(RunTrigger::Manual { actor })
+        }
+        "automation" => {
+            let automation_ref = match record.get(2) {
+                Some(dsl::FieldValue::Text(s)) => s.clone(),
+                other => return Err(dsl::__rt::field_error(format!("expected automation_ref, found {other:?}"))),
+            };
+            let event_fingerprint = match record.get(3) {
+                Some(dsl::FieldValue::Text(s)) => s.clone(),
+                other => return Err(dsl::__rt::field_error(format!("expected event_fingerprint, found {other:?}"))),
+            };
+            Ok(RunTrigger::Automation { automation_ref, event_fingerprint })
+        }
+        other => Err(dsl::__rt::field_error(format!("unknown run trigger kind '{other}'"))),
+    }
+}
+
+impl dsl::DslField for RunTrigger {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Record(run_trigger_spec)
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Record(run_trigger_to_record(self))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Record(record) => run_trigger_from_record(record).map_err(|e| e.message),
+            other => Err(format!("expected Record, found {other:?}")),
+        }
+    }
+}
+//#endregion 🔖️RunScalars
+
+//#region 🔖️RunRecords
+/// 🎛️ One resolved config-overlay value for a run — `value` carries a JSON-encoded scalar/text as
+/// plain `Text` (not a raw `dsl::DslValue` field): a `dsl::DslValue` embeds arbitrary nested
+/// object/array shapes, which risks not being self-delimiting as a bare `#[dsl(table)]` column (see
+/// `dsl_schema`'s `table_rejects_non_self_delimiting_column_shapes_at_spec_build_time` regression) —
+/// plain JSON text sidesteps that risk entirely while staying a lossless round trip. `run::SpaceRunner`
+/// parses it back to `serde_json::Value` when applying the overlay onto a node's config (see
+/// `WorkflowParameterBinding.field_path`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct RunParameterValue {
+    pub parameter_id: String,
+    pub value: String,
+}
+
+/// 🔑️ One port's fingerprint — reused for both a `RunNodeRecord`'s `input_fingerprints` and
+/// `output_fingerprints` (same shape, different table column on the owning row).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct PortFingerprint {
+    pub port_id: String,
+    pub fingerprint: String,
+}
+
+/// 📤️ Where one node's out-port materialized in the run's own write-only output area — `path` is
+/// relative to the run's own sink (see `run::RunContext`'s doc), never a source-bundle path.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct RunOutputArtifact {
+    pub port_id: String,
+    pub artifact_id: String,
+    pub path: String,
+}
+
+/// 📇️ Everything one run remembers about one workflow node — the `RunDocument`-native replacement
+/// for `run`'s old `NodeRunRecord`/`RunState` (deleted by W5 Lane A): memoization now compares
+/// against the PRIOR sealed run's `node_records`, not a side-channel state file. `duration_ms` is
+/// `f64` (not `u64`): the `dsl` engine's scalar `DslField` impls cover `bool`/`f32`/`f64`/`String`
+/// only, no integer width — see `dsl/rs/lib.rs`'s `impl DslField for f64` and neighbors.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct RunNodeRecord {
+    pub node_id: String,
+    pub status: RunNodeStatus,
+    pub document_fingerprint: String,
+    pub config_fingerprint: String,
+    #[dsl(table)]
+    pub input_fingerprints: Vec<PortFingerprint>,
+    #[dsl(table)]
+    pub output_fingerprints: Vec<PortFingerprint>,
+    #[dsl(table)]
+    pub outputs: Vec<RunOutputArtifact>,
+    pub duration_ms: f64,
+}
+
+/// 📜️ One run-level or per-node log line — `node_id` empty for a run-level line (see `RunOperation::Log`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct RunLogLine {
+    pub node_id: String,
+    pub level: String,
+    pub message: String,
+    pub at: String,
+}
+//#endregion 🔖️RunRecords
+
+//#region 🔖️RunDocumentBody
+/// 🏃️ The `s.run` persisted artifact (W5 Lane A) — one headless workflow execution's full record:
+/// which workflow/checkpoint/input snapshot it ran against, its resolved parameter overlay, where its
+/// outputs landed, per-node `RunNodeRecord`s (the new memoization ground truth), and a `sealed` flag
+/// that — once set by `RunOperation::Seal` — makes the document immutable (`RunOperation::validate`
+/// rejects every further operation, see `🔖️RunOperation` below). Sealing is meant to promote a run
+/// draft→asset later (`space::DraftCatalog`, W5 Lane B's territory) — this wave only carries the flag
+/// and the apply-rejection law, not the promotion wiring itself.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[dsl(extension = "run-document")]
+pub struct RunDocument {
+    pub schema: String,
+    pub workflow_ref: String,
+    pub workflow_checkpoint_id: String,
+    pub input_collection_ref: String,
+    pub input_snapshot_id: String,
+    #[dsl(table)]
+    pub parameter_values: Vec<RunParameterValue>,
+    pub output_collection_ref: String,
+    pub status: RunStatus,
+    #[dsl(block)]
+    pub trigger: RunTrigger,
+    #[dsl(table)]
+    pub node_records: Vec<RunNodeRecord>,
+    #[dsl(table)]
+    pub logs: Vec<RunLogLine>,
+    pub started_at: String,
+    pub finished_at: Option<String>,
+    pub sealed: bool,
+}
+
+pub fn empty_run_document() -> RunDocument {
+    RunDocument {
+        schema: S_RUN_SCHEMA.into(),
+        workflow_ref: String::new(),
+        workflow_checkpoint_id: String::new(),
+        input_collection_ref: String::new(),
+        input_snapshot_id: String::new(),
+        parameter_values: Vec::new(),
+        output_collection_ref: String::new(),
+        status: RunStatus::Pending,
+        trigger: RunTrigger::Manual { actor: String::new() },
+        node_records: Vec::new(),
+        logs: Vec::new(),
+        started_at: String::new(),
+        finished_at: None,
+        sealed: false,
+    }
+}
+//#endregion 🔖️RunDocumentBody
+
+//#region 🔖️RunOperation
+/// ⚡️ One settled `RunDocument` mutation — mirrors `WorkflowOperation`'s shape (this same crate).
+/// `Start` seeds the run's identity/parameter overlay and flips `status` to `Running`;
+/// `NodeStarted`/`NodeFinished`/`Log` are emitted once per node by `run::SpaceRunner`; `Seal` is the
+/// terminal operation — see `RunOperation::validate` below for the law this whole wave exists to prove
+/// ("no operation applies after `Seal`").
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum RunOperation {
+    Start { workflow_ref: String, workflow_checkpoint_id: String, input_collection_ref: String, input_snapshot_id: String, parameter_values: Vec<RunParameterValue>, output_collection_ref: String, trigger: RunTrigger },
+    NodeStarted { node_id: String },
+    // 🩹️ Field named `node_record`, not `record` (the ticket sketch's name): `#[derive(dsl::DslOps)]`'s
+    // generated variant body binds an internal `record: RecordValue` local in the very same scope —
+    // naming this field `record` too shadows it and breaks the macro's own codegen (a real compile
+    // error, confirmed against `cargo check`), not just a style preference.
+    NodeFinished { node_record: RunNodeRecord },
+    Log { node_id: String, level: String, message: String, at: String },
+    Seal { status: RunStatus },
+}
+
+pub fn apply_run_operation(document: &RunDocument, operation: &RunOperation) -> RunDocument {
+    let mut next = document.clone();
+    match operation {
+        RunOperation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
+            next.workflow_ref = workflow_ref.clone();
+            next.workflow_checkpoint_id = workflow_checkpoint_id.clone();
+            next.input_collection_ref = input_collection_ref.clone();
+            next.input_snapshot_id = input_snapshot_id.clone();
+            next.parameter_values = parameter_values.clone();
+            next.output_collection_ref = output_collection_ref.clone();
+            next.trigger = trigger.clone();
+            next.status = RunStatus::Running;
+            next.started_at = store::now_iso();
+        }
+        RunOperation::NodeStarted { node_id } => {
+            next.logs.push(RunLogLine { node_id: node_id.clone(), level: "info".into(), message: "node started".into(), at: store::now_iso() });
+        }
+        RunOperation::NodeFinished { node_record } => {
+            next.node_records.retain(|entry| entry.node_id != node_record.node_id);
+            next.node_records.push(node_record.clone());
+        }
+        RunOperation::Log { node_id, level, message, at } => {
+            next.logs.push(RunLogLine { node_id: node_id.clone(), level: level.clone(), message: message.clone(), at: at.clone() });
+        }
+        RunOperation::Seal { status } => {
+            next.status = *status;
+            next.finished_at = Some(store::now_iso());
+            next.sealed = true;
+        }
+    }
+    next
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum RunDiff {
+    #[default]
+    Empty,
+    Start { workflow_ref: String, workflow_checkpoint_id: String, input_collection_ref: String, input_snapshot_id: String, parameter_values: Vec<RunParameterValue>, output_collection_ref: String, trigger: RunTrigger },
+    NodeStarted { node_id: String },
+    NodeFinished { node_record: RunNodeRecord },
+    Log { node_id: String, level: String, message: String, at: String },
+    Seal { status: RunStatus },
+}
+
+impl protocol::OperationDiff<RunDocument> for RunDiff {
+    fn apply(&self, document: &RunDocument) -> RunDocument {
+        let operation = match self {
+            RunDiff::Empty => return document.clone(),
+            RunDiff::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
+                RunOperation::Start { workflow_ref: workflow_ref.clone(), workflow_checkpoint_id: workflow_checkpoint_id.clone(), input_collection_ref: input_collection_ref.clone(), input_snapshot_id: input_snapshot_id.clone(), parameter_values: parameter_values.clone(), output_collection_ref: output_collection_ref.clone(), trigger: trigger.clone() }
+            }
+            RunDiff::NodeStarted { node_id } => RunOperation::NodeStarted { node_id: node_id.clone() },
+            RunDiff::NodeFinished { node_record } => RunOperation::NodeFinished { node_record: node_record.clone() },
+            RunDiff::Log { node_id, level, message, at } => RunOperation::Log { node_id: node_id.clone(), level: level.clone(), message: message.clone(), at: at.clone() },
+            RunDiff::Seal { status } => RunOperation::Seal { status: *status },
+        };
+        apply_run_operation(document, &operation)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if !matches!(other, RunDiff::Empty) {
+            *self = other;
+        }
+    }
+}
+
+impl protocol::Operation<RunDocument> for RunOperation {
+    type Diff = RunDiff;
+
+    fn diff(&self, _document: &RunDocument) -> RunDiff {
+        match self {
+            RunOperation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
+                RunDiff::Start { workflow_ref: workflow_ref.clone(), workflow_checkpoint_id: workflow_checkpoint_id.clone(), input_collection_ref: input_collection_ref.clone(), input_snapshot_id: input_snapshot_id.clone(), parameter_values: parameter_values.clone(), output_collection_ref: output_collection_ref.clone(), trigger: trigger.clone() }
+            }
+            RunOperation::NodeStarted { node_id } => RunDiff::NodeStarted { node_id: node_id.clone() },
+            RunOperation::NodeFinished { node_record } => RunDiff::NodeFinished { node_record: node_record.clone() },
+            RunOperation::Log { node_id, level, message, at } => RunDiff::Log { node_id: node_id.clone(), level: level.clone(), message: message.clone(), at: at.clone() },
+            RunOperation::Seal { status } => RunDiff::Seal { status: *status },
+        }
+    }
+
+    fn backwards(&self, base: &RunDocument) -> Vec<Self> {
+        match self {
+            // 🧷️ `Start` is a run's genesis operation (always applied to a freshly-`empty_run_document`
+            // document in practice) and `Seal`/`NodeStarted`/`Log` have no meaningful undo target —
+            // matches this crate's own precedent for irreversible/no-prior-state ops
+            // (`WorkflowOperation::SyncNodePorts`'s own `backwards` returns `Vec::new()` too).
+            RunOperation::Start { .. } | RunOperation::Seal { .. } | RunOperation::NodeStarted { .. } | RunOperation::Log { .. } => Vec::new(),
+            RunOperation::NodeFinished { node_record } => base.node_records.iter().find(|entry| entry.node_id == node_record.node_id).map(|previous| vec![RunOperation::NodeFinished { node_record: previous.clone() }]).unwrap_or_default(),
+        }
+    }
+
+    /// 🔒️ THE law this whole wave exists to prove: once `RunDocument.sealed` is true, no further
+    /// operation may apply — a sealed run's per-node bytes are immutable history, never re-mutated by
+    /// a later invocation. Unlike `WorkflowOperation` (whose `validate` stays the trait's no-op
+    /// default), `RunOperation` overrides it for real. `store::DocumentStore::dispatch`'s `Apply` arm
+    /// never calls `Operation::validate` on its own (verified directly in `store/rs/lib.rs` — no
+    /// caller anywhere in this crate family invokes it outside `protocol_command`'s own unit tests),
+    /// so this hook alone would be silently unenforced if a caller went straight through
+    /// `DocumentStore`; `run::SpaceRunner`'s write path instead always goes through
+    /// `apply_run_operation_checked` (below), which calls this before ever calling
+    /// `apply_run_operation` — the one real write seam this crate ships for a `RunDocument`.
+    fn validate(&self, projection: &RunDocument) -> Result<(), String> {
+        if projection.sealed {
+            return Err(format!("run document is sealed; cannot apply {self:?}"));
+        }
+        Ok(())
+    }
+}
+
+/// 🔒️ The one real write seam for a `RunDocument`: validates (rejecting anything post-`Seal`) before
+/// delegating to `apply_run_operation`. `run::SpaceRunner` calls this, never `apply_run_operation`
+/// directly, for every operation it emits.
+pub fn apply_run_operation_checked(document: &RunDocument, operation: RunOperation) -> Result<RunDocument, String> {
+    <RunOperation as protocol::Operation<RunDocument>>::validate(&operation, document)?;
+    Ok(apply_run_operation(document, &operation))
+}
+//#endregion 🔖️RunOperation
+
+//#region 🔖️RunOperationOpText
+/// 🧬️ Local structural twin of [`RunOperation`] for the `dsl::DslOps` derive — mirrors
+/// `WorkflowOperationDsl` above exactly (same reasoning: the engine needs a concrete `DslVariants`
+/// impl per operation enum).
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+enum RunOperationDsl {
+    Start {
+        workflow_ref: String,
+        workflow_checkpoint_id: String,
+        input_collection_ref: String,
+        input_snapshot_id: String,
+        #[dsl(table)]
+        parameter_values: Vec<RunParameterValue>,
+        output_collection_ref: String,
+        trigger: RunTrigger,
+    },
+    NodeStarted {
+        node_id: String,
+    },
+    NodeFinished {
+        node_record: RunNodeRecord,
+    },
+    Log {
+        node_id: String,
+        level: String,
+        message: String,
+        at: String,
+    },
+    Seal {
+        status: RunStatus,
+    },
+}
+
+fn run_operation_to_dsl(operation: &RunOperation) -> RunOperationDsl {
+    match operation {
+        RunOperation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
+            RunOperationDsl::Start { workflow_ref: workflow_ref.clone(), workflow_checkpoint_id: workflow_checkpoint_id.clone(), input_collection_ref: input_collection_ref.clone(), input_snapshot_id: input_snapshot_id.clone(), parameter_values: parameter_values.clone(), output_collection_ref: output_collection_ref.clone(), trigger: trigger.clone() }
+        }
+        RunOperation::NodeStarted { node_id } => RunOperationDsl::NodeStarted { node_id: node_id.clone() },
+        RunOperation::NodeFinished { node_record } => RunOperationDsl::NodeFinished { node_record: node_record.clone() },
+        RunOperation::Log { node_id, level, message, at } => RunOperationDsl::Log { node_id: node_id.clone(), level: level.clone(), message: message.clone(), at: at.clone() },
+        RunOperation::Seal { status } => RunOperationDsl::Seal { status: *status },
+    }
+}
+
+fn run_operation_from_dsl(operation: RunOperationDsl) -> RunOperation {
+    match operation {
+        RunOperationDsl::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger } => {
+            RunOperation::Start { workflow_ref, workflow_checkpoint_id, input_collection_ref, input_snapshot_id, parameter_values, output_collection_ref, trigger }
+        }
+        RunOperationDsl::NodeStarted { node_id } => RunOperation::NodeStarted { node_id },
+        RunOperationDsl::NodeFinished { node_record } => RunOperation::NodeFinished { node_record },
+        RunOperationDsl::Log { node_id, level, message, at } => RunOperation::Log { node_id, level, message, at },
+        RunOperationDsl::Seal { status } => RunOperation::Seal { status },
+    }
+}
+
+impl protocol::OpText for RunOperation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        Ok(run_operation_from_dsl(<RunOperationDsl as protocol::OpText>::parse_op(line)?))
+    }
+
+    fn print_op(&self) -> String {
+        <RunOperationDsl as protocol::OpText>::print_op(&run_operation_to_dsl(self))
+    }
+}
+
+impl protocol::OpBinary for RunOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        run_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(run_operation_from_dsl(RunOperationDsl::decode_op(bytes)?))
+    }
+}
+//#endregion 🔖️RunOperationOpText
+//#endregion 🔖️RunDocument
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1810,4 +2338,113 @@ mod tests {
         assert!(validation.errors.iter().any(|error| error.contains("unknown node/port 'missing-node:x'")));
     }
     //#endregion 🧪️WorkflowDocumentLaws
+
+    //#region 🧪️RunDocumentLaws
+    fn sample_run_node_record(node_id: &str, status: RunNodeStatus) -> RunNodeRecord {
+        RunNodeRecord {
+            node_id: node_id.into(),
+            status,
+            document_fingerprint: "doc-fp".into(),
+            config_fingerprint: "cfg-fp".into(),
+            input_fingerprints: vec![PortFingerprint { port_id: format!("{node_id}:in:in"), fingerprint: "in-fp".into() }],
+            output_fingerprints: vec![PortFingerprint { port_id: format!("{node_id}:out:out"), fingerprint: "out-fp".into() }],
+            outputs: vec![RunOutputArtifact { port_id: format!("{node_id}:out:out"), artifact_id: format!("artifacts/{node_id}"), path: format!("out/{node_id}.out") }],
+            duration_ms: 12.5,
+        }
+    }
+
+    fn sample_run_document() -> RunDocument {
+        let mut document = empty_run_document();
+        document = apply_run_operation(
+            &document,
+            &RunOperation::Start {
+                workflow_ref: "space.space".into(),
+                workflow_checkpoint_id: "ck-1".into(),
+                input_collection_ref: "collections/in".into(),
+                input_snapshot_id: "snap-1".into(),
+                parameter_values: vec![RunParameterValue { parameter_id: "p1".into(), value: "10".into() }],
+                output_collection_ref: "collections/out".into(),
+                trigger: RunTrigger::Manual { actor: "dev".into() },
+            },
+        );
+        document = apply_run_operation(&document, &RunOperation::NodeStarted { node_id: "a".into() });
+        document = apply_run_operation(&document, &RunOperation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::Computed) });
+        document
+    }
+
+    #[test]
+    fn empty_run_document_matches_schema() {
+        let document = empty_run_document();
+        assert_eq!(document.schema, S_RUN_SCHEMA);
+        assert_eq!(document.status, RunStatus::Pending);
+        assert!(!document.sealed);
+        assert!(document.node_records.is_empty());
+    }
+
+    #[test]
+    fn run_document_dsl_pack_round_trips() {
+        store::test_support::assert_dsl_pack_equivalence(&sample_run_document());
+        store::test_support::assert_dsl_pack_equivalence(&empty_run_document());
+    }
+
+    #[test]
+    fn run_operation_op_text_round_trips_every_variant() {
+        store::test_support::assert_op_line_round_trip(&RunOperation::Start {
+            workflow_ref: "space.space".into(),
+            workflow_checkpoint_id: "ck-1".into(),
+            input_collection_ref: "collections/in".into(),
+            input_snapshot_id: "snap-1".into(),
+            parameter_values: vec![RunParameterValue { parameter_id: "p1".into(), value: "10".into() }],
+            output_collection_ref: "collections/out".into(),
+            trigger: RunTrigger::Manual { actor: "dev".into() },
+        });
+        store::test_support::assert_op_line_round_trip(&RunOperation::Start {
+            workflow_ref: "space.space".into(),
+            workflow_checkpoint_id: "ck-1".into(),
+            input_collection_ref: "collections/in".into(),
+            input_snapshot_id: "snap-1".into(),
+            parameter_values: Vec::new(),
+            output_collection_ref: "collections/out".into(),
+            trigger: RunTrigger::Automation { automation_ref: "s.automation/a1".into(), event_fingerprint: "evt-1".into() },
+        });
+        store::test_support::assert_op_line_round_trip(&RunOperation::NodeStarted { node_id: "a".into() });
+        store::test_support::assert_op_line_round_trip(&RunOperation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit) });
+        store::test_support::assert_op_line_round_trip(&RunOperation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() });
+        store::test_support::assert_op_line_round_trip(&RunOperation::Seal { status: RunStatus::Succeeded });
+    }
+
+    /// 🔒️ The load-bearing law this wave exists to prove: once `Seal` has been applied, every further
+    /// operation is rejected by `apply_run_operation_checked` (not silently accepted, not a panic) —
+    /// this is the real write seam `run::SpaceRunner` goes through for every `RunOperation` it emits.
+    #[test]
+    fn apply_run_operation_checked_rejects_everything_after_seal() {
+        let document = sample_run_document();
+        assert!(!document.sealed);
+
+        let sealed = apply_run_operation_checked(&document, RunOperation::Seal { status: RunStatus::Succeeded }).expect("sealing an unsealed run must succeed");
+        assert!(sealed.sealed);
+        assert_eq!(sealed.status, RunStatus::Succeeded);
+        assert!(sealed.finished_at.is_some());
+
+        let rejected_log = apply_run_operation_checked(&sealed, RunOperation::Log { node_id: "a".into(), level: "info".into(), message: "too late".into(), at: "999".into() });
+        assert!(rejected_log.is_err(), "a Log after Seal must be rejected, not silently applied");
+
+        let rejected_node_finished = apply_run_operation_checked(&sealed, RunOperation::NodeFinished { node_record: sample_run_node_record("b", RunNodeStatus::Computed) });
+        assert!(rejected_node_finished.is_err(), "a NodeFinished after Seal must be rejected");
+
+        let rejected_reseal = apply_run_operation_checked(&sealed, RunOperation::Seal { status: RunStatus::Failed });
+        assert!(rejected_reseal.is_err(), "re-sealing an already-sealed run must be rejected");
+
+        // 🧷️ Rejection must be a real `Err`, not a panic, and the document itself must stay untouched.
+        assert_eq!(sealed.node_records.len(), 1, "the rejected NodeFinished must not have been applied");
+    }
+
+    #[test]
+    fn run_node_record_dsl_pack_round_trips_nested_tables() {
+        let record = sample_run_node_record("a", RunNodeStatus::Failed);
+        let mut document = empty_run_document();
+        document.node_records.push(record);
+        store::test_support::assert_dsl_pack_equivalence(&document);
+    }
+    //#endregion 🧪️RunDocumentLaws
 }

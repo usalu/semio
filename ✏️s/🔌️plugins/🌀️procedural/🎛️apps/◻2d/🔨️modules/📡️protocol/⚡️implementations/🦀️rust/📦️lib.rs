@@ -104,5 +104,21 @@ mod tests {
         test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖️DocumentTextTests
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `Procedural2dOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing pack round-trip law (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+
+        let mut store = Procedural2dStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_projection(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![Procedural2dOperation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        let edit: &Edit<Procedural2dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        test_support::assert_command_envelope_round_trip::<procedural_2d::Procedural2dDocument, Procedural2dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
 }
 //#endregion 🧪️Tests

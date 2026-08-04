@@ -65,5 +65,28 @@ mod tests {
         let bytes = encode(&fixture);
         assert_eq!(decode(&bytes).expect("decode"), fixture);
     }
+
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `ShootingOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{CollectionOperation, DocumentId, Edit, SchemaId};
+        use shooting_op::ShootingOperation;
+        use store::{create_document_envelope, DocumentCommand, DocumentStore};
+
+        let mut store: DocumentStore<ShootingFixture, ShootingOperation> = DocumentStore::new(create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", shooting::empty_shooting_fixture(), None));
+        store
+            .dispatch(DocumentCommand::Apply {
+                operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None }, at: 0 })],
+                description: None,
+            })
+            .expect("apply");
+        let edit: &Edit<ShootingOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        store::test_support::assert_command_envelope_round_trip::<ShootingFixture, ShootingOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
 }
 //#endregion 🧪️Tests

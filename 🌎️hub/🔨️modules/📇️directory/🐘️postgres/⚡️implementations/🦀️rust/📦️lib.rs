@@ -39,9 +39,9 @@ impl PostgresDirectory {
         Ok(Self { pool })
     }
 
-    /// @emoji 🌱️ Seeds a placeholder `seed` system user, a default space it owns, and a
-    /// `Documents/default` node. The system user satisfies `hub_space.owner_user_id`'s foreign
-    /// key until a real bootstrap admin claims ownership through `/admin` (HP-6).
+    /// @emoji 🌱️ Seeds a placeholder `seed` system user and a default `studio`/`private` space it
+    /// owns. The system user satisfies `hub_space.owner_user_id`'s foreign key until a real
+    /// bootstrap admin claims ownership through `/admin` (HP-6).
     pub async fn seed(&self) -> DirectoryResult<()> {
         let user_exists: (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_user WHERE id = 'seed'").fetch_one(&self.pool).await.map_err(backend)?;
         if user_exists.0 == 0 {
@@ -49,12 +49,8 @@ impl PostgresDirectory {
         }
         let exists: (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_space WHERE id = 'default'").fetch_one(&self.pool).await.map_err(backend)?;
         if exists.0 == 0 {
-            sqlx_core::query::query("INSERT INTO hub_space (id, name, owner_user_id, created_at) VALUES ('default', 'Space', 'seed', $1)").bind(now_ms()).execute(&self.pool).await.map_err(backend)?;
-        }
-        let node_count: (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_node").fetch_one(&self.pool).await.map_err(backend)?;
-        if node_count.0 == 0 {
-            let folder = self.create_node("default", None, "Documents", "folder").await?;
-            self.create_node("default", Some(&folder.id), "default", "document").await?;
+            sqlx_core::query::query("INSERT INTO hub_space (id, name, owner_user_id, created_at, kind, visibility) VALUES ('default', 'Space', 'seed', $1, 'studio', 'private')").bind(now_ms()).execute(&self.pool).await.map_err(backend)?;
+            self.upsert_membership("default", "seed", SpaceRole::Author).await?;
         }
         Ok(())
     }
@@ -62,22 +58,6 @@ impl PostgresDirectory {
 
 #[async_trait]
 impl HubDirectory for PostgresDirectory {
-    //#region Vfs
-    async fn list_nodes(&self, space_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>> {
-        let rows: Vec<(String, Option<String>, String, String)> = match parent {
-            Some(parent) => sqlx_core::query_as::query_as("SELECT id, parent_id, name, kind FROM hub_node WHERE space_id = $1 AND parent_id = $2 ORDER BY name").bind(space_id).bind(parent).fetch_all(&self.pool).await.map_err(backend)?,
-            None => sqlx_core::query_as::query_as("SELECT id, parent_id, name, kind FROM hub_node WHERE space_id = $1 AND parent_id IS NULL ORDER BY name").bind(space_id).fetch_all(&self.pool).await.map_err(backend)?,
-        };
-        Ok(rows.into_iter().map(|(id, parent_id, name, kind)| NodeRecord { id, space_id: space_id.to_string(), parent_id, name, kind }).collect())
-    }
-
-    async fn create_node(&self, space_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord> {
-        let id = Uuid::now_v7().to_string();
-        sqlx_core::query::query("INSERT INTO hub_node (id, space_id, parent_id, name, kind) VALUES ($1, $2, $3, $4, $5)").bind(&id).bind(space_id).bind(parent_id).bind(name).bind(kind).execute(&self.pool).await.map_err(backend)?;
-        Ok(NodeRecord { id, space_id: space_id.to_string(), parent_id: parent_id.map(str::to_string), name: name.to_string(), kind: kind.to_string() })
-    }
-    //#endregion
-
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {
         let token = Uuid::now_v7().to_string();
@@ -156,33 +136,72 @@ impl HubDirectory for PostgresDirectory {
     //#endregion
 
     //#region Spaces
-    async fn create_space(&self, name: &str, owner_user_id: &str) -> DirectoryResult<SpaceRecord> {
+    async fn create_space(&self, name: &str, owner_user_id: &str, kind: &str, visibility: &str) -> DirectoryResult<SpaceRecord> {
         let id = Uuid::now_v7().to_string();
         let created_at = now_ms();
-        sqlx_core::query::query("INSERT INTO hub_space (id, name, owner_user_id, created_at) VALUES ($1, $2, $3, $4)").bind(&id).bind(name).bind(owner_user_id).bind(created_at).execute(&self.pool).await.map_err(backend)?;
-        self.upsert_membership(&id, owner_user_id, SpaceRole::Owner).await?;
-        Ok(SpaceRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at })
+        sqlx_core::query::query("INSERT INTO hub_space (id, name, owner_user_id, created_at, kind, visibility) VALUES ($1, $2, $3, $4, $5, $6)")
+            .bind(&id)
+            .bind(name)
+            .bind(owner_user_id)
+            .bind(created_at)
+            .bind(kind)
+            .bind(visibility)
+            .execute(&self.pool)
+            .await
+            .map_err(backend)?;
+        // 🎯️ An archive is frozen — even its owner is a spectator, never an author (matches
+        // `upsert_membership`'s own archive-rejects-author law below).
+        let owner_role = if kind == "archive" { SpaceRole::Spectator } else { SpaceRole::Author };
+        self.upsert_membership(&id, owner_user_id, owner_role).await?;
+        Ok(SpaceRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at, kind: kind.to_string(), visibility: visibility.to_string() })
+    }
+
+    async fn get_space(&self, space_id: &str) -> DirectoryResult<Option<SpaceRecord>> {
+        let row: Option<(String, String, String, i64, String, String)> =
+            sqlx_core::query_as::query_as("SELECT id, name, owner_user_id, created_at, kind, visibility FROM hub_space WHERE id = $1").bind(space_id).fetch_optional(&self.pool).await.map_err(backend)?;
+        Ok(row.map(|(id, name, owner_user_id, created_at, kind, visibility)| SpaceRecord { id, name, owner_user_id, created_at, kind, visibility }))
     }
 
     async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>> {
-        let rows: Vec<(String, String, String, i64, String)> = sqlx_core::query_as::query_as(
-            "SELECT s.id, s.name, s.owner_user_id, s.created_at, m.role FROM hub_space s
+        let rows: Vec<(String, String, String, i64, String, String, String)> = sqlx_core::query_as::query_as(
+            "SELECT s.id, s.name, s.owner_user_id, s.created_at, s.kind, s.visibility, m.role FROM hub_space s
              JOIN hub_space_membership m ON m.space_id = s.id WHERE m.user_id = $1 ORDER BY s.created_at",
         )
         .bind(user_id)
         .fetch_all(&self.pool)
         .await
         .map_err(backend)?;
-        Ok(rows.into_iter().filter_map(|(id, name, owner_user_id, created_at, role)| SpaceRole::parse(&role).map(|role| (SpaceRecord { id, name, owner_user_id, created_at }, role))).collect())
+        Ok(rows
+            .into_iter()
+            .filter_map(|(id, name, owner_user_id, created_at, kind, visibility, role)| SpaceRole::parse(&role).map(|role| (SpaceRecord { id, name, owner_user_id, created_at, kind, visibility }, role)))
+            .collect())
     }
 
     async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>> {
-        let rows: Vec<(String, String, String, i64)> =
-            sqlx_core::query_as::query_as("SELECT id, name, owner_user_id, created_at FROM hub_space ORDER BY created_at LIMIT $1 OFFSET $2").bind(limit).bind(offset).fetch_all(&self.pool).await.map_err(backend)?;
-        Ok(rows.into_iter().map(|(id, name, owner_user_id, created_at)| SpaceRecord { id, name, owner_user_id, created_at }).collect())
+        let rows: Vec<(String, String, String, i64, String, String)> =
+            sqlx_core::query_as::query_as("SELECT id, name, owner_user_id, created_at, kind, visibility FROM hub_space ORDER BY created_at LIMIT $1 OFFSET $2").bind(limit).bind(offset).fetch_all(&self.pool).await.map_err(backend)?;
+        Ok(rows.into_iter().map(|(id, name, owner_user_id, created_at, kind, visibility)| SpaceRecord { id, name, owner_user_id, created_at, kind, visibility }).collect())
     }
 
     async fn upsert_membership(&self, space_id: &str, user_id: &str, role: SpaceRole) -> DirectoryResult<()> {
+        if role == SpaceRole::Author {
+            if let Some(space) = self.get_space(space_id).await? {
+                if space.kind == "archive" {
+                    return Err(DirectoryError::Conflict(format!("space '{space_id}' is an archive; no author memberships are allowed")));
+                }
+                if space.kind == "atelier" {
+                    let other_authors: (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_space_membership WHERE space_id = $1 AND role = 'author' AND user_id != $2")
+                        .bind(space_id)
+                        .bind(user_id)
+                        .fetch_one(&self.pool)
+                        .await
+                        .map_err(backend)?;
+                    if other_authors.0 > 0 {
+                        return Err(DirectoryError::Conflict(format!("space '{space_id}' is an atelier; it already has a distinct author")));
+                    }
+                }
+            }
+        }
         sqlx_core::query::query(
             "INSERT INTO hub_space_membership (space_id, user_id, role, created_at) VALUES ($1, $2, $3, $4)
              ON CONFLICT (space_id, user_id) DO UPDATE SET role = $3",
@@ -311,18 +330,42 @@ mod tests {
     async fn user_space_membership_round_trip() {
         let (directory, _container) = test_directory().await;
         let user = directory.create_user("a@example.com", "Ada", None, None, None).await.expect("create user");
-        let studio = directory.create_space("Space A", &user.id).await.expect("create space");
-        assert_eq!(directory.get_role(&studio.id, &user.id).await.unwrap(), Some(SpaceRole::Owner));
+        let studio = directory.create_space("Space A", &user.id, "studio", "private").await.expect("create space");
+        assert_eq!(directory.get_role(&studio.id, &user.id).await.unwrap(), Some(SpaceRole::Author));
     }
 
-    // 🔬️ Schema bootstrap + seed grow a Documents/default VFS tree.
+    // 🔬️ Schema bootstrap + seed grow a default space the seed user authors — proves the DDL
+    // (`hub_space`/`hub_space_membership`, `author`/`spectator` role CHECK) matches this crate's
+    // own queries against a real Postgres instance.
     #[tokio::test]
-    async fn seed_creates_space_and_node_tree() {
+    async fn seed_creates_default_space_and_membership() {
         let (directory, _container) = test_directory().await;
         directory.seed().await.expect("seed");
-        let roots = directory.list_nodes("default", None).await.unwrap();
-        assert_eq!(roots.len(), 1);
-        assert_eq!(roots[0].name, "Documents");
+        let space = directory.get_space("default").await.unwrap().expect("default space");
+        assert_eq!(space.kind, "studio");
+        assert_eq!(space.visibility, "private");
+        assert_eq!(directory.get_role("default", "seed").await.unwrap(), Some(SpaceRole::Author));
+    }
+
+    // 🔬️ The postgres DDL (`🛢️schema.sql`) matches this crate's own queries: archive/atelier
+    // membership laws round-trip against a real Postgres, same as the sqlite backend's law test.
+    #[tokio::test]
+    async fn space_kind_membership_laws_are_enforced() {
+        let (directory, _container) = test_directory().await;
+        let owner = directory.create_user("owner@example.com", "Owner", None, None, None).await.expect("create user");
+        let other = directory.create_user("other@example.com", "Other", None, None, None).await.expect("create user 2");
+
+        let archive = directory.create_space("Archive", &owner.id, "archive", "private").await.expect("create archive");
+        let err = directory.upsert_membership(&archive.id, &owner.id, SpaceRole::Author).await.unwrap_err();
+        assert!(matches!(err, DirectoryError::Conflict(_)));
+
+        let atelier = directory.create_space("Atelier", &owner.id, "atelier", "private").await.expect("create atelier");
+        directory.upsert_membership(&atelier.id, &owner.id, SpaceRole::Author).await.expect("re-upsert sole author");
+        let err = directory.upsert_membership(&atelier.id, &other.id, SpaceRole::Author).await.unwrap_err();
+        assert!(matches!(err, DirectoryError::Conflict(_)));
+
+        let studio = directory.create_space("Studio", &owner.id, "studio", "private").await.expect("create studio");
+        directory.upsert_membership(&studio.id, &other.id, SpaceRole::Author).await.expect("studio allows many authors");
     }
 }
 //#endregion 🔖️Tests

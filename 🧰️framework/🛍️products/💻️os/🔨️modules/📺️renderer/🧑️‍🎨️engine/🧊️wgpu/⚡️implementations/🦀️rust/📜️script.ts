@@ -150,7 +150,10 @@ class TrunkServeScript extends BundleScript {
 class NativeBuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
-    if (runCmdStatus("cargo", ["build", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+    const ship = segments.includes("--dist") || segments.includes("--release");
+    const cargoArgs = ["build", "-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin"];
+    if (ship) cargoArgs.push("--release");
+    if (runCmdStatus("cargo", cargoArgs, { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
       throw new Error("native wgpu renderer build failed");
     }
     const osDevScript = join(repoRoot, "framework/product/os/module/dev/js/📜️script.ts");
@@ -168,7 +171,9 @@ class NativeBuildScript extends BundleScript {
 class NativeRunScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
-    await new NativeBuildScript(this.root).run([filterPlugin]);
+    const ship = segments.includes("--dist") || segments.includes("--release");
+    const buildSegments = segments[0] ? segments : [filterPlugin];
+    await new NativeBuildScript(this.root).run(buildSegments);
     ensureAssetServer(filterPlugin);
     const nativeEnv: NodeJS.ProcessEnv = {
       ...process.env,
@@ -179,8 +184,10 @@ class NativeRunScript extends BundleScript {
     }
     const catalog = loadFrameworkOsPlaygroundCatalog();
     const appArgs = resolveNativeAppArgs(catalog, filterPlugin);
-    // Interactive native app window — runs until the user closes it.
-    if (runCmdStatus("cargo", ["run", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs], { cwd: repoRoot, env: nativeEnv, ...daemonBudgetOpts() }) !== 0) {
+    const cargoArgs = ["run"];
+    if (ship) cargoArgs.push("--release");
+    cargoArgs.push("-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs);
+    if (runCmdStatus("cargo", cargoArgs, { cwd: repoRoot, env: nativeEnv, ...daemonBudgetOpts() }) !== 0) {
       throw new Error("native wgpu renderer run failed");
     }
   }

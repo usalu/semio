@@ -618,23 +618,19 @@ incremental = true
 [profile.dev.build-override]
 opt-level = 3
 
+# 🚀️ Ship profile for native binaries (`cargo build --release`, compose hub/gql, os-run in CI).
+# Dev loops use `[profile.dev]` only — see root `📜️script.ts` `os run` and wgpu native defaults.
 [profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
 strip = "debuginfo"
-incremental = true
-codegen-units = 256
-lto = "off"
-
-# LLVM 22's WASM linker crashes in ElemSection::writeBody when a component's cdylib is split
-# across the workspace-wide 256 codegen units. Keep the fast default for the rest of the workspace
-# and bound the affected component to a stable shard count. `vcs` moved off cdylib entirely (pure
-# rlib now — its cdylib/wasm surface moved to `store`, see EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY),
-# so only `store` needs this override today.
-[profile.release.package.semio-framework-os-kernel-store]
-codegen-units = 16
+incremental = false
+trim-paths = "object"
 
 # 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. wasm32-wasip2 plugin components only — os-dev's
-# 📜️script.ts passes `--profile wasm-release` when building plugin crates. Native `[profile.release]`
-# above is untouched, so concurrent native builds never rebuild because of this profile.
+# 📜️script.ts passes `--profile wasm-release` when building plugin crates. Inherits ship-oriented
+# `[profile.release]` above, then overrides for wasm size/runtime (see below).
 #
 # - opt-level "s" (not "z"): "z" measurably slows hot numeric loops in geometry/FEM solvers for a
 #   few extra percent of size; the wasm-opt -Oz post-pass (see buildPlugin/transpilePluginComponent)
@@ -661,7 +657,7 @@ incremental = false
 trim-paths = "object"
 
 # Explicit: profile inheritance does NOT inherit package-specific overrides from the parent
-# profile, so without this `store` would fall back to codegen-units=256 under `wasm-release`.
+# profile, so without this `store` would fall back to workspace defaults under `wasm-release`.
 [profile.wasm-release.package.semio-framework-os-kernel-store]
 codegen-units = 1
 

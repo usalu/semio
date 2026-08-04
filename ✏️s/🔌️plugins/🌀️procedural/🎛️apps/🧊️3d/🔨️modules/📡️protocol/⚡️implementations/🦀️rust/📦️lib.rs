@@ -156,6 +156,22 @@ mod tests {
     }
     //#endregion 🔖️DocumentTextTests
 
+    //#region 🔖️CommandEnvelopeTests
+    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
+    /// `Procedural3dOperation`'s `Edit` round-trips through `protocol::OperationEnvelope`s beside this
+    /// file's existing pack round-trip law (same pattern as `dag`'s own
+    /// `command_envelope_round_trip_holds_for_an_applied_operation`).
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        use protocol::{DocumentId, Edit, SchemaId};
+
+        let mut store = Procedural3dStore::new(create_document_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![Procedural3dOperation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        let edit: &Edit<Procedural3dOperation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
+        test_support::assert_command_envelope_round_trip::<Procedural3dDocument, Procedural3dOperation>(edit, &DocumentId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    }
+    //#endregion 🔖️CommandEnvelopeTests
+
     //#region 🔖️CommandTests
     #[test]
     fn command_op_binary_round_trips_and_agrees_with_text() {

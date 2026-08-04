@@ -12,7 +12,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::io::{Cursor, Read as _, Seek, Write as _};
-use std::sync::Mutex;
+use std::sync::{Arc, LazyLock, Mutex};
 use thiserror::Error;
 
 //#region 🔖️Roles
@@ -969,7 +969,45 @@ pub fn draft_uri(artifact_id: &str) -> String {
 pub enum SpaceError {
     #[error("unknown draft: {0}")]
     UnknownDraft(String),
+    #[error("draft backbone error: {0}")]
+    Backbone(String),
 }
+
+//#region 🔖️DraftBackbone
+/// 🔌️ Byte-oriented backbone port for draft<->asset envelope relocation — mirrors os-core's
+/// `OsBackbonePort`/blanket-bridge pattern exactly (`🧰️framework/🛍️products/💻️os`'s `host::OsBackbonePort`),
+/// but declared HERE rather than reused from there: os-core depends on `space` (`pub use space::*;`),
+/// so depending back on os-core's trait would cycle the dependency graph. Every real transport this
+/// crate needs (`store::MemoryBackbonePort`, `store::LocalStorageBackbonePort`, the host file/folder
+/// ports) is already `store::BackbonePort`-shaped (string payloads) — the blanket impl below bridges
+/// bytes<->base64 text exactly like os-core's own bridge, so any `Arc<dyn store::BackbonePort>`-backed
+/// concrete port a caller already holds satisfies `Arc<dyn SpaceBackbonePort>` for free, and (crucially
+/// for `draft_catalog_for`'s per-port keying below) preserves the SAME underlying `Arc` data pointer
+/// across both trait-object views since unsizing coercion never reallocates.
+pub trait SpaceBackbonePort: Send + Sync {
+    fn read(&self, uri: &str) -> Result<Vec<u8>, vcs::VcsError>;
+    fn write(&self, uri: &str, payload: &[u8]) -> Result<(), vcs::VcsError>;
+}
+
+impl<T: store::BackbonePort> SpaceBackbonePort for T {
+    fn read(&self, uri: &str) -> Result<Vec<u8>, vcs::VcsError> {
+        use base64::Engine;
+        let text = store::BackbonePort::read(self, uri)?;
+        if text.is_empty() {
+            return Ok(Vec::new());
+        }
+        base64::engine::general_purpose::STANDARD.decode(text).map_err(|error| vcs::VcsError::Deserialize(error.to_string()))
+    }
+
+    fn write(&self, uri: &str, payload: &[u8]) -> Result<(), vcs::VcsError> {
+        use base64::Engine;
+        if payload.is_empty() {
+            return store::BackbonePort::write(self, uri, "");
+        }
+        store::BackbonePort::write(self, uri, &base64::engine::general_purpose::STANDARD.encode(payload))
+    }
+}
+//#endregion 🔖️DraftBackbone
 
 /// 📄️ Bookkeeping for one draft artifact: identity, artifact kind, document schema, display name, and
 /// TTL (`expires_at_ms: None` means pinned — the plan's default TTL is 7 days, a caller policy, not a
@@ -984,18 +1022,19 @@ pub struct DraftEntry {
     pub expires_at_ms: Option<u64>,
 }
 
-/// 🗄️ Draft bookkeeping registry (TTL sweep, promote/demote as operation-sourced moves).
+/// 🗄️ Draft bookkeeping registry (TTL sweep, promote/demote as real operation-sourced byte moves).
 ///
-/// 🚧️ Narrower than the plan's full sketch on purpose: no port-keyed global registry (the
-/// `STUDIO_CATALOG_URIS`-style per-actor-instance keying os-core uses) — this crate has no host/actor
-/// concept yet, so `DraftCatalog` is a plain object a caller owns and instantiates; wiring one
-/// per-space instance into os-core's session state is W5 Lane B's job (`## Master wave plan` `W5 —
-/// Lane B (A4)`). `promote_draft` takes the draft id and target placement directly and returns the
-/// `CollectionOperation` that adds the promoted artifact as an entry — it does NOT move real envelope
-/// bytes (that needs `store::SpaceHost`'s live backbone, which doesn't exist until W4's storage wave);
-/// callers apply the returned operation to their own collection store and move the envelope bytes
-/// themselves. This keeps the OPERATION-SOURCED SHAPE (promote returns a `CollectionOperation`, demote
-/// is `AddEntry`'s `backwards()`) correct now even though the byte-move plumbing is stubbed.
+/// 🎯️ W5 Lane B: promoted from the W2/W4 stub to the real thing. `promote_draft`/`demote_asset` now
+/// relocate the draft's actual envelope bytes via an injected `SpaceBackbonePort` — read at
+/// `draft_uri`, written at `artifact_backbone_uri`/vice versa, byte-for-byte, no decode/re-encode —
+/// while still returning the `CollectionOperation` (`AddEntry`/`RemoveEntry`) that keeps promotion
+/// itself operation-sourced. One `DraftCatalog` per distinct backbone port identity lives in the
+/// port-keyed global registry below (`draft_catalog_for`), mirroring os-core's `SPACE_CATALOG_URIS`
+/// per-port keying — this crate still doesn't reach into os-core's session state directly (that
+/// dependency would cycle), it just now offers the SAME per-port-identity registry SHAPE os-core's
+/// `list_os_space_catalog_entries`/`create_os_space` already use, so a caller (os-core, or an app like
+/// `home`) wires it in by simply calling `draft_catalog_for(&port)` with whatever
+/// `Arc<dyn SpaceBackbonePort>` it already holds.
 #[derive(Default)]
 pub struct DraftCatalog {
     drafts: Mutex<HashMap<String, DraftEntry>>,
@@ -1022,23 +1061,73 @@ impl DraftCatalog {
         entries
     }
 
-    /// ⏰️ Removes every draft whose `expires_at_ms` is at or before `now_ms`, returning their ids.
-    pub fn expire_drafts(&self, now_ms: u64) -> Vec<String> {
-        let mut drafts = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let expired: Vec<String> = drafts.values().filter(|entry| entry.expires_at_ms.is_some_and(|expires_at| expires_at <= now_ms)).map(|entry| entry.artifact_id.clone()).collect();
+    /// ⏰️ Removes every draft whose `expires_at_ms` is at or before `now_ms` from the bookkeeping,
+    /// best-effort tombstoning each one's `draft_uri` bytes via `port` (empty-payload write, same
+    /// convention as os-core's `delete_os_space`) so an expired draft doesn't leak backbone storage —
+    /// bookkeeping removal is still the source of truth (a tombstone write failure doesn't undo it).
+    /// Returns the expired ids.
+    pub fn expire_drafts(&self, now_ms: u64, port: &Arc<dyn SpaceBackbonePort>) -> Vec<String> {
+        let expired: Vec<String> = {
+            let mut drafts = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let expired: Vec<String> = drafts.values().filter(|entry| entry.expires_at_ms.is_some_and(|expires_at| expires_at <= now_ms)).map(|entry| entry.artifact_id.clone()).collect();
+            for artifact_id in &expired {
+                drafts.remove(artifact_id);
+            }
+            expired
+        };
         for artifact_id in &expired {
-            drafts.remove(artifact_id);
+            let _ = port.write(&draft_uri(artifact_id), &[]);
         }
         expired
     }
 
-    /// ⬆️ Promotes `draft_id` into `folder_id` at the collection, returning the draft bookkeeping
-    /// (removed from this catalog) plus the `CollectionOperation::AddEntry` the caller applies. The
-    /// artifact keeps its id (`entry.id == draft.artifact_id`) and full VCS history byte-for-byte —
-    /// this function only mints the collection-side operation, never touches envelope bytes.
-    pub fn promote_draft(&self, draft_id: &str, folder_id: Option<String>) -> Result<(DraftEntry, CollectionOperation), SpaceError> {
-        let mut drafts = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let draft = drafts.remove(draft_id).ok_or_else(|| SpaceError::UnknownDraft(draft_id.to_string()))?;
+    /// 📚️ `list_drafts` preceded by a real `expire_drafts` sweep — the natural "sweep before listing"
+    /// call site (mirrors the spirit of os-core's catalog-listing entry points): any caller that lists
+    /// drafts for display should always see a freshly-swept set rather than stale expired entries.
+    pub fn list_drafts_sweeping_expired(&self, now_ms: u64, port: &Arc<dyn SpaceBackbonePort>) -> Vec<DraftEntry> {
+        self.expire_drafts(now_ms, port);
+        self.list_drafts()
+    }
+
+    /// 🗑️ Discards a draft outright (never promoted) — removes its bookkeeping and best-effort
+    /// tombstones its `draft_uri` bytes via `port`. Returns the removed bookkeeping, if any existed.
+    pub fn discard_draft(&self, port: &Arc<dyn SpaceBackbonePort>, draft_id: &str) -> Option<DraftEntry> {
+        let removed = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(draft_id);
+        if removed.is_some() {
+            let _ = port.write(&draft_uri(draft_id), &[]);
+        }
+        removed
+    }
+
+    /// ⬆️ REAL promotion: relocates the draft's envelope bytes — whatever opaque blob the caller wrote
+    /// at `draft_uri(draft_id)` (a pack+spr snapshot, an `encode_backbone_payload`-framed blob, etc. —
+    /// this catalog never decodes it) — to `artifact_backbone_uri(space_id, draft_id)` via `port`,
+    /// byte-for-byte (no decode/re-encode anywhere in this path, so the moved bytes are IDENTICAL
+    /// before and after, just at a different backbone uri — the plan's exact promotion invariant),
+    /// then tombstones the draft uri. Only removes the draft bookkeeping once the byte move fully
+    /// succeeds. Returns the draft bookkeeping (removed from this catalog) plus the
+    /// `CollectionOperation::AddEntry` the caller applies to their `CollectionProjection` — promotion
+    /// stays operation-sourced even though it now really touches bytes. The artifact keeps its id
+    /// (`entry.id == draft.artifact_id == document id`); a caller who knows the artifact's concrete
+    /// `<P, Operation>` pair can reconstruct a live `store::DocumentStore<P, Operation>` from the SAME
+    /// moved bytes via `import_document_artifact` (see `🔖️ZipStoreBridge` above) and register it into
+    /// their `store::SpaceHost` (`register_member`/`register_space_documents`) — this catalog stays
+    /// type-erased on purpose (same reasoning as `ArtifactBody`'s hand-written `DslVariants`) and never
+    /// touches `P`/`Operation` itself, so it never calls `SpaceHost` directly.
+    pub fn promote_draft(&self, port: &Arc<dyn SpaceBackbonePort>, space_id: &str, draft_id: &str, folder_id: Option<String>) -> Result<(DraftEntry, CollectionOperation), SpaceError> {
+        let draft = {
+            let drafts = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            drafts.get(draft_id).cloned().ok_or_else(|| SpaceError::UnknownDraft(draft_id.to_string()))?
+        };
+
+        let source_uri = draft_uri(draft_id);
+        let target_uri = artifact_backbone_uri(space_id, draft_id);
+        let envelope_bytes = port.read(&source_uri).map_err(|error| SpaceError::Backbone(error.to_string()))?;
+        port.write(&target_uri, &envelope_bytes).map_err(|error| SpaceError::Backbone(error.to_string()))?;
+        port.write(&source_uri, &[]).map_err(|error| SpaceError::Backbone(error.to_string()))?;
+
+        self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(draft_id);
+
         let entry = CollectionEntry {
             id: draft.artifact_id.clone(),
             folder_id,
@@ -1049,13 +1138,56 @@ impl DraftCatalog {
         Ok((draft, CollectionOperation::AddEntry { entry, at: u32::MAX }))
     }
 
-    /// ⏪️ Demotion is promotion's backwards — removing the entry from the collection. Re-registering
-    /// the draft bookkeeping (a fresh TTL window) is the caller's job, since this catalog has no
-    /// wall-clock of its own to stamp `created_at_ms` with.
+    /// ⏪️ Demotion's STRUCTURAL inverse — removing the entry from the collection. `CollectionOperation`'s
+    /// own `backwards()` on `AddEntry` already produces exactly this (see `## Draft vs asset`'s
+    /// "demotion is AddEntry's natural backwards"); kept as a standalone helper since a caller building
+    /// a demote flow from scratch (not undoing a specific `AddEntry`) needs the operation without an
+    /// `AddEntry` in hand. Does NOT move bytes — see `demote_asset` for the real byte-moving version.
     pub fn demote_operation(entry_id: &str) -> CollectionOperation {
         CollectionOperation::RemoveEntry { entry_id: entry_id.to_string() }
     }
+
+    /// ⏪️ REAL demotion: the byte-moving inverse of `promote_draft` — relocates `entry`'s envelope
+    /// bytes back from `artifact_backbone_uri(space_id, entry.id)` to `draft_uri(entry.id)`
+    /// byte-for-byte, tombstones the asset uri, and re-registers fresh draft bookkeeping (`now_ms`/
+    /// `ttl_ms` are caller-supplied, same convention as `create_draft` — a demoted draft gets a fresh
+    /// TTL window, it doesn't inherit whatever deadline it had before its original promotion). Returns
+    /// the `CollectionOperation::RemoveEntry` for the caller to apply to their `CollectionProjection`
+    /// (identical to `demote_operation`'s output — this is the byte-touching sibling of that pure
+    /// helper, needed whenever a demotion must actually relocate bytes rather than just undo an
+    /// in-hand `AddEntry`).
+    pub fn demote_asset(&self, port: &Arc<dyn SpaceBackbonePort>, space_id: &str, entry: &CollectionEntry, kind_id: &str, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionOperation, SpaceError> {
+        let source_uri = artifact_backbone_uri(space_id, &entry.id);
+        let target_uri = draft_uri(&entry.id);
+        let envelope_bytes = port.read(&source_uri).map_err(|error| SpaceError::Backbone(error.to_string()))?;
+        port.write(&target_uri, &envelope_bytes).map_err(|error| SpaceError::Backbone(error.to_string()))?;
+        port.write(&source_uri, &[]).map_err(|error| SpaceError::Backbone(error.to_string()))?;
+
+        let draft = DraftEntry { artifact_id: entry.id.clone(), kind_id: kind_id.into(), schema: schema.into(), name: entry.name.clone(), created_at_ms: now_ms, expires_at_ms: ttl_ms.map(|ttl| now_ms + ttl) };
+        self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(draft.artifact_id.clone(), draft);
+        Ok(Self::demote_operation(&entry.id))
+    }
 }
+
+//#region 🔖️DraftRegistry
+/// 🗄️ Port-keyed global `DraftCatalog` registry — mirrors os-core's `SPACE_CATALOG_URIS`/`port_key`
+/// per-port-identity keying exactly (`Arc::as_ptr` truncated to a bare data-pointer `usize`, dropping
+/// the vtable so two differently-vtabled trait-object views of the SAME underlying `Arc` allocation
+/// still key identically — see `SpaceBackbonePort`'s own doc). One `DraftCatalog` per distinct port
+/// identity, shared by every caller holding (a clone of) that port.
+static DRAFT_CATALOG_REGISTRY: LazyLock<Mutex<HashMap<usize, Arc<DraftCatalog>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+
+fn draft_catalog_port_key(port: &Arc<dyn SpaceBackbonePort>) -> usize {
+    Arc::as_ptr(port) as *const () as usize
+}
+
+/// 🔎️ Gets (or lazily creates) the `DraftCatalog` for `port`'s identity. Returns a cheap `Arc` clone —
+/// every caller sharing the same port shares the same draft bookkeeping, exactly the way
+/// `list_os_space_catalog_entries`/`create_os_space` share `SPACE_CATALOG_URIS` per port in os-core.
+pub fn draft_catalog_for(port: &Arc<dyn SpaceBackbonePort>) -> Arc<DraftCatalog> {
+    DRAFT_CATALOG_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).entry(draft_catalog_port_key(port)).or_insert_with(|| Arc::new(DraftCatalog::new())).clone()
+}
+//#endregion 🔖️DraftRegistry
 //#endregion 🔖️Drafts
 
 //#region 🔖️Zip
@@ -1170,6 +1302,66 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
 
     Ok(ImportedCollection { collection, collection_spr, artifacts, blobs })
 }
+
+//#region 🔖️ZipStoreBridge
+/// 🌉️ Real (non-mock) reader/writer bridge from `export_collection_zip`/`import_collection_zip`'s
+/// injected-callback shape to the actual `store` crate types (`store::DocumentStore`/
+/// `store::DocumentPackFiles`/`store::BlobStore`). This crate depends on `store` (see this crate's
+/// `Cargo.toml`), never the reverse, so the bridge lives HERE rather than inside `store` — the
+/// direction that keeps the dependency graph acyclic; `store` itself stays app-agnostic and never
+/// names a collection/space type. W2 shipped `export_collection_zip`/`import_collection_zip` IO-free
+/// with caller-injected reader closures and only fixture-string-backed unit tests exercising them;
+/// this region is what a real caller (a live `store::SpaceHost`'s registered members, W4's storage
+/// wave) plugs into those closures so a real collection with real document/blob artifacts actually
+/// round-trips through a real `.zip` byte stream.
+///
+/// 📤️ EXPORT side: a caller snapshots each open document artifact's `store::DocumentStore<P,
+/// Operation>` via its own `snapshot_pack()` into a `document_id -> store::DocumentPackFiles` table,
+/// then hands `real_artifact_reader`/`real_blob_reader` (closures over that table and a live
+/// `store::BlobStore`) straight to `export_collection_zip`.
+///
+/// 📥️ IMPORT side: `import_document_artifact`/`import_blob` are the inverse — reconstructing a real
+/// `store::DocumentStore<P, Operation>` from one `ImportedCollection::artifacts` entry's pack+spr
+/// bytes (generic over the artifact's own concrete schema, mirroring `store::parse_document_pack`'s
+/// own genericity — this crate never knows a document artifact's concrete type, only its `schema`
+/// string, so the caller supplies `P`/`Operation` at the call site), and re-`put`-ing one imported
+/// blob's bytes into a live `store::BlobStore`, verifying the freshly computed content hash still
+/// matches the `store::BlobRef` recorded in the collection.
+pub fn real_artifact_reader(pack_files: &HashMap<String, store::DocumentPackFiles>) -> impl Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> + '_ {
+    move |entry_id: &str| -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> {
+        let files = pack_files.get(entry_id).ok_or_else(|| SpaceZipError::MissingPath(entry_id.to_string()))?;
+        Ok((files.pack.clone(), files.spr.clone()))
+    }
+}
+
+pub fn real_blob_reader(blob_store: &dyn store::BlobStore) -> impl Fn(&str) -> Result<Vec<u8>, SpaceZipError> + '_ {
+    move |hash: &str| -> Result<Vec<u8>, SpaceZipError> {
+        blob_store.get(hash).map_err(|error| SpaceZipError::Pack(error.to_string()))?.ok_or_else(|| SpaceZipError::MissingPath(hash.to_string()))
+    }
+}
+
+/// 📥️ Reconstructs a real `store::DocumentStore<P, Operation>` from one imported document artifact's
+/// pack+spr bytes — the import-side counterpart to snapshotting it for `real_artifact_reader`.
+pub fn import_document_artifact<P, Operation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::DocumentStore<P, Operation>, SpaceZipError>
+where
+    P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+{
+    let parsed = store::parse_document_pack::<P, Operation>(pack_bytes, spr_bytes).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    Ok(store::DocumentStore::new(parsed.envelope))
+}
+
+/// 📥️ Puts one imported blob's bytes into a live `store::BlobStore`, verifying the freshly computed
+/// content hash matches the `store::BlobRef` recorded in the collection (a mismatch means the zip was
+/// tampered with or corrupted in transit).
+pub fn import_blob(blob_store: &dyn store::BlobStore, blob: &store::BlobRef, bytes: Vec<u8>) -> Result<(), SpaceZipError> {
+    let stored = blob_store.put(&bytes, &blob.media_type).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    if stored.hash != blob.hash {
+        return Err(SpaceZipError::Pack(format!("blob hash mismatch on import: expected {}, got {}", blob.hash, stored.hash)));
+    }
+    Ok(())
+}
+//#endregion 🔖️ZipStoreBridge
 //#endregion 🔖️Zip
 
 //#region 🧪️Tests
@@ -1177,7 +1369,7 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
 mod tests {
     use super::*;
     use protocol::DiffCodec;
-    use store::DocumentDsl;
+    use store::{BlobStore, DocumentDsl};
 
     //#region 🧸️Fixtures
     fn demo_user(id: &str, role: SpaceRole) -> SpaceUser {
@@ -1474,9 +1666,14 @@ mod tests {
     //#endregion 🧪️PathResolverLaws
 
     //#region 🧪️DraftLaws
+    fn memory_draft_port() -> Arc<dyn SpaceBackbonePort> {
+        Arc::new(store::MemoryBackbonePort::new())
+    }
+
     #[test]
     fn draft_create_list_expire_lifecycle() {
         let catalog = DraftCatalog::new();
+        let port = memory_draft_port();
         let draft_a = catalog.create_draft("puzzle.2d", "s.puzzle2d", "sketch-a", 1_000, Some(500));
         let draft_b = catalog.create_draft("puzzle.2d", "s.puzzle2d", "sketch-b", 1_000, None);
         assert_eq!(draft_a.expires_at_ms, Some(1_500));
@@ -1485,23 +1682,59 @@ mod tests {
         let listed = catalog.list_drafts();
         assert_eq!(listed.len(), 2);
 
-        let expired = catalog.expire_drafts(1_400);
+        let expired = catalog.expire_drafts(1_400, &port);
         assert!(expired.is_empty(), "not yet expired");
-        let expired = catalog.expire_drafts(1_500);
+        let expired = catalog.expire_drafts(1_500, &port);
         assert_eq!(expired, vec![draft_a.artifact_id.clone()]);
         assert_eq!(catalog.list_drafts().len(), 1, "the pinned draft survives");
     }
 
     #[test]
-    fn draft_promote_returns_add_entry_shaped_operation_and_demote_is_its_backwards() {
+    fn list_drafts_sweeping_expired_removes_stale_entries_first() {
         let catalog = DraftCatalog::new();
+        let port = memory_draft_port();
+        let draft = catalog.create_draft("puzzle.2d", "s.puzzle2d", "stale", 0, Some(100));
+        assert_eq!(catalog.list_drafts_sweeping_expired(50, &port).len(), 1, "not yet expired");
+        assert!(catalog.list_drafts_sweeping_expired(200, &port).is_empty(), "swept before listing");
+        assert!(catalog.list_drafts().iter().all(|entry| entry.artifact_id != draft.artifact_id));
+    }
+
+    #[test]
+    fn discard_draft_removes_bookkeeping_and_tombstones_bytes() {
+        let catalog = DraftCatalog::new();
+        let port = memory_draft_port();
+        let draft = catalog.create_draft("puzzle.2d", "s.puzzle2d", "scratch", 0, None);
+        port.write(&draft_uri(&draft.artifact_id), b"draft-bytes").expect("seed draft bytes");
+
+        let removed = catalog.discard_draft(&port, &draft.artifact_id).expect("discard");
+        assert_eq!(removed.artifact_id, draft.artifact_id);
+        assert!(catalog.list_drafts().is_empty());
+        assert_eq!(port.read(&draft_uri(&draft.artifact_id)).expect("read tombstone"), Vec::<u8>::new());
+        assert!(catalog.discard_draft(&port, &draft.artifact_id).is_none(), "already discarded");
+    }
+
+    /// 🧪️ The plan's core promotion invariant, proven with REAL bytes (not a fixture string): the
+    /// artifact's envelope bytes at `artifact_backbone_uri` after promotion are byte-for-byte IDENTICAL
+    /// to what was at `draft_uri` before promotion — just relocated under a different backbone uri, no
+    /// decode/re-encode anywhere in the path.
+    #[test]
+    fn draft_promote_moves_envelope_bytes_byte_identical() {
+        let catalog = DraftCatalog::new();
+        let port = memory_draft_port();
         let draft = catalog.create_draft("puzzle.2d", "s.puzzle2d", "sketch", 0, None);
-        let (removed_draft, operation) = catalog.promote_draft(&draft.artifact_id, Some("f1".into())).expect("promote");
+        let original_bytes = b"pretend-pack-plus-spr-envelope-bytes-with-full-vcs-history".to_vec();
+        port.write(&draft_uri(&draft.artifact_id), &original_bytes).expect("seed draft bytes");
+
+        let (removed_draft, operation) = catalog.promote_draft(&port, "space-1", &draft.artifact_id, Some("f1".into())).expect("promote");
         assert_eq!(removed_draft.artifact_id, draft.artifact_id);
         let CollectionOperation::AddEntry { entry, .. } = &operation else { panic!("promote_draft must return AddEntry") };
-        assert_eq!(entry.id, draft.artifact_id);
+        assert_eq!(entry.id, draft.artifact_id, "promotion preserves the document id");
         assert_eq!(entry.folder_id, Some("f1".into()));
         assert!(catalog.list_drafts().is_empty(), "promoted draft is no longer a draft");
+
+        let moved_bytes = port.read(&artifact_backbone_uri("space-1", &draft.artifact_id)).expect("read promoted bytes");
+        assert_eq!(moved_bytes, original_bytes, "promoted envelope bytes are byte-identical, just at a different backbone uri");
+        assert_eq!(port.read(&draft_uri(&draft.artifact_id)).expect("read tombstoned draft uri"), Vec::<u8>::new(), "draft uri is tombstoned after promotion");
 
         let demote = DraftCatalog::demote_operation(&entry.id);
         assert_eq!(demote, CollectionOperation::RemoveEntry { entry_id: entry.id.clone() });
@@ -1511,10 +1744,54 @@ mod tests {
         store::test_support::assert_operation_round_trip(&empty, operation);
     }
 
+    /// 🧪️ `demote_asset` is `promote_draft`'s real byte-moving inverse: the SAME bytes travel back
+    /// from the asset uri to the draft uri, byte-identical, and fresh draft bookkeeping reappears.
+    #[test]
+    fn demote_asset_moves_bytes_back_and_reregisters_draft_bookkeeping() {
+        let catalog = DraftCatalog::new();
+        let port = memory_draft_port();
+        let draft = catalog.create_draft("puzzle.2d", "s.puzzle2d", "sketch", 0, None);
+        let original_bytes = b"envelope-bytes-round-tripping-through-promote-then-demote".to_vec();
+        port.write(&draft_uri(&draft.artifact_id), &original_bytes).expect("seed draft bytes");
+
+        let (_, operation) = catalog.promote_draft(&port, "space-1", &draft.artifact_id, None).expect("promote");
+        let CollectionOperation::AddEntry { entry, .. } = operation else { panic!("expected AddEntry") };
+
+        let demote_operation = catalog.demote_asset(&port, "space-1", &entry, "puzzle.2d", "s.puzzle2d", 2_000, Some(1_000)).expect("demote");
+        assert_eq!(demote_operation, CollectionOperation::RemoveEntry { entry_id: entry.id.clone() });
+
+        let restored_bytes = port.read(&draft_uri(&entry.id)).expect("read demoted draft bytes");
+        assert_eq!(restored_bytes, original_bytes, "demoted envelope bytes are byte-identical to the originally-promoted ones");
+        assert_eq!(port.read(&artifact_backbone_uri("space-1", &entry.id)).expect("read tombstoned asset uri"), Vec::<u8>::new());
+
+        let redrafted = catalog.list_drafts();
+        assert_eq!(redrafted.len(), 1);
+        assert_eq!(redrafted[0].artifact_id, entry.id);
+        assert_eq!(redrafted[0].expires_at_ms, Some(3_000), "demotion re-registers a fresh TTL window");
+    }
+
     #[test]
     fn promote_unknown_draft_errors() {
         let catalog = DraftCatalog::new();
-        assert_eq!(catalog.promote_draft("nope", None), Err(SpaceError::UnknownDraft("nope".into())));
+        let port = memory_draft_port();
+        assert_eq!(catalog.promote_draft(&port, "space-1", "nope", None), Err(SpaceError::UnknownDraft("nope".into())));
+    }
+
+    /// 🧪️ `draft_catalog_for` is the port-keyed global registry: the SAME `Arc<dyn SpaceBackbonePort>`
+    /// identity always resolves to the SAME `DraftCatalog` instance (so callers sharing a port share
+    /// draft bookkeeping), while two DISTINCT port identities never share one.
+    #[test]
+    fn draft_catalog_for_is_keyed_by_port_identity() {
+        let port_a = memory_draft_port();
+        let port_b = memory_draft_port();
+
+        let catalog_a1 = draft_catalog_for(&port_a);
+        let catalog_a1_created = catalog_a1.create_draft("puzzle.2d", "s.puzzle2d", "shared", 0, None);
+        let catalog_a2 = draft_catalog_for(&port_a);
+        assert_eq!(catalog_a2.list_drafts().iter().map(|entry| entry.artifact_id.clone()).collect::<Vec<_>>(), vec![catalog_a1_created.artifact_id.clone()], "same port identity shares one catalog");
+
+        let catalog_b = draft_catalog_for(&port_b);
+        assert!(catalog_b.list_drafts().is_empty(), "a distinct port identity gets its own catalog");
     }
     //#endregion 🧪️DraftLaws
 
@@ -1558,5 +1835,106 @@ mod tests {
         assert_eq!(once, twice, "export -> import -> export must be byte-stable");
     }
     //#endregion 🧪️ZipLaws
+
+    //#region 🧪️ZipStoreBridgeLaws
+    /// 🧪️ Minimal in-memory `store::BlobStore` test double — content-addressed via a fast
+    /// non-cryptographic hash (no need for `framework_hash`'s real Blake3, this crate has no such
+    /// dependency and a test double only needs internal consistency, not a production hash).
+    #[derive(Default)]
+    struct TestBlobStore {
+        entries: Mutex<HashMap<String, (Vec<u8>, String)>>,
+    }
+
+    fn test_blob_hash(bytes: &[u8]) -> String {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        bytes.hash(&mut hasher);
+        format!("test-{:016x}", hasher.finish())
+    }
+
+    impl BlobStore for TestBlobStore {
+        fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, store::VcsError> {
+            let hash = test_blob_hash(bytes);
+            self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(hash.clone(), (bytes.to_vec(), media_type.to_string()));
+            Ok(store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
+        }
+
+        fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, store::VcsError> {
+            Ok(self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(hash).map(|(bytes, _)| bytes.clone()))
+        }
+
+        fn has(&self, hash: &str) -> Result<bool, store::VcsError> {
+            Ok(self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(hash))
+        }
+
+        fn delete(&self, hash: &str) -> Result<(), store::VcsError> {
+            self.entries.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(hash);
+            Ok(())
+        }
+    }
+
+    /// 🧪️ End-to-end law with REAL `store` types (not the fixture-string readers `zip_fixture_bytes`
+    /// injects above): a real `store::DocumentStore<SpaceProjection, SpaceOperation>` document
+    /// artifact (itself an ordinary `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` document —
+    /// exercising exactly the same `DocumentPack`/`OpBinary`/`OpText` machinery any real app document
+    /// would) plus a real blob round-trip through `real_artifact_reader`/`real_blob_reader`/
+    /// `import_document_artifact`/`import_blob`, asserting the round trip preserves collection
+    /// structure AND artifact envelope bytes byte-for-byte (the plan's "lossless" requirement), and
+    /// that export->import->export stays byte-stable with real data too.
+    #[test]
+    fn zip_export_import_round_trips_real_store_documents_and_blob() {
+        let mut nested_space_store = store::DocumentStore::new(store::create_document_envelope::<SpaceProjection, SpaceOperation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None));
+        nested_space_store.dispatch(store::DocumentCommand::Apply { operations: vec![SpaceOperation::SetName { name: "Nested Space".into() }], description: None }).expect("apply");
+        nested_space_store.dispatch(store::DocumentCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).expect("commit checkpoint");
+        let original_pack_files = nested_space_store.snapshot_pack().expect("snapshot pack");
+
+        let blob_store = TestBlobStore::default();
+        let blob_ref = blob_store.put(b"hello blob bytes", "text/plain").expect("put blob");
+
+        let mut collection = empty_collection_projection("RealDemo");
+        collection.entries.push(CollectionEntry {
+            id: "art-nested-space".into(),
+            folder_id: None,
+            name: "nested-space".into(),
+            kind_id: "s.space".into(),
+            body: Box::new(ArtifactBody::Document { schema: S_SPACE_SCHEMA.into(), document_id: "art-nested-space".into() }),
+        });
+        collection.entries.push(CollectionEntry { id: "blob-1".into(), folder_id: None, name: "note.txt".into(), kind_id: "file.blob".into(), body: Box::new(ArtifactBody::Blob { blob: blob_ref.clone() }) });
+
+        let mut pack_files = HashMap::new();
+        pack_files.insert("art-nested-space".to_string(), original_pack_files.clone());
+        let read_artifact = real_artifact_reader(&pack_files);
+        let read_blob = real_blob_reader(&blob_store);
+        let collection_spr = b"collection-history-bytes".to_vec();
+        let zip_bytes = export_collection_zip(&collection, &collection_spr, &read_artifact, &read_blob).expect("export");
+
+        let imported = import_collection_zip(&zip_bytes).expect("import");
+        assert_eq!(imported.collection, collection, "collection structure survives the round trip");
+        assert_eq!(imported.collection_spr, collection_spr);
+
+        let (_, imported_pack, imported_spr) = imported.artifacts.iter().find(|(entry, _, _)| entry.id == "art-nested-space").expect("artifact present");
+        assert_eq!(imported_pack, &original_pack_files.pack, "artifact pack bytes are byte-identical after the round trip");
+        assert_eq!(imported_spr, &original_pack_files.spr, "artifact spr bytes are byte-identical after the round trip");
+
+        let restored_store = import_document_artifact::<SpaceProjection, SpaceOperation>(imported_pack, imported_spr).expect("reconstruct store");
+        assert_eq!(restored_store.projection().expect("projection"), nested_space_store.projection().expect("projection"), "reconstructed document projection matches the original exactly");
+
+        let (imported_blob, imported_blob_bytes) = imported.blobs.iter().find(|(blob, _)| blob.hash == blob_ref.hash).expect("blob present");
+        assert_eq!(imported_blob_bytes, b"hello blob bytes");
+        let fresh_blob_store = TestBlobStore::default();
+        import_blob(&fresh_blob_store, imported_blob, imported_blob_bytes.clone()).expect("import blob");
+        assert_eq!(fresh_blob_store.get(&blob_ref.hash).expect("get"), Some(b"hello blob bytes".to_vec()));
+
+        // export -> import -> export must stay byte-stable with REAL data too (not just injected
+        // fixture strings) — the law `zip_export_import_export_is_byte_stable` proved with mock bytes
+        // holds end-to-end.
+        let mut reexport_pack_files = HashMap::new();
+        reexport_pack_files.insert("art-nested-space".to_string(), store::DocumentPackFiles { pack: imported_pack.clone(), spr: imported_spr.clone(), ops: String::new() });
+        let re_read_artifact = real_artifact_reader(&reexport_pack_files);
+        let re_read_blob = real_blob_reader(&fresh_blob_store);
+        let twice = export_collection_zip(&imported.collection, &imported.collection_spr, &re_read_artifact, &re_read_blob).expect("re-export");
+        assert_eq!(zip_bytes, twice, "export -> import -> export is byte-stable with real store-backed data");
+    }
+    //#endregion 🧪️ZipStoreBridgeLaws
 }
 //#endregion 🧪️Tests

@@ -17,19 +17,21 @@ CREATE TABLE IF NOT EXISTS hub_user (
     created_at BIGINT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS hub_studio (
+CREATE TABLE IF NOT EXISTS hub_space (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     owner_user_id TEXT NOT NULL REFERENCES hub_user(id),
-    created_at BIGINT NOT NULL
+    created_at BIGINT NOT NULL,
+    kind TEXT NOT NULL CHECK (kind IN ('atelier', 'studio', 'archive')),
+    visibility TEXT NOT NULL CHECK (visibility IN ('private', 'public'))
 );
 
-CREATE TABLE IF NOT EXISTS hub_studio_membership (
-    studio_id TEXT NOT NULL REFERENCES hub_studio(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS hub_space_membership (
+    space_id TEXT NOT NULL REFERENCES hub_space(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES hub_user(id) ON DELETE CASCADE,
-    role TEXT NOT NULL CHECK (role IN ('owner', 'member', 'viewer')),
+    role TEXT NOT NULL CHECK (role IN ('author', 'spectator')),
     created_at BIGINT NOT NULL,
-    PRIMARY KEY (studio_id, user_id)
+    PRIMARY KEY (space_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS hub_auth_session (
@@ -44,18 +46,10 @@ CREATE TABLE IF NOT EXISTS hub_sync_session (
     id TEXT PRIMARY KEY,
     document_id TEXT NOT NULL,
     user_id TEXT REFERENCES hub_user(id) ON DELETE SET NULL,
-    studio_role TEXT,
+    space_role TEXT,
     client_label TEXT NOT NULL,
     connected_at BIGINT NOT NULL,
     disconnected_at BIGINT
-);
-
-CREATE TABLE IF NOT EXISTS hub_node (
-    id TEXT PRIMARY KEY,
-    studio_id TEXT NOT NULL REFERENCES hub_studio(id) ON DELETE CASCADE,
-    parent_id TEXT REFERENCES hub_node(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    kind TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS hub_share_token (
@@ -64,6 +58,5 @@ CREATE TABLE IF NOT EXISTS hub_share_token (
     created_at BIGINT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_studio_membership (user_id);
-CREATE INDEX IF NOT EXISTS idx_node_studio_parent ON hub_node (studio_id, parent_id);
+CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_space_membership (user_id);
 CREATE INDEX IF NOT EXISTS idx_sync_session_document ON hub_sync_session (document_id, disconnected_at);

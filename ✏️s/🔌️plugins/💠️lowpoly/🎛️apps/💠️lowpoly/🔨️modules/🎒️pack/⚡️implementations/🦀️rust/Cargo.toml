@@ -17,3 +17,6 @@ store = { path = "../../../../../../../../../🧰️framework/🛍️products/�
 
 [dev-dependencies]
 lowpoly_dsl = { path = "../../../../../../../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-s-app-lowpoly-dsl" }
+lowpoly_op = { path = "../../../../../../../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-lowpoly-op" }
+lowpoly_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-lowpoly-engine" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

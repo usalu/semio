@@ -3132,9 +3132,17 @@ pub struct SpaceAlternative {
     pub checkpoint_ids: Vec<String>,
 }
 
-/// @emoji 🗄️ Projection of the `"os.space.history"` meta-document: itself an ordinary `DocumentVcs`
-/// document kind (dogfooded — no bespoke transport), holding the space-level checkpoint/alternative
-/// graph that `SpaceHost` composes on top of every registered member's own history.
+/// @emoji 🏷️ Schema id of the space-wide history meta-document — `"s.space.history"`, under the
+/// unified `s.` schema lattice alongside `space::S_SPACE_SCHEMA`/`space::S_COLLECTION_SCHEMA` (this
+/// crate sits below `space` in the dependency graph, so it declares its own constant rather than
+/// depending on that crate's). Renamed from `"os.space.history"` — the `.spr` extension
+/// (`SpaceHistoryProjection::EXTENSION`, `"space-history"`) is unchanged.
+pub const S_SPACE_HISTORY_SCHEMA: &str = "s.space.history";
+
+/// @emoji 🗄️ Projection of the `S_SPACE_HISTORY_SCHEMA` (`"s.space.history"`) meta-document: itself
+/// an ordinary `DocumentVcs` document kind (dogfooded — no bespoke transport), holding the
+/// space-level checkpoint/alternative graph that `SpaceHost` composes on top of every registered
+/// member's own history.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceHistoryProjection {
@@ -3321,8 +3329,9 @@ impl DocumentPack for SpaceHistoryProjection {
 
 //#region SpaceHost
 /// @emoji 🏛️ Composes many `SpaceMember` documents under one space-wide checkpoint/alternative
-/// timeline, itself stored in a dogfooded `"os.space.history"` meta-document. App-agnostic: this
-/// crate has no notion of what a member document *is*, only that it satisfies `SpaceMember`.
+/// timeline, itself stored in a dogfooded `S_SPACE_HISTORY_SCHEMA` (`"s.space.history"`)
+/// meta-document. App-agnostic: this crate has no notion of what a member document *is*, only that
+/// it satisfies `SpaceMember`.
 pub struct SpaceHost {
     meta: DocumentStore<SpaceHistoryProjection, SpaceHistoryOperation>,
     members: HashMap<String, Box<dyn SpaceMember>>,
@@ -3335,6 +3344,23 @@ impl SpaceHost {
 
     pub fn register_member(&mut self, member: Box<dyn SpaceMember>) {
         self.members.insert(member.document_id().to_string(), member);
+    }
+
+    /// @emoji 📚️ Batch counterpart to `register_member`: registers a space's manifest document, its
+    /// collection documents, and any currently-open artifact documents together in one call, so the
+    /// very next `commit_space_checkpoint` pins all of them atomically in the SAME space-wide
+    /// checkpoint (see `🪐️space`'s `SpaceProjection`/`CollectionProjection`/document-artifact
+    /// stores, W4's storage wiring — this crate stays app-agnostic and never names those types
+    /// directly, only their common `SpaceMember` façade). Purely additive sugar over calling
+    /// `register_member` three times in this order; no new mechanism.
+    pub fn register_space_documents(&mut self, manifest: Box<dyn SpaceMember>, collections: Vec<Box<dyn SpaceMember>>, artifacts: Vec<Box<dyn SpaceMember>>) {
+        self.register_member(manifest);
+        for collection in collections {
+            self.register_member(collection);
+        }
+        for artifact in artifacts {
+            self.register_member(artifact);
+        }
     }
 
     pub fn unregister_member(&mut self, document_id: &str) -> Option<Box<dyn SpaceMember>> {
@@ -4503,6 +4529,38 @@ mod tests {
     }
 
     #[test]
+    fn register_space_documents_registers_manifest_collections_and_artifacts_together() {
+        // 🎯️ Every member below gets at least one uncommitted edit (dirty), mirroring
+        // `space_checkpoint_commits_dirty_members_and_pins_their_checkpoints`'s `member_a` — a fresh
+        // member with zero edits and zero checkpoints has no `current_checkpoint_id` yet, which
+        // `commit_space_checkpoint` requires of every registered member (dirty ones are auto-committed,
+        // already-clean ones just need a prior checkpoint).
+        let mut manifest = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>("demo/v1", "space-manifest", DemoProjection { n: 0 }, None));
+        manifest.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply manifest edit");
+        let mut collection_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>("demo/v1", "collection-a", DemoProjection { n: 0 }, None));
+        collection_a.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply collection a edit");
+        let mut collection_b = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>("demo/v1", "collection-b", DemoProjection { n: 0 }, None));
+        collection_b.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 3 }], description: None }).expect("apply collection b edit");
+        let mut artifact_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>("demo/v1", "artifact-a", DemoProjection { n: 0 }, None));
+        artifact_a.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 7 }], description: None }).expect("apply artifact edit");
+
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
+        host.register_space_documents(Box::new(manifest), vec![Box::new(collection_a), Box::new(collection_b)], vec![Box::new(artifact_a)]);
+
+        assert!(host.member("space-manifest").is_some(), "manifest registered");
+        assert!(host.member("collection-a").is_some(), "collection a registered");
+        assert!(host.member("collection-b").is_some(), "collection b registered");
+        assert!(host.member("artifact-a").is_some(), "artifact registered");
+
+        let space_checkpoint_id = host.commit_space_checkpoint("initial space checkpoint".into(), Vec::new()).expect("commit space checkpoint");
+        let projection = host.meta_projection().expect("meta projection");
+        let checkpoint = projection.checkpoints.iter().find(|checkpoint| checkpoint.id == space_checkpoint_id).expect("checkpoint recorded");
+        assert_eq!(checkpoint.members.len(), 4, "manifest + 2 collections + 1 artifact all pinned atomically in one space checkpoint");
+        let pinned_ids: HashSet<&str> = checkpoint.members.iter().map(|pin| pin.document_id.as_str()).collect();
+        assert_eq!(pinned_ids, HashSet::from(["space-manifest", "collection-a", "collection-b", "artifact-a"]));
+    }
+
+    #[test]
     fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
         let mut member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>("demo/v1", "member-a", DemoProjection { n: 0 }, None));
         member_a.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply a");
@@ -4512,7 +4570,7 @@ mod tests {
         member_b.dispatch(DocumentCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }).expect("commit b upfront, so it starts clean");
         let member_b_checkpoint = member_b.current_checkpoint_id().expect("b checkpoint").to_string();
 
-        let mut host = SpaceHost::new(create_document_envelope("os.space.history/v1", "studio", SpaceHistoryProjection::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
         host.register_member(Box::new(member_a));
         host.register_member(Box::new(member_b));
 
@@ -4531,7 +4589,7 @@ mod tests {
     #[test]
     fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b");
-        let meta_envelope: DocumentEnvelope<SpaceHistoryProjection, SpaceHistoryOperation> = create_document_envelope("os.space.history/v1", "studio", SpaceHistoryProjection::default(), None);
+        let meta_envelope: DocumentEnvelope<SpaceHistoryProjection, SpaceHistoryOperation> = create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None);
         let mut host_a = SpaceHost::new(meta_envelope.clone());
         let mut host_b = SpaceHost::new(meta_envelope);
         assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other DocumentStore");
@@ -4558,7 +4616,7 @@ mod tests {
     #[test]
     fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
         let member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>("demo/v1", "member-a", DemoProjection { n: 0 }, None));
-        let mut host = SpaceHost::new(create_document_envelope("os.space.history/v1", "studio", SpaceHistoryProjection::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
         host.register_member(Box::new(member_a));
 
         demo_member::<DemoOperation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply 1");
@@ -4575,7 +4633,7 @@ mod tests {
     #[test]
     fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
         let member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>("demo/v1", "member-a", DemoProjection { n: 0 }, None));
-        let mut host = SpaceHost::new(create_document_envelope("os.space.history/v1", "studio", SpaceHistoryProjection::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
         host.register_member(Box::new(member_a));
 
         demo_member::<DemoOperation>(&mut host, "member-a").dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply 1");
@@ -4598,7 +4656,7 @@ mod tests {
         let mut member_late = DocumentStore::new(create_document_envelope::<DemoProjection, TimestampedOperation>("demo-ts/v1", "member-late", DemoProjection { n: 0 }, None));
         member_late.dispatch(DocumentCommand::Apply { operations: vec![TimestampedOperation::SetN { n: 9, physical_ms: 2_000 }], description: None }).expect("apply late");
 
-        let mut host = SpaceHost::new(create_document_envelope("os.space.history/v1", "studio", SpaceHistoryProjection::default(), None));
+        let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistoryProjection::default(), None));
         host.register_member(Box::new(member_early));
         host.register_member(Box::new(member_late));
 

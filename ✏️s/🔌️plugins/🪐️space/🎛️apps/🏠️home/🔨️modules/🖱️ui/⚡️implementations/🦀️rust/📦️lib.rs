@@ -6,8 +6,9 @@ use home_engine::HomeConfig;
 use home_op::{HomeConfigOperation, SHomeOperation};
 use home_protocol::HomeCommand;
 use semio_framework_os::{
-    create_backbone_document, create_os_space, delete_os_space, document_backbone_ref, empty_space_projection, encode_backbone_payload, export_os_space_pack, import_os_space_from_dsl, list_os_space_catalog_entries, load_os_space_document,
-    seed_os_space_catalog_if_empty, MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility, VcsError, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX, S_SPACE_SCHEMA,
+    create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, document_backbone_ref, draft_catalog_for, draft_uri, empty_space_projection, encode_backbone_payload, export_os_space_pack, import_os_space_from_dsl,
+    list_os_space_catalog_entries, load_os_space_document, seed_os_space_catalog_if_empty, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsSpaceDocument, SpaceBackbonePort, SpaceKind, SpaceOperation, SpaceProjection, SpaceRole, SpaceUser,
+    SpaceVisibility, VcsError, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX, S_SPACE_SCHEMA,
 };
 use semio_framework_plugin::{
         app_labels, build_virtual_file_system_scene, create_tab_stack_layout, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, Fault, FaultOrigin, HostEffect, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, VirtualFileSystemScene,
@@ -32,10 +33,18 @@ const OS_BOOT_STUDIO_ID: &str = "default";
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
-static CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
+/// 🧬️ Kept as its own concrete-typed static (not just `Arc<dyn OsBackbonePort>`) so this module can
+/// mint TWO different trait-object views of the SAME underlying allocation: `Arc<dyn OsBackbonePort>`
+/// (os-core's byte-via-base64 bridge, used by every existing catalog call) and `Arc<dyn
+/// space::SpaceBackbonePort>` (`draft_backbone_port` below, used by the real `space::DraftCatalog`
+/// wiring) — both blanket-impl'd over the SAME `store::BackbonePort`, and unsizing coercion never
+/// reallocates, so `Arc::as_ptr`-keyed registries (`space::draft_catalog_for`'s port identity key)
+/// still line up correctly across both views.
+static CATALOG_PORT_CONCRETE: LazyLock<Arc<LocalStorageBackbonePort>> = LazyLock::new(|| {
     ensure_space_fixtures_registered();
-    let port: Arc<dyn OsBackbonePort> = Arc::new(LocalStorageBackbonePort::new());
-    if list_os_space_catalog_entries(port.clone()).map(|entries| entries.is_empty()).unwrap_or(true) {
+    let port = Arc::new(LocalStorageBackbonePort::new());
+    let os_port: Arc<dyn OsBackbonePort> = port.clone();
+    if list_os_space_catalog_entries(os_port.clone()).map(|entries| entries.is_empty()).unwrap_or(true) {
         // 🧬️ `parse_demo_space_document` now yields a `workflow::WorkflowDocument` (the dissolved
         // `OsProjection`'s workflow-graph half, see `## The inversion`) — the space CATALOG this boot
         // seed populates needs a `space::SpaceProjection` manifest instead. `demo_name` still comes
@@ -46,26 +55,50 @@ static CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
         let mut projection = empty_space_projection(&demo_name, SpaceKind::Atelier, SpaceVisibility::Private);
         projection.users.push(SpaceUser { id: "local".into(), name: demo_name.clone(), avatar: None, role: SpaceRole::Author });
         let seed: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, OS_BOOT_STUDIO_ID, &demo_name, projection);
-        let _ = seed_os_space_catalog_if_empty(seed, port.clone());
+        let _ = seed_os_space_catalog_if_empty(seed, os_port);
     }
     port
 });
 
-static TEMP_CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| Arc::new(MemoryBackbonePort::new()));
+/// 🧬️ Session-local, ephemeral (in-memory only) counterpart to `CATALOG_PORT_CONCRETE` — every draft
+/// space a user creates from Home lives here at `space::draft_uri(id)` until it's promoted (bound to a
+/// file or a real catalog), matching the pre-`DraftCatalog` ephemeral registry's "never persisted"
+/// semantics exactly, just now backed by a real port instead of a bespoke `HashMap`.
+static TEMP_CATALOG_PORT_CONCRETE: LazyLock<Arc<MemoryBackbonePort>> = LazyLock::new(|| Arc::new(MemoryBackbonePort::new()));
 
 static STUDIO_PORTS: LazyLock<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
-
-static EPHEMERAL_STUDIOS: LazyLock<Mutex<HashMap<String, OsSpaceDocument>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// 🌉️ `pub` (not `pub(crate)`): `app_space` (a sibling crate, `semio-s-app-space-space-ui`) resolves
 /// studios through the Home launcher's own catalog port — see `app_space`'s `openSpace`/
 /// `exportStudioPack`/`exportStudioDsl`/`importSpacePackPayload` actions.
 pub fn catalog_port() -> Arc<dyn OsBackbonePort> {
-    CATALOG_PORT.clone()
+    CATALOG_PORT_CONCRETE.clone()
 }
 
 fn temp_catalog_port() -> Arc<dyn OsBackbonePort> {
-    TEMP_CATALOG_PORT.clone()
+    TEMP_CATALOG_PORT_CONCRETE.clone()
+}
+
+/// 🔌️ `space::SpaceBackbonePort` view over the SAME ephemeral port `temp_catalog_port` uses (see
+/// `TEMP_CATALOG_PORT_CONCRETE`'s doc) — the port every draft studio's real envelope bytes are
+/// relocated through by `space::DraftCatalog`.
+fn draft_backbone_port() -> Arc<dyn SpaceBackbonePort> {
+    TEMP_CATALOG_PORT_CONCRETE.clone()
+}
+
+/// 🗄️ The port-keyed `space::DraftCatalog` for `draft_backbone_port` — every draft studio's
+/// bookkeeping (id, kind, TTL) lives here; `space::draft_catalog_for` guarantees the SAME instance is
+/// returned every call since `draft_backbone_port` always unsizes the SAME `TEMP_CATALOG_PORT_CONCRETE`
+/// allocation.
+fn ephemeral_draft_catalog() -> Arc<DraftCatalog> {
+    draft_catalog_for(&draft_backbone_port())
+}
+
+/// 🕰️ Wall-clock millis, reusing `store::now_iso`'s own wasm-safe implementation (its string is
+/// already the millis count as text) rather than duplicating the `cfg(target_arch = "wasm32")`
+/// branching this crate has no `js-sys` dependency to replicate directly.
+fn now_ms() -> u64 {
+    store::now_iso().parse().unwrap_or(0)
 }
 
 fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>) {
@@ -74,36 +107,34 @@ fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>) {
     }
 }
 
-/// @emoji 🫧️ Registers a session-local studio document — no backbone URI, no catalog port write.
-fn register_ephemeral_studio(document: OsSpaceDocument) -> String {
-    let id = document.id.clone();
-    if let Ok(mut guard) = EPHEMERAL_STUDIOS.lock() {
-        guard.insert(id.clone(), document);
-    }
-    id
-}
-
-/// @emoji 🆕️ Mints and registers an ephemeral empty studio (space manifest, no collections) for the
-/// default create path — the dissolved `create_ephemeral_os_space`'s minimal compiling successor (see
-/// `## The inversion`): a session-local, never-persisted `space::SpaceProjection` with no backbone URI
-/// and no catalog port write. Real `space::DraftCatalog` wiring is out of scope for this wave.
+/// @emoji 🆕️ Mints a fresh draft space manifest (empty, no collections) for the default create path —
+/// the dissolved `create_ephemeral_os_space`'s real `space::DraftCatalog`-backed successor (see `##
+/// Draft vs asset` in the plan): a `space::SpaceProjection` document registered as a draft
+/// (`kind_id = "s.space"`) at `space::draft_uri(id)` on the ephemeral port, never on the real catalog
+/// port, never tracked as a `space://` catalog entry.
 fn create_and_register_ephemeral_studio(name: &str) -> String {
-    let id = semio_framework_os::create_os_id("space");
     let owner = SpaceUser { id: "local".into(), name: name.into(), avatar: None, role: SpaceRole::Author };
     let mut projection = empty_space_projection(name.trim(), SpaceKind::Atelier, SpaceVisibility::Private);
     projection.users.push(owner);
-    let document: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, &id, name.trim(), projection);
-    register_ephemeral_studio(document)
+    let draft = ephemeral_draft_catalog().create_draft("s.space", S_SPACE_SCHEMA, name.trim(), now_ms(), None);
+    let document: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, &draft.artifact_id, name.trim(), projection);
+    if let Ok(payload) = encode_backbone_payload(&document) {
+        let _ = draft_backbone_port().write(&draft_uri(&draft.artifact_id), &payload);
+    }
+    draft.artifact_id
 }
 
-/// @emoji 📂️ Resolves a studio id against the ephemeral registry, registered ports, then catalogs.
+/// @emoji 📂️ Resolves a studio id against the draft catalog, registered ports, then catalogs.
 ///
 /// 🌉️ `pub` (not `pub(crate)`): `app_space` resolves the studio it is asked to open through this same
 /// lookup — see the note on {@link catalog_port}.
 pub fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> {
-    if let Ok(guard) = EPHEMERAL_STUDIOS.lock() {
-        if let Some(document) = guard.get(space_id) {
-            return Some(document.clone());
+    let draft_port = draft_backbone_port();
+    if let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), &draft_uri(space_id)) {
+        if !payload.is_empty() {
+            if let Ok(document) = decode_backbone_payload::<SpaceProjection, SpaceOperation>(&payload, S_SPACE_SCHEMA) {
+                return Some(document);
+            }
         }
     }
     if let Ok(guard) = STUDIO_PORTS.lock() {
@@ -137,6 +168,10 @@ pub fn register_studio_port_for_test(space_id: &str, port: Arc<dyn OsBackbonePor
     register_studio_port(space_id, port);
 }
 
+/// 🎯️ W5 Lane B: the TTL-sweep call site — `list_drafts_sweeping_expired` clears any stale draft
+/// bookkeeping (and best-effort tombstones its bytes) BEFORE this listing is built, so Home's VFS
+/// never shows a studio draft past its deadline. Mirrors the spirit of os-core's own catalog-listing
+/// entry points (`list_os_space_catalog_entries`): always sweep, then list.
 fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpaceCatalogEntry> {
     let mut seen = HashSet::new();
     let mut entries = Vec::new();
@@ -149,22 +184,26 @@ fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpaceCatalogEnt
             }
         }
     }
-    if let Ok(guard) = EPHEMERAL_STUDIOS.lock() {
-        for (id, document) in guard.iter() {
-            if !seen.insert(id.clone()) {
-                continue;
-            }
-            let projection = &document.vcs.initial_projection;
-            entries.push(semio_framework_os::OsSpaceCatalogEntry {
-                id: id.clone(),
-                name: document.name.clone(),
-                backbone_uri: String::new(),
-                kind: projection.kind,
-                visibility: projection.visibility,
-                collection_count: projection.collections.len(),
-                updated_at: "0".into(),
-            });
+    let draft_port = draft_backbone_port();
+    for draft in ephemeral_draft_catalog().list_drafts_sweeping_expired(now_ms(), &draft_port) {
+        if draft.kind_id != "s.space" || !seen.insert(draft.artifact_id.clone()) {
+            continue;
         }
+        let Ok(payload) = SpaceBackbonePort::read(draft_port.as_ref(), &draft_uri(&draft.artifact_id)) else { continue };
+        if payload.is_empty() {
+            continue;
+        }
+        let Ok(document) = decode_backbone_payload::<SpaceProjection, SpaceOperation>(&payload, S_SPACE_SCHEMA) else { continue };
+        let projection = &document.vcs.initial_projection;
+        entries.push(semio_framework_os::OsSpaceCatalogEntry {
+            id: draft.artifact_id,
+            name: document.name.clone(),
+            backbone_uri: String::new(),
+            kind: projection.kind,
+            visibility: projection.visibility,
+            collection_count: projection.collections.len(),
+            updated_at: "0".into(),
+        });
     }
     entries
 }
@@ -184,16 +223,24 @@ fn create_folder_studio(name: &str, folder_path: &str) -> Result<semio_framework
     Ok(entry)
 }
 
+/// @emoji 🎯️ W5 Lane B: this IS "save this draft as a real asset" for a whole space manifest — binding
+/// a studio to a real file/catalog location is the natural persist moment. `resolve_studio_document`
+/// (draft-catalog-first) resolves the document whether `space_id` is still a draft or already real, so
+/// this now works for BOTH; when it was a draft, discarding its bookkeeping + tombstoning its
+/// `draft_uri` bytes afterwards completes the promotion (the SAME document now lives for real at
+/// `catalog_uri`, so the draft placement is done).
 #[cfg(not(target_arch = "wasm32"))]
 fn bind_studio_file(space_id: &str, file_path: &str) -> Result<(), VcsError> {
     let uri = format!("file://{file_path}");
     let port = semio_framework_os::open_file_space_backbone(file_path)?;
     register_studio_port(space_id, port.clone());
-    let mut document = load_os_space_document(space_id, catalog_port())?;
+    let mut document = resolve_studio_document(space_id).ok_or_else(|| VcsError::Backbone(format!("unknown space {space_id}")))?;
     document.backbone = Some(document_backbone_ref(&uri));
     port.write(&uri, &encode_backbone_payload(&document)?)?;
     let catalog_uri = format!("{OS_SPACE_BACKBONE_URI_PREFIX}{space_id}");
     sync_os_space_document_helper(&document, &catalog_uri, &catalog_port())?;
+    let draft_port = draft_backbone_port();
+    ephemeral_draft_catalog().discard_draft(&draft_port, space_id);
     Ok(())
 }
 
@@ -416,9 +463,8 @@ impl DocumentApp for HomeApp {
             }
             HomeCommand::DeleteVirtualFileSystemNode { node_id } => match node_id.strip_prefix("studio:") {
                 Some(space_id) => {
-                    if let Ok(mut guard) = EPHEMERAL_STUDIOS.lock() {
-                        guard.remove(space_id);
-                    }
+                    let draft_port = draft_backbone_port();
+                    ephemeral_draft_catalog().discard_draft(&draft_port, space_id);
                     let _ = delete_os_space(space_id, port.clone());
                     Ok(bump(generation + 1))
                 }

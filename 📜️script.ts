@@ -1166,8 +1166,10 @@ type OsPluginArtifact = { pluginId: string; wasmOut: string };
  * `resolve_plugin_paths` reads (see `framework/os/run/rs/bin.rs`). `os run`'s cargo runner panics with
  * an obscure "file not found" when a program is unregistered, so this runs first and names the gap.
  * Checks every registry entry rather than just the target `.studio` bundle's own app instances — that
- * would need re-decoding the bundle's binary `store` document pack (the `space.os.pack`/`.spr` VCS
- * envelope) in TypeScript, disproportionate for a preflight check.
+ * would need re-decoding the bundle's binary `store` document pack (the root `space.space.pack`/`.spr`
+ * VCS envelope — renamed from `space.os.pack`/`.spr` by W4's canonical on-disk layout rewrite, see
+ * `SpaceBundle`'s own doc comment in `framework/os/run/rs/lib.rs`) in TypeScript, disproportionate for
+ * a preflight check.
  */
 function missingPluginWasmArtifacts(repoRoot: string): string[] {
   const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🔣️plugins.json");
@@ -1198,7 +1200,7 @@ export class OsScript extends Script {
         }
       }
       const watch = rest.includes("--watch");
-      runCmd("cargo", ["run", "--release", "-p", "semio-framework-os-run", "--", ...rest], {
+      runCmd("cargo", ["run", "-p", "semio-framework-os-run", "--", ...rest], {
         cwd: this.root,
         env: { ...process.env, SEMIO_REPO_ROOT: repoRoot },
         ...(watch ? daemonBudgetOpts() : { budgetMs: buildBudgetMs() }),
@@ -1693,35 +1695,14 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
   "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs",
   "🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust/📦️lib.rs",
   "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/⚡️implementations/🦀️rust/📦️lib.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust/📦️lib.rs",
   "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs",
   "✏️s/🔌️plugins/🌍️gis/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs",
   "✏️s/🔌️plugins/➗️mathematical/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs",
   "✏️s/🔌️plugins/🗒️note/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/◻2d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs",
   "✏️s/🔌️plugins/🖨️raster/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs",
   "✏️s/🔌️plugins/💡️reasoning/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs",
   "✏️s/🔌️plugins/🪐️space/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🐏️ram/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/📦️lib.rs",
-  "✏️s/🔌️plugins/🔱️trinity/🎛️apps/✏️rewrite/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs",
   "✏️s/🔌️plugins/🌿️vcs/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs",
 ]);
 

@@ -44,9 +44,9 @@ const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️products
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 /** @emoji 🪶️ Cargo profile plugin crates build under (see root `Cargo.toml`'s `[profile.wasm-release]`).
- * `SEMIO_PLUGIN_PROFILE=release` is a fast hot-swap-iteration escape hatch — it trades away the
- * `os run` native-runner path (`emitRustArtifacts` hardwires `wasm-release`'s output dir; rebuild with
- * the default profile before an `os run` if this escape hatch was used). */
+ * `SEMIO_PLUGIN_PROFILE=release` applies native ship settings on wasm (slow, large vs `wasm-release`) —
+ * not a fast-iteration escape hatch. `emitRustArtifacts` hardwires `wasm-release`'s output dir; rebuild with
+ * the default profile before `os run` if this override was used. */
 const PLUGIN_WASM_PROFILE = process.env.SEMIO_PLUGIN_PROFILE ?? "wasm-release";
 
 //#region 🔖️PlaygroundVariantResolution

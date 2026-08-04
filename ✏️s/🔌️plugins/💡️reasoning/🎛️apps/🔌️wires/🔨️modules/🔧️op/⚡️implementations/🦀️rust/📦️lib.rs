@@ -2,7 +2,7 @@
 
 use dsl::DslValue;
 use protocol::{Operation, OperationDiff};
-use reasoning_wires::MindmapWiresDocument;
+use reasoning_wires::{BoardFixtureDsl, MindmapWiresDocument, WiresFixtureDsl};
 use reasoning_wires_engine::{array_mut, entity_id, find_board_edge, find_board_node, find_relationship};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -53,7 +53,7 @@ fn apply_step(wires: &mut DslValue, board: &mut DslValue, step: &MindmapWiresSte
 //#endregion 🔖️Steps
 
 //#region 🔖️Operations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum MindmapWiresOperation {
     AddNode { node: DslValue },
@@ -63,6 +63,74 @@ pub enum MindmapWiresOperation {
     RemoveEdge { edge_id: String },
     ReplaceDocument { wires_fixture: DslValue, board_fixture: DslValue },
 }
+
+//#region 🔖️DslMirror
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[serde(tag = "operation", rename_all = "camelCase")]
+enum MindmapWiresOperationDsl {
+    AddNode { node: DslValue },
+    RemoveNode { node_id: String },
+    PatchNode { node_id: String, patch: BTreeMap<String, DslValue> },
+    AddRelationship { edge: DslValue, relationship: DslValue },
+    RemoveEdge { edge_id: String },
+    ReplaceDocument { wires_fixture: WiresFixtureDsl, board_fixture: BoardFixtureDsl },
+}
+
+fn mindmap_wires_operation_to_dsl(op: &MindmapWiresOperation) -> MindmapWiresOperationDsl {
+    match op {
+        MindmapWiresOperation::AddNode { node } => MindmapWiresOperationDsl::AddNode { node: node.clone() },
+        MindmapWiresOperation::RemoveNode { node_id } => MindmapWiresOperationDsl::RemoveNode { node_id: node_id.clone() },
+        MindmapWiresOperation::PatchNode { node_id, patch } => MindmapWiresOperationDsl::PatchNode { node_id: node_id.clone(), patch: patch.clone() },
+        MindmapWiresOperation::AddRelationship { edge, relationship } => MindmapWiresOperationDsl::AddRelationship { edge: edge.clone(), relationship: relationship.clone() },
+        MindmapWiresOperation::RemoveEdge { edge_id } => MindmapWiresOperationDsl::RemoveEdge { edge_id: edge_id.clone() },
+        MindmapWiresOperation::ReplaceDocument { wires_fixture, board_fixture } => MindmapWiresOperationDsl::ReplaceDocument {
+            wires_fixture: dsl::from_dsl_value(wires_fixture.clone()).unwrap_or_else(|error| panic!("wires_fixture does not match the reasoning.wires.fixture schema: {error}")),
+            board_fixture: dsl::from_dsl_value(board_fixture.clone()).unwrap_or_else(|error| panic!("board_fixture does not match the reasoning.mindmap.fixture schema: {error}")),
+        },
+    }
+}
+
+fn mindmap_wires_operation_from_dsl(parsed: MindmapWiresOperationDsl) -> Result<MindmapWiresOperation, store::TextError> {
+    match parsed {
+        MindmapWiresOperationDsl::AddNode { node } => Ok(MindmapWiresOperation::AddNode { node }),
+        MindmapWiresOperationDsl::RemoveNode { node_id } => Ok(MindmapWiresOperation::RemoveNode { node_id }),
+        MindmapWiresOperationDsl::PatchNode { node_id, patch } => Ok(MindmapWiresOperation::PatchNode { node_id, patch }),
+        MindmapWiresOperationDsl::AddRelationship { edge, relationship } => Ok(MindmapWiresOperation::AddRelationship { edge, relationship }),
+        MindmapWiresOperationDsl::RemoveEdge { edge_id } => Ok(MindmapWiresOperation::RemoveEdge { edge_id }),
+        MindmapWiresOperationDsl::ReplaceDocument { wires_fixture, board_fixture } => {
+            let wires_val = dsl::to_dsl_value(&wires_fixture).map_err(|error| store::TextError::new(format!("invalid wires fixture: {error}"), store::TextSpan::at(1, 1)))?;
+            let board_val = dsl::to_dsl_value(&board_fixture).map_err(|error| store::TextError::new(format!("invalid board fixture: {error}"), store::TextSpan::at(1, 1)))?;
+            Ok(MindmapWiresOperation::ReplaceDocument { wires_fixture: wires_val, board_fixture: board_val })
+        }
+    }
+}
+
+impl protocol::OpText for MindmapWiresOperation {
+    fn print_op(&self) -> String {
+        <MindmapWiresOperationDsl as protocol::OpText>::print_op(&mindmap_wires_operation_to_dsl(self))
+    }
+
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let parsed = <MindmapWiresOperationDsl as protocol::OpText>::parse_op(line)?;
+        mindmap_wires_operation_from_dsl(parsed)
+    }
+}
+
+impl protocol::OpBinary for MindmapWiresOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        <MindmapWiresOperationDsl as protocol::OpBinary>::encode_op(&mindmap_wires_operation_to_dsl(self))
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let parsed = <MindmapWiresOperationDsl as protocol::OpBinary>::decode_op(bytes)?;
+        mindmap_wires_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed {
+            what: "op",
+            offset: 0,
+            detail: error.message,
+        })
+    }
+}
+//#endregion 🔖️DslMirror
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
