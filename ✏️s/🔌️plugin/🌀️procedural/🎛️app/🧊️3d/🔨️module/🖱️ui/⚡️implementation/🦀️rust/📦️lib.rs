@@ -18,7 +18,7 @@ use procedural_3d_engine::{
 use procedural_3d_op::{procedural3d_fixture_operations, Procedural3dConfigOperation, Procedural3dOperation};
 use procedural_3d_protocol::Procedural3dCommand;
 use semio_framework_plugin::{
-    apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
+        apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_readonly_field, ui_text, world3d_scene, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp,
     DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphHover, NodeGraphScene, NodeGraphViewport, OsMediaCapability, OsMediaFormat, PanelGroup,
     PanelTreeBuilder, SelectionSet, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -51,23 +51,7 @@ const PROCEDURAL_3D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural.play.gener
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels`.
-fn is_de_locale(cfg: &Procedural3dConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-fn procedural3d_locale(cfg: &Procedural3dConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-fn resolve_labels<L: AppLabels>(cfg: &Procedural3dConfig) -> &'static L {
-    L::labels(procedural3d_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -262,7 +246,7 @@ semio_framework_plugin::app_labels! {
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
 fn procedural3d_labels(cfg: &Procedural3dConfig) -> &'static Procedural3dLabels {
-    resolve_labels::<Procedural3dLabels>(cfg)
+    semio_framework_plugin::resolve_labels_for_locale::<Procedural3dLabels>(&cfg.locale)
 }
 
 /// 🗣️ Resolves a catalogue widget kind's display label from its stable id; unknown kinds fall back to the id itself.
@@ -1008,7 +992,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     },
                 )
             }
-            PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&generation_view(doc.projection, config), procedural3d_locale(config), Terminology::default()),
+            PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&generation_view(doc.projection, config), semio_framework_plugin::locale_from_str(&config.locale), Terminology::default()),
             PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, &generation_view(doc.projection, config), labels),
             PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(fixture, &generation_view(doc.projection, config), config, labels, active_utility),
             PROCEDURAL_3D_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_node_ids, labels),
@@ -1040,7 +1024,7 @@ impl DocumentApp for Procedural3dPlayApp {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let config = cfg.projection;
         let labels = procedural3d_labels(config);
-        let is_de = is_de_locale(config);
+        let is_de = config.locale.starts_with("de");
         let selected = config.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
         let has_selection = !nodes.is_empty() || !edges.is_empty();

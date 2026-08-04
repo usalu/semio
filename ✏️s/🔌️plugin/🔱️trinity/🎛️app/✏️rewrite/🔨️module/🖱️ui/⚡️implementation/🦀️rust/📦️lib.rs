@@ -13,7 +13,7 @@ use rewrite_engine::{apply_rule, build_rule_query, rewrite_io, rule_query_json, 
 use rewrite_op::{RewriteConfigOperation, RewriteRuleOperation};
 use rewrite_protocol::TrinityRewriteCommand;
 use semio_framework_plugin::{
-    app_labels, build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at, tree_item, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field,
+        app_labels, build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at, tree_item, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field,
     ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabels, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, MeasureSelectItem,
     Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphHover, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology,
     TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure,
@@ -76,26 +76,7 @@ const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`/`trinity_jack_ui`.
-fn is_de_locale(cfg: &RewriteConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-/// 🗣️ `RewriteConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
-fn rewrite_locale(cfg: &RewriteConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
-/// `AppLabels::labels`. `RewriteConfig` carries no terminology field, so terminology is always `Native`.
-fn resolve_labels<L: AppLabels>(cfg: &RewriteConfig) -> &'static L {
-    L::labels(rewrite_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -1169,7 +1150,7 @@ impl DocumentApp for TrinityRewritePlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>) -> UiNode {
         let state = doc.projection;
         let config = cfg.projection;
-        let labels = resolve_labels::<TrinityRewriteLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<TrinityRewriteLabels>(&config.locale);
         match body_key {
             TRINITY_REWRITE_PLAY_BODY_BEFORE => render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_BEFORE, TRINITY_REWRITE_PLAY_WINDOW_BEFORE, &state.before_fixture_json, config, true, Some(&config.before_pane_camera)),
             TRINITY_REWRITE_PLAY_BODY_AFTER => render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_AFTER, TRINITY_REWRITE_PLAY_WINDOW_AFTER, &after_fixture_json(state), config, false, None),
@@ -1198,7 +1179,7 @@ impl DocumentApp for TrinityRewritePlayApp {
     fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, RewriteRuleState>, cfg: &ConfigView<'_, RewriteConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = is_de_locale(cfg.projection);
+        let is_de = cfg.projection.locale.starts_with("de");
         let selected = cfg.projection.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
 

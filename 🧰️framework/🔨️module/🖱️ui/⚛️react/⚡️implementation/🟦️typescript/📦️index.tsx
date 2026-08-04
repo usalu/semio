@@ -6550,15 +6550,13 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
       setRect(null);
       return;
     }
-    const searchRoot: ParentNode = shellScope?.rootRef.current ?? document;
+    const getSearchRoot = (): ParentNode | null => {
+      if (shellScope) return shellScope.rootRef.current;
+      return document;
+    };
     const observeRoot: Node = shellScope?.rootRef.current ?? document.body;
     let elements: Element[] = [];
     let resizeObserver: ResizeObserver | null = null;
-    // 🐢️ The mutation observer below fires on every DOM change anywhere on the page — including ones
-    // completely unrelated to this anchor (a live 3D viewport, other components' updates). Without this
-    // guard, every one of those unrelated mutations would call `setRect(null)` with a fresh object while
-    // unresolved, and since object identity always differs, React would re-render this component on every
-    // single page-wide DOM mutation for as long as the element stays unresolved.
     let reportedUnresolved = false;
 
     const unionRect = (matches: readonly Element[]): IntroductionRect | null => {
@@ -6581,6 +6579,20 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
       if (next) setRect(next);
     };
     const attach = () => {
+      const searchRoot = getSearchRoot();
+      if (!searchRoot) {
+        if (elements.length > 0) {
+          elements.forEach((el) => el.removeAttribute("data-introduced"));
+          elements = [];
+          resizeObserver?.disconnect();
+          resizeObserver = null;
+        }
+        if (!reportedUnresolved) {
+          reportedUnresolved = true;
+          setRect(null);
+        }
+        return;
+      }
       const candidates = [...searchRoot.querySelectorAll(selector)];
       if (candidates.length === 0) {
         if (elements.length > 0) {
@@ -6651,17 +6663,17 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
       setResolved(new Set());
       return;
     }
-    const searchRoot: ParentNode = shellScope?.rootRef.current ?? document;
+    const getSearchRoot = (): ParentNode | null => {
+      if (shellScope) return shellScope.rootRef.current;
+      return document;
+    };
     const observeRoot: Node = shellScope?.rootRef.current ?? document.body;
-    // 🐢️ Cleanup remembers the exact stamped element references (rather than re-querying `document` at
-    // cleanup time) because React detaches a torn-down subtree from the document BEFORE running passive
-    // effect cleanups — a `document.querySelectorAll` lookup in the cleanup would find nothing on unmount,
-    // leaving stamps behind. Mirrors `useIntroductionAnchorRect`'s closure-captured elements for the same
-    // reason.
     let stampedRoots = new Set<Element>();
     const positionedByUs = new Set<Element>();
 
     const resolve = () => {
+      const searchRoot = getSearchRoot();
+      if (!searchRoot) return;
       const nextResolved = new Set<string>();
       const wantedRoots = new Set<Element>();
       for (const id of ids) {
@@ -6669,9 +6681,6 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
         if (targets.length === 0) continue;
         nextResolved.add(id);
         targets.forEach((target) =>
-          // 🪟️ A docked window's chrome silhouette is the enclosing `mode-dock-stack` (tabs + gap cutout +
-          // controls + body). Elevate that unit so the introduction veil doesn't dim the caps while the
-          // body rises alone — fall back to `[data-elevation-root]` for standalone windows/panels/etc.
           wantedRoots.add(target.closest('[data-slot="mode-dock-stack"]') ?? target.closest("[data-elevation-root]") ?? target),
         );
       }
@@ -6911,7 +6920,8 @@ export function sampleBezierSegments(
  * still moving (a resizing panel, an orbiting 3D camera, a panning 2D canvas). `null` means "not
  * resolvable yet" (element not mounted, no surface resolver registered, entity not found/hidden, or a 3D
  * point off-camera) — callers wait and retry next frame rather than treating it as an error. */
-export function resolveIntroductionPoint(point: IntroductionPoint, root: ParentNode = document): IntroductionResolvedPoint | null {
+export function resolveIntroductionPoint(point: IntroductionPoint, root: ParentNode | null = document): IntroductionResolvedPoint | null {
+  if (!root) return null;
   switch (point.kind) {
     case "element": {
       const element = root.querySelector(elementIdSelector(point.id));
@@ -7174,9 +7184,9 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
   // own standalone onboarding tour) — inside one, scopes the cursor-hide to that shell's own root so one
   // shell's demonstration never mutes the cursor over another shell (`.semio-scope[...]` in `🎨️ui.css`).
   const shellScope = useShellScopeOptional();
-  const demonstratingRoot = reactHostPort.useCallback((): Element => shellScope?.rootRef.current ?? document.documentElement, [shellScope]);
+  const demonstratingRoot = reactHostPort.useCallback((): Element | null => (shellScope ? shellScope.rootRef.current : document.documentElement), [shellScope]);
   const hide = reactHostPort.useCallback(() => {
-    demonstratingRoot().removeAttribute("data-introduction-demonstrating");
+    demonstratingRoot()?.removeAttribute("data-introduction-demonstrating");
     if (overlayRef.current) overlayRef.current.style.visibility = "hidden";
   }, [demonstratingRoot]);
   const { idle, lastPositionRef } = useIntroductionPointerIdle(true, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, hide);
@@ -7189,7 +7199,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       return;
     }
     if (overlayRef.current) overlayRef.current.style.visibility = "visible";
-    demonstratingRoot().setAttribute("data-introduction-demonstrating", "true");
+    demonstratingRoot()?.setAttribute("data-introduction-demonstrating", "true");
     const origin = lastPositionRef.current;
 
     const setGlyph = (glyph: IntroductionCursor) => {

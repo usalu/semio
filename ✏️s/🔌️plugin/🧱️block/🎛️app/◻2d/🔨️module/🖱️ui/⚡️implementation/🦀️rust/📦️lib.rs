@@ -11,7 +11,7 @@ use block_2d_op::{Block2dConfigOperation, Block2dOperation};
 use block_2d_protocol::Block2dCommand;
 use block_shared::BlockCompatibilityRule;
 use semio_framework_plugin::{
-    tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media,
+        tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media,
     MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode,
 };
 use serde_json::{json, Value};
@@ -31,21 +31,7 @@ const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
-/// `semio_framework_plugin::resolve_labels` — `Block2dConfig` carries no terminology axis, so this
-/// app is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag, lenient-parsed the same way
-/// `detectShellLocale` does on the TS side — see `home_ui`'s identical pair.
-fn block2d_locale(cfg: &Block2dConfig) -> Locale {
-    if cfg.locale.starts_with("de") {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
 
-fn resolve_labels<L: AppLabels>(cfg: &Block2dConfig) -> &'static L {
-    L::labels(block2d_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️Terminology
@@ -276,7 +262,7 @@ impl DocumentApp for Block2dPlayApp {
     }
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Block2dDefinition>, cfg: &ConfigView<'_, Block2dConfig>) -> UiNode {
-        let labels = resolve_labels::<Block2dLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<Block2dLabels>(&cfg.projection.locale);
         match body_key {
             BLOCK2D_BODY_BOARD => render_board(doc.projection, labels),
             BLOCK2D_BODY_DOCUMENT | BLOCK2D_BODY_KINDS => build_document_tree(doc.projection, &cfg.projection.selected_ids, labels),

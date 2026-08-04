@@ -11,7 +11,7 @@ use procedural_2d_engine::{
 use procedural_2d_op::{procedural2d_fixture_operations, Procedural2dConfigOperation, Procedural2dOperation};
 use procedural_2d_protocol::Procedural2dCommand;
 use semio_framework_plugin::{
-    build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
+        build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
     ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -137,28 +137,11 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ Wave-2: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — matches `shooting_ui`'s own local
-/// re-derivation exactly (`DocumentApp::render`/etc no longer receive a `ViewState`).
-fn is_de_locale(cfg: &Procedural2dConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-fn procedural2d_locale(cfg: &Procedural2dConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-fn resolve_labels<L: AppLabels>(cfg: &Procedural2dConfig) -> &'static L {
-    L::labels(procedural2d_locale(cfg), Terminology::Native)
-}
 
 /// 🗣️ Resolves the active label set from the config-carried locale; falls back to native English.
 fn procedural2d_labels(cfg: &Procedural2dConfig) -> &'static Procedural2dLabels {
-    resolve_labels::<Procedural2dLabels>(cfg)
+    semio_framework_plugin::resolve_labels_for_locale::<Procedural2dLabels>(&cfg.locale)
 }
 //#endregion 🔖️Terminology
 
@@ -595,7 +578,7 @@ impl DocumentApp for Procedural2dPlayApp {
         match body_key {
             PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play, labels),
             PROCEDURAL2D_PLAY_BODY_PREVIEW => render_preview_canvas(&play),
-            PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play, procedural2d_locale(cfg.projection), Terminology::Native),
+            PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play, semio_framework_plugin::locale_from_str(&cfg.projection.locale), Terminology::Native),
             PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => render_generate_form(&play, labels),
             PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&play, labels),
             PROCEDURAL2D_PLAY_BODY_DOCUMENT => build_document_tree(&play, labels),
@@ -621,8 +604,8 @@ impl DocumentApp for Procedural2dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let labels = resolve_labels::<Procedural2dLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<Procedural2dLabels>(&cfg.projection.locale);
+        let is_de = cfg.projection.locale.starts_with("de");
         let selected = cfg.projection.selected_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
         let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate").group("mode", |m| m.action("setShowMode")).group("create", |m| m.action("addGeneration")).group("methods", |m| m.action("selectGeneration"));

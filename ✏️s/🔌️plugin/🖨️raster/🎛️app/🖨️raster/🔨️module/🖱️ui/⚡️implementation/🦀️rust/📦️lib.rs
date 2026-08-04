@@ -13,7 +13,7 @@ use raster_engine::{
 use raster_op::{RasterConfigOperation, RasterOperation};
 use raster_protocol::RasterCommand;
 use semio_framework_plugin::{
-    build_paint_2d_scene, create_default_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
+        build_paint_2d_scene, create_default_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, Paint2dScene, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, UtilityCategory, UtilityDefinition,
     WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -43,27 +43,7 @@ const RASTER_DEFAULT_UTILITY: &str = "selectMarquee";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical helpers.
-fn is_de_locale(cfg: &RasterConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-/// 🌐️ `RasterConfig` carries no terminology axis — raster has no native/reuse vocabulary split, so
-/// every cell resolves `Terminology::Native`.
-fn raster_locale(cfg: &RasterConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ Resolves the active `RasterPlayLabels` cell from the config-carried locale via the SDK's
-/// two-axis `AppLabels::labels` (was the deleted `LocaleLabels::locale_labels_en/de`).
-fn resolve_labels<L: AppLabels>(cfg: &RasterConfig) -> &'static L {
-    L::labels(raster_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 fn layer_row_id(layer: &RasterLayerNode) -> String {
@@ -542,7 +522,7 @@ impl DocumentApp for RasterPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, RasterDocument>, cfg: &ConfigView<'_, RasterConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
-        let labels = resolve_labels::<RasterPlayLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<RasterPlayLabels>(&config.locale);
         let active_utility = config.active_utility_id.as_str();
         match body_key {
             RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(document, config, active_utility),

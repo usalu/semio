@@ -13,7 +13,7 @@ use layout_protocol::LayoutCommand;
 use protocol::CollectionOperation;
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{
-    build_canvas_2d_scene, create_default_layout, engagement_token_matches, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
+        build_canvas_2d_scene, create_default_layout, engagement_token_matches, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
     ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, IconName, Label, LabelText,
     Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
     UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -519,31 +519,11 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` (mirrors `shooting_ui`'s identical B1 fix).
-fn is_de_locale(cfg: &LayoutConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-/// 🌐️ `LayoutConfig` carries no terminology axis (unlike `CadConfig::terminology`) — layout has no
-/// native/reuse vocabulary split, so every cell resolves `Terminology::Native`.
-fn layout_locale(cfg: &LayoutConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
-/// `AppLabels::labels` (was the deleted `LocaleLabels::locale_labels_en/de`).
-fn resolve_labels<L: AppLabels>(cfg: &LayoutConfig) -> &'static L {
-    L::labels(layout_locale(cfg), Terminology::Native)
-}
 
 /// 🗣️ Resolves the active label set from the config-carried locale; unknown locales fall back to native English.
 fn layout_labels(cfg: &LayoutConfig) -> &'static LayoutLabels {
-    resolve_labels::<LayoutLabels>(cfg)
+    semio_framework_plugin::resolve_labels_for_locale::<LayoutLabels>(&cfg.locale)
 }
 
 /// 🗣️ Resolves a catalogue frame kind's display label from its stable id; unknown kinds fall back to the kind id itself.

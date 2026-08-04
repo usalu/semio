@@ -10,7 +10,7 @@ use block_5d_engine::Block5dConfig;
 use block_5d_op::{Block5dConfigOperation, Block5dOperation};
 use block_5d_protocol::Block5dCommand;
 use semio_framework_plugin::{
-    create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale,
+        create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale,
     LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode,
 };
 use serde_json::{json, Value};
@@ -31,21 +31,7 @@ const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
-/// `semio_framework_plugin::resolve_labels` — `Block5dConfig` carries no terminology axis, so this
-/// app is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag, lenient-parsed the same way
-/// `detectShellLocale` does on the TS side — see `home_ui`'s identical pair.
-fn block5d_locale(cfg: &Block5dConfig) -> Locale {
-    if cfg.locale.starts_with("de") {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
 
-fn resolve_labels<L: AppLabels>(cfg: &Block5dConfig) -> &'static L {
-    L::labels(block5d_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️Terminology
@@ -263,7 +249,7 @@ impl DocumentApp for Block5dPlayApp {
     }
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Block5dDefinition>, cfg: &ConfigView<'_, Block5dConfig>) -> UiNode {
-        let labels = resolve_labels::<Block5dLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<Block5dLabels>(&cfg.projection.locale);
         match body_key {
             BLOCK5D_BODY_BOARD => render_board(doc.projection, labels),
             BLOCK5D_BODY_WORLD => render_world(doc.projection, labels),

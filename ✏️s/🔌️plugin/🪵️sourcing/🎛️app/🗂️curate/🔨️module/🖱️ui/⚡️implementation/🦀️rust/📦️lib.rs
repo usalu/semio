@@ -8,7 +8,7 @@
 
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
-    app_labels, build_table_scene, build_world_3d_scene, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
+        app_labels, build_table_scene, build_world_3d_scene, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
     AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, SurfaceKind, TableCell, TableScene,
     Terminology, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
     WindowLayoutWindowNode, WorldSunConfig,
@@ -43,28 +43,7 @@ const EMPTY_EXAMPLE_ID: &str = "empty-curation";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — `DocumentApp::render`/`handle` no longer
-/// receive a `ViewState` at all (B1 dropped it), so locale-aware label resolution now reads it off the
-/// config projection instead. Mirrors `shooting_ui`'s identical local shims.
-fn is_de_locale(cfg: &SourcingCurateConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-/// 🗣️ `cfg.locale` mapped onto the SDK's exhaustive `Locale` enum.
-fn sourcing_locale(cfg: &SourcingCurateConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ `SourcingCurateConfig` has no terminology axis (curate is never embedded/reused as a building
-/// component sub-widget) — always resolves the native cell.
-fn resolve_labels<L: AppLabels>(cfg: &SourcingCurateConfig) -> &'static L {
-    L::labels(sourcing_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️Modules
@@ -480,7 +459,7 @@ impl DocumentApp for SourcingCurateApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, CurateDocument>, cfg: &ConfigView<'_, SourcingCurateConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
-        let labels = resolve_labels::<SourcingLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<SourcingLabels>(&config.locale);
         match body_key {
             BODY_POOL => {
                 let modules = available_modules();

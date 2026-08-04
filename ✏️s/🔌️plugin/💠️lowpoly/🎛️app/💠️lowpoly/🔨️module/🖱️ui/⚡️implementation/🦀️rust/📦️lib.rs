@@ -17,7 +17,7 @@ use lowpoly_op::{LowpolyConfigOperation, LowpolyOperation, PixelRun};
 use lowpoly_protocol::LowpolyCommand;
 use png::{BitDepth, ColorType, Encoder};
 use semio_framework_plugin::{
-    apply_world3d_sun_action, build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout, engagement_token_matches, merge_world_selection_ids, tree_item_with_action, ui_inspector_groups_to_tree,
+        apply_world3d_sun_action, build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout, engagement_token_matches, merge_world_selection_ids, tree_item_with_action, ui_inspector_groups_to_tree,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppIo, AppLabels, ArtifactKindSpec, Canvas2dScene,
     ConfigView, DocumentApp, DocumentView, Emit, IconName, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SelectionSet,
     SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput,
@@ -49,25 +49,7 @@ const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[("box", "Cube", "box"), ("pla
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `config.locale`-driven counterpart of the deleted `ViewState`-driven `is_de_locale`.
-fn is_de_locale(config: &LowpolyConfig) -> bool {
-    config.locale.starts_with("de")
-}
 
-/// 🗣️ `config.locale` mapped onto the SDK's exhaustive `Locale` enum.
-fn lowpoly_locale(config: &LowpolyConfig) -> Locale {
-    if is_de_locale(config) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ `LowpolyConfig` has no terminology axis (lowpoly is never embedded/reused as a building
-/// component sub-widget) — always resolves the native cell.
-fn resolve_labels<L: AppLabels>(config: &LowpolyConfig) -> &'static L {
-    L::labels(lowpoly_locale(config), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️Config
@@ -1870,7 +1852,7 @@ impl DocumentApp for LowpolyPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> UiNode {
         let projection = doc.projection;
         let config = cfg.projection;
-        let labels = resolve_labels::<LowpolyLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>(&config.locale);
         let active_utility = config.active_utility_id.as_str();
         let scratch_projection = self.transform.borrow().as_ref().map(|session| session.doc.projection().clone());
         let render_projection = scratch_projection.as_ref().unwrap_or(projection);
@@ -1907,14 +1889,14 @@ impl DocumentApp for LowpolyPlayApp {
     fn window_engagements(&self, doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
         let active_utility = config.active_utility_id.as_str();
-        let labels = resolve_labels::<LowpolyLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>(&config.locale);
         let engagement = lowpoly_window_engagement(LowpolyView { projection: doc.projection, config }, active_utility, labels);
         HashMap::from([(LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()), (LOWPOLY_PLAY_WINDOW_UV.into(), engagement)])
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, LowpolyProjection>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
-        let labels = resolve_labels::<LowpolyLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>(&config.locale);
         let measures = lowpoly_window_measures(config, labels);
         HashMap::from([(LOWPOLY_PLAY_WINDOW_MAIN.into(), measures.clone()), (LOWPOLY_PLAY_WINDOW_UV.into(), measures)])
     }

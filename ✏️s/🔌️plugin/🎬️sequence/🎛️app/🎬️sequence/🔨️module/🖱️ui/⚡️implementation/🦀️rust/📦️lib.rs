@@ -7,7 +7,7 @@
 
 use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use semio_framework_plugin::{
-    app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef,
+        app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef,
     ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppIo, AppLabels, ArtifactKindSpec, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp,
     DocumentView, DslValue, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, OsMediaCapability,
     PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -36,21 +36,7 @@ const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
-/// `semio_framework_plugin::resolve_labels` — `SequenceConfig` carries no terminology axis, so this
-/// app is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag, lenient-parsed the same way
-/// `detectShellLocale` does on the TS side — see `home_ui`'s identical pair.
-fn sequence_locale(cfg: &SequenceConfig) -> Locale {
-    if cfg.locale.starts_with("de") {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
 
-fn resolve_labels<L: AppLabels>(cfg: &SequenceConfig) -> &'static L {
-    L::labels(sequence_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -518,7 +504,7 @@ impl DocumentApp for SequencePlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>) -> UiNode {
         let fixture = doc.projection;
         let config = cfg.projection;
-        let labels = resolve_labels::<SequenceLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<SequenceLabels>(&config.locale);
         match body_key {
             SEQUENCE_PLAY_BODY_MAIN => render_main_graph(fixture, config),
             SEQUENCE_PLAY_BODY_SCRIPT => render_script(fixture, config),
@@ -539,7 +525,7 @@ impl DocumentApp for SequencePlayApp {
     fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, SequenceFixture>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = sequence_locale(cfg.projection) == Locale::De;
+        let is_de = cfg.projection.locale.starts_with("de");
         let selected = cfg.projection.selected_step_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
 

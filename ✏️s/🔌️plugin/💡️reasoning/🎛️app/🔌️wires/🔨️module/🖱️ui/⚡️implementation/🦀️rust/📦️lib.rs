@@ -11,7 +11,7 @@ use reasoning_wires_engine::{empty_mindmap_wires_document, find_board_node, meta
 use reasoning_wires_op::{MindmapWiresOperation, WiresConfigOperation};
 use reasoning_wires_protocol::WiresCommand;
 use semio_framework_plugin::{
-    app_labels, build_canvas_2d_scene, create_default_layout, tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView,
+        app_labels, build_canvas_2d_scene, create_default_layout, tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView,
     Emit, Label, Locale, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -37,26 +37,7 @@ const WIRES_DOCUMENT_RELATIONSHIP_PREFIX: &str = "wires-play-document.relationsh
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `block3d_ui`'s identical pair.
-fn is_de_locale(cfg: &WiresConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-/// 🗣️ `WiresConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
-fn wires_locale(cfg: &WiresConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
-/// `AppLabels::labels`. `WiresConfig` carries no terminology field, so terminology is always `Native`.
-fn resolve_labels<L: AppLabels>(cfg: &WiresConfig) -> &'static L {
-    L::labels(wires_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -484,7 +465,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, cfg: &ConfigView<'_, WiresConfig>) -> UiNode {
         let document = doc.projection;
-        let labels = resolve_labels::<WiresLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<WiresLabels>(&cfg.projection.locale);
         match body_key {
             WIRES_PLAY_BODY_COMPOSITE => render_canvas(&document.board_fixture, &document.wires_fixture),
             WIRES_PLAY_BODY_DOCUMENT => render_document_panel(document, &cfg.projection.selected_ids, labels),

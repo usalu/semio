@@ -674,6 +674,10 @@
     "🧰️framework/🔨️module/🗺️surface/🎨️paint/⚡️implementation/🦀️rust": {
       "name": "@semio-tech/framework-surface-paint-rs",
     },
+    "🧰️framework/🔨️module/🗺️surface/🎲️board-2d/⚡️implementation/🦀️rust": {
+      "name": "@semio-tech/framework-surface-board-2d-rs",
+      "version": "0.1.0",
+    },
     "🧰️framework/🔨️module/🗺️surface/🏔️terrain/⚡️implementation/🦀️rust": {
       "name": "@semio-tech/framework-surface-terrain-rs",
     },
@@ -794,6 +798,7 @@
         "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-editor-rs": "workspace:*",
         "@semio-tech/framework-os-core": "workspace:*",
+        "@semio-tech/framework-surface-board-2d-rs": "workspace:*",
         "@semio-tech/framework-surface-node-graph-rs": "workspace:*",
         "@semio-tech/framework-surface-paint-rs": "workspace:*",
         "@semio-tech/framework-surface-terrain-rs": "workspace:*",
@@ -1903,6 +1908,8 @@
     "@semio-tech/framework-renderer-react": ["@semio-tech/framework-renderer-react@workspace:🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript"],
 
     "@semio-tech/framework-renderer-wgpu": ["@semio-tech/framework-renderer-wgpu@workspace:🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust"],
+
+    "@semio-tech/framework-surface-board-2d-rs": ["@semio-tech/framework-surface-board-2d-rs@workspace:🧰️framework/🔨️module/🗺️surface/🎲️board-2d/⚡️implementation/🦀️rust"],
 
     "@semio-tech/framework-surface-node-graph-rs": ["@semio-tech/framework-surface-node-graph-rs@workspace:🧰️framework/🔨️module/🗺️surface/🕸️node-graph/⚡️implementation/🦀️rust"],
 

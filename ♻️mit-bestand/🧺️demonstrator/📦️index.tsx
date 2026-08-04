@@ -5,6 +5,8 @@
 import { createRoot } from "react-dom/client";
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
+  Navbar,
+  ShellBrandLogo,
   UIIntroduction,
   bootstrapElementsSurfaceChromeDocument,
   cn,
@@ -699,10 +701,24 @@ function DemonstratorLanding() {
       )}
 
       {!hoveredPaneId && (
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center z-20 text-foreground">
-          <div className="size-huge" dangerouslySetInnerHTML={{ __html: ENTWERFEN_MIT_BESTAND_LOGO_SVG }} aria-hidden />
-          <span className="mt-2 text-xl font-semibold">Entwerfen mit Bestand</span>
-        </div>
+        <Navbar
+          items={[
+            {
+              key: "logoAndTitle",
+              centered: true,
+              content: (
+                <div className="flex min-w-0 shrink-0 items-center gap-single">
+                  <ShellBrandLogo svg={ENTWERFEN_MIT_BESTAND_LOGO_SVG} className="size-workbench shrink-0" />
+                  <span data-slot="app-name" className="px-single text-sm font-semibold text-foreground">
+                    Entwerfen mit Bestand
+                  </span>
+                </div>
+              ),
+            },
+          ]}
+          showFullscreenToggle={false}
+          className="pointer-events-none absolute inset-x-0 top-0 z-40 bg-transparent"
+        />
       )}
     </>
   );

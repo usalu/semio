@@ -10,7 +10,7 @@ use semio_framework_os::{
     MemoryBackbonePort, OsBackbonePort, OsDocument, VcsError, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
 use semio_framework_plugin::{
-    app_labels, build_virtual_file_system_scene, create_tab_stack_layout, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, VirtualFileSystemScene,
+        app_labels, build_virtual_file_system_scene, create_tab_stack_layout, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, SurfaceKind, Terminology, UiNode, VirtualFileSystemScene,
 };
 use serde_json::{json, Value};
 use space_shared::{ensure_space_fixtures_registered, parse_demo_space_document};
@@ -28,21 +28,7 @@ const OS_BOOT_STUDIO_ID: &str = "default";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
-/// `semio_framework_plugin::resolve_labels` — `HomeConfig` carries no terminology axis, so this app
-/// is always `Terminology::Native`. `cfg.locale` is a BCP-47 tag (e.g. "en-US"), lenient-parsed the
-/// same way `detectShellLocale` does on the TS side — see `shooting_ui`'s identical pair.
-fn home_locale(cfg: &HomeConfig) -> Locale {
-    if cfg.locale.starts_with("de") {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
 
-fn resolve_labels<L: AppLabels>(cfg: &HomeConfig) -> &'static L {
-    L::labels(home_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -427,7 +413,7 @@ impl DocumentApp for HomeApp {
     }
 
     fn render(&self, body_key: &str, _doc: &DocumentView<'_, SHomeDocument>, cfg: &ConfigView<'_, HomeConfig>) -> UiNode {
-        let labels = resolve_labels::<SHomeLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.projection.locale);
         // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Home's single body key still matches (same pattern as puzzle3d).
         let base_body_key = body_key.split_once(':').map(|(base, _)| base).unwrap_or(body_key);

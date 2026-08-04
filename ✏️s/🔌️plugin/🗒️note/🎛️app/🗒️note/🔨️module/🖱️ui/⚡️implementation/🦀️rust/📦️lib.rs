@@ -8,7 +8,7 @@ use note_engine::{
 use note_op::{NoteConfigOperation, NoteOperation};
 use note_protocol::NoteCommand;
 use semio_framework_plugin::{
-    build_ink_canvas_scene, create_default_layout, tree_item, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical,
+        build_ink_canvas_scene, create_default_layout, tree_item, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical,
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, InkCanvasScene, Label, Locale, LocalizedLabel, MediaClass,
     MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiToggleNode, UiTreeItemNode, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -33,24 +33,7 @@ const NOTE_PLAY_WINDOW_NAVIGATOR: &str = "note-navigator";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical helpers.
-/// `NoteConfig` carries no terminology axis, so this app is always `Terminology::Native`.
-fn is_de_locale(cfg: &NoteConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-fn note_locale(cfg: &NoteConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-fn resolve_labels<L: AppLabels>(cfg: &NoteConfig) -> &'static L {
-    L::labels(note_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️CanvasEvents
@@ -1008,7 +991,7 @@ impl DocumentApp for NotePlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
-        let labels = resolve_labels::<NotePlayLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<NotePlayLabels>(&config.locale);
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(document, &config.camera, &config.selected_block_ids, config.hovered_block_id.as_deref(), &config.active_utility_id, NOTE_PLAY_SURFACE_COMPOSITE, "composite"),
             NOTE_PLAY_BODY_NAVIGATOR => render_canvas_scene(document, &config.camera, &config.selected_block_ids, config.hovered_block_id.as_deref(), &config.active_utility_id, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator"),
@@ -1029,7 +1012,7 @@ impl DocumentApp for NotePlayApp {
 
     fn window_measures(&self, doc: &DocumentView<'_, NoteDocument>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.projection;
-        let labels = resolve_labels::<NotePlayLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<NotePlayLabels>(&config.locale);
         HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(doc.projection, &config.camera, labels))])
     }
 }

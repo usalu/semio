@@ -1,0 +1,16 @@
+{
+  "title": "Fix Demonstrator Logo And Title Navbar Alignment",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Align demonstrator mainpage logo and title inside navbar instead of screen center, and ensure it appears in front of glass styling.",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "sessions": [],
+  "summary": "Fixed demonstrator mainpage logo and title positioning and layer ordering. Root Cause: The logo and title on the demonstrator mainpage overview Chrome were rendered inside a screen-centered block (absolute inset-0 flex flex-col items-center justify-center) with a low z-index (z-20), causing it to sit behind the tint veil (z-30) and demonstrator grid cards (z-[31]). Fix: Updated DemonstratorLanding overviewChrome to render the logo and title using Navbar with centered: true inside a top-0 navbar container with z-40 (in front of the glass and veil layers).",
+  "files": {
+    "created": [],
+    "updated": [
+      "♻️mit-bestand/🧺️demonstrator/📦️index.tsx"
+    ],
+    "deleted": []
+  }
+}

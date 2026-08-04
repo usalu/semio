@@ -25,7 +25,7 @@ use forms_engine::{building_component_spec, can_advance, default_value_for_quest
 use forms_op::{FormOperation, FormsConfigOperation};
 use forms_protocol::FormsCommand;
 use semio_framework_plugin::{
-    create_default_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field,
+        create_default_layout, tree_item_with_action, ui_declarative_sections_to_tree, ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ArtifactKindSpec, BlockPaletteEntry, ConfigView, Contribution, DocumentApp, DocumentView, Emit, HostEffect, IconName,
     Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
     UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -55,27 +55,7 @@ static FORM_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` (mirrors `shooting_ui`'s identical B1 fix).
-fn is_de_locale(cfg: &FormsConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-/// 🌐️ `FormsConfig` carries no terminology axis yet (unlike `CadConfig::terminology`) — forms has no
-/// native/reuse vocabulary split, so every cell resolves `Terminology::Native`.
-fn forms_locale(cfg: &FormsConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
-/// `AppLabels::labels` (was the deleted `LocaleLabels::locale_labels_en/de`).
-fn resolve_labels<L: AppLabels>(cfg: &FormsConfig) -> &'static L {
-    L::labels(forms_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -1487,7 +1467,7 @@ impl DocumentApp for FormsPlayApp {
         let spec = doc.projection;
         let config = cfg.projection;
         let contributions = parse_contributions(config);
-        let labels = resolve_labels::<FormsLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<FormsLabels>(&config.locale);
         match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => render_blueprint_builder(spec, config, &contributions, labels),
             FORMS_PLAY_BODY_TRY => render_try_wizard(spec, config, &contributions, labels),

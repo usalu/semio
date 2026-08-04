@@ -79,6 +79,7 @@ export default defineConfig({
       { find: "@semio-tech/framework-renderer-wgpu", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️index.ts") },
       { find: "@semio-tech/framework-core", replacement: path.resolve(repoRoot, "./🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts") },
       { find: "@semio-tech/framework-os-core", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/⚡️implementation/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/framework-surface-board-2d-rs", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🗺️surface/🎲️board-2d/⚡️implementation/🦀️rust/pkg") },
       { find: "/plugin-modules", replacement: pluginModulesDir },
       { find: "/renderer-modules", replacement: rendererModulesDir },
     ],

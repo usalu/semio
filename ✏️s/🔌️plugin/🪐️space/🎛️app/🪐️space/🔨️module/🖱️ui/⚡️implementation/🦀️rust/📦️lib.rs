@@ -23,7 +23,7 @@ use semio_framework_os::{
 };
 use semio_framework_plugin::optional_json_to_dsl;
 use semio_framework_plugin::{
-    app_labels, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene, create_default_layout, host_now_ms, tree_item_desc, ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, ActionArgDef, ActionArgOption,
+        app_labels, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene, create_default_layout, host_now_ms, tree_item_desc, ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, ActionArgDef, ActionArgOption,
     ActionDefinition, ActionDescriptor, ActionKind, App, AppLabels, ConfigView, DocumentApp, DocumentView, Emit, HostEffect, IconName, Label, Locale, LocalizedLabel, MeasureSelectItem, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover,
     NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence,
     UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode, VirtualFileSystemScene, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowMeasure,
@@ -43,28 +43,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::{LazyLock, Mutex};
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `cad_ui`'s identical region.
-fn is_de_locale(cfg: &SpaceConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-/// 🗣️ `SpaceConfig.locale` (a BCP-47 tag, was shell-provided `ViewState.locale` pre-B1) mapped onto
-/// the SDK's exhaustive `Locale` enum.
-fn space_locale(cfg: &SpaceConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ Resolves the active label-struct cell from the config-carried locale (was shell-provided
-/// `ViewState`, deleted by B1) via the SDK's two-axis `AppLabels::labels`. `SpaceConfig` carries no
-/// terminology field, so terminology is always `Native`.
-fn resolve_labels<L: AppLabels>(cfg: &SpaceConfig) -> &'static L {
-    L::labels(space_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -1508,7 +1487,7 @@ impl DocumentApp for SpaceApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, OsProjection>, cfg: &ConfigView<'_, SpaceConfig>) -> UiNode {
         let projection = doc.projection;
         let config = cfg.projection;
-        let labels = resolve_labels::<SStudioLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale);
         // 🪟 `VcsDocumentApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
         // strip it so Space body keys still match (same pattern as puzzle3d / Home).
         let base_body_key = body_key.split_once(':').map(|(base, _)| base).unwrap_or(body_key);
@@ -1516,7 +1495,7 @@ impl DocumentApp for SpaceApp {
             S_PLAY_BODY_WORKFLOW => render_workflow(projection, config, labels),
             S_PLAY_BODY_MEDIA_VFS => render_media_vfs(projection, labels),
             S_PLAY_BODY_COMPILED_DAG => render_compiled_dag(projection),
-            S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(labels, space_locale(config)),
+            S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale)),
             S_PLAY_PARAMETERS_BODY_KEY => build_parameters_tree(projection, labels),
             S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(projection, config, labels),
             _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
@@ -1524,7 +1503,7 @@ impl DocumentApp for SpaceApp {
     }
 
     fn window_measures(&self, doc: &DocumentView<'_, OsProjection>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let labels = resolve_labels::<SStudioLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&cfg.projection.locale);
         HashMap::from([(S_PLAY_WINDOW_WORKFLOW.into(), workflow_measures(cfg.projection, &doc.projection.workflow.nodes, labels))])
     }
 
@@ -1535,8 +1514,8 @@ impl DocumentApp for SpaceApp {
         cfg: &ConfigView<'_, SpaceConfig>,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let labels = resolve_labels::<SStudioLabels>(cfg.projection);
-        let is_de = is_de_locale(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&cfg.projection.locale);
+        let is_de = cfg.projection.locale.starts_with("de");
         space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &cfg.projection.selected_node_ids)
     }
 }
@@ -1603,7 +1582,7 @@ pub fn create_space_app() -> App {
     let projection = demo_space_projection();
     let config = SpaceConfig::default();
     let engagement = workflow_engagement(&config, projection.workflow.nodes.len());
-    let measures = workflow_measures(&config, &projection.workflow.nodes, resolve_labels::<SStudioLabels>(&config));
+    let measures = workflow_measures(&config, &projection.workflow.nodes, semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale));
     let builder = App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space")).document(["semio", "s", "studio"])
         .icon_id("s")
         .mode("main", LocalizedLabel::native("Space", "Space"), "globe")
@@ -2239,7 +2218,7 @@ mod tests {
     fn catalogue_tree_nests_apps_by_canonical_document() {
         seed_catalogue_apps();
         let config = SpaceConfig::default();
-        let tree = build_catalogue_tree(resolve_labels::<SStudioLabels>(&config), space_locale(&config));
+        let tree = build_catalogue_tree(semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale), semio_framework_plugin::locale_from_str(&config.locale));
         let json = serde_json::to_string(&tree).unwrap();
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.2d"));
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.3d"));
@@ -2275,7 +2254,7 @@ mod tests {
         let projection = demo_space_projection();
         let ids: Vec<String> = projection.workflow.nodes.iter().take(2).map(|node| node.id.clone()).collect();
         let config = SpaceConfig { selected_node_ids: ids, ..SpaceConfig::default() };
-        let tree = build_inspector_tree(&projection, &config, resolve_labels::<SStudioLabels>(&config));
+        let tree = build_inspector_tree(&projection, &config, semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale));
         let UiNode::Tree(tree_node) = tree else {
             panic!("expected tree");
         };
@@ -2513,7 +2492,7 @@ mod tests {
     #[test]
     fn space_workflow_context_menu_stays_within_budget_with_destructive_tail() {
         let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().definition);
-        let labels = resolve_labels::<SStudioLabels>(&SpaceConfig::default());
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&SpaceConfig::default().locale);
         let selected_node_ids = vec!["node-1".to_string()];
         let items = space_workflow_context_menu_items(&registry, labels, false, None, &selected_node_ids);
         assert!(items.len() <= 9, "top-level context menu rows must stay within budget: {} rows", items.len());

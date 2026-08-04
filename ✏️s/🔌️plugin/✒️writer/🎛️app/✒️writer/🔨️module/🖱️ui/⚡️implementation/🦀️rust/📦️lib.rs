@@ -6,7 +6,7 @@
 //! `DocumentApp::handle` — mirrors `shooting_ui::ShootingPlayApp` (the B1 pilot) exactly.
 
 use semio_framework_plugin::{
-    build_text_editor_scene, create_default_layout, engagement_token_matches, strip_engagement_prefix, tree_item, ui_declarative_sections_to_tree, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
+        build_text_editor_scene, create_default_layout, engagement_token_matches, strip_engagement_prefix, tree_item, ui_declarative_sections_to_tree, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App,
     AppActionRegistry, AppIo, AppLabels, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, DocumentApp, DocumentView, Emit, IconName, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError,
     MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability, PanelGroup, PanelTabSpec, PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -40,24 +40,7 @@ const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
-/// `WriterConfig` carries no terminology axis, so this app is always `Terminology::Native`.
-fn is_de_locale(cfg: &WriterConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-fn writer_locale(cfg: &WriterConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-fn resolve_labels<L: AppLabels>(cfg: &WriterConfig) -> &'static L {
-    L::labels(writer_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -612,7 +595,7 @@ impl DocumentApp for WriterPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> UiNode {
         let document = doc.projection;
         let config = cfg.projection;
-        let labels = resolve_labels::<WriterPlayLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<WriterPlayLabels>(&config.locale);
         match body_key {
             WRITER_PLAY_BODY_MAIN => render_main_scene(document, config),
             WRITER_PLAY_BODY_DOCUMENT => render_document_panel(document, config, labels),
@@ -624,7 +607,7 @@ impl DocumentApp for WriterPlayApp {
 
     fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, WindowEngagement> {
         let config = cfg.projection;
-        let labels = resolve_labels::<WriterPlayLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<WriterPlayLabels>(&config.locale);
         let engagement = WindowEngagement {
             session_active: Some(false),
             options: Some(vec![WindowEngagementOption {
@@ -659,7 +642,7 @@ impl DocumentApp for WriterPlayApp {
 
     fn window_measures(&self, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
         let settings = &cfg.projection.editor_settings;
-        let labels = resolve_labels::<WriterPlayLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<WriterPlayLabels>(&cfg.projection.locale);
         let measures = vec![
             WindowMeasure::Slider {
                 id: "writer-font-size-measure".into(),
@@ -716,7 +699,7 @@ impl DocumentApp for WriterPlayApp {
     }
 
     fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, WriterProjection>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let is_de = is_de_locale(cfg.projection);
+        let is_de = cfg.projection.locale.starts_with("de");
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, is_de)
     }

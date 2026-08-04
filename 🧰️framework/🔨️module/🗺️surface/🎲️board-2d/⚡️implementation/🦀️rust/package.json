@@ -7,5 +7,8 @@
     ".": "./pkg/framework_surface_board_2d.js",
     "./pkg/framework_surface_board_2d.js": "./pkg/framework_surface_board_2d.js"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "scripts": {
+    "build": "wasm-pack build --target web"
+  }
 }

@@ -28,7 +28,7 @@ use remodel_app_engine::{RemodelConfig, RemodelFrameCursor, RemodelLayerVisibili
 use remodel_op::{RemodelConfigOperation, RemodelOperation};
 use remodel_protocol::RemodelCommand;
 use semio_framework_plugin::{
-    app_labels, build_canvas_2d_scene, build_table_scene, build_world_3d_scene, create_default_layout, create_named_layout, mesh_from_kind, ui_import_drop_zone, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json,
+        app_labels, build_canvas_2d_scene, build_table_scene, build_world_3d_scene, create_default_layout, create_named_layout, mesh_from_kind, ui_import_drop_zone, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp, DocumentView, Emit, GlbExporter, HostEffect, Label, LabelText, Locale,
     LocalizedLabel, Media, MediaClass, MediaError, MediaPayload, MediaType, MeshData, MeshExporter, OsMediaCapability, OsMediaFormat, PanelGroup, SurfaceKind, TableScene, Terminology, UiNode, UtilityCategory, UtilityDefinition, WorldSunConfig,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -413,27 +413,10 @@ app_labels! {
     }
 }
 
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `flow_ui`'s identical pair.
-/// `RemodelConfig` carries no terminology axis, so this app is always `Terminology::Native`.
-fn is_de_locale(cfg: &RemodelConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-fn remodel_locale(cfg: &RemodelConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-fn resolve_labels<L: AppLabels>(cfg: &RemodelConfig) -> &'static L {
-    L::labels(remodel_locale(cfg), Terminology::Native)
-}
 
 fn remodel_labels(cfg: &RemodelConfig) -> &'static RemodelLabels {
-    resolve_labels::<RemodelLabels>(cfg)
+    semio_framework_plugin::resolve_labels_for_locale::<RemodelLabels>(&cfg.locale)
 }
 //#endregion 🔖️Terminology
 

@@ -1255,9 +1255,49 @@ pub mod app {
 
     pub use ui_wgpu::AppLabels;
 
+    /// 🗣️ Anything `resolve_labels` can resolve a label set from — `ViewState` (locale+terminology
+    /// from the shell) and, since the B1 config-driven apps stopped threading `ViewState` through
+    /// render, any per-app `Config` exposing just a raw `cfg.locale` string (region-tolerant: `"de"`
+    /// and `"de-DE"` both resolve to `Locale::De`, matching every hand-rolled `is_de_locale` this
+    /// replaces) — `terminology()` defaults to `Native`, matching every one of those apps' behavior
+    /// (none of them threaded a terminology axis themselves).
+    pub trait LabelAxes {
+        fn locale(&self) -> Locale;
+        fn terminology(&self) -> Terminology {
+            Terminology::Native
+        }
+    }
+
+    impl LabelAxes for ViewState {
+        fn locale(&self) -> Locale {
+            self.locale
+        }
+        fn terminology(&self) -> Terminology {
+            self.terminology
+        }
+    }
+
+    /// 🗣️ Region-tolerant `"de"`/`"de-DE"` → `Locale::De` parse, `_` → `Locale::En` — the shared body
+    /// of every hand-rolled per-app `is_de_locale`/`fn locale(cfg) -> Locale` this replaces.
+    pub fn locale_from_str(locale: &str) -> Locale {
+        if locale.starts_with("de") {
+            Locale::De
+        } else {
+            Locale::En
+        }
+    }
+
     /// 🗣️ Resolves the active label set for the shell-provided locale/terminology axes.
-    pub fn resolve_labels<L: AppLabels>(view_state: &ViewState) -> &'static L {
-        L::labels(view_state.locale, view_state.terminology)
+    pub fn resolve_labels<L: AppLabels>(axes: &impl LabelAxes) -> &'static L {
+        L::labels(axes.locale(), axes.terminology())
+    }
+
+    /// 🗣️ Config-driven counterpart of `resolve_labels` for the B1 apps whose `Config` type lives
+    /// outside their `_ui` crate (the orphan rule blocks `impl LabelAxes for` a foreign `Config` from
+    /// `_ui`) — call as `resolve_labels_for_locale::<XLabels>(&cfg.locale)`. Always resolves
+    /// `Terminology::Native`, matching every one of those apps' pre-existing behavior.
+    pub fn resolve_labels_for_locale<L: AppLabels>(locale: &str) -> &'static L {
+        L::labels(locale_from_str(locale), Terminology::Native)
     }
 
     /// 🗣️ Declares a two-axis label struct plus its four `NATIVE_EN`/`NATIVE_DE`/`REUSE_EN`/`REUSE_DE`
@@ -7391,7 +7431,7 @@ pub use app::{
     node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, HistoryView, KeybindingSpec,
     MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, NodeGraphDeleteDispatch, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBundle, VcsDocumentApp, WindowKindSpec,
 };
-pub use app::{resolve_labels, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable};
+pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 pub use host_port::{host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms, host_read_asset, register_host_backbone_channel, HostBackboneChannel};
 pub use plugin_runtime::{install_plugin_bundle, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack};

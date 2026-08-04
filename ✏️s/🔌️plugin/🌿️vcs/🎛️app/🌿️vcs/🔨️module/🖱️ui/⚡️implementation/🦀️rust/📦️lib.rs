@@ -1,7 +1,7 @@
 //! 🗂️ VCS app — DocumentApp impl, render, manifest (constitutional: ui).
 
 use semio_framework_plugin::{
-    build_graph_timeline_scene, create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp,
+        build_graph_timeline_scene, create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, App, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp,
     DocumentView, Emit, GraphTimelineScene, HistoryView, Label, Locale, LocalizedLabel, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiPresence, UiStackNode, UiTreeItemNode,
 };
@@ -28,24 +28,7 @@ type VcsDemoStore = DocumentStore<VcsDemoProjection, VcsDemoOperation>;
 //#endregion 🔖️Types
 
 //#region 🔖️Locale
-/// 🗣️ `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical region.
-/// `VcsDemoConfig` carries no terminology axis, so this app is always `Terminology::Native`.
-fn is_de_locale(cfg: &VcsDemoConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-fn vcs_locale(cfg: &VcsDemoConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-fn resolve_labels<L: AppLabels>(cfg: &VcsDemoConfig) -> &'static L {
-    L::labels(vcs_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -471,7 +454,7 @@ impl DocumentApp for VcsPlayApp {
     }
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, VcsDemoProjection>, cfg: &ConfigView<'_, VcsDemoConfig>) -> UiNode {
-        let labels = resolve_labels::<VcsLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<VcsLabels>(&cfg.projection.locale);
         match body_key {
             VCS_PLAY_BODY_EDITOR => render_editor(doc.projection, labels),
             VCS_PLAY_BODY_HISTORY => render_history(doc.history),

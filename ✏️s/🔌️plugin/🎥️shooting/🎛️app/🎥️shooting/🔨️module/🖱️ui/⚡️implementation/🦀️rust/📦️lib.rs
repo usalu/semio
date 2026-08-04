@@ -7,7 +7,7 @@
 
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
-    app_labels, build_icon_render_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
+        app_labels, build_icon_render_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_readonly_field, ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels,
     ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, DslValue, Emit, HostEffect, IconRenderExportItem, IconRenderScene, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowEngagementInput,
@@ -40,24 +40,7 @@ const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels`. `ShootingConfig` carries no terminology
-/// axis, so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
-fn is_de_locale(cfg: &ShootingConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-fn shooting_locale(cfg: &ShootingConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-fn resolve_labels<L: AppLabels>(cfg: &ShootingConfig) -> &'static L {
-    L::labels(shooting_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -1034,7 +1017,7 @@ impl DocumentApp for ShootingPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> UiNode {
         let fixture = doc.projection;
-        let labels = resolve_labels::<ShootingLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<ShootingLabels>(&cfg.projection.locale);
         match body_key {
             SHOOTING_PLAY_BODY_SCENE => render_model_scene(fixture, cfg.projection),
             SHOOTING_PLAY_BODY_ICON => render_icon_scene(fixture, cfg.projection),
@@ -1046,12 +1029,12 @@ impl DocumentApp for ShootingPlayApp {
     }
 
     fn window_engagements(&self, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
-        let labels = resolve_labels::<ShootingLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<ShootingLabels>(&cfg.projection.locale);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_engagement(doc.projection, cfg.projection, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_engagement(doc.projection, labels))])
     }
 
     fn window_measures(&self, doc: &DocumentView<'_, ShootingFixture>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let labels = resolve_labels::<ShootingLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<ShootingLabels>(&cfg.projection.locale);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(doc.projection, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_measures(doc.projection, labels))])
     }
 }

@@ -18,7 +18,7 @@ use draw_op::{draw_op_for_layer_field, DrawConfigOperation, DrawOperation};
 use draw_protocol::DrawCommand;
 use semio_framework_plugin::kernel::HostEffect;
 use semio_framework_plugin::{
-    build_canvas_2d_scene, create_default_layout, selection_ids, tree_item, tree_item_with_action, tree_item_with_action_draggable, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_select, ui_inspector_mixed_slider,
+        build_canvas_2d_scene, create_default_layout, selection_ids, tree_item, tree_item_with_action, tree_item_with_action_draggable, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_select, ui_inspector_mixed_slider,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, Canvas2dScene, ConfigView, DocumentApp,
     DocumentView, Emit, Label, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus,
@@ -53,24 +53,7 @@ const DRAW_PLAY_EXAMPLE_DEFAULT_ID: &str = "semio";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`'s identical helpers.
-fn is_de_locale(cfg: &DrawConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-fn draw_locale(cfg: &DrawConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ `AppLabels::labels` (was the deleted `LocaleLabels::locale_labels_en/de`).
-fn resolve_labels<L: AppLabels>(cfg: &DrawConfig) -> &'static L {
-    L::labels(draw_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -1695,7 +1678,7 @@ impl DocumentApp for DrawPlayApp {
         let document = doc.projection;
         let config = cfg.projection;
         let gesture = self.gesture.borrow();
-        let labels = resolve_labels::<DrawPlayLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawPlayLabels>(&config.locale);
         let active_utility = config.active_utility_id.as_str();
         match body_key {
             DRAW_PLAY_BODY_COMPOSITE => render_canvas(document, config, &gesture, active_utility),

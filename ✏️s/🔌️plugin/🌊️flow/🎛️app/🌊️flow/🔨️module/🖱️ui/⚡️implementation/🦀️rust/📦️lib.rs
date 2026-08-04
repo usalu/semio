@@ -12,7 +12,7 @@ use flow_op::{FlowConfigOperation, FlowOperation};
 use flow_protocol::{FlowCommand, FlowNodeGraphEditOp};
 use playbook::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation};
 use semio_framework_plugin::{
-    build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
+        build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabels, ArtifactKindSpec, ConfigView,
     ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, HostEffect, Label, Locale, LocalizedLabel, MeasureSelectItem, MediaClass, MediaForm, MediaType, NodeGraphScene, NodeGraphViewport, OsMediaCapability, PanelGroup,
     PanelTreeBuilder, SurfaceKind, Terminology, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -46,25 +46,7 @@ const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] =
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors
-/// `procedural_3d_ui`/`dag_ui`'s identical local replacement. `FlowConfig` carries no terminology
-/// axis, so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
-fn is_de_locale(cfg: &FlowConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-fn flow_locale(cfg: &FlowConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-fn resolve_labels<L: AppLabels>(cfg: &FlowConfig) -> &'static L {
-    L::labels(flow_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -405,7 +387,7 @@ semio_framework_plugin::app_labels! {
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
 fn flow_play_labels(cfg: &FlowConfig) -> &'static FlowPlayLabels {
-    resolve_labels::<FlowPlayLabels>(cfg)
+    semio_framework_plugin::resolve_labels_for_locale::<FlowPlayLabels>(&cfg.locale)
 }
 
 /// 🗣️ Resolves a built-in extension's display name from its stable id; unknown ids fall back to the
@@ -1109,7 +1091,7 @@ impl DocumentApp for FlowPlayApp {
         match body_key {
             FLOW_PLAY_BODY_MAIN => render_main_graph(fixture, config),
             FLOW_PLAY_BODY_COMPILED => render_compiled_dag(fixture, config),
-            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(config, flow_locale(config), Terminology::Native),
+            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(config, semio_framework_plugin::locale_from_str(&config.locale), Terminology::Native),
             FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, config),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(config),
             FLOW_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &config.selected_node_ids, labels),
@@ -1128,7 +1110,7 @@ impl DocumentApp for FlowPlayApp {
     fn context_menu(&self, request: &ContextMenuRequest, doc: &DocumentView<'_, FlowFixture>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let config = cfg.projection;
         let labels = flow_play_labels(config);
-        let is_de = is_de_locale(config);
+        let is_de = config.locale.starts_with("de");
         flow_context_menu_items(registry, doc.projection, config, labels, is_de, request.surface.as_ref())
     }
 }

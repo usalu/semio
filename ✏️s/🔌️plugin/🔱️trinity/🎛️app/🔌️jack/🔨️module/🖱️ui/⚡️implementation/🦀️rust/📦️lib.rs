@@ -8,7 +8,7 @@
 //! `shooting_ui::ShootingPlayApp` (the B1 pilot) — see its doc comments for the full rationale.
 
 use semio_framework_plugin::{
-    app_labels, build_node_graph_scene, build_table_scene, build_text_editor_scene, text_identifier_occurrences_json, tree_item, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
+        app_labels, build_node_graph_scene, build_table_scene, build_text_editor_scene, text_identifier_occurrences_json, tree_item, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
     ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, AppActionRegistry, AppLabels, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, Emit, Label,
     Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, PanelGroup, PanelTreeBuilder,
     SurfaceKind, TableScene, Terminology, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
@@ -49,26 +49,7 @@ const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels` — mirrors `shooting_ui`/`wires_ui`'s own pair.
-fn is_de_locale(cfg: &JackConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-/// 🗣️ `JackConfig.locale` (a BCP-47 tag) mapped onto the SDK's exhaustive `Locale` enum.
-fn jack_locale(cfg: &JackConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ Resolves the active label cell from the config-carried locale via the SDK's two-axis
-/// `AppLabels::labels`. `JackConfig` carries no terminology field, so terminology is always `Native`.
-fn resolve_labels<L: AppLabels>(cfg: &JackConfig) -> &'static L {
-    L::labels(jack_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -654,7 +635,7 @@ impl DocumentApp for TrinityJackPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>) -> UiNode {
         let fixture = doc.projection;
-        let labels = resolve_labels::<TrinityJackLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<TrinityJackLabels>(&cfg.projection.locale);
         match body_key {
             TRINITY_JACK_PLAY_BODY_GRAPH => render_graph(fixture, cfg.projection),
             TRINITY_JACK_PLAY_BODY_EDITOR => render_editor(fixture, cfg.projection),
@@ -674,7 +655,7 @@ impl DocumentApp for TrinityJackPlayApp {
     fn context_menu(&self, request: &ContextMenuRequest, _doc: &DocumentView<'_, GraphFixture>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = is_de_locale(cfg.projection);
+        let is_de = cfg.projection.locale.starts_with("de");
         let selected = cfg.projection.selected_node_ids.clone();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
         let mut menu = Menu::of(registry).action("runQuery").action("reorganize").action("formatDocument").group("mode", |m| m.action("setActiveExample")).group("open", |m| m.action("loadExampleQuery"));

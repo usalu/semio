@@ -14,7 +14,7 @@ use gis2d_protocol::Gis2dCommand;
 use protocol::CollectionOperation;
 use semio_framework_plugin::kernel::HostEffect;
 use semio_framework_plugin::{
-    app_labels, build_tiled_map_scene, create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor,
+        app_labels, build_tiled_map_scene, create_default_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor,
     ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView, Emit, Label, Locale, LocalizedLabel, MeasureSelectItem, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, OsMediaCapability,
     OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, TiledMapScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -48,20 +48,7 @@ const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterpart to the deleted `ViewState`-driven
-/// `semio_framework_plugin::resolve_labels` — `Gis2dConfig` carries no terminology axis, so this app
-/// is always `Terminology::Native`. Mirrors `shooting_ui`'s identical fix.
-fn gis2d_locale(cfg: &Gis2dConfig) -> Locale {
-    if cfg.locale.starts_with("de") {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
 
-fn resolve_labels<L: AppLabels>(cfg: &Gis2dConfig) -> &'static L {
-    L::labels(gis2d_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -908,7 +895,7 @@ impl DocumentApp for Gis2dPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, gis2d::GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> UiNode {
         let document = doc.projection;
-        let labels = resolve_labels::<Gis2dPlayLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<Gis2dPlayLabels>(&cfg.projection.locale);
         match body_key {
             GIS2D_PLAY_BODY_COMPOSITE => render_canvas(document, cfg.projection),
             GIS2D_PLAY_BODY_DOCUMENT => build_document_tree(cfg.projection, labels),
@@ -919,7 +906,7 @@ impl DocumentApp for Gis2dPlayApp {
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, gis2d::GisMapDocument>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let labels = resolve_labels::<Gis2dPlayLabels>(cfg.projection);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<Gis2dPlayLabels>(&cfg.projection.locale);
         HashMap::from([(GIS2D_PLAY_WINDOW_MAIN.into(), gis2d_window_measures(cfg.projection, labels))])
     }
 

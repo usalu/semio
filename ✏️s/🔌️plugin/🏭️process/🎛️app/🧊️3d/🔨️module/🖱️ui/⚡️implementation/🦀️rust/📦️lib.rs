@@ -16,7 +16,7 @@ use process_3d_protocol::Process3dCommand;
 use protocol::CollectionOperation;
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{
-    app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json,
+        app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json,
     world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppIo, AppLabels, ArtifactKindSpec, ConfigView, DocumentApp, DocumentView,
     Emit, Label, LabelText, Locale, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, SurfaceKind, Terminology, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus, WindowMeasure,
@@ -50,26 +50,7 @@ const PROCESS3D_DEFAULT_UTILITY: &str = "select";
 //#endregion 🔖️Constants
 
 //#region 🔖️Locale
-/// 🗣️ B1: `cfg.locale`-driven counterparts to the deleted `ViewState`-driven
-/// `semio_framework_plugin::is_de_locale`/`resolve_labels`.
-fn is_de_locale(cfg: &Process3dConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
 
-/// 🗣️ `cfg.locale` mapped onto the SDK's exhaustive `Locale` enum.
-fn process3d_locale(cfg: &Process3dConfig) -> Locale {
-    if is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
-}
-
-/// 🗣️ `Process3dConfig` has no terminology axis (process is never embedded/reused as a building
-/// component sub-widget) — always resolves the native cell.
-fn resolve_labels<L: AppLabels>(cfg: &Process3dConfig) -> &'static L {
-    L::labels(process3d_locale(cfg), Terminology::Native)
-}
 //#endregion 🔖️Locale
 
 //#region 🔖️DocumentHelpers
@@ -1111,7 +1092,7 @@ impl DocumentApp for Process3dPlayApp {
                     "sphere" => SolidSpec::Sphere { radius: 0.5 },
                     _ => SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 },
                 };
-                let stock = Stock { id: fixture.stock.id.clone(), label: resolve_labels::<Process3dLabels>(config).stock.into(), solid, pose: Pose::default() };
+                let stock = Stock { id: fixture.stock.id.clone(), label: semio_framework_plugin::resolve_labels_for_locale::<Process3dLabels>(&config.locale).stock.into(), solid, pose: Pose::default() };
                 let document = Process3dDocument { workshop: fixture.workshop.clone(), stock, steps: Vec::new(), resolved_up_to: None };
                 Emit { document_operations: vec![Process3dOperation::SetDocument { document }], config_operations: vec![Process3dConfigOperation::SetSelectedId { value: None }], ..Default::default() }
             }
@@ -1186,7 +1167,7 @@ impl DocumentApp for Process3dPlayApp {
                 if process3d_active_utility(config) != "select" {
                     return Emit::default();
                 }
-                match process3d_step_from_face_drag(*normal, *start_point, *distance, *face_extent, resolve_labels::<Process3dLabels>(config)) {
+                match process3d_step_from_face_drag(*normal, *start_point, *distance, *face_extent, semio_framework_plugin::resolve_labels_for_locale::<Process3dLabels>(&config.locale)) {
                     Some(step) => {
                         let step_id = step.id.clone();
                         Emit {
@@ -1244,7 +1225,7 @@ impl DocumentApp for Process3dPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> UiNode {
         let config = cfg.projection;
-        let labels = resolve_labels::<Process3dLabels>(config);
+        let labels = semio_framework_plugin::resolve_labels_for_locale::<Process3dLabels>(&config.locale);
         match body_key {
             PROCESS_3D_PLAY_BODY_MAIN => {
                 let (meshes_json, instances_json) = preview_payload_cached(doc.projection);
@@ -1263,7 +1244,7 @@ impl DocumentApp for Process3dPlayApp {
     }
 
     fn window_engagements(&self, doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, WindowEngagement> {
-        HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, cfg.projection, process3d_active_utility(cfg.projection), resolve_labels::<Process3dLabels>(cfg.projection)))])
+        HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, cfg.projection, process3d_active_utility(cfg.projection), semio_framework_plugin::resolve_labels_for_locale::<Process3dLabels>(&cfg.projection.locale)))])
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, Process3dDocument>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
@@ -1450,9 +1431,9 @@ mod tests {
     #[test]
     fn labels_resolve_native_by_default_and_in_german() {
         let mut config = Process3dConfig::default();
-        assert_eq!(resolve_labels::<Process3dLabels>(&config).stock.as_str(), "Stock");
+        assert_eq!(semio_framework_plugin::resolve_labels_for_locale::<Process3dLabels>(&config.locale).stock.as_str(), "Stock");
         config.locale = "de".into();
-        assert_eq!(resolve_labels::<Process3dLabels>(&config).stock.as_str(), "Rohteil");
+        assert_eq!(semio_framework_plugin::resolve_labels_for_locale::<Process3dLabels>(&config.locale).stock.as_str(), "Rohteil");
     }
 
     #[test]
