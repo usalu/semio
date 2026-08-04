@@ -1,0 +1,64 @@
+﻿\documentclass[type=paper,theme=light,language=de,citestyle=alphabetic]{semio}
+\title{Probe2}
+\author{Probe}
+\date{2026}
+
+\makeatletter
+\newcommand{\ProbeDump}[1]{%
+  \typeout{[DEBUG] #1 parindent=\the\parindent}%
+  \typeout{[DEBUG] #1 leftskip=\the\leftskip}%
+  \typeout{[DEBUG] #1 hsize=\the\hsize}%
+  \typeout{[DEBUG] #1 cellpad=\the\semio@table@long@cellpad}%
+  \typeout{[DEBUG] #1 innerw=\the\semio@table@long@inner@w}%
+  \typeout{[DEBUG] #1 hpad=\semio@table@hpad}%
+}
+\makeatother
+
+\begin{document}
+
+\section{Probe}
+
+\begin{Table}[title=Current Cellfill]
+\begin{SemioTable}{0.20,0.10,0.18,0.27,0.25}
+  \SemioTableHeaderRow{Risiko & Status & Verantwortung & Maßnahme & Restrisiko}
+  \SemioTableRow{\ProbeDump{col1}Formale Fristen und interne Meilensteinplanung verwenden unterschiedliche Ausgangspunkte & adressiert & \ProbeDump{col3}NGS, Verbundkoordination & Formaler und operativer Projektbeginn sind mit ihren jeweiligen Fristen im Bericht getrennt dargestellt & Formale Bewertung kann von der internen Zeitrechnung abweichen}
+\end{SemioTable}
+\end{Table}
+
+\makeatletter
+\renewcommand{\semio@table@long@cellfill}{%
+  \cellcolor{semio-chrome-canvas}%
+  \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\hspace{0pt}\semio@cell@struttop
+}
+\renewcommand{\semio@table@long@cellfill@first}{%
+  \cellcolor{semio-chrome-canvas}%
+  \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\hspace{0pt}\semio@cell@struttop
+}
+\makeatother
+
+\begin{Table}[title=Glue First No Leftskip]
+\begin{SemioTable}{0.20,0.10,0.18,0.27,0.25}
+  \SemioTableHeaderRow{Risiko & Status & Verantwortung & Maßnahme & Restrisiko}
+  \SemioTableRow{Formale Fristen und interne Meilensteinplanung verwenden unterschiedliche Ausgangspunkte & adressiert & NGS, Verbundkoordination & Formaler und operativer Projektbeginn sind mit ihren jeweiligen Fristen im Bericht getrennt dargestellt & Formale Bewertung kann von der internen Zeitrechnung abweichen}
+\end{SemioTable}
+\end{Table}
+
+\makeatletter
+\renewcommand{\semio@table@long@cellfill}{%
+  \cellcolor{semio-chrome-canvas}%
+  \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@struttop\hspace{0pt}\ignorespaces
+}
+\renewcommand{\semio@table@long@cellfill@first}{%
+  \cellcolor{semio-chrome-canvas}%
+  \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@struttop\hspace{0pt}\ignorespaces
+}
+\makeatother
+
+\begin{Table}[title=Strut First Ignorespaces]
+\begin{SemioTable}{0.20,0.10,0.18,0.27,0.25}
+  \SemioTableHeaderRow{Risiko & Status & Verantwortung & Maßnahme & Restrisiko}
+  \SemioTableRow{Formale Fristen und interne Meilensteinplanung verwenden unterschiedliche Ausgangspunkte & adressiert & NGS, Verbundkoordination & Formaler und operativer Projektbeginn sind mit ihren jeweiligen Fristen im Bericht getrennt dargestellt & Formale Bewertung kann von der internen Zeitrechnung abweichen}
+\end{SemioTable}
+\end{Table}
+
+\end{document}

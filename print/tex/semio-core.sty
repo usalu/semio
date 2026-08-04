@@ -590,6 +590,10 @@
 % table columns. \SemioSlash inserts the missing zero-width glue right after
 % the slash so the following word hyphenates normally again.
 \newcommand{\SemioSlash}{/\hspace{0pt}}
+% 🪢 Same hazard for a hyphen-joined compound ("Plattenbau-Massenwohnbau"): TeX
+% breaks at the literal hyphen but never hyphenates the tail, which then runs out
+% of a narrow column. \SemioDash restores the glue after the hyphen.
+\newcommand{\SemioDash}{-\hspace{0pt}}
 %endregion Hyphenation Safety
 
 \makeatletter

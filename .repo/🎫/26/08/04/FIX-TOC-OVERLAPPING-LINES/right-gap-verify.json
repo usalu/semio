@@ -1,0 +1,138 @@
+[
+  {
+    "page": 3,
+    "name": "TOC",
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.35,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.45,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.55,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.65,
+        "gap_pt": null
+      }
+    ]
+  },
+  {
+    "page": 12,
+    "name": "Meilensteine",
+    "gaps": [
+      {
+        "y_frac": 0.35,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.45,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.55,
+        "gap_pt": null
+      }
+    ]
+  },
+  {
+    "page": 20,
+    "name": "Project",
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.35,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.45,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.55,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.65,
+        "gap_pt": null
+      }
+    ]
+  },
+  {
+    "page": 52,
+    "name": "Bauteilboersen",
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.35,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.45,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.55,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.65,
+        "gap_pt": null
+      }
+    ]
+  },
+  {
+    "page": 64,
+    "name": "Typologie",
+    "gaps": [
+      {
+        "y_frac": 0.35,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.45,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.55,
+        "gap_pt": null
+      }
+    ]
+  },
+  {
+    "page": 96,
+    "name": "Glossary",
+    "gaps": [
+      {
+        "y_frac": 0.25,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.35,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.45,
+        "gap_pt": null
+      },
+      {
+        "y_frac": 0.55,
+        "gap_pt": null
+      }
+    ]
+  }
+]

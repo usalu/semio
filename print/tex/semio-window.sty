@@ -827,14 +827,6 @@
   }
 }
 
-\cs_new_protected:Npn \semio_window_table_border_finish: {
-  \draw[
-    draw=semio-chrome-border-normal,
-    line~width=\semio@stroke@hairline,
-  ] ([xshift=\dimexpr\semio@stroke@hairline/2\relax]frame.north~west)
-    -- ([xshift=\dimexpr\semio@stroke@hairline/2\relax]frame.south~west);
-}
-
 \cs_new_protected:Npn \semio_window_header_overlay_baseline: {
   \draw[
     draw=semio-chrome-border-normal,
@@ -886,7 +878,9 @@
     left=0pt,
     right=0pt,
     bottom=0pt,
-    finish={\semio_window_table_border_finish:},
+    % Side/bottom frame comes from leftrule/rightrule/bottomrule alone.
+    % The old finish left-stroke duplicated leftrule and produced edge stubs
+    % where row \hrule overshot the inner table \vrule.
   },
   semio~window~row/.style={
     semio~window,
