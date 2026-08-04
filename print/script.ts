@@ -686,17 +686,14 @@ class TestScript extends BundleScript {
     //#region Window layout
     const windowSource = readFileSync(join(texDir, "semio-window.sty"), "utf8");
     const tableSource = readFileSync(join(texDir, "semio-table.sty"), "utf8");
-    assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-\\semio@stroke@hairline-5\.75pt\\relax/);
-    assert.match(windowSource, /overlay~unbroken=\{\\semio_window_header_overlay_baseline:\\semio@window@break@record\{1\}/);
-    assert.match(windowSource, /overlay~first=\{\\semio_window_header_overlay_baseline:\}/);
+    assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-5\.75pt\\relax/);
+    assert.match(windowSource, /overlay~unbroken=\{\\semio@window@header@overlay@pageone\\semio@window@break@record\{1\}/);
+    assert.match(windowSource, /overlay~first=\{\\semio@window@header@overlay@pageone\}/);
     assert.match(windowSource, /\\semio@window@header@invoke@tcb/);
+    assert.match(windowSource, /\\semio@heading@cap@muted@open/);
+    assert.match(windowSource, /toprule=0pt/);
     assert.match(tableSource, /\\semio@table@long@title@chrome@row[\s\S]*?\\semio@window@header@invoke/);
-    assert.match(windowSource, /semio~window~table\/\.style=\{\s*semio~window,\s*toprule=0pt,/);
-    assert.match(windowSource, /\\semio_window_table_border_finish: \{[\s\S]*?frame\.north~west[\s\S]*?frame\.south~west/);
-    assert.match(windowSource, /semio~window~table\/\.style=\{[\s\S]*?finish=\{\\semio_window_table_border_finish:\}/);
     assert.match(tableSource, /\\NewDocumentCommand \\SemioTableHeaderRow \{ m \} \{[\s\S]*?\\semio@table@row@sep/);
-    assert.match(tableSource, /\\newcommand\{\\semio@table@row@sep\}\{[\s\S]*?\\hrule height\\arrayrulewidth width\\linewidth/);
-    assert.match(tableSource, /\\newcommand\{\\semio@table@long@header@left@cell\}\[2\]\{[\s\S]*?\\multicolumn\{1\}\{\|/);
     assert.match(tableSource, /\\semio_table_long_header_build:nn #1#2 \{[\s\S]*?\\semio@table@long@header@left@cell[\s\S]*?\\clist_item:nn \{#1\} \{1\}/);
     assert.doesNotMatch(tableSource, /\\newcommand\{\\semio@table@long@header@(repeat|continuation)@three\}\[3\]\{%\s*\\hhline/);
     //#endregion

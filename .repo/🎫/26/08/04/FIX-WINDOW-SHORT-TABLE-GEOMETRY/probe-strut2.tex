@@ -1,0 +1,25 @@
+\documentclass[type=paper,theme=light,language=de,citestyle=alphabetic]{semio}
+\title{Strut2}
+\author{Probe}
+\date{2026}
+
+\makeatletter
+% Visible bottom strut to prove whether <{} material is inside the cell box.
+\renewcommand{\semio@cell@strutbot}{%
+  \hspace{0pt}%
+  {\color{red}\rule[-\semio@table@vbot]{2pt}{\semio@table@vbot}}%
+}
+\makeatother
+
+\begin{document}
+\section{Strut2}
+
+\begin{Table}[title=Visible Bot Strut]
+\begin{SemioTable}{0.1,0.9}
+\SemioTableHeaderRow{ID & Hemmnis}
+\SemioTableRow{H-01 & Kosten}
+\SemioTableRow{H-02 & Akzeptanz}
+\end{SemioTable}
+\end{Table}
+
+\end{document}

@@ -69,7 +69,6 @@
 % file stays untouched. \semio@text@emphasized only sets the text colour.
 \newfontfamily\SemioSansBold[Path=\semio@font@root anta/,FakeBold=2.5]{Anta-Regular.ttf}
 \renewcommand{\semio@table@header@cell}[1]{%
-  \cellcolor{semio-chrome-canvas}%
   \SemioSansBold\semio@table@fontsize@apply
   \semio@text@emphasized{#1}%
 }
@@ -833,6 +832,10 @@
     line~width=\semio@stroke@hairline,
   ] (frame.north~west) -- (frame.north~east);
 }
+% @-named alias: overlay chips run under \ExplSyntaxOff, where a bare
+% \semio_window_... token splits at `_` into \semio + junk. Keep the expl3
+% name for call sites inside ExplSyntaxOn; latex overlays use this alias.
+\cs_new_eq:NN \semio@window@header@overlay@baseline \semio_window_header_overlay_baseline:
 
 \tcbset{
   semio~window/.style={
@@ -843,6 +846,8 @@
     boxrule=\semio@stroke@hairline,
     boxsep=0pt,
     colframe=semio-chrome-border-normal,
+    % toprule=0: the shared top hairline is the inline chip baseline (page 1)
+    % / the continuation chip baseline — not a skin toprule (that doubled).
     toprule=0pt,
     leftrule=\semio@stroke@hairline,
     rightrule=\semio@stroke@hairline,
@@ -861,13 +866,11 @@
     before~skip=0pt,
     after~skip=\semio@spacing@table@outer,
     parbox=false,
-    % 🪟 Redraw the muted title/number chip row in the overlay on every page-part
-    % (unbroken, first, middle, last) so the gap baseline is not covered by
-    % colback — see \semio@window@header@overlay. Record break parts on
-    % unbroken/last for the ":<N>" suffix on page 1 next pass
-    % (\semio@window@break@record, `.window-breaks` aux).
-    overlay~unbroken={\semio_window_header_overlay_baseline:\semio@window@break@record{1}},
-    overlay~first={\semio_window_header_overlay_baseline:},
+    % Page 1: chips+baseline are inline; do NOT TikZ-restroke frame.north (that
+    % was the extra parallel hairline when the seam was a hair off). Continuations
+    % redraw chips+baseline (no inline header on those parts).
+    overlay~unbroken={\semio@window@break@record{1}},
+    overlay~first={},
     overlay~middle={\semio@window@header@overlay@continuation},
     overlay~last={\semio@window@header@overlay@continuation\semio@window@break@record{\arabic{tcbbreakpart}}},
   },
@@ -879,8 +882,6 @@
     right=0pt,
     bottom=0pt,
     % Side/bottom frame comes from leftrule/rightrule/bottomrule alone.
-    % The old finish left-stroke duplicated leftrule and produced edge stubs
-    % where row \hrule overshot the inner table \vrule.
   },
   semio~window~row/.style={
     semio~window,
@@ -2174,16 +2175,9 @@
 }
 \ExplSyntaxOff
 
-% 🪟 Redraws the muted title/number chip row (same \semio@window@header@muted
-% as \semio@window@header@invoke) as a tcolorbox overlay above colback, on
-% every page-part. Long tables call \semio@window@header@invoke inline (no
-% tcolorbox). Wired as `overlay unbroken=` / `overlay first=` / `overlay
-% middle=` / `overlay last=` on `semio~window` (Table, Figure, generic
-% \Window, and \WindowItem rows inherit via semio~window~tier~* /
-% semio~window~table / semio~window~row).
-% 🪟 On page 1 / unbroken parts the inline chip row is already typeset; redraw
-% only the shared baseline where colback covered it. Continuation parts redraw
-% the full chip row (no inline header on those pages).
+% 🪟 Page 1 / unbroken: chips+baseline are inline — do not TikZ-restroke
+% frame.north (a second parallel hairline when the seam is a hair off).
+% Continuation parts redraw the full chip row (no inline header on those pages).
 \newcommand{\semio@window@header@overlay@continuation}{%
   \edef\semio@window@header@part@num{\arabic{tcbbreakpart}}%
   \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%
@@ -2193,7 +2187,6 @@
 
 \newcommand{\semio@window@header@overlay}{%
   \ifnum\value{tcbbreakpart}=1\relax
-    \semio_window_header_overlay_baseline:
   \else
     \semio@window@header@overlay@continuation
   \fi
@@ -2574,6 +2567,37 @@
     \semio@heading@cap@muted@core{#1}%
     \semio@window@cap@left@overlay{semio-chrome-border-normal}%
     \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
+  }%
+}
+
+% 📐 Open-bottom muted tab for window/table headers. Mirror
+% \semio@heading@cap@nofill@open: top + sides + canvas only, height
+% titleh−hairline, so the shared baseline row is the sole bottom edge.
+\newcommand{\semio@heading@cap@muted@open}[1]{%
+  \semio@window@cap@body@h@set
+  \sbox{\semio@window@cap@slot}{%
+    \begingroup
+    \semio@heading@bar@font\color{semio-chrome-text-normal}%
+    \hspace{\semio@tab@inset}#1\hspace{\semio@tab@inset}%
+    \endgroup
+  }%
+  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
+  \semio@window@cap@metrics@set
+  \semio@window@cap@raise@to{\semio@window@cap@titleh-\semio@stroke@hairline}{%
+    \vbox to \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax{%
+      \nointerlineskip
+      \hbox{%
+        \semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@outer@w}%
+      }%
+      \nointerlineskip
+      \hbox{%
+        \semio@window@stroke@v@to{semio-chrome-border-normal}{\semio@window@cap@body@h-\semio@stroke@hairline}%
+        \semio@window@cap@paint{\semio@window@cap@w}{semio-chrome-canvas}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
+        \semio@window@stroke@v@to{semio-chrome-border-normal}{\semio@window@cap@body@h-\semio@stroke@hairline}%
+      }%
+    }%
   }%
 }
 
@@ -3061,6 +3085,14 @@
   \ifvmode\nointerlineskip\fi
 }
 
+%region WindowHeaderMuted
+% 🪟 Muted title/number chip row. Open-bottom caps (\semio@heading@cap@muted@open)
+% stop one hairline above the shared baseline so that stroke is the sole bottom
+% edge. Page-1 tcolorbox windows paint chips+baseline inline (same as long
+% tables); the seam vskip welds frame.north onto that baseline. Page-1 overlay
+% does NOT restroke the baseline (that doubled when the seam was off). Omitting
+% the inline baseline left a ~5pt page gap under the open chips (seam was
+% calibrated for chips+baseline height).
 \newif\ifsemio@window@header@draw@baseline
 \semio@window@header@draw@baselinetrue
 
@@ -3069,13 +3101,13 @@
   \semio@window@header@muted@core{#1}{#2}%
 }
 
+% tcolorbox page-1: open chips + inline baseline (sole top hairline; no overlay stroke).
 \newcommand{\semio@window@header@invoke@tcb}{%
-  \semio@window@header@draw@baselinefalse
-  \semio@window@header@muted@core{\semio@window@header@number@page1}{\semio@window@header@title}%
+  \semio@window@header@muted{\semio@window@header@number@page1}{\semio@window@header@title}%
 }
 
 \newcommand{\semio@window@header@muted@core}[2]{%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted@open{\textcolor{semio-chrome-foreground}{#2}}}%
   \edef\semio@window@header@numval{#1}%
   \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
     \setlength{\semio@window@gap@w}{%
@@ -3087,16 +3119,11 @@
           \usebox{\semio@window@tab@box}%
           \semio@window@header@gap@open{semio-chrome-border-normal}%
         }%
-        \ifsemio@window@header@draw@baseline
-          \ifvmode\nointerlineskip\fi
-          \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
-            \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
-          }%
-        \fi
+        \semio@window@header@baseline@or@slot
       }%
     }%
   \else
-    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{#1}}%
+    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted@open{#1}}%
     \setlength{\semio@window@gap@w}{%
       \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
     }%
@@ -3108,16 +3135,21 @@
           \hskip-\semio@stroke@hairline\relax
           \usebox{\semio@window@ctrl@box}%
         }%
-        \ifsemio@window@header@draw@baseline
-          \ifvmode\nointerlineskip\fi
-          \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
-            \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
-          }%
-        \fi
+        \semio@window@header@baseline@or@slot
       }%
     }%
   \fi
 }
+
+\newcommand{\semio@window@header@baseline@or@slot}{%
+  \ifsemio@window@header@draw@baseline
+    \ifvmode\nointerlineskip\fi
+    \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+      \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
+    }%
+  \fi
+}
+%endregion WindowHeaderMuted
 
 %region WindowArrangement
 % H/V gap between tiles: \semio@window@gap, synced to \semio@spacing@par (0.5em) in

@@ -241,14 +241,21 @@
 % intersect \hhline and paint short horizontal ticks on every vertical at row
 % boundaries; border-colored \vrule inserts do not. Omitted when the enclosing
 % window frame already owns the sides (\ifsemio@table@owns@sidesfalse).
+% Ungrouped coloured \vrule (not {\color...\vrule} and not \vline): braces
+% pack the rule to natural height on tall m-rows; colortbl's \vline can do
+% the same via \color@begingroup. A stretchable \vrule with colour set via
+% \color before it fills the row box; padend/cellfill restore their own
+% colours immediately after.
 \newcommand{\semio@table@border@L}{%
   \ifsemio@table@owns@sides
-    {\color{semio-chrome-border-normal}\vrule width \arrayrulewidth}%
+    \color{semio-chrome-border-normal}\vrule width\arrayrulewidth
+    \color{semio-chrome-text-normal}%
   \fi
 }
 \newcommand{\semio@table@border@R}{%
   \ifsemio@table@owns@sides
-    {\color{semio-chrome-border-normal}\vrule width \arrayrulewidth}%
+    \color{semio-chrome-border-normal}\vrule width\arrayrulewidth
+    \color{semio-chrome-text-normal}%
   \fi
 }
 
@@ -286,15 +293,21 @@
 % Top strut: zero-width rule that only sets the first line's height (no depth,
 % so interline spacing in multi-line cells is untouched).
 \newcommand{\semio@cell@struttop}{\rule[\z@]{\z@}{\semio@table@vtop}}
-% Bottom strut: zero-width rule that only sets the last line's depth. The leading
-% zero glue is the counterpart of the one in \semio@cell@pre / the cellfills: TeX
-% hyphenates a run of letters only when it is BOTH preceded and followed by glue,
-% and this strut is a \rule that would otherwise butt straight against the cell's
-% last word ? so a single-word cell ("Faserzement", "Pfostenelement",
-% "Angebotsuebersicht") never hyphenated and ran over the column edge into its
-% neighbour. Discardable glue at a line break, zero width on the last line, so it
-% changes nothing else.
-\newcommand{\semio@cell@strutbot}{\hspace{0pt}\rule[-\semio@table@vbot]{\z@}{\z@}}
+% Bottom strut: zero-width rule that only sets the last line's depth. LaTeX's
+% \rule[raise]{width}{height} expands to a \vrule of height (height+raise) and
+% depth (-raise), so the height argument MUST equal the raise magnitude, not
+% \z@. With height=\z@ the vrule got a NEGATIVE height and contributed no
+% reliable depth; m-columns then \vcenter-ed an ascender-only box and every
+% single-line row (Huerden, Ueberblick, ...) read as top-heavy with a large empty
+% band under the text. Height=vbot yields height 0 / depth vbot -- a pure depth
+% strut, the mirror of \semio@cell@struttop. The leading zero glue is the
+% counterpart of the one in \semio@cell@pre / the cellfills: TeX hyphenates a
+% run of letters only when it is BOTH preceded and followed by glue, and this
+% strut is a \rule that would otherwise butt straight against the cell's last
+% word, so a single-word cell ("Faserzement", "Pfostenelement") never
+% hyphenated and ran over the column edge. Discardable at a line break, zero
+% width on the last line, so it changes nothing else.
+\newcommand{\semio@cell@strutbot}{\hspace{0pt}\rule[-\semio@table@vbot]{\z@}{\semio@table@vbot}}
 % Last-column closer for the register colspec (below). Kept as a named
 % indirection so a future register table could close its right-aligned page
 % column differently without editing the colspec.
@@ -324,7 +337,7 @@
 % zero glue last restores the "word preceded by glue" precondition (see the
 % Hyphenation Safety note in semio-core.sty). The strut still sets the first
 % line's height either way; the glue is zero-width, so nothing shifts visually.
-\newcommand{\semio@cell@pre}{\raggedright\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
+\newcommand{\semio@cell@pre}{\cellcolor{semio-chrome-canvas}\raggedright\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}}
 \newcommand{\semio@table@long@cellfill}{%
   \cellcolor{semio-chrome-canvas}%
   \raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\semio@cell@inset\semio@cell@struttop\hspace{0pt}%
@@ -340,26 +353,51 @@
   <{\semio@cell@strutbot}%
 }
 
+% No \cellcolor here: the column's >{\semio@table@long@cellfill} (or
+% \semio@cell@pre) already paints the canvas. A second \cellcolor after
+% \semio@cell@struttop was collapsing the header row's top strut, so column
+% labels sat ~3.5pt under the chip baseline while body rows kept the full
+% ~7.5pt air (measured on Huerden / BB.M.a vs body).
 \newcommand{\semio@table@header@cell}[1]{%
-  \cellcolor{semio-chrome-canvas}%
   \SemioSans\semio@table@fontsize@apply
   \semio@text@emphasized{\bfseries #1}%
 }
 
 \newcommand{\semio@table@short@hhline@current}{}
 \newif\ifsemio@table@window@rules
-% Row separator: one hairline inset by half a hairline on each side. Side
-% \vrule/tcb strokes are painted on their centreline, so a flush-full-width
-% rule ends past that centre and reads as a stub at every L/R join.
+% Row separator. Side \vrule segments live only inside row boxes and do not
+% extend through \noalign ? the join band must therefore carry border ink at
+% the L/R x-positions or cream shows through as a notch at every row.
+%
+% owns@sides: full-width \hrule covering the L/R border slots (ink-on-ink
+% T-join). Overlapping ±2pt pillars via negative \vskip were tried and rejected:
+% they destabilised \noalign band advance (multi-pt page gaps at joins). Side
+% continuity instead comes from ungrouped stretchable \semio@table@border@L/R
+% meeting this full-width rule.
+%
+% Windowed short tables: the tcolorbox leftrule/rightrule owns the sides; the
+% mid-rule overlaps half a hairline past each content edge so it welds into the
+% frame stroke without a notch or outer stub.
 \newcommand{\semio@table@rule}{%
   \noalign{%
-    \hbox to \linewidth{%
-      \hskip0.5\arrayrulewidth
-      {\color{semio-chrome-border-normal}%
-       \vrule height\arrayrulewidth depth\z@
-              width\dimexpr\linewidth-\arrayrulewidth\relax}%
-      \hss
-    }%
+    \begingroup
+      \color{semio-chrome-border-normal}%
+      \ifsemio@table@owns@sides
+        \hbox to \linewidth{%
+          \vrule width\arrayrulewidth height\arrayrulewidth depth\z@
+          \vrule width\dimexpr\linewidth-2\arrayrulewidth\relax
+                 height\arrayrulewidth depth\z@
+          \vrule width\arrayrulewidth height\arrayrulewidth depth\z@
+        }%
+      \else
+        \hbox to \linewidth{%
+          \hskip-.5\arrayrulewidth
+          \vrule height\arrayrulewidth depth\z@
+                 width\dimexpr\linewidth+\arrayrulewidth\relax
+          \hss
+        }%
+      \fi
+    \endgroup
   }%
 }
 \newcommand{\semio@table@row@sep}{%
@@ -415,12 +453,26 @@
 \newcommand{\semio@table@long@title@chrome@prepare}{}
 
 \newcommand{\semio@table@long@title@chrome@row}[1]{%
-  \multicolumn{#1}{@{}l@{}}{%
-    \semio@window@header@invoke
+  % Side \vrule borders ride in this row too ? otherwise the chip baseline is a
+  % full-width hairline with no verticals, and the table's L/R strokes only start
+  % on the next row, reading as a floating chip + gapped corners.
+  % Shrink \linewidth/\hsize to the span BETWEEN those borders: muted chips
+  % draw `\hbox to \linewidth+\hairline` with `\moveleft\hairline` so the
+  % baseline T-joins the frame; with borders outside an unshrunk \linewidth
+  % the baseline overshoots and corner joins notch.
+  \multicolumn{#1}{@{\semio@table@border@L}@{}l@{\semio@table@border@R}}{%
+    \begingroup
+      \setlength{\linewidth}{\dimexpr\linewidth-2\arrayrulewidth\relax}%
+      \setlength{\hsize}{\linewidth}%
+      \semio@window@header@invoke
+    \endgroup
   }%
   \\%
-  % Weld the column-header row onto the chip baseline (invoke draws one full-width
-  % rule under the tabs ? no second \hrule here, which caused parallel lines).
+  % Weld the next row onto the chip baseline. Without this pull, longtable /
+  % tabular leaves a cream/page gap under the chips. Cancel only the \\ strut
+  % (\extrarowheight + \dp\@arstrutbox). Do NOT also pull \lineskip or an
+  % extra hairline ? that overlaps into the next row and eats project-band
+  % toppad / cell struttop.
   \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
 }
 
@@ -479,13 +531,11 @@
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
   \begin{longtable}{#1}%
-  % Title chrome + column labels on the first page. This slot MUST stay filled:
-  % longtable uses \endfirsthead *instead of* \endhead on page 1, so an empty
-  % firsthead drops the title chip and the header row from every long table's
-  % first page (nothing else draws them ? \semio_table_long_open:n deliberately
-  % emits no chip, see semio-window.sty).
-  \semio@table@long@continuation@chrome{#5}%
-  #2%
+  % One head definition only. Filling BOTH firsthead and head made this
+  % longtable stack emit chrome+column-labels TWICE on page 1 (measured: two
+  % "Marktpl?tze" chip rows ~48pt apart). With firsthead empty, \endhead is
+  % used for the first page as well as continuations ? single chip, single
+  % header, no floating gap.
   \endfirsthead
   \semio@table@long@continuation@chrome{#5}%
   #3%
@@ -1032,40 +1082,52 @@
 % band is exactly \linewidth and the right-edge fill meets the border with no
 % page-coloured strip (the old chrome-only bandpad left that gap when body pads
 % moved to net chrome+cellpad).
+%
+% Inset: a bare top box left the photo flush on the chip baseline (measured
+% 0pt). Top air is \semio@window@bodypad (5.5pt). MUST be a canvas-coloured
+% rule ? plain \vskip is unpainted glue, so page cream/dark shows through as a
+% gap under the shared chip hairline. Meta uses \vbox to bandheight + \vss so
+% both cells share one height. Sides use \semio@table@long@cellpad. Photo
+% height absorbs the top pad (~26mm band).
+% Top air for the overview band. A TikZ cover photo is a tall box (height ?
+% toppad) whose upward extent in paragraph mode swallows any preceding line ?
+% toppad and photo MUST share one \vbox so the photo hbox sits strictly below
+% the pad. Nested tabular: canvas rule row (bodypad) then photo/meta. Validated
+% with a red debug rule ? pad is real; TikZ cover sits below it.
 \newcommand{\semio@project@overview@band}[7]{%
   \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@padendL}p{\semio@project@photow}@{\semio@project@padcp}}{%
     \cellcolor{semio-chrome-canvas}%
-    \begin{minipage}[t]{\linewidth}\vspace{0pt}%
-      \SemioProjectPhoto{#1}{\linewidth}{\semio@project@bandheight}%
-    \end{minipage}%
+    % \vbox + vmode \hrule (not an \hbox{\rule}): TikZ cover with baseline=0pt
+    % is a tall upward box; in paragraph mode it can swallow a preceding line
+    % box. A vmode \hrule is a vertical-list item the photo cannot climb over.
+    \vbox{%
+      \color{semio-chrome-canvas}%
+      \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
+      \nointerlineskip
+      \hbox{%
+        \hspace{\semio@table@long@cellpad}%
+        \SemioProjectPhoto{#1}{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{\dimexpr\semio@project@bandheight-\semio@window@bodypad\relax}%
+      }%
+    }%
   }%
   &
   \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\semio@project@padendR}@{\semio@table@border@R}}{%
     \cellcolor{semio-chrome-canvas}%
-    \begin{minipage}[t]{\linewidth}\vspace{0pt}%
-      \semio@project@meta{#2}{#3}{#4}{#5}{#6}{#7}%
-    \end{minipage}%
+    \vbox{%
+      \color{semio-chrome-canvas}%
+      \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
+      \nointerlineskip
+      \hbox{%
+        \begin{minipage}[t]{\linewidth}%
+          \semio@cell@inset
+          \semio@project@meta{#2}{#3}{#4}{#5}{#6}{#7}%
+        \end{minipage}%
+      }%
+    }%
   }%
-  % Divide the overview band from the component section with a single unbroken
-  % rule and NO cream breathing gap: the former \noalign{\vskip 4pt} above and
-  % below the \hline left a cream band across the full width and cut the left/right
-  % borders there. The shared rule welds band-canvas ? rule ? header-canvas, borders
-  % continuous, exactly like every body-row boundary.
   \\\semio@table@rule
 }
 
-% Project component-section column header, rendered THROUGH the project colspec
-% itself ? not the shared \semio@table@long@header@left@cell. That shared left
-% cell wraps column 1 in a \multicolumn whose preamble ends in a bare @{}, which
-% drops the canvas-filled inter-column pad (\semio@project@padcp) on col 1's
-% right edge and swaps the left edge for a plain \hspace. The result was a cream
-% stripe between "Bauteil / Menge" and "Material" (and a cream sliver at the left
-% border): the header fill broke away from the continuous body fill. Routing every
-% cell through \semio@table@header@cell in a plain project column lets
-% \semio@project@padendL / \semio@project@padcp fill the left edge and all five
-% gaps exactly like the body rows, and gives col 1 the same width and struts as
-% the body. Labels MUST stay in sync with the \semio@table@long@prepare call in
-% \SemioProject. The shared full-width rule matches every other row boundary.
 \newcommand{\semio@project@headrow}{%
   \semio@table@header@cell{Bauteil} &
   \semio@table@header@cell{Neue Nutzung} &

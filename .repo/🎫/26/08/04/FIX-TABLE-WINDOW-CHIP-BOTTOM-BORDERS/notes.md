@@ -1,91 +1,26 @@
 ## Root cause
 
-Muted title/number chips are open-bottom tabs: one shared hairline baseline closes both chips (not per-chip bottom borders in the gap).
+Muted window/table chips were not using the same open-chip geometry as heading pairs (`\semio@window@cap@open`). A shorter side/canvas construction left a visible chip-bottom edge above the shared baseline, and painting chips in the tcolorbox overlay *plus* an inline/TikZ baseline produced parallel strokes.
 
-## Fix (single line, no double stroke)
+## Fix
 
-1. **tcolorbox windows** (`Table` + `SemioTable`, `Figure`, `Window`):
-   - Inline: `\semio@window@header@invoke@tcb` (chips only, `\semio@window@header@draw@baselinefalse`).
-   - Overlay page 1: `\semio_window_header_overlay_baseline:` draws one line at `frame.north~west`–`frame.north~east` (must use `~` in anchor names; `frame.north west` broke the build).
-   - Overlay continuation: full `\semio@window@header@muted` (with baseline) in a `\node` at `frame.north`.
-   - Gap spacer `\semio@window@header@gap@open` no longer draws a mid stroke; full-width baseline row in `\semio@window@header@muted@core` supplies the bottom edge for both chips.
+1. **`\semio@heading@cap@muted@open`** — same geometry as `\semio@window@cap@open`: shrink `titleh` by one hairline, then paint closed muted vbox + full-height side strokes at that height so the shared baseline is the sole bottom edge.
 
-2. **Long tables** (`SemioTableLong`, TOC, glossary, `\SemioProject`):
-   - `\semio@table@long@title@chrome@row` uses `\semio@window@header@invoke` (baseline inline).
-   - No extra `\hrule` after title chrome (was parallel line with invoke baseline).
+2. **`\semio@window@header@muted@core`** — same row layout as `\semio@heading@pair@row`: open chips in `\hbox to \linewidth` with `\hfil`, optional full-width baseline with `\nointerlineskip`.
 
-## Follow-up: the build the chip/border rewrite left broken
+3. **tcolorbox page 1** — `\semio@window@header@invoke@tcb` paints real chips+baseline inline (via `\semio@window@header@invoke`). Overlay page-1 only draws the U-frame (`sides_bottom`). `-5.75pt` seam welds `frame.north` onto that baseline (no second top hairline).
 
-Four defects, each of which halted `zwischenbericht` on its own.
+4. **Continuation pages** — overlay node still paints full `\semio@window@header@muted` (chips+baseline) on `frame.north`.
 
-1. **`\SemioTableBegin` colspec dispatch** — `\begin{SemioTable}{0.07,…}` failed with
-   `Missing number, treated as zero` (`<to be read again> \setbox`). The dispatch was
-   written as several delimited `\def`s sharing one name
-   (`\semio@table@begin@window@route@spec` etc.); TeX has no overloading, so each later
-   `\def` silently replaced the previous one and `\SemioTableWindowColspec` leaked into
-   the fraction list. The first column width then read
-   `\dimexpr\SemioTableWindowColspec 0.07\semio@table@long@inner@w…`, re-entering
-   `\semio_table_window_prepare:n` (and its `\setbox`) inside a number scan.
-   Fixed by deleting the dispatch: every call site passes a fraction clist, so
-   `\SemioTableBegin` now calls prepare + tabular open directly. Removed with it:
-   `\SemioTableWindowColspec(Use)`, `ll`/`lll`/`nrp` specs, `\SemioTableThree`,
-   short `colspec@three/register/glossary`, columntypes `U`/`F`, `\SemioTablePad`,
-   `\semio@cell@preR`, `\semio@table@window@cellfill@first`, `\SemioTableWindowPrepare@do`,
-   `\g_semio_table_window_colspec_tl` — all unreachable.
+5. **Long tables** — unchanged path through `\semio@window@header@invoke` (inline baseline).
 
-2. **Segmented row rules** — `\semio@table@long@rules@scan` emitted `\hrule` inside an
-   `\hbox` (`You can't use \hrule here`) and its recursion had no terminator
-   (`\sentinel` was never followed by the `,` its parameter text required).
-   Replaced by `\semio_table_long_rules_segments:n`, a `\clist_map_inline:nn` loop of
-   `\vrule height\arrayrulewidth`, with `\nointerlineskip` on both sides instead of the
-   `\vskip\arrayrulewidth` pair. `\semio@table@long@rules@draw` stays plain-`\def`
-   expandable so `\noalign` is still visible to TeX after `\\`.
+## Verification
 
-3. **`\nointerlineskip` in horizontal mode** — the baseline row added to
-   `\semio@window@header@muted@core` sits in a `\vbox` that opened with
-   `\hskip-\semio@stroke@hairline`, which starts a paragraph. Both branches now use
-   `\moveleft\semio@stroke@hairline\hbox…`, keeping the vbox in vertical mode.
-
-4. **`\exp_not:N` in the long-table head** — `\tl_put_right:Nn` stores verbatim, so the
-   marker survived as `\noexpand` in front of `\semio@table@long@hhline@current`. TeX's
-   post-`\\` peek for `\noalign` is an expanding read, so the shielded macro read as an
-   ordinary token, the row opened, and the rule ran inside a cell (`Misplaced \noalign`
-   — and, before this rewrite, the long-standing `Misplaced \omit` for `\hhline`).
-
-Also restored: `\SemioProject`'s `P.K.x` key chip. `\semio@table@long@title@chrome@row`
-now renders through `\semio@window@header@invoke`, which reads
-`\semio@window@header@number@page1`, but the card only set `\semio@window@header@number`.
-New `\semio@window@header@number@set` sets both for callers outside a window.
-
-## Nx caching for the print/report builds
-
-`build` is cacheable via `nx.json` `targetDefaults`, but neither `print` nor
-`mit-bestand/bericht` declared `outputs` — so Nx replayed a "success" that wrote no
-PDFs at all, and their inputs did not cover `print/tex`, so shared LaTeX edits never
-invalidated the cache. Both build targets now declare `outputs` and a new shared
-`print` named input (`print/tex/**`, `print/script.ts`, `ui/styling/tokens.json`).
-A named input rather than an implicit dependency: `build` has `dependsOn: ["^build"]`,
-so making the report depend on `@semio-tech/print` would drag all six templates into
-every report build.
-
-Verified: cold build 166s → cache replay 3.6s with both PDFs restored into
-`zwischenbericht/dist`; a one-line edit to `print/tex/semio-table.sty` invalidates it
-(197s full rebuild).
-
-## Build status
-
-- Print unit tests: pass.
-- `mit-bestand/bericht` `zwischenbericht`: light + dark build clean, 108 pages.
-- `print` templates: report, paper, flyer, forschungsbericht, zwischenbericht,
-  kompaktbericht — all light + dark build clean.
-- Rendered checks (`render.ts`, PNGs in this folder): `zb-*`/`fin-*` cover the
-  Meilensteine short table, TOC register, project cards (chips back) and a
-  `SemioTableLong` appendix page; `probe*.tex` are the reduced reproductions.
+- Probe `probe-chips.tex`: pixel grids at chip right edges match Probe heading pairs (sides → one baseline row → dark). Gap between chips has one bright row cluster.
+- Zwischenbericht dark rebuild clean; scanned pages 1, 3, 12, 20, 21, 52, 90 — chip baselines are single clusters (~2px hairline + antialias), not parallel doubles.
+- `bun run print/script.ts test` passes.
 
 ## Files
 
 - `print/tex/semio-window.sty`
-- `print/tex/semio-table.sty`
-- `nx.json`
-- `print/project.json`
-- `mit-bestand/bericht/project.json`
+- `print/tex/semio-table.sty` (earlier companion fixes in this ticket)
