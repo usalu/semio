@@ -30,7 +30,7 @@ isProject: false
 
 ## Problem
 
-Shell **panels** already render through `[WindowChrome](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)`: glass only on chip-cap + body, transparent U-gap, SVG silhouette, fold control on the right, open width default **300px**.
+Shell **panels** already render through `[WindowChrome](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)`: glass only on chip-cap + body, transparent U-gap, SVG silhouette, fold control on the right, open width default **300px**.
 
 Built-in **window panes** (measures / engagement / search / utility) still use the old rectangular stack (`windowMeasuresStackClass` + header bar + `WindowPaneChromeToggle`). Open widths diverge (224px rail, `min(28rem,…)`, content `w-fit`). Ticket `[UNIFY-WINDOW-PANES-INTO-A-SHARED-8-ANCHOR-DRAGGABLE-PANE-API](.🦑️repo/🎫️tickets/🎆️26/� comb️07/☀️21/UNIFY-WINDOW-PANES-INTO-A-SHARED-8-ANCHOR-DRAGGABLE-PANE-API/)` already built `Pane`/`PaneHost` and **explicitly deferred** migrating these five overlays onto it.
 
@@ -48,7 +48,7 @@ flowchart LR
 
 ## Approach
 
-Finish the deferred migration inside `[Window](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)`: replace each rectangular overlay host with `Pane` (same `WindowChrome` path panels use). Do not invent a second chrome. Keep semantic slots/test hooks via `Pane`/`WindowChrome` `stackSlot`/`bodySlot` (extend `Pane` props if needed so existing `data-slot="window-measures-*"` selectors keep working).
+Finish the deferred migration inside `[Window](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)`: replace each rectangular overlay host with `Pane` (same `WindowChrome` path panels use). Do not invent a second chrome. Keep semantic slots/test hooks via `Pane`/`WindowChrome` `stackSlot`/`bodySlot` (extend `Pane` props if needed so existing `data-slot="window-measures-*"` selectors keep working).
 
 ### 1. Pane width parity with Panel
 
@@ -75,7 +75,7 @@ Align rail tokens so callers that still read `windowMeasuresDefaultWidthPx` reso
 
 Preserve existing fold hotkeys, measures fullscreen expand (teach `Pane`/`WindowChrome` an `expanded` fill mode driven by `enlarge`, replacing the `inset-0` overlay branch), and utility-bar height clearance (`useWindowUtilityBarMaxHeightPx`).
 
-Chip composition stays `WindowPaneChromeToggle`, but restyle it onto the same pill tokens as panel tabs (`modeDockInactiveTabClass` / active fill / `max-w-[12rem]`) so the chip-cap silhouette matches panels. Extend parent-hover CSS in `[🎨️ui.css](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript/🎨️ui.css)` so body hover emphasizes `window-pane-chrome-toggle` the same way it emphasizes `-tab-button`.
+Chip composition stays `WindowPaneChromeToggle`, but restyle it onto the same pill tokens as panel tabs (`modeDockInactiveTabClass` / active fill / `max-w-[12rem]`) so the chip-cap silhouette matches panels. Extend parent-hover CSS in `[🎨️ui.css](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript/🎨️ui.css)` so body hover emphasizes `window-pane-chrome-toggle` the same way it emphasizes `-tab-button`.
 
 ### 3. Delete rectangular chrome hosts
 

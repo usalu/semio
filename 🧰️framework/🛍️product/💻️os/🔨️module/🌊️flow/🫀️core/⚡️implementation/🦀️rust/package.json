@@ -1,9 +1,0 @@
-{
-  "name": "@semio-tech/flow-core-rs",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "../../../🫀️core/pkg/⚡️implementation/🦀️rust/flow_core.js",
-    "./pkg/flow_core.js": "../../../🫀️core/pkg/⚡️implementation/🦀️rust/flow_core.js"
-  }
-}

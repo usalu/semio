@@ -1,0 +1,25 @@
+[package]
+name = "semio-s-app-animate-present-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Animate present app — headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+present = { path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🦀️rust", package = "semio-s-app-animate-present" }
+animate_core = { path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🔨️modules/🫀️core/⚡️implementations/🦀️rust", package = "semio-s-plugin-animate-core" }
+animate_video = { path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🔨️modules/🎥️video/⚡️implementations/🦀️rust", package = "semio-s-plugin-animate-video" }
+vcs = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+semio-framework-os = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"

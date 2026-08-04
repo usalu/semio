@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 
 import type { Plugin } from "vite";
-import type { PlaygroundAssetSpec } from "../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import type { PlaygroundAssetSpec } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 
 export type { PlaygroundAssetSpec };
 
@@ -86,7 +86,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
       "@semio-tech/ui-react/globals.css": "framework/module/ui/js/react/globals.css",
       "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
     },
-    optimizeDepsExclude: ["@semio-tech/compose-react", "@semio-tech/compose-js", "@semio-tech/asset"],
+    optimizeDepsExclude: ["@semio-tech/compose-react", "@semio-tech/compose-js", "@semio-tech/assets"],
   },
   {
     id: "compose/ui",
@@ -133,7 +133,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
       { kind: "static-dir", route: "/renderer-modules", root: "framework/product/os/module/dev/js/renderer-modules" },
     ],
     vitePlugins: async () => {
-      const { playgroundIframeEmbedHeadersPlugin } = await import("../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts");
+      const { playgroundIframeEmbedHeadersPlugin } = await import("../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts");
       return [playgroundIframeEmbedHeadersPlugin()];
     },
   },

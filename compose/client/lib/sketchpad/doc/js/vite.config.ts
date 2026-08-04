@@ -23,7 +23,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
-import { semioFaviconVitePlugin, semioHostHtmlVitePlugin, semioEmojiIndexHtmlVitePlugin } from "../../../../../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+import { semioFaviconVitePlugin, semioHostHtmlVitePlugin, semioEmojiIndexHtmlVitePlugin } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 // #endregion 🔌️Adapters
@@ -40,7 +40,7 @@ export default defineConfig(async () => {
       alias: {
         "@semio-tech/compose-js": path.resolve(__dirname, "../../js"),
         "@semio-tech/compose-sketchpad": path.resolve(__dirname, "../../sketchpad"),
-        "@semio-tech/asset": path.resolve(workspaceRoot, "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/📦️index.ts"),
+        "@semio-tech/assets": path.resolve(workspaceRoot, "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/📦️index.ts"),
       },
     },
     plugins: [

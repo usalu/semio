@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-animate-present-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Animate present app — binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/🎒️pack/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+present = { path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🦀️rust", package = "semio-s-app-animate-present" }
+pack = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+present_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-animate-present-engine" }

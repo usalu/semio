@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-playbook-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Playbook-play app - binary command protocol surface (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+playbook_op = { path = "../../../../../../../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-playbook-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

@@ -1,0 +1,22 @@
+[package]
+name = "semio-framework-repo-cli"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "semio monorepo orchestrator CLI + TUI dashboard (binary: semio)"
+
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[[bin]]
+name = "semio"
+path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/⚡️implementations/🦀️rust/📦️main.rs"
+
+[dependencies]
+ui_tui = { path = "../../../../../../🔨️modules/🖱️ui/⌨️tui/⚡️implementations/🦀️rust", features = ["terminal"], package = "semio-framework-ui-tui" }
+ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust", package = "semio-framework-ui-styling" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

@@ -1,0 +1,23 @@
+[package]
+name = "semio-s-plugin-remodel-motion"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/🏃️motion/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+remodel_image = { path = "../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/🖼️images/⚡️implementations/🦀️rust", package = "semio-s-plugin-remodel-image" }
+remodel_feature = { path = "../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/🌟️feature/⚡️implementations/🦀️rust", package = "semio-s-plugin-remodel-feature" }
+remodel_camera = { path = "../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/📷️camera/⚡️implementations/🦀️rust", package = "semio-s-plugin-remodel-camera" }
+remodel_sfm = { path = "../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/📸️sfm/⚡️implementations/🦀️rust", package = "semio-s-plugin-remodel-sfm" }
+mathematical_algebra = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️math/➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_signal = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️math/📶️signal/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-signal" }
+mathematical_lie = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️math/🔷️lie/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-lie" }
+mathematical_optimize = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️math/🎯️optimize/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-optimize" }
+mathematical_spatial = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-spatial" }

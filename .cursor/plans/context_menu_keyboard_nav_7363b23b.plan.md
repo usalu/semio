@@ -70,7 +70,7 @@ flowchart LR
 
 ## React renderer
 
-Main file: [🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx), region `// #region 🖱️ContextMenu` (1571-2182).
+Main file: [🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx), region `// #region 🖱️ContextMenu` (1571-2182).
 
 - Lift submenu open state out of `FixedContextMenuSubmenu` (local `useState` at 1817-1835) into `ContextMenuController`. The controller owns a single `activePath: number[]` (index per level); the open submenu is the prefix of that path whose row has `children`. Pointer enter/leave now sets `activePath` instead of a private `open` flag, so mouse and keyboard share one highlight.
 - Add pure, exported helpers next to the existing `contextMenuDigitFromKey` (1881-1894) so they are unit-testable:
@@ -84,11 +84,11 @@ Main file: [🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implement
 
 Consumers:
 
-- [🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx): drop the manual `shortcut: String(n)` digits from `suggestionMenuItems` (numbering is now automatic and would double-render). `mapContextMenuSpecs` (12927-12964) needs no change - it already recurses into `children`.
+- [🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx): drop the manual `shortcut: String(n)` digits from `suggestionMenuItems` (numbering is now automatic and would double-render). `mapContextMenuSpecs` (12927-12964) needs no change - it already recurses into `children`.
 
 ## wgpu renderer
 
-Main file: [🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs). Today this menu is flat, unhighlighted and Escape-only, so it needs the whole feature.
+Main file: [🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs). Today this menu is flat, unhighlighted and Escape-only, so it needs the whole feature.
 
 - `ContextMenuItem` (16384-16390) gains `children: Vec<ContextMenuItem>`; `ContextMenuState` (16392-16397) gains `active: Vec<usize>`.
 - `render_context_menu` (28204-28234): draw the ordinal badge, paint the active row with `theme.accent` / `theme.active_foreground` (same pairing the completions popup already uses at 15424-15428) instead of a uniform `theme.button`, and recursively draw the open submenu panel offset to the right, registering `HitKind::ContextMenu` hits for its rows too.
@@ -104,7 +104,7 @@ Main file: [🧰️framework/🛍️product/💻️os/🔨️module/📺️rende
 Extend existing files only:
 
 - React UI tests in the same `📦️index.tsx` `describe("ContextMenu")` block (30902-31188): ordinal badges rendered 1-9 and restarting per submenu; ArrowDown/`s`/ArrowUp/`w` move the highlight and fire `onHover`/`onHoverEnd`; digit sets active without selecting; `Enter` and `" "` select the active row; `ArrowRight`/`d` opens a submenu and `ArrowLeft`/`a` returns; Escape closes submenu then menu. The existing digit+Enter test at 31156 keeps passing because the initial active row is the `checked` one.
-- [🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/🧪️index.test.ts](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/🧪️index.test.ts): update the `suggestionMenuItems` digit-shortcut test (1941-1958) for automatic numbering.
+- [🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/🧪️index.test.ts](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/🧪️index.test.ts): update the `suggestionMenuItems` digit-shortcut test (1941-1958) for automatic numbering.
 - wgpu tests in the `//#region ContextMenuItems` test region (15963+) plus a render assertion alongside `context_menu_draws_a_border_stroke_around_the_flat_panel` (16207): navigation state machine, ordinal badges, active-row fill, submenu open/close.
 - [.storybook/stories/ui/ContextMenu.stories.tsx](.storybook/stories/ui/ContextMenu.stories.tsx): remove the manual `shortcut: "1"`/`"2"` digits, and make the nested `transform` item the keyboard-submenu demo.
 

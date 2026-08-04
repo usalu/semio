@@ -1,0 +1,27 @@
+# #region 🔖️Header
+# 2026 Ueli Saluz
+# AGPL-3.0
+# HubDirectory implementation over Neo4j (neo4rs) — users/spaces/memberships as real nodes and
+# relationships; VFS nodes form a real tree too (see lib.rs header for why).
+# #endregion 🔖️Header
+
+[package]
+name = "semio-hub-directory-neo4j"
+version = "0.1.0"
+edition = "2021"
+
+
+[lints]
+workspace = true
+[lib]
+path = "../../../🌐️neo4j/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+async-trait = "0.1"
+serde_json = "1.0"
+uuid = { version = "1.20", features = ["v7"] }
+neo4rs = "0.8"
+os-hub-directory = { path = "../../../../../../🌎️hub/🔨️modules/📇️directory/⚡️implementations/🦀️rust", package = "semio-hub-directory" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }

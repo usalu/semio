@@ -1,0 +1,27 @@
+# #region 🔖️Header
+# 2026 Ueli Saluz
+# AGPL-3.0
+# HubDirectory implementation over SQLite (rusqlite) — the zero-touch default for local dev and
+# single-user self-hosting; no external database service required.
+# #endregion 🔖️Header
+
+[package]
+name = "semio-hub-directory-sqlite"
+version = "0.1.0"
+edition = "2021"
+
+
+[lints]
+workspace = true
+[lib]
+path = "../../../🪶️sqlite/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+async-trait = "0.1"
+serde_json = "1.0"
+uuid = { version = "1.20", features = ["v7"] }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+os-hub-directory = { path = "../../../../../../🌎️hub/🔨️modules/📇️directory/⚡️implementations/🦀️rust", package = "semio-hub-directory" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "test-util"] }

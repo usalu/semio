@@ -28,10 +28,10 @@ isProject: false
 ## Scope (option 2)
 
 **Remove from git + ignore forever**
-- Entire [`🔌️plugin-modules/`](🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules) tree (wasm, jco js/d.ts, `_vendor` preview2-shim copies, `.hot-swap`)
-- Bundled [`🟨️boot.js`](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/⚡️implementation/🦀️rust/🧑️‍🎨️engine/🧊️wgpu/🟦️typescript/🟨️boot.js) (built from [`🟦️boot.ts`](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/⚡️implementation/🦀️rust/🧑️‍🎨️engine/🧊️wgpu/🟦️typescript/🟦️boot.ts))
+- Entire [`🔌️plugin-modules/`](🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🔌️plugin-modules) tree (wasm, jco js/d.ts, `_vendor` preview2-shim copies, `.hot-swap`)
+- Bundled [`🟨️boot.js`](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/⚡️implementations/🦀️rust/🧑️‍🎨️engine/🧊️wgpu/🟦️typescript/🟨️boot.js) (built from [`🟦️boot.ts`](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/⚡️implementations/🦀️rust/🧑️‍🎨️engine/🧊️wgpu/🟦️typescript/🟦️boot.ts))
 - All `**/🤖️generated/**` dirs and single-file `**/🤖️generated.*` (icons, graph manifests, plugin registry, schema, styling)
-- Other codegen products already tracked: e.g. [`🟦️tokens.generated.ts`](🧰️framework/🔨️module/🖱️ui/⚡️implementation/🟦️typescript/🎨️styling/🟦️tokens.generated.ts), Next `🟦️next-env.d.ts`
+- Other codegen products already tracked: e.g. [`🟦️tokens.generated.ts`](🧰️framework/🔨️modules/🖱️ui/⚡️implementations/🟦️typescript/🎨️styling/🟦️tokens.generated.ts), Next `🟦️next-env.d.ts`
 - Global build leftovers: `*.wasm`, `*.map`, `**/pkg/**` (wasm-bindgen), keep existing `dist`/`out`/`target*` ignores; refresh stale non-emoji plugin-modules paths in [`.gitignore`](.gitignore)
 
 **Keep tracked**
@@ -74,9 +74,9 @@ Replace stale non-emoji plugin-modules / boot.js entries with the emoji paths ab
 
 These must emit into the ignored locations or regeneration after untrack will miss consumers:
 
-- [`🧰️framework/🔨️module/🧬️schema/.../📜️script.ts`](🧰️framework/🔨️module/🧬️schema/⚡️implementation/🦀️rust/📜️script.ts) — still targets `framework/module/schema/...`; retarget to current emoji paths (`🔣️entity-kinds.json` input, `🤖️generated.rs` + TS/Go siblings beside the package).
-- [`🧰️framework/🔨️module/🖱️ui/🖼️asset/.../📜️script.ts`](🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript/📜️script.ts) — still uses `icon/generated`; retarget to `🔣️icon/` catalog + `🔣️icon/🤖️generated/`.
-- [`🧰️framework/🔨️module/🖱️ui/.../🎨️styling/📜️script.ts`](🧰️framework/🔨️module/🖱️ui/⚡️implementation/🦀️rust/🎨️styling/📜️script.ts) — align `generatedDir` / JS token output with ignored paths (`🤖️generated.rs`, `🟦️tokens.generated.ts`, CSS under ignored dirs).
+- [`🧰️framework/🔨️modules/🧬️schema/.../📜️script.ts`](🧰️framework/🔨️modules/🧬️schema/⚡️implementations/🦀️rust/📜️script.ts) — still targets `framework/module/schema/...`; retarget to current emoji paths (`🔣️entity-kinds.json` input, `🤖️generated.rs` + TS/Go siblings beside the package).
+- [`🧰️framework/🔨️modules/🖱️ui/🖼️assets/.../📜️script.ts`](🧰️framework/🔨️modules/🖱️ui/🖼️assets/⚡️implementations/🟦️typescript/📜️script.ts) — still uses `icon/generated`; retarget to `🔣️icons/` catalog + `🔣️icons/🤖️generated/`.
+- [`🧰️framework/🔨️modules/🖱️ui/.../🎨️styling/📜️script.ts`](🧰️framework/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/🎨️styling/📜️script.ts) — align `generatedDir` / JS token output with ignored paths (`🤖️generated.rs`, `🟦️tokens.generated.ts`, CSS under ignored dirs).
 
 ### 3. Zero-touch regeneration
 
@@ -89,11 +89,11 @@ These must emit into the ignored locations or regeneration after untrack will mi
 5. `@semio-tech/graph-manifest:generate`
 6. `@semio-tech/plugin-registry:generate`
 
-Also teach Rust `build.rs` for packages that `include!` generated files ([graph-manifest](🧰️framework/🔨️module/🧮️math/⚡️implementation/🦀️rust/🕸️graph/🛂️manifest/build.rs), schema if needed) to invoke the package `bun ./📜️script.ts generate` when the artifact is missing, so `cargo check` alone remains zero-touch.
+Also teach Rust `build.rs` for packages that `include!` generated files ([graph-manifest](🧰️framework/🔨️modules/🧮️math/⚡️implementations/🦀️rust/🕸️graph/🛂️manifest/build.rs), schema if needed) to invoke the package `bun ./📜️script.ts generate` when the artifact is missing, so `cargo check` alone remains zero-touch.
 
 Plugin wasm/`🔌️plugin-modules` stay **dev/build** outputs (produced by os-dev `📜️script.ts` on playground build), not setup-wide — only ignored + untracked.
 
-`🟨️boot.js` continues to be produced by the existing wgpu [`📜️script.ts` bun build](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/⚡️implementation/🦀️rust/🧑️‍🎨️engine/🧊️wgpu/📜️script.ts) before Trunk; ensure that path is gitignored.
+`🟨️boot.js` continues to be produced by the existing wgpu [`📜️script.ts` bun build](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/⚡️implementations/🦀️rust/🧑️‍🎨️engine/🧊️wgpu/📜️script.ts) before Trunk; ensure that path is gitignored.
 
 ### 4. Untrack currently committed outputs
 

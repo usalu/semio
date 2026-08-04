@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-en1999-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "EN 1999 app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+en1999 = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1999" }
+en1999_op = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1999-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }

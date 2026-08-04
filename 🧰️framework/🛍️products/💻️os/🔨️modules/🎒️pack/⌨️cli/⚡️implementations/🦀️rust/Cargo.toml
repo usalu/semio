@@ -1,0 +1,21 @@
+[package]
+name = "semio-framework-os-kernel-pack-cli"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pack binary document format CLI — inspect, verify, hash, to-dsl, from-dsl, diff subcommands"
+
+
+[lints]
+workspace = true
+[lib]
+name = "pack_cli"
+path = "../../../⌨️cli/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[[bin]]
+name = "pack"
+path = "📦️main.rs"
+
+[dependencies]
+pack = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
+dsl_schema = { path = "../../../../🗣️dsl/🧬️schema/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-schema" }

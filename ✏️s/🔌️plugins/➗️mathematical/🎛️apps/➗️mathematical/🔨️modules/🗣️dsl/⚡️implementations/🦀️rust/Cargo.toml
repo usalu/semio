@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-mathematical-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Mathematical app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+mathematical = { path = "../../../../../../../../../✏️s/🔌️plugins/➗️mathematical/🎛️apps/➗️mathematical/⚡️implementations/🦀️rust", package = "semio-s-app-mathematical" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }

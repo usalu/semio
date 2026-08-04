@@ -1,0 +1,128 @@
+W3 "the inversion" — progress notes (this session)
+
+DONE, verified (cargo test green):
+1. space crate (🧰️framework/🛍️product/💻️os/🔨️module/🪐️space/⚡️implementation/🦀️rust/📦️lib.rs):
+   - Added `pub programs: Vec<String>` to SpaceProjection (+ SpaceOperation::InstallProgram/UninstallProgram,
+     SpaceDiff fields, apply/absorb/diff/backwards arms, tests). 28/28 tests pass.
+   - Updated 📚️example/🎬️demo.space fixture: added `programs=[ ]` to line 1 (list-of-scalar fields render
+     AFTER required-scalar fields, confirmed empirically via the DSL round-trip test, not by declaration order).
+
+2. workflow crate (🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust/📦️lib.rs):
+   - Cargo.toml: added `protocol` + `serde_json` deps.
+   - Added S_WORKFLOW_SCHEMA = "s.workflow", S_RUN_SCHEMA/S_AUTOMATION_SCHEMA (reserved consts only, no bodies — W5/W6).
+   - New 🔖️WorkflowParameters region: WorkflowParameterType, WorkflowParameterFieldSpec, WorkflowParameterBinding,
+     WorkflowParameter (dsl::DslEnum), create_default_workflow_parameter, patch_workflow_parameter,
+     validate_workflow_parameter_config_binding (takes ConfigSpec as arg — no registry needed, confirmed this
+     whole region is pure and portable), resolve_workflow_parameter_values, parameter-port helpers,
+     sync_workflow_node_parameter_ports/sync_workflow_parameter_ports — all ported verbatim from os-core's
+     instance::🔖️Parameters + workflow::🔖️Workflow sync helpers, Os->Workflow renamed.
+   - New 🔖️WorkflowDocument region: WorkflowInput (hand-written dsl::DslField, NOT derived — its
+     `multiplicity: PortMultiplicity` field is foreign/orphan-rule-blocked, mirrors WorkflowMediaPort/
+     MediaContract's existing pattern), WorkflowInputBinding, WorkflowOutputBinding (both plain
+     #[derive(dsl::DslRecord)]), WorkflowDocument struct (#[derive(dsl::DslDocument)], extension="workflow-document"),
+     WorkflowOperation enum (lifted from OsOperation: AddNode/RemoveNode/ConnectPorts/DisconnectEdge/MoveNode/
+     PatchNode/AddParameter/RemoveParameter/PatchParameter/BindParameterField/UnbindParameterField/SyncNodePorts
+     + new DeclareInput/RemoveInput/BindInput/UnbindInput/BindOutput/UnbindOutput), apply_workflow_operation,
+     hand-rolled tagged-enum WorkflowDiff + OperationDiff impl (NOT the sparse-struct DslDiff derive — see
+     rationale below), Operation<WorkflowDocument> impl (backwards() FIXED to restore cascade-deleted
+     dependents for RemoveNode/RemoveParameter/RemoveInput, which the original OsOperation never did — a
+     latent gap only surfaced once a real backwards-restores-pre-state law test was written), WorkflowOperationDsl
+     mirror + OpText/OpBinary bridge (ported from OsOperationDsl), validate_workflow_document (new: required
+     in-port edge XOR input-binding check + input/output binding resolution check).
+   - 17/17 tests pass (9 original + 8 new: empty_workflow_document_matches_schema,
+     workflow_document_dsl_pack_round_trips, workflow_operation_op_text_round_trips_every_variant,
+     workflow_operation_backwards_restores_pre_state, remove_operations_backwards_restores_cascade_deleted_dependents,
+     workflow_diff_print_parse_and_encode_decode_round_trip,
+     validate_workflow_document_requires_edge_xor_input_binding_on_required_ports,
+     validate_workflow_document_flags_unresolved_bindings).
+
+Design decisions made (deviating from the sketch, with reasons):
+- WorkflowDiff is a hand-rolled tagged enum (matching the ALREADY-EXISTING OsDiff pattern in os-core), NOT
+  #[derive(dsl::DslDiff)]'s sparse-struct-of-Options shape. Reason: dsl::DslDiff only supports structs (per
+  its own doc comment, confirmed in the space crate's SpaceDiff), and WorkflowOperation has ~18 action-
+  discriminated variants (not a flat "one field per possible mutation" manifest like SpaceProjection) — a
+  hand-rolled enum is the direct, low-risk "lift" of the proven OsDiff code, and is what "lifted from OsOperation
+  arms" most literally means. DiffCodec (print/parse/encode/decode_diff) was therefore NOT implemented for
+  WorkflowDiff either (same status as the OLD OsDiff, which also never had it — W1 left DiffCodec a soft,
+  policy-checked requirement, not a hard bound, specifically to allow this).
+- WorkflowOperation::reconcile is NOT overridden (inherits the trait's no-op default). Reason: the original
+  os-core reconcile_os_workflow pipeline has 4 ordered rules; 2 of them (contract renegotiation via
+  negotiate_media_contract, parameter-binding-vs-ConfigSpec validation) genuinely need the os-core plugin/
+  artifact registry, which cannot live in this kernel crate (same reasoning the file's own `validate_workflow`
+  doc-comment already gives for its os-core wrapper). Splitting the 4-rule pipeline across two layers would
+  change rule ORDERING versus the existing tested behavior (each rule sees the previous rule's pruned edge
+  set) — too risky to guess right without the concurrent-reconcile test in hand. DECISION: keep the WHOLE
+  4-rule pipeline (including the 2 pure-structural rules that COULD move down) as a single ordered function
+  at the os-core layer, operating on workflow::WorkflowDocument, invoked explicitly by whatever replaces
+  OsStore (not through the Operation::reconcile trait hook). This preserves exact existing semantics.
+- create_default_workflow_parameter's id-minting fallback uses its own small AtomicU64 counter
+  (create_workflow_parameter_id, "param-{n}") scoped to this crate, NOT os-core's shared create_os_id counter
+  — the real caller (os-core) always premints via its own id and passes Some(id), so this fallback path is
+  dead in practice; documented as a deliberate, safe, additive local scheme rather than plumbing os-core's
+  global counter down (which would invert the dependency direction).
+
+NOT DONE — the os-core dissolve itself (🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs is
+UNTOUCHED, confirmed via `git diff` empty). This is a deliberate stopping point, not an oversight: os-core is
+the single most shared file in the blast radius (grep for OsProjection|OsOperation|OS_SPACE_SCHEMA hit 20+
+files: 🏃️run/bin.rs, 🏪️store, 🗣️dsl/fixture-sweep, os-core itself, and the entire ✏️s/🔌️plugin/🪐️space app
+family — op/pack/protocol/dsl/engine/ui crates + home app). A partially-dissolved os-core would fail to
+compile for every concurrent session touching this repo, which is strictly worse than not starting — the
+two kernel-crate pieces above are safe (additive-only, `cargo check -p semio-framework-os` confirmed still
+green against them) and are the two riskiest/most novel design unknowns (does SpaceProjection cleanly take
+`programs`? does WorkflowDocument/WorkflowOperation lift cleanly through the derive macros?) — both now
+proven.
+
+CONCRETE NEXT STEPS for whoever continues the os-core dissolve (region line numbers as of this session,
+search for the region markers since they'll drift):
+1. Read os-core's `pub mod host` 🔖️OsDocument (317-1026), 🔖️OsStore (1028-1142), 🔖️Backbone (1144-1184),
+   🔖️SpaceCatalog (1193-1349), and its ~700-line inline test module (1351-2026) — all in the SAME `pub mod
+   host { }` block, this session already read all of it in full.
+2. Delete OsProjection/OsOperation/OsDocument/OsDiff/OsVcs/OsEnvelope, default_os_projection,
+   create_empty_os_document, apply_os_operation, OsOperationDsl + its to/from-dsl bridge + OpText/OpBinary
+   impls, materialize_os_projection, os_document_to_json/from_json, encode/decode_os_space_payload.
+   sync_workflow_node_parameter_ports (os-core's OWN copy, in the `workflow` submodule) is now REDUNDANT
+   with the kernel crate's copy — delete it there too and call workflow::sync_workflow_parameter_ports.
+3. Rename OsStore -> OsWorkflowStore (recommended, not mandated — the plan only forbids renaming
+   OsProjection/OsOperation/OsDocument, not OsStore), retarget its inner `DocumentStore<P,Op>` from
+   `OsProjection,OsOperation` to `workflow::WorkflowDocument,workflow::WorkflowOperation`. Its
+   `add_workflow_node`/`add_parameter`/`patch_parameter` methods port over almost mechanically (see
+   1082-1110) — `add_workflow_node` should ALSO dispatch a `space::SpaceOperation::InstallProgram` against
+   whatever now owns the SpaceProjection session (a second, separate DocumentStore/document — this is the
+   one genuinely NEW piece of wiring, since programs now lives on a DIFFERENT document than the workflow
+   graph).
+4. Build a small generic "backbone document" abstraction (schema/id/name/vcs/applied_edit_ids/backbone,
+   mirroring OsDocument's exact shape) parametrized over <P: DocumentDsl+.., Op: Operation<P>+OpText+OpBinary>
+   — store::create_document_envelope/materialize_document_projection/print_document_pack/parse_document_pack
+   are ALREADY fully generic (just instantiated at OsProjection/OsOperation today), so this is a real,
+   low-risk generalization, not invention. Three type aliases: OsSpaceDocument (space::SpaceProjection/
+   SpaceOperation), OsCollectionDocument (space::CollectionProjection/CollectionOperation),
+   OsWorkflowArtifactDocument (workflow::WorkflowDocument/WorkflowOperation).
+5. Rewrite 🔖️SpaceCatalog (1193-1349) around OsSpaceDocument: STUDIO_CATALOG_URIS -> SPACE_CATALOG_URIS;
+   create_os_space(name, kind: space::SpaceKind, visibility: space::SpaceVisibility, owner: space::SpaceUser)
+   writes ONE SpaceProjection manifest (with owner pushed into `users`) PLUS ONE default CollectionProjection
+   named "main" (space.collections gets a CollectionRef pointing at it) — do NOT auto-create a workflow
+   artifact. OsSpaceCatalogEntry gains kind/visibility/collection_count, drops app_count/node_count.
+   Delete create_ephemeral_os_space outright (space::DraftCatalog supersedes it, real wiring is W5).
+6. Delete 🔖️WorkflowVfs (3815-4082) entirely. grep the WHOLE repo for OsWorkflowVfs*/os_workflow_vfs_* /
+   OS_WORKFLOW_VFS_ROOT_ID call sites outside this file before deleting (this session did NOT do that grep
+   yet) — the plan expects the space plugin app's UI to reference these; those call sites need a minimal
+   compiling stub per this wave's scope (full collection-browser UI is W7).
+7. seed_builtin_artifact_kinds (4555) — register S_WORKFLOW_SCHEMA (and space::S_SPACE_SCHEMA/
+   S_COLLECTION_SCHEMA) as builtin ArtifactKindSpec entries (real shape at
+   🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:1002 — id/name/source_format/component_kind/dimension/
+   media_capability/media_type/schema/export_formats/import_formats).
+8. Rename 📚️example/🎬️demo.os -> 🎬️demo.workflow, regenerate its content for the new WorkflowDocument
+   shape via WorkflowDocument's `print_dsl()` (same approach W2 used for demo.space/demo.collection —
+   construct the fixture in a temporary test assertion, run with --nocapture, paste the printed text, then
+   remove the temporary print).
+9. Update the file's final `pub use` export list (~4928+) for everything renamed/deleted.
+10. cargo check -p semio-framework-os-kernel-workflow (already green), then
+    -p semio-framework-os (expect real iteration — this is the big one), THEN fix
+    🏃️run/{lib.rs,bin.rs}, 🏪️store (if it references OS_SPACE_SCHEMA anywhere beyond SpaceConflict — check),
+    🗣️dsl/🧪️fixture-sweep, THEN ✏️s/🔌️plugin/🪐️space's op/pack/protocol/dsl/engine/ui crates + home app
+    (compile-fix only per this wave's scope, especially EPHEMERAL_STUDIOS ~4 call sites in the home app).
+    Do NOT run `cargo check --workspace` until semio-framework-os itself is clean (shared repo, slow, other
+    sessions' unrelated churn will show up and shouldn't be chased).
+
+Baseline confirmed clean before stopping: `cargo check -p semio-framework-os` passes today (only pre-existing
+unrelated warnings), unaffected by this session's additive-only kernel-crate changes.

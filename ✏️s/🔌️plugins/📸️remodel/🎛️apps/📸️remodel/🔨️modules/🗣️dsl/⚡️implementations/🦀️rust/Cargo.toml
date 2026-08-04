@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-remodel-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Remodel app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+remodel = { path = "../../../../../../../../../✏️s/🔌️plugins/📸️remodel/🎛️apps/📸️remodel/⚡️implementations/🦀️rust", package = "semio-s-app-remodel" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }

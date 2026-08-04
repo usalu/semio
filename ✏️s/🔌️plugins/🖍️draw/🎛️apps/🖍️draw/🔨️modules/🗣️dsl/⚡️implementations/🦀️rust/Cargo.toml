@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-draw-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Draw app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+draw = { path = "../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/⚡️implementations/🦀️rust", package = "semio-s-app-draw" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+draw_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-draw-engine" }

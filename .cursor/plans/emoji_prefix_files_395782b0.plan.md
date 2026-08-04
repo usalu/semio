@@ -72,7 +72,7 @@ Extend the existing migration helpers under [`.repo/🎫️/26/07/29/MOVE-ALL-AP
 4. **Rewrite references** (extend [rewrite-refs-v2.py](.repo/🎫️/26/07/29/MOVE-ALL-APPS-INTO-THE-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES-EMOJI-LAYOUT/rewrite-refs-v2.py)):
    - Cargo.toml `build` / `[[bench]]` / `[[bin]]` / `path =`
    - TS/JS imports, `package.json` `main`/`exports`/`types`
-   - `runVitest(..., "vitest.config.ts")` → new default in [`📦️index.ts` `runVitest`](🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts) and all call sites
+   - `runVitest(..., "vitest.config.ts")` → new default in [`📦️index.ts` `runVitest`](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts) and all call sites
    - Asset URLs, Storybook, manifests, codegen emitters that write `generated.rs`
    - Policy scanners that match exact filenames (e.g. vitest config detection in repo lib tests) — update matchers, do not weaken rules
 

@@ -1,0 +1,28 @@
+[package]
+name = "semio-framework-plugin-host"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+path = "../../../🖥️host/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust", package = "semio-framework-ui-wgpu" }
+vcs = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
+wasmtime-wasi = "22.0.1"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+protocol = { path = "../../../../📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+thiserror = "2.0.12"
+dsl_core = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
+# 🪶️ GUESTSLIM: serves the typst default font set through `read-asset` (see
+# `infinite_canvas`'s `render` feature doc) so wasm32-wasip2 guests don't embed it themselves.
+typst-assets = { version = "0.14.2", features = ["fonts"] }

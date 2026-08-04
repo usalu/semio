@@ -42,7 +42,7 @@ The earlier pass correctly split geometry from selection chrome, so the composit
 
 `handle_action` snapshots and diffs the entire document on **every** action, including pure view actions that provably cannot mutate it:
 
-```688:701:✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs
+```688:701:✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs
 fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, active_utility: &str) -> Puzzle3dScene {
     let fixture = serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture());
     ...
@@ -59,7 +59,7 @@ That explains every observed symptom: the drag preview is pure JS and never ente
 
 Two amplifiers confirmed alongside it:
 
-- All WASM entry points are funneled through `runSerialized` in [📜️script.ts](🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts), so a 120ms `fillBuildTick` / `suggestionsTick` already in flight delays the selection commit behind it.
+- All WASM entry points are funneled through `runSerialized` in [📜️script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📜️script.ts), so a 120ms `fillBuildTick` / `suggestionsTick` already in flight delays the selection commit behind it.
 - Selection ids are `Vec<String>`, so `build_inspector_tree` (line 2860) and `gumball_target_world` (line 1398) scan O(scene x selection), and the inspector embeds the full id array into ~25 action descriptors.
 
 ```mermaid
@@ -91,13 +91,13 @@ This confirms the split before the refactor and proves the result after. Remove 
 
 An action is either a document action or a view action, declared once and enforced by the type system rather than by remembering to add a string to a list. Today the intent is implicit and rediscovered by diffing.
 
-In [📦️lib.rs](✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs):
+In [📦️lib.rs](✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs):
 
 - Add `puzzle3d_action_intent(action) -> ActionIntent` (`View` | `Document`), covering every arm of the `match`.
 - For `View`: never clone `doc.projection.0`, never call `puzzle3d_operations_from_fixture_change`, and emit `operations: vec![]` directly. The existing "must not emit operations" guard becomes a debug assertion instead of the thing we pay a document diff to satisfy.
 - For `Document`: keep the existing snapshot and delta path unchanged.
 
-Generalize in [🔌️plugin/📦️lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs) so `VcsDocumentApp::dispatch_action` skips `refresh_cache()`'s history rebuild work for view actions too, keeping the invariant framework-wide rather than puzzle-specific.
+Generalize in [🔌️plugin/📦️lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs) so `VcsDocumentApp::dispatch_action` skips `refresh_cache()`'s history rebuild work for view actions too, keeping the invariant framework-wide rather than puzzle-specific.
 
 ## Mechanism 2: selection is a set, not a list
 
@@ -113,7 +113,7 @@ Add a `SelectionSet` type to the framework plugin crate: ordered `Vec<String>` p
 
 ## Mechanism 5: per-item chrome subscribes, never a prop
 
-Mirror the existing `TreeSelectionStore` pattern from [🖱️ui react index.tsx](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx) (lines 16507-16566) in the 3D layer of [renderer index.tsx](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx):
+Mirror the existing `TreeSelectionStore` pattern from [🖱️ui react index.tsx](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx) (lines 16507-16566) in the 3D layer of [renderer index.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx):
 
 - Add a `WorldSelectionStore` holding `selectedIds` / `hoveredId` / `hoveredKindId` / preview ids; `WorldInstanceNode` becomes `memo` and reads its own flags via `useSyncExternalStore`, so `WorldInstancesLayer` no longer depends on `selection.ids` and a selection change re-renders only the instances whose flags flipped.
 - Hoist `buildVertexPickData` / `buildEdgeGeometry` out of `instances.map` (lines 14039-14040) into per-`meshId` `useMemo` maps beside the existing `borderGeometries`, and dispose geometries on eviction — today a fresh `BufferGeometry` is allocated per instance per render and never disposed.

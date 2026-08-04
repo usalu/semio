@@ -26,13 +26,13 @@ isProject: false
 
 Folded inspector chips live in the navbar as `PanelChromeTabBar` **immediately before** the trailing fullscreen toggle:
 
-```8305:8307:🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx
+```8305:8307:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx
 { key: "topLeftPanelTabs", content: <PanelChromeTabBar anchor="top-left" ... /> },
 navbarFillItem("navbarTrailingFill"),
 { key: "topRightPanelTabs", content: <PanelChromeTabBar anchor="top-right" ... /> },
 ```
 
-```15049:15052:🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx
+```15049:15052:🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx
 {showFullscreenToggle ? (
   <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="... ms-auto">
     <NavbarFullscreenToggle />
@@ -40,10 +40,10 @@ navbarFillItem("navbarTrailingFill"),
 
 On open, two things break “unfold in place”:
 
-1. `[PanelChromeTabBar](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)` returns `null` when `visible` — navbar chip width disappears and fullscreen shifts left.
-2. Open `[Panel](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)` rehosts chips on `WindowChrome` at `right: var(--spacing-single)`. With `dir="rtl"` for top-right, chips dock on the **outer** edge and land on/past the fullscreen control.
+1. `[PanelChromeTabBar](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)` returns `null` when `visible` — navbar chip width disappears and fullscreen shifts left.
+2. Open `[Panel](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)` rehosts chips on `WindowChrome` at `right: var(--spacing-single)`. With `dir="rtl"` for top-right, chips dock on the **outer** edge and land on/past the fullscreen control.
 
-Vertical jump was already addressed by `[chromeHostedOpenPanelPositionStyle](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)`; horizontal trailing conflict with fullscreen was not.
+Vertical jump was already addressed by `[chromeHostedOpenPanelPositionStyle](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)`; horizontal trailing conflict with fullscreen was not.
 
 ```mermaid
 flowchart LR
@@ -94,7 +94,7 @@ Apply it only for chrome-hosted **right** anchors when open:
 - Keep panel root at the corner via existing `chromeHostedOpenPanelPositionStyle` (`right: var(--spacing-single)` + vertical shell pull-in) so the **body still grows from the corner**.
 - On the open `WindowChrome` cap row, add logical `padding-inline-start` equal to that reserve (under `dir="rtl"` this pads the physical right). Chips stay left of fullscreen; U-gap + fold control remain toward the canvas; fullscreen sits in the clear cut zone.
 
-Wire this via `data-panel-chrome-hosted` + anchor (already on `Panel`) or an explicit prop/class on `WindowChrome` — prefer data attributes + existing styling tokens in `[🎨️ui.css](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript/🎨️ui.css)` / component classes in the React index, consistent with other chrome metrics.
+Wire this via `data-panel-chrome-hosted` + anchor (already on `Panel`) or an explicit prop/class on `WindowChrome` — prefer data attributes + existing styling tokens in `[🎨️ui.css](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript/🎨️ui.css)` / component classes in the React index, consistent with other chrome metrics.
 
 Mirror the same reserve for `bottom-right` if it uses chrome hosting (footer has no fullscreen today; still keep horizontal chip stability if a trailing footer control appears later, or apply only when the shell actually has an end control — default: right anchors that share the navbar trailing group, i.e. `top-right`).
 
@@ -111,7 +111,7 @@ Repo MCP auth was skipped in planning — authenticate, read `repo://goals`, the
 
 ## Primary files
 
-- `[🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)` — `PanelChromeTabBar`, open `Panel`/`WindowChrome` wiring, tests
-- `[🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript/🎨️ui.css](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript/🎨️ui.css)` — only if the reserve is expressed as a shared CSS rule/token
+- `[🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)` — `PanelChromeTabBar`, open `Panel`/`WindowChrome` wiring, tests
+- `[🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript/🎨️ui.css](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript/🎨️ui.css)` — only if the reserve is expressed as a shared CSS rule/token
 
 No OS renderer navbar reorder unless runtime proves the reserve token must be owned by `Navbar` (prefer UI-local fix).

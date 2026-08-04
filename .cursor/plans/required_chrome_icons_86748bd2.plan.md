@@ -47,15 +47,15 @@ flowchart LR
 
 | Surface                          | Schema                                                                                                       | UI today                                                                                                                                                                                            |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Modes (~48 `.mode(` sites)       | `[ModeDefinition](🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs)` — id/label only                          | OS navbar uses `icon={<span className="hidden" />}` ([os react index ~7749](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)) |
-| Examples (~64 `.example(` sites) | `[ExampleDefinition](🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs)` — id/label/json only                  | `[NavbarExampleOption](�onnaisframework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)` label-only `SelectItem`s                                                              |
-| Context menu title chip          | none                                                                                                         | `[ContextMenuChrome](�onnaisframework/🔨️module/🖱️ui/⚛️react/⚡️implementation/�🟦typescript/📦️index.tsx)` title text only in `data-slot="context-menu-title-chip"`                                |
-| Context menu rows                | `icon?` optional; `[ActionDefinition.icon_id](�framework/⚡️implementation/🦀️rust/📦️lib.rs)` still `Option` | `Menu::action` copies optional icon; many hand-rolled rows omit                                                                                                                                     |
+| Modes (~48 `.mode(` sites)       | `[ModeDefinition](🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs)` — id/label only                          | OS navbar uses `icon={<span className="hidden" />}` ([os react index ~7749](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)) |
+| Examples (~64 `.example(` sites) | `[ExampleDefinition](🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs)` — id/label/json only                  | `[NavbarExampleOption](�onnaisframework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)` label-only `SelectItem`s                                                              |
+| Context menu title chip          | none                                                                                                         | `[ContextMenuChrome](�onnaisframework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/�🟦typescript/📦️index.tsx)` title text only in `data-slot="context-menu-title-chip"`                                |
+| Context menu rows                | `icon?` optional; `[ActionDefinition.icon_id](�framework/⚡️implementations/🦀️rust/📦️lib.rs)` still `Option` | `Menu::action` copies optional icon; many hand-rolled rows omit                                                                                                                                     |
 
 
 ## 1. Schema + builders (required `IconName`)
 
-In `[ModeDefinition` / `ExampleDefinition](�framework/⚡️implementation/🦀️rust/📦️lib.rs)` and plugin `[ModeSpec` / `AppBuilder](�framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs)`:
+In `[ModeDefinition` / `ExampleDefinition](�framework/⚡️implementations/🦀️rust/📦️lib.rs)` and plugin `[ModeSpec` / `AppBuilder](�framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs)`:
 
 - Add `icon_id: IconName` (required, always serialized).
 - Change APIs:
@@ -68,7 +68,7 @@ In `[ModeDefinition` / `ExampleDefinition](�framework/⚡️implementation/�
 
 ## 2. Populate every call site
 
-Hand-assign catalog icons across `✏️s/🔌️plugin/**` (and framework harnesses):
+Hand-assign catalog icons across `✏️s/🔌️plugins/**` (and framework harnesses):
 
 - Modes: `edit` → `pencil` / `square-pen`; `paint` → `paintbrush`; `generate` → `sparkles`; `explore` → `compass`; `review`/`report` → distinct review/report glyphs; etc.
 - Examples: content-specific when distinct (e.g. capsule vs forest); shared meaning (generic “Demo”/“Default”) may share one glyph (e.g. `file-text`).
@@ -78,7 +78,7 @@ Hand-assign catalog icons across `✏️s/🔌️plugin/**` (and framework harne
 
 ## 3. React chrome wiring
 
-In `[ui/js react index](�framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/�🟦typescript/📦️index.tsx)` and OS renderer:
+In `[ui/js react index](�framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/�🟦typescript/📦️index.tsx)` and OS renderer:
 
 - **Modes**: thread `mode.iconId` into `ButtonGroupItem icon={mode.iconId}`; delete hidden stub.
 - **Examples**: `NavbarExampleOption.icon: IconName`; render leading `<Icon>` inside each `SelectItem` (and trigger value). “No example” uses a fixed catalog id (e.g. `circle-off`).
@@ -88,7 +88,7 @@ In `[ui/js react index](�framework/🔨️module/🖱️ui/⚛️react/⚡️i
 
 ## 4. wgpu parity
 
-Mirror mode/example/menu title+item icons in `[ui/wgpu](�framework/🔨️module/🖱️ui/🎊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs)` / OS wgpu renderer wherever those chrome surfaces already paint labels, using existing `push_icon` / atlas paths.
+Mirror mode/example/menu title+item icons in `[ui/wgpu](�framework/🔨️modules/🖱️ui/🎊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs)` / OS wgpu renderer wherever those chrome surfaces already paint labels, using existing `push_icon` / atlas paths.
 
 ## 5. Tests + ticket
 

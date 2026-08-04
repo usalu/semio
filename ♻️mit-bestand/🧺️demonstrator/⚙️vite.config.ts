@@ -3,14 +3,14 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, staticDirVitePlugin } from "../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, staticDirVitePlugin } from "../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📜️script.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_PANES } from "./🟦️brand.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(playDir, "../..");
-const pluginModulesDir = path.join(playDir, "../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules");
+const pluginModulesDir = path.join(playDir, "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🔌️plugin-modules");
 
 //#region 🔖️DemonstratorUnionAssets
 /** @emoji 🎪️ Registry rows for exactly this demonstrator's six panes — the union this page needs to
@@ -32,14 +32,14 @@ export default defineConfig({
   resolve: {
     alias: [
       ...playgroundSceneHostResolveAliases(repoRoot),
-      { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx") },
-      { find: "@semio-tech/asset", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/📦️index.ts") },
-      { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript") },
-      { find: "@semio-tech/infinite-canvas-react-renderer", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementation/🟦️typescript/📦️index.tsx") },
-      { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🌍️world/🎨️r3f/⚡️implementation/🟦️typescript/📦️index.tsx") },
-      { find: "@semio-tech/framework-renderer-react", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx") },
-      { find: "@semio-tech/framework-core", replacement: path.resolve(repoRoot, "./🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts") },
-      { find: "@semio-tech/framework-os-core", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️product/💻️os/⚡️implementation/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx") },
+      { find: "@semio-tech/assets", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript") },
+      { find: "@semio-tech/infinite-canvas-react-renderer", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript/📦️index.tsx") },
+      { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/⚡️implementations/🟦️typescript/📦️index.tsx") },
+      { find: "@semio-tech/framework-renderer-react", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx") },
+      { find: "@semio-tech/framework-core", replacement: path.resolve(repoRoot, "./🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts") },
+      { find: "@semio-tech/framework-os-core", replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/📦️index.ts") },
       { find: "/plugin-modules", replacement: pluginModulesDir },
     ],
     dedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],

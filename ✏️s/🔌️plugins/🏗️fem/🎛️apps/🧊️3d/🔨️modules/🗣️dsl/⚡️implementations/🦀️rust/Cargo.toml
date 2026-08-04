@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-fem-3d-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "FEM 3D app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+fem3d = { path = "../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-fem-3d" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }

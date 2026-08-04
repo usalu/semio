@@ -31,15 +31,15 @@ Strip becomes 300vw x 200vh. Row 1 stays Generator / Koordinator / Aggregator; r
 
 ## 1. Playground variants
 
-Add one `[[package.metadata.semio.playground]]` row per plugin manifest, mirroring the existing `generator` row in [procedural Cargo.toml](✏️s/🔌️plugin/🌀️procedural/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/Cargo.toml):
+Add one `[[package.metadata.semio.playground]]` row per plugin manifest, mirroring the existing `generator` row in [procedural Cargo.toml](✏️s/🔌️plugins/🌀️procedural/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml):
 
-- [sourcing](✏️s/🔌️plugin/🪵️sourcing/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/Cargo.toml): `variant = "aussuchen"`, `app = "sourcing-curate"`, `brand = "entwerfen-mit-bestand-aussuchen"`, `ports = { react = 6030, wgpu = 6130 }`
-- [process](✏️s/🔌️plugin/🏭️process/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/Cargo.toml): `variant = "bearbeiten"`, `app = "process3d-play"`, `brand = "entwerfen-mit-bestand-bearbeiten"`, `ports = { react = 6031, wgpu = 6131 }`
-- [gis](✏️s/🔌️plugin/🌍️gis/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/Cargo.toml): `variant = "verfolgen"`, `app = "gis2d-play"`, `brand = "entwerfen-mit-bestand-verfolgen"`, `ports = { react = 6032, wgpu = 6132 }`, plus the same `engines = ["./🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust"]` as the `gis2d` row
+- [sourcing](✏️s/🔌️plugins/🪵️sourcing/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml): `variant = "aussuchen"`, `app = "sourcing-curate"`, `brand = "entwerfen-mit-bestand-aussuchen"`, `ports = { react = 6030, wgpu = 6130 }`
+- [process](✏️s/🔌️plugins/🏭️process/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml): `variant = "bearbeiten"`, `app = "process3d-play"`, `brand = "entwerfen-mit-bestand-bearbeiten"`, `ports = { react = 6031, wgpu = 6131 }`
+- [gis](✏️s/🔌️plugins/🌍️gis/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml): `variant = "verfolgen"`, `app = "gis2d-play"`, `brand = "entwerfen-mit-bestand-verfolgen"`, `ports = { react = 6032, wgpu = 6132 }`, plus the same `engines = ["./🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust"]` as the `gis2d` row
 
 Ports 6030-6032 and 6130-6132 are unused today (6029 is the landing, the next taken react port is 6040).
 
-Then regenerate the catalog with `bun nx run @semio-tech/plugin-registry:generate`, which rewrites [🟦️playgrounds.ts](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts) and its json/rs siblings.
+Then regenerate the catalog with `bun nx run @semio-tech/plugin-registry:generate`, which rewrites [🟦️playgrounds.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts) and its json/rs siblings.
 
 ## 2. Brands
 
@@ -51,13 +51,13 @@ In [🟦️brand.ts](♻️mit-bestand/🧺️demonstrator/🟦️brand.ts), add
 
 Also in that file: extend `ENTWERFEN_MIT_BESTAND_BRAND_IDS` to all six ids, and update the `ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION` welcome copy from "drei Werkzeuge" to six.
 
-Register them in [🏷️brand/📦️index.ts](🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🏷️brand/📦️index.ts): import, append to `SHELL_BRANDS`, and re-export alongside the existing three.
+Register them in [🏷️brand/📦️index.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/🏷️brand/📦️index.ts): import, append to `SHELL_BRANDS`, and re-export alongside the existing three.
 
 ## 3. Landing geometry: one axis to two
 
 All in [📦️index.tsx](♻️mit-bestand/🧺️demonstrator/📦️index.tsx).
 
-The pane table grows to six entries with explicit `row` and `col` (or derived as `col = index % 3`, `row = (index / 3) | 0`), new hrefs `/aussuchen/`, `/bearbeiten/`, `/verfolgen/`, and icons `library`, `hammer`, `gis2d` (the canonical `app.sourcing` / `app.process` / `app.gis2d` assignments in [🟦️icon_concepts.ts](🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript/🟦️icon_concepts.ts)).
+The pane table grows to six entries with explicit `row` and `col` (or derived as `col = index % 3`, `row = (index / 3) | 0`), new hrefs `/aussuchen/`, `/bearbeiten/`, `/verfolgen/`, and icons `library`, `hammer`, `gis2d` (the canonical `app.sourcing` / `app.process` / `app.gis2d` assignments in [🟦️icon_concepts.ts](🧰️framework/🔨️modules/🖱️ui/🖼️assets/⚡️implementations/🟦️typescript/🟦️icon_concepts.ts)).
 
 Replace the scalar scroll offset with a 2-D one:
 
@@ -80,7 +80,7 @@ Hash deep-links, the click-only URL update, and the bfcache reload-on-return sta
 
 ## 5. Tests
 
-Update the brand test in [🧪️index.test.ts](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/🧪️index.test.ts) (the "registers all three Entwerfen mit Bestand demonstrator shell brands" case) to expect all six ids and assert each new brand's `id`, extending the existing suite rather than adding files.
+Update the brand test in [🧪️index.test.ts](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/🧪️index.test.ts) (the "registers all three Entwerfen mit Bestand demonstrator shell brands" case) to expect all six ids and assert each new brand's `id`, extending the existing suite rather than adding files.
 
 ## 6. Verification
 

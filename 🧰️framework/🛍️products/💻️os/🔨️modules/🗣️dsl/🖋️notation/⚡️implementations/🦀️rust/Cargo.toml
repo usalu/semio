@@ -1,0 +1,16 @@
+[package]
+name = "semio-framework-os-kernel-dsl-notation"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Shared notation piece-parsers/printers for handcrafted per-app grammars — the edge/arrow literal (with optional id/kind label) is the first resident"
+
+
+[lints]
+workspace = true
+[lib]
+name = "dsl_notation"
+path = "../../../🖋️notation/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl_core = { package = "semio-framework-os-kernel-dsl-core", path = "../../../🫀️core/⚡️implementations/🦀️rust" }

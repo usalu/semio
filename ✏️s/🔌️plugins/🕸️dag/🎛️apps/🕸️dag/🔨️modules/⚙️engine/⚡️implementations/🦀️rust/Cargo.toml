@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-app-dag-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DAG app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+infinite_board_port_directed_dag = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag", default-features = false }
+ui_wgpu = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust", package = "semio-framework-ui-wgpu" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"

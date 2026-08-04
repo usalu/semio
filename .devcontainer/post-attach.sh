@@ -382,7 +382,7 @@ fi
 
 #region 🔖️RepoConfigure
 echo "🔧️ Syncing repo hook configuration..."
-REPO_CLIENT="$REPO_ROOT/🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client"
+REPO_CLIENT="$REPO_ROOT/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client"
 if [ -x "$REPO_CLIENT" ]; then
   if "$REPO_CLIENT" configure --repo "$REPO_ROOT"; then
     echo "✅️ Repo hook configuration synced."

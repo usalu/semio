@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/flow-module-text",
+  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🧩️extensions/📝️text",
+        "command": "bun ./📜️script.ts wasm"
+      }
+    }
+  }
+}

@@ -44,7 +44,7 @@ isProject: false
 
 Three violations of "the default driver hides nothing behind hover, and drag starts only on a handle":
 
-1. **Catalogue drags from anywhere on the row.** [TreeDataItemView](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx) line 18973 hardcodes surface initiation whenever a payload exists, ignoring the driver entirely:
+1. **Catalogue drags from anywhere on the row.** [TreeDataItemView](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx) line 18973 hardcodes surface initiation whenever a payload exists, ignoring the driver entirely:
    ```
    dragInitiation={item.dragData || dragAndDropController?.pointerPaletteDrag ? "surface" : "handle"}
    ```
@@ -69,12 +69,12 @@ flowchart LR
 ```
 
 - **Placement replaces reveal.** Every action declares where it lives; nothing is hidden by its own declaration.
-- **Reveal is driver-only.** Row controls follow `driver.chrome` through the existing `data-ui-reveal-region` mechanism in [globals-ui.css](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/🎨️globals-ui.css) 160-177, so `default` paints them and `compact` reveals them.
+- **Reveal is driver-only.** Row controls follow `driver.chrome` through the existing `data-ui-reveal-region` mechanism in [globals-ui.css](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals-ui.css) 160-177, so `default` paints them and `compact` reveals them.
 - **Drag roles are explicit.** A row declares `sort` (reorder within the tree) and/or `transfer` (palette drag onto windows), each getting its own labelled handle in the trailing group; `driver.drag === "surface"` collapses both back onto the row and drops the grips.
 
 ## Changes
 
-### 1. Framework UI React — [📦️index.tsx](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)
+### 1. Framework UI React — [📦️index.tsx](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)
 
 Inside `//#region 📜️Tree` and `//#region 🫳️DragAffordance`:
 
@@ -87,14 +87,14 @@ Inside `//#region 📜️Tree` and `//#region 🫳️DragAffordance`:
 - Stamp `data-ui-reveal-region` on the row action group so `driver.chrome === "hover"` (compact) drives reveal instead of the deleted class.
 - Add i18n keys `ui.tree.drag.sort` and `ui.tree.drag.transfer` to the `ui` schema (3759), the `en` bundle (4877), and the `de` bundle — `check-chrome-i18n` in [📜️script.ts](📜️script.ts) enforces this.
 
-### 2. Shared Rust model — [wgpu 📦️lib.rs](🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs)
+### 2. Shared Rust model — [wgpu 📦️lib.rs](🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs)
 
 - `UiTreeItemAction.reveal_on_hover: Option<bool>` (2564) becomes `placement: Option<UiTreeActionPlacement>` with a serde camelCase enum `Row`/`Menu`; same for the internal `TreeItemAction` (19652) and the conversion at 18719.
 - Painter: drop the `reveal_on_hover && !hovered` skips at 14583 and 20826 — row actions always paint and always register hit targets. Menu-placement actions are appended to the row context menu the painter builds from `UiTreeItemNode.menu` (2618).
 - Update the fixtures at 6877 / 15058 and rename the test at 19442 to assert menu-placement actions never paint as row controls while row-placement ones always register a hit target.
-- Regenerate [UiTreeItemAction.ts](🧰️framework/⚡️implementation/🦀️rust/bindings/UiTreeItemAction.ts) and update the hand-written twin at [framework/⚡️implementation/🟦️typescript/📦️index.ts](🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts) line 279.
+- Regenerate [UiTreeItemAction.ts](🧰️framework/⚡️implementations/🦀️rust/bindings/UiTreeItemAction.ts) and update the hand-written twin at [framework/⚡️implementations/🟦️typescript/📦️index.ts](🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts) line 279.
 
-### 3. OS renderer — [📦️index.tsx](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)
+### 3. OS renderer — [📦️index.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)
 
 - Line 864 maps `placement` instead of `revealOnHover`; `TableCellButton` (20502) follows.
 - `declarativeTreeDragController` (907) and the tree item mapping (841-856) pass drag roles rather than the blanket `cursor-grab` class.
@@ -103,8 +103,8 @@ Inside `//#region 📜️Tree` and `//#region 🫳️DragAffordance`:
 
 Hand-classify each of the 15 `reveal_on_hover: Some(true)` sites — frequent toggles stay `Row`, destructive and rare ones become `Menu`:
 
-- `Row`: puzzle 3d eye/lock toggles ([📦️lib.rs](✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs) 2523-2525)
-- `Menu`: deletes and removes in [cad](✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs) (1096-1171), [process 3d](✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs) (588-669), [playbook](🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust/📦️lib.rs) (767-775), [lowpoly](✏️s/🔌️plugin/💠️lowpoly/🎛️app/💠️lowpoly/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs) (658), [os plugin](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs) (3232), [sourcing](✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs) (242)
+- `Row`: puzzle 3d eye/lock toggles ([📦️lib.rs](✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) 2523-2525)
+- `Menu`: deletes and removes in [cad](✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) (1096-1171), [process 3d](✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) (588-669), [playbook](🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust/📦️lib.rs) (767-775), [lowpoly](✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) (658), [os plugin](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs) (3232), [sourcing](✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) (242)
 - Playbook's raw `Label::data("Remove")` (767) becomes a localized label while the file is open.
 
 ### 5. Tests and stories

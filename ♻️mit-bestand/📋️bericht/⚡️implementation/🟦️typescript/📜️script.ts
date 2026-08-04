@@ -2,8 +2,8 @@
 /** 🏚️ `@semio-tech/mit-bestand-bericht` router: `bun ./📜️script.ts build|watch|latex`. */
 import { existsSync, statSync, watch } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
-import { buildPrintDocument, fetchPrintFonts } from "../../../../🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript/📜️script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { buildPrintDocument, fetchPrintFonts } from "../../../../🧰️framework/🛍️products/📓️print/⚡️implementations/🟦️typescript/📜️script.ts";
 
 const berichtRoot = import.meta.dir;
 const defaultTex = join(berichtRoot, "📋️zwischenbericht/zwischenbericht.tex");
@@ -30,7 +30,7 @@ async function buildDocument(segments: string[]): Promise<void> {
 async function watchDocument(segments: string[]): Promise<void> {
   const texAbs = resolveTexPath(segments);
   const outDir = resolveOutDir(texAbs, segments);
-  const roots = [dirname(texAbs), join(berichtRoot, "../../../../🧰️framework/🛍️product/📓️print/⚡️implementation/🖋️latex")];
+  const roots = [dirname(texAbs), join(berichtRoot, "../../../../🧰️framework/🛍️products/📓️print/⚡️implementations/🖋️latex")];
   const mtimes = new Map<string, number>();
   const rebuild = async () => {
     try {

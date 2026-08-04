@@ -1,0 +1,26 @@
+[package]
+name = "semio-s-app-puzzle-2d-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Puzzle 2d app — headless compute (constitutional: engine)"
+build = "build.rs"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[build-dependencies]
+serde_json = "1.0.140"
+
+[dependencies]
+puzzle_2d = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-2d" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+infinite_board_port_directed_normal = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-normal", default-features = false }
+reasoning_mindmap = { path = "../../../../../../../../../✏️s/🔨️modules/💭️mindmap/⚡️implementations/🦀️rust", package = "semio-s-kernel-reasoning-mindmap" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

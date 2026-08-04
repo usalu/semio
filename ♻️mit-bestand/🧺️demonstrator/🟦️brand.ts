@@ -11,7 +11,7 @@ import {
   type ShellBrand,
   type ShellLocale,
   type TutorialDefinition,
-} from "../../🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts";
+} from "../../🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts";
 import type { IconName } from "@semio-tech/ui-react";
 
 //#region 🏷️DemonstratorShared
@@ -41,7 +41,7 @@ export type EntwerfenMitBestandBrandId = (typeof ENTWERFEN_MIT_BESTAND_BRAND_IDS
 /** @emoji ✒️ Semio emblem shared across demonstrator brands and the landing page. */
 export const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entwerfen mit Bestand"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
 
-const demonstratorLogoUrl = (file: string) => `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logo/${file}`;
+const demonstratorLogoUrl = (file: string) => `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/${file}`;
 
 /** @emoji 🎓️ General demonstrator introduction shown on the landing page only (not inside app shells). */
 export const ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION: IntroductionDefinition = {

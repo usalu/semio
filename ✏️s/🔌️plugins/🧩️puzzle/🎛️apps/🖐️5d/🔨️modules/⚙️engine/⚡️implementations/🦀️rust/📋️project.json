@@ -1,0 +1,48 @@
+{
+  "name": "@semio-tech/puzzle-5d-rs",
+  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
+        "command": "bun ./📜️script.ts wasm"
+      },
+      "outputs": [
+        "{projectRoot}/pkg"
+      ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

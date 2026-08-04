@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-app-playbook-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Playbook-play app - operation enum + constructors (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+playbook = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-playbook" }
+playbook_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/📖️playbook/🎛️apps/📖️playbook/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-playbook-engine" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]

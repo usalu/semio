@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-trinity-jack-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Jack app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🐏️ram/⚡️implementations/🦀️rust", package = "semio-s-plugin-trinity-ram" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+trinity_jack_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-trinity-jack-engine" }

@@ -1,0 +1,16 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-generate"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_generate"
+crate-type = ["rlib"]
+path = "../../../../🕸️graph/🎲️generate/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../../../🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }

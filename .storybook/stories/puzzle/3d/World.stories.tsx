@@ -9,14 +9,14 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { World3dHost } from "../../../../🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx";
-import type { ActionDescriptor, UiComponentSceneNode } from "../../../../🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx";
+import { World3dHost } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx";
 
-import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🧩️concrete-forest.puzzle3d?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🧩️nakagin-capsule-tower.puzzle3d?raw";
+import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust/📚️examples/🧩️concrete-forest.puzzle3d?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/⚡️implementations/🦀️rust/📚️examples/🧩️nakagin-capsule-tower.puzzle3d?raw";
 
-import abbauAufbauReferenceUrl from "../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🧫️fixture/🖼️abbau-aufbau-masterarbeit-grundriss.jpg";
-import rathausAhlenReferenceUrl from "../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🧫️fixture/🖼️rathaus-ahlen-grundriss.png";
+import abbauAufbauReferenceUrl from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.jpg";
+import rathausAhlenReferenceUrl from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures/🖼️rathaus-ahlen-grundriss.png";
 
 //#region StoryTypes
 type Vec3 = readonly [number, number, number];

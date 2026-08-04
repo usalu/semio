@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-forms"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Forms app - document entities (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../✏️s/🔌️plugins/📋️forms/🎛️apps/📋️forms/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+playbook = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-playbook" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

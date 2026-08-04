@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-puzzle-5d-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Puzzle 5d app — binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+puzzle_5d = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-5d" }
+puzzle_5d_op = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-5d-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+puzzle_5d_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🖐️5d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-5d-engine" }

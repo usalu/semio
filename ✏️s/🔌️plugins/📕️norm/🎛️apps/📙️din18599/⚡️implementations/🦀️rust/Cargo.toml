@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-din18599"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DIN V 18599 app - document entities (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+norm_core = { path = "../../../../../../../✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust", package = "semio-s-plugin-norm-core" }
+serde = { version = "1.0.219", features = ["derive"] }

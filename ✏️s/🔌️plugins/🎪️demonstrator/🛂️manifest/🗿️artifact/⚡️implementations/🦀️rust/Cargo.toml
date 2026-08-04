@@ -1,0 +1,136 @@
+[package]
+name = "semio-s-plugin-demonstrator"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[package.metadata.component]
+package = "semio:demonstrator"
+
+# 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: bundles the six mit-bestand demonstrator panes'
+# already-existing apps (procedural3d, cad, puzzle3d, sourcing-curate, process3d, gis2d) into ONE
+# wasm component instead of six — the framework/kernel SDK (`semio-framework-plugin`,
+# `semio-framework-os`, `semio-framework-core`) is statically linked exactly once, and the six panes
+# share one plugin worker/module via the existing `acquirePluginModule` lease pool (framework core
+# `📦️index.ts`), instead of six separate workers each duplicating that linkage. Each source plugin
+# (procedural/cad/puzzle/sourcing/process/gis) keeps its own standalone playground rows below unchanged
+# for its own non-demonstrator variants (e.g. `procedural3d`, `puzzle3d`) — only the six
+# demonstrator-specific rows (`generator`/`koordinator`/`aggregator`/`aussuchen`/`bearbeiten`/`verfolgen`)
+# moved here from those crates' own `Cargo.toml`s.
+[package.metadata.semio]
+consumes = ["forms.questionKind", "flow.extension", "process.machines"]
+
+[[package.metadata.semio.playground]]
+variant = "generator"
+app = "procedural3d-play"
+brand = "entwerfen-mit-bestand-generator"
+aliases = ["entwerfen-mit-bestand-generator"]
+ports = { react = 6027, wgpu = 6127 }
+
+[[package.metadata.semio.playground]]
+variant = "koordinator"
+app = "cad-play"
+brand = "entwerfen-mit-bestand-koordinator"
+aliases = ["entwerfen-mit-bestand-koordinator"]
+ports = { react = 6028, wgpu = 6128 }
+
+[[package.metadata.semio.playground]]
+variant = "aggregator"
+app = "puzzle3d-play"
+brand = "entwerfen-mit-bestand-aggregator"
+aliases = ["mit-bestand", "entwerfen-mit-bestand"]
+ports = { react = 6023, wgpu = 6123 }
+
+[[package.metadata.semio.playground]]
+variant = "aussuchen"
+app = "sourcing-curate"
+brand = "entwerfen-mit-bestand-aussuchen"
+aliases = ["entwerfen-mit-bestand-aussuchen"]
+ports = { react = 6030, wgpu = 6130 }
+
+[[package.metadata.semio.playground]]
+variant = "bearbeiten"
+app = "process3d-play"
+brand = "entwerfen-mit-bestand-bearbeiten"
+aliases = ["entwerfen-mit-bestand-bearbeiten"]
+ports = { react = 6031, wgpu = 6131 }
+
+[[package.metadata.semio.playground]]
+variant = "verfolgen"
+app = "gis2d-play"
+brand = "entwerfen-mit-bestand-verfolgen"
+aliases = ["entwerfen-mit-bestand-verfolgen"]
+ports = { react = 6032, wgpu = 6132 }
+engines = ["./🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/⚡️implementations/🦀️rust"]
+
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/cad-fixture"
+app = "cad-play"
+root = "✏️s/🔌️plugins/📐️cad/🧫️fixtures"
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+app = "puzzle3d-play"
+roots = ["🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"]
+placeholder = "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🥽️mesh/🧊️placeholder.glb"
+filter_from_examples = true
+
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/infinite-fixture"
+app = "puzzle3d-play"
+root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures"
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/osm"
+app = "gis2d-play"
+upstream = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+cache = "osm-tiles"
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/vt"
+app = "gis2d-play"
+upstream = "https://tiles.openfreemap.org/planet"
+cache = "openfreemap-vt"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../../../../../../✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+kernel_3d_brepkit = { path = "../../../../../../🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
+# 🪶️ GUESTSLIM: direct dep only to wire `infinite_canvas::host_asset::register_asset_reader` to
+# `semio_framework_plugin::host_read_asset` at plugin init — see `infinite_canvas`'s `render` feature doc.
+infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
+serde_json = "1.0.140"
+
+procedural_3d = { path = "../../../../../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-3d" }
+procedural_3d_engine = { path = "../../../../../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-3d-engine" }
+procedural_3d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-procedural-3d-ui" }
+
+cad_document = { path = "../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/⚡️implementations/🦀️rust", package = "semio-s-app-cad" }
+cad_document_engine = { path = "../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-cad-engine" }
+cad_document_ui = { path = "../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-cad-ui" }
+
+puzzle_3d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-3d-ui" }
+
+sourcing = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/⚡️implementations/🦀️rust", package = "semio-s-app-sourcing-curate" }
+sourcing_ui = { path = "../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-sourcing-curate-ui" }
+
+process_3d = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d" }
+process_3d_engine = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d-engine" }
+process_3d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d-ui" }
+
+gis2d = { path = "../../../../../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-gis-2d" }
+gis2d_engine = { path = "../../../../../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-gis-2d-engine" }
+gis2d_ui = { path = "../../../../../../../✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-gis-2d-ui" }

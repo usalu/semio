@@ -1,0 +1,31 @@
+[package]
+name = "semio-s-app-imperative-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Imperative app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+imperative = { path = "../../../../../../../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/⚡️implementations/🦀️rust", package = "semio-s-app-imperative" }
+imperative_engine = { path = "../../../../../../../../../✏️s/🔨️modules/📜️imperative/⚡️implementations/🦀️rust", package = "semio-s-kernel-imperative" }
+imperative_dsl = { path = "../../../../../../../../../✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-s-app-imperative-dsl" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
+# 🔌️ `PortMultiplicity` isn't re-exported by `semio-framework-plugin` (WORKFLOWS-END-TO-END-TYPED-PORTS
+# port recipe) — a direct dependency on the core crate is the minimal fix, mirroring how the plugin
+# crate itself depends on it.
+semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+
+[dev-dependencies]
+neural_engine = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }

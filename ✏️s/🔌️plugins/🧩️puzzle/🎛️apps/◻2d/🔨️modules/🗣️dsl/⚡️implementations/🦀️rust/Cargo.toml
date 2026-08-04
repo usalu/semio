@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-puzzle-2d-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Puzzle 2d app — textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+puzzle_2d = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-puzzle-2d" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }

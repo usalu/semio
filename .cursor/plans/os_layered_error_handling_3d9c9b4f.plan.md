@@ -9,9 +9,9 @@ isProject: false
 
 ## The concrete bug, first
 
-`http://127.0.0.1:6070/spaces/space-1` returns HTTP 404 and never loads the bundle. Vite's SPA fallback hardcodes a rewrite to `/index.html`, but the OS dev entry document is named `🌐️index.html`, and `[semioEmojiIndexHtmlVitePlugin](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts)` only rewrites the bare root:
+`http://127.0.0.1:6070/spaces/space-1` returns HTTP 404 and never loads the bundle. Vite's SPA fallback hardcodes a rewrite to `/index.html`, but the OS dev entry document is named `🌐️index.html`, and `[semioEmojiIndexHtmlVitePlugin](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts)` only rewrites the bare root:
 
-```688:694:🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts
+```688:694:🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts
       server.middlewares.use((req, _res, next) => {
         const url = req.url ?? "";
         if (url === "/" || url.startsWith("/?")) {
@@ -36,7 +36,7 @@ One `Severity` enum for both. Today there are five incompatible `Diagnostic` str
 
 ### Canonical types
 
-Declared once in `semio_framework_core` ([Rust](🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs), new `#region 🔖️Fault`), mirrored in [TypeScript](🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts) and in the WIT `[interface types](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📜️wit/📜️world.wit)`:
+Declared once in `semio_framework_core` ([Rust](🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs), new `#region 🔖️Fault`), mirrored in [TypeScript](🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts) and in the WIT `[interface types](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📜️wit/📜️world.wit)`:
 
 ```rust
 pub enum FaultOrigin { Edge, Renderer, Os, Module, Plugin, App, Extension }
@@ -77,7 +77,7 @@ flowchart TB
 
 ### 1. Edge: make deep links resolve
 
-Rewrite in `[semioEmojiIndexHtmlVitePlugin](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts)` so `configureServer`/`configurePreviewServer` *return* a post-hook middleware that maps `/index.html` onto the emoji entry. That slot sits after Vite's fallback and before `indexHtmlMiddleware`, so it handles `/`, deep links, and preview uniformly without accept-header heuristics. Add a `closeBundle` step emitting `dist/index.html` and `dist/404.html` alongside `dist/🌐️index.html` so static deploys and their SPA fallbacks work.
+Rewrite in `[semioEmojiIndexHtmlVitePlugin](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts)` so `configureServer`/`configurePreviewServer` *return* a post-hook middleware that maps `/index.html` onto the emoji entry. That slot sits after Vite's fallback and before `indexHtmlMiddleware`, so it handles `/`, deep links, and preview uniformly without accept-header heuristics. Add a `closeBundle` step emitting `dist/index.html` and `dist/404.html` alongside `dist/🌐️index.html` so static deploys and their SPA fallbacks work.
 
 ### 2. Canonical model
 
@@ -86,8 +86,8 @@ Add the types above to core Rust, core TypeScript and WIT. Add `TextSpan` reuse 
 ### 3. Wire: stop stringifying twice
 
 - WIT: `variant plugin-error { message(string) }` becomes the `fault` record; all 11 host `result<_, string>` arms become `result<_, fault>`.
-- `AppFrame::Error { code, message }` in [protocol/channel](🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust/📦️lib.rs) becomes `AppFrame::Fault { in_reply_to, fault }`, pack-encoded. Update all 25 runtime emission sites in the plugin SDK and run module.
-- The 15 `PluginApp` methods, `DocumentApp::command_from_action` and `AppAction::from_action_id` in [the plugin SDK](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs) return `Result<_, Fault>`.
+- `AppFrame::Error { code, message }` in [protocol/channel](🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust/📦️lib.rs) becomes `AppFrame::Fault { in_reply_to, fault }`, pack-encoded. Update all 25 runtime emission sites in the plugin SDK and run module.
+- The 15 `PluginApp` methods, `DocumentApp::command_from_action` and `AppAction::from_action_id` in [the plugin SDK](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs) return `Result<_, Fault>`.
 - The 183 `.map_err(|e| JsValue::from_str(...))` sites route through one shared `fault_to_js` bridge; TypeScript reconstructs a `SemioFaultError` carrying the structured fault instead of a bare string.
 - Install `console_error_panic_hook` in os and plugin wasm so a trap carries a Rust backtrace rather than an opaque `unreachable`.
 
@@ -106,7 +106,7 @@ Each of the 93 `*Error` types across the 62 thiserror crates gets a code namespa
 
 ### 6. Renderer boundaries
 
-In the [React shell](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx), generalize `ShellRenderErrorBoundary` into the hierarchy above (root, route, session, window, panel, surface, extension slot), each with `componentDidCatch` reporting a `Fault` and a scoped fallback with retry. Add supervisor state and a recovery panel matching the wgpu `ui_recovery_panel`. Keep the wgpu renderer at parity via the shared model.
+In the [React shell](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx), generalize `ShellRenderErrorBoundary` into the hierarchy above (root, route, session, window, panel, surface, extension slot), each with `componentDidCatch` reporting a `Fault` and a scoped fallback with retry. Add supervisor state and a recovery panel matching the wgpu `ui_recovery_panel`. Keep the wgpu renderer at parity via the shared model.
 
 ### 7. Routing: report unknown routes
 
@@ -116,7 +116,7 @@ Replace `parseSpaceShellPath`'s `SpaceShellPath | null` with a typed `ShellRoute
 
 `SpaceCommand::OpenSpace` currently invents a document for any id:
 
-```1444:1444:✏️s/🔌️plugin/🪐️space/🎛️app/🪐️space/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs
+```1444:1444:✏️s/🔌️plugins/🪐️space/🎛️apps/🪐️space/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs
                 let document = home_ui::resolve_studio_document(space_id).or_else(|| if space_id == "demo" { Some(parse_demo_space_document()) } else { None }).unwrap_or_else(|| create_empty_os_document(space_id, "Untitled Studio"));
 ```
 

@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-trinity-jack-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Jack app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🐏️ram/⚡️implementations/🦀️rust", package = "semio-s-plugin-trinity-ram" }
+trinity_jack_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🎛️apps/🔌️jack/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-trinity-jack-engine" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <dev|build> [args…]`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmdStatus, runViteBunxDev, withViteConfigLoader } from "../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
-import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmdStatus, runViteBunxDev, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts";
+import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📜️script.ts";
 import { DEMONSTRATOR_PANES } from "./🟦️brand.ts";
 
 const demonstratorRoot = import.meta.dir;
@@ -11,7 +11,7 @@ const demonstratorRoot = import.meta.dir;
  * `🧧framework/os/dev` `🔌️plugin-modules/` dir this page's own `⚙️vite.config.ts` static-serves from.
  *
  * 🎪️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: all six panes now share ONE plugin crate
- * (`✏️s/🔌️plugin/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust` — see its docstring),
+ * (`✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust` — see its docstring),
  * so the plugin build only needs to run once, keyed off any one pane's variant (`buildPlugins`/
  * `ensurePluginRegistry` resolve a variant to its plugin crate; all six now resolve to the same one).
  * This also removes the six-way `writePlaygroundSession` race that used to exist here — each pane's

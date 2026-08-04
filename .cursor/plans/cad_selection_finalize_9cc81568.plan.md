@@ -11,7 +11,7 @@ isProject: false
 
 Live marquee highlighting is renderer-only (`setWorldSelectionPreview`). Commit happens on pointer-up in World3d:
 
-```16533:16538:🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx
+```16533:16538:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx
 if (marqueePreview.mergedInstanceIds) {
   dispatch("worldSelect", { ids: marqueePreview.mergedInstanceIds, merge: "replace" });
 } else if (marqueePreview.mergedComponentIds) {
@@ -42,7 +42,7 @@ sequenceDiagram
 
 Two concrete failures:
 
-1. **Component finalize is a contract mismatch (hard bug).** Lowpoly/`World3d` expect `{ mode, ids }`. CAD protocol only has `SetSelection { object_ids }` and parses `objectIds` only ([`protocol/.../lib.rs`](✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs) L85, [`ui/.../lib.rs`](✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs) L3264). Missing `objectIds` becomes `[]`, then the handler clears both object and component selection (L2444–2453). Matches “live works, release leaves nothing.”
+1. **Component finalize is a contract mismatch (hard bug).** Lowpoly/`World3d` expect `{ mode, ids }`. CAD protocol only has `SetSelection { object_ids }` and parses `objectIds` only ([`protocol/.../lib.rs`](✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs) L85, [`ui/.../lib.rs`](✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) L3264). Missing `objectIds` becomes `[]`, then the handler clears both object and component selection (L2444–2453). Matches “live works, release leaves nothing.”
 
 2. **Object finalize clears preview before commit lands (slow / empty look).** `setMarqueePath([])` runs immediately after a non-awaited `dispatch`, so preview dies before WASM config refresh. World3d marquee also lacks pointer capture / window `pointerup`, so releases outside the pane can skip finalize entirely.
 
@@ -58,6 +58,6 @@ Unify CAD selection commands with the World3d/lowpoly split (no dual-meaning blo
 
 ## Files to change
 
-- [`✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs`](✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs) — reshape `CadCommand::SetSelection` to `{ mode, ids, object_id, merge }` (drop `object_ids`).
-- [`✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs`](✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs) — parse/handle new `setSelection`; migrate tree `objectIds` callers to `worldSelect`; extend existing selection tests with marquee-shaped `setSelection` + keep object `worldSelect` coverage.
+- [`✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs`](✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs) — reshape `CadCommand::SetSelection` to `{ mode, ids, object_id, merge }` (drop `object_ids`).
+- [`✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs`](✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs) — parse/handle new `setSelection`; migrate tree `objectIds` callers to `worldSelect`; extend existing selection tests with marquee-shaped `setSelection` + keep object `worldSelect` coverage.
 - [`

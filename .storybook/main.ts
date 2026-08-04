@@ -13,7 +13,7 @@ import { dirname, join, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -26,10 +26,10 @@ const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "..");
 const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
 
-const uiReactDir = resolve(repoRootPath, "🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript");
-const uiStylingDir = resolve(repoRootPath, "🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript");
+const uiReactDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript");
+const uiStylingDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript");
 const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
-const composeAssetsDir = resolve(repoRootPath, "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript");
+const composeAssetsDir = resolve(repoRootPath, "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript");
 const composeFixturesDir = resolve(repoRootPath, "compose/fixture");
 
 function toVitePath(value: string): string {
@@ -54,10 +54,10 @@ function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
     "@semio-tech/ui-react": toVitePath(uiReactDir),
     "@semio-tech/ui-styling": toVitePath(uiStylingDir),
-    "@semio-tech/puzzle-asset": toVitePath(resolve(repoRootPath, "✏️s/🔌️plugin/🧩️puzzle/🔨️module/🖼️asset/⚡️implementation/🟦️typescript")),
+    "@semio-tech/puzzle-assets": toVitePath(resolve(repoRootPath, "✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript")),
     "@semio-tech/compose-js": toVitePath(composeJsDir),
     "@semio-tech/compose-react": toVitePath(composeJsDir),
-    "@semio-tech/asset": toVitePath(composeAssetsDir),
+    "@semio-tech/assets": toVitePath(composeAssetsDir),
     "@semio-tech/compose-fixture": toVitePath(composeFixturesDir),
   };
   const scopeAliases = buildScopeAliases(activeScopes, {});

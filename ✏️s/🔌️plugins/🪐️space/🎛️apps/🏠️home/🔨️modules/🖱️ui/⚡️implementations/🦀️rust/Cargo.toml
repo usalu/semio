@@ -1,0 +1,23 @@
+[package]
+name = "semio-s-app-space-home-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "S Home launcher app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+home = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/⚡️implementations/🦀️rust", package = "semio-s-app-space-home" }
+home_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-space-home-engine" }
+home_op = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-space-home-op" }
+home_protocol = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🎛️apps/🏠️home/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-s-app-space-home-protocol" }
+space_shared = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🔨️modules/🤝️shared/⚡️implementations/🦀️rust", package = "semio-s-plugin-space-shared" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+semio-framework-os = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

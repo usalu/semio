@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-plugin-architect-spine-module"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Headless architectural programming domain — program_registers, adjacency, analysis, and exchange"
+
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../✏️s/🔌️plugins/🏛️architect/🔨️modules/🦴️spine/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+vcs = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+mathematical_graph = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"

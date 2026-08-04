@@ -43,7 +43,7 @@ Canonical meta layout (from closed ticket `26/07/31/EMOJI-PREFIX-ALL-RENAMABLE-F
 | `💬️` / `prompts` | `💬️prompts` (and `💬️chat` if present) |
 
 
-Disk already uses the new layout. The remnant `[.repo/🎫️/26/07/31/PUSH-IMPLEMENTATION-LEAF-TO-LAST-LEVEL](.repo/🎫️/26/07/31/PUSH-IMPLEMENTATION-LEAF-TO-LAST-LEVEL)` is evidence of the old ticket root. The built binary at `[💻️client/client](🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client)` still embeds `.repo` / bare `🎫️` and **zero** `.🦑️repo` / `🎫️tickets` — it was not rebuilt after the partial source rewrite. Several Go helpers and callers were also never updated.
+Disk already uses the new layout. The remnant `[.repo/🎫️/26/07/31/PUSH-IMPLEMENTATION-LEAF-TO-LAST-LEVEL](.repo/🎫️/26/07/31/PUSH-IMPLEMENTATION-LEAF-TO-LAST-LEVEL)` is evidence of the old ticket root. The built binary at `[💻️client/client](🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client)` still embeds `.repo` / bare `🎫️` and **zero** `.🦑️repo` / `🎫️tickets` — it was not rebuilt after the partial source rewrite. Several Go helpers and callers were also never updated.
 
 Goal to bind: `AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY`.
 
@@ -73,7 +73,7 @@ Entity emoji constants (`EmojiTicket = "🎫️"`, etc.) stay bare — they iden
 
 ### 1. Finish Go CLI meta helpers
 
-In `[main.go](🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/⌨️cli/⚡️implementation/🐹️go/main.go)`:
+In `[main.go](🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go/main.go)`:
 
 - `GetDraftsPath`: `✍️` → `✍️notes`
 - Contributor helpers (`GetContributor*`, list/create): `🧑️‍💻️` → `🧑️‍💻️devs`
@@ -85,21 +85,21 @@ In `[main.go](🧰️framework/🛍️product/🦑️repo/🔨️module/💻️c
 
 ### 2. Align tests with new layout
 
-Update `[main_test.go](🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/⌨️cli/⚡️implementation/🐹️go/main_test.go)` fixtures/expectations from `.repo` + bare `🎫️`/`🎯️`/`⚡️`/`🧑️‍💻️`/`💬️` to `.🦑️repo` + full names. Extend existing tests only (no new test files).
+Update `[main_test.go](🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🐹️go/main_test.go)` fixtures/expectations from `.repo` + bare `🎫️`/`🎯️`/`⚡️`/`🧑️‍💻️`/`💬️` to `.🦑️repo` + full names. Extend existing tests only (no new test files).
 
 ### 3. Fix binary build / resolve paths (product tree)
 
 `repo/` no longer exists; go.work already points at the emoji tree. Update:
 
-- `[defaultCliBin` / shell resolver](🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts) → output under `🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client` (win: `client.exe`)
-- Client `[📜️script.ts](🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/⌨️cli/⚡️implementation/🟦️typescript/📜️script.ts)` `build`/`dev`/`test` packages → `./🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation/🐹️go` and `.../⌨️cli/⚡️implementation/🐹️go`
+- `[defaultCliBin` / shell resolver](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts) → output under `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client` (win: `client.exe`)
+- Client `[📜️script.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/⚡️implementations/🟦️typescript/📜️script.ts)` `build`/`dev`/`test` packages → `./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go` and `.../⌨️cli/⚡️implementations/🐹️go`
 - `[.mcp.json](.mcp.json)`, `[.vscode/mcp.json](.vscode/mcp.json)`, and matching `[.vscode/launch.json](.vscode/launch.json)` repo-client entries
 
 ### 4. Fix remaining callers still on old meta paths
 
-- VSCode `[🟦️extension.ts](🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🧩️vscode/⚡️implementation/🟦️typescript/🟦️extension.ts)`: `.repo/🎫️|🎯️|✍️` → `.🦑️repo/🎫️tickets|🎯️goals|✍️notes`; ignore-set `.repo` → `.🦑️repo`
+- VSCode `[🟦️extension.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/⚡️implementations/🟦️typescript/🟦️extension.ts)`: `.repo/🎫️|🎯️|✍️` → `.🦑️repo/🎫️tickets|🎯️goals|✍️notes`; ignore-set `.repo` → `.🦑️repo`
 - Root `[📜️script.ts](📜️script.ts)`: `.repo/cache|coverage|🛂️` → `.🦑️repo/⚡️cache|📊️metrics/coverage|🛂️manifest`
-- Bootstrap `[⌨️script.ps1](🧰️framework/🛍️product/🦑️repo/🔨️module/🔩️native/🥾️bootstrap/⌨️script.ps1)` to match the already-updated shell bootstrap
+- Bootstrap `[⌨️script.ps1](🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/⌨️script.ps1)` to match the already-updated shell bootstrap
 
 Do **not** edit `AGENTS.md` (repo rule).
 

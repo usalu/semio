@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/framework-renderer-wgpu",
+  "version": "0.1.0",
+  "description": "framework · raw wgpu WASM renderer for declarative Rust program UI trees",
+  "type": "module",
+  "private": true,
+  "bundleKind": "library",
+  "exports": {
+    ".": "../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📦️index.ts"
+  },
+  "scripts": {
+    "test": "bun nx run @semio-tech/framework-renderer-wgpu:test",
+    "wasm": "bun nx run @semio-tech/framework-renderer-wgpu:wasm",
+    "serve": "bun nx run @semio-tech/framework-renderer-wgpu:serve",
+    "dev": "bun nx run @semio-tech/framework-renderer-wgpu:dev",
+    "native": "bun nx run @semio-tech/framework-renderer-wgpu:native"
+  },
+  "dependencies": {
+    "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/assets": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "framework/product/os/module/renderer/wgpu"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

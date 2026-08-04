@@ -1,0 +1,38 @@
+{
+  "name": "@semio-tech/kernel-2d-js",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔨️modules/◻2d/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔨️modules/◻2d/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔨️modules/◻2d/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔨️modules/◻2d/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts test exhaustive"
+      }
+    }
+  }
+}

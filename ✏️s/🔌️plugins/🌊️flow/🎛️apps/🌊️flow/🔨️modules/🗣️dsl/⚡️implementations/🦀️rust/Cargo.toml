@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-flow-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Flow app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+flow = { path = "../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/⚡️implementations/🦀️rust", package = "semio-s-app-flow" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }

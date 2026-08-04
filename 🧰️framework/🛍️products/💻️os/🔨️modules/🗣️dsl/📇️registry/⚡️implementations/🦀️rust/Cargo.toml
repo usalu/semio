@@ -1,0 +1,28 @@
+[package]
+name = "semio-framework-os-kernel-dsl-registry"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Fan-in DSL schema registry (design ruling B-R3): a SchemaResolver implementation over a growing set of real app schemas, keeping pack_cli/protocol_cli app-dependency-free while giving them a real (non-demonstration) resolver to drive"
+
+[lints]
+workspace = true
+[lib]
+name = "dsl_registry"
+path = "../../../📇️registry/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl_schema = { path = "../../../🧬️schema/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl-schema" }
+pack_cli = { path = "../../../../🎒️pack/⌨️cli/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack-cli" }
+
+# 🚧️ W1 proof-of-mechanism fan-in only (2 apps) — full fan-in across all real app schemas is
+# deferred to a later wave (see this crate's `📦️lib.rs` module doc `🚧️` note and the wave plan's
+# W8 "dsl_registry completeness assertion" item). Add one app's `🗣️dsl`/`🔧️op` pair per follow-up.
+writer = { path = "../../../../../../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/⚡️implementations/🦀️rust", package = "semio-s-app-writer" }
+writer_op = { path = "../../../../../../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-writer-op" }
+note = { path = "../../../../../../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/⚡️implementations/🦀️rust", package = "semio-s-app-note" }
+note_op = { path = "../../../../../../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-note-op" }
+
+[dev-dependencies]
+pack = { path = "../../../../🎒️pack/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-pack" }
+protocol = { path = "../../../../📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

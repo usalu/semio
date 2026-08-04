@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-iso16757-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "ISO 16757 app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+iso16757 = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/⚡️implementations/🦀️rust", package = "semio-s-app-norm-iso16757" }
+iso16757_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-norm-iso16757-engine" }
+iso16757_op = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-norm-iso16757-op" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }

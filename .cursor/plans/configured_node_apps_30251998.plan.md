@@ -120,7 +120,7 @@ Three graph layers get explicit, non-overlapping roles (no more bridging one int
 `<App>Config` (new, in each app's `⚙️engine` slot) absorbs:
 
 - **From app-struct runtime fields:** `selected_ids`, `hovered_id`, `camera` (keyed per window instance), gesture scratch/drafts, LOD, grid/snap toggles, catalogue expansion, eval-driver cursor, `GenerationPlayState`.
-- **From host-pushed `ViewState`** (`🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs` ~5938): `active_mode_id`, `active_window_kind_id`, `active_utility_id`, `active_utility_by_window_id`, `active_tool_id`, `selection_json`, `panel_json`, `window_id`, `window_instances`, `locale`, `terminology`.
+- **From host-pushed `ViewState`** (`🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs` ~5938): `active_mode_id`, `active_window_kind_id`, `active_utility_id`, `active_utility_by_window_id`, `active_tool_id`, `selection_json`, `panel_json`, `window_id`, `window_instances`, `locale`, `terminology`.
 - **From React renderer state:** `draftDoc`, workflow diagram `nodes`/`edges` layout, `viewportCamera`, staged command args, `sliderStateJson`/`labelStateJson` overlays.
 
 Stays *out* of config (host-transient only, never persisted): raw intra-gesture pointer coordinates, marquee rubber-band points, menu open/close, in-flight WASM session handles. These coalesce via `ActionEmit::amend` into one config edit at gesture end.
@@ -133,9 +133,9 @@ Rules for every wave: work inside a repo-MCP ticket; packages within a wave are 
 
 ### Wave A - Kernel foundations (3 parallel, file-disjoint)
 
-- **WP-A1 - Free the workflow name.** Move the playbook domain from `🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust/📦️lib.rs` to a new module `🔨️module/📖️playbook/⚡️implementation/🦀️rust/📦️lib.rs`, package `semio-framework-os-kernel-playbook`, lib stays `playbook`. Update `Cargo.toml` workspace members, `📋️project.json`, dependents (playbook plugin, forms plugin). Then extract the workflow graph out of os `📦️lib.rs` (module at ~3328) into `🔁️workflow` as `Workflow`, `WorkflowNode`, `WorkflowEdge`, `WorkflowOperation` (dropping the `Os` prefix), plus `workflow_node_for_app(&AppDefinition) -> WorkflowNode` so *any* app is instantiable as a node from its manifest alone.
-- **WP-A2 - Config artifact in store.** In `🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs`, add a `🔖️Config` region: `ConfigEnvelope<C, ConfigOperation>` and `ConfigStore` as type aliases over the existing `DocumentEnvelope`/`DocumentStore` (same append-only machinery, no parallel implementation), plus `create_config_envelope`. Add `store::test_support::assert_config_round_trip`. In `🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs`, extend `ConfigSpec` so it can be derived from a `dsl::DslRecord` config type and validated against a config projection.
-- **WP-A3 - Channel frames.** In `🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust/📦️lib.rs`: bump `CHANNEL_VERSION` to 2; delete `view_state` from `AppCommand::Command`; replace `AppCommand::Configure` with `AppCommand::ConfigCommand { seq, command: Vec<u8> }` (a `store::DocumentCommand` over the config store, so undo/redo/checkpoint work on config); add `AppCommand::LoadConfig { seq, pack, spr }`, `AppCommand::ReadConfig { seq }`; add `AppFrame::Config { in_reply_to, pack, spr, ops }` and `AppFrame::ConfigChanged { envelopes, origin }`. Extend the hex fixture corpus.
+- **WP-A1 - Free the workflow name.** Move the playbook domain from `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust/📦️lib.rs` to a new module `🔨️modules/📖️playbook/⚡️implementations/🦀️rust/📦️lib.rs`, package `semio-framework-os-kernel-playbook`, lib stays `playbook`. Update `Cargo.toml` workspace members, `📋️project.json`, dependents (playbook plugin, forms plugin). Then extract the workflow graph out of os `📦️lib.rs` (module at ~3328) into `🔁️workflow` as `Workflow`, `WorkflowNode`, `WorkflowEdge`, `WorkflowOperation` (dropping the `Os` prefix), plus `workflow_node_for_app(&AppDefinition) -> WorkflowNode` so *any* app is instantiable as a node from its manifest alone.
+- **WP-A2 - Config artifact in store.** In `🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs`, add a `🔖️Config` region: `ConfigEnvelope<C, ConfigOperation>` and `ConfigStore` as type aliases over the existing `DocumentEnvelope`/`DocumentStore` (same append-only machinery, no parallel implementation), plus `create_config_envelope`. Add `store::test_support::assert_config_round_trip`. In `🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs`, extend `ConfigSpec` so it can be derived from a `dsl::DslRecord` config type and validated against a config projection.
+- **WP-A3 - Channel frames.** In `🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust/📦️lib.rs`: bump `CHANNEL_VERSION` to 2; delete `view_state` from `AppCommand::Command`; replace `AppCommand::Configure` with `AppCommand::ConfigCommand { seq, command: Vec<u8> }` (a `store::DocumentCommand` over the config store, so undo/redo/checkpoint work on config); add `AppCommand::LoadConfig { seq, pack, spr }`, `AppCommand::ReadConfig { seq }`; add `AppFrame::Config { in_reply_to, pack, spr, ops }` and `AppFrame::ConfigChanged { envelopes, origin }`. Extend the hex fixture corpus.
 
 Accept: `cargo test -p semio-framework-os-kernel-playbook -p semio-framework-os-kernel-workflow -p semio-framework-os-kernel-store -p protocol-channel -p protocol`.
 
@@ -143,7 +143,7 @@ Accept: `cargo test -p semio-framework-os-kernel-playbook -p semio-framework-os-
 
 This is a hard cutover with no compatibility layer, per repo rules. Nothing compiles until B2 completes; that is acceptable and is exactly what a workforce is for.
 
-- **WP-B1 (serial spine)** - `🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs`:
+- **WP-B1 (serial spine)** - `🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs`:
   - `DocumentApp` becomes pure. New associated types `Config: ConfigRecord` and `ConfigOperation: protocol::Operation<Self::Config> + OpText + OpBinary`. Signature change:
     ```rust
     fn handle(
@@ -157,32 +157,32 @@ This is a hard cutover with no compatibility layer, per repo rules. Nothing comp
   - `ActionEmit` becomes `Emit { document_operations, config_operations, description, coalesce_key, effects, events, ui_scope }`. Delete `inverse`/`InverseAction` (a config op has a real `backwards`). Keep `amend`/`commit` constructors, now able to target either store.
   - Delete from the trait: `handle_action`, `handle_command`, `handle_typed_command`, `apply_config_bytes`, and every `&mut self` method (`copy_fragment`, `cut_operations`, `paste_operations`, `pending_effects`, `import_media` become `&self` and emit config ops instead of mutating).
   - `VcsDocumentApp<A>` owns two stores; `PluginApp` gains `config_pack`/`load_config_pack`/`dispatch_config_command`; `plugin_runtime::plugin_exchange` routes the new frames.
-  - Delete `ViewState` and `ViewWindowInstance` from `🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs`; delete `AppDefinition`'s now-redundant surfaces that duplicated config (`ArtifactKindSpec`, `MediaKindDescriptor`, `OsParameterFieldSpec`) as scheduled by the parent plan's Wave 5.
+  - Delete `ViewState` and `ViewWindowInstance` from `🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs`; delete `AppDefinition`'s now-redundant surfaces that duplicated config (`ArtifactKindSpec`, `MediaKindDescriptor`, `OsParameterFieldSpec`) as scheduled by the parent plan's Wave 5.
   - Update WIT doc comments in `📜️wit/📜️world.wit` (the 5-function surface is unchanged; only frame semantics move).
   - Pilot: convert `🎥️shooting` (already the parent program's pilot) in the same package as the compile fixture.
-- **WP-B2 (parallel fan-out, ~30 packages)** - all 52 apps under `✏️s/🔌️plugin/*/🎛️app/*/`. One agent per plugin directory; `📕️norm`'s 15 near-clone apps are one package; `🧩️puzzle`/`🧱️block` (3 apps each) and `🌀️procedural`/`🌍️gis`/`🏗️fem`/`🔱️trinity`/`🪐️space` (2 each) are one package per plugin. Per-app recipe is in the section below.
-- **WP-B3 (serial closer)** - regenerate the plugin registry (`🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/📜️script.ts`), rebuild all plugin wasm, run `cargo test --workspace` and `bun nx run-many -t test`.
+- **WP-B2 (parallel fan-out, ~30 packages)** - all 52 apps under `✏️s/🔌️plugins/*/🎛️apps/*/`. One agent per plugin directory; `📕️norm`'s 15 near-clone apps are one package; `🧩️puzzle`/`🧱️block` (3 apps each) and `🌀️procedural`/`🌍️gis`/`🏗️fem`/`🔱️trinity`/`🪐️space` (2 each) are one package per plugin. Per-app recipe is in the section below.
+- **WP-B3 (serial closer)** - regenerate the plugin registry (`🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/📜️script.ts`), rebuild all plugin wasm, run `cargo test --workspace` and `bun nx run-many -t test`.
 
 Accept: workspace compiles and tests green; every app's `assert_app_contract` passes.
 
 ### Wave C - UI becomes a pure projection (2 parallel)
 
-- **WP-C1 - React renderer** `🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx`. Delete the `ViewState` construction sites (~5663, ~5760, ~6521, ~6545, ~6647, ~7789) and the `injectActiveUtility`/`injectActiveTool` helpers - the engine owns this now. Delete the client-side tree patchers `patchWorld3dChromeOntoNode` and `patchDocumentTreeSelectedIds` (~4931-4953): selection chrome comes from the engine's `UiNode`. Convert ink `draftDoc` (~23631), workflow diagram `nodes`/`edges` (~17586), `viewportCamera` (~15502), and staged command args to config commands dispatched immediately with a `coalesce_key`, rendering from the returned frames only. Resolve `ExternalSlot` server-side in `plugin_exchange` rather than by a renderer fetch.
-- **WP-C2 - wgpu renderer** `🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs` plus `🟦️typescript/🟦️boot.ts`. Retire `boot.ts`'s pre-channel `render`/`handleAction` API onto `AppChannelClient`. `ui_wgpu`'s retained `Ui` keeps only frame-local layout/focus; per-window options move to config.
+- **WP-C1 - React renderer** `🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx`. Delete the `ViewState` construction sites (~5663, ~5760, ~6521, ~6545, ~6647, ~7789) and the `injectActiveUtility`/`injectActiveTool` helpers - the engine owns this now. Delete the client-side tree patchers `patchWorld3dChromeOntoNode` and `patchDocumentTreeSelectedIds` (~4931-4953): selection chrome comes from the engine's `UiNode`. Convert ink `draftDoc` (~23631), workflow diagram `nodes`/`edges` (~17586), `viewportCamera` (~15502), and staged command args to config commands dispatched immediately with a `coalesce_key`, rendering from the returned frames only. Resolve `ExternalSlot` server-side in `plugin_exchange` rather than by a renderer fetch.
+- **WP-C2 - wgpu renderer** `🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs` plus `🟦️typescript/🟦️boot.ts`. Retire `boot.ts`'s pre-channel `render`/`handleAction` API onto `AppChannelClient`. `ui_wgpu`'s retained `Ui` keeps only frame-local layout/focus; per-window options move to config.
 
 Accept: dev-shell `SpaceE2eVerify` plus the react-vs-wgpu parity sweep green; the enforcement lint from Wave E passes.
 
 ### Wave D - Workflow node instantiation end to end (3 parallel)
 
-- **WP-D1 - Bundle and runner.** `🔨️module/🏃️run/⚡️implementation/🦀️rust/{📦️lib.rs,📦️bin.rs}`: `SpaceBundle` gains `config/<nodeId>.pack|.spr`. Per-node frame script becomes `Hello -> LoadConfig -> LoadDocument -> MediaIn* -> MediaOut/MediaFingerprint* -> ReadDocument -> ReadConfig`, persisting both artifacts back. `NodeRunRecord.config_fingerprint` now hashes the config artifact head edit id rather than a JSON blob.
-- **WP-D2 - OS studio and node graph.** os `📦️lib.rs`: delete `OsAppInstance.config` and `OsOperation::SetAppInstanceConfig`; nodes reference `config_ref`. Open-node flow binds the live app instance to that node's config artifact so UI interaction writes straight through. Delete `os_workflow_to_flow_fixture`. `🧰️framework/🔨️module/🗺️surface/🕸️node-graph/⚡️implementation/🦀️rust/📦️lib.rs` + the DAG kernel: `AppInstance` is the sole app node kind; a palette entry is generated for every `AppDefinition` in the registry so **every app is instantiable**.
+- **WP-D1 - Bundle and runner.** `🔨️modules/🏃️run/⚡️implementations/🦀️rust/{📦️lib.rs,📦️bin.rs}`: `SpaceBundle` gains `config/<nodeId>.pack|.spr`. Per-node frame script becomes `Hello -> LoadConfig -> LoadDocument -> MediaIn* -> MediaOut/MediaFingerprint* -> ReadDocument -> ReadConfig`, persisting both artifacts back. `NodeRunRecord.config_fingerprint` now hashes the config artifact head edit id rather than a JSON blob.
+- **WP-D2 - OS studio and node graph.** os `📦️lib.rs`: delete `OsAppInstance.config` and `OsOperation::SetAppInstanceConfig`; nodes reference `config_ref`. Open-node flow binds the live app instance to that node's config artifact so UI interaction writes straight through. Delete `os_workflow_to_flow_fixture`. `🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust/📦️lib.rs` + the DAG kernel: `AppInstance` is the sole app node kind; a palette entry is generated for every `AppDefinition` in the registry so **every app is instantiable**.
 - **WP-D3 - Scripts and launch targets.** Root `📜️script.ts` `os` region: `os workflow new|add-node|run` subcommands; register every new runnable in `.vscode/launch.json` following existing grouping and naming.
 
 Accept: `cargo test -p semio-framework-os-run -p semio-framework-os`; `bun ./script.ts os run … --dry` then a real run.
 
 ### Wave E - Laws and conformance harness (1 package, then always-on)
 
-Extend the testkit at `🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs` (`assert_constitutional_crates`, ~1907):
+Extend the testkit at `🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs` (`assert_constitutional_crates`, ~1907):
 
 - `assert_app_is_pure::<A>()` - the app type is a unit struct (`size_of::<A>() == 0`) and `A::Config::default()` round-trips dsl-to-pack byte-identically.
 - `assert_config_totality::<A>(manifest_fn)` - every manifest action, view-action, shell-action and command maps to a `<App>Command` variant, and every variant emits at least one document *or* config operation. A command that emits nothing is a hard error.
@@ -204,7 +204,7 @@ Extend the testkit at `🔨️module/🔌️plugin/⚡️implementation/🦀️r
 
 ## Per-app recipe for Wave B2 (hand to each agent verbatim)
 
-Given an app at `✏️s/🔌️plugin/<plugin>/🎛️app/<app>/` with slots `⚡️implementation` (root), `🔨️module/{⚙️engine,🔧️op,🗣️dsl,🎒️pack,📡️protocol,🖱️ui}`:
+Given an app at `✏️s/🔌️plugins/<plugin>/🎛️apps/<app>/` with slots `⚡️implementations` (root), `🔨️modules/{⚙️engine,🔧️op,🗣️dsl,🎒️pack,📡️protocol,🖱️ui}`:
 
 1. **`⚙️engine`** - define `<App>Config` with `#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, dsl::DslRecord)]`. Populate it by moving *every* field off the app struct in `🖱️ui` plus every `view_state.*` read in that crate. Camera, selection, and per-window options are keyed by window-instance id (`BTreeMap<String, _>`), never by window kind.
 2. **`🔧️op`** - define `<App>ConfigOperation` with `#[derive(… dsl::DslOps)]` and `impl protocol::Operation<<App>Config>`, with a real `backwards` for every variant. One variant per settled interaction (`SetCamera`, `SetSelection`, `SetHover`, `SetActiveUtility`, `SetPanel`, `SetDraft`, …).
@@ -212,7 +212,7 @@ Given an app at `✏️s/🔌️plugin/<plugin>/🎛️app/<app>/` with slots `�
 4. **`📡️protocol`** - ensure `<App>Command` has one variant per manifest action, including the ones that previously only mutated runtime state.
 5. **`🖱️ui`** - make the app struct a unit struct (`pub struct <App>PlayApp;`). Rewrite `handle` as a pure match returning `Emit`; every former `self.field = x` becomes a config operation. Every `render`/scene builder reads from `cfg` instead of `self`. Manifest: `.config::<<App>Config>()`.
 6. **Tests** - add `assert_app_is_pure`, `assert_config_totality`, `assert_ui_is_projection`, `assert_headless_ui_parity` alongside the existing `assert_app_contract`. Extend existing test files; do not create new ones.
-7. `cargo check --all-targets` and `cargo test --lib` on every touched crate; hand-fix every fixture and example under `📚️example/` and `🧫️fixture/`.
+7. `cargo check --all-targets` and `cargo test --lib` on every touched crate; hand-fix every fixture and example under `📚️examples/` and `🧫️fixtures/`.
 
 ## Verification summary
 
@@ -222,13 +222,13 @@ Given an app at `✏️s/🔌️plugin/<plugin>/🎛️app/<app>/` with slots `�
 
 ## Critical files
 
-- `🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs` - the `DocumentApp`/`PluginApp`/`VcsDocumentApp`/`Emit` spine and the testkit laws
-- `🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs` - delete `ViewState`; `AppDefinition`, `ConfigSpec`, `PluginManifest`
-- `🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust/📦️lib.rs` - config frames
-- `🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs` - `ConfigStore`
-- `🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust/📦️lib.rs` - becomes the real workflow kernel
-- `🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs` - workflow extraction, delete `SetAppInstanceConfig` and the flow bridge
-- `🧰️framework/🛍️product/💻️os/🔨️module/🏃️run/⚡️implementation/🦀️rust/{📦️lib.rs,📦️bin.rs}` - config artifacts in the bundle
-- `🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx` - the largest UI-purity surface
-- `🧰️framework/🔨️module/🗺️surface/🕸️node-graph/⚡️implementation/🦀️rust/📦️lib.rs` - app-node palette from the registry
-- `✏️s/🔌️plugin/*/🎛️app/*/` - 52 apps, the Wave B2 fan-out
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs` - the `DocumentApp`/`PluginApp`/`VcsDocumentApp`/`Emit` spine and the testkit laws
+- `🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs` - delete `ViewState`; `AppDefinition`, `ConfigSpec`, `PluginManifest`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🧵️channel/⚡️implementations/🦀️rust/📦️lib.rs` - config frames
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs` - `ConfigStore`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/⚡️implementations/🦀️rust/📦️lib.rs` - becomes the real workflow kernel
+- `🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust/📦️lib.rs` - workflow extraction, delete `SetAppInstanceConfig` and the flow bridge
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/⚡️implementations/🦀️rust/{📦️lib.rs,📦️bin.rs}` - config artifacts in the bundle
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx` - the largest UI-purity surface
+- `🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/⚡️implementations/🦀️rust/📦️lib.rs` - app-node palette from the registry
+- `✏️s/🔌️plugins/*/🎛️apps/*/` - 52 apps, the Wave B2 fan-out

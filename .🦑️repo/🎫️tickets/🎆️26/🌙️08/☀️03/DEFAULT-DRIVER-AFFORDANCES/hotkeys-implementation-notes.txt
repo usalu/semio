@@ -1,0 +1,18 @@
+Hotkeys under default driver — implementation notes (2026-08-04)
+
+Core:
+- UiDriver.hotkeys axis: inline | tooltip | none (default inline, compact none)
+- SHELL_KEYBINDINGS single source for shell control chords
+- UiKeybindingsProvider + composeControlKeybindings (shell + app action ids + overrides)
+- ControlHotkeyBadge on ButtonGroupItem and ToggleGroupItem
+- Introduction/UIDialog use useControlKeybinding from registry
+- Settings > Keybindings tab with capture/reset/conflict
+- navigate-to-hotkey listener opens keybindings tab
+- OS wgpu format_keybinding_shortcut for context menu display
+
+Remaining follow-ups:
+- PanelTabButton, ribbon, tree actions, DragHandle, CommandItem inline badges
+- wgpu paint_button/paint_toggle inline chord glyphs
+- Per-plugin control id ↔ action id mapping where ids differ
+
+Tests: ui-react 503/510 pass (7 pre-existing failures unrelated)

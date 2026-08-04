@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-note-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Note app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+note = { path = "../../../../../../../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/⚡️implementations/🦀️rust", package = "semio-s-app-note" }
+note_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-note-engine" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

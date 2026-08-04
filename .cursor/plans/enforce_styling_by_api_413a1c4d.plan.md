@@ -3,19 +3,19 @@ name: Enforce Styling By API
 overview: "The demonstrator's font mismatch is caused by font files never being served: five of six `uiAssetsVitePlugin` callers pass a non-existent asset root. Fix by merging the two asset packages into one, replacing the path-taking plugin with an API that owns its roots, moving all apps onto the existing host-HTML API, and adding tests that make silent regression impossible."
 todos:
   - id: merge-asset-trees
-    content: Move A's 🔤️font, 👆️cursor, 👋️introduction, 🔣️icon and 📃️list into @semio-tech/asset; namespace B's domain icons under 🏛️compose/🔣️icon to resolve the file/type collision; merge the two 🟦️icon_resolver.ts into one file under two regions
+    content: Move A's 🔤️fonts, 👆️cursor, 👋️introduction, 🔣️icons and 📃️list into @semio-tech/assets; namespace B's domain icons under 🏛️compose/🔣️icons to resolve the file/type collision; merge the two 🟦️icon_resolver.ts into one file under two regions
     status: completed
   - id: merge-asset-codegen
     content: Fold A's 📜️script.ts generate subcommands into B's 📜️script.ts as regions; delete A's package.json, 📋️project.json, 📜️script.ts; drop @semio-tech/ui-asset from B's deps and from root package.json workspaces
     status: completed
   - id: rewrite-ts-consumers
-    content: Rewrite every @semio-tech/ui-asset import to @semio-tech/asset across framework core, ui/react, both renderer engines, storybook stories, root 📜️script.ts, package.json deps, vite/vitest aliases and the nx dependsOn
+    content: Rewrite every @semio-tech/ui-asset import to @semio-tech/assets across framework core, ui/react, both renderer engines, storybook stories, root 📜️script.ts, package.json deps, vite/vitest aliases and the nx dependsOn
     status: completed
   - id: rewrite-rust-paths
     content: "Repoint the Rust #[path] and include_bytes! references in ui/🧊️wgpu, os renderer wgpu build.rs + lib.rs, and infinite/🖼️canvas build.rs + lib.rs at the merged asset root"
     status: completed
   - id: asset-api
-    content: Replace uiAssetsVitePlugin(assetsRoot) with semioAssetsVitePlugin(repoRoot) + SEMIO_ASSET_ROOT that owns its root and throws when the tree or 🔤️font is missing; update all six call sites including createPlaygroundPlayViteConfig and .storybook/main.ts
+    content: Replace uiAssetsVitePlugin(assetsRoot) with semioAssetsVitePlugin(repoRoot) + SEMIO_ASSET_ROOT that owns its root and throws when the tree or 🔤️fonts is missing; update all six call sites including createPlaygroundPlayViteConfig and .storybook/main.ts
     status: completed
   - id: host-html
     content: Move demonstrator, präsentation, os dev and the five compose hosts onto semioHostHtmlVitePlugin; delete their hand-authored inline <style> blocks, ad-hoc body classes and inconsistent titles
@@ -34,13 +34,13 @@ isProject: false
 
 ## Root cause
 
-`🎨️palette.css` declares every `@font-face` against `/asset/🔤️font/...`. That URL namespace is served by `uiAssetsVitePlugin(assetsRoot: string)` in [🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts). It accepts a caller-supplied filesystem path, and five of six callers pass a directory that does not exist:
+`🎨️palette.css` declares every `@font-face` against `/asset/🔤️fonts/...`. That URL namespace is served by `uiAssetsVitePlugin(assetsRoot: string)` in [🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts). It accepts a caller-supplied filesystem path, and five of six callers pass a directory that does not exist:
 
-- `♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts:17` - `🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript` (has logos/meshes, no `🔤️font`)
-- `🟦️vite-elements-assets.ts:1583` in `createPlaygroundPlayViteConfig` - `🧰️framework/🔨️module/🖱️ui/🖼️asset` (missing `/⚡️implementation/🟦️typescript`)
+- `♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts:17` - `🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript` (has logos/meshes, no `🔤️fonts`)
+- `🟦️vite-elements-assets.ts:1583` in `createPlaygroundPlayViteConfig` - `🧰️framework/🔨️modules/🖱️ui/🖼️assets` (missing `/⚡️implementations/🟦️typescript`)
 - `.storybook/main.ts:35` - `framework/module/ui/asset` (pre-emoji-rename, gone)
 - `compose/client/lib/sketchpad/js/vite.config.ts:306` - `framework/ui/asset` (gone); its import at line 29 is also a dead path
-- `♻️mit-bestand/🎤️präsentation/…/⚙️vite.config.ts:13` and `🧪️vitest.config.ts:12` - `🧰️framework/🔨️module/🖱️ui/🖼️asset` (gone)
+- `♻️mit-bestand/🎤️präsentation/…/⚙️vite.config.ts:13` and `🧪️vitest.config.ts:12` - `🧰️framework/🔨️modules/🖱️ui/🖼️assets` (gone)
 
 Only `🧑️‍💻️dev/⚙️vite.config.ts:22` is correct. Everywhere else Anta/Kelly Slab/Share Tech Mono 404 and Tailwind preflight falls back to `ui-sans-serif, system-ui`.
 
@@ -56,43 +56,43 @@ flowchart LR
 
 ## Part 1 - Merge the two asset packages into one
 
-Merge `@semio-tech/ui-asset` (A, `🧰️framework/🔨️module/🖱️ui/🖼️asset/⚡️implementation/🟦️typescript`, 789 files) **into** `@semio-tech/asset` (B, `🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript`, 2172 files). B is the target because it is the only location general enough to hold both UI chrome and domain assets, and B already depends on A - merging removes that edge.
+Merge `@semio-tech/ui-asset` (A, `🧰️framework/🔨️modules/🖱️ui/🖼️assets/⚡️implementations/🟦️typescript`, 789 files) **into** `@semio-tech/assets` (B, `🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript`, 2172 files). B is the target because it is the only location general enough to hold both UI chrome and domain assets, and B already depends on A - merging removes that edge.
 
-The two `🔣️icon` trees are distinct catalogs, not duplicates (kebab-case UI chrome vs snake_case compose domain, colliding only on the bare ids `file` and `type`). Keep them as **separate named catalogs inside one package** rather than one flat folder, so both codegen pipelines and both Rust `#[path]` consumers survive:
+The two `🔣️icons` trees are distinct catalogs, not duplicates (kebab-case UI chrome vs snake_case compose domain, colliding only on the bare ids `file` and `type`). Keep them as **separate named catalogs inside one package** rather than one flat folder, so both codegen pipelines and both Rust `#[path]` consumers survive:
 
-- `🔣️icon` - UI chrome catalog moved from A (247 SVGs), keeps codegen to `🟦️icons.ts`, `🔷️Icons.cs`, `🐍️icons.py`, `🦀️icon_name.rs`, `🟦️shortcodes.ts`
-- `🏛️compose/🔣️icon` - B's current root `🔣️icon` (313 SVGs + ~992 PNG/ICO), renamed into a namespace to resolve the `file`/`type` collision; it has no code consumer today, only static serving
+- `🔣️icons` - UI chrome catalog moved from A (247 SVGs), keeps codegen to `🟦️icons.ts`, `🔷️Icons.cs`, `🐍️icons.py`, `🦀️icon_name.rs`, `🟦️shortcodes.ts`
+- `🏛️compose/🔣️icons` - B's current root `🔣️icons` (313 SVGs + ~992 PNG/ICO), renamed into a namespace to resolve the `file`/`type` collision; it has no code consumer today, only static serving
 - `🌱️metabolism` - unchanged, keeps its `🦀️metabolism_icon_name.rs` codegen
-- `🔤️font`, `👆️cursor`, `👋️introduction` move from A verbatim
+- `🔤️fonts`, `👆️cursor`, `👋️introduction` move from A verbatim
 - `📃️list` - merge A's 7 files (licenses, mimes, wordlists, palettes) with B's 10 (qualities, tags); no filename overlap
 - `🟦️icon_resolver.ts` - fold A's `resolveCatalogIcon*` and B's `resolveMetabolismIcon*` into one file under two regions
 
 Then:
-- Delete A's `package.json`, `📋️project.json`, `📜️script.ts`; fold A's `generate` subcommands into B's `📜️script.ts` as regions so one `@semio-tech/asset:build` drives all codegen
+- Delete A's `package.json`, `📋️project.json`, `📜️script.ts`; fold A's `generate` subcommands into B's `📜️script.ts` as regions so one `@semio-tech/assets:build` drives all codegen
 - Remove `@semio-tech/ui-asset` from B's `package.json` dependencies and from root `package.json` workspaces (line 7)
 - Re-export A's former barrel (`ICONS`, `ICON_NAMES`, `isIconName`, `IconName`, `ICON_CONCEPT_ASSIGNMENTS`, `SHORTCODE_*`) from B's `📦️index.ts`
 
-Rewrite every consumer of `@semio-tech/ui-asset` to `@semio-tech/asset`: `🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts:8`, `ui/⚛️react/…/📦️index.tsx:146`, renderer react `📦️index.tsx:295`, renderer wgpu `📦️index.ts:5`, `.storybook/stories/ui/Icons.stories.tsx:13`, `📜️script.ts:272`, plus the `package.json` deps, vite/vitest aliases and the nx `dependsOn` in `🧑️‍💻️dev/📋️project.json:21`.
+Rewrite every consumer of `@semio-tech/ui-asset` to `@semio-tech/assets`: `🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts:8`, `ui/⚛️react/…/📦️index.tsx:146`, renderer react `📦️index.tsx:295`, renderer wgpu `📦️index.ts:5`, `.storybook/stories/ui/Icons.stories.tsx:13`, `📜️script.ts:272`, plus the `package.json` deps, vite/vitest aliases and the nx `dependsOn` in `🧑️‍💻️dev/📋️project.json:21`.
 
 Rewrite the Rust paths that point into A:
-- `🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:3` (`#[path]`) and `:12905-12918` (font `include_bytes!`)
-- `🧰️framework/🛍️product/💻️os/…/📺️renderer/…/🧊️wgpu/…/build.rs:7` and `📦️lib.rs:32366`
-- `🧰️framework/🛍️product/💻️os/…/♾️infinite/🖼️canvas/…/build.rs:15` and `📦️lib.rs:1218`
+- `🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs:3` (`#[path]`) and `:12905-12918` (font `include_bytes!`)
+- `🧰️framework/🛍️products/💻️os/…/📺️renderer/…/🧊️wgpu/…/build.rs:7` and `📦️lib.rs:32366`
+- `🧰️framework/🛍️products/💻️os/…/♾️infinite/🖼️canvas/…/build.rs:15` and `📦️lib.rs:1218`
 
 ## Part 2 - Make `/asset/*` enforced by API
 
 In `🟦️vite-elements-assets.ts`, replace the exported `uiAssetsVitePlugin(assetsRoot: string)` with a plugin that takes no filesystem path:
 
 ```ts
-/** @emoji 🗂️ Canonical repo-relative root of `@semio-tech/asset`, the only tree served at `/asset/*`. */
-export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript";
+/** @emoji 🗂️ Canonical repo-relative root of `@semio-tech/assets`, the only tree served at `/asset/*`. */
+export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript";
 
 export function semioAssetsVitePlugin(repoRoot: string): Plugin[] { /* serve + copy, throw if missing */ }
 ```
 
 Key behaviours:
 - Callers pass only `repoRoot`; the root is resolved internally, so no caller can pick a wrong half again.
-- Throw at `configResolved` when the root or its `🔤️font` subtree is absent, instead of silently 404ing at runtime.
+- Throw at `configResolved` when the root or its `🔤️fonts` subtree is absent, instead of silently 404ing at runtime.
 - `semioFaviconSources` (`:560`) already resolves under this same root, so favicons and fonts finally share one truth.
 
 Update all six call sites, including `createPlaygroundPlayViteConfig:1583` and `.storybook/main.ts:136`.
@@ -110,7 +110,7 @@ Move the apps onto it and delete their hand-authored `🌐️index.html` inline 
 ## Part 4 - Repair the stale CSS and alias paths
 
 All verified missing on disk:
-- `♻️mit-bestand/🎤️präsentation/…/🎨️globals.css:1-4` imports `../../../ui/js/react/…` and `../../../animate/present/renderer/react/…`; repoint at the framework react hub and `✏️s/🔌️plugin/🎞️animate/…/🎨️globals.css`, matching the demonstrator's working pattern
+- `♻️mit-bestand/🎤️präsentation/…/🎨️globals.css:1-4` imports `../../../ui/js/react/…` and `../../../animate/present/renderer/react/…`; repoint at the framework react hub and `✏️s/🔌️plugins/🎞️animate/…/🎨️globals.css`, matching the demonstrator's working pattern
 - `.storybook/main.ts:29-35` - `framework/module/ui/js/react`, `framework/module/ui/styling/js`, `framework/module/asset`, `puzzle/asset`, `framework/module/ui/asset` all gone
 - `.storybook/globals.css:2-12` - legacy flat `@source` roots
 - `compose/client/lib/sketchpad/js/vite.config.ts:29` - dead import path for `🟦️vite-elements-assets.ts`
@@ -129,7 +129,7 @@ Extend the existing `🧪️index.test.ts` in the styling package (no new test f
 
 ## Verification
 
-Per the repo rules, runtime behaviour must be confirmed, not assumed: run `bun nx run @semio-tech/mit-bestand-demonstrator:dev`, load the page, and confirm with a `[DEBUG]` log of `getComputedStyle(document.body).fontFamily` that it reports Anta and that `/asset/🔤️font/🔤️anta/🔤️latin.woff2` returns 200 with `font/woff2`. Repeat for Storybook and one playground. Then run the styling and ui-react test suites plus `cargo check` on the crates whose `include_bytes!` paths moved.
+Per the repo rules, runtime behaviour must be confirmed, not assumed: run `bun nx run @semio-tech/mit-bestand-demonstrator:dev`, load the page, and confirm with a `[DEBUG]` log of `getComputedStyle(document.body).fontFamily` that it reports Anta and that `/asset/🔤️fonts/🔤️anta/🔤️latin.woff2` returns 200 with `font/woff2`. Repeat for Storybook and one playground. Then run the styling and ui-react test suites plus `cargo check` on the crates whose `include_bytes!` paths moved.
 
 ## Ticket
 

@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-architect-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Architect app operation protocol surface (constitutional: protocol)"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️lib.rs"
+
+[dependencies]
+architect_op = { path = "../../../🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-architect-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }

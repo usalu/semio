@@ -46,9 +46,9 @@ export { default as DeleteCases } from "../delete.cases.compose.json";
 export { default as CopyPasteCases } from "../copy-paste.cases.compose.json";
 
 //#region 🌱️MetabolismKitDerived
-// 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: relocated from `@semio-tech/asset` — these derived
+// 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: relocated from `@semio-tech/assets` — these derived
 // exports (and the 7.3MB JSON fixture behind them) had zero runtime consumers outside
-// `.storybook/stories/compose/**`, but `@semio-tech/asset` is statically imported by `ui-react`'s
+// `.storybook/stories/compose/**`, but `@semio-tech/assets` is statically imported by `ui-react`'s
 // barrel, so every document paid the parse + flatten cost for nothing. `compose-fixture` is
 // storybook/test-only by convention (see this file's header), so this is where the fixture-derived
 // data belongs; `MetabolismShallowKit` above is the same JSON these are computed from.

@@ -1,7 +1,7 @@
-@import "../../../../🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/🎨️globals.css";
-@import "../../../../✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/📺️renderer/⚛️react/⚡️implementation/🟦️typescript/🎨️globals.css";
-@source "../../../../🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript";
-@source "../../../../✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/📺️renderer/⚛️react/⚡️implementation/🟦️typescript";
+@import "../../../../🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css";
+@import "../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css";
+@source "../../../../🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript";
+@source "../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript";
 @source ".";
 
 .reveal .slides > section > section[title="abschluss"] {

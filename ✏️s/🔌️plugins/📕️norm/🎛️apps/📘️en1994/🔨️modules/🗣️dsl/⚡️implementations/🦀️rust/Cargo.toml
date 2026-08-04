@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-norm-en1994-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Norm EN 1994 app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+en1994 = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1994" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+norm_core = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust", package = "semio-s-plugin-norm-core" }

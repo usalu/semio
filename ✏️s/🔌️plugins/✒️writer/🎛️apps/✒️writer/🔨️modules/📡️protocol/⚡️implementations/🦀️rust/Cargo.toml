@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-writer-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Writer app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+writer = { path = "../../../../../../../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/⚡️implementations/🦀️rust", package = "semio-s-app-writer" }
+writer_op = { path = "../../../../../../../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-writer-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+writer_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-writer-engine" }

@@ -32,8 +32,8 @@ isProject: false
 1. Reopen ticket [EMOJI-PREFIX-ALL-RENAMABLE-FILENAMES](.repo/🎫️/26/07/31/EMOJI-PREFIX-ALL-RENAMABLE-FILENAMES/) (or open a follow-up under same goal) and put temp scripts there.
 2. Rename files deepest-first: `script.ts` → `📜️script.ts`, `project.json` → `📋️project.json`.
 3. **Rewire discovery (no dual-name shims):**
-   - [🟨️nx-plugin.mjs](🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🟨️nx-plugin.mjs): `createNodesV2: ["**/📜️script.ts", …]`.
-   - [📦️index.ts](🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts): every `base !== "script.ts"`, `**/script.ts` walker, usage strings → `📜️script.ts`.
+   - [🟨️nx-plugin.mjs](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/🟨️nx-plugin.mjs): `createNodesV2: ["**/📜️script.ts", …]`.
+   - [📦️index.ts](🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️lib/⚡️implementations/🟦️typescript/📦️index.ts): every `base !== "script.ts"`, `**/script.ts` walker, usage strings → `📜️script.ts`.
    - All `project.json` / `📋️project.json` `command: "bun ./📜️script.ts …"` → `bun ./📜️script.ts …`.
    - Root [package.json](package.json) scripts, [.vscode/launch.json](.vscode/launch.json), root [📜️script.ts](script.ts) self-refs.
    - Nx project discovery: configure plugin / `workspaceLayout` so projects load from `**/📋️project.json` (custom createNodes or update existing plugin) — default Nx only auto-loads `project.json`, so the emoji name **must** be registered in the plugin.

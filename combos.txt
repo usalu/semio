@@ -1,5 +1,5 @@
 warning: function `tessellate_geometry_json_for_wasm` is never used
-    --> 🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs:2223:4
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🔨️modules/📐️brep/../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🔨️modules/📐️brep/📦️lib.rs:2223:4
      |
 2223 | fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
      |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -7,9 +7,9 @@ warning: function `tessellate_geometry_json_for_wasm` is never used
      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
 warning: `semio-s-kernel-flow-module-brep` (lib) generated 1 warning
-   Compiling semio-s-app-flow-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-flow-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust)
 warning: unnecessary qualification
-   --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:161:16
+   --> ✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs:161:16
     |
 161 |     registry: &semio_framework_plugin::AppActionRegistry,
     |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -22,7 +22,7 @@ help: remove the unnecessary path segments
     |
 
 warning: unnecessary qualification
-   --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:167:10
+   --> ✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs:167:10
     |
 167 | ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -34,7 +34,7 @@ help: remove the unnecessary path segments
     |
 
 warning: unnecessary qualification
-    --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1466:23
+    --> ✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs:1466:23
      |
 1466 |         let request = semio_framework_plugin::ContextMenuRequest {
      |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -46,7 +46,7 @@ help: remove the unnecessary path segments
      |
 
 error[E0599]: no method named `test_projection` found for struct `VcsDocumentApp<A>` in the current scope
-    --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1766:26
+    --> ✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs:1766:26
      |
 1766 |         let before = app.test_projection().synapses.len();
      |                          ^^^^^^^^^^^^^^^
@@ -58,7 +58,7 @@ help: there is a method `projection` with a similar name
      |
 
 error[E0599]: no method named `test_projection` found for struct `VcsDocumentApp<A>` in the current scope
-    --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1776:25
+    --> ✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs:1776:25
      |
 1776 |         let after = app.test_projection();
      |                         ^^^^^^^^^^^^^^^
@@ -70,7 +70,7 @@ help: there is a method `projection` with a similar name
      |
 
 warning: unused variable: `labels`
-   --> ✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:737:72
+   --> ✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/../../../../../../../../../✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs:737:72
     |
 737 | fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
     |                                                                        ^^^^^^ help: if this is intentional, prefix it with an underscore: `_labels`

@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-vcs-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "VCS app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+vcs = { path = "../../../../../../../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-s-app-vcs" }
+vcs_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-vcs-engine" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

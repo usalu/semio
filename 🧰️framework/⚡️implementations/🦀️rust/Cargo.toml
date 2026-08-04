@@ -1,0 +1,39 @@
+[package]
+name = "semio-framework-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Render-independent framework kernel: Platform, ActionBus, declarative UiTree, layouts"
+
+
+[lints]
+workspace = true
+[lib]
+path = "../../../🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+gltf = { version = "1.4.1", default-features = false, features = ["utils"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+ts-rs = { version = "10", optional = true }
+ui_wgpu = { path = "../../🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust", package = "semio-framework-ui-wgpu" }
+semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/#⃣hash/⚡️implementations/🦀️rust", package = "semio-framework-hash" }
+# 🎞️ CW3 kernel cut-over: HybridLogicalTimestamp/UndoPolicy/MergeStrategyKind and the operation-
+# flavored id newtypes (OperationId/ActorId/DocumentId/DocumentVersion/SchemaId) now canonically
+# live in `protocol_core`; framework/core re-exports them under their existing names (see `kernel`
+# module) so every existing internal/external reference keeps resolving unchanged.
+protocol_core = { path = "../../🛍️products/💻️os/🔨️modules/📡️protocol/🫀️core/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol-core" }
+# 🎯️ W6 kernel unification: `kernel::DocumentDiff` re-exports `protocol::DocumentDiff` (the binary
+# causal-envelope shape from W5), needing the full facade (protocol_causal's `DocumentDiff`, not
+# just protocol_core).
+protocol = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+
+[features]
+# 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `js/generated/manifest.ts`);
+# never enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
+typegen = ["dep:ts-rs", "ui_wgpu/typegen"]

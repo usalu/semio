@@ -1,0 +1,27 @@
+[package]
+name = "semio-s-app-draw-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Draw app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+draw = { path = "../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/⚡️implementations/🦀️rust", package = "semio-s-app-draw" }
+draw_dsl = { path = "../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-s-app-draw-dsl" }
+semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+# 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe: `DrawConfig`'s `dsl::DslDocument` derive +
+# `store::ConfigRecord`/`protocol::OperationDiff` impls (mirrors `shooting_engine`'s `ShootingConfig`).
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+kernel_2d_engine = { path = "../../../../../../../../../✏️s/🔨️modules/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-kernel-geometry-2d-engine" }
+kernel_2d_rs = { path = "../../../../../../../../../✏️s/🔨️modules/◻2d/⚡️implementations/🦀️rust", package = "semio-s-kernel-geometry-2d" }
+base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

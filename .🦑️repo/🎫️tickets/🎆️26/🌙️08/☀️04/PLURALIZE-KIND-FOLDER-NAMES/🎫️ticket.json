@@ -1,0 +1,12 @@
+{
+  "title": "Pluralize Kind Folder Names",
+  "emoji": "📁️",
+  "status": "closed",
+  "description": "Rename taxonomy container folders from singular to plural (implementations, modules, apps, plugins under ✏️s, assets, etc.) and update all active references and six npm package names.",
+  "summary": "Renamed 845 taxonomy container directories (⚡️implementations, 🔨️modules, 🎛️apps, ✏️s/🔌️plugins, 🖼️assets, …) and rewrote ~1,290 active config/source references. Consolidated 🪝️hook into 🪝️hooks. Pluralized npm packages @semio-tech/assets, icons, images, logos, puzzle-assets, remodel-images; regenerated bun.lock and plugin registry. Left ♻️mit-bestand/compose local folder names singular; fixed their URLs and workspace paths. Verified: cargo metadata, dependency-cruiser, go build (repo CLI), @semio-tech/assets build, nx show projects (242). verify gate blocked in this environment by bun spawnSync ENOENT for cargo (not migration-related).",
+  "goal": "🎯️r2603",
+  "files": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️04/PLURALIZE-KIND-FOLDER-NAMES/changed-files.txt"
+  ],
+  "sessions": []
+}

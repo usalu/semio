@@ -50,32 +50,32 @@ Scope decisions (confirmed): repo MCP/CLI and Jack LSP keep JSON-RPC (external s
 
 `serde_json::Value` is the universal escape hatch. Replace it with a native domain value type so nothing depends on serde_json at runtime.
 
-- In [store lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs) `pack_rt` region: make `encode_wire_value`/`decode_wire_value` operate on a native `WireValue` (aligned with `dsl_schema::FieldValue`), delete `encode_json_value`/`decode_json_value` and `impl DocumentPack for serde_json::Value`. Schema-less apps get real `RecordSpec` grammars instead.
-- In [dsl_schema lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧬️schema/⚡️implementation/🦀️rust/📦️lib.rs): replace `Shape::Value`/`FieldValue::Value` JSON-literal shapes with the native value literal so DSL text never embeds JSON.
-- In [framework kernel lib.rs](🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs): retype `InvocationResult`, `ViewState`, `KernelOperation`, action args, and tutorial events from `serde_json::Value` to `WireValue`/typed structs with binary codec + DSL printing.
-- In [protocol_causal](🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔗️causal/⚡️implementation/🦀️rust/📦️lib.rs) and [protocol_command](🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🎮️command/⚡️implementation/🦀️rust/📦️lib.rs): drop `serde::Serialize`/`Deserialize` derives from `OperationEnvelope`, `Edit`, `OperationMeta` — binary codec plus `OpText` are the only representations.
+- In [store lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust/📦️lib.rs) `pack_rt` region: make `encode_wire_value`/`decode_wire_value` operate on a native `WireValue` (aligned with `dsl_schema::FieldValue`), delete `encode_json_value`/`decode_json_value` and `impl DocumentPack for serde_json::Value`. Schema-less apps get real `RecordSpec` grammars instead.
+- In [dsl_schema lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/⚡️implementations/🦀️rust/📦️lib.rs): replace `Shape::Value`/`FieldValue::Value` JSON-literal shapes with the native value literal so DSL text never embeds JSON.
+- In [framework kernel lib.rs](🧰️framework/⚡️implementations/🦀️rust/📦️lib.rs): retype `InvocationResult`, `ViewState`, `KernelOperation`, action args, and tutorial events from `serde_json::Value` to `WireValue`/typed structs with binary codec + DSL printing.
+- In [protocol_causal](🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🔗️causal/⚡️implementations/🦀️rust/📦️lib.rs) and [protocol_command](🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/🎮️command/⚡️implementations/🦀️rust/📦️lib.rs): drop `serde::Serialize`/`Deserialize` derives from `OperationEnvelope`, `Edit`, `OperationMeta` — binary codec plus `OpText` are the only representations.
 - Remove `serde_json` from all in-scope `Cargo.toml` dependencies as each crate is cleaned.
 
 ## Workstream 2: Plugin surface fully binary
 
-- In [plugin lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs): delete the fallback `dispatch_command_frame` JSON envelope (`{kind,name,args}`); all commands go through typed binary `AppCommand`. Manifest/effects/events encode `WireValue` directly (no `serde_json::to_value` hop).
-- In [world.wit](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📜️wit/📜️world.wit) and [plugin host lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/🖥️host/⚡️implementation/🦀️rust/📦️lib.rs): replace `payload-json`/`*-json` string params with `list<u8>` binary wire values; decode `PluginManifest` from wire bytes into typed structs without a `serde_json::Value` intermediate; same for `context_menu` request/response.
+- In [plugin lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs): delete the fallback `dispatch_command_frame` JSON envelope (`{kind,name,args}`); all commands go through typed binary `AppCommand`. Manifest/effects/events encode `WireValue` directly (no `serde_json::to_value` hop).
+- In [world.wit](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📜️wit/📜️world.wit) and [plugin host lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️implementations/🦀️rust/📦️lib.rs): replace `payload-json`/`*-json` string params with `list<u8>` binary wire values; decode `PluginManifest` from wire bytes into typed structs without a `serde_json::Value` intermediate; same for `context_menu` request/response.
 
 ## Workstream 3: JS/WASM bridges binary
 
-- In [WGPU renderer lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs) (~250 serde_json uses) and [OS React shell index.tsx](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx) (~100 JSON.parse/stringify): replace all scene `*Json` string fields (camera, selection, fixture, tables, paint2d, board, dag, world3d, …) with binary pack bytes (`Uint8Array`) decoded via `decodePackValue`; `handleAction`/`handle_action_js` exchange binary command envelopes instead of JSON strings; drag/drop payloads become pack bytes.
-- In [backbone-worker.ts](🧰️framework/🛍️product/💻️os/⚡️implementation/🟦️typescript/🟦️backbone-worker.ts) and [os index.ts](🧰️framework/🛍️product/💻️os/⚡️implementation/🟦️typescript/📦️index.ts): worker messages to `store_worker` become binary (drop `handleRequestJson`); `encodePackValue`/`decodePackValue` are the only TS codec, updated for the native value model.
-- In [framework ui react index.tsx](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx) and [framework ts index.ts](🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts): UI action/staging args carried as pack values, not JSON.
+- In [WGPU renderer lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs) (~250 serde_json uses) and [OS React shell index.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx) (~100 JSON.parse/stringify): replace all scene `*Json` string fields (camera, selection, fixture, tables, paint2d, board, dag, world3d, …) with binary pack bytes (`Uint8Array`) decoded via `decodePackValue`; `handleAction`/`handle_action_js` exchange binary command envelopes instead of JSON strings; drag/drop payloads become pack bytes.
+- In [backbone-worker.ts](🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/🟦️backbone-worker.ts) and [os index.ts](🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/📦️index.ts): worker messages to `store_worker` become binary (drop `handleRequestJson`); `encodePackValue`/`decodePackValue` are the only TS codec, updated for the native value model.
+- In [framework ui react index.tsx](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx) and [framework ts index.ts](🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts): UI action/staging args carried as pack values, not JSON.
 
 ## Workstream 4: Backbone and persistence envelopes
 
-- Dev `/semio-backbone` HTTP in [dev script.ts](🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts) and `readBackboneEnvelope`/`writeBackboneEnvelope` in [os index.ts](🧰️framework/🛍️product/💻️os/⚡️implementation/🟦️typescript/📦️index.ts): binary `encode_backbone_message` bytes with `content-type: application/octet-stream`, replacing the `{kind: snapshot|operations}` JSON envelope.
+- Dev `/semio-backbone` HTTP in [dev script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📜️script.ts) and `readBackboneEnvelope`/`writeBackboneEnvelope` in [os index.ts](🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/📦️index.ts): binary `encode_backbone_message` bytes with `content-type: application/octet-stream`, replacing the `{kind: snapshot|operations}` JSON envelope.
 - Persisted `document/v1` JSON envelopes (`wrapDocumentEnvelope`/`documentFromEnvelopeJson`): replaced by the existing binary bundle `encode_document_pack_bytes` (pack + spr), with `.dsl`/`.ops` text mirrors for humans. Per-app `envelope_json`/`projection_json` bridges (CAD `CadDocumentVcs`, `FlowDocumentVcs`, puzzle3d, procedural, norm, shooting, …) move to pack bytes + DSL text.
-- Path-map diffs in [db document lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/📄️document/⚡️implementation/🦀️rust/📦️lib.rs) (`encode_pathmap` = `serde_json::to_vec`): binary pack record encoding.
+- Path-map diffs in [db document lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️document/⚡️implementations/🦀️rust/📦️lib.rs) (`encode_pathmap` = `serde_json::to_vec`): binary pack record encoding.
 
 ## Workstream 5: User-facing import/export → .spk + DSL
 
-Across all plugins in `✏️s/🔌️plugin/**` (CAD spatial, flow, `.note.json`, `.theme.json`, shooting/remodel QC, architect, animate present deck, tutorial downloads):
+Across all plugins in `✏️s/🔌️plugins/**` (CAD spatial, flow, `.note.json`, `.theme.json`, shooting/remodel QC, architect, animate present deck, tutorial downloads):
 
 - `HostEffect::DownloadMediaExport` emits `.spk` (binary, `application/octet-stream`) and `.dsl`/`.ops` (text) — no `application/json` mime anywhere.
 - File pickers accept `.spk,.dsl,.ops` (drop `application/json,.json`), including the OS shell import in the React renderer.
@@ -88,8 +88,8 @@ Across all plugins in `✏️s/🔌️plugin/**` (CAD spatial, flow, `.note.json
 
 ## Workstream 7: Fixtures and tests
 
-- Sync actor `fixture.json` files under [store sync fixtures](🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/🧫️fixtures) → `.ops` DSL fixtures; golden `.bin` wire fixtures stay.
-- Jack graph JSON fixtures → the Jack graph DSL under [math graph dsl](🧰️framework/🔨️module/🧮️math/🕸️graph/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs).
+- Sync actor `fixture.json` files under [store sync fixtures](🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/⚡️implementations/🦀️rust/🧫️fixtures) → `.ops` DSL fixtures; golden `.bin` wire fixtures stay.
+- Jack graph JSON fixtures → the Jack graph DSL under [math graph dsl](🧰️framework/🔨️modules/🧮️math/🕸️graph/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs).
 - Storybook host fixtures → pack/DSL. All existing test files are extended in place (no new test files); assertions on JSON strings (e.g. flow/cad UI tests) rewritten against typed values or DSL text.
 
 ## Order of execution

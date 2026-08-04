@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-block-5d-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Block 5D app — textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+block_5d = { path = "../../../../../../../../../✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/⚡️implementations/🦀️rust", package = "semio-s-app-block-5d" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+block_shared = { path = "../../../../../../../../../✏️s/🔌️plugins/🧱️block/🔨️modules/🤝️shared/⚡️implementations/🦀️rust", package = "semio-s-plugin-block-shared" }

@@ -1,0 +1,36 @@
+[package]
+name = "semio-s-plugin-shooting"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[package.metadata.component]
+package = "semio:shooting"
+
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "shooting"
+ports = { react = 6019, wgpu = 6119 }
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+roots = ["🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️assets/🏚️abbau-aufbau"]
+placeholder = "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🥽️mesh/🧊️placeholder.glb"
+filter_from_examples = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../../../../../../✏️s/🔌️plugins/🎥️shooting/🛂️manifest/🗿️artifact/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/⚡️implementations/🦀️rust", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+shooting = { path = "../../../../../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/⚡️implementations/🦀️rust", package = "semio-s-app-shooting" }
+shooting_engine = { path = "../../../../../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-shooting-engine" }
+shooting_ui = { path = "../../../../../../../✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🔨️modules/🖱️ui/⚡️implementations/🦀️rust", package = "semio-s-app-shooting-ui" }
+

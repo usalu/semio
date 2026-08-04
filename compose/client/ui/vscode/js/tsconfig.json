@@ -18,8 +18,8 @@
       "@semio-tech/compose-js/*": ["../js/*"],
       "@semio-tech/ui-react": ["../../../../../framework/ui/js/react"],
       "@semio-tech/ui-react/*": ["../../../../../framework/ui/js/react/*"],
-      "@semio-tech/asset": ["../../../../asset"],
-      "@semio-tech/asset/*": ["../../../../asset/*"]
+      "@semio-tech/assets": ["../../../../asset"],
+      "@semio-tech/assets/*": ["../../../../asset/*"]
     },
     "types": ["node", "react", "react-dom", "vite/client"]
   },

@@ -35,7 +35,7 @@ isProject: false
 
 The kernel is fine. `brep.solid.extrude` -> `brep.measure.volume` already asserts an exact volume of 16.0 in `flow_module_brep`'s own tests, and `tessellate_geometry_json` runs real deflection-based tessellation. The problem is entirely the procedural 3D app's preview layer, which is built around placeholder primitives instead of kernel output.
 
-In [the engine](✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs):
+In [the engine](✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs):
 
 - `PROCEDURAL_FALLBACK_MESH_KIND = "box"`, `neuron_mesh_kind` (maps extrude/cut/fuse to `"box"`), `widget_preview_mesh_kind`, `preview_meshes_json_fallback`, `preview_instances_json_fallback` synthesize `semio_framework_plugin::mesh_from_kind("box")` unit cubes. `preview_payload_cached` returns them on a cold start, and `evaluated_preview_payload` returns them whenever tessellation yields nothing. This is exactly the grey cube in `probe-hexagonal-mushroom.png` (the fixture is a hexagonal column, not a cube).
 - Instances are positioned by node-graph layout: `let position = [x * 0.01, -y * 0.01, 0.0];`. Brep geometry is already in world coordinates, so previews get scattered across the scene by where their node sits in the graph. This is the "wrong boxes in wrong places" symptom.
@@ -46,7 +46,7 @@ In [the engine](✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/�
 - Operator errors (`entry["error"]` in the eval JSON) are dropped; a failing brep op silently becomes a box.
 - Double evaluation: `flowEvalTick` runs a budgeted `FlowEvalDriver::tick`, then `refresh_all_caches` -> `evaluated_preview_payload` builds a *second* `FlowHost` and runs a *full* synchronous `evaluate()`, discarding `eval_driver.eval_json()`.
 
-[CAD](✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs) already does this correctly via `kernel_3d_brepkit::mesh_data_from_mesh_transfer`, which fills `edge_positions`/`edge_ids`/`face_ids` - everything the React `World3dHost` needs for edge rendering and face/edge/vertex picking.
+[CAD](✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs) already does this correctly via `kernel_3d_brepkit::mesh_data_from_mesh_transfer`, which fills `edge_positions`/`edge_ids`/`face_ids` - everything the React `World3dHost` needs for edge rendering and face/edge/vertex picking.
 
 ## Target pipeline
 
@@ -67,7 +67,7 @@ flowchart LR
 
 ### 1. Typed tessellation API on the brep flow module
 
-In [flow/module/brep](🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep/📦️lib.rs), add to the existing tessellation region:
+In [flow/module/brep](🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/⚡️implementations/🦀️rust/🔨️modules/📐️brep/📦️lib.rs), add to the existing tessellation region:
 
 ```rust
 pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framework_core::MeshData, String>
@@ -77,7 +77,7 @@ backed by `kernel.tessellate` + `kernel_3d_brepkit::mesh_data_from_mesh_transfer
 
 ### 2. Rewrite the procedural engine preview payload
 
-In [the engine](✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs):
+In [the engine](✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs):
 
 - Delete `PROCEDURAL_FALLBACK_MESH_KIND`, `neuron_mesh_kind`, `widget_preview_mesh_kind`, `preview_meshes_json_fallback`, `preview_instances_json_fallback`, `mesh_from_tessellation_json`. No placeholder geometry anywhere: an empty graph previews nothing, a computing graph shows the existing `status_json` spinner, a failing node shows its error.
 - `geometry_handle_for_widget` becomes `geometry_handles_for_widget` returning every handle, in eval order. Emit one mesh + one instance per handle, instance id `widgetId` for a single handle and `widgetId#N` for multiples, so `worldSelect`/`worldHover` still resolve back to the widget.
@@ -90,18 +90,18 @@ In [the engine](✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/�
 
 ### 3. Wire show mode and selection targets in the UI
 
-In [the UI](✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs), extend `preview_selection_json` to emit `showEdges`, `selectionMode`, `granularity`, `targets` and `componentIds` the way [CAD's `world_selection_json](✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs)` does, driven by `runtime.show_mode` (`shaded`, `shaded+edges`, `wireframe`, `points`). Wireframe/points modes make the engine emit edge-only / point-only `MeshData`, since the React host has no global wireframe flag but does render `edgePositions` and point clouds. Add the show-mode entries to the window measure next to `procedural3d_lod_measure`.
+In [the UI](✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs), extend `preview_selection_json` to emit `showEdges`, `selectionMode`, `granularity`, `targets` and `componentIds` the way [CAD's `world_selection_json](✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs)` does, driven by `runtime.show_mode` (`shaded`, `shaded+edges`, `wireframe`, `points`). Wireframe/points modes make the engine emit edge-only / point-only `MeshData`, since the React host has no global wireframe flag but does render `edgePositions` and point clouds. Add the show-mode entries to the window measure next to `procedural3d_lod_measure`.
 
 ### 4. Close the two kernel gaps
 
-In [the brepkit kernel](✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/📦️lib.rs):
+In [the brepkit kernel](✏️s/🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust/📦️lib.rs):
 
 - `boolean_sync` currently detours torus-involving booleans through `boolean_mesh_sync` (tessellate at deflection 0.1, triangle-triangle boolean, `import_mesh` back into topology) - a faceted, non-analytic result. Replace with: copy the torus-bearing operand, `brepkit_operations::heal::convert_to_bspline` it (already wrapped as `convert_to_nurbs_sync`), then run the analytic `boolean`. Delete `boolean_mesh_sync` and `mesh_boolean_cache`; a boolean that genuinely fails returns `BrepError` and surfaces through the new status JSON. Keep the existing `fuse_box_torus_mesh_fallback` bench as a timing guard, retargeted at the analytic path.
 - `tessellate_sync`'s `Entity::Surface` arm uses `surface_grid(&nurbs, .., 16, 16)` with `normal.extend([0.0, 0.0, 1.0])`. Make the grid resolution derive from `tol` and the surface's parametric span, and compute real normals from the surface partials (the native `surface` module already exposes normal/derivative evaluation).
 
 ### 5. Extend the examples
 
-Rework [the example folder](✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example) and the `PROCEDURAL3D_EXAMPLE_*_TEXT` constants in [the DSL crate](✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs), plus `example_projection`/`example_document_json` and the `setActiveExample` staged palette args, so the set covers every operator family end to end: primitives, curves and surfaces, extrude/revolve/loft/sweep/pipe, booleans, fillet/chamfer/shell, transforms and patterns, measure. Each new example gets a DSL round-trip test in the existing `dsl` test region.
+Rework [the example folder](✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/⚡️implementations/🦀️rust/📚️examples) and the `PROCEDURAL3D_EXAMPLE_*_TEXT` constants in [the DSL crate](✏️s/🔌️plugins/🌀️procedural/🎛️apps/🧊️3d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust/📦️lib.rs), plus `example_projection`/`example_document_json` and the `setActiveExample` staged palette args, so the set covers every operator family end to end: primitives, curves and surfaces, extrude/revolve/loft/sweep/pipe, booleans, fillet/chamfer/shell, transforms and patterns, measure. Each new example gets a DSL round-trip test in the existing `dsl` test region.
 
 ### 6. Tests and runtime verification
 

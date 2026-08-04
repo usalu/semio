@@ -1,0 +1,28 @@
+[package]
+name = "semio-s-app-fem-2d-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "FEM 2D app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+fem2d = { path = "../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/⚡️implementations/🦀️rust", package = "semio-s-app-fem-2d" }
+fem_core = { path = "../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🔨️modules/🫀️core/⚡️implementations/🦀️rust", package = "semio-s-plugin-fem-core" }
+thiserror = "2.0.12"
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
+# 🔌️ `PortMultiplicity` isn't re-exported by `semio-framework-plugin` (WORKFLOWS-END-TO-END-TYPED-PORTS
+# port recipe) — a direct dependency on the core crate is the minimal fix, mirroring
+# `shooting_engine`'s identical dependency (see that crate's `Cargo.toml`).
+semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementations/🦀️rust", package = "semio-framework-core" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+fem2d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-s-app-fem-2d-dsl" }

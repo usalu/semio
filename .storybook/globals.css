@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
-@import "../🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/🎨️globals.css";
-@source "../🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript";
+@import "../🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/🎨️globals.css";
+@source "../🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript";
 @source "./";
 @source "./stories";
 @source "../compose/client/lib/js";
 @source "../compose/dev/algorithm";
-@source "../🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript";
-@source "../✏️s/🔌️plugin/📐️cad/🔨️module/📺️renderer/⚡️implementation/🟦️typescript";
-@source "../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🌍️world/🎨️r3f/⚡️implementation/🟦️typescript";
-@source "../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementation/🟦️typescript";
-@source "../✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/📺️renderer/⚛️react/⚡️implementation/🟦️typescript";
+@source "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript";
+@source "../✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript";
+@source "../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/⚡️implementations/🟦️typescript";
+@source "../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementations/🟦️typescript";
+@source "../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/📺️renderer/⚛️react/⚡️implementations/🟦️typescript";

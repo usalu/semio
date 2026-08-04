@@ -1,0 +1,26 @@
+[package]
+name = "semio-framework-os-kernel-infinite-board-port-directed"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[features]
+default = ["render"]
+render = ["infinite_board/render", "infinite_board_normal_undirected/render", "infinite_canvas/render"]
+[lib]
+name = "infinite_board_port_directed"
+crate-type = ["rlib"]
+path = "../../../../../🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust", package = "semio-framework-ui-styling" }
+infinite_board = { path = "../../../../../🎲️board/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board", default-features = false }
+infinite_board_port = { path = "../../../../../🎲️board/🔌️ports/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port" }
+infinite_board_normal_undirected = { path = "../../../../../🎲️board/➕️normal/↔undirected/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-undirected", default-features = false }
+mathematical_graph = { path = "../../../../../../../../../🔨️modules/🧮️math/🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
+infinite_canvas = { path = "../../../../../🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

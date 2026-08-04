@@ -1,0 +1,15 @@
+{
+  "name": "@semio-tech/icons",
+  "version": "1.0.0",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "framework/asset/icon",
+  "projectType": "library",
+  "devDependencies": {
+    "@semio-tech/logos": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  }
+}

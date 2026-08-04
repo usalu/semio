@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-norm-en1998"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "EN 1998 app - document entities (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

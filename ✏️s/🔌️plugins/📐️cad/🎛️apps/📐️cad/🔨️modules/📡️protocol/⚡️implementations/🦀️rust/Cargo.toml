@@ -1,0 +1,26 @@
+[package]
+name = "semio-s-app-cad-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Cad app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["rlib"]
+path = "../../../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/📡️protocol/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+cad_document = { path = "../../../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/⚡️implementations/🦀️rust", package = "semio-s-app-cad" }
+cad_document_op = { path = "../../../../../../../../../✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-cad-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+# 🎯️ `CadCommand` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2, mirrors the shooting B1 pilot's
+# `ShootingCommand`) derives `dsl::DslOps` for its `OpText`/`OpBinary` codec.
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"

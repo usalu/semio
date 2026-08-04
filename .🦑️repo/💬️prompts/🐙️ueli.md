@@ -368,11 +368,11 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 Every artifact must define diff, sqlite, 
 <artifact>
   diff
-    implementation
+    implementations
       rust
       typescript
       …
-  command
+  commands
     general.rs
     general.ts
     <command>
@@ -381,22 +381,22 @@ Every artifact must define diff, sqlite,
 
   document
     sqlite
-      implementation
+      implementations
         rust
         typescript
         …
     postgres
-      implementation
+      implementations
         rust
         typescript
         …
     neo4j
-      implementation
+      implementations
         rust
         typescript
         …
     json
-      implementation
+      implementations
         rust
         typescript
         …
@@ -411,7 +411,7 @@ Every artifact must define diff, sqlite,
     general.rs
     general.ts
 
-instead of
+doesnt work because of shared package.json
 
 <plugin>
   implementation
@@ -477,11 +477,11 @@ Add Variation Selector-16 (U+FE0F) to all text style emojis in the codebase. For
 
 ```
 🧰️framework
-    ⚡️implementation
+    ⚡️implementations
         <language> # e.g. 🦀️rust, 🟦️typescript, … for general framework
             <package-tree*> e.g. packages in rust, modules in python, …
             📦️.<extension> e.g. 📦️lib.rs or 📦️main.rs, 📦️index.tsx, …
-    🔨️module
+    🔨️modules
         <module> e.g. math, ui, … for general framework modules that are used by all the products
             ⚡️ # implementation
                 <language> # e.g. 🦀️ for rust, 🟦️ for typescript, …

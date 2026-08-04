@@ -47,10 +47,10 @@ Derive from emoji-stripped path segments (skip structural folders: `implementati
 
 | Tree                                          | Rust `[package].name`                                       | npm / Nx `name`                                                                           |
 | --------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `✏️s/🔌️plugin/<p>/🛂️manifest/...`           | `semio-s-plugin-<p>`                                        | `@semio-tech/<p>-plugin` (or existing `@semio-tech/<p>-rs` if already the bundle)         |
-| `✏️s/🔌️plugin/<p>/🎛️app/<a>/.../<slot>/...` | `semio-s-app-<a>[-<slot>]` (already mostly done)            | keep `@semio-tech/...` aligned with app/slot                                              |
-| `✏️s/🔌️plugin/<p>/🔨️module/<m>/...`         | `semio-s-plugin-<p>-<m>`                                    | `@semio-tech/<p>-<m>-rs`                                                                  |
-| `✏️s/🔨️module/...`                           | `semio-s-kernel-...` (geometry/mindmap/imperative as today) | `@semio-tech/kernel-...`                                                                  |
+| `✏️s/🔌️plugins/<p>/🛂️manifest/...`           | `semio-s-plugin-<p>`                                        | `@semio-tech/<p>-plugin` (or existing `@semio-tech/<p>-rs` if already the bundle)         |
+| `✏️s/🔌️plugins/<p>/🎛️apps/<a>/.../<slot>/...` | `semio-s-app-<a>[-<slot>]` (already mostly done)            | keep `@semio-tech/...` aligned with app/slot                                              |
+| `✏️s/🔌️plugins/<p>/🔨️modules/<m>/...`         | `semio-s-plugin-<p>-<m>`                                    | `@semio-tech/<p>-<m>-rs`                                                                  |
+| `✏️s/🔨️modules/...`                           | `semio-s-kernel-...` (geometry/mindmap/imperative as today) | `@semio-tech/kernel-...`                                                                  |
 | `🧰️framework/...`                            | `semio-framework-...` / `semio-framework-os-kernel-...`     | `@semio-tech/framework-...` / `@semio-tech/ui-...`                                        |
 | `compose/...`                                 | `semio-compose-...`                                         | `@semio-tech/compose-...`                                                                 |
 | `🌎️hub/...`                                  | `semio-hub-...`                                             | n/a (Rust-only today)                                                                     |
@@ -70,7 +70,7 @@ Concrete examples of expected renames:
 - `hub` / `hub-directory-*` → `semio-hub` / `semio-hub-directory-*`
 - `compose-vscode` / `repo-vscode` → `@semio-tech/compose-vscode` / `@semio-tech/repo-vscode`
 - `@semio-tech/infinite-canvas-react-renderer` → `@semio-tech/infinite-canvas-react-renderer`
-- `@semio-tech/semio-asset` (and icon/image/logo) → `@semio-tech/asset` (drop doubled `semio-`)
+- `@semio-tech/semio-asset` (and icon/image/logo) → `@semio-tech/assets` (drop doubled `semio-`)
 - Python `compose` → `semio-compose`; `ui-styling` → `semio-framework-ui-styling`
 - .NET `Elements.Styling` → location-aligned `Semio.Framework.Ui.Styling` (both framework and compose copies)
 - Align the 4 `package.json` ≠ `project.json` name pairs (vscode ×2, trinity ram/lsp)

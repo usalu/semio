@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-norm-iso16757-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "ISO 16757 app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+iso16757 = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/⚡️implementations/🦀️rust", package = "semio-s-app-norm-iso16757" }
+norm_core = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust", package = "semio-s-plugin-norm-core" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

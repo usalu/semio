@@ -1,0 +1,54 @@
+{
+  "name": "@semio-tech/cad-js-renderer",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6041"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6041"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts test long",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6041"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/🔨️modules/📺️renderer/⚡️implementations/🟦️typescript",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "env": {
+          "CAD_JS_RENDERER_PLAY_PORT": "6041"
+        },
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -26,7 +26,7 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { meshCollectionVitePlugin, semioFaviconVitePlugin, semioAssetsVitePlugin, semioHostHtmlVitePlugin, semioEmojiIndexHtmlVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+import { meshCollectionVitePlugin, semioFaviconVitePlugin, semioAssetsVitePlugin, semioHostHtmlVitePlugin, semioEmojiIndexHtmlVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/📜️script.ts";
 // #endregion 🔌️Adapters
 
@@ -283,7 +283,7 @@ export default defineConfig(async ({ mode }) => {
   const workspaceAliases: Array<{ find: string | RegExp; replacement: string }> = [
     { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname) },
     { find: "@compose/studio", replacement: path.resolve(__dirname, "../../studio") },
-    { find: "@semio-tech/asset/icon", replacement: path.resolve(workspaceRoot, "framework/asset/js/index.ts") },
+    { find: "@semio-tech/assets/icon", replacement: path.resolve(workspaceRoot, "framework/asset/js/index.ts") },
     ...(workspaceResolve.resolve?.alias ?? []),
     { find: /^use-sync-external-store\/shim\/with-selector(?:\.js)?$/, replacement: shimWithSelector },
     { find: /^use-sync-external-store\/shim(?:\.js)?$/, replacement: shimMain },

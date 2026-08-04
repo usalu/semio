@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/logos",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🪧️logos",
+        "command": "bun --watch ./📜️script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/⚡️implementations/🟦️typescript/🪧️logos",
+        "command": "bun ./📜️script.ts generate && bun ./📜️script.ts export",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

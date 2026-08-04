@@ -6794,6 +6794,7 @@ dependencies = [
  "semio-framework-os-kernel-3d-brep-engine",
  "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-space",
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-store-sync",
  "semio-framework-os-kernel-vcs",

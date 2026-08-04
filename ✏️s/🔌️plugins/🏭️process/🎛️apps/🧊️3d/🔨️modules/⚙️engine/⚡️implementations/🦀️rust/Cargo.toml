@@ -1,0 +1,28 @@
+[package]
+name = "semio-s-app-process-3d-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Process 3d app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🔨️modules/⚙️engine/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+process_3d = { path = "../../../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d" }
+process_3d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-s-app-process-3d-dsl" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
+kernel_3d_brepkit = { path = "../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
+kernel_3d_engine = { path = "../../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/⚡️implementations/🦀️rust", features = ["parallel"], package = "semio-framework-os-kernel-3d-brep-engine" }
+process_machines_wood = { path = "../../../../../../../../../✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/⚡️implementations/🦀️rust", package = "semio-s-plugin-process-wood" }
+process_machines_concrete = { path = "../../../../../../../../../✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/⚡️implementations/🦀️rust", package = "semio-s-plugin-process-concrete" }
+process_machines_metal = { path = "../../../../../../../../../✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/⚡️implementations/🦀️rust", package = "semio-s-plugin-process-metal" }
+process_machines_robotic = { path = "../../../../../../../../../✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/⚡️implementations/🦀️rust", package = "semio-s-plugin-process-robotic" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+base64 = "0.22.1"

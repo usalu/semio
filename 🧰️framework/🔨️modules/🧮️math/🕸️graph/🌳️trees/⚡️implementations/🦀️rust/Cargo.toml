@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-trees"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_trees"
+crate-type = ["rlib"]
+path = "../../../../🕸️graph/🌳️trees/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../../../🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
+mathematical_graph_components = { path = "../../../../🕸️graph/🧩️components/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-components" }
+mathematical_random = { path = "../../../../🎲️random/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-random" }
+mathematical_algebra = { path = "../../../../➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }

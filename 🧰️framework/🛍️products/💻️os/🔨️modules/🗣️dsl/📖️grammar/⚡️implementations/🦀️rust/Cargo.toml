@@ -1,0 +1,18 @@
+[package]
+name = "semio-framework-os-kernel-dsl-grammar"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "The self-hosted `.grammar` spec format — parser, canonical printer, and a PEG-style recognizer used to sweep hand-authored grammar files against fixture corpora"
+
+
+[lints]
+workspace = true
+[lib]
+name = "dsl_grammar"
+path = "../../../📖️grammar/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl_core = { package = "semio-framework-os-kernel-dsl-core", path = "../../../🫀️core/⚡️implementations/🦀️rust" }
+dsl_notation = { package = "semio-framework-os-kernel-dsl-notation", path = "../../../🖋️notation/⚡️implementations/🦀️rust" }
+dsl_schema = { package = "semio-framework-os-kernel-dsl-schema", path = "../../../🧬️schema/⚡️implementations/🦀️rust" }

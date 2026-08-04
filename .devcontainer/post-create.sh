@@ -76,7 +76,7 @@ echo "Installing JS deps with Bun…"
 bun install
 
 echo "Building repo client binary…"
-go build -o '🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client' './🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation/🐹️go'
+go build -o '🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/client' './🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/⚡️implementations/🐹️go'
 
 echo "Running workspace setup (polyglot toolchains + VSIX + hooks)…"
 bun nx run workspace:setup

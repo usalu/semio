@@ -25,11 +25,11 @@ Ticket: `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️02/FIX-EMPTY-PROC
 
 The React renderer loads the flow canvas engine with a bare specifier:
 
-```9442:9442:🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx
+```9442:9442:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx
     flowSessionPromise = import("@semio-tech/flow-core").then(async (mod) => {
 ```
 
-In [vite-elements-assets.ts](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts), `playgroundFlowWasmDevStubPlugin.resolveId` flags that id as a wasm package (line 162) but then only knows how to resolve `@semio-tech/<pkg>/<subpath>` ids:
+In [vite-elements-assets.ts](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🟦️vite-elements-assets.ts), `playgroundFlowWasmDevStubPlugin.resolveId` flags that id as a wasm package (line 162) but then only knows how to resolve `@semio-tech/<pkg>/<subpath>` ids:
 
 - `const workspacePkg = cleanId.match(/^(@semio-tech\/[^/]+)\/(.+)$/)` requires a subpath, so the bare id falls into the `else` branch
 - the only candidate becomes `<repoRoot>/@semio-tech/flow-core`, which never exists
@@ -37,7 +37,7 @@ In [vite-elements-assets.ts](🧰️framework/🔨️module/🖱️ui/🎨️sty
 
 Confirmed at runtime: the page loads `/@id/__x00__playground-wasm-stub/@semio-tech__flow-core`. The stub's `FlowSession` has `attachCanvas() { return Promise.resolve(); }`, `setSize() {}`, `renderFrame() {}`, so the flow canvas keeps a 300x150 backing store against a 966x807 CSS box and paints nothing. The failure is silent because the attach chain ends in a bare `.catch()` at line 18891 of the React engine.
 
-`node_modules/@semio-tech/flow-core` correctly links to the wasm-pack `pkg/` dir, whose `package.json` declares `"main": "flow_core.js"`, and `buildEngineWasm` always builds that pkg (see the note at line 990 of the os dev [script.ts](🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/📜️script.ts)) - so the stub should never have applied here.
+`node_modules/@semio-tech/flow-core` correctly links to the wasm-pack `pkg/` dir, whose `package.json` declares `"main": "flow_core.js"`, and `buildEngineWasm` always builds that pkg (see the note at line 990 of the os dev [script.ts](🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📜️script.ts)) - so the stub should never have applied here.
 
 ```mermaid
 flowchart LR
@@ -70,7 +70,7 @@ Extend the `if (import.meta.vitest)` region already at the bottom of the same fi
 
 ## Already applied in this ticket
 
-[framework/os/module/plugin lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs) `dispatch_command_frame` had its pack-envelope fallback restored (decode `{kind,name,args}` via `store::pack_rt::decode_wire_value` and route to `dispatch_action`/`dispatch_command`) after an Aug 1 commit removed it and left every unmigrated app erroring with "app must handle command frames via handle_typed_command". Verified: `setActiveExample` and `nodeGraphSelect` no longer fail at runtime. Keep this change.
+[framework/os/module/plugin lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs) `dispatch_command_frame` had its pack-envelope fallback restored (decode `{kind,name,args}` via `store::pack_rt::decode_wire_value` and route to `dispatch_action`/`dispatch_command`) after an Aug 1 commit removed it and left every unmigrated app erroring with "app must handle command frames via handle_typed_command". Verified: `setActiveExample` and `nodeGraphSelect` no longer fail at runtime. Keep this change.
 
 ## Verification
 

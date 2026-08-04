@@ -30,7 +30,7 @@ isProject: false
 
 `🎨️ui.css` `CelebrateContent` paints the conic on an oversized `::before` (`inset: -100%`) behind every `[data-icon]` inside a celebrated control, then tries to knock it back out with `mix-blend-mode: destination-in` on the inner `<svg>`:
 
-```7028:7053:🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript/🎨️ui.css
+```7028:7053:🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript/🎨️ui.css
 ) :is([data-icon], [data-icon-kind="catalog"], [data-icon-kind="svg"])::before {
   content: "";
   position: absolute;
@@ -48,7 +48,7 @@ isProject: false
 
 The label (`background-clip: text`) and tree guide/elbow/stem strokes (conic as the 1px line's own background) already work. Only the icon recipe is broken.
 
-### 1. `Icon` emits an alpha mask — [🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)
+### 1. `Icon` emits an alpha mask — [🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)
 
 In the `🖼️IconCodec` region add a memoized helper next to `iconSvgMarkup`:
 
@@ -69,7 +69,7 @@ style={{ ...boxStyle, ["--icon-mask" as string]: iconMaskImage(svgMarkup) }}
 
 Derived from the already theme-resolved `svgMarkup`, so `UiTheme.icons` variants mask correctly. Do **not** register `--icon-mask` with `@property`: it must stay unset on non-SVG kinds so the `var()` fallback in the CSS below can guarantee a transparent mask rather than `none`.
 
-### 2. Rewrite the icon recipe — [🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript/🎨️ui.css](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript/🎨️ui.css)
+### 2. Rewrite the icon recipe — [🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript/🎨️ui.css](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🟦️typescript/🎨️ui.css)
 
 In `CelebrateContent`, delete the three-rule blend recipe (the `isolation: isolate; color: #000` block, the `::before`, and the `> svg { mix-blend-mode }`) and replace with mask-based ink on the wrapper, adding the currently missing `themed` kind:
 
@@ -91,7 +91,7 @@ Glyph-based kinds that have no mask (`text`, `typst`, `shortcode`, `missing`) ge
 
 ### 3. Tests
 
-In-source, [📦️index.tsx](🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx):
+In-source, [📦️index.tsx](🧰️framework/🔨️modules/🖱️ui/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx):
 - `"celebrate content paint shares --celebrate-conic..."` (~28148): drop the `mix-blend-mode: destination-in` and drag-handle `color: #000` assertions; assert the region has no `mix-blend-mode` and no `inset: -100%`, and does contain `mask-image: var(--icon-mask, linear-gradient(#0000 0 0))` plus `visibility: hidden` for `> svg`.
 - `"Icon hover animation attributes"` (~30518): catalog markup contains `--icon-mask:url(&quot;data:image/svg+xml,`; `emoji` / `text` markup does not.
 

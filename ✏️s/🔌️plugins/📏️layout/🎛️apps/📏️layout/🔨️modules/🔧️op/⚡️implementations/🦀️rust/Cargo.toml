@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-layout-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Layout app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+layout = { path = "../../../../../../../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/⚡️implementations/🦀️rust", package = "semio-s-app-layout" }
+layout_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-layout-engine" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+vcs = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }

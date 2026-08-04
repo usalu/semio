@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-plugin-remodel-feature"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/🌟️feature/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+remodel_image = { path = "../../../../../../../✏️s/🔌️plugins/📸️remodel/🔨️modules/🖼️images/⚡️implementations/🦀️rust", package = "semio-s-plugin-remodel-image" }
+mathematical_spatial = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️math/🗺️spatial/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-spatial" }
+mathematical_random = { path = "../../../../../../../🧰️framework/🔨️modules/🧮️math/🎲️random/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-random" }

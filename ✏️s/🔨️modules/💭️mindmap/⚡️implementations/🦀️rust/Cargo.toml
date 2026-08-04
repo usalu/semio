@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-kernel-reasoning-mindmap"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "../../../../../✏️s/🔨️modules/💭️mindmap/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+infinite_board_normal_directed = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-directed" }
+infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas", default-features = false }
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"

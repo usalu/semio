@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-plugin-trinity-jack-shell"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[[bin]]
+name = "semio-s-plugin-trinity-jack-shell"
+path = "../../../🐚️shell/⚡️implementations/🦀️rust/📦️bin.rs"
+
+
+[lints]
+workspace = true
+[dependencies]
+trinity_jack = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/⚡️implementations/🦀️rust", package = "semio-s-plugin-trinity-jack" }
+trinity_ram = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🐏️ram/⚡️implementations/🦀️rust", package = "semio-s-plugin-trinity-ram" }
+vcs = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+thiserror = "2.0.12"

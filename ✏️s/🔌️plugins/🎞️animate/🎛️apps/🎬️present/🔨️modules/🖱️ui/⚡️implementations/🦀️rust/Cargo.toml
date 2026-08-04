@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-animate-present-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Animate present app — DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+present = { path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🦀️rust", package = "semio-s-app-animate-present" }
+present_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-animate-present-engine" }
+present_op = { path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/🔧️op/⚡️implementations/🦀️rust", package = "semio-s-app-animate-present-op" }
+present_protocol = { path = "../../../../../../../../../✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-s-app-animate-present-protocol" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust", package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

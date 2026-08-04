@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ compose/dev/algorithm/🧪️vitest.config.ts
 // Specs: Vitest for @semio-tech/compose-algorithm index (embedded tests + WASM-backed runner smoke).
-// Summary: Mirrors compose/js wasm resolution; `@semio-tech/asset` and `@semio-tech/compose-fixture` aliases.
+// Summary: Mirrors compose/js wasm resolution; `@semio-tech/assets` and `@semio-tech/compose-fixture` aliases.
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
@@ -21,7 +21,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@semio-tech/compose-rs-wasm": composeRsPkg,
-      "@semio-tech/asset": composeAssets,
+      "@semio-tech/assets": composeAssets,
       "@semio-tech/compose-fixture": composeFixtures,
     },
   },

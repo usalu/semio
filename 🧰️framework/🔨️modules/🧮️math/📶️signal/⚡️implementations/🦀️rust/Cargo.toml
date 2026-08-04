@@ -1,0 +1,16 @@
+[package]
+name = "semio-framework-os-kernel-math-signal"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+name = "mathematical_signal"
+crate-type = ["rlib"]
+path = "../../../📶️signal/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+mathematical_algebra = { path = "../../../➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }

@@ -57,7 +57,7 @@ Naming note: `DagDrawLod::Minimap` already exists and means "zoomed-far-out silh
 
 ## Core work: new region in the DAG crate
 
-All in [🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust/📦️lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust/📦️lib.rs), as a new `// #region 🔖️MinimapWidget` inside the existing `🔖️DagHost` region.
+All in [🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/⚡️implementations/🦀️rust/📦️lib.rs), as a new `// #region 🔖️MinimapWidget` inside the existing `🔖️DagHost` region.
 
 - New `DagHost` fields: `minimap_widget_visible: bool` (default `false`), `minimap_widget_hovered: bool`, `minimap_widget_drag: Option<(f64, f64)>` (pointer-to-viewport-center offset in minimap space).
 - `pub fn set_minimap_widget_visible(&mut self, visible: bool)` so the widget is opt-in per canvas.
@@ -78,26 +78,26 @@ All in [🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/�
 
 ## Enabling it for flow
 
-In [🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/📦️lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/📦️lib.rs), set `dag.set_minimap_widget_visible(true)` where `FlowHost` builds its `DagHost` (constructor around line 1785). Other DAG consumers stay unaffected because the flag defaults to `false`.
+In [🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/⚡️implementations/🦀️rust/📦️lib.rs), set `dag.set_minimap_widget_visible(true)` where `FlowHost` builds its `DagHost` (constructor around line 1785). Other DAG consumers stay unaffected because the flag defaults to `false`.
 
 ## Styling tokens
 
 Tokens are code-generated, so hand-edit only the sources and regenerate.
 
-- [🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🔣️tokens.json](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🔣️tokens.json): add `metrics.dag.minimapWidget` (`width`, `height`, `margin`, `radius`, `nodeMinSize`, `maxContentRatio`), `strokes.dagMinimapWidgetPanel` / `dagMinimapWidgetViewport`, and `appearances.{light,dark}.board.minimapWidget{PanelFill,PanelStroke,ViewportFill,ViewportStroke,ViewportStrokeHovered}`.
-- [🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🎨️theme/🔣️mono.theme.json](🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🎨️theme/🔣️mono.theme.json): matching mono-theme entries.
+- [🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🔣️tokens.json](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🔣️tokens.json): add `metrics.dag.minimapWidget` (`width`, `height`, `margin`, `radius`, `nodeMinSize`, `maxContentRatio`), `strokes.dagMinimapWidgetPanel` / `dagMinimapWidgetViewport`, and `appearances.{light,dark}.board.minimapWidget{PanelFill,PanelStroke,ViewportFill,ViewportStroke,ViewportStrokeHovered}`.
+- [🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🎨️theme/🔣️mono.theme.json](🧰️framework/🔨️modules/🖱️ui/🎨️styling/⚡️implementations/🦀️rust/🎨️theme/🔣️mono.theme.json): matching mono-theme entries.
 - Regenerate with the styling crate's `📜️script.ts generate`, which rewrites `🤖️generated.rs`, `🤖️generated.py`, the CSS and the TS tokens.
-- Extend `CanvasPalette` (fields plus `from_board_palette`) in [🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust/📦️lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust/📦️lib.rs) (struct at line 372) with the new colours, and add them to its JSON merge so runtime theme switching keeps working.
+- Extend `CanvasPalette` (fields plus `from_board_palette`) in [🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust/📦️lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/⚡️implementations/🦀️rust/📦️lib.rs) (struct at line 372) with the new colours, and add them to its JSON merge so runtime theme switching keeps working.
 
 ## Renderer-side follow-through
 
-The DOM overlays in [🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx) stack above the GPU canvas (labels `z-40`, sliders `z-45`), so a node parked in the bottom-right corner would draw its label over the minimap.
+The DOM overlays in [🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx) stack above the GPU canvas (labels `z-40`, sliders `z-45`), so a node parked in the bottom-right corner would draw its label over the minimap.
 
 - Include the minimap panel rect and a `cursor` hint in `label_overlay_paint_state_json` (DAG crate) and surface it through the existing `FlowSession` getter, which React already polls each frame at line ~17307.
 - Cull labels inside that rect in `paintDagLabelOverlays`, and hide sliders whose screen position falls inside it in `GraphSliderOverlays` (both in the `//#region 🔖️graph-canvas-overlays`).
 - Apply the cursor hint (`grab` / `grabbing` / `pointer`) to the flow canvas element in `FlowGraphCanvasHost`. The native wgpu path gets painted hover feedback only; no cursor plumbing exists there and none is added.
 
-No changes are needed in [🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs) — it already forwards to `pointer_*_screen` (lines ~3631-3694) and composites whatever `paint_scene` produces.
+No changes are needed in [🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs) — it already forwards to `pointer_*_screen` (lines ~3631-3694) and composites whatever `paint_scene` produces.
 
 ## Verification
 

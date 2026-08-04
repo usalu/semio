@@ -36,7 +36,7 @@ isProject: false
 
 Flow builds its menu inside `render()` and ships it as `context_menu_json` on the scene, then emits every selection-scoped row unconditionally with `disabled: !has_selection`:
 
-```203:211:✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs
+```203:211:✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🔨️modules/🖱️ui/⚡️implementations/🦀️rust/📦️lib.rs
     items.push(json!({
         "id": "delete-selection",
         "label": labels.delete_selection,
@@ -51,7 +51,7 @@ Flow builds its menu inside `render()` and ships it as `context_menu_json` on th
 Three consequences: the menu is always one frame stale, inapplicable rows are present, and no row can mention what is selected. Additionally:
 
 - `DagHost` exposes only `selected_node_ids()` while the board engine tracks `selection.edge_ids`/`handle_ids`, so the flow plugin never learns about selected edges. Its `deleteSelection` handler calls `sync_host_selection(host, &selected)` with node ids only, so right-click delete silently spares selected edges.
-- `Delete`/`Backspace` is hardcoded per canvas (e.g. [react renderer:18811](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx)) instead of being an app keybinding, so `mapContextMenuSpecs` has no shortcut to display for `deleteSelection`.
+- `Delete`/`Backspace` is hardcoded per canvas (e.g. [react renderer:18811](🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/📦️index.tsx)) instead of being an app keybinding, so `mapContextMenuSpecs` has no shortcut to display for `deleteSelection`.
 - The on-demand path already exists end-to-end in Rust (`DocumentApp::context_menu`, `Menu` builder, `plugin_context_menu`, `AppCommand::ContextMenu` tag 5 / `AppFrame::ContextMenu` tag 10, wire codecs in TS), but `AppChannelClient` has no `contextMenu()` method, so nothing ever calls it and no app implements the trait hook.
 
 ## Target flow
@@ -72,7 +72,7 @@ flowchart LR
 
 ## 1. Request contract (typed, no free-form JSON)
 
-In [ui-wgpu lib.rs](🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs) and its TS twin [framework core index.ts](🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts), replace `ContextMenuSurfaceTarget.target_json: Option<String>` with typed context reusing the existing pick-target grammar (`node`, `edge`, `handle`, `object`, `feature`, `row`, `word`):
+In [ui-wgpu lib.rs](🧰️framework/🔨️modules/🖱️ui/🧊️wgpu/⚡️implementations/🦀️rust/📦️lib.rs) and its TS twin [framework core index.ts](🧰️framework/⚡️implementations/🟦️typescript/📦️index.ts), replace `ContextMenuSurfaceTarget.target_json: Option<String>` with typed context reusing the existing pick-target grammar (`node`, `edge`, `handle`, `object`, `feature`, `row`, `word`):
 
 ```rust
 pub struct ContextMenuSurfaceTarget {
@@ -89,7 +89,7 @@ pub struct ContextMenuTextContext { pub caret: usize, pub has_selection: bool, p
 
 Empty `hits` means the click landed on empty canvas — that is the signal apps use to emit the canvas menu instead of the target menu.
 
-Add a localized count-phrase helper next to the `Menu` builder in [plugin lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs) so every app formats counts identically:
+Add a localized count-phrase helper next to the `Menu` builder in [plugin lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🦀️rust/📦️lib.rs) so every app formats counts identically:
 
 ```rust
 pub fn selection_count_phrase(is_de: bool, counts: &[(usize, &str, &str)]) -> String
@@ -101,9 +101,9 @@ Row labels become `format!("{} ({})", labels.delete_selection, phrase)`, e.g. `D
 
 ## 2. Channel plumbing
 
-- [os index.ts](🧰️framework/🛍️product/💻️os/⚡️implementation/🟦️typescript/📦️index.ts): add `AppChannelClient.contextMenu(request)` next to `refreshUi`, encoding `ContextMenu: { seq: this.nextSeq(), request: Array.from(encodePackValue(request)) }` and decoding the `ContextMenu` frame whose `in_reply_to` matches.
+- [os index.ts](🧰️framework/🛍️products/💻️os/⚡️implementations/🟦️typescript/📦️index.ts): add `AppChannelClient.contextMenu(request)` next to `refreshUi`, encoding `ContextMenu: { seq: this.nextSeq(), request: Array.from(encodePackValue(request)) }` and decoding the `ContextMenu` frame whose `in_reply_to` matches.
 - Add `contextMenu` to `PluginWasmHandle` in framework core TS and implement `performContextMenu` in `adaptPluginHandle` in the React renderer, mirroring `performRefreshUi`.
-- wgpu: add `ProgramBridgeEntry::context_menu(instance_id, request)` beside `handle_action` (wgpu lib.rs ~7598) for both backends, encoding the same `AppCommand::ContextMenu` over `exchange`; add the matching helper on `WasmPluginRuntime` in [plugin host lib.rs](🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/🖥️host/⚡️implementation/🦀️rust/📦️lib.rs) if the native arm needs it.
+- wgpu: add `ProgramBridgeEntry::context_menu(instance_id, request)` beside `handle_action` (wgpu lib.rs ~7598) for both backends, encoding the same `AppCommand::ContextMenu` over `exchange`; add the matching helper on `WasmPluginRuntime` in [plugin host lib.rs](🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️implementations/🦀️rust/📦️lib.rs) if the native arm needs it.
 
 ## 3. Selection truth: nodes, edges, handles
 

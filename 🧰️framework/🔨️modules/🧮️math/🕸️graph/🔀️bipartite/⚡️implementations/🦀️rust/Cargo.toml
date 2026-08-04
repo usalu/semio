@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-bipartite"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_bipartite"
+crate-type = ["rlib"]
+path = "../../../../🕸️graph/🔀️bipartite/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../../../🕸️graph/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
+mathematical_graph_matching = { path = "../../../../🕸️graph/🤝️matching/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-graph-matching" }
+mathematical_random = { path = "../../../../🎲️random/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-random" }
+mathematical_algebra = { path = "../../../../➕️algebra/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }

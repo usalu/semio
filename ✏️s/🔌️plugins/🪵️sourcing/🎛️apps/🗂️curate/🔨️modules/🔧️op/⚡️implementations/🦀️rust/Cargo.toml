@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-app-sourcing-curate-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sourcing curate app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+sourcing = { path = "../../../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/⚡️implementations/🦀️rust", package = "semio-s-app-sourcing-curate" }
+# 🧮️ `SourcingCurateConfigOperation::Snapshot` carries a real `sourcing_engine::SourcingCurateConfig` in
+# production now (B1 config recipe) — mirrors `shooting_op`'s equally-real `shooting_engine` dependency.
+sourcing_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-sourcing-curate-engine" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️protocol/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-en1997-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "EN 1997 app - operation type + family + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/🔨️modules/🔧️op/⚡️implementations/🦀️rust/📦️lib.rs"
+
+[dependencies]
+en1997 = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1997" }
+en1997_engine = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/🔨️modules/⚙️engine/⚡️implementations/🦀️rust", package = "semio-s-app-norm-en1997-engine" }
+norm_core = { path = "../../../../../../../../../✏️s/🔌️plugins/📕️norm/🔨️modules/🫀️core/⚡️implementations/🦀️rust", package = "semio-s-plugin-norm-core" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚡️implementations/🦀️rust", package = "semio-framework-os-kernel-store" }
