@@ -1,0 +1,28 @@
+{
+  "title": "Create Solar Radiation Cooling Video",
+  "emoji": "☀️",
+  "status": "closed",
+  "description": "Build Cooling Part 3 (Solar Radiation & Glass) as beat-based Manim scenes with German on-screen text, English TTS narrations and compose scripts, following the generate-manim-tutorial skill and the dev's scene breakdown (I_S,max, A/F_F, F_V, g_tot, Q̇_S,tr).",
+  "goal": "🎯r2602🎯updateddocs🎯updateduserdocs🎯updatedtutorials",
+  "dates": {
+    "due": "2026-08-04",
+    "started": "2026-08-04",
+    "finished": "2026-08-04"
+  },
+  "client": "claude-code",
+  "llm": "opus-4-7",
+  "summary": "Built Cooling 4_solar_radiation as 5 beat scenes (I_S,max orientation chart, A·F_F, F_V Raffstore, g_tot = τ_e + q_i, master equation Q̇_S,tr) plus generate_audio/build_full_video/manim.cfg. Beat 3 was reworked on dev request from a face-on window to a vertical facade section carrying two situations — unshaded (full beam through the glass, F_V = 1,0) then the external Raffstore dropping in and reflecting the beam back outside (F_V = 0,15) — with derived slat/reflection geometry and a matching narration. All five beats smoke-rendered at -ql and frame-inspected; build_full_video.py ran end-to-end (-qh render → mux → compose, exit 0) producing a 75.5 s Full_Scene4_Solar_Radiation.mp4. Blocking-light occlusion is done via z_index with fully opaque frame/masonry/blind so blocked rays are genuinely cut. TTS returned 401 (invalid OpenAI key in NowIGetIt .env) — the five English narrations are staged in generate_audio.py and the final video currently carries no audio. Also repointed the stale scene_2 launch entry to merged_scenes.py Scene1 and ignored Manim partial_movie_files.",
+  "files": {
+    "created": [
+      "tutorial/energy/demand/Cooling/4_solar_radiation/scene_4.py",
+      "tutorial/energy/demand/Cooling/4_solar_radiation/generate_audio.py",
+      "tutorial/energy/demand/Cooling/4_solar_radiation/build_full_video.py",
+      "tutorial/energy/demand/Cooling/4_solar_radiation/manim.cfg",
+      ".repo/🎫/26/08/04/CREATE-SOLAR-RADIATION-COOLING-VIDEO/notes.md"
+    ],
+    "updated": [
+      ".vscode/launch.json",
+      ".gitignore"
+    ]
+  }
+}

@@ -575,3 +575,4 @@ tutorial/**/*.mp4
 tutorial/**/*.mp3
 tutorial/**/*.svg
 tutorial/**/*.wav
+tutorial/**/partial_movie_files/
