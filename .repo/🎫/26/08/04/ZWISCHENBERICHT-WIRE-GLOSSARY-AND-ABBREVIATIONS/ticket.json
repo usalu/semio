@@ -1,0 +1,16 @@
+{
+  "title": "Zwischenbericht Wire Glossary and Abbreviations",
+  "emoji": "🔤",
+  "status": "closed",
+  "description": "Wire all glossary terms via \\Gls{} and ensure all abbreviations (REST, API, KI, LLM, HID, AP, NGS, KET, BBSR, and any missing technical terms) are defined and wired via \\Abbr{} in mit-bestand/bericht/zwischenbericht/zwischenbericht.tex so Glossar and Abkürzungsverzeichnis page hyperlinks populate. Split compound glossary keys that cannot appear verbatim in body text into usable term keys. Leave bare forms in section titles and pre-define front matter per prior convention.",
+  "summary": "Added a proper bibliographic reference for semio from CITATION.cff (@software{saluz-semio-2025} with authors, version r25.07-1, Zenodo DOI 10.5281/zenodo.8419156, GitHub URL) and cited it with \\cite{saluz-semio-2025} at the toolkit introduction, Ergebnisverwertung opening, and Softwarebasis paragraph (replacing the bare \\url and ERGÄNZEN placeholder). Rebuild verified: in-text [107], bibliography shows DOI + URL.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2427"
+  },
+  "goal": "🎯r2602/🎯updateddocs",
+  "sessions": [
+    "⚪c527d7e277e445ad952346e398c82a67",
+    "⚪3ba4829bf98242cc9e54c0697a5d2762",
+    "⚪a24c076efc5b44329b5d93c782224b53"
+  ]
+}

@@ -1,0 +1,619 @@
+
+> nx run @semio-tech/print:build
+
+> bun ./script.ts build
+
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.appendix.tex:11: Overfull \hbox (4.40002pt too wide) in alignment at lines 11--11
+note: Running BibTeX on report.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Overfull \hbox (94.67415pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Overfull \hbox (94.67415pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) in alignment at lines 10--10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.appendix.tex:11: Overfull \hbox (4.40002pt too wide) in alignment at lines 11--11
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.bbl` (1.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.blg` (252 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.aux` (5.0625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.log` (52.0068359375 KiB)
+note: Not writing `report.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.synctex.gz` (35.5439453125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.run.xml` (2.57421875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.pdf` (49.6630859375 KiB)
+[DEBUG] print built print/dist/report.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.appendix.tex:11: Overfull \hbox (4.40002pt too wide) in alignment at lines 11--11
+note: Running BibTeX on report.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Overfull \hbox (94.67415pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Overfull \hbox (94.67415pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) in alignment at lines 10--10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.appendix.tex:11: Overfull \hbox (4.40002pt too wide) in alignment at lines 11--11
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.run.xml` (2.57421875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.log` (52.1123046875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.pdf` (73.611328125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.register-toc` (489 B)
+note: Not writing `report.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.blg` (252 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.bbl` (1.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.aux` (5.0625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report.synctex.gz` (35.81640625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-blx.bib` (340 B)
+[DEBUG] print built print/dist/report.pdf
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.appendix.tex:11: Overfull \hbox (4.40002pt too wide) in alignment at lines 11--11
+note: Running BibTeX on report-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Overfull \hbox (94.67415pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Overfull \hbox (94.67415pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) in alignment at lines 10--10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.appendix.tex:11: Overfull \hbox (4.40002pt too wide) in alignment at lines 11--11
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.bbl` (1.7294921875 KiB)
+note: Not writing `report-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.aux` (5.0673828125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.log` (52.099609375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.pdf` (49.6240234375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.run.xml` (2.6181640625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.blg` (262 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.synctex.gz` (35.560546875 KiB)
+[DEBUG] print built print/dist/report-dark.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.appendix.tex:11: Overfull \hbox (4.40002pt too wide) in alignment at lines 11--11
+note: Running BibTeX on report-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:10: Overfull \hbox (94.67415pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Overfull \hbox (94.67415pt too wide) in alignment at lines 10--10
+warning: report.content.tex:10: Underfull \hbox (badness 10000) in alignment at lines 10--10
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: report.appendix.tex:11: Overfull \hbox (4.40002pt too wide) in alignment at lines 11--11
+note: Rerunning TeX because I was told to ...
+warning: report.content.tex:14: Underfull \hbox (badness 4765) in paragraph at lines 13--14
+warning: report.content.tex:40: Overfull \hbox (199.66634pt too wide) in paragraph at lines 39--40
+warning: report.content.tex:43: Overfull \hbox (199.66634pt too wide) in paragraph at lines 42--43
+warning: report.content.tex:46: Overfull \hbox (199.66634pt too wide) in paragraph at lines 45--46
+warning: report.content.tex:49: Overfull \hbox (199.66634pt too wide) in paragraph at lines 48--49
+warning: report.content.tex:49: Underfull \vbox (badness 10000) has occurred while \output is active
+warning: report.content.tex:52: Overfull \hbox (199.66634pt too wide) in paragraph at lines 51--52
+warning: report.content.tex:70: Overfull \hbox (3.65509pt too wide) detected at line 70
+warning: report.content.tex:70: Overfull \hbox (127.58759pt too wide) in paragraph at lines 70--70
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.pdf` (72.4814453125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.register-toc` (489 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.aux` (5.0673828125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.synctex.gz` (35.8330078125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.window-breaks` (342 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.run.xml` (2.6181640625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.log` (52.21484375 KiB)
+note: Not writing `report-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.blg` (262 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/report-dark.bbl` (1.7294921875 KiB)
+[DEBUG] print built print/dist/report-dark.pdf
+note: Running TeX ...
+note: Running BibTeX on paper.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.synctex.gz` (8.1103515625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.blg` (250 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.bbl` (2.47265625 KiB)
+note: Not writing `paper.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.aux` (2.943359375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.register-toc` (344 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.run.xml` (2.5712890625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.pdf` (23.37890625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.log` (49.66015625 KiB)
+[DEBUG] print built print/dist/paper.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+note: Running BibTeX on paper.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Not writing `paper.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.register-toc` (344 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.bbl` (2.47265625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.run.xml` (2.5712890625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.log` (49.763671875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.blg` (250 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.synctex.gz` (8.3310546875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.aux` (2.943359375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper.pdf` (52.36328125 KiB)
+[DEBUG] print built print/dist/paper.pdf
+note: Running TeX ...
+note: Running BibTeX on paper-dark.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Not writing `paper-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.register-toc` (344 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.run.xml` (2.615234375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.blg` (260 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.bbl` (2.47265625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.log` (49.73828125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.pdf` (23.369140625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.synctex.gz` (8.1279296875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.aux` (2.9482421875 KiB)
+[DEBUG] print built print/dist/paper-dark.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+note: Running BibTeX on paper-dark.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.log` (49.8515625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.blg` (260 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.pdf` (52.1689453125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.bbl` (2.47265625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.aux` (2.9482421875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.register-toc` (344 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.run.xml` (2.615234375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/paper-dark.synctex.gz` (8.349609375 KiB)
+note: Not writing `paper-dark.out`: it would be empty.
+[DEBUG] print built print/dist/paper-dark.pdf
+note: Running TeX ...
+note: Running BibTeX on flyer.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.window-breaks` (87 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.blg` (217 B)
+note: Not writing `flyer.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.aux` (1.1689453125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.log` (49.2900390625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.synctex.gz` (4.4892578125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.pdf` (13.3310546875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.run.xml` (2.5322265625 KiB)
+[DEBUG] print built print/dist/flyer.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+note: Running BibTeX on flyer.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.aux` (1.1689453125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.pdf` (16.0908203125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.synctex.gz` (4.693359375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.blg` (217 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.window-breaks` (87 B)
+note: Not writing `flyer.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.log` (49.3935546875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.run.xml` (2.5322265625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer.bbl` (512 B)
+[DEBUG] print built print/dist/flyer.pdf
+note: Running TeX ...
+note: Running BibTeX on flyer-dark.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.run.xml` (2.576171875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.synctex.gz` (4.5048828125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.log` (49.373046875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.aux` (1.173828125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.window-breaks` (87 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.blg` (227 B)
+note: Not writing `flyer-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.pdf` (13.314453125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.bbl` (512 B)
+[DEBUG] print built print/dist/flyer-dark.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+note: Running BibTeX on flyer-dark.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.aux` (1.173828125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.log` (49.486328125 KiB)
+note: Not writing `flyer-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.run.xml` (2.576171875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.window-breaks` (87 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.blg` (227 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.synctex.gz` (4.708984375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/flyer-dark.pdf` (15.9248046875 KiB)
+[DEBUG] print built print/dist/flyer-dark.pdf
+note: Running TeX ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:27: Underfull \hbox (badness 10000) in paragraph at lines 26--27
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+note: Running BibTeX on forschungsbericht.aux ...
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.window-breaks` (58 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.register-toc` (743 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.synctex.gz` (33.5224609375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.bbl` (2.5078125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.pdf` (50.537109375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.aux` (4.935546875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.run.xml` (2.6708984375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.log` (51.91796875 KiB)
+note: Not writing `forschungsbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.blg` (274 B)
+[DEBUG] print built print/dist/forschungsbericht.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:27: Underfull \hbox (badness 10000) in paragraph at lines 26--27
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+note: Running BibTeX on forschungsbericht.aux ...
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.pdf` (52.677734375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.window-breaks` (58 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.log` (52.044921875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.register-toc` (743 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.run.xml` (2.6708984375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.aux` (4.935546875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.synctex.gz` (33.7294921875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.bbl` (2.5078125 KiB)
+note: Not writing `forschungsbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht.blg` (274 B)
+[DEBUG] print built print/dist/forschungsbericht.pdf
+note: Running TeX ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:27: Underfull \hbox (badness 10000) in paragraph at lines 26--27
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+note: Running BibTeX on forschungsbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.bbl` (2.5078125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.synctex.gz` (33.5390625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.log` (52.01171875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.blg` (284 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.aux` (4.9404296875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.register-toc` (743 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.pdf` (50.4248046875 KiB)
+note: Not writing `forschungsbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.run.xml` (2.71484375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.window-breaks` (58 B)
+[DEBUG] print built print/dist/forschungsbericht-dark.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:27: Underfull \hbox (badness 10000) in paragraph at lines 26--27
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+note: Running BibTeX on forschungsbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+note: Rerunning TeX because I was told to ...
+warning: forschungsbericht.content.tex:16: Underfull \hbox (badness 10000) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:16: Overfull \hbox (392.48627pt too wide) in paragraph at lines 16--16
+warning: forschungsbericht.content.tex:33: Underfull \hbox (badness 1675) in paragraph at lines 32--33
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.window-breaks` (58 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.log` (52.1494140625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.aux` (4.9404296875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.blg` (284 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.run.xml` (2.71484375 KiB)
+note: Not writing `forschungsbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.synctex.gz` (33.7451171875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.bbl` (2.5078125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.register-toc` (743 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.pdf` (52.56640625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/forschungsbericht-dark.panels` (50 B)
+[DEBUG] print built print/dist/forschungsbericht-dark.pdf
+note: Running TeX ...
+note: Running BibTeX on zwischenbericht.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.log` (51.837890625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.synctex.gz` (17.8916015625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.window-breaks` (66 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.pdf` (29.2333984375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.blg` (237 B)
+note: Not writing `zwischenbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.aux` (2.498046875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.register-toc` (419 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.run.xml` (2.6201171875 KiB)
+[DEBUG] print built print/dist/zwischenbericht.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+note: Running BibTeX on zwischenbericht.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.log` (51.9609375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.blg` (237 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.register-toc` (419 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.aux` (2.498046875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.synctex.gz` (18.1171875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.run.xml` (2.6201171875 KiB)
+note: Not writing `zwischenbericht.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.pdf` (58.0986328125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht.window-breaks` (66 B)
+[DEBUG] print built print/dist/zwischenbericht.pdf
+note: Running TeX ...
+note: Running BibTeX on zwischenbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.aux` (2.5029296875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.log` (51.931640625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.pdf` (29.2021484375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.synctex.gz` (17.91015625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.register-toc` (419 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.window-breaks` (66 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.run.xml` (2.6640625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark-blx.bib` (340 B)
+note: Not writing `zwischenbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.blg` (247 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.panels` (50 B)
+[DEBUG] print built print/dist/zwischenbericht-dark.pdf
+[DEBUG] print panel glass panel-1 page 3
+note: Running TeX ...
+note: Running BibTeX on zwischenbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.aux` (2.5029296875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.blg` (247 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.bbl` (512 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.register-toc` (419 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.window-breaks` (66 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.synctex.gz` (18.134765625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.run.xml` (2.6640625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.pdf` (57.9658203125 KiB)
+note: Not writing `zwischenbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/zwischenbericht-dark.log` (52.0654296875 KiB)
+[DEBUG] print built print/dist/zwischenbericht-dark.pdf
+note: Running TeX ...
+note: Running BibTeX on kompaktbericht.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.log` (49.748046875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.run.xml` (2.650390625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.bbl` (1.857421875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.synctex.gz` (7.7119140625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.aux` (2.548828125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.register-toc` (376 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.blg` (268 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.pdf` (23.4970703125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.panels` (50 B)
+note: Not writing `kompaktbericht.out`: it would be empty.
+[DEBUG] print built print/dist/kompaktbericht.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+note: Running BibTeX on kompaktbericht.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.pdf` (36.0439453125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.register-toc` (376 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.synctex.gz` (7.9326171875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.bbl` (1.857421875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.blg` (268 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.aux` (2.548828125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.log` (49.869140625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht.run.xml` (2.650390625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-blx.bib` (340 B)
+note: Not writing `kompaktbericht.out`: it would be empty.
+[DEBUG] print built print/dist/kompaktbericht.pdf
+note: Running TeX ...
+note: Running BibTeX on kompaktbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.synctex.gz` (7.73046875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.bbl` (1.857421875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.aux` (2.5537109375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.run.xml` (2.6943359375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark-blx.bib` (340 B)
+note: Not writing `kompaktbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.blg` (278 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.log` (49.8251953125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.register-toc` (376 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.pdf` (23.4853515625 KiB)
+[DEBUG] print built print/dist/kompaktbericht-dark.pdf
+[DEBUG] print panel glass panel-1 page 2
+note: Running TeX ...
+note: Running BibTeX on kompaktbericht-dark.aux ...
+note: Rerunning TeX because I was told to ...
+note: Rerunning TeX because I was told to ...
+note: Running xdvipdfmx ...
+note: Not writing `kompaktbericht-dark.out`: it would be empty.
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.register-toc` (376 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.run.xml` (2.6943359375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.log` (49.95703125 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.blg` (278 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.aux` (2.5537109375 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.synctex.gz` (7.9482421875 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.pdf` (36.4072265625 KiB)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.panels` (50 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark-blx.bib` (340 B)
+note: Writing `/Users/ueli/Documents/semio-kinan-wip/print/dist/kompaktbericht-dark.bbl` (1.857421875 KiB)
+[DEBUG] print built print/dist/kompaktbericht-dark.pdf
+
+
+
+ NX   Successfully ran target build for project @semio-tech/print
+
+

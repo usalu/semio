@@ -667,7 +667,7 @@
   } { }
 }
 
-\cs_new_protected:Npn \semio_termlist_use:nn #1#2 {
+\cs_new_protected:Npn \semio_termlist_use:nnn #1#2#3 {
   \semio_termlist_term_ensure:nn {#1} {#2}
   \refstepcounter { semio#1usage }
   \group_begin:
@@ -678,7 +678,11 @@
   \makeatother
   \group_end:
   \semio_termlist_label_append:nnx {#1} {#2} { \semio@termlist@label }
-  #2
+  #3
+}
+
+\cs_new_protected:Npn \semio_termlist_use:nn #1#2 {
+  \semio_termlist_use:nnn {#1} {#2} {#2}
 }
 
 \cs_new:Npn \semio_termlist_sort_compare:nn #1#2 {
@@ -777,6 +781,14 @@
 
 \cs_set_protected:Npn \AbbreviationDefine #1#2#3 {
   \semio_termlist_define:nnn { abbreviations } {#1} { #2~--~#3 }
+}
+
+% Optional display form for German inflection: \Gls[Baukomponenten]{Baukomponente}
+\cs_undefine:N \Gls
+\NewDocumentCommand \Gls { o m } {
+  \IfNoValueTF {#1}
+    { \semio_termlist_use:nn { glossary } {#2} }
+    { \semio_termlist_use:nnn { glossary } {#2} {#1} }
 }
 %endregion Termlist
 
@@ -2358,6 +2370,32 @@
   }%
 }
 
+% 📐 Open-bottom solid chip for pairs: identical to \semio@window@cap except the
+% box stops one hairline above the pair baseline, so the row's shared full-width
+% rule supplies the chip's bottom edge (and continues across the gap between the
+% two chips) instead of the gap being filled into one solid rectangle.
+\newcommand{\semio@window@cap@open}[3]{%
+  \semio@window@cap@body@h@set
+  \sbox{\semio@window@cap@slot}{%
+    \begingroup
+    #3\relax
+    \hspace{\semio@window@cap@hpad}#2\hspace{\semio@window@cap@hpad}%
+    \endgroup
+  }%
+  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  \semio@window@cap@metrics@set
+  \addtolength{\semio@window@cap@titleh}{-\semio@stroke@hairline}%
+  \setlength{\semio@window@cap@body@h}{%
+    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
+  }%
+  \hbox{%
+    \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
+    \semio@window@cap@raise{\semio@window@cap@accent@vbox{#1}}%
+    \semio@window@cap@left@overlay{#1}%
+    \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
+  }%
+}
+
 \newcommand{\semio@window@tab}[2]{%
   \semio@window@cap{#1}{#2}{%
     \SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont\color{semio-chrome-canvas}%
@@ -2525,8 +2563,15 @@
   \endgroup
 }
 
-\newcommand{\semio@window@gap@inbox}[1]{%
-  \semio@window@header@gap@paint{#1}{#1}%
+\newcommand{\semio@heading@chip@open}[3]{%
+  \begingroup
+  \renewcommand{\semio@window@cap@hpad}{\semio@tab@inset}%
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
+  \semio@window@cap@open{#1}{#3}{%
+    \semio@heading@bar@font\color{#2}%
+  }%
+  \endgroup
 }
 
 \newcommand{\semio@heading@number@suffix}[1]{%
@@ -2541,25 +2586,8 @@
   }%
 }
 
-% LR-headline-full: the heading's connecting line runs the FULL width of the row
-% — from the left tab's outer-left corner to the right tab's outer-right corner —
-% rather than only bridging the inner gap between the two tabs. It is drawn as a
-% baseline underlay (\rlap → zero width, so tab placement is untouched) at the
-% tabs' bottom edge in the tab colour #1, so under a solid tab it continues the
-% tab's fill and under an outline tab it merges with the tab's bottom border,
-% reading as one continuous rule that reaches both tab corners. The two tabs are
-% then placed flush-left / flush-right with \hfil between them, so the line is
-% visible across the whole heading including the segments beneath the tabs.
-\newcommand{\semio@heading@baseline@full}[1]{%
-  \rlap{\textcolor{#1}{\rule[\z@]{\linewidth}{\semio@stroke@hairline}}}%
-}
-
-% 📐 Solid heading pairs: filled gap band (not a full-linewidth baseline underlay).
-% The underlay used to run past the right chip's outer edge by a hairline under
-% PDF rasterization; a width-exact gap between the measured chip boxes stays flush.
-% Two-pass height sync makes title and number the same tallness (max of both);
-% gap overlaps each chip by one hairline so same-colour abutments don't flash a
-% cream seam under rasterization (same trick as muted title bars).
+% 📐 Two-pass height sync makes title and number chips the same tallness (max of
+% both) before they are placed on the shared pair baseline.
 \newcommand{\semio@heading@pair@sync@height}{%
   \setlength{\semio@window@cap@min@titleh}{%
     \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax
@@ -2571,34 +2599,12 @@
   \fi
 }
 
-\newcommand{\semio@heading@pair}[5]{%
-  \semio@hierarchy@path@set{\csname the#4\endcsname}%
-  \setlength{\semio@window@cap@min@titleh}{\z@}%
-  \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
-  \semio@heading@pair@sync@height
-  \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
-  \setlength{\semio@window@cap@min@titleh}{\z@}%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box
-      +\semio@stroke@hairline+\semio@stroke@hairline\relax
-  }%
-  \semio@heading@row@wrap{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \hskip-\semio@stroke@hairline\relax
-      \semio@window@header@gap@paint{#1}{#1}%
-      \hskip-\semio@stroke@hairline\relax
-      \usebox{\semio@window@ctrl@box}%
-    }%
-  }%
-}
-
-% 📐 Outline heading pairs: open-bottom chips sit on one shared baseline row.
-% Chip-local bottom + gap stroke stacked at the same y and made verticals poke
-% below the rule (Bauteilportal). Sides end on the shared baseline instead.
-\newcommand{\semio@heading@pair@outline@row}[1]{%
+% 📐 Heading pairs — solid and outline alike: two open-bottom chips sit
+% flush-left / flush-right on one shared baseline row, and a single full-width
+% rule underneath supplies both chips' bottom edge and the connector between
+% them. Solid levels therefore read as chip + border + chip, never as one
+% continuous coloured rectangle spanning the text width.
+\newcommand{\semio@heading@pair@row}[1]{%
   \semio@heading@row@wrap{%
     \vbox{%
       \hbox to \linewidth{%
@@ -2614,6 +2620,21 @@
   }%
 }
 
+\newcommand{\semio@heading@pair}[5]{%
+  \semio@hierarchy@path@set{\csname the#4\endcsname}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#1}{#2}{#5}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  \semio@heading@pair@sync@height
+  % Open chips box to titleh−hairline (baseline is the pair row below); sync
+  % measured that shorter box, so lift the floor back to full titleh.
+  \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
+  \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#1}{#2}{#5}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \semio@heading@pair@row{#1}%
+}
+
 \newcommand{\semio@heading@pair@outline}[5]{%
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
@@ -2626,7 +2647,24 @@
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#5}{#2}{#1}}%
   \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
-  \semio@heading@pair@outline@row{#1}%
+  \semio@heading@pair@row{#1}%
+}
+
+% 📐 Explicit-number pairs — same construction as the level-driven pairs above,
+% but the number is passed in rather than read from \the<level>, for the nested
+% paragraphs whose numbers are composed by hand (see NestedParagraphs). Both
+% carry the same argument order so the nest can pick one by ladder style alone.
+\newcommand{\semio@heading@pair@num}[4]{%
+  \semio@hierarchy@path@set{#1}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#4}{#3}{#2}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#4}{#3}{\semio@kind@number@bare{#1}}}%
+  \semio@heading@pair@sync@height
+  \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
+  \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#4}{#3}{#2}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#4}{#3}{\semio@kind@number@bare{#1}}}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
+  \semio@heading@pair@row{#4}%
 }
 
 \newcommand{\semio@heading@pair@nofill@num}[4]{%
@@ -2639,7 +2677,7 @@
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#2}{#3}{#4}}%
   \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@kind@number@bare{#1}}{#3}{#4}}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
-  \semio@heading@pair@outline@row{#4}%
+  \semio@heading@pair@row{#4}%
 }
 
 \newcommand{\semio@heading@title@end}[3]{%
@@ -2748,28 +2786,71 @@
   ]{#1}%
 }
 
+% 🪜 The heading ladder: each of the three brand colours occupies two
+% consecutive rungs, filled first then outlined, so depth reads twice over —
+% once in the hue, once in the fill. Past the last brand pair the ladder runs
+% out of hues and steps down through the neutrals instead, outline-only, so
+% arbitrarily deep nesting still terminates in something legible.
+% Rungs are handed out by a level's position in the *class's own* heading
+% sequence, never by its name: an article-style class has no \chapter, so its
+% \section takes the rung \chapter would have held instead of leaving that
+% outline rung unused and jumping a whole colour. \semio@heading@rung@<level>
+% keeps each level's number so the nested-paragraph chips (which sit below the
+% deepest numbered level, see NestedParagraphs) can carry on down the same
+% ladder rather than starting a second one.
+% {@link https://github.com/usalu/semio/issues/2429}
+\newcommand{\semio@heading@ladder@color}[1]{%
+  \ifcase#1 semio-tertiary%
+  \or semio-tertiary%
+  \or semio-secondary%
+  \or semio-secondary%
+  \or semio-primary%
+  \or semio-primary%
+  \or semio-chrome-panel%
+  \or semio-chrome-border-emphasized%
+  \else semio-chrome-border-normal%
+  \fi
+}
+
+\newcommand{\semio@heading@ladder@style}[1]{%
+  \ifcase#1 solid%
+  \or outline%
+  \or solid%
+  \or outline%
+  \or solid%
+  \or outline%
+  \or solid%
+  \else outline%
+  \fi
+}
+
+\newcommand{\semio@heading@ladder@step}[1]{%
+  \expandafter\edef\csname semio@heading@rung@#1\endcsname{\number\@tempcnta}%
+  \expandafter\edef\csname semio@heading@color@#1\endcsname{%
+    \semio@heading@ladder@color{\number\@tempcnta}%
+  }%
+  \expandafter\edef\csname semio@heading@style@#1\endcsname{%
+    \semio@heading@ladder@style{\number\@tempcnta}%
+  }%
+  \expandafter\def\csname semio@heading@textcolor@#1\endcsname{semio-chrome-foreground}%
+  \advance\@tempcnta\@ne
+}
+
+\newcommand{\semio@heading@ladder@install}{%
+  \@tempcnta\z@
+  \semio@heading@ladder@step{part}%
+  \ifcsname chapter\endcsname
+    \semio@heading@ladder@step{chapter}%
+  \fi
+  \semio@heading@ladder@step{section}%
+  \semio@heading@ladder@step{subsection}%
+  \semio@heading@ladder@step{subsubsection}%
+  \semio@heading@ladder@step{paragraph}%
+  \semio@heading@ladder@step{subparagraph}%
+}
+
 \newcommand{\semio@heading@installall}{%
-  \def\semio@heading@style@part{solid}%
-  \def\semio@heading@color@part{semio-tertiary}%
-  \def\semio@heading@textcolor@part{semio-chrome-foreground}%
-  \def\semio@heading@style@chapter{outline}%
-  \def\semio@heading@color@chapter{semio-tertiary}%
-  \def\semio@heading@textcolor@chapter{semio-chrome-foreground}%
-  \def\semio@heading@style@section{solid}%
-  \def\semio@heading@color@section{semio-secondary}%
-  \def\semio@heading@textcolor@section{semio-chrome-foreground}%
-  \def\semio@heading@style@subsection{outline}%
-  \def\semio@heading@color@subsection{semio-secondary}%
-  \def\semio@heading@textcolor@subsection{semio-chrome-foreground}%
-  \def\semio@heading@style@subsubsection{solid}%
-  \def\semio@heading@color@subsubsection{semio-primary}%
-  \def\semio@heading@textcolor@subsubsection{semio-chrome-foreground}%
-  \def\semio@heading@style@paragraph{outline}%
-  \def\semio@heading@color@paragraph{semio-primary}%
-  \def\semio@heading@textcolor@paragraph{semio-chrome-foreground}%
-  \def\semio@heading@style@subparagraph{solid}%
-  \def\semio@heading@color@subparagraph{semio-chrome-panel}%
-  \def\semio@heading@textcolor@subparagraph{semio-chrome-foreground}%
+  \semio@heading@ladder@install
   \ifcsname chapter\endcsname
     \setkomafont{chapter}{\semio@heading@chip@font}%
   \fi
@@ -2871,22 +2952,20 @@
   \ifnum\value{semio@nest@depth}>4 .\thesemio@nest@e\fi
 }
 
-% 🎨 SubSubparagraph (depth 1) and deeper are all outline-only chips with
-% emphasized text; only the border weight steps down, frozen from depth 2 on.
-\newcommand{\semio@nest@style@apply}[1]{%
-  \ifcase\numexpr#1-1\relax
-    \def\semio@nest@style@border{semio-chrome-border-emphasized}%
-  \or
-    \def\semio@nest@style@border{semio-chrome-border-normal}%
-  \fi
-}
-
+% 🎨 Nested paragraphs keep walking the heading ladder (see Headings) instead of
+% starting a palette of their own: a nest chip sits exactly one rung below the
+% level whose number it extends — \paragraph once that level has been used,
+% \subsubsection otherwise, mirroring \semio@nest@build@number — and each extra
+% depth steps one rung further. Depths past the last brand pair land on the
+% ladder's neutral outline tail, which is where they lived before.
 \newcommand{\semio@nest@style@resolve}{%
-  \ifnum\value{semio@nest@depth}>2
-    \semio@nest@style@apply{2}%
+  \ifnum\c@paragraph>\z@
+    \edef\semio@nest@rung{\number\numexpr\semio@heading@rung@paragraph+\value{semio@nest@depth}\relax}%
   \else
-    \semio@nest@style@apply{\value{semio@nest@depth}}%
+    \edef\semio@nest@rung{\number\numexpr\semio@heading@rung@subsubsection+\value{semio@nest@depth}\relax}%
   \fi
+  \edef\semio@nest@color{\semio@heading@ladder@color{\semio@nest@rung}}%
+  \edef\semio@nest@style{\semio@heading@ladder@style{\semio@nest@rung}}%
 }
 
 \newcommand{\semio@nest@paragraph}[1]{%
@@ -2903,7 +2982,11 @@
     \semio@toc@track@num{paragraph}{\semio@nest@num}{#1}%
   \fi
   \semio@nest@style@resolve
-  \semio@heading@pair@nofill@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@style@border}%
+  \ifx\semio@nest@style\semio@heading@style@outline@marker
+    \semio@heading@pair@nofill@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@color}%
+  \else
+    \semio@heading@pair@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@color}%
+  \fi
   \vspace{\semio@heading@bottomskip}% LR-bottomskip: space below nested-paragraph headings
   \semio@block@after
 }
@@ -2920,80 +3003,14 @@
 }
 %endregion NestedParagraphs
 
-%region Header gap — closed, filled band welding the title tab to the number/key tab; {@link https://github.com/usalu/semio/issues/1965}
-% \semio@window@header@gap@paint{<fill>}{<stroke>} paints the middle segment
-% between the two header chips as a *closed, filled* band rather than a
-% transparent cutout: a top hairline stroke (<stroke>), continuous with the
-% chip top borders, over a body filled with the band colour (<fill>),
-% continuous with the chip fill. Its bottom is closed by the same content-frame
-% seam the chips sit on (the chips carry no bottom rule of their own), so the
-% header row reads as one continuous rectangle — no cream strip in the middle
-% and no doubled baseline rule. This restores the pre-#1965 filled principle,
-% corrected on two points: the fill now matches the chip colour (was
-% semio-chrome-base, the page cream, which showed as a stripe) and the stroke
-% sits on TOP so the band's top border is continuous (was a bottom-only stroke,
-% which left the top border broken across the gap).
-%
-% ⚠️ Band height is derived from the *tab box* (\ht+\dp\semio@window@tab@box),
-% NOT from \semio@window@cap@titleh / \semio@window@cap@body@h. The chip builders
-% set those two lengths *inside* the \sbox that measures each chip, so the
-% assignments are local to that box group and have reverted (to a stale/zero
-% value) by the time this macro runs in the surrounding \hbox — which is why the
-% earlier "fill" collapsed to zero height and the band looked unchanged. The tab
-% box, in contrast, persists: its height IS the chip height (\semio@window@cap@raise
-% pins every chip to [titleh][0pt]), so \ht+\dp gives exactly the band height and
-% the fill lines up with both chips, long titles and enlarged fonts included.
-\newcommand{\semio@window@header@gap@paint}[2]{%
-  % Height from the tab box (chip builders set titleh inside an \sbox, so it has
-  % reverted by the time the gap is painted in the surrounding row).
-  \begingroup
-  \setlength{\semio@window@cap@titleh}{%
-    \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax
-  }%
-  \setlength{\semio@window@cap@body@h}{%
-    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
-  }%
-  \semio@window@cap@raise{%
-    \vbox to \semio@window@cap@titleh{%
-      \nointerlineskip
-      \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \semio@window@stroke@h{#2}{\semio@window@gap@w}%
-      }%
-      \nointerlineskip
-      \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \textcolor{#1}{\rule{\dimexpr\semio@window@gap@w\relax}{\semio@window@cap@body@h}}%
-      }%
-    }%
-  }%
-  \endgroup
-}
-
-% Outline (nofill) headings keep the transparent middle closed only by the
-% baseline stroke — those chips carry no fill, so there is no band to continue.
-% Unchanged from before, just no longer routed through the filled painter.
-\newcommand{\semio@window@header@gap@paint@nofill}[1]{%
-  \if\relax\detokenize{#1}\relax
-    \semio@window@cap@raise{%
-      \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@window@cap@titleh}}%
-    }%
-  \else
-    \semio@window@cap@raise{%
-      \vbox to \semio@window@cap@titleh{%
-        \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@window@cap@body@h}}%
-        \nointerlineskip
-        \hbox to \dimexpr\semio@window@gap@w\relax{%
-          \semio@window@stroke@h{#1}{\semio@window@gap@w}%
-        }%
-      }%
-    }%
-  \fi
-}
-
+%region Header gap — open connector joining the title tab to the number/key tab; {@link https://github.com/usalu/semio/issues/1965}
 % Open connector for MUTED title bars (table / figure / contents): the two chips
 % are tabs sitting on the component's top edge, so the middle must stay UNFILLED
 % (paper shows through) with NO top line — only a baseline stroke joining the two
-% tabs along the component's top border. Height comes from the tab box (see
-% \semio@window@header@gap@paint) so the stroke lands exactly on the tab baseline.
+% tabs along the component's top border. Height comes from the tab box — the chip
+% builders set \semio@window@cap@titleh *inside* the \sbox that measures each chip,
+% so that length has reverted by the time this macro runs in the surrounding row,
+% while \ht+\dp of the tab box persists and is exactly the chip height.
 \newcommand{\semio@window@header@gap@open}[1]{%
   \raisebox{0pt}[\dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax][0pt]{%
     \vbox to \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax{%

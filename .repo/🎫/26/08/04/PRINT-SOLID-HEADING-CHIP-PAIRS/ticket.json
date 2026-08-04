@@ -1,0 +1,14 @@
+{
+  "title": "Print Solid Heading Chip Pairs",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Solid-filled headings (part, chapter, section, subsubsection, subparagraph) currently render as one complete colored rectangle spanning the full text width, because the gap between the title chip and the number chip is painted filled. They must instead follow the same design as paragraphs and windows: a chip on the left, a chip on the right, and a bottom border running the full width connecting the two chips.",
+  "summary": "Solid-filled headings (part, section, subsubsection, subparagraph and the solid appendix levels) no longer render as one continuous coloured rectangle across the text width. They now use the same construction as the outline levels, paragraphs and windows: a chip left, a chip right, and one full-width hairline underneath connecting them.\n\nChange in print/tex/semio-window.sty (Headings + Header gap regions):\n- New \\semio@window@cap@open — a solid chip identical to \\semio@window@cap but boxed one hairline shorter, so the row's shared rule supplies its bottom edge — and its heading wrapper \\semio@heading@chip@open.\n- \\semio@heading@pair rebuilt on the two-pass height sync + shared row, mirroring \\semio@heading@pair@outline; the filled gap band is gone.\n- \\semio@heading@pair@outline@row renamed \\semio@heading@pair@row (it now serves solid, outline and nested-paragraph pairs alike).\n- Removed the code the filled band left dead: \\semio@window@header@gap@paint, \\semio@window@header@gap@paint@nofill, \\semio@window@gap@inbox, \\semio@heading@baseline@full, plus their obsolete comments. \\semio@window@header@gap@open (muted table/figure/contents tabs) is untouched.\n\nVerified by rebuilding all six templates light+dark (nx run print:build --skip-nx-cache) and rasterizing: report section \"Architecture\", paper sections, zwischenbericht \\part levels and appendix chips (\"Anlagen\"/\"AL\", \"Messreihen\"/\"AL.MR\") all render chip + connecting rule + chip; a 600dpi crop shows the chip sitting flush on the rule with no seam and no doubled line. Outline levels (chapter, subsection, paragraph) and muted title bars are byte-identical in appearance.\n\nNote: `nx run print:test` aborts on a pre-existing assertion at print/script.ts:689 that expects `\\vskip\\dimexpr-3\\semio@stroke@hairline` in \\semio_window_vskip_stroke_hairline:, while the committed .sty has `-\\semio@stroke@hairline-5.75pt`. That section is byte-identical to HEAD and unrelated to this ticket; no heading assertions exist in the suite.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2426"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪d7c8eef701194dda8b6ade83ee7e5591"
+  ]
+}

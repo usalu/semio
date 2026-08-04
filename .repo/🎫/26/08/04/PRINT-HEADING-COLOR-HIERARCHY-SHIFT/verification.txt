@@ -1,0 +1,62 @@
+Heading ladder verification — 2026-08-04
+
+Rung table (position in the class's own heading sequence; the nested-paragraph
+chips carry on down the same ladder instead of starting a second one):
+  0 tertiary                 solid    (orange filled)
+  1 tertiary                 outline  (orange outline)
+  2 secondary                solid    (teal filled)
+  3 secondary                outline  (teal outline)
+  4 primary                  solid    (pink filled)
+  5 primary                  outline  (pink outline)
+  6 chrome-panel             solid
+  7 chrome-border-emphasized outline
+  8+ chrome-border-normal    outline
+
+Class mappings:
+  scrreprt (type=report): part 0, chapter 1, section 2, subsection 3,
+    subsubsection 4, paragraph 5, subparagraph 6  -> identical to before.
+  scrartcl (type=paper):  part 0, section 1, subsection 2, subsubsection 3,
+    paragraph 4, subparagraph 5  -> shifted; the orange outline rung that was
+    previously skipped (no \chapter) is now taken by \section.
+
+Nested paragraphs (SemioNest): rung = rung of the level whose number the chip
+extends (paragraph once c@paragraph > 0, subsubsection otherwise — the same
+test \semio@nest@build@number makes) + nest depth. Previously they ran on their
+own two-tone ladder (border-emphasized, then border-normal), so a paper-family
+document that nests under \subsubsection — the mit-bestand zwischenbericht does
+— never reached the pink pair at all.
+
+Builds (nx run print:build --skip-nx-cache): all six templates, light + dark, exit 0.
+Build (nx run @semio-tech/mit-bestand-bericht:build --skip-nx-cache): exit 0.
+
+Rasterized evidence in this folder:
+  probe-1.png          ladder-probe.tex — all nine rungs on one page, in order:
+    Rung Zero orange filled, One orange outline, Two teal filled, Three teal
+    outline, Four pink filled, Five pink outline, Six panel filled, Seven dark
+    outline, Eight gray outline. (Rungs 4-8 are SemioNest depths 1-5.)
+  mb2-009.png / mb2-dark-009.png  mit-bestand zwischenbericht p9, light + dark:
+    "Arbeitspakete" (\section) orange outline, "AP-Erfahrung" (\subsection)
+    teal filled, "Recherche" (\subsubsection) teal outline, "Bauteilbörsen und
+    Angebotskanäle" (nest depth 1) pink filled, "Depot-Shop" / "Marktplatz" /
+    "Ressourcenkatalog" (nest depth 2) pink outline.
+  zoom-appendix-5.png  zwischenbericht template p5: "Anlagen" (\part) orange
+    filled, "Messreihen" (\section) orange outline.
+  report2-03.png / report-dark-03.png  report template unchanged: "Introduction"
+    (\chapter) orange outline, "Architecture" (\section) teal filled,
+    "Print Pipeline" (\subsection) teal outline, "Token Pipeline" (\paragraph)
+    pink outline.
+  paper-2.png          paper template: \section now orange outline.
+
+ladder-probe.tex was compiled directly with the repo's cached tectonic:
+  TEXINPUTS=print/tex//:print/tex: .repo/cache/tectonic/*/tectonic \
+    --keep-logs --reruns 2 -Z search-path=print/tex -Z search-path=<ticket> \
+    --outdir <ticket> <ticket>/ladder-probe.tex        -> exit 0
+No shipped document nests deeper than SemioNest depth 2, so the probe is what
+exercises rungs 6-8.
+
+Tests (nx run print:test): fails on the SAME pre-existing assertion as before
+this ticket — print/script.ts:689 expects
+  \vskip\dimexpr-3\semio@stroke@hairline
+in \semio_window_vskip_stroke_hairline:, while both HEAD and the working tree
+carry a different value there (confirmed with `git show HEAD:print/tex/semio-window.sty`).
+Unrelated to headings; no heading assertions exist in the suite.

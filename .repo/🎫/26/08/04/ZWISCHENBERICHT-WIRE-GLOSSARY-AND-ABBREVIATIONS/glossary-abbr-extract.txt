@@ -1,0 +1,206 @@
+Glossar
+Begriff                       Verwendung im Bericht                                                        Seiten
+
+
+                              Physisches Element oder zusammengehörige Gruppe von
+Baukomponente                                                                                                      1
+                              Elementen, die im Entwurf als Einheit betrachtet und verwendet wird.
+
+
+Entwurfsrolle                 Mögliche Funktion einer Baukomponente im neuen Entwurf. Sie kann                 4
+                              von ihrer ursprünglichen Funktion abweichen.
+
+
+                              Quelle wiederverwendbarer Baukomponenten, etwa eine
+Bestandsquelle                Bauteilbörse, ein Rückbauinventar oder eine direkte                                  1
+                              Bestandsaufnahme.
+
+
+                              Organisation, physischer Lagerort oder digitaler Angebotskanal, über
+Bauteilbörse                  den wiederverwendbare Baukomponenten dokumentiert, vermittelt                        1
+                              oder verkauft werden.
+
+
+Qualifizierung                Strukturierte Erfassung, Prüfung und nachvollziehbare Ergänzung                  6
+                              verfügbarer Bauteilinformationen.
+
+
+                              Projektinterne Ordnung von Baukomponenten nach ihrer
+                              geometrisch-konstruktiven Organisation: lineare und flächige
+Typologiefamilie                                                                                               4
+                              Elemente, Knoten- und Übergangselemente sowie Rahmen- und
+                              Systemelemente.
+
+
+                              Kennzeichnung des Bearbeitungs- und Belegstands einzelner
+Nachweiszustände              Angaben. Sie zeigt, ob eine Information vorhanden, abgeleitet,                   4
+                              angenommen oder noch offen ist.
+
+
+Leistungsbewertung            Einschätzung ausgewählter Eigenschaften oder Auswirkungen einer                  9
+                              Entwurfsvariante auf Grundlage der verfügbaren Informationen.
+
+
+Vorbewertung                  Frühe, vereinfachte Leistungsbewertung einer Entwurfsvariante auf                2
+                              Grundlage der verfügbaren Informationen.
+
+
+                              Strukturierte digitale Repräsentation einer Baukomponente, die
+Bauteilobjekt                 mehrere geometrische Darstellungen sowie die zugehörigen                         6
+                              fachlichen und beschreibenden Informationen in einem
+                              gemeinsamen Modell bündelt.
+
+
+                              Parametrischer Mechanismus, der aus erfassten Angaben zu einer
+Generator                     Baukomponente ein digitales Bauteilobjekt mit den benötigten                     6
+                              geometrischen Repräsentationen erzeugt.
+
+
+Einspeiseplattform            Gesamtheit aus Bauteilportal und Wizard zur Erfassung, Übernahme                 6
+                              und Qualifizierung von Bestandsdaten zu Baukomponenten.
+
+
+
+                                                      U. Saluz   K. Sarakbi                                    93
+Verzeichnisse                                      Zwischenbericht                            Entwerfen mit Bestand
+
+
+
+
+Glossar
+Begriff                  Verwendung im Bericht                                                                Seiten
+
+
+                         Gesamtheit aus Bauteilkatalog, Entwurfsumgebung und Konfigurator
+Entwurfswerkzeug                                                                                                     6
+                         zur Auswahl, Kombination und Bewertung digitaler Baukomponenten.
+
+
+                         Einspeiseplattform zur Erfassung, Übernahme und Qualifizierung von
+Bauteilportal            Bestandsdaten zu Baukomponenten als Grundlage für die                                       6
+                         Erzeugung digitaler Bauteilobjekte.
+
+
+                         Geführte Eingabeoberfläche im Bauteilportal zur schrittweisen
+Wizard                   Erfassung und Qualifizierung unvollständiger oder unstrukturierter                          7
+                         Bauteildaten.
+
+
+Bauteilkatalog           Bereich des Entwurfswerkzeugs zur Übersicht, Suche und Auswahl                              6
+                         von Baukomponenten und den dazugehörigen Informationen.
+
+
+                         Bereich des Entwurfswerkzeugs, in dem Baukomponenten
+Entwurfsumgebung         angeordnet, kombiniert und zu Entwurfsvarianten weiterentwickelt                            6
+                         werden.
+
+
+                         Bereich des Entwurfswerkzeugs für den Austausch mit
+                         Bauteilbörsen, etwa für Anfragen, Reservierungen,
+Konfigurator                                                                                                         6
+                         Statusänderungen und die Übermittlung projektspezifischer
+                         Angaben.
+
+
+                         Quelloffenes Toolkit zur Beschreibung, Verknüpfung und räumlichen
+semio                    Anordnung digitaler Repräsentationen modularer Baukomponenten                               8
+                         sowie technische Grundlage des Entwurfswerkzeugs.
+
+
+Human-Interface-Design   Gestaltung der Interaktion zwischen Nutzenden und digitaler                                 8
+                         Arbeitsumgebung.
+
+
+User-Experience          Wahrnehmung und Einbindung der digitalen Arbeitsumgebung in den                             11
+                         Arbeitsablauf der Nutzenden.
+
+
+Entwurfsgrammatik        Projektbezogenes Regelwerk für die Bildung, Veränderung und                                10
+                         Prüfung von Entwurfsvarianten.
+
+
+Test-Case                Realer oder realitätsnaher Anwendungsfall für die Entwicklung und                           8
+                         schrittweise Prüfung der digitalen Kette.
+
+
+
+Abkürzungsverzeichnis
+Abkürzung                Bedeutung                                                                            Seiten
+
+
+                         Arbeitspaket -- Ein klar abgegrenzter Teilbereich des Projekts mit
+AP                       eigenen Zielen und Aufgaben, in den das Gesamtprojekt zur                     2, 6, 8, 9, 12
+                         besseren Steuerung unterteilt ist.
+
+
+                         Application Programming Interface -- Eine festgelegte
+API                      Programmierschnittstelle, über die zwei Computerprogramme                               11, 13
+                         miteinander kommunizieren und Daten austauschen.
+
+
+                         Künstliche Intelligenz -- Oberbegriff für Computerprogramme, die
+KI                       Aufgaben lösen, für die normalerweise menschliches Denken nötig            1, 7, 9, 11, 13, 15
+                         ist, etwa Sprache verstehen oder Muster erkennen.
+
+
+                         Large-Language-Model -- Ein Computerprogramm, das mit sehr
+LLM                      großen Textmengen trainiert wurde und dadurch selbstständig Texte                    1, 9, 13
+                         verstehen, beantworten und formulieren kann.
+
+
+                         Human Interface Design -- Die Gestaltung, wie Menschen ein
+HID                      Computerprogramm bedienen und mit ihm interagieren, etwa über                              13
+                         Bildschirmansichten.
+
+
+                         Representational State Transfer -- Ein verbreitetes technisches
+REST                     Verfahren, mit dem Computerprogramme über das Internet                           7, 8, 11, 13
+                         standardisiert Daten austauschen.
+
+
+NGS                      Nachhaltige Gebäudesysteme -- Die an diesem Projekt beteiligte             10, 12, 13, 14, 16
+                         Abteilung der Leibniz Universität Hannover.
+
+
+
+
+94                                               U. Saluz   K. Sarakbi
+  Entwerfen mit Bestand                            Zwischenbericht                               Verzeichnisse
+
+
+
+
+Abkürzungsverzeichnis
+Abkürzung                 Bedeutung                                                                      Seiten
+
+
+KET                       Konstruktives Entwerfen und Tragwerksplanung -- Die an diesem        10, 12, 13, 14, 16
+                          Projekt beteiligte Abteilung der Universität der Künste Berlin.
+
+
+BBSR                      Bundesinstitut für Bau-, Stadt- und Raumforschung -- Die                              1
+                          Bundesbehörde, die dieses Forschungsvorhaben fördert.
+
+
+
+  [1] A. Jansen B.V. Hergebruikte bouwmaterialen in woningproject Boschgaard.
+      URL: https://www.ajansenbv.com/projecten/hergebruikte-bouwmateriale
+      n-in-woningproject-boschgaard/ (besucht am 31. 07. 2026).
+ [2] Sarah Ackermann u. a. ReUse in der Bauindustrie stärken. Studie zur aktuellen
+     Entwicklung der Wiederverwendung in der Bauindustrie und zum Potenzial ihrer
+     Skalierung. Basel: BaselCircular; Cirkla, 2025.
+ [3]   Adokin. Grande Halle de Colombelles — Réemploi de matériaux. URL: https
+       ://adokin.eu/fr/2020/07/grande-halle-de-colombelles-fr/ (besucht am
+       30. 07. 2026).
+ [4] AgwA. 1718_VERBIEST. URL: https://www.agwa.be/en/projects/1718_verbi
+     est/201/ (besucht am 20. 07. 2026).
+ [5]   Arch2O. Alliander HQ — RAU Architects. URL: https://www.arch2o.com/alli
+       ander-hq-rau-architects/ (besucht am 30. 07. 2026).
+ [6] ArchDaily. Alliander HQ. URL: https://www.archdaily.com/777783/alliander
+     -hq-rau-architects (besucht am 20. 07. 2026).
+ [7] ArchDaily. gjG House. URL: https://www.archdaily.com/951845/gjg-house-
+     blaf-architecten (besucht am 20. 07. 2026).
+ [8] ArchDaily. Saxum Vineyard Equipment Barn. URL: https://www.archdaily.c
+     om/932817/saxum-vineyard-equipment-barn-clayton-and-little (besucht
+     am 20. 07. 2026).
+ [9] Archipel Sion Ress
