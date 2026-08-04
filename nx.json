@@ -32,6 +32,7 @@
       "{workspaceRoot}/.dependency-cruiser.cjs"
     ],
     "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?", "!{projectRoot}/.storybook/**"],
+    "print": ["{workspaceRoot}/print/tex/**/*", "{workspaceRoot}/print/script.ts", "{workspaceRoot}/ui/styling/tokens.json"],
     "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
     "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work", "{workspaceRoot}/go.work.sum"],
     "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],

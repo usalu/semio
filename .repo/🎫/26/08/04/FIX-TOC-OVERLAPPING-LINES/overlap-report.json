@@ -1,7 +1,28 @@
 {
   "pdf": "e:\\semio\\mit-bestand\\bericht\\zwischenbericht\\dist\\zwischenbericht-dark.pdf",
-  "pages_with_overlap": [],
+  "pages_with_overlap": [
+    {
+      "page": 53,
+      "defects": [
+        {
+          "y": 796.8,
+          "full_width": 430.9,
+          "segments": 5
+        }
+      ]
+    },
+    {
+      "page": 58,
+      "defects": [
+        {
+          "y": 796.8,
+          "full_width": 430.9,
+          "segments": 5
+        }
+      ]
+    }
+  ],
   "samples": {
-    "datenfelder_header_page": 65
+    "datenfelder_header_page": 61
   }
 }

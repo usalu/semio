@@ -18,6 +18,8 @@
     },
     "build": {
       "executor": "nx:run-commands",
+      "inputs": ["production", "^production", "print"],
+      "outputs": ["{projectRoot}/dist"],
       "options": {
         "cwd": "print",
         "command": "bun ./script.ts build",

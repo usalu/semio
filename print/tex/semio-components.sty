@@ -11,6 +11,19 @@
 
 \ExplSyntaxOn
 
+\bool_new:N \g_semio_cover_geometry_bool
+\bool_gset_false:N \g_semio_cover_geometry_bool
+
+\cs_new_protected:Npn \semio_cover_geometry_restore: {
+  \bool_if:NT \g_semio_cover_geometry_bool {
+    \clearpage
+    \restoregeometry
+    \bool_gset_false:N \g_semio_cover_geometry_bool
+  }
+}
+
+\AddToHook { cmd / tableofcontents / after } { \semio_cover_geometry_restore: }
+
 \bool_new:N \l_semio_cover@meta@row_bool
 \bool_new:N \l_semio_cover@institution@row_bool
 \bool_new:N \l_semio_is_zwischenbericht_bool
@@ -79,6 +92,7 @@
 }
 
 \cs_new_protected:Npn \semio_mainmatter_begin: {
+  \semio_cover_geometry_restore:
   \semio_clear_to_recto:
   \setcounter{page}{1}
   \renewcommand{\thepage}{\arabic{page}}
@@ -133,7 +147,8 @@
   \semio_frontmatter_begin:
   \clearpage
   \newgeometry{left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm}
-  \begin{titlepage}
+  \bool_gset_true:N \g_semio_cover_geometry_bool
+  \thispagestyle{empty}
     \semio_theme_apply:
     \setlength{\parskip}{0pt}
     \bool_set_false:N \l_semio_cover@meta@row_bool
@@ -294,9 +309,7 @@
         }
       \end{WindowColumn}
     \end{WindowArrangement}
-  \end{titlepage}
-  \clearpage
-  \restoregeometry
+  \newpage
 }
 
 \NewDocumentCommand{\maketableofcontents}{o}{%

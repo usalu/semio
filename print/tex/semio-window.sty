@@ -2138,6 +2138,16 @@
 \def\semio@window@header@number@page1{}
 \def\semio@window@header@title{}
 
+% 📌 Chip number for callers that draw title chrome outside a window and so never
+% pass through \semio_window_header_store_aux:nn (the project catalogue card).
+% Such a card is an unbreakable box, so the page-1 display copy read by
+% \semio@window@header@invoke equals the base number — set both here rather than
+% leaving @page1 empty, which drops the chip.
+\newcommand{\semio@window@header@number@set}[1]{%
+  \gdef\semio@window@header@number{#1}%
+  \gdef\semio@window@header@number@page1{#1}%
+}
+
 \newcommand{\semio@window@header@invoke}{%
   % 🔢 Page 1 uses \semio@window@header@number@page1 (base number, plus a
   % ":1" suffix if the *previous* compile pass recorded this window as
@@ -3079,15 +3089,13 @@
     }%
     \semio@window@header@row@wrap{%
       \vbox{%
-        \hskip-\semio@stroke@hairline\relax
-        \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+        \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
           \usebox{\semio@window@tab@box}%
           \semio@window@header@gap@open{semio-chrome-border-normal}%
         }%
         \ifsemio@window@header@draw@baseline
-          \nointerlineskip
-          \hskip-\semio@stroke@hairline\relax
-          \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+          \ifvmode\nointerlineskip\fi
+          \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
             \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
           }%
         \fi
@@ -3100,17 +3108,15 @@
     }%
     \semio@window@header@row@wrap{%
       \vbox{%
-        \hskip-\semio@stroke@hairline\relax
-        \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+        \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
           \usebox{\semio@window@tab@box}%
           \semio@window@header@gap@open{semio-chrome-border-normal}%
           \hskip-\semio@stroke@hairline\relax
           \usebox{\semio@window@ctrl@box}%
         }%
         \ifsemio@window@header@draw@baseline
-          \nointerlineskip
-          \hskip-\semio@stroke@hairline\relax
-          \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+          \ifvmode\nointerlineskip\fi
+          \moveleft\semio@stroke@hairline\hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
             \semio@window@stroke@h{semio-chrome-border-normal}{\dimexpr\linewidth+\semio@stroke@hairline\relax}%
           }%
         \fi
@@ -3218,6 +3224,7 @@
   \noindent\hbox to \linewidth{
     \semio_window_row_items_render:nn { 1 } { \semio_window_frame_weight_count: }
   }\par
+  \prevdepth\z@\nointerlineskip
   \semio_window_frame_pop:
   \group_end:
 }
